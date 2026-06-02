@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 정렬 시각화</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+.page { width: 210mm; min-height: 297mm; margin: 16px auto; padding: 18mm 20mm 15mm 22mm; background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: relative; page-break-after: always; }
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after { content: counter(pagenum); position: absolute; bottom: 10mm; right: 16mm; font-size: 10px; color: #94a3b8; font-weight: 600; }
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark { position: absolute; top: -10px; right: -15px; font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3); line-height: 1; pointer-events: none; }
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #2563eb; font-weight: 600; }
+.code { background: #0f172a; border-radius: 8px; padding: 16px 20px; font-family: 'JetBrains Mono', monospace; font-size: 14px; color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap; }
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fce7f3; color: #9d174d; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<div class="page cover">
+  <div class="cover-sidebar"></div>
+  <div class="cover-accent"></div>
+  <div class="cover-body">
+    <div class="cover-watermark">P10</div>
+    <div class="cover-label">Project 10 · Level 5</div>
+    <h1 class="cover-title">정렬 시각화</h1>
+    <p class="cover-sub">버블 정렬 알고리즘으로 배열을 정렬하면서, 각 단계마다 배열 상태를 출력해 정렬 과정을 눈으로 확인합니다.</p>
+    <div style="margin:24px 0;">
+      <svg viewBox="0 0 460 130" style="max-width:460px;width:100%">
+        <text x="230" y="16" text-anchor="middle" font-size="11" fill="#64748b" font-weight="600">버블 정렬 — {5,3,8,1,4} 오름차순</text>
+        <!-- 패스 0 -->
+        <text x="10" y="36" font-size="9" fill="#64748b">초기</text>
+        <rect x="50" y="24" width="30" height="20" rx="3" fill="#dbeafe" stroke="#3b82f6"/><text x="65" y="38" text-anchor="middle" font-size="10" fill="#1d4ed8">5</text>
+        <rect x="85" y="24" width="30" height="20" rx="3" fill="#dbeafe" stroke="#3b82f6"/><text x="100" y="38" text-anchor="middle" font-size="10" fill="#1d4ed8">3</text>
+        <rect x="120" y="24" width="30" height="20" rx="3" fill="#fefce8" stroke="#f59e0b" stroke-width="2"/><text x="135" y="38" text-anchor="middle" font-size="10" fill="#92400e" font-weight="800">8</text>
+        <rect x="155" y="24" width="30" height="20" rx="3" fill="#dbeafe" stroke="#3b82f6"/><text x="170" y="38" text-anchor="middle" font-size="10" fill="#1d4ed8">1</text>
+        <rect x="190" y="24" width="30" height="20" rx="3" fill="#dbeafe" stroke="#3b82f6"/><text x="205" y="38" text-anchor="middle" font-size="10" fill="#1d4ed8">4</text>
+        <!-- 패스 1 -->
+        <text x="10" y="62" font-size="9" fill="#64748b">패스1</text>
+        <rect x="50" y="50" width="30" height="20" rx="3" fill="#dbeafe" stroke="#3b82f6"/><text x="65" y="64" text-anchor="middle" font-size="10" fill="#1d4ed8">3</text>
+        <rect x="85" y="50" width="30" height="20" rx="3" fill="#dbeafe" stroke="#3b82f6"/><text x="100" y="64" text-anchor="middle" font-size="10" fill="#1d4ed8">5</text>
+        <rect x="120" y="50" width="30" height="20" rx="3" fill="#dbeafe" stroke="#3b82f6"/><text x="135" y="64" text-anchor="middle" font-size="10" fill="#1d4ed8">1</text>
+        <rect x="155" y="50" width="30" height="20" rx="3" fill="#dbeafe" stroke="#3b82f6"/><text x="170" y="64" text-anchor="middle" font-size="10" fill="#1d4ed8">4</text>
+        <rect x="190" y="50" width="30" height="20" rx="3" fill="#f0fdf4" stroke="#22c55e" stroke-width="2"/><text x="205" y="64" text-anchor="middle" font-size="10" fill="#166534" font-weight="800">8</text>
+        <text x="240" y="64" font-size="9" fill="#166534">8 확정</text>
+        <!-- 패스 2 -->
+        <text x="10" y="88" font-size="9" fill="#64748b">패스2</text>
+        <rect x="50" y="76" width="30" height="20" rx="3" fill="#dbeafe" stroke="#3b82f6"/><text x="65" y="90" text-anchor="middle" font-size="10" fill="#1d4ed8">3</text>
+        <rect x="85" y="76" width="30" height="20" rx="3" fill="#dbeafe" stroke="#3b82f6"/><text x="100" y="90" text-anchor="middle" font-size="10" fill="#1d4ed8">1</text>
+        <rect x="120" y="76" width="30" height="20" rx="3" fill="#dbeafe" stroke="#3b82f6"/><text x="135" y="90" text-anchor="middle" font-size="10" fill="#1d4ed8">4</text>
+        <rect x="155" y="76" width="30" height="20" rx="3" fill="#f0fdf4" stroke="#22c55e" stroke-width="2"/><text x="170" y="90" text-anchor="middle" font-size="10" fill="#166534" font-weight="800">5</text>
+        <rect x="190" y="76" width="30" height="20" rx="3" fill="#f0fdf4" stroke="#22c55e"/><text x="205" y="90" text-anchor="middle" font-size="10" fill="#166534">8</text>
+        <text x="240" y="90" font-size="9" fill="#166534">5,8 확정</text>
+        <!-- 완료 -->
+        <text x="10" y="120" font-size="9" fill="#166534" font-weight="700">완료</text>
+        <rect x="50" y="108" width="30" height="20" rx="3" fill="#f0fdf4" stroke="#22c55e"/><text x="65" y="122" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">1</text>
+        <rect x="85" y="108" width="30" height="20" rx="3" fill="#f0fdf4" stroke="#22c55e"/><text x="100" y="122" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">3</text>
+        <rect x="120" y="108" width="30" height="20" rx="3" fill="#f0fdf4" stroke="#22c55e"/><text x="135" y="122" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">4</text>
+        <rect x="155" y="108" width="30" height="20" rx="3" fill="#f0fdf4" stroke="#22c55e"/><text x="170" y="122" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">5</text>
+        <rect x="190" y="108" width="30" height="20" rx="3" fill="#f0fdf4" stroke="#22c55e"/><text x="205" y="122" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">8</text>
+      </svg>
+    </div>
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/database.png" alt="데이터" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+      <h3>이 프로젝트에서 배우는 것</h3>
+      <ul>
+        <li>버블 정렬의 원리(인접 원소 비교·교환)를 이해합니다.</li>
+        <li>중첩 for문으로 정렬 알고리즘을 구현합니다.</li>
+        <li>각 패스마다 배열 상태를 출력하는 방법을 배웁니다.</li>
+        <li>정렬 과정에서 swap 횟수를 카운트합니다.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+  <h2>버블 정렬 알고리즘</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/folder.png" alt="배열" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+  <p>버블 정렬은 인접한 두 원소를 비교해서 순서가 틀리면 교환합니다. 한 번의 패스가 끝나면 가장 큰 값이 맨 끝으로 이동합니다.</p>
+  <div style="text-align:center;margin:14px 0;">
+    <svg viewBox="0 0 460 90" style="max-width:460px;width:100%">
+      <text x="230" y="16" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="800">패스 1 — 인접 비교 과정</text>
+      <!-- 비교 단계들 -->
+      <rect x="10" y="24" width="80" height="50" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+      <text x="50" y="40" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">5 3 8 1 4</text>
+      <text x="50" y="55" text-anchor="middle" font-size="8" fill="#94a3b8">5&gt;3? swap</text>
+      <text x="50" y="66" text-anchor="middle" font-size="9" fill="#f59e0b">3 5 8 1 4</text>
+      <line x1="92" y1="50" x2="105" y2="50" stroke="#94a3b8" stroke-width="1.5"/>
+      <rect x="108" y="24" width="80" height="50" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+      <text x="148" y="40" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">3 5 8 1 4</text>
+      <text x="148" y="55" text-anchor="middle" font-size="8" fill="#94a3b8">5&gt;8? NO</text>
+      <text x="148" y="66" text-anchor="middle" font-size="9" fill="#64748b">3 5 8 1 4</text>
+      <line x1="190" y1="50" x2="203" y2="50" stroke="#94a3b8" stroke-width="1.5"/>
+      <rect x="206" y="24" width="80" height="50" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1"/>
+      <text x="246" y="40" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">3 5 8 1 4</text>
+      <text x="246" y="55" text-anchor="middle" font-size="8" fill="#94a3b8">8&gt;1? swap</text>
+      <text x="246" y="66" text-anchor="middle" font-size="9" fill="#f59e0b">3 5 1 8 4</text>
+      <line x1="288" y1="50" x2="301" y2="50" stroke="#94a3b8" stroke-width="1.5"/>
+      <rect x="304" y="24" width="80" height="50" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1"/>
+      <text x="344" y="40" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">3 5 1 8 4</text>
+      <text x="344" y="55" text-anchor="middle" font-size="8" fill="#94a3b8">8&gt;4? swap</text>
+      <text x="344" y="66" text-anchor="middle" font-size="9" fill="#22c55e" font-weight="700">3 5 1 4 [8]</text>
+    </svg>
+  </div>
+  <div class="code"><span class="kw">int</span> arr[] = {<span class="num">5</span>, <span class="num">3</span>, <span class="num">8</span>, <span class="num">1</span>, <span class="num">4</span>};
+<span class="kw">int</span> n = <span class="num">5</span>, swapCnt = <span class="num">0</span>;
+
+<span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; n - <span class="num">1</span>; i++) {       <span class="cmt">// 패스 수</span>
+    <span class="fn">printf</span>(<span class="str">"패스 %d: "</span>, i + <span class="num">1</span>);
+    <span class="kw">for</span> (<span class="kw">int</span> j = <span class="num">0</span>; j &lt; n - <span class="num">1</span> - i; j++) {  <span class="cmt">// 비교 범위</span>
+        <span class="kw">if</span> (arr[j] &gt; arr[j + <span class="num">1</span>]) {
+            <span class="kw">int</span> tmp = arr[j];
+            arr[j] = arr[j + <span class="num">1</span>];
+            arr[j + <span class="num">1</span>] = tmp;
+            swapCnt++;
+        }
+    }
+    <span class="cmt">// 패스 후 상태 출력</span>
+    <span class="kw">for</span> (<span class="kw">int</span> k = <span class="num">0</span>; k &lt; n; k++) <span class="fn">printf</span>(<span class="str">"%d "</span>, arr[k]);
+    <span class="fn">printf</span>(<span class="str">"\n"</span>);
+}</div>
+</div>
+
+<div class="page">
+  <h2>완성 코드 & 출력 예시</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/hard-drive.png" alt="저장소" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+  <div class="code">#<span class="kw">include</span> <span class="str">&lt;stdio.h&gt;</span>
+
+<span class="kw">void</span> <span class="fn">printArr</span>(<span class="kw">int</span> arr[], <span class="kw">int</span> n) {
+    <span class="kw">for</span> (<span class="kw">int</span> i=<span class="num">0</span>;i&lt;n;i++) <span class="fn">printf</span>(<span class="str">"%3d"</span>,arr[i]);
+    <span class="fn">printf</span>(<span class="str">"\n"</span>);
+}
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="kw">int</span> arr[] = {<span class="num">5</span>,<span class="num">3</span>,<span class="num">8</span>,<span class="num">1</span>,<span class="num">4</span>};
+    <span class="kw">int</span> n=<span class="num">5</span>, swapCnt=<span class="num">0</span>;
+
+    <span class="fn">printf</span>(<span class="str">"초기: "</span>); <span class="fn">printArr</span>(arr,n);
+
+    <span class="kw">for</span>(<span class="kw">int</span> i=<span class="num">0</span>;i&lt;n-<span class="num">1</span>;i++){
+        <span class="kw">for</span>(<span class="kw">int</span> j=<span class="num">0</span>;j&lt;n-<span class="num">1</span>-i;j++){
+            <span class="kw">if</span>(arr[j]&gt;arr[j+<span class="num">1</span>]){
+                <span class="kw">int</span> tmp=arr[j];arr[j]=arr[j+<span class="num">1</span>];arr[j+<span class="num">1</span>]=tmp;
+                swapCnt++;
+            }
+        }
+        <span class="fn">printf</span>(<span class="str">"패스%d: "</span>,i+<span class="num">1</span>); <span class="fn">printArr</span>(arr,n);
+    }
+    <span class="fn">printf</span>(<span class="str">"swap횟수: %d\n"</span>,swapCnt);
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+  <div style="text-align:center;margin:14px 0;">
+    <svg viewBox="0 0 460 110" style="max-width:460px;width:100%">
+      <rect x="10" y="8" width="440" height="98" rx="8" fill="#0f172a"/>
+      <text x="30" y="28" font-size="10" fill="#67e8f9" font-family="JetBrains Mono">초기:   5  3  8  1  4</text>
+      <text x="30" y="44" font-size="10" fill="#e2e8f0" font-family="JetBrains Mono">패스1:  3  5  1  4  8</text>
+      <text x="30" y="60" font-size="10" fill="#e2e8f0" font-family="JetBrains Mono">패스2:  3  1  4  5  8</text>
+      <text x="30" y="76" font-size="10" fill="#e2e8f0" font-family="JetBrains Mono">패스3:  1  3  4  5  8</text>
+      <text x="30" y="92" font-size="10" fill="#86efac" font-family="JetBrains Mono">패스4:  1  3  4  5  8   swap횟수: 5</text>
+    </svg>
+  </div>
+  <div class="practice">
+    <div class="practice-head">따라해보세요</div>
+    <div class="practice-body">
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="정렬" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+      <div class="practice-item">
+        <div class="practice-num">1</div>
+        <div class="practice-desc">내부 for에서 j &lt; n-1-i 인 이유를 생각해보세요. i가 증가할수록 뒤쪽은 이미 정렬됐으니 비교 불필요!</div>
+        <div class="practice-result">각 패스마다 비교 범위가 1씩 줄어 효율적</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+  <h2>연습 문제</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">1</div>
+      <div class="problem-label">내림차순 정렬</div>
+      <span class="problem-diff easy">쉬움</span>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">버블 정렬을 내림차순(큰 수가 앞)으로 수정하세요. 비교 조건 하나만 바꾸면 됩니다.</div>
+      <div class="problem-example">
+        <div class="problem-example-row"><span class="problem-example-label">결과</span><span class="problem-example-value">8 5 4 3 1</span></div>
+      </div>
+      <details class="problem-toggle">
+        <summary>정답 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="answer-code"><span class="kw">if</span>(arr[j] &lt; arr[j+<span class="num">1</span>]) { <span class="cmt">// &gt; → &lt; 로 변경</span>
+  <span class="kw">int</span> tmp=arr[j];arr[j]=arr[j+<span class="num">1</span>];arr[j+<span class="num">1</span>]=tmp;
+}</div>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">2</div>
+      <div class="problem-label">조기 종료 최적화</div>
+      <span class="problem-diff medium">중간</span>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">패스 중에 swap이 한 번도 없으면 이미 정렬된 것입니다. swapped 플래그를 사용해 조기 종료를 구현하세요.</div>
+      <div class="problem-example">
+        <div class="problem-example-row"><span class="problem-example-label">효과</span><span class="problem-example-value">이미 정렬된 배열: O(n)으로 처리</span></div>
+      </div>
+      <details class="problem-toggle">
+        <summary>힌트 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="hint-text">패스 시작 전 swapped=0, swap 발생 시 swapped=1. 패스 후 if(!swapped) break;</div>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">3</div>
+      <div class="problem-label">선택 정렬 구현</div>
+      <span class="problem-diff hard">어려움</span>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">버블 정렬 대신 선택 정렬(각 패스에서 최솟값을 찾아 맨 앞과 swap)을 구현하세요.</div>
+      <div class="problem-example">
+        <div class="problem-example-row"><span class="problem-example-label">패스1</span><span class="problem-example-value">최솟값 1을 찾아 arr[0]과 swap</span></div>
+        <div class="problem-example-row"><span class="problem-example-label">패스2</span><span class="problem-example-value">남은 중 최솟값 3을 찾아 arr[1]과 swap</span></div>
+      </div>
+      <details class="problem-toggle">
+        <summary>힌트 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="hint-text">for(i=0;i&lt;n-1;i++) { minIdx=i; for(j=i+1;j&lt;n;j++) if(arr[j]&lt;arr[minIdx]) minIdx=j; swap(arr[i],arr[minIdx]); }</div>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+    <h3>핵심 정리</h3>
+    <ul>
+      <li>버블 정렬: 인접 비교·교환, 외부 n-1 패스, 내부 n-1-i 비교</li>
+      <li>한 패스 후 가장 큰(작은) 값이 맨 끝(앞)으로 이동</li>
+      <li>시간복잡도: O(n²) — n이 커질수록 느려짐</li>
+      <li>swap 함수: tmp=a; a=b; b=tmp; 3단계</li>
+      <li>조기 종료: swapped 플래그로 최적화 가능</li>
+    </ul>
+  </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

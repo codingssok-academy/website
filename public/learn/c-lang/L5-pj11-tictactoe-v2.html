@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 틱택토 게임</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+.page { width: 210mm; min-height: 297mm; margin: 16px auto; padding: 18mm 20mm 15mm 22mm; background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: relative; page-break-after: always; }
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after { content: counter(pagenum); position: absolute; bottom: 10mm; right: 16mm; font-size: 10px; color: #94a3b8; font-weight: 600; }
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark { position: absolute; top: -10px; right: -15px; font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3); line-height: 1; pointer-events: none; }
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #2563eb; font-weight: 600; }
+.code { background: #0f172a; border-radius: 8px; padding: 16px 20px; font-family: 'JetBrains Mono', monospace; font-size: 14px; color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap; }
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fce7f3; color: #9d174d; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<div class="page cover">
+  <div class="cover-sidebar"></div>
+  <div class="cover-accent"></div>
+  <div class="cover-body">
+    <div class="cover-watermark">P11</div>
+    <div class="cover-label">Project 11 · Level 5</div>
+    <h1 class="cover-title">틱택토 게임</h1>
+    <p class="cover-sub">3×3 이차원 배열로 게임 보드를 만들고, O와 X가 번갈아 두며 가로·세로·대각선 승리를 판별하는 게임입니다.</p>
+    <div style="margin:24px 0;">
+      <svg viewBox="0 0 460 130" style="max-width:460px;width:100%">
+        <text x="130" y="16" text-anchor="middle" font-size="11" fill="#64748b" font-weight="600">게임 보드</text>
+        <!-- 보드 -->
+        <rect x="20" y="24" width="220" height="100" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+        <line x1="93" y1="30" x2="93" y2="118" stroke="#cbd5e1" stroke-width="2"/>
+        <line x1="167" y1="30" x2="167" y2="118" stroke="#cbd5e1" stroke-width="2"/>
+        <line x1="26" y1="57" x2="234" y2="57" stroke="#cbd5e1" stroke-width="2"/>
+        <line x1="26" y1="90" x2="234" y2="90" stroke="#cbd5e1" stroke-width="2"/>
+        <!-- O -->
+        <text x="57" y="50" text-anchor="middle" font-size="22" fill="#3b82f6" font-weight="900">O</text>
+        <text x="200" y="50" text-anchor="middle" font-size="22" fill="#3b82f6" font-weight="900">O</text>
+        <text x="130" y="82" text-anchor="middle" font-size="22" fill="#3b82f6" font-weight="900">O</text>
+        <!-- X -->
+        <text x="130" y="50" text-anchor="middle" font-size="22" fill="#ef4444" font-weight="900">X</text>
+        <text x="57" y="82" text-anchor="middle" font-size="22" fill="#ef4444" font-weight="900">X</text>
+        <!-- 승리선 -->
+        <line x1="200" y1="35" x2="57" y2="115" stroke="#f59e0b" stroke-width="3" stroke-dasharray="5,3"/>
+        <text x="270" y="55" font-size="11" fill="#374151" font-weight="700">배열 구조</text>
+        <rect x="270" y="62" width="170" height="55" rx="6" fill="#f1f5f9"/>
+        <text x="280" y="80" font-size="9" fill="#374151" font-family="JetBrains Mono">board[3][3]:</text>
+        <text x="280" y="96" font-size="9" fill="#3b82f6" font-family="JetBrains Mono">'O' ' ' 'X'</text>
+        <text x="280" y="110" font-size="9" fill="#374151" font-family="JetBrains Mono">'X' 'O' ' '</text>
+      </svg>
+    </div>
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/gamepad.png" alt="게임" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+      <h3>이 프로젝트에서 배우는 것</h3>
+      <ul>
+        <li>2차원 char 배열로 게임 보드를 표현합니다.</li>
+        <li>가로·세로·대각선 승리 조건을 판별합니다.</li>
+        <li>while 반복문으로 게임 루프를 구현합니다.</li>
+        <li>입력 유효성 검사(이미 채워진 칸 체크)를 합니다.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+  <h2>보드 초기화와 출력</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="우승" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+  <p>3×3 char 배열을 '.'으로 초기화합니다. 행과 열을 구분하는 선을 함께 출력합니다.</p>
+  <div class="code"><span class="kw">char</span> board[<span class="num">3</span>][<span class="num">3</span>];
+
+<span class="cmt">// 초기화: 전체를 '.'으로</span>
+<span class="kw">for</span> (<span class="kw">int</span> r=<span class="num">0</span>;r&lt;<span class="num">3</span>;r++)
+    <span class="kw">for</span> (<span class="kw">int</span> c=<span class="num">0</span>;c&lt;<span class="num">3</span>;c++)
+        board[r][c] = <span class="str">'.'</span>;
+
+<span class="cmt">// 보드 출력 함수</span>
+<span class="kw">void</span> <span class="fn">printBoard</span>(<span class="kw">char</span> b[<span class="num">3</span>][<span class="num">3</span>]) {
+    <span class="fn">printf</span>(<span class="str">"\n"</span>);
+    <span class="kw">for</span> (<span class="kw">int</span> r=<span class="num">0</span>;r&lt;<span class="num">3</span>;r++) {
+        <span class="fn">printf</span>(<span class="str">" %c | %c | %c\n"</span>, b[r][<span class="num">0</span>],b[r][<span class="num">1</span>],b[r][<span class="num">2</span>]);
+        <span class="kw">if</span> (r&lt;<span class="num">2</span>) <span class="fn">printf</span>(<span class="str">"---+---+---\n"</span>);
+    }
+    <span class="fn">printf</span>(<span class="str">"\n"</span>);
+}</div>
+  <h2>승리 판별 함수</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/flowchart.png" alt="게임 흐름" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+  <p>가로 3줄, 세로 3줄, 대각선 2줄 총 8가지 경우를 확인합니다.</p>
+  <div style="text-align:center;margin:14px 0;">
+    <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+      <text x="230" y="16" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="800">승리 조건 8가지</text>
+      <rect x="10" y="24" width="130" height="50" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+      <text x="75" y="40" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">가로 (3가지)</text>
+      <text x="75" y="56" text-anchor="middle" font-size="9" fill="#374151">board[r][0]==board[r][1]</text>
+      <text x="75" y="68" text-anchor="middle" font-size="9" fill="#374151">== board[r][2] != '.'</text>
+      <rect x="155" y="24" width="130" height="50" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+      <text x="220" y="40" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">세로 (3가지)</text>
+      <text x="220" y="56" text-anchor="middle" font-size="9" fill="#374151">board[0][c]==board[1][c]</text>
+      <text x="220" y="68" text-anchor="middle" font-size="9" fill="#374151">== board[2][c] != '.'</text>
+      <rect x="300" y="24" width="150" height="50" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+      <text x="375" y="40" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">대각선 (2가지)</text>
+      <text x="375" y="56" text-anchor="middle" font-size="9" fill="#374151">좌상→우하, 우상→좌하</text>
+      <text x="375" y="68" text-anchor="middle" font-size="9" fill="#374151">board[0][0],[1][1],[2][2]</text>
+    </svg>
+  </div>
+  <div class="code"><span class="kw">int</span> <span class="fn">checkWin</span>(<span class="kw">char</span> b[<span class="num">3</span>][<span class="num">3</span>], <span class="kw">char</span> p) {
+    <span class="kw">for</span> (<span class="kw">int</span> i=<span class="num">0</span>;i&lt;<span class="num">3</span>;i++) {
+        <span class="kw">if</span>(b[i][<span class="num">0</span>]==p&amp;&amp;b[i][<span class="num">1</span>]==p&amp;&amp;b[i][<span class="num">2</span>]==p) <span class="kw">return</span> <span class="num">1</span>; <span class="cmt">// 가로</span>
+        <span class="kw">if</span>(b[<span class="num">0</span>][i]==p&amp;&amp;b[<span class="num">1</span>][i]==p&amp;&amp;b[<span class="num">2</span>][i]==p) <span class="kw">return</span> <span class="num">1</span>; <span class="cmt">// 세로</span>
+    }
+    <span class="kw">if</span>(b[<span class="num">0</span>][<span class="num">0</span>]==p&amp;&amp;b[<span class="num">1</span>][<span class="num">1</span>]==p&amp;&amp;b[<span class="num">2</span>][<span class="num">2</span>]==p) <span class="kw">return</span> <span class="num">1</span>; <span class="cmt">// 대각선</span>
+    <span class="kw">if</span>(b[<span class="num">0</span>][<span class="num">2</span>]==p&amp;&amp;b[<span class="num">1</span>][<span class="num">1</span>]==p&amp;&amp;b[<span class="num">2</span>][<span class="num">0</span>]==p) <span class="kw">return</span> <span class="num">1</span>;
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+</div>
+
+<div class="page">
+  <h2>게임 루프 완성</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+  <div class="code">#<span class="kw">include</span> <span class="str">&lt;stdio.h&gt;</span>
+
+<span class="kw">char</span> board[<span class="num">3</span>][<span class="num">3</span>];
+
+<span class="kw">void</span> <span class="fn">initBoard</span>() {
+    <span class="kw">for</span>(<span class="kw">int</span> r=<span class="num">0</span>;r&lt;<span class="num">3</span>;r++)
+      <span class="kw">for</span>(<span class="kw">int</span> c=<span class="num">0</span>;c&lt;<span class="num">3</span>;c++) board[r][c]=<span class="str">'.'</span>;
+}
+<span class="kw">void</span> <span class="fn">printBoard</span>() {
+    <span class="kw">for</span>(<span class="kw">int</span> r=<span class="num">0</span>;r&lt;<span class="num">3</span>;r++){
+      <span class="fn">printf</span>(<span class="str">" %c|%c|%c\n"</span>,board[r][<span class="num">0</span>],board[r][<span class="num">1</span>],board[r][<span class="num">2</span>]);
+      <span class="kw">if</span>(r&lt;<span class="num">2</span>) <span class="fn">printf</span>(<span class="str">"-+-+-\n"</span>);
+    }
+}
+<span class="kw">int</span> <span class="fn">checkWin</span>(<span class="kw">char</span> p) {
+    <span class="kw">for</span>(<span class="kw">int</span> i=<span class="num">0</span>;i&lt;<span class="num">3</span>;i++){
+      <span class="kw">if</span>(board[i][<span class="num">0</span>]==p&amp;&amp;board[i][<span class="num">1</span>]==p&amp;&amp;board[i][<span class="num">2</span>]==p)<span class="kw">return</span> <span class="num">1</span>;
+      <span class="kw">if</span>(board[<span class="num">0</span>][i]==p&amp;&amp;board[<span class="num">1</span>][i]==p&amp;&amp;board[<span class="num">2</span>][i]==p)<span class="kw">return</span> <span class="num">1</span>;
+    }
+    <span class="kw">if</span>(board[<span class="num">0</span>][<span class="num">0</span>]==p&amp;&amp;board[<span class="num">1</span>][<span class="num">1</span>]==p&amp;&amp;board[<span class="num">2</span>][<span class="num">2</span>]==p)<span class="kw">return</span> <span class="num">1</span>;
+    <span class="kw">if</span>(board[<span class="num">0</span>][<span class="num">2</span>]==p&amp;&amp;board[<span class="num">1</span>][<span class="num">1</span>]==p&amp;&amp;board[<span class="num">2</span>][<span class="num">0</span>]==p)<span class="kw">return</span> <span class="num">1</span>;
+    <span class="kw">return</span> <span class="num">0</span>;
+}
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="fn">initBoard</span>();
+    <span class="kw">char</span> turn=<span class="str">'O'</span>;
+    <span class="kw">for</span>(<span class="kw">int</span> move=<span class="num">0</span>;move&lt;<span class="num">9</span>;move++){
+      <span class="fn">printBoard</span>();
+      <span class="kw">int</span> r,c;
+      <span class="fn">printf</span>(<span class="str">"%c 차례 (행 열): "</span>,turn);
+      <span class="fn">scanf</span>(<span class="str">"%d %d"</span>,&amp;r,&amp;c);
+      <span class="kw">if</span>(board[r][c]!=<span class="str">'.'</span>){move--;continue;}
+      board[r][c]=turn;
+      <span class="kw">if</span>(<span class="fn">checkWin</span>(turn)){<span class="fn">printBoard</span>();<span class="fn">printf</span>(<span class="str">"%c 승리!\n"</span>,turn);<span class="kw">return</span> <span class="num">0</span>;}
+      turn=(turn==<span class="str">'O'</span>)?<span class="str">'X'</span>:<span class="str">'O'</span>;
+    }
+    <span class="fn">printBoard</span>(); <span class="fn">printf</span>(<span class="str">"무승부!\n"</span>);
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+</div>
+
+<div class="page">
+  <h2>연습 문제</h2>
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">1</div>
+      <div class="problem-label">남은 빈칸 개수 출력</div>
+      <span class="problem-diff easy">쉬움</span>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">매 턴마다 보드에 남은 빈칸('.')이 몇 개인지 출력하는 코드를 추가하세요.</div>
+      <div class="problem-example">
+        <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">남은 빈칸: 7개</span></div>
+      </div>
+      <details class="problem-toggle">
+        <summary>정답 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="answer-code"><span class="kw">int</span> empty=<span class="num">0</span>;
+<span class="kw">for</span>(<span class="kw">int</span> r=<span class="num">0</span>;r&lt;<span class="num">3</span>;r++)
+  <span class="kw">for</span>(<span class="kw">int</span> c=<span class="num">0</span>;c&lt;<span class="num">3</span>;c++)
+    <span class="kw">if</span>(board[r][c]==<span class="str">'.'</span>) empty++;
+<span class="fn">printf</span>(<span class="str">"빈칸: %d개\n"</span>,empty);</div>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">2</div>
+      <div class="problem-label">입력 범위 체크</div>
+      <span class="problem-diff medium">중간</span>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">행·열 입력이 0~2 범위를 벗어나면 "잘못된 위치" 메시지를 출력하고 다시 입력받으세요.</div>
+      <div class="problem-example">
+        <div class="problem-example-row"><span class="problem-example-label">입력</span><span class="problem-example-value">3 0 → "잘못된 위치!"</span></div>
+      </div>
+      <details class="problem-toggle">
+        <summary>힌트 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="hint-text">if(r&lt;0 || r&gt;2 || c&lt;0 || c&gt;2) { printf("잘못된 위치!\n"); move--; continue; }</div>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">3</div>
+      <div class="problem-label">연속 게임 (다시하기)</div>
+      <span class="problem-diff hard">어려움</span>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">게임이 끝난 후 "다시 하시겠습니까? (1=예/0=아니오)"를 묻고, 1이면 보드를 초기화해 다시 시작하도록 구현하세요.</div>
+      <div class="problem-example">
+        <div class="problem-example-row"><span class="problem-example-label">구현</span><span class="problem-example-value">전체를 while(replay) 루프로 감싸기</span></div>
+      </div>
+      <details class="problem-toggle">
+        <summary>힌트 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="hint-text">int replay=1; while(replay) { initBoard(); ...(게임)...; scanf("%d",&amp;replay); }</div>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+    <h3>핵심 정리</h3>
+    <ul>
+      <li>2차원 char 배열: board[3][3], '.'=빈칸, 'O'/'X'=플레이어</li>
+      <li>승리 조건: 가로 3 + 세로 3 + 대각선 2 = 총 8가지</li>
+      <li>턴 교체: <code>turn = (turn=='O') ? 'X' : 'O'</code></li>
+      <li>무승부: 9칸 모두 차고 승자가 없을 때</li>
+      <li>입력 유효성: 범위 체크 + 빈칸 체크 동시에</li>
+    </ul>
+  </div>
+</div>
+
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/lightbulb.png" alt="아이디어" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/database.png" alt="데이터베이스" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

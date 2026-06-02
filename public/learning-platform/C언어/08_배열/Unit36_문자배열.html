@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Unit 36. 문자 배열과 문자열 — C 언어 코딩 도장</title>
+    <link rel="stylesheet" href="../common.css">
+</head>
+
+<body>
+    <div class="wrap">
+        <div class="hdr">
+            <h1>Unit 36. 문자 배열과 문자열</h1>
+            <div class="sub">char[] · "문자열" · \0 · 입출력</div>
+            <span class="unit-badge">Chapter 08 · 배열</span>
+            <div class="level-bar"><span class="on"></span><span class="on"></span><span></span></div>
+            <div class="meta"><span class="tag pri">🖥️ C언어</span><span class="tag acc">📝 15문제</span><span
+                    class="tag">⏱ 25~35분</span></div>
+        </div>
+        <div class="stu-bar"><label>👤 이름 <input type="text" id="stu-name" placeholder="이름"></label><label>📅 날짜 <input
+                    type="date" id="stu-date"></label></div>
+        <div class="learn">
+            <h2><span class="ico" style="background:rgba(236,72,153,.15)">📝</span> C의 문자열 = char 배열 + '\0'</h2>
+            <p>C에는 string 타입이 없다! 문자 배열 끝에 <strong>널 문자('\0')</strong>를 붙여서 문자열을 표현.</p>
+        </div>
+        <div id="problems"></div>
+        <div class="submit-section">
+            <p>모든 문제를 풀었나요? 📨</p><button class="btn-submit" id="btn-submit">📄 제출하기</button>
+        </div>
+        <div class="modal-overlay" id="submit-modal">
+            <div class="modal-box">
+                <div class="modal-icon">✅</div>
+                <h3>제출 완료!</h3>
+                <p>학습지가 저장되었습니다.</p>
+                <div style="margin:12px 0"><span class="info-tag" id="modal-name"></span> <span class="info-tag"
+                        id="modal-date"></span> <span class="info-tag" id="modal-count"></span></div>
+                <p style="font-size:.78rem;color:var(--dim)">📁 <strong id="modal-filename"></strong></p><button
+                    class="btn-close-modal" id="btn-close-modal">확인</button>
+            </div>
+        </div>
+        <div class="pg"><a href="Unit35_2차원배열.html">← Unit 35</a><span class="tag active">Unit 36</span><a
+                href="../09_문자열/Unit37_문자열함수.html">Unit 37 →</a></div>
+        <div class="ft">🖥️ C 언어 코딩 도장 · Unit 36 · 문자 배열</div>
+    </div>
+    <script>
+        const P = [
+            {
+                n: 1, t: "문자열 = char[] + \\0", d: 1,
+                q: `두 가지 초기화 방법의 배열 크기를 쓰세요.<pre class="code-c">char a[] = {'H','e','l','l','o','\\0'};
+char b[] = "Hello";</pre>`,
+                a: `<span class="key">정답</span><div class="trace">a의 크기: <span class="val">6</span> (5글자 + \\0)<br>b의 크기: <span class="val">6</span> (동일!)<br><br>"Hello"는 자동으로 \\0 추가!</div>`
+            },
+
+            {
+                n: 2, t: "\\0의 중요성", d: 2,
+                q: `\\0 없이 문자 배열을 만들면?<pre class="code-c">char bad[5] = {'H','e','l','l','o'};
+printf("%s\\n", bad);  <span class="cm">// ???</span></pre>`,
+                a: `<span class="key">정답</span><div class="trace"><span class="err">정의되지 않은 동작!</span><br>%s는 \\0을 만날 때까지 출력 → 쓰레기값 출력<br>반드시 \\0으로 끝나야 문자열!</div>`
+            },
+
+            {
+                n: 3, t: "문자열 출력", d: 1,
+                q: `여러 가지 문자열 출력 방법을 쓰세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">char str[] = "Hello";
+printf("%s\\n", str);  <span class="cm">// printf</span>
+puts(str);            <span class="cm">// puts (자동 줄바꿈)</span>
+for (int i = 0; str[i] != '\\0'; i++)
+    putchar(str[i]);  <span class="cm">// 한 글자씩</span></pre>`},
+
+            {
+                n: 4, t: "문자열 입력: scanf", d: 2,
+                q: `scanf로 문자열을 입력받으세요.<pre class="code-c">char name[20];
+scanf("%s", name);  <span class="cm">// &가 필요 없다!</span></pre>`,
+                a: `<span class="key">정답</span><div class="trace">배열 이름 자체가 주소이므로 <span class="val">& 불필요!</span><br><br><span class="err">주의: scanf %s는 공백에서 끊김!</span><br>"Hong Gil" 입력 → name="Hong"만 저장</div>`
+            },
+
+            {
+                n: 5, t: "fgets로 공백 포함 입력", d: 2,
+                q: `공백을 포함한 문자열을 입력받으세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">char line[100];
+fgets(line, 100, stdin);
+<span class="cm">// "Hong Gil" 전체 입력 가능!</span>
+<span class="cm">// 주의: 줄바꿈(\\n)도 포함될 수 있음</span></pre>`},
+
+            {
+                n: 6, t: "문자열 길이 구하기", d: 2,
+                q: `반복문으로 문자열 길이를 구하세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">char str[] = "Hello";
+int len = 0;
+while (str[len] != '\\0')
+    len++;
+printf("길이: %d\\n", len); <span class="cm">// 5</span>
+<span class="cm">// 또는: strlen(str) 사용 (&lt;string.h&gt;)</span></pre>`},
+
+            {
+                n: 7, t: "문자열 복사", d: 2,
+                q: `반복문으로 문자열을 복사하세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">char src[] = "Hello";
+char dst[20];
+int i = 0;
+while (src[i] != '\\0') {
+    dst[i] = src[i];
+    i++;
+}
+dst[i] = '\\0';  <span class="cm">// 널 문자 꼭 복사!</span>
+<span class="cm">// 또는: strcpy(dst, src);</span></pre>`},
+
+            {
+                n: 8, t: "문자열 비교", d: 2,
+                q: `두 문자열이 같은지 비교하세요.<pre class="code-c">char a[] = "Hello";
+char b[] = "Hello";
+if (a == b)  <span class="cm">// 이건 안 됩니다!</span>
+    printf("같다");</pre>`,
+                a: `<span class="key">정답</span><div class="trace"><span class="err">a == b 는 주소 비교!</span> 내용 비교 아님!<br><br>올바른 방법:</div><pre class="code-c">#include &lt;string.h&gt;
+if (strcmp(a, b) == 0)
+    printf("같다\\n");</pre><div class="trace">strcmp: 같으면 0, 다르면 1 또는 -1</div>`},
+
+            {
+                n: 9, t: "문자열 연결", d: 2,
+                q: `두 문자열을 연결하세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">char a[20] = "Hello";
+char b[] = " World";
+<span class="cm">// 직접 구현:</span>
+int i = 0, j = 0;
+while (a[i]) i++;         <span class="cm">// a의 끝 찾기</span>
+while (b[j]) a[i++] = b[j++]; <span class="cm">// b를 이어붙이기</span>
+a[i] = '\\0';
+<span class="cm">// 또는: strcat(a, b);</span>
+printf("%s\\n", a); <span class="cm">// "Hello World"</span></pre>`},
+
+            {
+                n: 10, t: "문자열 뒤집기", d: 2,
+                q: `문자열을 뒤집어 출력하세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">char str[] = "Hello";
+int len = strlen(str);
+for (int i = 0; i < len/2; i++) {
+    char t = str[i];
+    str[i] = str[len-1-i];
+    str[len-1-i] = t;
+}
+printf("%s\\n", str); <span class="cm">// "olleH"</span></pre>`},
+
+            {
+                n: 11, t: "심사: 대문자 변환", d: 2,
+                q: `문자열의 소문자를 모두 대문자로 변환하세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">char str[] = "Hello World";
+for (int i = 0; str[i]; i++)
+    if (str[i] >= 'a' && str[i] <= 'z')
+        str[i] -= 32;
+printf("%s\\n", str); <span class="cm">// "HELLO WORLD"</span></pre>`},
+
+            {
+                n: 12, t: "심사: 모음 세기", d: 2,
+                q: `문자열에서 모음(a,e,i,o,u) 개수를 세세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">char str[] = "Hello World";
+int count = 0;
+for (int i = 0; str[i]; i++) {
+    char c = str[i];
+    if (c>='A'&&c<='Z') c+=32;
+    if (c=='a'||c=='e'||c=='i'||c=='o'||c=='u')
+        count++;
+}
+printf("모음: %d개\\n", count); <span class="cm">// 3</span></pre>`},
+
+            {
+                n: 13, t: "심사: 단어 수 세기", d: 3,
+                q: `문장에서 단어 수를 세세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">char str[] = "Hello World foo bar";
+int words = 0, inWord = 0;
+for (int i = 0; str[i]; i++) {
+    if (str[i] != ' ' && !inWord) {
+        words++; inWord = 1;
+    } else if (str[i] == ' ') inWord = 0;
+}
+printf("단어: %d개\\n", words); <span class="cm">// 4</span></pre>`},
+
+            {
+                n: 14, t: "심사: 팰린드롬 검사", d: 3,
+                q: `문자열이 팰린드롬(앞뒤 같은 단어)인지 확인하세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">char str[] = "level";
+int len = strlen(str), ok = 1;
+for (int i = 0; i < len/2; i++)
+    if (str[i] != str[len-1-i]) { ok=0; break; }
+printf("%s\\n", ok ? "팰린드롬!" : "아님");</pre>`},
+
+            {
+                n: 15, t: "🏆 Unit 36 종합", d: 3,
+                q: `문자열에서 각 알파벳의 빈도를 세세요.<pre class="code-c">char str[] = "banana";
+int freq[26] = {0};
+for (int i = 0; str[i]; i++)
+    if (str[i]>='a' && str[i]<='z')
+        freq[str[i]-'a']++;
+for (int i = 0; i < 26; i++)
+    if (freq[i] > 0)
+        printf("%c: %d\\n", 'a'+i, freq[i]);</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">a: 3<br>b: 1<br>n: 2</div><div class="trace">str[i]-'a' → 알파벳을 0~25 인덱스로!<br>카운팅 배열 패턴의 응용!</div>`
+            }
+        ];
+        const c = document.getElementById('problems'); P.forEach(p => { const dc = p.d <= 1 ? 'ez' : p.d <= 2 ? 'md' : 'hd'; const dots = Array.from({ length: 5 }, (_, i) => `<span${i < p.d ? ' class="on"' : ''}>​</span>`).join(''); c.innerHTML += `<div class="prob"><div class="prob-top"><div class="prob-num ${dc}">${p.n}</div><div class="prob-title">${p.t}</div><div class="diff-dots">${dots}</div></div><div class="prob-body"><div class="q">${p.q}</div><textarea class="write" placeholder="✍️ 답을 작성하세요"></textarea><details class="ans"><summary>정답 및 해설 보기</summary><div class="ans-body">${p.a}</div></details></div></div>`; });
+    </script>
+    <script src="../submit.js"></script>
+    <script src="../../platform.js"></script>
+</body>
+
+</html>

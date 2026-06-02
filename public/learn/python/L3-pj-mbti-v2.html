@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 프로젝트: MBTI 테스트 만들기</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #7c3aed; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 220px; font-weight: 900; color: rgba(180,150,230,0.2);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #7c3aed; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 36px; font-weight: 900; color: #4c1d95; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #4c1d95; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #7c3aed; font-weight: 900; }
+
+h2 { font-size: 20px; font-weight: 800; color: #4c1d95; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 16px; font-weight: 700; color: #4c1d95; margin: 18px 0 10px; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #7c3aed; font-weight: 600;
+}
+ul, ol { margin: 0 0 12px 20px; }
+li { font-size: 14px; color: #374151; line-height: 1.8; }
+
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13.5px;
+    color: #e2e8f0; line-height: 1.85; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.code .dec { color: #f9a8d4; }
+
+.practice { margin: 20px 0; border-left: 4px solid #7c3aed; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #5b21b6; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #7c3aed; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #7c3aed; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#7c3aed,#a855f7); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #5b21b6; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #4c1d95; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+.step-box { border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 14px 18px; margin: 14px 0; background: #fff; }
+.step-label { font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+.step-title { font-size: 15px; font-weight: 800; color: #4c1d95; margin-bottom: 8px; }
+
+.output-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #334155; line-height: 1.7; margin: 10px 0; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- ===== 1페이지: 표지 ===== -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">MBTI</div>
+        <div class="cover-label">L3 — Project</div>
+        <h1 class="cover-title">프로젝트:<br>MBTI 테스트 만들기</h1>
+        <p class="cover-sub">딕셔너리, 리스트, 조건문, 함수를 조합해 실제 MBTI 테스트처럼 작동하는 파이썬 프로그램을 만듭니다. 질문에 답하면 E/I, S/N, T/F, J/P를 자동으로 계산해 16가지 유형 중 하나를 출력합니다.</p>
+
+        <!-- SVG: MBTI 4축 구조 -->
+        <div style="margin:24px 0;">
+            <svg viewBox="0 0 480 140" style="max-width:480px;width:100%">
+                <defs>
+                    <marker id="arwCov" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                    </marker>
+                </defs>
+                <!-- 중앙 결과 박스 -->
+                <rect x="160" y="50" width="160" height="44" rx="8" fill="#4c1d95"/>
+                <text x="240" y="69" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">MBTI 결과</text>
+                <text x="240" y="84" text-anchor="middle" font-size="9" fill="#c4b5fd">ENFJ, ISTP, ... (16가지)</text>
+                <!-- E/I -->
+                <rect x="5" y="8" width="110" height="34" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+                <text x="60" y="22" text-anchor="middle" font-size="9" fill="#5b21b6" font-weight="700">E(외향) / I(내향)</text>
+                <text x="60" y="34" text-anchor="middle" font-size="8" fill="#64748b">에너지 방향</text>
+                <line x1="115" y1="25" x2="157" y2="62" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+                <!-- S/N -->
+                <rect x="365" y="8" width="110" height="34" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="420" y="22" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">S(감각) / N(직관)</text>
+                <text x="420" y="34" text-anchor="middle" font-size="8" fill="#64748b">정보 수집 방식</text>
+                <line x1="365" y1="25" x2="323" y2="62" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+                <!-- T/F -->
+                <rect x="5" y="98" width="110" height="34" rx="6" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="60" y="112" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">T(사고) / F(감정)</text>
+                <text x="60" y="124" text-anchor="middle" font-size="8" fill="#64748b">의사결정 방식</text>
+                <line x1="115" y1="115" x2="157" y2="82" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+                <!-- J/P -->
+                <rect x="365" y="98" width="110" height="34" rx="6" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="420" y="112" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">J(판단) / P(인식)</text>
+                <text x="420" y="124" text-anchor="middle" font-size="8" fill="#64748b">생활 방식</text>
+                <line x1="365" y1="115" x2="323" y2="82" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/gamepad.png" alt="게임" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 유닛에서 만드는 것</h3>
+            <ul>
+                <li>질문 리스트와 딕셔너리로 MBTI 질문 데이터를 구조화할 수 있습니다.</li>
+                <li><code>input()</code>으로 사용자 답변을 받아 E/I, S/N, T/F, J/P 점수를 누적할 수 있습니다.</li>
+                <li>조건문으로 4개 축의 최종 유형 문자를 결정할 수 있습니다.</li>
+                <li>문자열 결합으로 16가지 MBTI 코드를 만들 수 있습니다.</li>
+                <li>딕셔너리로 16가지 유형별 설명을 저장하고 조회할 수 있습니다.</li>
+                <li>함수로 각 단계를 분리해 <code>mbti_test.py</code>를 완성할 수 있습니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- ===== 2페이지: 데이터 구조 설계 + Step 1 ===== -->
+<div class="page">
+    <h2>Step 1 — 질문 데이터 설계</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="우승" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>MBTI 테스트의 핵심은 <strong>질문 데이터를 어떻게 저장하느냐</strong>입니다. 각 질문은 어떤 축(E/I, S/N, T/F, J/P)을 측정하는지, 어떤 답변이 어떤 유형을 가리키는지를 함께 저장해야 합니다.</p>
+
+    <!-- SVG: 질문 딕셔너리 구조 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 110" style="max-width:460px;width:100%">
+            <!-- 딕셔너리 박스 -->
+            <rect x="5" y="10" width="450" height="90" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="28" text-anchor="middle" font-size="10" fill="#4c1d95" font-weight="800">questions 리스트 구조</text>
+            <!-- key: text -->
+            <rect x="20" y="38" width="80" height="28" rx="5" fill="#ede9fe" stroke="#7c3aed" stroke-width="1"/>
+            <text x="60" y="52" text-anchor="middle" font-size="9" fill="#5b21b6" font-weight="700">"text"</text>
+            <text x="60" y="63" text-anchor="middle" font-size="8" fill="#64748b">질문 문장</text>
+            <!-- key: axis -->
+            <rect x="115" y="38" width="80" height="28" rx="5" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+            <text x="155" y="52" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">"axis"</text>
+            <text x="155" y="63" text-anchor="middle" font-size="8" fill="#64748b">측정 축 (EI/SN/TF/JP)</text>
+            <!-- key: a_type -->
+            <rect x="210" y="38" width="80" height="28" rx="5" fill="#dcfce7" stroke="#22c55e" stroke-width="1"/>
+            <text x="250" y="52" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">"a_type"</text>
+            <text x="250" y="63" text-anchor="middle" font-size="8" fill="#64748b">a 선택 시 유형</text>
+            <!-- key: b_type -->
+            <rect x="305" y="38" width="80" height="28" rx="5" fill="#eff6ff" stroke="#3b82f6" stroke-width="1"/>
+            <text x="345" y="52" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">"b_type"</text>
+            <text x="345" y="63" text-anchor="middle" font-size="8" fill="#64748b">b 선택 시 유형</text>
+            <!-- 예시 -->
+            <text x="230" y="90" text-anchor="middle" font-size="8" fill="#94a3b8">예: axis="EI", a_type="E", b_type="I"</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># mbti_test.py — Step 1: 질문 데이터 정의</span>
+
+questions = [
+    {
+        <span class="str">"text"</span>: <span class="str">"파티에서 에너지가 충전된다 vs 혼자 있을 때 충전된다"</span>,
+        <span class="str">"axis"</span>: <span class="str">"EI"</span>,
+        <span class="str">"a_type"</span>: <span class="str">"E"</span>,
+        <span class="str">"b_type"</span>: <span class="str">"I"</span>
+    },
+    {
+        <span class="str">"text"</span>: <span class="str">"사실과 경험을 믿는다 vs 가능성과 상상을 믿는다"</span>,
+        <span class="str">"axis"</span>: <span class="str">"SN"</span>,
+        <span class="str">"a_type"</span>: <span class="str">"S"</span>,
+        <span class="str">"b_type"</span>: <span class="str">"N"</span>
+    },
+    {
+        <span class="str">"text"</span>: <span class="str">"논리적으로 판단한다 vs 감정으로 판단한다"</span>,
+        <span class="str">"axis"</span>: <span class="str">"TF"</span>,
+        <span class="str">"a_type"</span>: <span class="str">"T"</span>,
+        <span class="str">"b_type"</span>: <span class="str">"F"</span>
+    },
+    {
+        <span class="str">"text"</span>: <span class="str">"계획을 세우는 게 편하다 vs 즉흥적인 게 편하다"</span>,
+        <span class="str">"axis"</span>: <span class="str">"JP"</span>,
+        <span class="str">"a_type"</span>: <span class="str">"J"</span>,
+        <span class="str">"b_type"</span>: <span class="str">"P"</span>
+    },
+]
+
+<span class="fn">print</span>(<span class="str">f"총 {len(questions)}개 질문 로드됨"</span>)</div>
+
+    <h3>점수 딕셔너리 초기화</h3>
+    <p>4개 축 각각에서 두 유형 중 어느 쪽이 더 많이 나왔는지 세기 위해 딕셔너리로 카운터를 만듭니다.</p>
+
+    <!-- SVG: 질문 하나 구조 상세도 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+            <rect x="5" y="5" width="450" height="70" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="22" text-anchor="middle" font-size="10" fill="#4c1d95" font-weight="800">질문 딕셔너리 구조 상세</text>
+            <rect x="20" y="30" width="95" height="36" rx="5" fill="#ede9fe" stroke="#7c3aed" stroke-width="1"/>
+            <text x="68" y="46" text-anchor="middle" font-size="8" fill="#5b21b6" font-weight="700">"text": "파티에서..."</text>
+            <text x="68" y="58" text-anchor="middle" font-size="7" fill="#64748b">질문 내용</text>
+            <rect x="128" y="30" width="70" height="36" rx="5" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+            <text x="163" y="46" text-anchor="middle" font-size="8" fill="#92400e" font-weight="700">"axis": "EI"</text>
+            <text x="163" y="58" text-anchor="middle" font-size="7" fill="#64748b">측정 축</text>
+            <rect x="210" y="30" width="100" height="36" rx="5" fill="#dcfce7" stroke="#22c55e" stroke-width="1"/>
+            <text x="260" y="46" text-anchor="middle" font-size="8" fill="#166534" font-weight="700">"a_type": "E"</text>
+            <text x="260" y="58" text-anchor="middle" font-size="7" fill="#64748b">a 선택 결과</text>
+            <rect x="323" y="30" width="100" height="36" rx="5" fill="#eff6ff" stroke="#3b82f6" stroke-width="1"/>
+            <text x="373" y="46" text-anchor="middle" font-size="8" fill="#1d4ed8" font-weight="700">"b_type": "I"</text>
+            <text x="373" y="58" text-anchor="middle" font-size="7" fill="#64748b">b 선택 결과</text>
+        </svg>
+    </div>
+
+    <!-- SVG: 점수 딕셔너리 초기 상태 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 460 60" style="max-width:460px;width:100%">
+            <rect x="5" y="8" width="450" height="44" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="24" text-anchor="middle" font-size="9" fill="#4c1d95" font-weight="700">scores = {"E":0,"I":0,"S":0,"N":0,"T":0,"F":0,"J":0,"P":0}</text>
+            <!-- 각 키 색상 표시 -->
+            <rect x="20" y="32" width="28" height="14" rx="3" fill="#ede9fe"/>
+            <text x="34" y="43" text-anchor="middle" font-size="8" fill="#5b21b6">E:0</text>
+            <rect x="54" y="32" width="28" height="14" rx="3" fill="#ede9fe"/>
+            <text x="68" y="43" text-anchor="middle" font-size="8" fill="#5b21b6">I:0</text>
+            <rect x="98" y="32" width="28" height="14" rx="3" fill="#fef3c7"/>
+            <text x="112" y="43" text-anchor="middle" font-size="8" fill="#92400e">S:0</text>
+            <rect x="132" y="32" width="28" height="14" rx="3" fill="#fef3c7"/>
+            <text x="146" y="43" text-anchor="middle" font-size="8" fill="#92400e">N:0</text>
+            <rect x="176" y="32" width="28" height="14" rx="3" fill="#dcfce7"/>
+            <text x="190" y="43" text-anchor="middle" font-size="8" fill="#166534">T:0</text>
+            <rect x="210" y="32" width="28" height="14" rx="3" fill="#dcfce7"/>
+            <text x="224" y="43" text-anchor="middle" font-size="8" fill="#166534">F:0</text>
+            <rect x="254" y="32" width="28" height="14" rx="3" fill="#eff6ff"/>
+            <text x="268" y="43" text-anchor="middle" font-size="8" fill="#1d4ed8">J:0</text>
+            <rect x="288" y="32" width="28" height="14" rx="3" fill="#eff6ff"/>
+            <text x="302" y="43" text-anchor="middle" font-size="8" fill="#1d4ed8">P:0</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># 점수 카운터 초기화</span>
+scores = {
+    <span class="str">"E"</span>: <span class="num">0</span>, <span class="str">"I"</span>: <span class="num">0</span>,
+    <span class="str">"S"</span>: <span class="num">0</span>, <span class="str">"N"</span>: <span class="num">0</span>,
+    <span class="str">"T"</span>: <span class="num">0</span>, <span class="str">"F"</span>: <span class="num">0</span>,
+    <span class="str">"J"</span>: <span class="num">0</span>, <span class="str">"P"</span>: <span class="num">0</span>
+}</div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+        <div class="practice-head">따라해보세요 — Step 1</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">questions 리스트를 입력하고 첫 번째 질문의 "text"를 출력하세요.</div>
+                <div class="code"><span class="fn">print</span>(questions[<span class="num">0</span>][<span class="str">"text"</span>])</div>
+                <div class="practice-result">파티에서 에너지가 충전된다 vs 혼자 있을 때 충전된다</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">for 문으로 모든 질문의 axis 값만 출력하세요.</div>
+                <div class="code"><span class="kw">for</span> q <span class="kw">in</span> questions:
+    <span class="fn">print</span>(q[<span class="str">"axis"</span>])</div>
+                <div class="practice-result">EI / SN / TF / JP 순서로 출력</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">scores 딕셔너리에서 "E" 키의 값을 1 증가시키고 출력하세요.</div>
+                <div class="code">scores[<span class="str">"E"</span>] += <span class="num">1</span>
+<span class="fn">print</span>(scores[<span class="str">"E"</span>])</div>
+                <div class="practice-result">1</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== 3페이지: 질문 루프 + 유형 계산 ===== -->
+<div class="page">
+    <h2>Step 2 — 질문 루프와 점수 누적</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/flowchart.png" alt="게임 흐름" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>for 문으로 모든 질문을 순서대로 출력하고, 사용자가 a 또는 b를 입력하면 해당 유형의 점수를 1씩 올립니다.</p>
+
+    <!-- SVG: 루프 흐름도 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 100" style="max-width:460px;width:100%">
+            <defs>
+                <marker id="arwS2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="5" y="32" width="80" height="36" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+            <text x="45" y="48" text-anchor="middle" font-size="9" fill="#5b21b6" font-weight="700">질문 출력</text>
+            <text x="45" y="60" text-anchor="middle" font-size="8" fill="#64748b">q["text"]</text>
+            <line x1="88" y1="50" x2="108" y2="50" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwS2)"/>
+            <rect x="111" y="32" width="80" height="36" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="151" y="48" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">답변 입력</text>
+            <text x="151" y="60" text-anchor="middle" font-size="8" fill="#64748b">input() → a/b</text>
+            <line x1="194" y1="50" x2="214" y2="50" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwS2)"/>
+            <rect x="217" y="32" width="80" height="36" rx="8" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="257" y="48" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">유형 선택</text>
+            <text x="257" y="60" text-anchor="middle" font-size="8" fill="#64748b">a_type/b_type</text>
+            <line x1="300" y1="50" x2="320" y2="50" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwS2)"/>
+            <rect x="323" y="32" width="80" height="36" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="363" y="48" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">점수 +1</text>
+            <text x="363" y="60" text-anchor="middle" font-size="8" fill="#64748b">scores[t] += 1</text>
+            <!-- 반복 화살표 -->
+            <path d="M 405 50 Q 430 10 430 50" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4,3"/>
+            <text x="440" y="52" font-size="8" fill="#94a3b8">다음</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># Step 2: 질문 루프</span>
+<span class="fn">print</span>(<span class="str">"=== MBTI 테스트 시작 ==="</span>)
+<span class="fn">print</span>(<span class="str">"a 또는 b를 입력하세요\n"</span>)
+
+<span class="kw">for</span> i, q <span class="kw">in</span> <span class="fn">enumerate</span>(questions, <span class="num">1</span>):
+    <span class="fn">print</span>(<span class="str">f"Q{i}. {q['text']}"</span>)
+    <span class="fn">print</span>(<span class="str">"  a) 첫 번째    b) 두 번째"</span>)
+    answer = <span class="fn">input</span>(<span class="str">"선택 (a/b): "</span>).<span class="fn">strip</span>().<span class="fn">lower</span>()
+
+    <span class="kw">if</span> answer == <span class="str">"a"</span>:
+        chosen = q[<span class="str">"a_type"</span>]
+    <span class="kw">else</span>:
+        chosen = q[<span class="str">"b_type"</span>]
+
+    scores[chosen] += <span class="num">1</span>
+    <span class="fn">print</span>(<span class="str">f"  → {chosen} +1\n"</span>)</div>
+
+    <h3>Step 3 — 4개 축별 유형 결정</h3>
+    <p>각 축에서 점수가 높은 쪽이 그 축의 유형이 됩니다. 점수가 같으면 첫 번째 문자(예: E)를 기본으로 선택합니다. 파이썬의 조건 표현식 <code>a if 조건 else b</code>를 쓰면 if/else를 한 줄로 쓸 수 있습니다.</p>
+
+    <!-- SVG: 조건 표현식 예시 -->
+    <div style="text-align:center;margin:10px 0;">
+        <svg viewBox="0 0 460 52" style="max-width:460px;width:100%">
+            <rect x="5" y="8" width="450" height="36" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="24" text-anchor="middle" font-size="9" fill="#4c1d95" font-weight="800">조건 표현식: 값 = a if 조건 else b</text>
+            <rect x="20" y="30" width="80" height="10" rx="3" fill="#dcfce7"/>
+            <text x="60" y="39" text-anchor="middle" font-size="7" fill="#166534">조건이 참이면 a 반환</text>
+            <rect x="200" y="30" width="80" height="10" rx="3" fill="#fee2e2"/>
+            <text x="240" y="39" text-anchor="middle" font-size="7" fill="#991b1b">조건이 거짓이면 b 반환</text>
+            <rect x="350" y="30" width="100" height="10" rx="3" fill="#ede9fe"/>
+            <text x="400" y="39" text-anchor="middle" font-size="7" fill="#5b21b6">예: "E" if scores["E"]>=scores["I"] else "I"</text>
+        </svg>
+    </div>
+
+    <!-- SVG: 축별 비교 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 70" style="max-width:460px;width:100%">
+            <!-- EI -->
+            <rect x="5" y="10" width="100" height="50" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="55" y="28" text-anchor="middle" font-size="9" fill="#5b21b6" font-weight="700">E vs I</text>
+            <rect x="15" y="34" width="30" height="16" rx="3" fill="#ede9fe"/>
+            <text x="30" y="46" text-anchor="middle" font-size="8" fill="#5b21b6">E: 3</text>
+            <rect x="65" y="34" width="30" height="16" rx="3" fill="#f1f5f9"/>
+            <text x="80" y="46" text-anchor="middle" font-size="8" fill="#64748b">I: 1</text>
+            <text x="55" y="60" text-anchor="middle" font-size="8" fill="#166534" font-weight="700">→ E</text>
+            <!-- SN -->
+            <rect x="118" y="10" width="100" height="50" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="168" y="28" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">S vs N</text>
+            <rect x="128" y="34" width="30" height="16" rx="3" fill="#f1f5f9"/>
+            <text x="143" y="46" text-anchor="middle" font-size="8" fill="#64748b">S: 1</text>
+            <rect x="178" y="34" width="30" height="16" rx="3" fill="#fef3c7"/>
+            <text x="193" y="46" text-anchor="middle" font-size="8" fill="#92400e">N: 3</text>
+            <text x="168" y="60" text-anchor="middle" font-size="8" fill="#166534" font-weight="700">→ N</text>
+            <!-- TF -->
+            <rect x="231" y="10" width="100" height="50" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="281" y="28" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">T vs F</text>
+            <rect x="241" y="34" width="30" height="16" rx="3" fill="#dcfce7"/>
+            <text x="256" y="46" text-anchor="middle" font-size="8" fill="#166534">T: 2</text>
+            <rect x="291" y="34" width="30" height="16" rx="3" fill="#f1f5f9"/>
+            <text x="306" y="46" text-anchor="middle" font-size="8" fill="#64748b">F: 2</text>
+            <text x="281" y="60" text-anchor="middle" font-size="8" fill="#166534" font-weight="700">→ T(동점=첫번째)</text>
+            <!-- JP -->
+            <rect x="344" y="10" width="100" height="50" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="394" y="28" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">J vs P</text>
+            <rect x="354" y="34" width="30" height="16" rx="3" fill="#f1f5f9"/>
+            <text x="369" y="46" text-anchor="middle" font-size="8" fill="#64748b">J: 0</text>
+            <rect x="404" y="34" width="30" height="16" rx="3" fill="#eff6ff"/>
+            <text x="419" y="46" text-anchor="middle" font-size="8" fill="#1d4ed8">P: 4</text>
+            <text x="394" y="60" text-anchor="middle" font-size="8" fill="#166534" font-weight="700">→ P</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># Step 3: 4개 축 유형 결정</span>
+<span class="kw">def</span> <span class="fn">get_type</span>(a, b):
+    <span class="str">"""점수 비교 후 유형 문자 반환"""</span>
+    <span class="kw">return</span> a <span class="kw">if</span> scores[a] >= scores[b] <span class="kw">else</span> b
+
+ei = <span class="fn">get_type</span>(<span class="str">"E"</span>, <span class="str">"I"</span>)
+sn = <span class="fn">get_type</span>(<span class="str">"S"</span>, <span class="str">"N"</span>)
+tf = <span class="fn">get_type</span>(<span class="str">"T"</span>, <span class="str">"F"</span>)
+jp = <span class="fn">get_type</span>(<span class="str">"J"</span>, <span class="str">"P"</span>)
+
+result = ei + sn + tf + jp
+<span class="fn">print</span>(<span class="str">f"\n당신의 MBTI: {result}"</span>)</div>
+
+    <div class="output-box">Q1. 파티에서 에너지가 충전된다 vs 혼자 있을 때 충전된다
+  a) 첫 번째    b) 두 번째
+선택 (a/b): a
+  → E +1
+
+당신의 MBTI: ENTP</div>
+</div>
+
+<!-- ===== 4페이지: 유형 설명 딕셔너리 + 완성 코드 ===== -->
+<div class="page">
+    <h2>Step 4 — 16가지 유형 설명 딕셔너리</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>딕셔너리 키를 MBTI 코드(문자열)로, 값을 유형 설명으로 저장하면 결과를 바로 조회할 수 있습니다.</p>
+
+    <!-- SVG: 딕셔너리 조회 흐름 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 68" style="max-width:460px;width:100%">
+            <defs>
+                <marker id="arwS4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="5" y="14" width="90" height="40" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+            <text x="50" y="31" text-anchor="middle" font-size="9" fill="#5b21b6" font-weight="700">result = "ENTP"</text>
+            <text x="50" y="45" text-anchor="middle" font-size="8" fill="#64748b">문자열 4자</text>
+            <line x1="98" y1="34" x2="118" y2="34" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwS4)"/>
+            <rect x="121" y="14" width="150" height="40" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="196" y="31" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">descriptions["ENTP"]</text>
+            <text x="196" y="45" text-anchor="middle" font-size="8" fill="#64748b">딕셔너리 키 조회</text>
+            <line x1="274" y1="34" x2="294" y2="34" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwS4)"/>
+            <rect x="297" y="5" width="158" height="58" rx="8" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="376" y="22" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">변론가</text>
+            <text x="376" y="36" text-anchor="middle" font-size="7.5" fill="#374151">논리적이고 창의적인</text>
+            <text x="376" y="48" text-anchor="middle" font-size="7.5" fill="#374151">아이디어뱅크입니다.</text>
+            <text x="376" y="58" text-anchor="middle" font-size="7" fill="#64748b">유형 설명 반환</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># Step 4: 유형별 설명 딕셔너리 (16가지)</span>
+descriptions = {
+    <span class="str">"INTJ"</span>: <span class="str">"전략가 — 논리적이고 계획적인 완벽주의자."</span>,
+    <span class="str">"INTP"</span>: <span class="str">"논리술사 — 지식 탐구를 즐기는 이론가."</span>,
+    <span class="str">"ENTJ"</span>: <span class="str">"통솔자 — 타고난 리더십으로 목표를 달성합니다."</span>,
+    <span class="str">"ENTP"</span>: <span class="str">"변론가 — 논리적이고 창의적인 아이디어뱅크."</span>,
+    <span class="str">"INFJ"</span>: <span class="str">"옹호자 — 조용하고 신비롭지만 강한 원칙을 가짐."</span>,
+    <span class="str">"INFP"</span>: <span class="str">"중재자 — 이상주의적이고 공감 능력이 뛰어납니다."</span>,
+    <span class="str">"ENFJ"</span>: <span class="str">"주인공 — 카리스마 있는 사람 중심의 리더."</span>,
+    <span class="str">"ENFP"</span>: <span class="str">"활동가 — 열정적이고 창의적인 자유로운 영혼."</span>,
+    <span class="str">"ISTJ"</span>: <span class="str">"현실주의자 — 신뢰할 수 있고 철저한 사실주의자."</span>,
+    <span class="str">"ISFJ"</span>: <span class="str">"수호자 — 헌신적이고 따뜻한 보호자."</span>,
+    <span class="str">"ESTJ"</span>: <span class="str">"관리자 — 사실에 근거한 강력한 행정가."</span>,
+    <span class="str">"ESFJ"</span>: <span class="str">"집정관 — 사교적이고 배려심 깊은 협력자."</span>,
+    <span class="str">"ISTP"</span>: <span class="str">"장인 — 대담하고 실용적인 실험가."</span>,
+    <span class="str">"ISFP"</span>: <span class="str">"모험가 — 유연하고 매력적인 예술가."</span>,
+    <span class="str">"ESTP"</span>: <span class="str">"사업가 — 영리하고 에너지 넘치는 행동파."</span>,
+    <span class="str">"ESFP"</span>: <span class="str">"연예인 — 자발적이고 활기차며 끼가 넘칩니다."</span>,
+}
+
+<span class="cmt"># 최종 출력</span>
+<span class="fn">print</span>(<span class="str">f"\n===== 결과 ====="</span>)
+<span class="fn">print</span>(<span class="str">f"당신의 MBTI: {result}"</span>)
+<span class="fn">print</span>(<span class="str">f"유형: {descriptions[result]}"</span>)</div>
+
+    <div class="output-box">===== 결과 =====
+당신의 MBTI: ENTP
+유형: 변론가 — 논리적이고 창의적인 아이디어뱅크.</div>
+
+    <!-- 문제 1 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q1</div>
+            <div class="problem-label">questions 리스트에서 axis가 "TF"인 질문의 index를 찾으세요.</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">for 문과 <code>enumerate()</code>를 사용해 questions 리스트를 순회하면서 <code>axis</code>가 <code>"TF"</code>인 항목의 인덱스를 출력하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력</span>
+                    <span class="problem-example-value">index 2: 논리적으로 판단한다 vs 감정으로 판단한다</span>
+                </div>
+            </div>
+            <details class="problem-toggle">
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">enumerate(questions, 0)으로 인덱스와 함께 순회하고, q["axis"] == "TF" 조건으로 필터링하세요.</div>
+                </div>
+            </details>
+            <details class="problem-toggle">
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code"><span class="kw">for</span> i, q <span class="kw">in</span> <span class="fn">enumerate</span>(questions):
+    <span class="kw">if</span> q[<span class="str">"axis"</span>] == <span class="str">"TF"</span>:
+        <span class="fn">print</span>(<span class="str">f"index {i}: {q['text']}"</span>)</div>
+                </div>
+            </details>
+        </div>
+    </div>
+</div>
+
+<!-- ===== 5페이지: 문제 + 핵심 요약 ===== -->
+<div class="page">
+    <h2>연습 문제</h2>
+
+    <!-- 문제 2 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q2</div>
+            <div class="problem-label">get_type() 함수를 수정해 동점이면 "?" 반환</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">현재 <code>get_type()</code>는 동점이면 첫 번째 유형을 반환합니다. 동점인 경우 <code>"?"</code>를 반환하도록 수정하세요. 예: scores["T"]==2, scores["F"]==2 이면 <code>"?"</code> 반환.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">입력</span>
+                    <span class="problem-example-value">scores["T"]=2, scores["F"]=2</span>
+                </div>
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력</span>
+                    <span class="problem-example-value">TF축: ?</span>
+                </div>
+            </div>
+            <details class="problem-toggle">
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">scores[a] == scores[b] 조건을 먼저 체크하고 "?"를 반환하세요.</div>
+                </div>
+            </details>
+            <details class="problem-toggle">
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code"><span class="kw">def</span> <span class="fn">get_type</span>(a, b):
+    <span class="kw">if</span> scores[a] == scores[b]:
+        <span class="kw">return</span> <span class="str">"?"</span>
+    <span class="kw">return</span> a <span class="kw">if</span> scores[a] > scores[b] <span class="kw">else</span> b</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <!-- 문제 3 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q3</div>
+            <div class="problem-label">MBTI 결과와 점수를 함께 포맷팅 출력</div>
+            <span class="problem-diff hard">심화</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">f-string을 사용해 아래 형식으로 최종 결과를 출력하는 <code>print_result()</code> 함수를 만드세요. scores 딕셔너리와 result 변수를 활용합니다. 배운 조건 표현식을 활용하면 한 줄로 분기할 수 있습니다.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력</span>
+                    <span class="problem-example-value">ENTP | E:3 I:1 | S:1 N:3 | T:2 F:2 | J:0 P:4</span>
+                </div>
+            </div>
+            <details class="problem-toggle">
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">f-string 안에 scores["E"], scores["I"] 등을 직접 넣어서 조합하세요.</div>
+                </div>
+            </details>
+            <details class="problem-toggle">
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code"><span class="kw">def</span> <span class="fn">print_result</span>():
+    s = scores
+    <span class="fn">print</span>(<span class="str">f"{result} | E:{s['E']} I:{s['I']} | S:{s['S']} N:{s['N']} | T:{s['T']} F:{s['F']} | J:{s['J']} P:{s['P']}"</span>)</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <!-- SVG: 16가지 MBTI 유형 그리드 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 90" style="max-width:460px;width:100%">
+            <text x="230" y="14" text-anchor="middle" font-size="10" fill="#4c1d95" font-weight="800">16가지 MBTI 유형</text>
+            <!-- 행1: NT -->
+            <rect x="5" y="20" width="52" height="20" rx="4" fill="#ede9fe"/>
+            <text x="31" y="34" text-anchor="middle" font-size="8" fill="#5b21b6" font-weight="700">INTJ</text>
+            <rect x="62" y="20" width="52" height="20" rx="4" fill="#ede9fe"/>
+            <text x="88" y="34" text-anchor="middle" font-size="8" fill="#5b21b6" font-weight="700">INTP</text>
+            <rect x="119" y="20" width="52" height="20" rx="4" fill="#ede9fe"/>
+            <text x="145" y="34" text-anchor="middle" font-size="8" fill="#5b21b6" font-weight="700">ENTJ</text>
+            <rect x="176" y="20" width="52" height="20" rx="4" fill="#ede9fe"/>
+            <text x="202" y="34" text-anchor="middle" font-size="8" fill="#5b21b6" font-weight="700">ENTP</text>
+            <!-- 행2: NF -->
+            <rect x="233" y="20" width="52" height="20" rx="4" fill="#fef3c7"/>
+            <text x="259" y="34" text-anchor="middle" font-size="8" fill="#92400e" font-weight="700">INFJ</text>
+            <rect x="290" y="20" width="52" height="20" rx="4" fill="#fef3c7"/>
+            <text x="316" y="34" text-anchor="middle" font-size="8" fill="#92400e" font-weight="700">INFP</text>
+            <rect x="347" y="20" width="52" height="20" rx="4" fill="#fef3c7"/>
+            <text x="373" y="34" text-anchor="middle" font-size="8" fill="#92400e" font-weight="700">ENFJ</text>
+            <rect x="404" y="20" width="52" height="20" rx="4" fill="#fef3c7"/>
+            <text x="430" y="34" text-anchor="middle" font-size="8" fill="#92400e" font-weight="700">ENFP</text>
+            <!-- 행3: SJ -->
+            <rect x="5" y="48" width="52" height="20" rx="4" fill="#dcfce7"/>
+            <text x="31" y="62" text-anchor="middle" font-size="8" fill="#166534" font-weight="700">ISTJ</text>
+            <rect x="62" y="48" width="52" height="20" rx="4" fill="#dcfce7"/>
+            <text x="88" y="62" text-anchor="middle" font-size="8" fill="#166534" font-weight="700">ISFJ</text>
+            <rect x="119" y="48" width="52" height="20" rx="4" fill="#dcfce7"/>
+            <text x="145" y="62" text-anchor="middle" font-size="8" fill="#166534" font-weight="700">ESTJ</text>
+            <rect x="176" y="48" width="52" height="20" rx="4" fill="#dcfce7"/>
+            <text x="202" y="62" text-anchor="middle" font-size="8" fill="#166534" font-weight="700">ESFJ</text>
+            <!-- 행4: SP -->
+            <rect x="233" y="48" width="52" height="20" rx="4" fill="#eff6ff"/>
+            <text x="259" y="62" text-anchor="middle" font-size="8" fill="#1d4ed8" font-weight="700">ISTP</text>
+            <rect x="290" y="48" width="52" height="20" rx="4" fill="#eff6ff"/>
+            <text x="316" y="62" text-anchor="middle" font-size="8" fill="#1d4ed8" font-weight="700">ISFP</text>
+            <rect x="347" y="48" width="52" height="20" rx="4" fill="#eff6ff"/>
+            <text x="373" y="62" text-anchor="middle" font-size="8" fill="#1d4ed8" font-weight="700">ESTP</text>
+            <rect x="404" y="48" width="52" height="20" rx="4" fill="#eff6ff"/>
+            <text x="430" y="62" text-anchor="middle" font-size="8" fill="#1d4ed8" font-weight="700">ESFP</text>
+            <text x="230" y="82" text-anchor="middle" font-size="8" fill="#94a3b8">총 16가지 — descriptions 딕셔너리에 모두 저장</text>
+        </svg>
+    </div>
+
+    <!-- 핵심 요약 -->
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/lightbulb.png" alt="아이디어" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>핵심 요약</h3>
+        <ul>
+            <li>딕셔너리 안에 딕셔너리를 넣어 복잡한 데이터를 구조화할 수 있습니다.</li>
+            <li><code>enumerate()</code>로 인덱스와 값을 동시에 순회할 수 있습니다.</li>
+            <li>조건 연산자 <code>a if 조건 else b</code>로 한 줄 분기가 가능합니다.</li>
+            <li>문자열 결합 <code>ei + sn + tf + jp</code>로 MBTI 코드를 만들 수 있습니다.</li>
+            <li>딕셔너리 키로 문자열을 사용하면 유형 설명을 O(1)로 조회할 수 있습니다.</li>
+        </ul>
+    </div>
+
+    <!-- SVG: 전체 프로젝트 흐름 요약 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 60" style="max-width:460px;width:100%">
+            <defs>
+                <marker id="arwSum" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="5" y="10" width="70" height="40" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+            <text x="40" y="28" text-anchor="middle" font-size="8" fill="#5b21b6" font-weight="700">데이터 설계</text>
+            <text x="40" y="40" text-anchor="middle" font-size="7" fill="#64748b">questions/scores</text>
+            <line x1="78" y1="30" x2="95" y2="30" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwSum)"/>
+            <rect x="98" y="10" width="70" height="40" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="133" y="28" text-anchor="middle" font-size="8" fill="#92400e" font-weight="700">질문 루프</text>
+            <text x="133" y="40" text-anchor="middle" font-size="7" fill="#64748b">for + input()</text>
+            <line x1="171" y1="30" x2="188" y2="30" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwSum)"/>
+            <rect x="191" y="10" width="70" height="40" rx="6" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="226" y="28" text-anchor="middle" font-size="8" fill="#166534" font-weight="700">유형 결정</text>
+            <text x="226" y="40" text-anchor="middle" font-size="7" fill="#64748b">get_type()</text>
+            <line x1="264" y1="30" x2="281" y2="30" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwSum)"/>
+            <rect x="284" y="10" width="70" height="40" rx="6" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="319" y="28" text-anchor="middle" font-size="8" fill="#1d4ed8" font-weight="700">결과 조회</text>
+            <text x="319" y="40" text-anchor="middle" font-size="7" fill="#64748b">descriptions[result]</text>
+            <line x1="357" y1="30" x2="374" y2="30" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwSum)"/>
+            <rect x="377" y="10" width="78" height="40" rx="6" fill="#fdf4ff" stroke="#a855f7" stroke-width="1.5"/>
+            <text x="416" y="28" text-anchor="middle" font-size="8" fill="#7e22ce" font-weight="700">MBTI 출력</text>
+            <text x="416" y="40" text-anchor="middle" font-size="7" fill="#64748b">ENTP + 설명</text>
+        </svg>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

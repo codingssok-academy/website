@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — __init__: 생성자로 초기화하기</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+/* -- 페이지 -- */
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+/* -- 챕터 표지 -- */
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+
+/* -- 본문 -- */
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 16px; font-weight: 700; color: #1e3a5f; margin: 18px 0 10px; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+ul, ol { margin: 0 0 12px 20px; }
+li { font-size: 14px; color: #374151; line-height: 1.8; }
+
+/* -- 코드 블록 -- */
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13.5px;
+    color: #e2e8f0; line-height: 1.85; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.code .dec { color: #f9a8d4; }
+
+/* -- 따라해보세요 -- */
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+
+/* -- 문제 -- */
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+
+/* -- 요약 -- */
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+/* -- 출력 박스 -- */
+.output-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #334155; line-height: 1.7; margin: 10px 0; }
+
+/* -- 비교 테이블 -- */
+.compare-table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13px; }
+.compare-table th { background: #1e3a5f; color: #fff; padding: 8px 12px; text-align: left; font-weight: 700; }
+.compare-table td { padding: 7px 12px; border-bottom: 1px solid #e2e8f0; color: #374151; }
+.compare-table tr:nth-child(even) td { background: #f8fafc; }
+.compare-table code { background: #e0e7ff; padding: 1px 5px; border-radius: 3px; font-family: 'JetBrains Mono', monospace; color: #3730a3; font-size: 12px; }
+
+/* -- 콜아웃 -- */
+.callout { border-radius: 8px; padding: 12px 16px; margin: 12px 0; font-size: 14px; line-height: 1.7; }
+.callout-info { background: #eff6ff; border-left: 4px solid #3b82f6; color: #1e40af; }
+.callout-warn { background: #fffbeb; border-left: 4px solid #f59e0b; color: #92400e; }
+.callout-tip { background: #f0fdf4; border-left: 4px solid #22c55e; color: #166534; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- 1페이지: 표지 -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">39</div>
+        <div class="cover-label">L3 — Unit 39</div>
+        <h1 class="cover-title">__init__<br>생성자로 초기화하기</h1>
+        <p class="cover-sub">클래스를 만들 때 객체의 초기 상태를 설정하는 <code>__init__</code> 메서드를 이해하고, self, 속성 초기화, 기본값, 유효성 검사까지 단계적으로 학습합니다.</p>
+
+        <!-- SVG: __init__ 핵심 개념 맵 -->
+        <div style="margin:24px 0;">
+            <svg viewBox="0 0 500 160" style="max-width:500px;width:100%">
+                <defs>
+                    <marker id="arwCov" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                    </marker>
+                </defs>
+                <!-- 중앙: __init__ -->
+                <rect x="170" y="55" width="160" height="50" rx="10" fill="#1e3a5f"/>
+                <text x="250" y="76" text-anchor="middle" font-size="13" fill="#fff" font-weight="900">__init__</text>
+                <text x="250" y="94" text-anchor="middle" font-size="9" fill="#93c5fd">생성자 메서드</text>
+                <!-- self -->
+                <rect x="5" y="10" width="120" height="38" rx="7" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="65" y="26" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">self</text>
+                <text x="65" y="41" text-anchor="middle" font-size="8" fill="#64748b">현재 인스턴스 참조</text>
+                <line x1="128" y1="29" x2="168" y2="68" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+                <!-- 속성 초기화 -->
+                <rect x="5" y="112" width="120" height="38" rx="7" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="65" y="128" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">속성 초기화</text>
+                <text x="65" y="143" text-anchor="middle" font-size="8" fill="#64748b">self.name = name</text>
+                <line x1="128" y1="131" x2="168" y2="95" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+                <!-- 기본값 -->
+                <rect x="375" y="10" width="120" height="38" rx="7" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="435" y="26" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">기본값</text>
+                <text x="435" y="41" text-anchor="middle" font-size="8" fill="#64748b">def __init__(x=0)</text>
+                <line x1="372" y1="29" x2="332" y2="68" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+                <!-- 유효성 검사 -->
+                <rect x="375" y="112" width="120" height="38" rx="7" fill="#ffe4e6" stroke="#f43f5e" stroke-width="1.5"/>
+                <text x="435" y="128" text-anchor="middle" font-size="10" fill="#be123c" font-weight="700">유효성 검사</text>
+                <text x="435" y="143" text-anchor="middle" font-size="8" fill="#64748b">if age &lt; 0: raise</text>
+                <line x1="372" y1="131" x2="332" y2="95" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/puzzle.png" alt="클래스" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 유닛에서 배우는 것</h3>
+            <ul>
+                <li><code>__init__</code> 메서드가 무엇인지, 언제 자동으로 호출되는지 이해합니다.</li>
+                <li><code>self</code> 매개변수의 역할과 인스턴스 속성을 설정하는 방법을 익힙니다.</li>
+                <li>기본값 매개변수를 활용해 유연한 생성자를 작성합니다.</li>
+                <li><code>__init__</code> 안에서 유효성 검사를 넣어 안전한 객체를 만듭니다.</li>
+                <li>실용 예제인 <code>Student</code>와 <code>BankAccount</code> 클래스를 완성합니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- 2페이지: __init__ 메서드란 + self 매개변수 -->
+<div class="page">
+    <h2>__init__ 메서드란</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="메서드" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>파이썬에서 클래스로 객체를 만들 때, 가장 먼저 자동으로 실행되는 특별 메서드가 <code>__init__</code>입니다. 이름 앞뒤로 밑줄 두 개(<code>__</code>)가 붙어 있어 "던더(dunder) 메서드"라고도 부릅니다.</p>
+
+    <!-- SVG: 객체 생성 흐름 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 90" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="arwP2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <!-- 1: 호출 -->
+            <rect x="5" y="20" width="105" height="50" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="57" y="40" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">Student("김철수", 15)</text>
+            <text x="57" y="58" text-anchor="middle" font-size="9" fill="#64748b">객체 생성 호출</text>
+            <line x1="113" y1="45" x2="133" y2="45" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwP2)"/>
+            <!-- 2: __init__ 실행 -->
+            <rect x="136" y="10" width="120" height="70" rx="8" fill="#1e3a5f"/>
+            <text x="196" y="35" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">__init__ 자동 실행</text>
+            <text x="196" y="52" text-anchor="middle" font-size="9" fill="#93c5fd">self.name = "김철수"</text>
+            <text x="196" y="67" text-anchor="middle" font-size="9" fill="#93c5fd">self.age = 15</text>
+            <line x1="259" y1="45" x2="279" y2="45" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwP2)"/>
+            <!-- 3: 인스턴스 -->
+            <rect x="282" y="10" width="105" height="70" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="334" y="32" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">인스턴스 생성 완료</text>
+            <text x="334" y="49" text-anchor="middle" font-size="9" fill="#64748b">s.name → "김철수"</text>
+            <text x="334" y="64" text-anchor="middle" font-size="9" fill="#64748b">s.age  → 15</text>
+            <line x1="390" y1="45" x2="410" y2="45" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwP2)"/>
+            <!-- 4: 사용 -->
+            <rect x="413" y="20" width="60" height="50" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="443" y="40" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">사용 가능</text>
+            <text x="443" y="56" text-anchor="middle" font-size="8" fill="#64748b">s.name</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># __init__ 없이 클래스 만들기 (비교용)</span>
+<span class="kw">class</span> <span class="fn">Student</span>:
+    <span class="kw">pass</span>
+
+s = <span class="fn">Student</span>()
+s.name = <span class="str">"김철수"</span>   <span class="cmt"># 속성을 나중에 따로 설정해야 함 — 불편!</span>
+s.age = <span class="num">15</span>
+
+<span class="cmt"># __init__을 사용한 클래스 (권장)</span>
+<span class="kw">class</span> <span class="fn">Student</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="dec">self</span>, name, age):
+        <span class="dec">self</span>.name = name   <span class="cmt"># 객체가 만들어지는 순간 자동 실행</span>
+        <span class="dec">self</span>.age = age
+
+s = <span class="fn">Student</span>(<span class="str">"김철수"</span>, <span class="num">15</span>)   <span class="cmt"># 생성과 초기화를 한 번에!</span>
+<span class="fn">print</span>(s.name)  <span class="cmt"># 김철수</span>
+<span class="fn">print</span>(s.age)   <span class="cmt"># 15</span></div>
+
+    <h3>self 매개변수</h3>
+    <p><code>self</code>는 지금 만들어지고 있는 객체(인스턴스) 자신을 가리킵니다. <code>__init__</code>의 첫 번째 매개변수로 반드시 써야 하며, 파이썬이 자동으로 전달하므로 호출할 때는 직접 넣지 않습니다.</p>
+
+    <!-- SVG: self 동작 원리 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 100" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="arwSelf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#6366f1"/>
+                </marker>
+            </defs>
+            <!-- 인스턴스 s1 -->
+            <rect x="10" y="15" width="120" height="70" rx="8" fill="#eff6ff" stroke="#6366f1" stroke-width="2"/>
+            <text x="70" y="35" text-anchor="middle" font-size="10" fill="#4338ca" font-weight="700">인스턴스 s1</text>
+            <text x="70" y="52" text-anchor="middle" font-size="9" fill="#64748b">name: "김철수"</text>
+            <text x="70" y="67" text-anchor="middle" font-size="9" fill="#64748b">age: 15</text>
+            <text x="70" y="82" text-anchor="middle" font-size="8" fill="#94a3b8">← self가 가리키는 곳</text>
+            <!-- 인스턴스 s2 -->
+            <rect x="155" y="15" width="120" height="70" rx="8" fill="#eff6ff" stroke="#6366f1" stroke-width="2"/>
+            <text x="215" y="35" text-anchor="middle" font-size="10" fill="#4338ca" font-weight="700">인스턴스 s2</text>
+            <text x="215" y="52" text-anchor="middle" font-size="9" fill="#64748b">name: "이영희"</text>
+            <text x="215" y="67" text-anchor="middle" font-size="9" fill="#64748b">age: 16</text>
+            <text x="215" y="82" text-anchor="middle" font-size="8" fill="#94a3b8">← self가 가리키는 곳</text>
+            <!-- 설명 오른쪽 -->
+            <rect x="300" y="5" width="175" height="90" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="387" y="25" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">self 핵심 규칙</text>
+            <text x="387" y="42" text-anchor="middle" font-size="9" fill="#374151">1) 항상 첫 번째 매개변수</text>
+            <text x="387" y="57" text-anchor="middle" font-size="9" fill="#374151">2) 호출 시 직접 쓰지 않음</text>
+            <text x="387" y="72" text-anchor="middle" font-size="9" fill="#374151">3) 이름은 self 관례</text>
+            <text x="387" y="87" text-anchor="middle" font-size="9" fill="#64748b">(this와 같은 개념)</text>
+        </svg>
+    </div>
+
+    <div class="callout callout-info">
+        <strong>왜 self가 필요한가?</strong> 같은 클래스에서 여러 객체를 만들면, 각각의 속성을 구분해야 합니다. <code>self</code>는 "내 속성은 나 자신에게 저장"이라는 뜻입니다. <code>s1.name</code>과 <code>s2.name</code>이 서로 다른 값을 가질 수 있는 이유입니다.
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/lightbulb.png" alt="아이디어" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+        <div class="practice-head">따라해보세요 — self와 __init__</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1단계</div>
+                <div class="practice-desc">아래 코드를 입력하고, <code>s1</code>과 <code>s2</code>의 name이 독립적으로 저장되는지 확인하세요.</div>
+                <div class="code"><span class="kw">class</span> <span class="fn">Student</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="dec">self</span>, name, age):
+        <span class="dec">self</span>.name = name
+        <span class="dec">self</span>.age = age
+
+s1 = <span class="fn">Student</span>(<span class="str">"김철수"</span>, <span class="num">15</span>)
+s2 = <span class="fn">Student</span>(<span class="str">"이영희"</span>, <span class="num">16</span>)
+<span class="fn">print</span>(s1.name, s2.name)</div>
+                <div class="practice-result">김철수 이영희</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2단계</div>
+                <div class="practice-desc"><code>Student</code>에 <code>grade</code> (학년) 속성을 추가하고, <code>s1 = Student("김철수", 15, 2)</code>로 테스트하세요.</div>
+                <div class="practice-result">학년 속성이 정상 출력됩니다.</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3단계</div>
+                <div class="practice-desc">만든 <code>Student</code> 클래스의 <code>__init__</code>에 <code>print(f"{self.name} 객체 생성!")</code>을 넣고, 객체를 2개 만들어 언제 출력되는지 확인하세요.</div>
+                <div class="practice-result">인스턴스 생성 순간마다 메시지가 출력됩니다.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3페이지: 속성 초기화 + 기본값 매개변수 -->
+<div class="page">
+    <h2>속성 초기화와 기본값 매개변수</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/book.png" alt="설계" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p><code>__init__</code>에서 <code>self.속성명 = 값</code> 형태로 인스턴스 속성을 설정합니다. 매개변수에 기본값을 주면 일부 정보가 없어도 객체를 만들 수 있습니다.</p>
+
+    <!-- SVG: 인스턴스 속성 저장 구조 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 110" style="max-width:480px;width:100%">
+            <!-- 클래스 정의 -->
+            <rect x="5" y="5" width="200" height="100" rx="8" fill="#0f172a"/>
+            <text x="105" y="24" text-anchor="middle" font-size="10" fill="#c084fc" font-weight="700">class Student:</text>
+            <text x="105" y="42" text-anchor="middle" font-size="9" fill="#67e8f9">  def __init__(self, name, age=14):</text>
+            <text x="105" y="58" text-anchor="middle" font-size="9" fill="#f9a8d4">    self.name = name</text>
+            <text x="105" y="74" text-anchor="middle" font-size="9" fill="#f9a8d4">    self.age  = age</text>
+            <text x="105" y="90" text-anchor="middle" font-size="9" fill="#86efac">    self.score = 0</text>
+            <!-- 화살표 -->
+            <text x="225" y="58" text-anchor="middle" font-size="18" fill="#94a3b8">→</text>
+            <!-- 인스턴스 메모리 -->
+            <rect x="245" y="5" width="230" height="100" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="360" y="24" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">s = Student("박지민")</text>
+            <rect x="258" y="32" width="205" height="22" rx="4" fill="#dbeafe"/>
+            <text x="365" y="47" text-anchor="middle" font-size="9" fill="#1d4ed8">name : "박지민"  (전달받은 값)</text>
+            <rect x="258" y="57" width="205" height="22" rx="4" fill="#fefce8"/>
+            <text x="365" y="72" text-anchor="middle" font-size="9" fill="#92400e">age  : 14  (기본값 사용됨)</text>
+            <rect x="258" y="82" width="205" height="18" rx="4" fill="#f0fdf4"/>
+            <text x="365" y="95" text-anchor="middle" font-size="9" fill="#166534">score: 0  (고정 초기값)</text>
+        </svg>
+    </div>
+
+    <h3>기본값이 있는 __init__</h3>
+    <p>매개변수에 <code>= 값</code>을 붙이면 기본값이 됩니다. 호출할 때 해당 인수를 생략하면 기본값이 자동으로 들어갑니다. 기본값이 없는 매개변수는 반드시 앞에 위치해야 합니다.</p>
+
+    <div class="code"><span class="kw">class</span> <span class="fn">Student</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="dec">self</span>, name, grade=<span class="num">1</span>, score=<span class="num">0</span>):
+        <span class="dec">self</span>.name  = name     <span class="cmt"># 필수 — 기본값 없음</span>
+        <span class="dec">self</span>.grade = grade    <span class="cmt"># 선택 — 기본값 1학년</span>
+        <span class="dec">self</span>.score = score    <span class="cmt"># 선택 — 기본값 0점</span>
+
+s1 = <span class="fn">Student</span>(<span class="str">"김민준"</span>)              <span class="cmt"># grade=1, score=0</span>
+s2 = <span class="fn">Student</span>(<span class="str">"이서연"</span>, <span class="num">2</span>)           <span class="cmt"># grade=2, score=0</span>
+s3 = <span class="fn">Student</span>(<span class="str">"박지호"</span>, <span class="num">3</span>, <span class="num">95</span>)       <span class="cmt"># grade=3, score=95</span>
+s4 = <span class="fn">Student</span>(<span class="str">"최수아"</span>, score=<span class="num">88</span>)    <span class="cmt"># grade=1, score=88 (키워드 인수)</span>
+
+<span class="fn">print</span>(s1.name, s1.grade, s1.score)
+<span class="fn">print</span>(s4.name, s4.grade, s4.score)</div>
+
+    <div class="output-box">김민준 1 0
+최수아 1 88</div>
+
+    <!-- SVG: 기본값 있는/없는 매개변수 순서 규칙 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 75" style="max-width:480px;width:100%">
+            <text x="10" y="18" font-size="10" fill="#166534" font-weight="700">올바른 순서 (OK)</text>
+            <rect x="10" y="24" width="120" height="28" rx="6" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="70" y="42" text-anchor="middle" font-size="9" fill="#166534">name</text>
+            <rect x="134" y="24" width="140" height="28" rx="6" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="204" y="42" text-anchor="middle" font-size="9" fill="#166534">grade=1, score=0</text>
+            <text x="80" y="15" text-anchor="middle" font-size="8" fill="#64748b">필수</text>
+            <text x="204" y="15" text-anchor="middle" font-size="8" fill="#64748b">기본값 있음</text>
+
+            <text x="295" y="18" font-size="10" fill="#991b1b" font-weight="700">잘못된 순서 (오류)</text>
+            <rect x="295" y="24" width="140" height="28" rx="6" fill="#fee2e2" stroke="#f43f5e" stroke-width="1.5"/>
+            <text x="365" y="42" text-anchor="middle" font-size="9" fill="#991b1b">grade=1, name</text>
+            <text x="450" y="42" text-anchor="middle" font-size="14" fill="#f43f5e">X</text>
+        </svg>
+    </div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요 — 기본값 매개변수</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1단계</div>
+                <div class="practice-desc"><code>Cat</code> 클래스를 만드세요. 속성은 <code>name</code>(필수), <code>color</code>(기본값 <code>"흰색"</code>), <code>age</code>(기본값 <code>1</code>).</div>
+                <div class="code">c1 = <span class="fn">Cat</span>(<span class="str">"나비"</span>)
+c2 = <span class="fn">Cat</span>(<span class="str">"치즈"</span>, <span class="str">"노란색"</span>, <span class="num">3</span>)
+<span class="fn">print</span>(c1.name, c1.color, c1.age)
+<span class="fn">print</span>(c2.name, c2.color, c2.age)</div>
+                <div class="practice-result">나비 흰색 1 / 치즈 노란색 3</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2단계</div>
+                <div class="practice-desc"><code>Book</code> 클래스를 만드세요. <code>title</code>(필수), <code>author</code>(필수), <code>pages</code>(기본값 <code>100</code>), <code>is_read</code>(기본값 <code>False</code>). 키워드 인수로 <code>Book("파이썬 입문", "홍길동", is_read=True)</code>를 만들어 출력하세요.</div>
+                <div class="practice-result">파이썬 입문 홍길동 100 True</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 4페이지: __init__에서 유효성 검사 -->
+<div class="page">
+    <h2>__init__에서 유효성 검사</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p><code>__init__</code>에서 잘못된 값이 들어오면 즉시 <code>ValueError</code>를 발생시킬 수 있습니다. 이렇게 하면 잘못된 상태의 객체가 만들어지는 것을 원천 차단합니다.</p>
+
+    <!-- SVG: 유효성 검사 흐름 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 95" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="arwV" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <!-- 값 입력 -->
+            <rect x="5" y="25" width="90" height="45" rx="8" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="50" y="44" text-anchor="middle" font-size="9" fill="#334155" font-weight="700">입력값</text>
+            <text x="50" y="60" text-anchor="middle" font-size="8" fill="#64748b">age = -5</text>
+            <line x1="98" y1="47" x2="118" y2="47" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwV)"/>
+            <!-- 검사 -->
+            <rect x="121" y="10" width="120" height="74" rx="8" fill="#1e3a5f"/>
+            <text x="181" y="32" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">유효성 검사</text>
+            <text x="181" y="50" text-anchor="middle" font-size="9" fill="#93c5fd">if age &lt; 0:</text>
+            <text x="181" y="66" text-anchor="middle" font-size="9" fill="#f9a8d4">  raise ValueError</text>
+            <!-- 실패 -->
+            <line x1="181" y1="87" x2="181" y2="77" stroke="#f43f5e" stroke-width="1.5" marker-end="url(#arwV)"/>
+            <rect x="121" y="88" width="120" height="0" rx="0" fill="none"/>
+            <!-- 실패 경로 -->
+            <line x1="244" y1="68" x2="310" y2="68" stroke="#f43f5e" stroke-width="1.5" marker-end="url(#arwV)"/>
+            <rect x="313" y="50" width="115" height="38" rx="8" fill="#fee2e2" stroke="#f43f5e" stroke-width="1.5"/>
+            <text x="370" y="66" text-anchor="middle" font-size="9" fill="#991b1b" font-weight="700">ValueError 발생</text>
+            <text x="370" y="80" text-anchor="middle" font-size="8" fill="#64748b">객체 생성 실패</text>
+            <!-- 성공 경로 -->
+            <line x1="244" y1="35" x2="310" y2="35" stroke="#22c55e" stroke-width="1.5" marker-end="url(#arwV)"/>
+            <rect x="313" y="17" width="115" height="30" rx="8" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="370" y="36" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">속성 초기화 완료</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">class</span> <span class="fn">Student</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="dec">self</span>, name, age, score=<span class="num">0</span>):
+        <span class="cmt"># 이름 유효성 검사</span>
+        <span class="kw">if not</span> name.<span class="fn">strip</span>():
+            <span class="kw">raise</span> <span class="fn">ValueError</span>(<span class="str">"이름은 빈 문자열일 수 없습니다"</span>)
+
+        <span class="cmt"># 나이 유효성 검사</span>
+        <span class="kw">if</span> age &lt; <span class="num">0</span> <span class="kw">or</span> age &gt; <span class="num">150</span>:
+            <span class="kw">raise</span> <span class="fn">ValueError</span>(<span class="str">f"나이가 잘못되었습니다: {age}"</span>)
+
+        <span class="cmt"># 점수 유효성 검사</span>
+        <span class="kw">if not</span> (<span class="num">0</span> &lt;= score &lt;= <span class="num">100</span>):
+            <span class="kw">raise</span> <span class="fn">ValueError</span>(<span class="str">f"점수는 0~100 사이여야 합니다: {score}"</span>)
+
+        <span class="dec">self</span>.name  = name.<span class="fn">strip</span>()   <span class="cmt"># 앞뒤 공백 제거 후 저장</span>
+        <span class="dec">self</span>.age   = age
+        <span class="dec">self</span>.score = score
+
+<span class="cmt"># 정상 생성</span>
+s = <span class="fn">Student</span>(<span class="str">"  김철수  "</span>, <span class="num">15</span>, <span class="num">85</span>)
+<span class="fn">print</span>(s.name)   <span class="cmt"># "김철수" (공백 제거됨)</span>
+
+<span class="cmt"># 오류 발생 테스트</span>
+<span class="kw">try</span>:
+    bad = <span class="fn">Student</span>(<span class="str">"홍길동"</span>, -<span class="num">1</span>)
+<span class="kw">except</span> <span class="fn">ValueError</span> <span class="kw">as</span> e:
+    <span class="fn">print</span>(<span class="str">f"오류: {e}"</span>)</div>
+
+    <div class="output-box">김철수
+오류: 나이가 잘못되었습니다: -1</div>
+
+    <div class="callout callout-tip">
+        <strong>언제 유효성 검사를 넣어야 할까?</strong> 숫자 범위가 있을 때(나이, 점수, 금액), 빈 문자열을 막아야 할 때, 특정 선택지만 허용할 때(예: 등급 A~F) 넣으면 됩니다. 검사 코드는 속성 대입 앞에 위치시킵니다.
+    </div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요 — 유효성 검사</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1단계</div>
+                <div class="practice-desc"><code>Temperature</code> 클래스를 만드세요. <code>celsius</code>가 -273.15 미만이면 <code>ValueError("절대 영도 이하입니다")</code>를 발생시키세요.</div>
+                <div class="code">t = <span class="fn">Temperature</span>(<span class="num">25</span>)      <span class="cmt"># OK</span>
+t2 = <span class="fn">Temperature</span>(-<span class="num">300</span>)  <span class="cmt"># ValueError!</span></div>
+                <div class="practice-result">오류: 절대 영도 이하입니다</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2단계</div>
+                <div class="practice-desc"><code>Grade</code> 클래스를 만드세요. <code>level</code>이 <code>['A', 'B', 'C', 'D', 'F']</code>에 없으면 <code>ValueError</code>를 발생시키세요.</div>
+                <div class="practice-result">A, B, C, D, F만 허용됩니다.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 5페이지: 실용 예 — Student 클래스 -->
+<div class="page">
+    <h2>실용 예 — Student 클래스 완성하기</h2>
+    <p>지금까지 배운 내용을 모두 합쳐 실제로 쓸 수 있는 <code>Student</code> 클래스를 만들어봅니다. <code>__init__</code>에서 속성 초기화, 기본값, 유효성 검사를 함께 사용합니다. 정보 조회 메서드(예: <code>get_balance</code>, <code>average</code>, <code>info</code>)는 속성값을 읽어 반환하거나 출력하는 패턴입니다. 이후 문제에서는 <code>Rectangle</code>(직사각형), <code>Product</code>(상품) 등 다양한 클래스를 직접 설계합니다.</p>
+
+    <!-- SVG: Student 클래스 구조도 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 120" style="max-width:480px;width:100%">
+            <!-- 클래스 박스 -->
+            <rect x="5" y="5" width="470" height="110" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="2"/>
+            <rect x="5" y="5" width="470" height="30" rx="10" fill="#1e3a5f"/>
+            <rect x="5" y="25" width="470" height="10" fill="#1e3a5f"/>
+            <text x="240" y="25" text-anchor="middle" font-size="12" fill="#fff" font-weight="900">class Student</text>
+            <!-- 속성 -->
+            <text x="20" y="52" font-size="9" fill="#64748b" font-weight="700">속성 (Attributes)</text>
+            <rect x="20" y="57" width="95" height="22" rx="5" fill="#dbeafe"/>
+            <text x="67" y="72" text-anchor="middle" font-size="8" fill="#1d4ed8">name: str</text>
+            <rect x="120" y="57" width="95" height="22" rx="5" fill="#dbeafe"/>
+            <text x="167" y="72" text-anchor="middle" font-size="8" fill="#1d4ed8">age: int</text>
+            <rect x="220" y="57" width="95" height="22" rx="5" fill="#dbeafe"/>
+            <text x="267" y="72" text-anchor="middle" font-size="8" fill="#1d4ed8">grade: int = 1</text>
+            <rect x="320" y="57" width="95" height="22" rx="5" fill="#fefce8"/>
+            <text x="367" y="72" text-anchor="middle" font-size="8" fill="#92400e">scores: list = []</text>
+            <!-- 메서드 -->
+            <text x="20" y="95" font-size="9" fill="#64748b" font-weight="700">메서드 (Methods)</text>
+            <rect x="20" y="100" width="100" height="10" rx="3" fill="#f0fdf4"/>
+            <text x="70" y="109" text-anchor="middle" font-size="7" fill="#166534">__init__</text>
+            <rect x="125" y="100" width="100" height="10" rx="3" fill="#f0fdf4"/>
+            <text x="175" y="109" text-anchor="middle" font-size="7" fill="#166534">add_score</text>
+            <rect x="230" y="100" width="100" height="10" rx="3" fill="#f0fdf4"/>
+            <text x="280" y="109" text-anchor="middle" font-size="7" fill="#166534">average</text>
+            <rect x="335" y="100" width="100" height="10" rx="3" fill="#f0fdf4"/>
+            <text x="385" y="109" text-anchor="middle" font-size="7" fill="#166534">info</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">class</span> <span class="fn">Student</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="dec">self</span>, name, age, grade=<span class="num">1</span>):
+        <span class="kw">if not</span> name.<span class="fn">strip</span>():
+            <span class="kw">raise</span> <span class="fn">ValueError</span>(<span class="str">"이름을 입력하세요"</span>)
+        <span class="kw">if not</span> (<span class="num">13</span> &lt;= age &lt;= <span class="num">20</span>):
+            <span class="kw">raise</span> <span class="fn">ValueError</span>(<span class="str">f"나이 범위 오류: {age}"</span>)
+        <span class="kw">if</span> grade <span class="kw">not in</span> (<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>):
+            <span class="kw">raise</span> <span class="fn">ValueError</span>(<span class="str">f"학년 오류: {grade}"</span>)
+
+        <span class="dec">self</span>.name   = name.<span class="fn">strip</span>()
+        <span class="dec">self</span>.age    = age
+        <span class="dec">self</span>.grade  = grade
+        <span class="dec">self</span>.scores = []          <span class="cmt"># 빈 리스트로 초기화</span>
+
+    <span class="kw">def</span> <span class="fn">add_score</span>(<span class="dec">self</span>, score):
+        <span class="kw">if not</span> (<span class="num">0</span> &lt;= score &lt;= <span class="num">100</span>):
+            <span class="kw">raise</span> <span class="fn">ValueError</span>(<span class="str">"점수는 0~100"</span>)
+        <span class="dec">self</span>.scores.<span class="fn">append</span>(score)
+
+    <span class="kw">def</span> <span class="fn">average</span>(<span class="dec">self</span>):
+        <span class="kw">if not</span> <span class="dec">self</span>.scores:
+            <span class="kw">return</span> <span class="num">0</span>
+        <span class="kw">return</span> <span class="fn">sum</span>(<span class="dec">self</span>.scores) / <span class="fn">len</span>(<span class="dec">self</span>.scores)
+
+    <span class="kw">def</span> <span class="fn">info</span>(<span class="dec">self</span>):
+        <span class="fn">print</span>(<span class="str">f"{self.name} ({self.grade}학년) — 평균: {self.average():.1f}점"</span>)
+
+<span class="cmt"># 사용</span>
+s = <span class="fn">Student</span>(<span class="str">"김민준"</span>, <span class="num">15</span>, <span class="num">2</span>)
+s.<span class="fn">add_score</span>(<span class="num">90</span>)
+s.<span class="fn">add_score</span>(<span class="num">85</span>)
+s.<span class="fn">add_score</span>(<span class="num">92</span>)
+s.<span class="fn">info</span>()</div>
+
+    <div class="output-box">김민준 (2학년) — 평균: 89.0점</div>
+
+    <div class="callout callout-warn">
+        <strong>주의: 리스트를 기본값으로 쓰지 말 것.</strong> <code>def __init__(self, scores=[])</code>처럼 가변 객체(리스트, 딕셔너리)를 기본값에 직접 쓰면 모든 인스턴스가 같은 리스트를 공유합니다. 반드시 <code>self.scores = []</code>로 인스턴스 내부에서 초기화하세요.
+    </div>
+
+    <!-- 문제 1 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">1</div>
+            <div class="problem-label">Student 클래스 확장</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text"><code>Student</code> 클래스에 <code>subject</code>(과목, 기본값 <code>"수학"</code>) 속성을 추가하세요. <code>s1 = Student("이서연", 14)</code>와 <code>s2 = Student("박지호", 16, 3, "과학")</code>을 만들어 각자의 <code>name</code>과 <code>subject</code>를 출력하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">이서연 수학<br>박지호 과학</span></div>
+            </div>
+            <details class="problem-toggle">
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text"><code>def __init__(self, name, age, grade=1, subject="수학")</code> 형태로 subject를 마지막 기본값 매개변수로 추가합니다.</div>
+                </div>
+            </details>
+            <details class="problem-toggle">
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code"><span class="kw">class</span> <span class="fn">Student</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="dec">self</span>, name, age, grade=<span class="num">1</span>, subject=<span class="str">"수학"</span>):
+        <span class="dec">self</span>.name    = name
+        <span class="dec">self</span>.age     = age
+        <span class="dec">self</span>.grade   = grade
+        <span class="dec">self</span>.subject = subject
+
+s1 = <span class="fn">Student</span>(<span class="str">"이서연"</span>, <span class="num">14</span>)
+s2 = <span class="fn">Student</span>(<span class="str">"박지호"</span>, <span class="num">16</span>, <span class="num">3</span>, <span class="str">"과학"</span>)
+<span class="fn">print</span>(s1.name, s1.subject)
+<span class="fn">print</span>(s2.name, s2.subject)</div>
+                </div>
+            </details>
+        </div>
+    </div>
+</div>
+
+<!-- 6페이지: 실용 예 — BankAccount 클래스 -->
+<div class="page">
+    <h2>실용 예 — BankAccount 클래스</h2>
+    <p><code>BankAccount</code>는 <code>__init__</code>의 유효성 검사가 왜 중요한지 잘 보여주는 예입니다. 잔액이 음수인 계좌는 처음부터 만들지 못하도록 막습니다. 기본값 매개변수(예: 화폐 단위, 기본값 <code>"원"</code>)처럼 선택 속성도 자유롭게 추가할 수 있습니다.</p>
+
+    <!-- SVG: BankAccount 구조도 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 115" style="max-width:480px;width:100%">
+            <rect x="5" y="5" width="470" height="105" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="2"/>
+            <rect x="5" y="5" width="470" height="30" rx="10" fill="#1e3a5f"/>
+            <rect x="5" y="25" width="470" height="10" fill="#1e3a5f"/>
+            <text x="240" y="25" text-anchor="middle" font-size="12" fill="#fff" font-weight="900">class BankAccount</text>
+            <!-- 속성 -->
+            <text x="20" y="50" font-size="9" fill="#64748b" font-weight="700">속성</text>
+            <rect x="20" y="55" width="100" height="20" rx="5" fill="#dbeafe"/>
+            <text x="70" y="69" text-anchor="middle" font-size="8" fill="#1d4ed8">owner: str</text>
+            <rect x="125" y="55" width="100" height="20" rx="5" fill="#dbeafe"/>
+            <text x="175" y="69" text-anchor="middle" font-size="8" fill="#1d4ed8">balance: float</text>
+            <rect x="230" y="55" width="120" height="20" rx="5" fill="#fefce8"/>
+            <text x="290" y="69" text-anchor="middle" font-size="8" fill="#92400e">account_no: str</text>
+            <rect x="355" y="55" width="110" height="20" rx="5" fill="#fefce8"/>
+            <text x="410" y="69" text-anchor="middle" font-size="8" fill="#92400e">transactions: list</text>
+            <!-- 메서드 -->
+            <text x="20" y="90" font-size="9" fill="#64748b" font-weight="700">메서드</text>
+            <rect x="20" y="95" width="85" height="10" rx="3" fill="#f0fdf4"/>
+            <text x="62" y="104" text-anchor="middle" font-size="7" fill="#166534">__init__</text>
+            <rect x="110" y="95" width="85" height="10" rx="3" fill="#f0fdf4"/>
+            <text x="152" y="104" text-anchor="middle" font-size="7" fill="#166534">deposit</text>
+            <rect x="200" y="95" width="85" height="10" rx="3" fill="#f0fdf4"/>
+            <text x="242" y="104" text-anchor="middle" font-size="7" fill="#166534">withdraw</text>
+            <rect x="290" y="95" width="85" height="10" rx="3" fill="#f0fdf4"/>
+            <text x="332" y="104" text-anchor="middle" font-size="7" fill="#166534">get_balance</text>
+            <rect x="380" y="95" width="85" height="10" rx="3" fill="#f0fdf4"/>
+            <text x="422" y="104" text-anchor="middle" font-size="7" fill="#166534">history</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">import</span> uuid
+
+<span class="kw">class</span> <span class="fn">BankAccount</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="dec">self</span>, owner, balance=<span class="num">0</span>):
+        <span class="kw">if not</span> owner.<span class="fn">strip</span>():
+            <span class="kw">raise</span> <span class="fn">ValueError</span>(<span class="str">"예금주 이름이 필요합니다"</span>)
+        <span class="kw">if</span> balance &lt; <span class="num">0</span>:
+            <span class="kw">raise</span> <span class="fn">ValueError</span>(<span class="str">"초기 잔액은 0 이상이어야 합니다"</span>)
+
+        <span class="dec">self</span>.owner        = owner.<span class="fn">strip</span>()
+        <span class="dec">self</span>.balance      = balance
+        <span class="dec">self</span>.account_no   = str(uuid.<span class="fn">uuid4</span>())[:<span class="num">8</span>].upper()
+        <span class="dec">self</span>.transactions = []
+
+    <span class="kw">def</span> <span class="fn">deposit</span>(<span class="dec">self</span>, amount):
+        <span class="kw">if</span> amount &lt;= <span class="num">0</span>:
+            <span class="kw">raise</span> <span class="fn">ValueError</span>(<span class="str">"입금액은 양수여야 합니다"</span>)
+        <span class="dec">self</span>.balance += amount
+        <span class="dec">self</span>.transactions.<span class="fn">append</span>(<span class="str">f"+{amount}"</span>)
+
+    <span class="kw">def</span> <span class="fn">withdraw</span>(<span class="dec">self</span>, amount):
+        <span class="kw">if</span> amount &gt; <span class="dec">self</span>.balance:
+            <span class="kw">raise</span> <span class="fn">ValueError</span>(<span class="str">"잔액 부족"</span>)
+        <span class="dec">self</span>.balance -= amount
+        <span class="dec">self</span>.transactions.<span class="fn">append</span>(<span class="str">f"-{amount}"</span>)
+
+    <span class="kw">def</span> <span class="fn">get_balance</span>(<span class="dec">self</span>):
+        <span class="kw">return</span> <span class="str">f"{self.owner} 잔액: {self.balance:,}원"</span>
+
+<span class="cmt"># 사용</span>
+acc = <span class="fn">BankAccount</span>(<span class="str">"김민준"</span>, <span class="num">50000</span>)
+acc.<span class="fn">deposit</span>(<span class="num">30000</span>)
+acc.<span class="fn">withdraw</span>(<span class="num">10000</span>)
+<span class="fn">print</span>(acc.<span class="fn">get_balance</span>())
+<span class="fn">print</span>(acc.transactions)</div>
+
+    <div class="output-box">김민준 잔액: 70,000원
+['+30000', '-10000']</div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요 — BankAccount</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1단계</div>
+                <div class="practice-desc">위 <code>BankAccount</code>를 입력하고, <code>acc2 = BankAccount("이영희", -100)</code>을 실행해 유효성 검사가 동작하는지 확인하세요.</div>
+                <div class="practice-result">ValueError: 초기 잔액은 0 이상이어야 합니다</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2단계</div>
+                <div class="practice-desc"><code>BankAccount</code>에 화폐 단위 속성(기본값 <code>"원"</code>)을 추가하고, <code>get_balance</code>가 <code>"김민준 잔액: 70,000원"</code> 형태로 출력되도록 수정하세요.</div>
+                <div class="practice-result">통화 단위가 자동으로 붙어 출력됩니다.</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3단계</div>
+                <div class="practice-desc"><code>BankAccount</code>의 <code>withdraw</code>를 호출할 때 잔액보다 많은 금액을 출금하면 어떤 오류가 나는지 <code>try-except</code>로 처리해보세요.</div>
+                <div class="practice-result">ValueError: 잔액 부족</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 7페이지: 문제 + 핵심 요약 -->
+<div class="page">
+    <h2>문제 풀기</h2>
+
+    <!-- 문제 2 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">2</div>
+            <div class="problem-label">Rectangle 클래스 만들기</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">
+                <code>Rectangle</code>(직사각형) 클래스를 만드세요.<br>
+                <code>__init__</code>에서 <code>width</code>와 <code>height</code>를 받고, 두 값이 모두 양수인지 검사하세요.<br>
+                <code>area()</code> 메서드는 넓이를, <code>perimeter()</code> 메서드는 둘레를 반환합니다.
+            </div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">입력</span><span class="problem-example-value">r = Rectangle(5, 3)</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">넓이: 15, 둘레: 16</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">오류</span><span class="problem-example-value">Rectangle(-1, 3) → ValueError</span></div>
+            </div>
+            <details class="problem-toggle">
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">넓이 = width * height, 둘레 = 2 * (width + height). 유효성 검사는 <code>if width &lt;= 0 or height &lt;= 0</code>으로 처리합니다.</div>
+                </div>
+            </details>
+            <details class="problem-toggle">
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code"><span class="kw">class</span> <span class="fn">Rectangle</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="dec">self</span>, width, height):
+        <span class="kw">if</span> width &lt;= <span class="num">0</span> <span class="kw">or</span> height &lt;= <span class="num">0</span>:
+            <span class="kw">raise</span> <span class="fn">ValueError</span>(<span class="str">"가로, 세로는 양수여야 합니다"</span>)
+        <span class="dec">self</span>.width  = width
+        <span class="dec">self</span>.height = height
+
+    <span class="kw">def</span> <span class="fn">area</span>(<span class="dec">self</span>):
+        <span class="kw">return</span> <span class="dec">self</span>.width * <span class="dec">self</span>.height
+
+    <span class="kw">def</span> <span class="fn">perimeter</span>(<span class="dec">self</span>):
+        <span class="kw">return</span> <span class="num">2</span> * (<span class="dec">self</span>.width + <span class="dec">self</span>.height)
+
+r = <span class="fn">Rectangle</span>(<span class="num">5</span>, <span class="num">3</span>)
+<span class="fn">print</span>(<span class="str">f"넓이: {r.area()}, 둘레: {r.perimeter()}"</span>)</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <!-- 문제 3 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">3</div>
+            <div class="problem-label">Product 클래스 — 재고 관리</div>
+            <span class="problem-diff hard">어려움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">
+                온라인 쇼핑몰의 <code>Product</code> 클래스를 만드세요.<br>
+                <code>__init__</code>은 <code>name</code>(필수), <code>price</code>(필수, 양수), <code>stock</code>(기본값 <code>0</code>, 음수 불가)를 받습니다.<br>
+                <code>buy(quantity)</code> 메서드: 재고가 충분하면 구매 처리, 부족하면 <code>"재고 부족"</code> 출력.<br>
+                <code>restock(quantity)</code> 메서드: 재고 추가 (양수만 허용).
+            </div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">입력</span><span class="problem-example-value">p = Product("파이썬 책", 25000, 10)</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">buy(3)</span><span class="problem-example-value">구매 완료. 재고: 7</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">buy(10)</span><span class="problem-example-value">재고 부족. 현재 재고: 7</span></div>
+            </div>
+            <details class="problem-toggle">
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text"><code>buy</code>에서 <code>if quantity &gt; self.stock</code>을 확인합니다. <code>restock</code>은 <code>if quantity &lt;= 0</code>을 검사합니다.</div>
+                </div>
+            </details>
+            <details class="problem-toggle">
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code"><span class="kw">class</span> <span class="fn">Product</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="dec">self</span>, name, price, stock=<span class="num">0</span>):
+        <span class="kw">if</span> price &lt;= <span class="num">0</span>:
+            <span class="kw">raise</span> <span class="fn">ValueError</span>(<span class="str">"가격은 양수여야 합니다"</span>)
+        <span class="kw">if</span> stock &lt; <span class="num">0</span>:
+            <span class="kw">raise</span> <span class="fn">ValueError</span>(<span class="str">"재고는 0 이상이어야 합니다"</span>)
+        <span class="dec">self</span>.name  = name
+        <span class="dec">self</span>.price = price
+        <span class="dec">self</span>.stock = stock
+
+    <span class="kw">def</span> <span class="fn">buy</span>(<span class="dec">self</span>, quantity):
+        <span class="kw">if</span> quantity &gt; <span class="dec">self</span>.stock:
+            <span class="fn">print</span>(<span class="str">f"재고 부족. 현재 재고: {self.stock}"</span>)
+        <span class="kw">else</span>:
+            <span class="dec">self</span>.stock -= quantity
+            <span class="fn">print</span>(<span class="str">f"구매 완료. 재고: {self.stock}"</span>)
+
+    <span class="kw">def</span> <span class="fn">restock</span>(<span class="dec">self</span>, quantity):
+        <span class="kw">if</span> quantity &lt;= <span class="num">0</span>:
+            <span class="kw">raise</span> <span class="fn">ValueError</span>(<span class="str">"보충량은 양수여야 합니다"</span>)
+        <span class="dec">self</span>.stock += quantity
+        <span class="fn">print</span>(<span class="str">f"재고 추가 완료. 현재 재고: {self.stock}"</span>)</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <!-- SVG: __init__ 있을 때 vs 없을 때 비교 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 90" style="max-width:480px;width:100%">
+            <text x="115" y="14" text-anchor="middle" font-size="10" fill="#991b1b" font-weight="700">__init__ 없을 때</text>
+            <rect x="5" y="20" width="220" height="64" rx="8" fill="#fff5f5" stroke="#fca5a5" stroke-width="1.5"/>
+            <text x="115" y="38" text-anchor="middle" font-size="9" fill="#64748b">s = Student()</text>
+            <text x="115" y="52" text-anchor="middle" font-size="9" fill="#64748b">s.name = "김민준"  # 따로 설정</text>
+            <text x="115" y="66" text-anchor="middle" font-size="9" fill="#64748b">s.age = 15         # 깜빡하면 오류!</text>
+            <text x="115" y="80" text-anchor="middle" font-size="8" fill="#ef4444">속성 누락 위험, 초기화 분산</text>
+
+            <text x="240" y="50" text-anchor="middle" font-size="18" fill="#94a3b8">→</text>
+
+            <text x="365" y="14" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">__init__ 있을 때</text>
+            <rect x="255" y="20" width="220" height="64" rx="8" fill="#f0fdf4" stroke="#86efac" stroke-width="1.5"/>
+            <text x="365" y="38" text-anchor="middle" font-size="9" fill="#64748b">s = Student("김민준", 15)</text>
+            <text x="365" y="52" text-anchor="middle" font-size="9" fill="#166534"># 생성과 동시에 완전 초기화</text>
+            <text x="365" y="66" text-anchor="middle" font-size="9" fill="#166534"># 유효성 검사 자동 실행</text>
+            <text x="365" y="80" text-anchor="middle" font-size="8" fill="#166534">안전하고 일관된 초기 상태</text>
+        </svg>
+    </div>
+
+    <!-- 핵심 요약 -->
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>핵심 요약</h3>
+        <ul>
+            <li><code>__init__</code>은 객체 생성 시 자동으로 호출되는 초기화 메서드입니다.</li>
+            <li><code>self</code>는 현재 인스턴스를 가리키며, 항상 첫 번째 매개변수로 씁니다.</li>
+            <li><code>self.속성 = 값</code>으로 인스턴스 속성을 설정합니다.</li>
+            <li>기본값 매개변수는 필수 매개변수 뒤에 위치해야 합니다.</li>
+            <li>가변 객체(list, dict)는 기본값이 아닌 <code>self.attr = []</code>로 초기화합니다.</li>
+            <li><code>__init__</code>에서 <code>raise ValueError</code>로 잘못된 입력을 즉시 막을 수 있습니다.</li>
+        </ul>
+    </div>
+
+    <!-- SVG: __init__ 체크리스트 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 75" style="max-width:480px;width:100%">
+            <text x="240" y="15" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="700">__init__ 작성 체크리스트</text>
+            <rect x="5" y="22" width="92" height="46" rx="7" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="51" y="40" text-anchor="middle" font-size="8" fill="#1e3a5f" font-weight="700">self 첫 번째</text>
+            <text x="51" y="55" text-anchor="middle" font-size="8" fill="#64748b">항상 포함</text>
+            <rect x="102" y="22" width="92" height="46" rx="7" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="148" y="40" text-anchor="middle" font-size="8" fill="#1e3a5f" font-weight="700">유효성 먼저</text>
+            <text x="148" y="55" text-anchor="middle" font-size="8" fill="#64748b">대입 전 검사</text>
+            <rect x="199" y="22" width="92" height="46" rx="7" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="245" y="40" text-anchor="middle" font-size="8" fill="#1e3a5f" font-weight="700">기본값 뒤에</text>
+            <text x="245" y="55" text-anchor="middle" font-size="8" fill="#64748b">필수 → 선택 순</text>
+            <rect x="296" y="22" width="92" height="46" rx="7" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="342" y="40" text-anchor="middle" font-size="8" fill="#1e3a5f" font-weight="700">가변 초기화</text>
+            <text x="342" y="55" text-anchor="middle" font-size="8" fill="#64748b">self.x = []</text>
+            <rect x="393" y="22" width="82" height="46" rx="7" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="434" y="40" text-anchor="middle" font-size="8" fill="#1e3a5f" font-weight="700">return 없음</text>
+            <text x="434" y="55" text-anchor="middle" font-size="8" fill="#64748b">None 반환</text>
+        </svg>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

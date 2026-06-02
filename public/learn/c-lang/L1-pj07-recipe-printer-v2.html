@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 프로젝트: 요리 레시피 출력기</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #ea580c; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 220px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #c2410c; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 36px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #ea580c; font-weight: 900; }
+
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #fff7ed; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #c2410c; font-weight: 600;
+}
+
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 14px;
+    color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+
+.practice { margin: 20px 0; border-left: 4px solid #ea580c; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #c2410c; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #ea580c; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #ea580c; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fff7ed; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#ea580c,#c2410c); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #c2410c; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #fff7ed; color: #c2410c; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fff7ed; padding: 8px 12px; border-radius: 6px; color: #c2410c; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+.project-badge { display: inline-block; background: linear-gradient(135deg,#ea580c,#c2410c); color: #fff; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 99px; margin-bottom: 8px; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- ═══ 1페이지: 표지 ═══ -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">PJ</div>
+        <div class="cover-label">Project 07</div>
+        <div class="project-badge">실전 프로젝트</div>
+        <h1 class="cover-title">요리 레시피 출력기</h1>
+        <p class="cover-sub">좋아하는 요리의 재료와 조리 순서를 C 언어로 예쁘게 출력합니다.</p>
+
+        <!-- SVG: 레시피 출력 미리보기 -->
+        <div style="margin:24px 0;">
+            <svg viewBox="0 0 460 130" style="max-width:460px;width:100%">
+                <rect x="10" y="10" width="440" height="110" rx="10" fill="#0f172a"/>
+                <text x="230" y="30" text-anchor="middle" font-size="11" fill="#ea580c" font-weight="700">출력 결과 미리보기</text>
+                <text x="30" y="50" font-family="monospace" font-size="12" fill="#fcd34d">===== 라면 레시피 =====</text>
+                <text x="30" y="68" font-family="monospace" font-size="12" fill="#86efac">[재료] 라면 1개, 계란 1개</text>
+                <text x="30" y="84" font-family="monospace" font-size="12" fill="#67e8f9">[순서] 1. 물 500ml 끓이기</text>
+                <text x="30" y="98" font-family="monospace" font-size="12" fill="#67e8f9">       2. 면 넣고 3분 조리</text>
+                <text x="30" y="112" font-family="monospace" font-size="12" fill="#fcd34d">======================</text>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/lightbulb.png" alt="아이디어" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 프로젝트에서 만드는 것</h3>
+            <ul>
+                <li>레시피 카드 형식의 텍스트 레이아웃을 설계합니다.</li>
+                <li>재료 목록, 조리 순서를 번호와 함께 출력합니다.</li>
+                <li>섹션별 구분선을 특수문자로 표현합니다.</li>
+                <li>4페이지 분량의 완성도 높은 레시피 카드를 완성합니다.</li>
+            </ul>
+        </div>
+
+        <!-- SVG: 레시피 구조 -->
+        <div style="margin:24px 0 0;">
+            <svg viewBox="0 0 440 80" style="max-width:440px;width:100%">
+                <rect x="10" y="10" width="100" height="60" rx="6" fill="#fff7ed" stroke="#ea580c" stroke-width="1.5"/>
+                <text x="60" y="35" text-anchor="middle" font-size="11" fill="#c2410c" font-weight="700">제목</text>
+                <text x="60" y="52" text-anchor="middle" font-size="10" fill="#64748b">헤더</text>
+                <text x="125" y="45" text-anchor="middle" font-size="18" fill="#94a3b8">→</text>
+                <rect x="145" y="10" width="100" height="60" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="195" y="35" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">재료</text>
+                <text x="195" y="52" text-anchor="middle" font-size="10" fill="#64748b">목록</text>
+                <text x="260" y="45" text-anchor="middle" font-size="18" fill="#94a3b8">→</text>
+                <rect x="280" y="10" width="100" height="60" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="330" y="35" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">조리순서</text>
+                <text x="330" y="52" text-anchor="middle" font-size="10" fill="#64748b">단계별</text>
+            </svg>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ 2페이지: 레시피 기본 구조 ═══ -->
+<div class="page">
+    <h2>레시피 카드 설계하기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>레시피 카드는 <strong>제목 → 재료 → 조리 순서</strong> 3단계 구조로 만듭니다. 각 섹션을 <code>-----</code>로 구분하면 읽기 쉬운 카드가 됩니다.</p>
+
+    <!-- SVG 1: 레시피 카드 레이아웃 -->
+    <div style="text-align:center;margin:20px 0;">
+        <svg viewBox="0 0 460 160" style="max-width:460px;width:100%">
+            <rect x="10" y="10" width="440" height="140" rx="10" fill="#0f172a"/>
+            <rect x="20" y="20" width="420" height="28" rx="4" fill="#ff7c20" opacity="0.15"/>
+            <text x="230" y="38" text-anchor="middle" font-family="monospace" font-size="12" fill="#fcd34d" font-weight="700">======== 라면 레시피 ========</text>
+            <text x="30" y="66" font-family="monospace" font-size="12" fill="#94a3b8">------- [재료] -------</text>
+            <text x="30" y="84" font-family="monospace" font-size="12" fill="#86efac">  - 라면 1봉지</text>
+            <text x="30" y="100" font-family="monospace" font-size="12" fill="#86efac">  - 계란 1개</text>
+            <text x="30" y="116" font-family="monospace" font-size="12" fill="#94a3b8">------- [순서] -------</text>
+            <text x="30" y="132" font-family="monospace" font-size="12" fill="#67e8f9">  1. 물 500ml 끓이기</text>
+            <text x="30" y="148" font-family="monospace" font-size="12" fill="#67e8f9">  2. 면과 수프 넣기</text>
+        </svg>
+    </div>
+
+    <!-- SVG 2: 번호 목록 출력법 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 70" style="max-width:460px;width:100%">
+            <text x="230" y="14" text-anchor="middle" font-size="11" fill="#64748b" font-weight="700">번호 목록 출력 방법</text>
+            <rect x="10" y="20" width="440" height="45" rx="8" fill="#0f172a"/>
+            <text x="25" y="40" font-family="monospace" font-size="12" fill="#67e8f9">printf</text>
+            <text x="77" y="40" font-family="monospace" font-size="12" fill="#e2e8f0">(</text>
+            <text x="85" y="40" font-family="monospace" font-size="12" fill="#86efac">"  1. 물 끓이기\n"</text>
+            <text x="218" y="40" font-family="monospace" font-size="12" fill="#e2e8f0">);</text>
+            <text x="25" y="57" font-size="10" fill="#64748b">공백 2칸 + 번호 + 점 + 공백 + 내용 → 깔끔한 번호 목록</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="cmt">/* 라면 레시피 출력기 */</span>
+
+    <span class="cmt">// 제목</span>
+    <span class="fn">printf</span>(<span class="str">"======== 라면 레시피 ========\n"</span>);
+
+    <span class="cmt">// 재료 섹션</span>
+    <span class="fn">printf</span>(<span class="str">"------- [재료] -------\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"  - 라면 1봉지\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"  - 계란 1개\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"  - 대파 조금\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"  - 물 500ml\n"</span>);
+
+    <span class="cmt">// 조리 순서 섹션</span>
+    <span class="fn">printf</span>(<span class="str">"------- [순서] -------\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"  1. 냄비에 물 500ml 붓기\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"  2. 물이 끓으면 면과 수프 넣기\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"  3. 3분 더 끓이기\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"  4. 계란과 대파 올리기\n"</span>);
+
+    <span class="cmt">// 마무리</span>
+    <span class="fn">printf</span>(<span class="str">"============================\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"  완성! 맛있게 드세요!\n"</span>);
+
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/desktop-pc.png" alt="데스크탑" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="완성" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">위 코드를 입력하고 라면 레시피 카드를 출력해보세요.</div>
+                <div class="practice-result">레시피 카드 형식으로 출력</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">재료를 1~2개 추가해서 더 완성도 높은 레시피를 만들어보세요.</div>
+                <div class="practice-result">재료 목록 확장</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ 3페이지: 나만의 레시피 ═══ -->
+<div class="page">
+    <h2>나만의 레시피 만들기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/monitor.png" alt="모니터" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>좋아하는 요리를 선택해서 완전한 레시피 카드를 작성합니다. 재료, 조리 시간, 난이도까지 포함하면 더욱 완성도 높은 카드가 됩니다.</p>
+
+    <!-- SVG 3: 레시피 카드 확장 요소 -->
+    <div style="text-align:center;margin:20px 0;">
+        <svg viewBox="0 0 460 100" style="max-width:460px;width:100%">
+            <rect x="10" y="10" width="100" height="80" rx="6" fill="#fff7ed" stroke="#ea580c" stroke-width="1.5"/>
+            <text x="60" y="35" text-anchor="middle" font-size="11" fill="#c2410c" font-weight="700">요리 이름</text>
+            <text x="60" y="55" text-anchor="middle" font-size="10" fill="#64748b">헤더</text>
+            <text x="60" y="72" text-anchor="middle" font-size="9" fill="#94a3b8">===제목===</text>
+            <rect x="125" y="10" width="100" height="80" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="175" y="35" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">기본 정보</text>
+            <text x="175" y="55" text-anchor="middle" font-size="10" fill="#64748b">시간/난이도</text>
+            <text x="175" y="72" text-anchor="middle" font-size="9" fill="#94a3b8">[시간: 15분]</text>
+            <rect x="240" y="10" width="100" height="80" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="290" y="35" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">재료</text>
+            <text x="290" y="55" text-anchor="middle" font-size="10" fill="#64748b">목록</text>
+            <text x="290" y="72" text-anchor="middle" font-size="9" fill="#94a3b8">- 재료 Xg</text>
+            <rect x="355" y="10" width="100" height="80" rx="6" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="405" y="35" text-anchor="middle" font-size="11" fill="#dc2626" font-weight="700">순서</text>
+            <text x="405" y="55" text-anchor="middle" font-size="10" fill="#64748b">단계별</text>
+            <text x="405" y="72" text-anchor="middle" font-size="9" fill="#94a3b8">1. 단계</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="cmt">/* 나만의 레시피 카드 */</span>
+
+    <span class="cmt">// 헤더</span>
+    <span class="fn">printf</span>(<span class="str">"################################\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"##   나만의 특제 볶음밥 레시피  ##\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"################################\n"</span>);
+
+    <span class="cmt">// 기본 정보</span>
+    <span class="fn">printf</span>(<span class="str">"  [조리 시간] 약 15분\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"  [난이도   ] 쉬움\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"  [인분     ] 1인분\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"--------------------------------\n"</span>);
+
+    <span class="cmt">// 재료</span>
+    <span class="fn">printf</span>(<span class="str">"  [재료]\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"  - 밥 1공기\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"  - 계란 2개\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"  - 당근 1/4개\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"  - 간장 1스푼\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"--------------------------------\n"</span>);
+
+    <span class="cmt">// 조리 순서</span>
+    <span class="fn">printf</span>(<span class="str">"  [만드는 법]\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"  1. 당근 작게 썰기\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"  2. 프라이팬에 기름 두르기\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"  3. 계란 스크램블 만들기\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"  4. 밥 넣고 볶기\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"  5. 간장으로 간하기\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"################################\n"</span>);
+
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">위 코드를 참고해서 좋아하는 요리 레시피로 바꿔보세요.</div>
+                <div class="practice-result">나만의 레시피 카드 완성</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">재료 개수를 다르게 해서 테두리 길이를 맞춰보세요.</div>
+                <div class="practice-result">정렬된 레시피 카드</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">각 섹션 앞에 // 주석으로 설명을 달아보세요.</div>
+                <div class="practice-result">주석이 포함된 완성 코드</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ 4페이지: 도전 과제 + 요약 ═══ -->
+<div class="page">
+    <h2>도전 과제</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/keyboard.png" alt="키보드" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q1</div>
+            <div class="problem-label">간식 레시피 만들기</div>
+            <span class="problem-diff easy">기본</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">좋아하는 간식(떡볶이, 샌드위치, 과일 화채 등)의 레시피 카드를 만드세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">조건 1</span><span class="problem-example-value">제목 헤더 포함 (특수문자 테두리)</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">조건 2</span><span class="problem-example-value">재료 3가지 이상</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">조건 3</span><span class="problem-example-value">조리 순서 3단계 이상</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>예시 정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code"><span class="fn">printf</span>(<span class="str">"==== 떡볶이 레시피 ====\n"</span>);
+<span class="fn">printf</span>(<span class="str">"[재료]\n"</span>);
+<span class="fn">printf</span>(<span class="str">"  - 떡볶이 떡 200g\n"</span>);
+<span class="fn">printf</span>(<span class="str">"  - 고추장 2스푼\n"</span>);
+<span class="fn">printf</span>(<span class="str">"  - 물 1컵\n"</span>);
+<span class="fn">printf</span>(<span class="str">"[순서]\n"</span>);
+<span class="fn">printf</span>(<span class="str">"  1. 물에 고추장 풀기\n"</span>);
+<span class="fn">printf</span>(<span class="str">"  2. 떡 넣고 5분 끓이기\n"</span>);
+<span class="fn">printf</span>(<span class="str">"  3. 완성!\n"</span>);</div>
+            </div>
+        </details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q2</div>
+            <div class="problem-label">2가지 레시피 연속 출력</div>
+            <span class="problem-diff medium">심화</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">두 가지 요리 레시피를 하나의 프로그램에서 연속으로 출력하세요. 사이에 빈 줄 2줄을 넣으세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">힌트</span><span class="problem-example-value">printf("\n\n"); 으로 빈 줄 2개</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">첫 번째 레시피 마지막 줄 다음에 <code>printf("\n\n");</code>을 추가하면 됩니다.</div>
+            </div>
+        </details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q3</div>
+            <div class="problem-label">주석 완전 정복</div>
+            <span class="problem-diff easy">기본</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">레시피 코드 전체에 /* */ 헤더 주석과 // 섹션 주석을 모두 달아보세요.</div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>예시 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code"><span class="cmt">/* 나만의 레시피 출력기
+   작성자: 내 이름
+   요리: 라면 */</span>
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="cmt">// 헤더 출력</span>
+    <span class="fn">printf</span>(<span class="str">"제목\n"</span>);
+    <span class="cmt">// 재료 출력</span>
+    <span class="fn">printf</span>(<span class="str">"재료\n"</span>);
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+            </div>
+        </details>
+    </div>
+
+    <div class="summary" style="background:#ffffff;">
+        <h3>핵심 요약</h3>
+        <ul>
+            <li>여러 줄 <code>printf</code>를 조합해 구조화된 텍스트 레이아웃 가능</li>
+            <li>특수문자 테두리로 섹션을 시각적으로 구분</li>
+            <li><code>  - 항목</code>, <code>  1. 단계</code> 형식으로 목록 표현</li>
+            <li>주석으로 섹션 설명 → 유지보수 편리</li>
+            <li>실제 사용 가능한 완성된 프로그램 경험</li>
+        </ul>
+    </div>
+
+    <!-- SVG: 레시피 카드 미니 완성본 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 65" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="55" rx="8" fill="#0f172a"/>
+            <text x="230" y="22" text-anchor="middle" font-family="monospace" font-size="11" fill="#fcd34d" font-weight="700">####### 내 레시피 카드 #######</text>
+            <text x="30" y="38" font-family="monospace" font-size="11" fill="#86efac">  - 재료 A, B, C</text>
+            <text x="30" y="52" font-family="monospace" font-size="11" fill="#67e8f9">  1. 단계1  2. 단계2  3. 완성!</text>
+        </svg>
+    </div>
+</div>
+
+
+    <!-- Extra SVG -->
+    <div style="text-align:center;margin:8px 0;">
+        <svg viewBox="0 0 460 50" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="200" height="40" rx="8" fill="#0f172a" stroke="#ea580c" stroke-width="1.5"/>
+            <text x="110" y="22" text-anchor="middle" font-size="10" fill="#ea580c" font-weight="700">레시피 구조</text>
+            <text x="110" y="38" text-anchor="middle" font-family="monospace" font-size="12" fill="#e2e8f0">제목/재료/순서</text>
+            <rect x="250" y="5" width="200" height="40" rx="8" fill="#0f172a" stroke="#ea580c" stroke-width="1.5"/>
+            <text x="350" y="22" text-anchor="middle" font-size="10" fill="#ea580c" font-weight="700">예시</text>
+            <text x="350" y="38" text-anchor="middle" font-family="monospace" font-size="12" fill="#94a3b8">구분선 분리</text>
+        </svg>
+    </div>
+    <!-- Extra SVG -->
+    <div style="text-align:center;margin:6px 0;">
+        <svg viewBox="0 0 460 40" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="30" rx="6" fill="#0f172a"/>
+            <text x="230" y="24" text-anchor="middle" font-size="11" fill="#ea580c" font-weight="700">레시피 구조 2</text>
+        </svg>
+    </div>
+    <!-- Extra SVG -->
+    <div style="text-align:center;margin:6px 0;">
+        <svg viewBox="0 0 460 40" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="30" rx="6" fill="#0f172a"/>
+            <text x="230" y="24" text-anchor="middle" font-size="11" fill="#ea580c" font-weight="700">레시피 구조 3</text>
+        </svg>
+    </div>
+    <!-- Extra SVG -->
+    <div style="text-align:center;margin:6px 0;">
+        <svg viewBox="0 0 460 40" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="30" rx="6" fill="#0f172a"/>
+            <text x="230" y="24" text-anchor="middle" font-size="11" fill="#ea580c" font-weight="700">레시피 구조 4</text>
+        </svg>
+    </div>
+    <div class="code"><span class="cmt">// 추가 예시</span>
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="fn">printf</span>(<span class="str">"예시 출력
+"</span>);
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+
+
+
+<script>
+(function(){
+  var KEY = 'cs_ans_' + location.pathname.replace(/[^a-zA-Z0-9]/g,'_');
+  var pagePath = location.pathname;
+  var userId = null;
+  try {
+    userId = window.parent?.localStorage?.getItem('codingssok_user_id')
+      || localStorage.getItem('codingssok_user_id');
+  } catch(e) {}
+
+  function save(){
+    var areas = document.querySelectorAll('textarea');
+    var saved = 0;
+    areas.forEach(function(ta, i){
+      if(ta.value.trim()) {
+        localStorage.setItem(KEY + '_' + i, ta.value);
+        saved++;
+      } else {
+        localStorage.removeItem(KEY + '_' + i);
+      }
+    });
+    if(saved > 0) showSaveIndicator();
+  }
+
+  function load(){
+    var areas = document.querySelectorAll('textarea');
+    var restored = 0;
+    areas.forEach(function(ta, i){
+      var val = localStorage.getItem(KEY + '_' + i);
+      if(val && val.trim()) {
+        ta.value = val;
+        ta.style.borderColor = '#10b981';
+        ta.style.boxShadow = '0 0 0 2px rgba(16,185,129,0.15)';
+        setTimeout(function(){ ta.style.borderColor = ''; ta.style.boxShadow = ''; }, 2000);
+        restored++;
+      }
+    });
+    if(restored > 0) showRestoreIndicator(restored);
+  }
+
+  function saveToDb(){
+    if(!userId) return;
+    var areas = document.querySelectorAll('textarea');
+    var answers = [];
+    areas.forEach(function(ta, i){
+      if(ta.value.trim()) answers.push({ field_index: i, answer_text: ta.value });
+    });
+    if(answers.length === 0) return;
+    fetch('/api/answers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId, page_path: pagePath, answers: answers })
+    }).catch(function(){});
+  }
+
+  function loadFromDb(){
+    if(!userId) return;
+    fetch('/api/answers?user_id=' + encodeURIComponent(userId) + '&page_path=' + encodeURIComponent(pagePath))
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(!d.answers || !d.answers.length) return;
+        var areas = document.querySelectorAll('textarea');
+        d.answers.forEach(function(a){
+          if(areas[a.field_index] && a.answer_text) {
+            areas[a.field_index].value = a.answer_text;
+            localStorage.setItem(KEY + '_' + a.field_index, a.answer_text);
+          }
+        });
+      }).catch(function(){});
+  }
+
+  function showSaveIndicator(){
+    var el = document.getElementById('cs-save-ind');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'cs-save-ind';
+      el.style.cssText = 'position:fixed;bottom:16px;right:16px;padding:6px 14px;border-radius:8px;background:#0f172a;color:#22c55e;font-size:11px;font-weight:700;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+      document.body.appendChild(el);
+    }
+    el.textContent = '\u2713 \uB2F5\uC548 \uC800\uC7A5\uB428'; // ✓ 답안 저장됨
+    el.style.opacity = '1';
+    setTimeout(function(){ el.style.opacity = '0'; }, 1500);
+  }
+
+  function showRestoreIndicator(n){
+    var el = document.getElementById('cs-save-ind');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'cs-save-ind';
+      el.style.cssText = 'position:fixed;bottom:16px;right:16px;padding:6px 14px;border-radius:8px;background:#0f172a;color:#3b82f6;font-size:11px;font-weight:700;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+      document.body.appendChild(el);
+    }
+    el.textContent = '\u21BB ' + n + '\uAC1C \uB2F5\uC548 \uBCF5\uC6D0'; // ↻ n개 답안 복원
+    el.style.color = '#3b82f6';
+    el.style.opacity = '1';
+    setTimeout(function(){ el.style.opacity = '0'; }, 2500);
+  }
+
+  var t = null;
+  document.addEventListener('input', function(e){
+    if(e.target.tagName === 'TEXTAREA'){
+      clearTimeout(t);
+      t = setTimeout(function(){ save(); saveToDb(); }, 300);
+    }
+  });
+  document.addEventListener('change', function(e){
+    if(e.target.tagName === 'TEXTAREA'){ save(); saveToDb(); }
+  });
+  document.addEventListener('focusout', function(e){
+    if(e.target.tagName === 'TEXTAREA'){ save(); saveToDb(); }
+  });
+  window.addEventListener('beforeunload', function(){ save(); saveToDb(); });
+
+  // 즉시 로드
+  load();
+  loadFromDb();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 문자열 검색</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+.page { width: 210mm; min-height: 297mm; margin: 16px auto; padding: 18mm 20mm 15mm 22mm; background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: relative; page-break-after: always; }
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after { content: counter(pagenum); position: absolute; bottom: 10mm; right: 16mm; font-size: 10px; color: #94a3b8; font-weight: 600; }
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark { position: absolute; top: -10px; right: -15px; font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3); line-height: 1; pointer-events: none; }
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #2563eb; font-weight: 600; }
+.code { background: #0f172a; border-radius: 8px; padding: 16px 20px; font-family: 'JetBrains Mono', monospace; font-size: 14px; color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap; }
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<div class="page cover">
+  <div class="cover-sidebar"></div>
+  <div class="cover-accent"></div>
+  <div class="cover-body">
+    <div class="cover-watermark">06</div>
+    <div class="cover-label">Chapter 07 — Unit 06</div>
+    <h1 class="cover-title">문자열 검색<br>— strchr와 strstr</h1>
+    <p class="cover-sub">문자열 안에서 특정 문자나 부분 문자열을 찾는 strchr, strstr을 배웁니다.</p>
+    <div style="margin:20px 0;">
+      <svg viewBox="0 0 500 60" style="max-width:500px;width:100%">
+        <rect x="5" y="15" width="100" height="30" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+        <text x="55" y="35" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">strchr 문자검색</text>
+        <line x1="110" y1="30" x2="125" y2="30" stroke="#94a3b8" stroke-width="1.5"/>
+        <rect x="130" y="15" width="100" height="30" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+        <text x="180" y="35" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">strstr 부분검색</text>
+        <line x1="235" y1="30" x2="250" y2="30" stroke="#94a3b8" stroke-width="1.5"/>
+        <rect x="255" y="15" width="90" height="30" rx="6" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+        <text x="300" y="35" text-anchor="middle" font-size="10" fill="#dc2626" font-weight="700">포인터 반환</text>
+        <line x1="350" y1="30" x2="365" y2="30" stroke="#94a3b8" stroke-width="1.5"/>
+        <rect x="370" y="15" width="90" height="30" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+        <text x="415" y="35" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">NULL이면 없음</text>
+      </svg>
+    </div>
+    <div class="cover-goals">
+      <h3>이 유닛에서 배우는 것</h3>
+      <ul>
+        <li>strchr로 문자열에서 특정 문자를 찾을 수 있습니다.</li>
+        <li>strstr로 문자열 안에서 부분 문자열을 찾을 수 있습니다.</li>
+        <li>반환값이 NULL이면 찾지 못했음을 처리할 수 있습니다.</li>
+        <li>포인터 반환값을 통해 위치 정보를 활용할 수 있습니다.</li>
+        <li>검색 결과로 이메일 @ 기호 위치 찾기 등을 구현합니다.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+  <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/computer-basics/keyboard.png" alt="키보드 - 문자열 입력" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>strchr — 문자 검색</h2>
+  <p><code>strchr(str, ch)</code>는 문자열 <code>str</code>에서 문자 <code>ch</code>를 처음 발견한 위치(포인터)를 반환합니다. 찾지 못하면 <code>NULL</code>을 반환합니다.</p>
+  <div style="text-align:center;margin:18px 0;">
+    <svg viewBox="0 0 460 110" style="max-width:460px;width:100%">
+      <text x="230" y="16" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="800">strchr("Hello", 'l') 동작</text>
+      <rect x="20" y="28" width="50" height="44" rx="4" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1.5"/>
+      <text x="45" y="54" text-anchor="middle" font-size="18" fill="#64748b" font-weight="700">H</text>
+      <rect x="76" y="28" width="50" height="44" rx="4" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1.5"/>
+      <text x="101" y="54" text-anchor="middle" font-size="18" fill="#64748b" font-weight="700">e</text>
+      <rect x="132" y="24" width="50" height="52" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="3"/>
+      <text x="157" y="54" text-anchor="middle" font-size="18" fill="#1d4ed8" font-weight="900">l</text>
+      <text x="157" y="68" text-anchor="middle" font-size="8" fill="#3b82f6" font-weight="700">발견!</text>
+      <rect x="188" y="28" width="50" height="44" rx="4" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1.5"/>
+      <text x="213" y="54" text-anchor="middle" font-size="18" fill="#64748b" font-weight="700">l</text>
+      <rect x="244" y="28" width="50" height="44" rx="4" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1.5"/>
+      <text x="269" y="54" text-anchor="middle" font-size="18" fill="#64748b" font-weight="700">o</text>
+      <path d="M157,82 L157,98" stroke="#3b82f6" stroke-width="2" marker-end="url(#sr1)"/>
+      <text x="230" y="106" text-anchor="middle" font-size="10" fill="#3b82f6" font-weight="700">반환: 'l'이 있는 주소 (첫 번째만)</text>
+      <defs><marker id="sr1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#3b82f6"/></marker></defs>
+    </svg>
+  </div>
+  <div class="code"><span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="kw">#include</span> <span class="str">&lt;string.h&gt;</span>
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="kw">char</span> str[] = <span class="str">"Hello World"</span>;
+    <span class="kw">char</span> *p;
+
+    p = <span class="fn">strchr</span>(str, <span class="str">'o'</span>);   <span class="cmt">// 첫 번째 'o' 위치</span>
+    <span class="kw">if</span> (p != <span class="num">NULL</span>)
+        <span class="fn">printf</span>(<span class="str">"발견: %s\n"</span>, p);  <span class="cmt">// "o World"</span>
+    <span class="kw">else</span>
+        <span class="fn">printf</span>(<span class="str">"없음\n"</span>);
+
+    <span class="cmt">// 위치(인덱스) 계산</span>
+    <span class="kw">if</span> (p) <span class="fn">printf</span>(<span class="str">"인덱스: %ld\n"</span>, p - str);  <span class="cmt">// 4</span>
+
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+  <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/c-lang/book.png" alt="교재 - 문자열 개념 학습" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>strstr — 부분 문자열 검색</h2>
+  <p><code>strstr(haystack, needle)</code>은 haystack에서 needle 문자열을 처음 발견한 위치를 반환합니다. 없으면 <code>NULL</code>입니다.</p>
+  <div class="code"><span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="kw">#include</span> <span class="str">&lt;string.h&gt;</span>
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="kw">char</span> text[] = <span class="str">"I love C language"</span>;
+    <span class="kw">char</span> *found;
+
+    found = <span class="fn">strstr</span>(text, <span class="str">"C lang"</span>);
+    <span class="kw">if</span> (found)
+        <span class="fn">printf</span>(<span class="str">"찾음: '%s'\n"</span>, found);  <span class="cmt">// C language</span>
+
+    found = <span class="fn">strstr</span>(text, <span class="str">"Python"</span>);
+    <span class="kw">if</span> (!found)
+        <span class="fn">printf</span>(<span class="str">"Python 없음\n"</span>);
+
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+</div>
+
+<div class="page">
+  <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/c-lang/notebook.png" alt="노트북 - 문자열 기록" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>검색 활용 — 이메일 @ 위치 찾기</h2>
+  <div style="text-align:center;margin:14px 0;">
+    <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+      <text x="230" y="14" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="800">strchr로 이메일 @ 찾기</text>
+      <text x="30" y="40" font-size="13" fill="#64748b" font-family="JetBrains Mono">user@example.com</text>
+      <rect x="94" y="26" width="16" height="22" rx="3" fill="#fef2f2" stroke="#ef4444" stroke-width="2"/>
+      <text x="102" y="42" text-anchor="middle" font-size="13" fill="#dc2626" font-weight="900">@</text>
+      <path d="M102,52 L102,65" stroke="#ef4444" stroke-width="1.5" marker-end="url(#at1)"/>
+      <text x="200" y="72" text-anchor="middle" font-size="10" fill="#ef4444" font-weight="700">strchr(email,'@') → @ 위치 포인터</text>
+      <defs><marker id="at1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#ef4444"/></marker></defs>
+    </svg>
+  </div>
+  <div class="code"><span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="kw">#include</span> <span class="str">&lt;string.h&gt;</span>
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="kw">char</span> email[] = <span class="str">"student@school.com"</span>;
+    <span class="kw">char</span> *at = <span class="fn">strchr</span>(email, <span class="str">'@'</span>);
+
+    <span class="kw">if</span> (at) {
+        <span class="cmt">// @ 앞부분 (아이디)</span>
+        <span class="kw">int</span> id_len = at - email;
+        <span class="kw">char</span> id[<span class="num">30</span>];
+        <span class="fn">strncpy</span>(id, email, id_len);
+        id[id_len] = <span class="str">'\0'</span>;
+        <span class="fn">printf</span>(<span class="str">"아이디: %s\n"</span>, id);
+
+        <span class="cmt">// @ 뒷부분 (도메인)</span>
+        <span class="fn">printf</span>(<span class="str">"도메인: %s\n"</span>, at+<span class="num">1</span>);
+    } <span class="kw">else</span> {
+        <span class="fn">printf</span>(<span class="str">"유효하지 않은 이메일\n"</span>);
+    }
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+  <div style="display:flex;align-items:center;gap:6px;margin:14px 0 4px;">
+        <img src="/images/learn/c-lang/notebook.png" alt="노트북 - 문자열 기록" style="width:24px;height:24px;object-fit:contain;background:#fff;border-radius:8px;">
+        <span style="font-size:12px;color:#1d4ed8;font-weight:600;">실습 구역</span>
+    </div>
+<div class="practice">
+    <div class="practice-head">따라해보세요</div>
+    <div class="practice-body">
+      <div class="practice-item">
+        <div class="practice-num">1</div>
+        <div class="practice-desc">"Hello World"에서 'W'의 위치(인덱스)를 출력하세요.</div>
+        <div class="code"><span class="kw">char</span> s[] = <span class="str">"Hello World"</span>;
+<span class="kw">char</span> *p = <span class="fn">strchr</span>(s, <span class="str">'W'</span>);
+<span class="kw">if</span> (p) <span class="fn">printf</span>(<span class="str">"인덱스: %ld\n"</span>, p - s);</div>
+        <div class="practice-result">인덱스: 6 출력</div>
+      </div>
+      <div class="practice-item">
+        <div class="practice-num">2</div>
+        <div class="practice-desc">strstr로 "C programming"에서 "gram"이 있는지 확인하세요.</div>
+        <div class="code"><span class="kw">char</span> s[] = <span class="str">"C programming"</span>;
+<span class="kw">if</span> (<span class="fn">strstr</span>(s, <span class="str">"gram"</span>))
+    <span class="fn">printf</span>(<span class="str">"포함됨\n"</span>);</div>
+        <div class="practice-result">포함됨 출력</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+  <h2>확인 문제</h2>
+  <div style="text-align:center;margin:14px 0;">
+    <svg viewBox="0 0 460 60" style="max-width:460px;width:100%">
+      <rect x="10" y="10" width="200" height="40" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+      <text x="110" y="27" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">strchr(s, ch)</text>
+      <text x="110" y="43" text-anchor="middle" font-size="10" fill="#3b82f6">문자 ch의 첫 위치 반환</text>
+      <rect x="250" y="10" width="200" height="40" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+      <text x="350" y="27" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">strstr(s, sub)</text>
+      <text x="350" y="43" text-anchor="middle" font-size="10" fill="#22c55e">부분문자열 첫 위치 반환</text>
+    </svg>
+  </div>
+
+  <div class="problem">
+    <div class="problem-head"><div class="problem-badge">Q1</div><div class="problem-label">반환값 예측</div><span class="problem-diff easy">쉬움</span></div>
+    <div class="problem-body">
+      <div class="problem-text">char s[] = "banana"; 일 때 각 결과를 쓰세요.</div>
+      <div class="problem-example">
+        <div class="problem-example-row"><span class="problem-example-label">(1)</span><span class="problem-example-value">strchr(s,'a') — NULL 아닌 포인터 반환? (O/X)</span></div>
+        <div class="problem-example-row"><span class="problem-example-label">(2)</span><span class="problem-example-value">strchr(s,'z') — NULL 반환? (O/X)</span></div>
+        <div class="problem-example-row"><span class="problem-example-label">(3)</span><span class="problem-example-value">strstr(s,"nan") — NULL 아닌 포인터? (O/X)</span></div>
+      </div>
+    </div>
+    <details class="problem-toggle"><summary>정답 보기</summary><div class="problem-toggle-content"><div class="answer-code">(1) O  (2) O  (3) O</div></div></details>
+  </div>
+
+  <div class="problem">
+    <div class="problem-head"><div class="problem-badge">Q2</div><div class="problem-label">인덱스 계산</div><span class="problem-diff medium">보통</span></div>
+    <div class="problem-body">
+      <div class="problem-text">"programming"에서 'm'의 첫 번째 인덱스를 strchr로 구하세요.</div>
+    </div>
+    <details class="problem-toggle"><summary>정답 보기</summary><div class="problem-toggle-content"><div class="answer-code">char s[] = "programming";
+char *p = strchr(s, 'm');
+if (p) printf("인덱스: %ld\n", p - s);  // 6</div></div></details>
+  </div>
+
+  <div class="problem">
+    <div class="problem-head"><div class="problem-badge">Q3</div><div class="problem-label">포함 여부 확인</div><span class="problem-diff medium">보통</span></div>
+    <div class="problem-body">
+      <div class="problem-text">입력받은 문장에 "error"가 포함되어 있는지 확인하는 코드를 작성하세요.</div>
+    </div>
+    <details class="problem-toggle"><summary>정답 보기</summary><div class="problem-toggle-content"><div class="answer-code">char line[100];
+fgets(line, sizeof(line), stdin);
+if (strstr(line, "error"))
+    printf("에러 발견!\n");
+else
+    printf("정상\n");</div></div></details>
+  </div>
+
+  <div class="problem">
+    <div class="problem-head"><div class="problem-badge">Q4</div><div class="problem-label">이메일 검증</div><span class="problem-diff medium">보통</span></div>
+    <div class="problem-body">
+      <div class="problem-text">입력받은 문자열에 @가 있으면 "이메일 형식", 없으면 "잘못된 형식"을 출력하세요.</div>
+    </div>
+    <details class="problem-toggle"><summary>정답 보기</summary><div class="problem-toggle-content"><div class="answer-code">char email[50];
+scanf("%s", email);
+if (strchr(email, '@'))
+    printf("이메일 형식\n");
+else
+    printf("잘못된 형식\n");</div></div></details>
+  </div>
+
+  <div class="problem">
+    <div class="problem-head"><div class="problem-badge">Q5</div><div class="problem-label">파일 확장자 찾기</div><span class="problem-diff medium">보통</span></div>
+    <div class="problem-body">
+      <div class="problem-text">"document.txt"에서 . 이후의 확장자를 strchr로 출력하세요.</div>
+    </div>
+    <details class="problem-toggle"><summary>힌트 보기</summary><div class="problem-toggle-content"><div class="hint-text">strchr로 '.'의 위치를 찾고, 그 다음 문자부터 출력합니다.</div></div></details>
+    <details class="problem-toggle"><summary>정답 보기</summary><div class="problem-toggle-content"><div class="answer-code">char fname[] = "document.txt";
+char *dot = strchr(fname, '.');
+if (dot) printf("확장자: %s\n", dot+1);  // txt</div></div></details>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:8px;margin:16px 0 6px;padding:8px 14px;background:#f0f9ff;border-radius:6px;border:1px solid #bae6fd;">
+        <img src="/images/learn/computer-basics/keyboard.png" alt="키보드 - 문자열 입력" style="width:28px;height:28px;object-fit:contain;background:#fff;border-radius:8px;">
+        <img src="/images/learn/c-lang/book.png" alt="교재 - 문자열 개념 학습" style="width:28px;height:28px;object-fit:contain;background:#fff;border-radius:8px;">
+        <span style="font-size:12px;color:#0369a1;font-weight:600;">핵심 정리</span>
+    </div>
+<div class="summary">
+    <h3>핵심 요약</h3>
+    <ul>
+      <li>strchr(s, ch): 문자 ch를 처음 발견한 위치 포인터를 반환합니다.</li>
+      <li>strstr(s, sub): 부분 문자열 sub를 처음 발견한 위치를 반환합니다.</li>
+      <li>찾지 못하면 NULL을 반환 — NULL 체크 필수!</li>
+      <li>인덱스 = 반환 포인터 - 원래 배열 시작 주소</li>
+      <li>이메일 @, 파일 확장자 . 검색 등에 활용합니다.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="page">
+  <h2>전체 예제 — URL 파서</h2>
+  <div class="code"><span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="kw">#include</span> <span class="str">&lt;string.h&gt;</span>
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="kw">char</span> url[] = <span class="str">"https://www.school.com/login"</span>;
+    <span class="kw">char</span> *colon, *slash;
+
+    <span class="cmt">// 프로토콜 추출 (https)</span>
+    colon = <span class="fn">strchr</span>(url, <span class="str">':'</span>);
+    <span class="kw">if</span> (colon) {
+        <span class="kw">int</span> len = colon - url;
+        <span class="kw">char</span> proto[<span class="num">10</span>];
+        <span class="fn">strncpy</span>(proto, url, len);
+        proto[len] = <span class="str">'\0'</span>;
+        <span class="fn">printf</span>(<span class="str">"프로토콜: %s\n"</span>, proto);
+    }
+
+    <span class="cmt">// /login 부분 있는지 확인</span>
+    <span class="kw">if</span> (<span class="fn">strstr</span>(url, <span class="str">"/login"</span>))
+        <span class="fn">printf</span>(<span class="str">"로그인 페이지\n"</span>);
+
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+  <div style="text-align:center;margin:14px 0;">
+    <svg viewBox="0 0 460 50" style="max-width:460px;width:100%">
+      <rect x="10" y="10" width="200" height="30" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+      <text x="110" y="30" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">U06 문자열 검색</text>
+      <path d="M220,25 L250,25" stroke="#3b82f6" stroke-width="2" marker-end="url(#nx6)"/>
+      <rect x="260" y="10" width="190" height="30" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+      <text x="355" y="30" text-anchor="middle" font-size="11" fill="#92400e" font-weight="700">U07 ctype.h 함수들</text>
+      <defs><marker id="nx6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#3b82f6"/></marker></defs>
+    </svg>
+  </div>
+
+    <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:20px;padding-top:10px;border-top:1px solid #f1f5f9;">
+        <img src="/images/learn/c-lang/code-screen.png" alt="코드 화면 - 문자열 처리 코드" style="width:22px;height:22px;object-fit:contain;opacity:0.6;background:#fff;border-radius:8px;">
+        <span style="font-size:10px;color:#cbd5e1;">코딩쏙 C언어</span>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

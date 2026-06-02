@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>성취도 대시보드 — 학습 분석</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', 'Outfit', sans-serif;
+            background: #f8f9fc;
+            color: #1e293b;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 40px 24px 60px;
+        }
+
+        .dash-header {
+            text-align: center;
+            padding: 20px 0 40px;
+        }
+
+        .dash-header h1 {
+            font-family: 'Outfit';
+            font-size: clamp(1.8rem, 4vw, 2.4rem);
+            font-weight: 900;
+            background: linear-gradient(135deg, #6366f1, #a78bfa, #10b981);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+
+        .dash-header p {
+            color: #94a3b8;
+            font-size: .9rem;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 20px;
+            color: #6366f1;
+            text-decoration: none;
+            font-size: .85rem;
+            font-weight: 600;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        /* ─── Stats Grid ─── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 14px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, .04);
+        }
+
+        .stat-card .stat-num {
+            font-family: 'Outfit';
+            font-size: 2rem;
+            font-weight: 900;
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+
+        .stat-card .stat-label {
+            font-size: .78rem;
+            color: #94a3b8;
+        }
+
+        .stat-card.blue .stat-num {
+            color: #6366f1;
+        }
+
+        .stat-card.green .stat-num {
+            color: #10b981;
+        }
+
+        .stat-card.red .stat-num {
+            color: #ef4444;
+        }
+
+        .stat-card.orange .stat-num {
+            color: #f97316;
+        }
+
+        /* ─── Chart Cards ─── */
+        .chart-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .chart-card {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, .04);
+        }
+
+        .chart-card.full {
+            grid-column: 1 / -1;
+        }
+
+        .chart-card h3 {
+            font-size: .95rem;
+            font-weight: 800;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .chart-card h3 svg {
+            width: 20px;
+            height: 20px;
+            fill: none;
+            stroke: #6366f1;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        canvas {
+            max-height: 320px;
+        }
+
+        /* ─── Tabs ─── */
+        .tab-bar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            justify-content: center;
+        }
+
+        .tab-btn {
+            padding: 10px 24px;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 10px;
+            background: #fff;
+            font-size: .85rem;
+            font-weight: 700;
+            cursor: pointer;
+            color: #64748b;
+            transition: all .2s;
+        }
+
+        .tab-btn.active {
+            background: #6366f1;
+            color: #fff;
+            border-color: #6366f1;
+        }
+
+        .tab-btn:hover:not(.active) {
+            border-color: #6366f1;
+            color: #6366f1;
+        }
+
+        /* ─── Reset Button ─── */
+        .reset-wrap {
+            text-align: center;
+            margin-top: 32px;
+        }
+
+        .reset-btn {
+            padding: 10px 24px;
+            border: 1.5px solid #fca5a5;
+            border-radius: 10px;
+            background: #fff;
+            color: #ef4444;
+            font-size: .82rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all .2s;
+        }
+
+        .reset-btn:hover {
+            background: #ef4444;
+            color: #fff;
+        }
+
+        /* ─── Empty State ─── */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #94a3b8;
+        }
+
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            stroke: #cbd5e1;
+            fill: none;
+            stroke-width: 1.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            margin-bottom: 16px;
+        }
+
+        .empty-state h3 {
+            color: #64748b;
+            margin-bottom: 8px;
+        }
+
+        @media (max-width: 768px) {
+            .chart-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">← 허브로 돌아가기</a>
+
+        <div class="dash-header">
+            <h1>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle">
+                    <line x1="18" y1="20" x2="18" y2="10" />
+                    <line x1="12" y1="20" x2="12" y2="4" />
+                    <line x1="6" y1="20" x2="6" y2="14" />
+                </svg>
+                성취도 대시보드
+            </h1>
+            <p>나의 학습 현황을 한눈에 확인하세요</p>
+        </div>
+
+        <div class="tab-bar">
+            <button class="tab-btn active" data-tab="kf">코딩 기초 사고력</button>
+            <button class="tab-btn" data-tab="ct">컴퓨팅 사고력</button>
+        </div>
+
+        <div id="stats-grid" class="stats-grid"></div>
+        <div id="charts" class="chart-grid"></div>
+
+        <div class="reset-wrap">
+            <button class="reset-btn" id="reset-btn">학습 데이터 초기화</button>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            'use strict';
+
+            function getAll() {
+                try { return JSON.parse(localStorage.getItem('ct_platform') || '{}'); } catch { return {}; }
+            }
+
+            function getStatsForKeys(keys) {
+                const all = getAll();
+                let correct = 0, wrong = 0;
+                keys.forEach(k => {
+                    const data = all[k];
+                    if (!data) return;
+                    Object.values(data).forEach(v => {
+                        if (v === 'correct') correct++;
+                        if (v === 'wrong') wrong++;
+                    });
+                });
+                return { correct, wrong, total: correct + wrong };
+            }
+
+            const KF = {
+                '논리적 사고': { keys: ['kf_논리_쉬움', 'kf_논리_보통', 'kf_논리_어려움'], color: '#818cf8', max: 180 },
+                '수학적 사고': { keys: ['kf_수학_쉬움', 'kf_수학_보통', 'kf_수학_어려움'], color: '#fb923c', max: 180 },
+                '순서도': { keys: ['kf_순서도_쉬움', 'kf_순서도_보통', 'kf_순서도_어려움'], color: '#22d3ee', max: 180 },
+                '문제해결': { keys: ['kf_문제해결_쉬움', 'kf_문제해결_보통', 'kf_문제해결_어려움'], color: '#4ade80', max: 180 },
+                '이산수학': { keys: ['kf_이산수학_쉬움', 'kf_이산수학_보통', 'kf_이산수학_어려움'], color: '#f472b6', max: 180 }
+            };
+
+            const CT = {
+                '분해': { keys: ['ct_분해_Level1', 'ct_분해_Level2', 'ct_분해_Level3', 'ct_분해_Level4', 'ct_분해_Level5'], color: '#6366f1', max: 300 },
+                '패턴인식': { keys: ['ct_패턴_Level1', 'ct_패턴_Level2', 'ct_패턴_Level3', 'ct_패턴_Level4', 'ct_패턴_Level5'], color: '#10b981', max: 300 },
+                '추상화': { keys: ['ct_추상화_Level1', 'ct_추상화_Level2', 'ct_추상화_Level3', 'ct_추상화_Level4', 'ct_추상화_Level5'], color: '#06b6d4', max: 300 },
+                '알고리즘': { keys: ['ct_알고리즘_Level1', 'ct_알고리즘_Level2', 'ct_알고리즘_Level3', 'ct_알고리즘_Level4', 'ct_알고리즘_Level5'], color: '#f97316', max: 300 },
+                '종합평가': { keys: ['ct_종합평가_Level1', 'ct_종합평가_Level2', 'ct_종합평가_Level3'], color: '#a855f7', max: 180 },
+                '프로젝트': { keys: ['ct_프로젝트_Level1', 'ct_프로젝트_Level2', 'ct_프로젝트_Level3'], color: '#f43f5e', max: 60 }
+            };
+
+            let currentTab = 'kf';
+            let charts = [];
+
+            function render() {
+                const map = currentTab === 'kf' ? KF : CT;
+                const entries = Object.entries(map);
+
+                // Destroy old charts
+                charts.forEach(c => c.destroy());
+                charts = [];
+
+                // Gather stats
+                const allKeys = entries.flatMap(([, v]) => v.keys);
+                const totalStats = getStatsForKeys(allKeys);
+                const domainStats = entries.map(([name, cfg]) => ({
+                    name, ...getStatsForKeys(cfg.keys), color: cfg.color, max: cfg.max
+                }));
+
+                const totalMax = currentTab === 'kf' ? 900 : 1440;
+                const completePct = totalMax > 0 ? Math.round((totalStats.total / totalMax) * 100) : 0;
+                const correctPct = totalStats.total > 0 ? Math.round((totalStats.correct / totalStats.total) * 100) : 0;
+
+                // Stats grid
+                const sg = document.getElementById('stats-grid');
+                sg.innerHTML = `
+                <div class="stat-card blue"><div class="stat-num">${totalStats.total}</div><div class="stat-label">총 풀이 문제</div></div>
+                <div class="stat-card green"><div class="stat-num">${totalStats.correct}</div><div class="stat-label">정답</div></div>
+                <div class="stat-card red"><div class="stat-num">${totalStats.wrong}</div><div class="stat-label">오답</div></div>
+                <div class="stat-card orange"><div class="stat-num">${correctPct}%</div><div class="stat-label">정답률</div></div>
+                <div class="stat-card"><div class="stat-num">${completePct}%</div><div class="stat-label">완료율 (${totalMax}문제 중)</div></div>
+            `;
+
+                // Charts
+                const cg = document.getElementById('charts');
+
+                if (totalStats.total === 0) {
+                    cg.innerHTML = `
+                    <div class="chart-card full">
+                        <div class="empty-state">
+                            <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                            <h3>아직 학습 데이터가 없어요</h3>
+                            <p>학습지에서 문제를 풀고 채점하면 여기에 분석이 표시됩니다!</p>
+                        </div>
+                    </div>
+                `;
+                    return;
+                }
+
+                cg.innerHTML = `
+                <div class="chart-card">
+                    <h3>
+                        <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        영역별 정답률
+                    </h3>
+                    <canvas id="radarChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3>
+                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 0 20"/></svg>
+                        전체 완료율
+                    </h3>
+                    <canvas id="doughnutChart"></canvas>
+                </div>
+                <div class="chart-card full">
+                    <h3>
+                        <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                        영역별 풀이 현황
+                    </h3>
+                    <canvas id="barChart"></canvas>
+                </div>
+            `;
+
+                // Radar Chart — 정답률
+                const radarLabels = domainStats.map(d => d.name);
+                const radarData = domainStats.map(d => d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0);
+                charts.push(new Chart(document.getElementById('radarChart'), {
+                    type: 'radar',
+                    data: {
+                        labels: radarLabels,
+                        datasets: [{
+                            label: '정답률 (%)',
+                            data: radarData,
+                            backgroundColor: 'rgba(99, 102, 241, 0.15)',
+                            borderColor: '#6366f1',
+                            borderWidth: 2,
+                            pointBackgroundColor: '#6366f1',
+                            pointRadius: 4
+                        }]
+                    },
+                    options: {
+                        scales: { r: { beginAtZero: true, max: 100, ticks: { stepSize: 20, font: { size: 11 } } } },
+                        plugins: { legend: { display: false } }
+                    }
+                }));
+
+                // Doughnut Chart — 완료율
+                const done = totalStats.total;
+                const remaining = Math.max(totalMax - done, 0);
+                charts.push(new Chart(document.getElementById('doughnutChart'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['풀이 완료', '미풀이'],
+                        datasets: [{
+                            data: [done, remaining],
+                            backgroundColor: ['#6366f1', '#f1f5f9'],
+                            borderWidth: 0,
+                            borderRadius: 4
+                        }]
+                    },
+                    options: {
+                        cutout: '70%',
+                        plugins: {
+                            legend: { position: 'bottom', labels: { font: { size: 12 }, padding: 16 } }
+                        }
+                    }
+                }));
+
+                // Bar Chart — 영역별 정답/오답
+                charts.push(new Chart(document.getElementById('barChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: domainStats.map(d => d.name),
+                        datasets: [
+                            {
+                                label: '정답',
+                                data: domainStats.map(d => d.correct),
+                                backgroundColor: '#10b981',
+                                borderRadius: 6
+                            },
+                            {
+                                label: '오답',
+                                data: domainStats.map(d => d.wrong),
+                                backgroundColor: '#fca5a5',
+                                borderRadius: 6
+                            }
+                        ]
+                    },
+                    options: {
+                        scales: {
+                            y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
+                            x: { grid: { display: false } }
+                        },
+                        plugins: {
+                            legend: { position: 'bottom', labels: { font: { size: 12 }, padding: 16 } }
+                        }
+                    }
+                }));
+            }
+
+            // Tab handling
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentTab = btn.dataset.tab;
+                    render();
+                });
+            });
+
+            // Reset
+            document.getElementById('reset-btn').addEventListener('click', () => {
+                if (confirm('모든 학습 데이터를 삭제할까요? 이 작업은 되돌릴 수 없습니다.')) {
+                    localStorage.removeItem('ct_platform');
+                    localStorage.removeItem('ct_answers');
+                    render();
+                    alert('학습 데이터가 초기화되었습니다.');
+                }
+            });
+
+            render();
+        })();
+    </script>
+</body>
+
+</html>

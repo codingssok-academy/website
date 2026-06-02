@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 프로젝트: 몬스터 배틀</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #dc2626; }
+.cover-accent { width: 7px; background: #f59e0b; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 200px; font-weight: 900; color: rgba(220,38,38,0.1);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #dc2626; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 36px; font-weight: 900; color: #7f1d1d; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #7f1d1d; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #dc2626; font-weight: 900; }
+
+h2 { font-size: 20px; font-weight: 800; color: #7f1d1d; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 16px; font-weight: 700; color: #7f1d1d; margin: 18px 0 10px; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #dc2626; font-weight: 600;
+}
+ul, ol { margin: 0 0 12px 20px; }
+li { font-size: 14px; color: #374151; line-height: 1.8; }
+
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13.5px;
+    color: #e2e8f0; line-height: 1.85; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.code .dec { color: #f9a8d4; }
+
+.practice { margin: 20px 0; border-left: 4px solid #dc2626; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #b91c1c; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #dc2626; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #dc2626; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#dc2626,#ef4444); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #7f1d1d; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #7f1d1d; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+.output-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #334155; line-height: 1.7; margin: 10px 0; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- ===== 1페이지: 표지 ===== -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">HP</div>
+        <div class="cover-label">L3 — Project</div>
+        <h1 class="cover-title">프로젝트:<br>몬스터 배틀</h1>
+        <p class="cover-sub">Monster 클래스를 만들고 이름/HP/공격력/방어력 속성, 속성 상성(불>풀>물>불), 턴제 전투, 레벨업 시스템을 구현합니다. 파이썬 클래스의 핵심을 게임으로 배웁니다.</p>
+
+        <!-- SVG: 게임 시스템 구조도 -->
+        <div style="margin:20px 0;">
+            <svg viewBox="0 0 480 140" style="max-width:480px;width:100%">
+                <defs>
+                    <marker id="arwCov" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                    </marker>
+                </defs>
+                <!-- 중앙: Monster 클래스 -->
+                <rect x="150" y="48" width="180" height="44" rx="8" fill="#7f1d1d"/>
+                <text x="240" y="67" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">Monster 클래스</text>
+                <text x="240" y="82" text-anchor="middle" font-size="9" fill="#fca5a5">핵심 설계</text>
+                <!-- 속성 -->
+                <rect x="5" y="8" width="115" height="32" rx="6" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/>
+                <text x="63" y="21" text-anchor="middle" font-size="9" fill="#991b1b" font-weight="700">속성(attribute)</text>
+                <text x="63" y="33" text-anchor="middle" font-size="8" fill="#64748b">불/풀/물/일반</text>
+                <line x1="122" y1="24" x2="147" y2="58" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+                <!-- 속성 상성 -->
+                <rect x="360" y="8" width="115" height="32" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="418" y="21" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">속성 상성</text>
+                <text x="418" y="33" text-anchor="middle" font-size="8" fill="#64748b">불>풀>물>불</text>
+                <line x1="358" y1="24" x2="333" y2="58" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+                <!-- 턴제 전투 -->
+                <rect x="5" y="100" width="115" height="32" rx="6" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="63" y="113" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">턴제 전투</text>
+                <text x="63" y="125" text-anchor="middle" font-size="8" fill="#64748b">while HP > 0</text>
+                <line x1="122" y1="116" x2="147" y2="82" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+                <!-- 레벨업 -->
+                <rect x="360" y="100" width="115" height="32" rx="6" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="418" y="113" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">레벨업</text>
+                <text x="418" y="125" text-anchor="middle" font-size="8" fill="#64748b">exp 누적 → 레벨 상승</text>
+                <line x1="358" y1="116" x2="333" y2="82" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/gamepad.png" alt="게임" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 유닛에서 만드는 것</h3>
+            <ul>
+                <li><code>class Monster</code>를 정의하고 <code>__init__()</code>으로 속성을 초기화할 수 있습니다.</li>
+                <li>메서드로 공격, 피해 받기, 상태 출력 기능을 구현할 수 있습니다.</li>
+                <li>딕셔너리로 속성 상성표를 만들어 데미지를 배율로 적용할 수 있습니다.</li>
+                <li>while 루프로 턴제 전투를 구현하고 승패를 판정할 수 있습니다.</li>
+                <li>경험치(exp) 누적으로 레벨업 시스템을 만들 수 있습니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- ===== 2페이지: Monster 클래스 설계 ===== -->
+<div class="page">
+    <h2>Step 1 — Monster 클래스 설계</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="우승" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>클래스(class)는 같은 종류의 객체를 찍어내는 틀입니다. Monster 클래스를 만들면 불꽃도마뱀, 물고기 등 여러 몬스터를 같은 틀로 쉽게 생성할 수 있습니다. <code>__init__()</code>은 객체 생성 시 자동으로 실행됩니다.</p>
+
+    <!-- SVG: 클래스 vs 인스턴스 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 90" style="max-width:460px;width:100%">
+            <defs>
+                <marker id="arwCls" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <!-- 클래스 (틀) -->
+            <rect x="5" y="20" width="130" height="50" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+            <text x="70" y="38" text-anchor="middle" font-size="10" fill="#7f1d1d" font-weight="800">class Monster</text>
+            <text x="70" y="52" text-anchor="middle" font-size="8" fill="#64748b">이름/HP/공격력/방어력</text>
+            <text x="70" y="63" text-anchor="middle" font-size="8" fill="#64748b">속성/경험치/레벨</text>
+            <!-- 화살표 -->
+            <line x1="138" y1="45" x2="158" y2="35" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCls)"/>
+            <line x1="138" y1="45" x2="158" y2="55" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCls)"/>
+            <line x1="138" y1="45" x2="158" y2="75" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCls)"/>
+            <!-- 인스턴스들 -->
+            <rect x="161" y="8" width="110" height="28" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="216" y="21" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">불꽃도마뱀</text>
+            <text x="216" y="32" text-anchor="middle" font-size="8" fill="#64748b">HP=80, 불속성</text>
+            <rect x="161" y="44" width="110" height="28" rx="6" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="216" y="57" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">물고기전사</text>
+            <text x="216" y="68" text-anchor="middle" font-size="8" fill="#64748b">HP=90, 물속성</text>
+            <rect x="161" y="64" width="110" height="28" rx="6" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="216" y="77" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">풀잎정령</text>
+            <text x="216" y="88" text-anchor="middle" font-size="8" fill="#64748b">HP=70, 풀속성</text>
+            <!-- self 설명 -->
+            <rect x="285" y="20" width="170" height="50" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="370" y="36" text-anchor="middle" font-size="9" fill="#374151" font-weight="700">self = 이 객체 자신</text>
+            <text x="370" y="50" text-anchor="middle" font-size="8" fill="#64748b">self.name = 이 몬스터의 이름</text>
+            <text x="370" y="62" text-anchor="middle" font-size="8" fill="#64748b">self.hp = 이 몬스터의 HP</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># monster_battle.py — Step 1: Monster 클래스</span>
+<span class="kw">import</span> random
+
+<span class="kw">class</span> <span class="dec">Monster</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, name, hp, attack, defense, element=<span class="str">"일반"</span>):
+        self.name = name
+        self.hp = hp
+        self.max_hp = hp
+        self.attack = attack
+        self.defense = defense
+        self.element = element
+        self.level = <span class="num">1</span>
+        self.exp = <span class="num">0</span>
+
+    <span class="kw">def</span> <span class="fn">status</span>(self):
+        <span class="str">"""현재 상태 출력"""</span>
+        bar = <span class="str">"#"</span> * (self.hp * <span class="num">10</span> // self.max_hp)
+        <span class="fn">print</span>(<span class="str">f"[Lv.{self.level}] {self.name} ({self.element})"</span>)
+        <span class="fn">print</span>(<span class="str">f"  HP: [{bar:<10}] {self.hp}/{self.max_hp}"</span>)</div>
+
+    <!-- SVG: Monster 클래스 속성 다이어그램 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 460 52" style="max-width:460px;width:100%">
+            <rect x="5" y="6" width="450" height="40" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="20" text-anchor="middle" font-size="9" fill="#7f1d1d" font-weight="700">Monster 인스턴스 속성</text>
+            <rect x="15" y="26" width="54" height="14" rx="3" fill="#fee2e2"/>
+            <text x="42" y="37" text-anchor="middle" font-size="7.5" fill="#991b1b">name</text>
+            <rect x="78" y="26" width="40" height="14" rx="3" fill="#fee2e2"/>
+            <text x="98" y="37" text-anchor="middle" font-size="7.5" fill="#991b1b">hp</text>
+            <rect x="127" y="26" width="54" height="14" rx="3" fill="#fef3c7"/>
+            <text x="154" y="37" text-anchor="middle" font-size="7.5" fill="#92400e">attack</text>
+            <rect x="190" y="26" width="58" height="14" rx="3" fill="#fef3c7"/>
+            <text x="219" y="37" text-anchor="middle" font-size="7.5" fill="#92400e">defense</text>
+            <rect x="257" y="26" width="60" height="14" rx="3" fill="#dcfce7"/>
+            <text x="287" y="37" text-anchor="middle" font-size="7.5" fill="#166534">element</text>
+            <rect x="326" y="26" width="44" height="14" rx="3" fill="#eff6ff"/>
+            <text x="348" y="37" text-anchor="middle" font-size="7.5" fill="#1d4ed8">level</text>
+            <rect x="379" y="26" width="40" height="14" rx="3" fill="#eff6ff"/>
+            <text x="399" y="37" text-anchor="middle" font-size="7.5" fill="#1d4ed8">exp</text>
+        </svg>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+        <div class="practice-head">따라해보세요 — Step 1</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">Monster 클래스를 입력하고 불꽃도마뱀 인스턴스를 만드세요.</div>
+                <div class="code">m1 = <span class="dec">Monster</span>(<span class="str">"불꽃도마뱀"</span>, <span class="num">80</span>, <span class="num">25</span>, <span class="num">10</span>, <span class="str">"불"</span>)
+m1.<span class="fn">status</span>()</div>
+                <div class="practice-result">[Lv.1] 불꽃도마뱀 (불) / HP: [##########] 80/80</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">같은 클래스로 물고기전사 인스턴스를 만들고 status()를 출력하세요.</div>
+                <div class="code">m2 = <span class="dec">Monster</span>(<span class="str">"물고기전사"</span>, <span class="num">90</span>, <span class="num">20</span>, <span class="num">15</span>, <span class="str">"물"</span>)
+m2.<span class="fn">status</span>()</div>
+                <div class="practice-result">[Lv.1] 물고기전사 (물) / HP: [##########] 90/90</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">m1의 hp 속성을 직접 수정해서 status()를 다시 출력하세요.</div>
+                <div class="code">m1.hp = <span class="num">40</span>
+m1.<span class="fn">status</span>()</div>
+                <div class="practice-result">[Lv.1] 불꽃도마뱀 (불) / HP: [#####     ] 40/80</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== 3페이지: 속성 상성 + 공격 메서드 ===== -->
+<div class="page">
+    <h2>Step 2 — 속성 상성과 공격 메서드</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/flowchart.png" alt="게임 흐름" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>속성 상성은 딕셔너리로 표현합니다. "불"이 "풀"에게 유리하면 데미지 배율을 1.5배, 불리하면 0.5배로 적용합니다. 공격력에서 방어력을 뺀 값에 배율을 곱해 최종 데미지를 계산합니다.</p>
+
+    <!-- SVG: 속성 상성 삼각형 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 100" style="max-width:460px;width:100%">
+            <defs>
+                <marker id="arwElem" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#dc2626"/>
+                </marker>
+                <marker id="arwWeak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#3b82f6"/>
+                </marker>
+            </defs>
+            <!-- 불 -->
+            <rect x="185" y="5" width="90" height="30" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+            <text x="230" y="25" text-anchor="middle" font-size="11" fill="#7f1d1d" font-weight="800">불 (Fire)</text>
+            <!-- 풀 -->
+            <rect x="5" y="65" width="90" height="30" rx="8" fill="#dcfce7" stroke="#22c55e" stroke-width="2"/>
+            <text x="50" y="85" text-anchor="middle" font-size="11" fill="#166534" font-weight="800">풀 (Grass)</text>
+            <!-- 물 -->
+            <rect x="365" y="65" width="90" height="30" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+            <text x="410" y="85" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="800">물 (Water)</text>
+            <!-- 상성 화살표: 불>풀 -->
+            <line x1="190" y1="35" x2="85" y2="65" stroke="#dc2626" stroke-width="2" marker-end="url(#arwElem)"/>
+            <text x="118" y="50" text-anchor="middle" font-size="9" fill="#dc2626" font-weight="700">x1.5</text>
+            <!-- 풀>물 -->
+            <line x1="98" y1="80" x2="362" y2="80" stroke="#22c55e" stroke-width="2" marker-end="url(#arwElem)"/>
+            <text x="230" y="76" text-anchor="middle" font-size="9" fill="#22c55e" font-weight="700">x1.5</text>
+            <!-- 물>불 -->
+            <line x1="365" y1="65" x2="275" y2="35" stroke="#3b82f6" stroke-width="2" marker-end="url(#arwElem)"/>
+            <text x="340" y="50" text-anchor="middle" font-size="9" fill="#3b82f6" font-weight="700">x1.5</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># Step 2: 속성 상성 딕셔너리 + 공격 메서드</span>
+<span class="cmt"># 클래스 밖에 상성 표 정의</span>
+ADVANTAGE = {
+    <span class="str">"불"</span>: <span class="str">"풀"</span>,   <span class="cmt"># 불이 풀에 유리</span>
+    <span class="str">"풀"</span>: <span class="str">"물"</span>,
+    <span class="str">"물"</span>: <span class="str">"불"</span>,
+}
+
+<span class="cmt"># Monster 클래스에 메서드 추가</span>
+<span class="kw">def</span> <span class="fn">do_attack</span>(self, target):
+    <span class="str">"""target에게 공격. 속성 상성 반영"""</span>
+    multiplier = <span class="num">1.0</span>
+    <span class="kw">if</span> ADVANTAGE.<span class="fn">get</span>(self.element) == target.element:
+        multiplier = <span class="num">1.5</span>   <span class="cmt"># 유리</span>
+    <span class="kw">elif</span> ADVANTAGE.<span class="fn">get</span>(target.element) == self.element:
+        multiplier = <span class="num">0.5</span>   <span class="cmt"># 불리</span>
+
+    raw = <span class="fn">max</span>(<span class="num">1</span>, self.attack - target.defense)
+    damage = <span class="fn">int</span>(raw * multiplier)
+    target.hp = <span class="fn">max</span>(<span class="num">0</span>, target.hp - damage)
+
+    tag = <span class="str">"(효과적!)"</span> <span class="kw">if</span> multiplier > <span class="num">1</span> <span class="kw">else</span> <span class="str">"(효과 없음)"</span> <span class="kw">if</span> multiplier < <span class="num">1</span> <span class="kw">else</span> <span class="str">""</span>
+    <span class="fn">print</span>(<span class="str">f"{self.name}의 공격! {damage} 데미지 {tag}"</span>)
+    <span class="kw">return</span> damage</div>
+
+    <!-- SVG: 데미지 계산 공식 -->
+    <div style="text-align:center;margin:10px 0;">
+        <svg viewBox="0 0 460 48" style="max-width:460px;width:100%">
+            <rect x="5" y="6" width="450" height="36" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="20" text-anchor="middle" font-size="9" fill="#7f1d1d" font-weight="700">데미지 공식: max(1, 공격력 - 방어력) × 상성배율</text>
+            <rect x="20" y="26" width="120" height="12" rx="3" fill="#fee2e2"/>
+            <text x="80" y="36" text-anchor="middle" font-size="7.5" fill="#991b1b">유리: x1.5 배율 (50% 증가)</text>
+            <rect x="175" y="26" width="110" height="12" rx="3" fill="#f1f5f9"/>
+            <text x="230" y="36" text-anchor="middle" font-size="7.5" fill="#64748b">보통: x1.0 (배율 없음)</text>
+            <rect x="320" y="26" width="130" height="12" rx="3" fill="#eff6ff"/>
+            <text x="385" y="36" text-anchor="middle" font-size="7.5" fill="#1d4ed8">불리: x0.5 배율 (50% 감소)</text>
+        </svg>
+    </div>
+
+    <div class="output-box">불꽃도마뱀의 공격! 22 데미지 (효과적!)
+물고기전사의 공격! 6 데미지 (효과 없음)</div>
+</div>
+
+<!-- ===== 4페이지: 턴제 전투 + 레벨업 ===== -->
+<div class="page">
+    <h2>Step 3 — 턴제 전투 시스템</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>while 루프로 두 몬스터가 번갈아 공격합니다. 어느 한 쪽의 HP가 0이 되면 전투가 끝납니다. 각 턴마다 두 몬스터의 상태를 출력해 전투 진행을 보여줍니다.</p>
+
+    <!-- SVG: 턴제 전투 흐름도 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+            <defs>
+                <marker id="arwT" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="5" y="22" width="70" height="36" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/>
+            <text x="40" y="38" text-anchor="middle" font-size="8" fill="#7f1d1d" font-weight="700">while</text>
+            <text x="40" y="50" text-anchor="middle" font-size="7" fill="#64748b">HP&gt;0 확인</text>
+            <line x1="78" y1="40" x2="95" y2="40" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwT)"/>
+            <rect x="98" y="22" width="80" height="36" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="138" y="38" text-anchor="middle" font-size="8" fill="#92400e" font-weight="700">몬스터1</text>
+            <text x="138" y="50" text-anchor="middle" font-size="7" fill="#64748b">do_attack()</text>
+            <line x1="181" y1="40" x2="198" y2="40" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwT)"/>
+            <rect x="201" y="22" width="80" height="36" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="241" y="38" text-anchor="middle" font-size="8" fill="#1d4ed8" font-weight="700">몬스터2</text>
+            <text x="241" y="50" text-anchor="middle" font-size="7" fill="#64748b">do_attack()</text>
+            <line x1="284" y1="40" x2="301" y2="40" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwT)"/>
+            <rect x="304" y="22" width="80" height="36" rx="8" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="344" y="38" text-anchor="middle" font-size="8" fill="#166534" font-weight="700">상태 출력</text>
+            <text x="344" y="50" text-anchor="middle" font-size="7" fill="#64748b">status()</text>
+            <line x1="387" y1="40" x2="404" y2="40" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwT)"/>
+            <rect x="407" y="22" width="48" height="36" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="431" y="38" text-anchor="middle" font-size="7" fill="#374151" font-weight="700">HP==0?</text>
+            <text x="431" y="50" text-anchor="middle" font-size="7" fill="#dc2626">종료</text>
+            <!-- 반복 화살표 -->
+            <path d="M 431 22 Q 431 5 230 5 Q 29 5 29 22" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arwT)"/>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># Step 3: 턴제 전투</span>
+<span class="kw">def</span> <span class="fn">battle</span>(m1, m2):
+    <span class="str">"""두 몬스터가 싸워서 승자를 반환"""</span>
+    turn = <span class="num">1</span>
+    <span class="fn">print</span>(<span class="str">f"=== 배틀 시작: {m1.name} vs {m2.name} ==="</span>)
+    <span class="kw">while</span> m1.hp > <span class="num">0</span> <span class="kw">and</span> m2.hp > <span class="num">0</span>:
+        <span class="fn">print</span>(<span class="str">f"\n--- Turn {turn} ---"</span>)
+        m1.<span class="fn">do_attack</span>(m2)
+        <span class="kw">if</span> m2.hp > <span class="num">0</span>:
+            m2.<span class="fn">do_attack</span>(m1)
+        m1.<span class="fn">status</span>()
+        m2.<span class="fn">status</span>()
+        turn += <span class="num">1</span>
+    winner = m1 <span class="kw">if</span> m1.hp > <span class="num">0</span> <span class="kw">else</span> m2
+    <span class="fn">print</span>(<span class="str">f"\n{winner.name} 승리!"</span>)
+    winner.<span class="fn">gain_exp</span>(<span class="num">30</span>)
+    <span class="kw">return</span> winner</div>
+
+    <h3>Step 4 — 레벨업 시스템</h3>
+    <p>경험치(exp)를 누적하다 일정 기준(level × 50)을 넘으면 레벨이 오릅니다. 레벨업 시 HP, 공격력, 방어력이 모두 상승합니다.</p>
+
+    <!-- SVG: 레벨업 공식 -->
+    <div style="text-align:center;margin:10px 0;">
+        <svg viewBox="0 0 460 52" style="max-width:460px;width:100%">
+            <rect x="5" y="6" width="450" height="40" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="20" text-anchor="middle" font-size="9" fill="#7f1d1d" font-weight="700">레벨업 조건: exp >= level * 50</text>
+            <rect x="20" y="28" width="130" height="12" rx="3" fill="#fee2e2"/>
+            <text x="85" y="38" text-anchor="middle" font-size="7.5" fill="#991b1b">Lv.1 → 50 exp 필요</text>
+            <rect x="165" y="28" width="130" height="12" rx="3" fill="#fef3c7"/>
+            <text x="230" y="38" text-anchor="middle" font-size="7.5" fill="#92400e">Lv.2 → 100 exp 필요</text>
+            <rect x="310" y="28" width="130" height="12" rx="3" fill="#dcfce7"/>
+            <text x="375" y="38" text-anchor="middle" font-size="7.5" fill="#166534">Lv.3 → 150 exp 필요</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># Step 4: 레벨업 메서드 (Monster 클래스에 추가)</span>
+<span class="kw">def</span> <span class="fn">gain_exp</span>(self, amount):
+    <span class="str">"""경험치 획득. 조건 충족 시 레벨업"""</span>
+    self.exp += amount
+    <span class="fn">print</span>(<span class="str">f"{self.name} +{amount} EXP (총 {self.exp})"</span>)
+    <span class="kw">if</span> self.exp >= self.level * <span class="num">50</span>:
+        self.level += <span class="num">1</span>
+        self.max_hp += <span class="num">10</span>
+        self.hp = self.max_hp  <span class="cmt"># HP 회복</span>
+        self.attack += <span class="num">3</span>
+        self.defense += <span class="num">2</span>
+        <span class="fn">print</span>(<span class="str">f"  레벨업! {self.name} → Lv.{self.level}"</span>)</div>
+
+    <div class="output-box">=== 배틀 시작: 불꽃도마뱀 vs 물고기전사 ===
+
+--- Turn 1 ---
+불꽃도마뱀의 공격! 8 데미지 (효과 없음)
+물고기전사의 공격! 24 데미지 (효과적!)
+...
+물고기전사 승리!
+물고기전사 +30 EXP (총 30)
+  레벨업! 물고기전사 → Lv.2</div>
+
+    <!-- 문제 1 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q1</div>
+            <div class="problem-label">heal() 메서드 추가</div>
+            <span class="problem-diff easy">기본</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">Monster 클래스에 <code>heal(amount)</code> 메서드를 추가하세요. HP를 amount만큼 회복하되, max_hp를 초과할 수 없습니다. <code>min()</code> 함수를 사용해 최댓값을 제한하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">호출</span>
+                    <span class="problem-example-value">m1.hp = 40; m1.heal(50)</span>
+                </div>
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력</span>
+                    <span class="problem-example-value">불꽃도마뱀 HP 50 회복! (80/80)</span>
+                </div>
+            </div>
+            <details class="problem-toggle">
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">self.hp = min(self.hp + amount, self.max_hp) 로 HP를 증가시키되 max_hp를 넘지 않게 하세요.</div>
+                </div>
+            </details>
+            <details class="problem-toggle">
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code"><span class="kw">def</span> <span class="fn">heal</span>(self, amount):
+    old_hp = self.hp
+    self.hp = <span class="fn">min</span>(self.hp + amount, self.max_hp)
+    healed = self.hp - old_hp
+    <span class="fn">print</span>(<span class="str">f"{self.name} HP {healed} 회복! ({self.hp}/{self.max_hp})"</span>)</div>
+                </div>
+            </details>
+        </div>
+    </div>
+</div>
+
+<!-- ===== 5페이지: 문제 + 요약 ===== -->
+<div class="page">
+    <h2>연습 문제</h2>
+
+    <!-- SVG: 완성된 메서드 목록 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 460 52" style="max-width:460px;width:100%">
+            <text x="230" y="14" text-anchor="middle" font-size="10" fill="#7f1d1d" font-weight="800">Monster 클래스 메서드 목록</text>
+            <rect x="5" y="20" width="80" height="28" rx="5" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/>
+            <text x="45" y="36" text-anchor="middle" font-size="7.5" fill="#7f1d1d" font-weight="700">__init__()</text>
+            <rect x="94" y="20" width="76" height="28" rx="5" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="132" y="36" text-anchor="middle" font-size="7.5" fill="#92400e" font-weight="700">status()</text>
+            <rect x="179" y="20" width="84" height="28" rx="5" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="221" y="36" text-anchor="middle" font-size="7.5" fill="#166534" font-weight="700">do_attack()</text>
+            <rect x="272" y="20" width="80" height="28" rx="5" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="312" y="36" text-anchor="middle" font-size="7.5" fill="#1d4ed8" font-weight="700">gain_exp()</text>
+            <rect x="361" y="20" width="64" height="28" rx="5" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+            <text x="393" y="36" text-anchor="middle" font-size="7.5" fill="#5b21b6" font-weight="700">heal()</text>
+            <rect x="434" y="20" width="20" height="28" rx="5" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.5"/>
+            <text x="444" y="36" text-anchor="middle" font-size="6.5" fill="#64748b" font-weight="700">...</text>
+        </svg>
+    </div>
+
+    <!-- SVG: 클래스 인스턴스 생성 비교 -->
+    <div style="text-align:center;margin:8px 0;">
+        <svg viewBox="0 0 460 48" style="max-width:460px;width:100%">
+            <rect x="5" y="6" width="450" height="36" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="20" text-anchor="middle" font-size="9" fill="#7f1d1d" font-weight="700">m = Monster("이름", hp, attack, defense, element) — 인스턴스 생성</text>
+            <text x="115" y="34" text-anchor="middle" font-size="8" fill="#64748b">m.name → 이름 접근</text>
+            <text x="280" y="34" text-anchor="middle" font-size="8" fill="#64748b">m.status() → 메서드 호출</text>
+            <text x="415" y="34" text-anchor="middle" font-size="8" fill="#64748b">m.hp -= 10 → 속성 변경</text>
+        </svg>
+    </div>
+
+    <!-- 문제 2 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q2</div>
+            <div class="problem-label">is_alive() 메서드 구현</div>
+            <span class="problem-diff easy">기본</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">Monster 클래스에 <code>is_alive()</code> 메서드를 추가하세요. HP가 0보다 크면 <code>True</code>, 아니면 <code>False</code>를 반환합니다. battle() 함수의 while 조건을 <code>m1.is_alive() and m2.is_alive()</code>로 바꿔 사용하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">호출</span>
+                    <span class="problem-example-value">m1.hp = 0; print(m1.is_alive())</span>
+                </div>
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력</span>
+                    <span class="problem-example-value">False</span>
+                </div>
+            </div>
+            <details class="problem-toggle">
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">return self.hp > 0 한 줄로 완성할 수 있습니다. hp가 0이면 False, 양수면 True를 반환합니다.</div>
+                </div>
+            </details>
+            <details class="problem-toggle">
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code"><span class="kw">def</span> <span class="fn">is_alive</span>(self):
+    <span class="kw">return</span> self.hp > <span class="num">0</span></div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <!-- 문제 3 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q3</div>
+            <div class="problem-label">몬스터 3종 토너먼트 구현</div>
+            <span class="problem-diff hard">심화</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">몬스터 3마리를 리스트에 담아 토너먼트를 진행하세요. 1번 vs 2번 전투 후 승자가 3번과 다시 싸웁니다. 전투 전에 몬스터의 HP를 <code>max_hp</code>로 초기화하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력</span>
+                    <span class="problem-example-value">준결승 → 결승 → 최종 챔피언: 몬스터명</span>
+                </div>
+            </div>
+            <details class="problem-toggle">
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">monsters = [m1, m2, m3] → winner1 = battle(monsters[0], monsters[1]) → 전투 전 winner1.hp = winner1.max_hp 초기화 → winner2 = battle(winner1, monsters[2]).</div>
+                </div>
+            </details>
+            <details class="problem-toggle">
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code">monsters = [
+    <span class="dec">Monster</span>(<span class="str">"불꽃도마뱀"</span>, <span class="num">80</span>, <span class="num">25</span>, <span class="num">10</span>, <span class="str">"불"</span>),
+    <span class="dec">Monster</span>(<span class="str">"물고기전사"</span>, <span class="num">90</span>, <span class="num">20</span>, <span class="num">15</span>, <span class="str">"물"</span>),
+    <span class="dec">Monster</span>(<span class="str">"풀잎정령"</span>,  <span class="num">70</span>, <span class="num">28</span>, <span class="num">8</span>,  <span class="str">"풀"</span>),
+]
+<span class="fn">print</span>(<span class="str">"준결승"</span>)
+w1 = <span class="fn">battle</span>(monsters[<span class="num">0</span>], monsters[<span class="num">1</span>])
+w1.hp = w1.max_hp  <span class="cmt"># HP 회복</span>
+<span class="fn">print</span>(<span class="str">"\n결승"</span>)
+champion = <span class="fn">battle</span>(w1, monsters[<span class="num">2</span>])
+<span class="fn">print</span>(<span class="str">f"\n최종 챔피언: {champion.name}"</span>)</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <!-- 핵심 요약 -->
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/lightbulb.png" alt="아이디어" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>핵심 요약</h3>
+        <ul>
+            <li><code>class 이름:</code>으로 클래스를 정의하고 <code>__init__(self, ...)</code>으로 속성을 초기화합니다.</li>
+            <li><code>self</code>는 인스턴스 자기 자신을 가리킵니다.</li>
+            <li>딕셔너리 <code>ADVANTAGE</code>로 속성 상성을 표현하고 데미지 배율을 적용합니다.</li>
+            <li><code>while HP > 0</code> 루프로 턴제 전투를 구현합니다.</li>
+            <li>경험치 누적으로 레벨업 시 HP/공격력/방어력이 자동 상승합니다.</li>
+        </ul>
+    </div>
+
+    <!-- SVG: 핵심 개념 요약 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 460 54" style="max-width:460px;width:100%">
+            <rect x="5" y="8" width="80" height="40" rx="7" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/>
+            <text x="45" y="26" text-anchor="middle" font-size="8" fill="#7f1d1d" font-weight="700">class + __init__</text>
+            <text x="45" y="40" text-anchor="middle" font-size="7" fill="#64748b">클래스 설계</text>
+            <rect x="95" y="8" width="80" height="40" rx="7" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="135" y="26" text-anchor="middle" font-size="8" fill="#92400e" font-weight="700">속성 상성</text>
+            <text x="135" y="40" text-anchor="middle" font-size="7" fill="#64748b">딕셔너리 배율</text>
+            <rect x="185" y="8" width="80" height="40" rx="7" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="225" y="26" text-anchor="middle" font-size="8" fill="#166534" font-weight="700">턴제 전투</text>
+            <text x="225" y="40" text-anchor="middle" font-size="7" fill="#64748b">while + 번갈아</text>
+            <rect x="275" y="8" width="80" height="40" rx="7" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="315" y="26" text-anchor="middle" font-size="8" fill="#1d4ed8" font-weight="700">레벨업</text>
+            <text x="315" y="40" text-anchor="middle" font-size="7" fill="#64748b">exp 누적</text>
+            <rect x="365" y="8" width="90" height="40" rx="7" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+            <text x="410" y="26" text-anchor="middle" font-size="8" fill="#5b21b6" font-weight="700">메서드 확장</text>
+            <text x="410" y="40" text-anchor="middle" font-size="7" fill="#64748b">heal, is_alive</text>
+        </svg>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

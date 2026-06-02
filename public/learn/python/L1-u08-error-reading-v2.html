@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 에러 메시지 읽기</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+/* ── 페이지 ── */
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+/* ── 챕터 표지 ── */
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '\2022'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+
+/* ── 본문 ── */
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+
+/* ── 코드 블록 ── */
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 14px;
+    color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.code .err { color: #fca5a5; }
+
+/* ── 따라해보세요 ── */
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '\2192'; color: #94a3b8; font-weight: 700; }
+
+/* ── 문제 ── */
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+
+/* ── 요약 ── */
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- ═══ 1페이지: 표지 ═══ -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">08</div>
+        <div class="cover-label">Chapter 08</div>
+        <h1 class="cover-title">에러 메시지 읽기</h1>
+        <p class="cover-sub">당황하지 않기 - SyntaxError, NameError, TypeError, IndentationError를 읽는 법을 배웁니다.</p>
+        <!-- SVG: 학습 로드맵 -->
+        <div style="margin:20px 0;">
+            <svg viewBox="0 0 500 50" style="max-width:500px;width:100%">
+                <rect x="5" y="10" width="90" height="30" rx="6" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+                <text x="50" y="30" text-anchor="middle" font-size="9" fill="#ef4444" font-weight="700">에러 구조</text>
+                <line x1="100" y1="25" x2="115" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="120" y="10" width="90" height="30" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="165" y="30" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">SyntaxError</text>
+                <line x1="215" y1="25" x2="230" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="235" y="10" width="90" height="30" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="280" y="30" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">NameError</text>
+                <line x1="330" y1="25" x2="345" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="350" y="10" width="90" height="30" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="395" y="30" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">TypeError</text>
+            </svg>
+        </div>
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/magnifying-glass.png" alt="디버깅" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 유닛에서 배우는 것</h3>
+            <ul>
+                <li>에러 메시지의 구조(줄 번호, 화살표, 에러명)를 읽을 수 있습니다.</li>
+                <li>SyntaxError가 무엇인지 이해하고 고칠 수 있습니다.</li>
+                <li>NameError가 왜 발생하는지 설명할 수 있습니다.</li>
+                <li>TypeError를 만나면 자료형을 확인하고 고칠 수 있습니다.</li>
+                <li>IndentationError를 보고 들여쓰기를 수정할 수 있습니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ 2페이지: 에러는 친구다 ═══ -->
+<div class="page">
+    <h2>에러는 친구다 - 에러 메시지 읽는 법</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/lightbulb.png" alt="해결" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>에러가 나면 당황하지 마세요. 파이썬이 "여기가 잘못됐어!"라고 친절하게 알려주는 것입니다.</p>
+
+    <!-- SVG 1: 에러 메시지 구조 분해 -->
+    <div style="text-align:center;margin:20px 0;">
+        <svg viewBox="0 0 440 160" style="max-width:440px;width:100%">
+            <rect x="10" y="10" width="420" height="100" rx="8" fill="#0f172a"/>
+            <text x="20" y="32" font-family="monospace" font-size="10" fill="#64748b">Traceback (most recent call last):</text>
+            <text x="20" y="50" font-family="monospace" font-size="10" fill="#e2e8f0">  File "main.py", line 3, in &lt;module&gt;</text>
+            <text x="20" y="68" font-family="monospace" font-size="10" fill="#e2e8f0">    print("hello"</text>
+            <text x="20" y="86" font-family="monospace" font-size="10" fill="#ef4444">SyntaxError: '(' was never closed</text>
+            <!-- 화살표 설명 -->
+            <line x1="160" y1="50" x2="160" y2="120" stroke="#3b82f6" stroke-width="1" stroke-dasharray="3,3"/>
+            <text x="160" y="135" text-anchor="middle" font-size="9" fill="#3b82f6" font-weight="600">줄 번호 (line 3)</text>
+            <line x1="60" y1="86" x2="60" y2="120" stroke="#ef4444" stroke-width="1" stroke-dasharray="3,3"/>
+            <text x="60" y="135" text-anchor="middle" font-size="9" fill="#ef4444" font-weight="600">에러 이름</text>
+            <line x1="300" y1="86" x2="300" y2="120" stroke="#f59e0b" stroke-width="1" stroke-dasharray="3,3"/>
+            <text x="300" y="135" text-anchor="middle" font-size="9" fill="#f59e0b" font-weight="600">설명 (원인)</text>
+            <line x1="430" y1="50" x2="430" y2="120" stroke="#22c55e" stroke-width="1" stroke-dasharray="3,3"/>
+            <text x="415" y="150" text-anchor="middle" font-size="9" fill="#22c55e" font-weight="600">문제 코드</text>
+        </svg>
+    </div>
+
+    <!-- SVG 2: 에러 읽기 3단계 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 60" style="max-width:460px;width:100%">
+            <rect x="5" y="10" width="130" height="40" rx="8" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="70" y="25" text-anchor="middle" font-size="10" fill="#ef4444" font-weight="700">1단계</text>
+            <text x="70" y="40" text-anchor="middle" font-size="9" fill="#64748b">에러 이름 확인</text>
+            <line x1="140" y1="30" x2="160" y2="30" stroke="#94a3b8" stroke-width="1.5"/>
+            <rect x="165" y="10" width="130" height="40" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="230" y="25" text-anchor="middle" font-size="10" fill="#f59e0b" font-weight="700">2단계</text>
+            <text x="230" y="40" text-anchor="middle" font-size="9" fill="#64748b">줄 번호 찾기</text>
+            <line x1="300" y1="30" x2="320" y2="30" stroke="#94a3b8" stroke-width="1.5"/>
+            <rect x="325" y="10" width="130" height="40" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="390" y="25" text-anchor="middle" font-size="10" fill="#22c55e" font-weight="700">3단계</text>
+            <text x="390" y="40" text-anchor="middle" font-size="9" fill="#64748b">설명 읽기</text>
+        </svg>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="분석" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">일부러 에러를 내보세요. 괄호를 안 닫아봅시다.</div>
+                <div class="code"><span class="fn">print</span>(<span class="str">"안녕"</span></div>
+                <div class="practice-result">SyntaxError가 발생합니다</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">없는 변수를 써보세요.</div>
+                <div class="code"><span class="fn">print</span>(abc)</div>
+                <div class="practice-result">NameError: name 'abc' is not defined</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">문자열과 숫자를 더해보세요.</div>
+                <div class="code"><span class="fn">print</span>(<span class="str">"나이: "</span> + <span class="num">15</span>)</div>
+                <div class="practice-result">TypeError가 발생합니다</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ 3페이지: SyntaxError ═══ -->
+<div class="page">
+    <h2>SyntaxError - 문법이 틀렸을 때</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p><code>SyntaxError</code>는 파이썬 문법 규칙을 어겼을 때 발생합니다. 괄호, 따옴표, 콜론 등을 확인하세요.</p>
+
+    <!-- SVG 3: SyntaxError 원인 모음 -->
+    <div style="text-align:center;margin:20px 0;">
+        <svg viewBox="0 0 440 110" style="max-width:440px;width:100%">
+            <rect x="10" y="5" width="200" height="45" rx="8" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="110" y="20" text-anchor="middle" font-size="10" fill="#ef4444" font-weight="700">괄호 안 닫음</text>
+            <text x="110" y="38" text-anchor="middle" font-family="monospace" font-size="11" fill="#0f172a">print("hello"</text>
+            <rect x="230" y="5" width="200" height="45" rx="8" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="330" y="20" text-anchor="middle" font-size="10" fill="#ef4444" font-weight="700">따옴표 안 닫음</text>
+            <text x="330" y="38" text-anchor="middle" font-family="monospace" font-size="11" fill="#0f172a">print("hello)</text>
+            <rect x="10" y="60" width="200" height="45" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="110" y="75" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">올바른 코드</text>
+            <text x="110" y="93" text-anchor="middle" font-family="monospace" font-size="11" fill="#0f172a">print("hello")</text>
+            <rect x="230" y="60" width="200" height="45" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="330" y="75" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">올바른 코드</text>
+            <text x="330" y="93" text-anchor="middle" font-family="monospace" font-size="11" fill="#0f172a">print("hello")</text>
+        </svg>
+    </div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">따옴표를 닫지 않으면 어떤 에러가 나는지 확인하세요.</div>
+                <div class="code"><span class="fn">print</span>(<span class="str">"안녕하세요</span>)</div>
+                <div class="practice-result">SyntaxError: unterminated string literal</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">올바르게 고쳐서 실행하세요.</div>
+                <div class="code"><span class="fn">print</span>(<span class="str">"안녕하세요"</span>)</div>
+                <div class="practice-result">안녕하세요 가 정상 출력됩니다</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">print를 prnt로 잘못 쓰면 어떻게 되는지 보세요.</div>
+                <div class="code">prnt(<span class="str">"테스트"</span>)</div>
+                <div class="practice-result">NameError: name 'prnt' is not defined</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SVG 4: SyntaxError 체크리스트 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 380 90" style="max-width:380px;width:100%">
+            <rect x="10" y="5" width="360" height="80" rx="8" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="190" y="22" text-anchor="middle" font-size="11" fill="#92400e" font-weight="700">SyntaxError 체크리스트</text>
+            <text x="30" y="42" font-size="11" fill="#475569">[ ] 괄호가 열고 닫혔는지 확인</text>
+            <text x="30" y="58" font-size="11" fill="#475569">[ ] 따옴표가 짝이 맞는지 확인</text>
+            <text x="30" y="74" font-size="11" fill="#475569">[ ] 콜론(:)이 빠지지 않았는지 확인</text>
+        </svg>
+    </div>
+</div>
+
+<!-- ═══ 4페이지: NameError + TypeError ═══ -->
+<div class="page">
+    <h2>NameError와 TypeError</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p><code>NameError</code>는 존재하지 않는 이름을 사용할 때 발생합니다. 오타가 가장 흔한 원인입니다.</p>
+
+    <!-- SVG 5: NameError 원인 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 440 80" style="max-width:440px;width:100%">
+            <rect x="10" y="5" width="200" height="65" rx="8" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="110" y="22" text-anchor="middle" font-size="10" fill="#ef4444" font-weight="700">NameError</text>
+            <text x="110" y="42" text-anchor="middle" font-family="monospace" font-size="11" fill="#0f172a">prnt("hello")</text>
+            <text x="110" y="58" text-anchor="middle" font-size="9" fill="#64748b">print를 prnt로 잘못 씀</text>
+            <line x1="220" y1="37" x2="240" y2="37" stroke="#22c55e" stroke-width="2" marker-end="url(#arr8g)"/>
+            <rect x="250" y="5" width="180" height="65" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="340" y="22" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">해결</text>
+            <text x="340" y="42" text-anchor="middle" font-family="monospace" font-size="11" fill="#0f172a">print("hello")</text>
+            <text x="340" y="58" text-anchor="middle" font-size="9" fill="#64748b">올바른 이름으로 수정</text>
+            <defs>
+                <marker id="arr8g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#22c55e"/></marker>
+            </defs>
+        </svg>
+    </div>
+
+    <p><code>TypeError</code>는 자료형이 맞지 않을 때 발생합니다. 문자열과 숫자를 더하는 경우가 대표적입니다.</p>
+
+    <!-- SVG 6: TypeError 원인 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 440 80" style="max-width:440px;width:100%">
+            <rect x="10" y="5" width="200" height="65" rx="8" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="110" y="22" text-anchor="middle" font-size="10" fill="#ef4444" font-weight="700">TypeError</text>
+            <text x="110" y="42" text-anchor="middle" font-family="monospace" font-size="11" fill="#0f172a">"점수: " + 100</text>
+            <text x="110" y="58" text-anchor="middle" font-size="9" fill="#64748b">str + int = 에러</text>
+            <line x1="220" y1="37" x2="240" y2="37" stroke="#22c55e" stroke-width="2" marker-end="url(#arr8g)"/>
+            <rect x="250" y="5" width="180" height="65" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="340" y="22" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">해결</text>
+            <text x="340" y="42" text-anchor="middle" font-family="monospace" font-size="11" fill="#0f172a">"점수: " + str(100)</text>
+            <text x="340" y="58" text-anchor="middle" font-size="9" fill="#64748b">str()로 변환</text>
+        </svg>
+    </div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">변수 이름을 잘못 써보세요.</div>
+                <div class="code">name = <span class="str">"민수"</span>
+<span class="fn">print</span>(nme)</div>
+                <div class="practice-result">NameError: name 'nme' is not defined</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">올바른 변수 이름으로 고치세요.</div>
+                <div class="code">name = <span class="str">"민수"</span>
+<span class="fn">print</span>(name)</div>
+                <div class="practice-result">민수 가 출력됩니다</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">TypeError를 고쳐보세요.</div>
+                <div class="code"><span class="cmt"># 에러 코드: print("합계: " + 100)</span>
+<span class="fn">print</span>(<span class="str">"합계: "</span> + <span class="fn">str</span>(<span class="num">100</span>))</div>
+                <div class="practice-result">합계: 100 이 출력됩니다</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ 5페이지: 에러 고치기 연습 ═══ -->
+<div class="page">
+    <h2>에러 고치기 연습</h2>
+    <p>에러 코드를 보고 직접 고쳐보는 연습을 합시다. 에러 이름과 줄 번호를 먼저 확인하세요.</p>
+
+    <!-- SVG 7: IndentationError -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 440 90" style="max-width:440px;width:100%">
+            <rect x="10" y="5" width="200" height="80" rx="8" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="110" y="22" text-anchor="middle" font-size="10" fill="#ef4444" font-weight="700">IndentationError</text>
+            <text x="22" y="42" font-family="monospace" font-size="10" fill="#0f172a">name = "Kim"</text>
+            <text x="22" y="58" font-family="monospace" font-size="10" fill="#ef4444">  print(name)</text>
+            <text x="110" y="75" text-anchor="middle" font-size="9" fill="#64748b">불필요한 들여쓰기</text>
+            <line x1="220" y1="45" x2="240" y2="45" stroke="#22c55e" stroke-width="2" marker-end="url(#arr8g)"/>
+            <rect x="250" y="5" width="180" height="80" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="340" y="22" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">수정</text>
+            <text x="262" y="42" font-family="monospace" font-size="10" fill="#0f172a">name = "Kim"</text>
+            <text x="262" y="58" font-family="monospace" font-size="10" fill="#0f172a">print(name)</text>
+            <text x="340" y="75" text-anchor="middle" font-size="9" fill="#64748b">들여쓰기 맞춤</text>
+        </svg>
+    </div>
+
+    <!-- SVG 8: 에러별 빈도 차트 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 400 110" style="max-width:400px;width:100%">
+            <text x="10" y="15" font-size="11" fill="#1e3a5f" font-weight="700">초보자가 자주 만나는 에러 TOP 4</text>
+            <rect x="120" y="25" width="220" height="16" rx="4" fill="#ef4444" opacity="0.8"/>
+            <text x="10" y="37" font-size="9" fill="#475569">SyntaxError</text>
+            <text x="350" y="37" font-size="9" fill="#fff" font-weight="600">40%</text>
+            <rect x="120" y="48" width="165" height="16" rx="4" fill="#f59e0b" opacity="0.8"/>
+            <text x="10" y="60" font-size="9" fill="#475569">NameError</text>
+            <text x="293" y="60" font-size="9" fill="#fff" font-weight="600">30%</text>
+            <rect x="120" y="71" width="88" height="16" rx="4" fill="#3b82f6" opacity="0.8"/>
+            <text x="10" y="83" font-size="9" fill="#475569">TypeError</text>
+            <text x="215" y="83" font-size="9" fill="#fff" font-weight="600">16%</text>
+            <rect x="120" y="94" width="55" height="16" rx="4" fill="#8b5cf6" opacity="0.8"/>
+            <text x="10" y="106" font-size="9" fill="#475569">IndentationError</text>
+            <text x="182" y="106" font-size="9" fill="#fff" font-weight="600">10%</text>
+        </svg>
+    </div>
+
+    <!-- SVG 9: 에러 고치기 비교 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 90" style="max-width:460px;width:100%">
+            <rect x="5" y="5" width="220" height="80" rx="8" fill="#0f172a"/>
+            <text x="115" y="20" text-anchor="middle" font-size="10" fill="#ef4444" font-weight="700">잘못된 코드</text>
+            <text x="15" y="38" font-family="monospace" font-size="10" fill="#e2e8f0">age = 15</text>
+            <text x="15" y="55" font-family="monospace" font-size="10" fill="#e2e8f0">print("나이: " + age)</text>
+            <text x="15" y="72" font-family="monospace" font-size="9" fill="#ef4444">TypeError!</text>
+            <line x1="235" y1="45" x2="250" y2="45" stroke="#22c55e" stroke-width="2" marker-end="url(#arr8g)"/>
+            <rect x="260" y="5" width="195" height="80" rx="8" fill="#0f172a"/>
+            <text x="357" y="20" text-anchor="middle" font-size="10" fill="#22c55e" font-weight="700">고친 코드</text>
+            <text x="270" y="38" font-family="monospace" font-size="10" fill="#e2e8f0">age = 15</text>
+            <text x="270" y="55" font-family="monospace" font-size="10" fill="#86efac">print("나이: " + str(age))</text>
+            <text x="270" y="72" font-family="monospace" font-size="9" fill="#22c55e">나이: 15</text>
+        </svg>
+    </div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">불필요한 들여쓰기를 넣어서 IndentationError를 확인하세요.</div>
+                <div class="code">x = <span class="num">10</span>
+  <span class="fn">print</span>(x)</div>
+                <div class="practice-result">IndentationError: unexpected indent</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">들여쓰기를 제거하고 다시 실행하세요.</div>
+                <div class="code">x = <span class="num">10</span>
+<span class="fn">print</span>(x)</div>
+                <div class="practice-result">10 이 정상 출력됩니다</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">여러 에러를 한 번에 고쳐보세요.</div>
+                <div class="code"><span class="cmt"># 에러코드: prnt("점수: " + 100</span>
+<span class="cmt"># 1. prnt -> print (NameError 수정)</span>
+<span class="cmt"># 2. 100 -> str(100) (TypeError 수정)</span>
+<span class="cmt"># 3. 괄호 닫기 (SyntaxError 수정)</span>
+<span class="fn">print</span>(<span class="str">"점수: "</span> + <span class="fn">str</span>(<span class="num">100</span>))</div>
+                <div class="practice-result">점수: 100 이 출력됩니다</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ 6페이지: 문제 ═══ -->
+<div class="page">
+    <h2>직접 풀어보세요</h2>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q1</div>
+            <div class="problem-label">SyntaxError 고치기</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">아래 코드에서 <code>SyntaxError</code>를 찾아 고치세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">코드</span><span class="problem-example-value">print("Hello World"</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">Hello World</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle"><summary>힌트 보기</summary><div class="problem-toggle-content"><div class="hint-text">괄호가 제대로 닫혀있는지 확인하세요.</div></div></details>
+        <details class="problem-toggle"><summary>정답 확인</summary><div class="problem-toggle-content"><div class="answer-code">print("Hello World")</div></div></details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q2</div>
+            <div class="problem-label">NameError 고치기</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">아래 코드에서 <code>NameError</code>를 찾아 고치세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">코드</span><span class="problem-example-value">message = "Hi"<br>print(mesage)</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">Hi</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle"><summary>힌트 보기</summary><div class="problem-toggle-content"><div class="hint-text">변수 이름의 철자를 비교해보세요. message와 mesage는 다릅니다.</div></div></details>
+        <details class="problem-toggle"><summary>정답 확인</summary><div class="problem-toggle-content"><div class="answer-code">message = "Hi"
+print(message)</div></div></details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q3</div>
+            <div class="problem-label">TypeError 고치기</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">아래 코드에서 <code>TypeError</code>를 찾아 고치세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">코드</span><span class="problem-example-value">score = 95<br>print("내 점수: " + score + "점")</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">내 점수: 95점</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle"><summary>힌트 보기</summary><div class="problem-toggle-content"><div class="hint-text">숫자를 문자열로 변환하는 함수를 사용하세요.</div></div></details>
+        <details class="problem-toggle"><summary>정답 확인</summary><div class="problem-toggle-content"><div class="answer-code">score = 95
+print("내 점수: " + str(score) + "점")</div></div></details>
+    </div>
+</div>
+
+<!-- ═══ 7페이지: 핵심 요약 ═══ -->
+<div class="page">
+    <h2>핵심 요약</h2>
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/monitor.png" alt="모니터" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>이 유닛에서 배운 것</h3>
+        <ul>
+            <li>에러 메시지는 에러 이름, 줄 번호, 설명으로 구성된다</li>
+            <li><code>SyntaxError</code>: 괄호, 따옴표, 콜론 등 문법 실수</li>
+            <li><code>NameError</code>: 오타이거나 정의되지 않은 이름 사용</li>
+            <li><code>TypeError</code>: 자료형이 맞지 않을 때 (str + int 등)</li>
+            <li><code>IndentationError</code>: 들여쓰기가 잘못되었을 때</li>
+        </ul>
+    </div>
+
+    <!-- SVG 10: 에러별 해결법 요약 카드 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 440 170" style="max-width:440px;width:100%">
+            <rect x="10" y="5" width="200" height="75" rx="8" fill="#fff" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="110" y="22" text-anchor="middle" font-size="10" fill="#ef4444" font-weight="700">SyntaxError</text>
+            <text x="110" y="40" text-anchor="middle" font-size="9" fill="#475569">괄호/따옴표 확인</text>
+            <text x="110" y="55" text-anchor="middle" font-size="9" fill="#475569">콜론(:) 확인</text>
+            <text x="110" y="70" text-anchor="middle" font-size="9" fill="#166534" font-weight="600">짝이 맞는지 세기!</text>
+            <rect x="230" y="5" width="200" height="75" rx="8" fill="#fff" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="330" y="22" text-anchor="middle" font-size="10" fill="#f59e0b" font-weight="700">NameError</text>
+            <text x="330" y="40" text-anchor="middle" font-size="9" fill="#475569">변수 이름 오타 확인</text>
+            <text x="330" y="55" text-anchor="middle" font-size="9" fill="#475569">변수 선언 여부 확인</text>
+            <text x="330" y="70" text-anchor="middle" font-size="9" fill="#166534" font-weight="600">철자 하나하나 비교!</text>
+            <rect x="10" y="90" width="200" height="75" rx="8" fill="#fff" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="110" y="107" text-anchor="middle" font-size="10" fill="#3b82f6" font-weight="700">TypeError</text>
+            <text x="110" y="125" text-anchor="middle" font-size="9" fill="#475569">자료형 확인 (type())</text>
+            <text x="110" y="140" text-anchor="middle" font-size="9" fill="#475569">str()/int()로 변환</text>
+            <text x="110" y="155" text-anchor="middle" font-size="9" fill="#166534" font-weight="600">같은 타입끼리 연산!</text>
+            <rect x="230" y="90" width="200" height="75" rx="8" fill="#fff" stroke="#8b5cf6" stroke-width="1.5"/>
+            <text x="330" y="107" text-anchor="middle" font-size="10" fill="#8b5cf6" font-weight="700">IndentationError</text>
+            <text x="330" y="125" text-anchor="middle" font-size="9" fill="#475569">들여쓰기 맞추기</text>
+            <text x="330" y="140" text-anchor="middle" font-size="9" fill="#475569">탭/공백 섞지 않기</text>
+            <text x="330" y="155" text-anchor="middle" font-size="9" fill="#166534" font-weight="600">왼쪽 끝에서 시작!</text>
+        </svg>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

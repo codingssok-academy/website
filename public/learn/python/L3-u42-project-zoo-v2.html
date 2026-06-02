@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 프로젝트: 동물원 시뮬레이터</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+/* -- 페이지 -- */
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+/* -- 챕터 표지 -- */
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+
+/* -- 본문 -- */
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 16px; font-weight: 700; color: #1e3a5f; margin: 18px 0 10px; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+ul, ol { margin: 0 0 12px 20px; }
+li { font-size: 14px; color: #374151; line-height: 1.8; }
+
+/* -- 코드 블록 -- */
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13.5px;
+    color: #e2e8f0; line-height: 1.85; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.code .dec { color: #f9a8d4; }
+.code .cls { color: #fbbf24; }
+
+/* -- 따라해보세요 -- */
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+
+/* -- 문제 -- */
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+
+/* -- 요약 -- */
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+/* -- 단계 박스 -- */
+.step-box { border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 14px 18px; margin: 14px 0; background: #fff; }
+.step-label { font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+.step-title { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 8px; }
+
+/* -- 출력 박스 -- */
+.output-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #334155; line-height: 1.7; margin: 10px 0; }
+
+/* -- 비교 테이블 -- */
+.compare-table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13px; }
+.compare-table th { background: #1e3a5f; color: #fff; padding: 8px 12px; text-align: left; font-weight: 700; }
+.compare-table td { padding: 7px 12px; border-bottom: 1px solid #e2e8f0; color: #374151; }
+.compare-table tr:nth-child(even) td { background: #f8fafc; }
+.compare-table code { background: #e0e7ff; padding: 1px 5px; border-radius: 3px; font-family: 'JetBrains Mono', monospace; color: #3730a3; font-size: 12px; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- 1페이지: 표지 -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">42</div>
+        <div class="cover-label">L3 — Unit 42 Project</div>
+        <h1 class="cover-title">프로젝트:<br>동물원 시뮬레이터</h1>
+        <p class="cover-sub">L3d에서 배운 클래스, __init__, 메서드, 상속을 총동원해 Animal 부모 클래스와 Lion, Penguin, Monkey 자식 클래스, 그리고 동물원을 관리하는 Zoo 클래스를 단계별로 완성합니다.</p>
+
+        <!-- SVG: 클래스 상속 구조도 -->
+        <div style="margin:24px 0;">
+            <svg viewBox="0 0 500 160" style="max-width:500px;width:100%">
+                <defs>
+                    <marker id="arwCov" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                    </marker>
+                </defs>
+                <!-- 부모 클래스 Animal -->
+                <rect x="165" y="8" width="170" height="48" rx="8" fill="#1e3a5f"/>
+                <text x="250" y="28" text-anchor="middle" font-size="12" fill="#fff" font-weight="700">Animal</text>
+                <text x="250" y="44" text-anchor="middle" font-size="9" fill="#93c5fd">name, sound, hunger</text>
+                <!-- 자식: Lion -->
+                <rect x="5" y="100" width="130" height="48" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="70" y="120" text-anchor="middle" font-size="11" fill="#92400e" font-weight="700">Lion</text>
+                <text x="70" y="136" text-anchor="middle" font-size="8" fill="#64748b">roar(), hunt()</text>
+                <!-- 자식: Penguin -->
+                <rect x="185" y="100" width="130" height="48" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="250" y="120" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">Penguin</text>
+                <text x="250" y="136" text-anchor="middle" font-size="8" fill="#64748b">swim(), slide()</text>
+                <!-- 자식: Monkey -->
+                <rect x="365" y="100" width="130" height="48" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="430" y="120" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">Monkey</text>
+                <text x="430" y="136" text-anchor="middle" font-size="8" fill="#64748b">climb(), play()</text>
+                <!-- 화살표 -->
+                <line x1="70" y1="100" x2="200" y2="58" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+                <line x1="250" y1="100" x2="250" y2="58" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+                <line x1="430" y1="100" x2="300" y2="58" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/puzzle.png" alt="고급 기능" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 유닛에서 만드는 것</h3>
+            <ul>
+                <li><code>class Animal</code>로 부모 클래스를 정의하고 <code>__init__</code>으로 속성을 초기화할 수 있습니다.</li>
+                <li><code>speak()</code>, <code>eat()</code>, <code>status()</code> 공통 메서드를 부모에 구현할 수 있습니다.</li>
+                <li><code>class Lion(Animal)</code>처럼 상속으로 자식 클래스를 만들고 메서드를 추가할 수 있습니다.</li>
+                <li><code>super().__init__()</code>으로 부모 클래스의 초기화를 재사용할 수 있습니다.</li>
+                <li><code>Zoo</code> 클래스로 동물 리스트를 관리하고 먹이를 주거나 전체 상태를 출력할 수 있습니다.</li>
+                <li>메서드 오버라이드로 자식 클래스가 부모와 다른 동작을 정의할 수 있습니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- 2페이지: 클래스 기초 복습 + Step 1 Animal 부모 클래스 -->
+<div class="page">
+    <h2>프로젝트 준비 — 클래스와 상속 핵심 복습</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="처리" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>이 프로젝트는 L3d에서 배운 객체지향 개념을 집중적으로 활용합니다. 핵심 문법을 빠르게 정리합니다.</p>
+
+    <!-- SVG: 클래스 4대 요소 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 85" style="max-width:480px;width:100%">
+            <!-- class 정의 -->
+            <rect x="5" y="8" width="108" height="68" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="59" y="26" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">class 정의</text>
+            <text x="59" y="40" text-anchor="middle" font-size="8" fill="#64748b">class Animal:</text>
+            <text x="59" y="54" text-anchor="middle" font-size="8" fill="#94a3b8">클래스 = 설계도</text>
+            <text x="59" y="68" text-anchor="middle" font-size="8" fill="#94a3b8">인스턴스 = 실체</text>
+            <!-- __init__ -->
+            <rect x="123" y="8" width="108" height="68" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="177" y="26" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">__init__</text>
+            <text x="177" y="40" text-anchor="middle" font-size="8" fill="#64748b">def __init__(self,...)</text>
+            <text x="177" y="54" text-anchor="middle" font-size="8" fill="#94a3b8">객체 생성 시 자동 실행</text>
+            <text x="177" y="68" text-anchor="middle" font-size="8" fill="#94a3b8">self.속성 초기화</text>
+            <!-- 메서드 -->
+            <rect x="241" y="8" width="108" height="68" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="295" y="26" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">메서드</text>
+            <text x="295" y="40" text-anchor="middle" font-size="8" fill="#64748b">def speak(self):</text>
+            <text x="295" y="54" text-anchor="middle" font-size="8" fill="#94a3b8">클래스 안 함수</text>
+            <text x="295" y="68" text-anchor="middle" font-size="8" fill="#94a3b8">self로 속성 접근</text>
+            <!-- 상속 -->
+            <rect x="359" y="8" width="116" height="68" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="417" y="26" text-anchor="middle" font-size="9" fill="#4338ca" font-weight="700">상속</text>
+            <text x="417" y="40" text-anchor="middle" font-size="8" fill="#64748b">class Lion(Animal):</text>
+            <text x="417" y="54" text-anchor="middle" font-size="8" fill="#94a3b8">부모 기능 물려받음</text>
+            <text x="417" y="68" text-anchor="middle" font-size="8" fill="#94a3b8">super().__init__()</text>
+        </svg>
+    </div>
+
+    <h3>Step 1 — Animal 부모 클래스 정의</h3>
+    <p>모든 동물이 공통으로 가져야 할 속성(<code>name</code>, <code>sound</code>, <code>hunger</code>)과 메서드(<code>speak</code>, <code>eat</code>, <code>status</code>)를 부모 클래스에 정의합니다.</p>
+
+    <!-- SVG: Animal 클래스 구조 다이어그램 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 100" style="max-width:480px;width:100%">
+            <!-- Animal 클래스 박스 -->
+            <rect x="50" y="8" width="380" height="84" rx="8" fill="#f8fafc" stroke="#1e3a5f" stroke-width="2"/>
+            <rect x="50" y="8" width="380" height="28" rx="8" fill="#1e3a5f"/>
+            <text x="240" y="26" text-anchor="middle" font-size="11" fill="#fff" font-weight="800">Animal</text>
+            <!-- 속성 -->
+            <text x="100" y="52" font-size="9" fill="#374151" font-weight="700">속성 (Attributes)</text>
+            <text x="100" y="66" font-size="8" fill="#64748b">name: str — 동물 이름</text>
+            <text x="100" y="78" font-size="8" fill="#64748b">sound: str — 울음소리</text>
+            <text x="100" y="90" font-size="8" fill="#64748b">hunger: int — 배고픔(0~10)</text>
+            <!-- 구분선 -->
+            <line x1="260" y1="38" x2="260" y2="92" stroke="#e2e8f0" stroke-width="1"/>
+            <!-- 메서드 -->
+            <text x="310" y="52" font-size="9" fill="#374151" font-weight="700">메서드 (Methods)</text>
+            <text x="310" y="66" font-size="8" fill="#3b82f6">speak() — 울음소리 출력</text>
+            <text x="310" y="78" font-size="8" fill="#22c55e">eat() — 먹이 주기</text>
+            <text x="310" y="90" font-size="8" fill="#f59e0b">status() — 상태 출력</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># Step 1: Animal 부모 클래스</span>
+
+<span class="kw">class</span> <span class="cls">Animal</span>:
+    <span class="str">"""동물 기본 클래스"""</span>
+
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="dec">self</span>, name, sound):
+        <span class="dec">self</span>.name = name        <span class="cmt"># 동물 이름</span>
+        <span class="dec">self</span>.sound = sound      <span class="cmt"># 울음소리</span>
+        <span class="dec">self</span>.hunger = <span class="num">5</span>        <span class="cmt"># 배고픔 (0=배부름, 10=매우 배고픔)</span>
+
+    <span class="kw">def</span> <span class="fn">speak</span>(<span class="dec">self</span>):
+        <span class="fn">print</span>(<span class="str">f"{self.name}: {self.sound}!"</span>)
+
+    <span class="kw">def</span> <span class="fn">eat</span>(<span class="dec">self</span>, amount=<span class="num">2</span>):
+        <span class="dec">self</span>.hunger -= amount
+        <span class="kw">if</span> <span class="dec">self</span>.hunger &lt; <span class="num">0</span>:
+            <span class="dec">self</span>.hunger = <span class="num">0</span>
+        <span class="fn">print</span>(<span class="str">f"{self.name}이(가) 먹이를 먹었습니다. (배고픔: {self.hunger})"</span>)
+
+    <span class="kw">def</span> <span class="fn">status</span>(<span class="dec">self</span>):
+        bar = <span class="str">"#"</span> * <span class="dec">self</span>.hunger + <span class="str">"-"</span> * (<span class="num">10</span> - <span class="dec">self</span>.hunger)
+        <span class="fn">print</span>(<span class="str">f"[{self.name}] 배고픔: [{bar}] {self.hunger}/10"</span>)
+
+<span class="cmt"># 테스트</span>
+a = <span class="cls">Animal</span>(<span class="str">"동물"</span>, <span class="str">"..."</span>)
+a.<span class="fn">speak</span>()
+a.<span class="fn">status</span>()</div>
+
+    <div class="output-box">동물: ...!
+[동물] 배고픔: [#####-----] 5/10</div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="완성" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+        <div class="practice-head">따라해보세요 — Step 1</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc"><code>Animal</code> 클래스를 입력하고 <code>Animal("고양이", "야옹")</code>으로 객체를 만들어 <code>speak()</code>를 호출하세요.</div>
+                <div class="code">cat = <span class="cls">Animal</span>(<span class="str">"고양이"</span>, <span class="str">"야옹"</span>)
+cat.<span class="fn">speak</span>()</div>
+                <div class="practice-result">고양이: 야옹! 이 출력되면 성공</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc"><code>eat(3)</code>을 두 번 호출한 뒤 <code>status()</code>로 배고픔이 0이 됐는지 확인하세요.</div>
+                <div class="code">cat.<span class="fn">eat</span>(<span class="num">3</span>)
+cat.<span class="fn">eat</span>(<span class="num">3</span>)
+cat.<span class="fn">status</span>()</div>
+                <div class="practice-result">배고픔: 0 (음수로 내려가지 않음)</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">객체의 속성을 직접 확인하세요. <code>cat.name</code>, <code>cat.sound</code>, <code>cat.hunger</code>를 출력합니다.</div>
+                <div class="code"><span class="fn">print</span>(cat.name, cat.sound, cat.hunger)</div>
+                <div class="practice-result">고양이 야옹 0 이 출력되면 성공</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3페이지: Step 2 자식 클래스 Lion, Penguin, Monkey -->
+<div class="page">
+    <h2>Step 2 — 자식 클래스: Lion, Penguin, Monkey</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/database.png" alt="데이터" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p><code>Animal</code>을 상속받아 각 동물만의 고유한 속성과 메서드를 추가합니다. <code>super().__init__()</code>으로 부모 초기화를 재사용하고, 자식만의 메서드를 추가합니다.</p>
+
+    <!-- SVG: super().__init__() 동작 원리 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 90" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="arwS2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <!-- Lion.__init__ -->
+            <rect x="5" y="10" width="148" height="70" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="79" y="28" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">Lion.__init__(self, name)</text>
+            <text x="79" y="44" text-anchor="middle" font-size="8" fill="#64748b">super().__init__(name, "어흥")</text>
+            <text x="79" y="58" text-anchor="middle" font-size="8" fill="#64748b">self.mane = True  # 갈기</text>
+            <text x="79" y="72" text-anchor="middle" font-size="8" fill="#94a3b8">부모 init 호출 후 추가 속성</text>
+            <line x1="156" y1="45" x2="176" y2="45" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwS2)"/>
+            <!-- Animal.__init__ -->
+            <rect x="179" y="10" width="148" height="70" rx="8" fill="#1e3a5f"/>
+            <text x="253" y="28" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">Animal.__init__</text>
+            <text x="253" y="44" text-anchor="middle" font-size="8" fill="#93c5fd">self.name = name</text>
+            <text x="253" y="58" text-anchor="middle" font-size="8" fill="#93c5fd">self.sound = "어흥"</text>
+            <text x="253" y="72" text-anchor="middle" font-size="8" fill="#93c5fd">self.hunger = 5</text>
+            <line x1="330" y1="45" x2="350" y2="45" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwS2)"/>
+            <!-- 결과 -->
+            <rect x="353" y="18" width="122" height="54" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="414" y="34" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">lion 객체 완성</text>
+            <text x="414" y="50" text-anchor="middle" font-size="8" fill="#166534">name, sound, hunger</text>
+            <text x="414" y="64" text-anchor="middle" font-size="8" fill="#166534">+ mane 속성까지</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># Step 2a: Lion 클래스 (사자)</span>
+
+<span class="kw">class</span> <span class="cls">Lion</span>(<span class="cls">Animal</span>):
+    <span class="str">"""사자 클래스"""</span>
+
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="dec">self</span>, name):
+        <span class="fn">super</span>().<span class="fn">__init__</span>(name, <span class="str">"어흥"</span>)   <span class="cmt"># 부모 초기화</span>
+        <span class="dec">self</span>.mane = <span class="dec">True</span>                 <span class="cmt"># 갈기 여부 (사자만)</span>
+
+    <span class="kw">def</span> <span class="fn">roar</span>(<span class="dec">self</span>):
+        <span class="fn">print</span>(<span class="str">f"{self.name}이(가) 크게 포효합니다! 어흥!!"</span>)
+
+    <span class="kw">def</span> <span class="fn">hunt</span>(<span class="dec">self</span>):
+        <span class="dec">self</span>.hunger -= <span class="num">3</span>
+        <span class="kw">if</span> <span class="dec">self</span>.hunger &lt; <span class="num">0</span>:
+            <span class="dec">self</span>.hunger = <span class="num">0</span>
+        <span class="fn">print</span>(<span class="str">f"{self.name}이(가) 사냥에 성공했습니다!"</span>)
+
+<span class="cmt"># Step 2b: Penguin 클래스 (펭귄)</span>
+
+<span class="kw">class</span> <span class="cls">Penguin</span>(<span class="cls">Animal</span>):
+    <span class="str">"""펭귄 클래스"""</span>
+
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="dec">self</span>, name):
+        <span class="fn">super</span>().<span class="fn">__init__</span>(name, <span class="str">"크왁"</span>)
+        <span class="dec">self</span>.swim_speed = <span class="num">25</span>             <span class="cmt"># 수영 속도 (km/h)</span>
+
+    <span class="kw">def</span> <span class="fn">swim</span>(<span class="dec">self</span>):
+        <span class="fn">print</span>(<span class="str">f"{self.name}이(가) {self.swim_speed}km/h로 수영합니다!"</span>)
+
+    <span class="kw">def</span> <span class="fn">slide</span>(<span class="dec">self</span>):
+        <span class="fn">print</span>(<span class="str">f"{self.name}이(가) 배로 미끄러집니다! 슝~"</span>)
+
+<span class="cmt"># Step 2c: Monkey 클래스 (원숭이)</span>
+
+<span class="kw">class</span> <span class="cls">Monkey</span>(<span class="cls">Animal</span>):
+    <span class="str">"""원숭이 클래스"""</span>
+
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="dec">self</span>, name):
+        <span class="fn">super</span>().<span class="fn">__init__</span>(name, <span class="str">"우키"</span>)
+        <span class="dec">self</span>.energy = <span class="num">10</span>               <span class="cmt"># 활동 에너지</span>
+
+    <span class="kw">def</span> <span class="fn">climb</span>(<span class="dec">self</span>):
+        <span class="dec">self</span>.energy -= <span class="num">2</span>
+        <span class="fn">print</span>(<span class="str">f"{self.name}이(가) 나무를 오릅니다! (에너지: {self.energy})"</span>)
+
+    <span class="kw">def</span> <span class="fn">play</span>(<span class="dec">self</span>):
+        <span class="fn">print</span>(<span class="str">f"{self.name}이(가) 신나게 놉니다! 우키우키!"</span>)</div>
+
+    <!-- SVG: 상속 관계 및 메서드 표 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 72" style="max-width:480px;width:100%">
+            <!-- 헤더 -->
+            <rect x="0" y="0" width="480" height="20" rx="4" fill="#1e3a5f"/>
+            <text x="70" y="14" text-anchor="middle" font-size="8" fill="#fff" font-weight="700">클래스</text>
+            <text x="170" y="14" text-anchor="middle" font-size="8" fill="#fff" font-weight="700">상속받는 메서드</text>
+            <text x="330" y="14" text-anchor="middle" font-size="8" fill="#fff" font-weight="700">추가 메서드</text>
+            <text x="430" y="14" text-anchor="middle" font-size="8" fill="#fff" font-weight="700">고유 속성</text>
+            <!-- Lion 행 -->
+            <rect x="0" y="20" width="480" height="17" fill="#fefce8"/>
+            <text x="70" y="32" text-anchor="middle" font-size="8" fill="#92400e" font-weight="700">Lion</text>
+            <text x="170" y="32" text-anchor="middle" font-size="8" fill="#374151">speak, eat, status</text>
+            <text x="330" y="32" text-anchor="middle" font-size="8" fill="#374151">roar(), hunt()</text>
+            <text x="430" y="32" text-anchor="middle" font-size="8" fill="#374151">mane</text>
+            <!-- Penguin 행 -->
+            <rect x="0" y="37" width="480" height="17" fill="#dbeafe"/>
+            <text x="70" y="49" text-anchor="middle" font-size="8" fill="#1d4ed8" font-weight="700">Penguin</text>
+            <text x="170" y="49" text-anchor="middle" font-size="8" fill="#374151">speak, eat, status</text>
+            <text x="330" y="49" text-anchor="middle" font-size="8" fill="#374151">swim(), slide()</text>
+            <text x="430" y="49" text-anchor="middle" font-size="8" fill="#374151">swim_speed</text>
+            <!-- Monkey 행 -->
+            <rect x="0" y="54" width="480" height="17" fill="#f0fdf4"/>
+            <text x="70" y="66" text-anchor="middle" font-size="8" fill="#166534" font-weight="700">Monkey</text>
+            <text x="170" y="66" text-anchor="middle" font-size="8" fill="#374151">speak, eat, status</text>
+            <text x="330" y="66" text-anchor="middle" font-size="8" fill="#374151">climb(), play()</text>
+            <text x="430" y="66" text-anchor="middle" font-size="8" fill="#374151">energy</text>
+        </svg>
+    </div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요 — Step 2</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc"><code>Lion("심바")</code>를 만들어 <code>speak()</code>와 <code>roar()</code>를 모두 호출하세요.</div>
+                <div class="code">lion = <span class="cls">Lion</span>(<span class="str">"심바"</span>)
+lion.<span class="fn">speak</span>()
+lion.<span class="fn">roar</span>()</div>
+                <div class="practice-result">심바: 어흥! 과 포효 메시지 출력</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc"><code>Penguin("뽀로로")</code>를 만들어 <code>swim()</code>과 <code>slide()</code>를 호출하세요.</div>
+                <div class="code">peng = <span class="cls">Penguin</span>(<span class="str">"뽀로로"</span>)
+peng.<span class="fn">swim</span>()
+peng.<span class="fn">slide</span>()</div>
+                <div class="practice-result">수영 속도와 미끄럼 메시지 출력</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">세 동물 모두 <code>eat()</code>을 호출하고 <code>status()</code>로 배고픔을 확인하세요. 부모 메서드를 그대로 쓸 수 있음을 확인합니다.</div>
+                <div class="code">monkey = <span class="cls">Monkey</span>(<span class="str">"마리오"</span>)
+<span class="kw">for</span> animal <span class="kw">in</span> [lion, peng, monkey]:
+    animal.<span class="fn">eat</span>()
+    animal.<span class="fn">status</span>()</div>
+                <div class="practice-result">세 동물 모두 배고픔이 3으로 줄어든 상태 출력</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 4페이지: Step 3 Zoo 클래스 -->
+<div class="page">
+    <h2>Step 3 — Zoo 클래스: 동물원 관리</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p><code>Zoo</code> 클래스는 동물 리스트를 내부에 보관하고, 동물을 추가하거나, 전체에게 먹이를 주거나, 현재 상태를 한번에 출력하는 기능을 담당합니다.</p>
+
+    <!-- SVG: Zoo 클래스 구조 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 104" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="arwZ" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <!-- Zoo 클래스 -->
+            <rect x="160" y="8" width="160" height="88" rx="8" fill="#1e3a5f"/>
+            <text x="240" y="26" text-anchor="middle" font-size="11" fill="#fff" font-weight="800">Zoo</text>
+            <text x="240" y="42" text-anchor="middle" font-size="8" fill="#93c5fd">animals: list</text>
+            <text x="240" y="56" text-anchor="middle" font-size="8" fill="#67e8f9">add_animal(animal)</text>
+            <text x="240" y="70" text-anchor="middle" font-size="8" fill="#67e8f9">feed_all(amount)</text>
+            <text x="240" y="84" text-anchor="middle" font-size="8" fill="#67e8f9">show_status()</text>
+            <!-- 왼쪽 동물들 -->
+            <rect x="5" y="20" width="100" height="30" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="55" y="39" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">Lion 객체들</text>
+            <line x1="108" y1="35" x2="157" y2="52" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwZ)"/>
+            <rect x="5" y="60" width="100" height="30" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="55" y="79" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">Penguin 객체들</text>
+            <line x1="108" y1="75" x2="157" y2="62" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwZ)"/>
+            <!-- 오른쪽 동물들 -->
+            <rect x="375" y="20" width="100" height="30" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="425" y="39" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">Monkey 객체들</text>
+            <line x1="323" y1="52" x2="372" y2="35" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwZ)"/>
+            <!-- 출력 화살표 -->
+            <rect x="375" y="60" width="100" height="30" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="425" y="79" text-anchor="middle" font-size="9" fill="#374151" font-weight="700">상태 출력</text>
+            <line x1="323" y1="62" x2="372" y2="72" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwZ)"/>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># Step 3: Zoo 클래스</span>
+
+<span class="kw">class</span> <span class="cls">Zoo</span>:
+    <span class="str">"""동물원 관리 클래스"""</span>
+
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="dec">self</span>, zoo_name):
+        <span class="dec">self</span>.zoo_name = zoo_name
+        <span class="dec">self</span>.animals = []              <span class="cmt"># 동물 리스트</span>
+
+    <span class="kw">def</span> <span class="fn">add_animal</span>(<span class="dec">self</span>, animal):
+        <span class="dec">self</span>.animals.<span class="fn">append</span>(animal)
+        <span class="fn">print</span>(<span class="str">f"{animal.name}이(가) {self.zoo_name}에 입소했습니다!"</span>)
+
+    <span class="kw">def</span> <span class="fn">feed_all</span>(<span class="dec">self</span>, amount=<span class="num">2</span>):
+        <span class="fn">print</span>(<span class="str">f"\n[{self.zoo_name}] 전체 먹이 주기 시작..."</span>)
+        <span class="kw">for</span> animal <span class="kw">in</span> <span class="dec">self</span>.animals:
+            animal.<span class="fn">eat</span>(amount)
+
+    <span class="kw">def</span> <span class="fn">show_status</span>(<span class="dec">self</span>):
+        <span class="fn">print</span>(<span class="str">f"\n=== {self.zoo_name} 현황 ==="</span>)
+        <span class="fn">print</span>(<span class="str">f"총 동물 수: {len(self.animals)}마리"</span>)
+        <span class="fn">print</span>(<span class="str">"-" * 35</span>)
+        <span class="kw">for</span> animal <span class="kw">in</span> <span class="dec">self</span>.animals:
+            animal.<span class="fn">status</span>()
+        <span class="fn">print</span>(<span class="str">"=" * 35</span>)
+
+<span class="cmt"># 동물원 생성 및 동물 추가</span>
+zoo = <span class="cls">Zoo</span>(<span class="str">"서울 코딩 동물원"</span>)
+zoo.<span class="fn">add_animal</span>(<span class="cls">Lion</span>(<span class="str">"심바"</span>))
+zoo.<span class="fn">add_animal</span>(<span class="cls">Penguin</span>(<span class="str">"뽀로로"</span>))
+zoo.<span class="fn">add_animal</span>(<span class="cls">Monkey</span>(<span class="str">"마리오"</span>))
+zoo.<span class="fn">show_status</span>()</div>
+
+    <div class="output-box">심바이(가) 서울 코딩 동물원에 입소했습니다!
+뽀로로이(가) 서울 코딩 동물원에 입소했습니다!
+마리오이(가) 서울 코딩 동물원에 입소했습니다!
+
+=== 서울 코딩 동물원 현황 ===
+총 동물 수: 3마리
+-----------------------------------
+[심바] 배고픔: [#####-----] 5/10
+[뽀로로] 배고픔: [#####-----] 5/10
+[마리오] 배고픔: [#####-----] 5/10
+===================================</div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요 — Step 3</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc"><code>Zoo</code>를 만들고 동물 3마리를 추가한 뒤 <code>show_status()</code>를 호출하세요.</div>
+                <div class="code">my_zoo = <span class="cls">Zoo</span>(<span class="str">"나의 동물원"</span>)
+my_zoo.<span class="fn">add_animal</span>(<span class="cls">Lion</span>(<span class="str">"라이언"</span>))
+my_zoo.<span class="fn">add_animal</span>(<span class="cls">Penguin</span>(<span class="str">"핑구"</span>))
+my_zoo.<span class="fn">show_status</span>()</div>
+                <div class="practice-result">2마리 동물의 상태가 출력되면 성공</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc"><code>feed_all(3)</code>으로 전체 동물에게 먹이를 준 뒤 <code>show_status()</code>로 배고픔이 줄었는지 확인하세요.</div>
+                <div class="code">my_zoo.<span class="fn">feed_all</span>(<span class="num">3</span>)
+my_zoo.<span class="fn">show_status</span>()</div>
+                <div class="practice-result">배고픔 값이 5에서 2로 줄어든 상태 출력</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc"><code>zoo.animals</code>를 <code>for</code>로 순회하며 <code>type(animal).__name__</code>으로 클래스 이름을 출력하세요.</div>
+                <div class="code"><span class="kw">for</span> a <span class="kw">in</span> my_zoo.animals:
+    <span class="fn">print</span>(<span class="fn">type</span>(a).__name__, a.name)</div>
+                <div class="practice-result">Lion 라이언 / Penguin 핑구 순으로 출력</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 5페이지: Step 4 메서드 오버라이드 + speak 재정의 -->
+<div class="page">
+    <h2>Step 4 — 메서드 오버라이드: speak() 재정의</h2>
+    <p>부모 클래스의 메서드를 자식 클래스에서 같은 이름으로 다시 정의하면, 자식 객체에서 호출 시 자식 버전이 실행됩니다. 이를 <strong>메서드 오버라이드</strong>라고 합니다.</p>
+
+    <!-- SVG: 오버라이드 동작 원리 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 90" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="arwOv" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <!-- Animal.speak() -->
+            <rect x="5" y="10" width="145" height="70" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="77" y="28" text-anchor="middle" font-size="9" fill="#374151" font-weight="700">Animal.speak()</text>
+            <text x="77" y="44" text-anchor="middle" font-size="8" fill="#64748b">print(f"{name}: {sound}!")</text>
+            <text x="77" y="60" text-anchor="middle" font-size="8" fill="#94a3b8">기본 구현</text>
+            <!-- Lion.speak() 오버라이드 -->
+            <rect x="168" y="10" width="145" height="70" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="240" y="28" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">Lion.speak() 재정의</text>
+            <text x="240" y="44" text-anchor="middle" font-size="8" fill="#64748b">super().speak() 호출</text>
+            <text x="240" y="58" text-anchor="middle" font-size="8" fill="#64748b">+ 갈기 흔드는 동작 추가</text>
+            <line x1="153" y1="45" x2="165" y2="45" stroke="#94a3b8" stroke-width="1.5"/>
+            <text x="159" y="40" text-anchor="middle" font-size="7" fill="#f59e0b" font-weight="700">재정의</text>
+            <!-- 결과 -->
+            <rect x="331" y="18" width="144" height="54" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="403" y="34" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">lion.speak() 결과</text>
+            <text x="403" y="50" text-anchor="middle" font-size="8" fill="#374151">심바: 어흥!</text>
+            <text x="403" y="64" text-anchor="middle" font-size="8" fill="#374151">갈기를 힘차게 흔듭니다</text>
+            <line x1="316" y1="45" x2="328" y2="45" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwOv)"/>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># Step 4: speak() 메서드 오버라이드</span>
+
+<span class="kw">class</span> <span class="cls">Lion</span>(<span class="cls">Animal</span>):
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="dec">self</span>, name):
+        <span class="fn">super</span>().<span class="fn">__init__</span>(name, <span class="str">"어흥"</span>)
+        <span class="dec">self</span>.mane = <span class="dec">True</span>
+
+    <span class="kw">def</span> <span class="fn">speak</span>(<span class="dec">self</span>):                   <span class="cmt"># 부모 speak() 오버라이드</span>
+        <span class="fn">super</span>().<span class="fn">speak</span>()               <span class="cmt"># 부모 메서드도 실행</span>
+        <span class="fn">print</span>(<span class="str">f"  ({self.name}이(가) 갈기를 힘차게 흔듭니다)"</span>)
+
+    <span class="kw">def</span> <span class="fn">roar</span>(<span class="dec">self</span>): ...
+    <span class="kw">def</span> <span class="fn">hunt</span>(<span class="dec">self</span>): ...
+
+<span class="kw">class</span> <span class="cls">Penguin</span>(<span class="cls">Animal</span>):
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="dec">self</span>, name):
+        <span class="fn">super</span>().<span class="fn">__init__</span>(name, <span class="str">"크왁"</span>)
+        <span class="dec">self</span>.swim_speed = <span class="num">25</span>
+
+    <span class="kw">def</span> <span class="fn">speak</span>(<span class="dec">self</span>):                   <span class="cmt"># Penguin의 speak 오버라이드</span>
+        <span class="fn">super</span>().<span class="fn">speak</span>()
+        <span class="fn">print</span>(<span class="str">f"  ({self.name}이(가) 날개를 퍼덕입니다)"</span>)
+
+    <span class="kw">def</span> <span class="fn">swim</span>(<span class="dec">self</span>): ...
+    <span class="kw">def</span> <span class="fn">slide</span>(<span class="dec">self</span>): ...
+
+<span class="cmt"># 오버라이드 테스트</span>
+lion = <span class="cls">Lion</span>(<span class="str">"심바"</span>)
+peng = <span class="cls">Penguin</span>(<span class="str">"뽀로로"</span>)
+lion.<span class="fn">speak</span>()
+peng.<span class="fn">speak</span>()</div>
+
+    <div class="output-box">심바: 어흥!
+  (심바이(가) 갈기를 힘차게 흔듭니다)
+뽀로로: 크왁!
+  (뽀로로이(가) 날개를 퍼덕입니다)</div>
+
+    <!-- SVG: super() 역할 비교 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 65" style="max-width:480px;width:100%">
+            <!-- super() 사용 O -->
+            <rect x="5" y="5" width="225" height="55" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="117" y="22" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">super().speak() 사용</text>
+            <text x="117" y="38" text-anchor="middle" font-size="8" fill="#374151">부모 기능 + 자식 추가 기능 모두 실행</text>
+            <text x="117" y="52" text-anchor="middle" font-size="8" fill="#64748b">심바: 어흥! + (갈기 흔들기)</text>
+            <!-- super() 사용 X -->
+            <rect x="250" y="5" width="225" height="55" rx="8" fill="#fff1f2" stroke="#f43f5e" stroke-width="1.5"/>
+            <text x="362" y="22" text-anchor="middle" font-size="9" fill="#be123c" font-weight="700">super().speak() 없으면</text>
+            <text x="362" y="38" text-anchor="middle" font-size="8" fill="#374151">자식 코드만 실행, 부모 기능 무시됨</text>
+            <text x="362" y="52" text-anchor="middle" font-size="8" fill="#64748b">(갈기 흔들기) 메시지만 출력</text>
+        </svg>
+    </div>
+
+    <!-- SVG: 메서드 오버라이드 vs 새 메서드 비교 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 68" style="max-width:480px;width:100%">
+            <!-- 헤더 -->
+            <rect x="0" y="0" width="480" height="20" rx="4" fill="#1e3a5f"/>
+            <text x="120" y="14" text-anchor="middle" font-size="8" fill="#fff" font-weight="700">메서드 오버라이드</text>
+            <text x="360" y="14" text-anchor="middle" font-size="8" fill="#fff" font-weight="700">새 메서드 추가</text>
+            <line x1="240" y1="0" x2="240" y2="68" stroke="#e2e8f0" stroke-width="1"/>
+            <!-- 오버라이드 설명 -->
+            <text x="120" y="36" text-anchor="middle" font-size="8" fill="#374151">부모에 이미 있는 메서드 이름 사용</text>
+            <text x="120" y="50" text-anchor="middle" font-size="8" fill="#374151">자식 호출 시 자식 버전 실행</text>
+            <text x="120" y="64" text-anchor="middle" font-size="8" fill="#64748b">예: speak() 재정의</text>
+            <!-- 새 메서드 설명 -->
+            <text x="360" y="36" text-anchor="middle" font-size="8" fill="#374151">부모에 없는 새 이름 메서드 정의</text>
+            <text x="360" y="50" text-anchor="middle" font-size="8" fill="#374151">자식 객체에서만 호출 가능</text>
+            <text x="360" y="64" text-anchor="middle" font-size="8" fill="#64748b">예: roar(), swim(), climb()</text>
+        </svg>
+    </div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요 — Step 4</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc"><code>Monkey</code> 클래스에도 <code>speak()</code>를 오버라이드해 부모 speak 후 "(바나나를 먹으며 웃습니다)" 를 추가 출력하게 하세요.</div>
+                <div class="code"><span class="kw">def</span> <span class="fn">speak</span>(<span class="dec">self</span>):
+    <span class="fn">super</span>().<span class="fn">speak</span>()
+    <span class="fn">print</span>(<span class="str">f"  ({self.name}이(가) 바나나를 먹으며 웃습니다)"</span>)</div>
+                <div class="practice-result">우키! 와 바나나 메시지가 함께 출력되면 성공</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc"><code>isinstance(lion, Animal)</code>의 결과를 출력해 상속 관계를 확인하세요.</div>
+                <div class="code"><span class="fn">print</span>(<span class="fn">isinstance</span>(lion, <span class="cls">Animal</span>))
+<span class="fn">print</span>(<span class="fn">isinstance</span>(lion, <span class="cls">Lion</span>))
+<span class="fn">print</span>(<span class="fn">isinstance</span>(lion, <span class="cls">Penguin</span>))</div>
+                <div class="practice-result">True / True / False 출력</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc"><code>Zoo</code>에 모든 동물을 추가하고 <code>for</code>로 각 동물의 <code>speak()</code>를 호출하세요.</div>
+                <div class="code">zoo = <span class="cls">Zoo</span>(<span class="str">"오버라이드 테스트"</span>)
+zoo.<span class="fn">add_animal</span>(<span class="cls">Lion</span>(<span class="str">"심바"</span>))
+zoo.<span class="fn">add_animal</span>(<span class="cls">Penguin</span>(<span class="str">"핑구"</span>))
+zoo.<span class="fn">add_animal</span>(<span class="cls">Monkey</span>(<span class="str">"조조"</span>))
+<span class="kw">for</span> a <span class="kw">in</span> zoo.animals:
+    a.<span class="fn">speak</span>()</div>
+                <div class="practice-result">각 동물마다 고유한 speak 출력</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 6페이지: 완성 코드 + 핵심 요약 -->
+<div class="page">
+    <h2>완성: zoo_simulator.py 전체 코드</h2>
+    <p>지금까지 만든 모든 클래스를 하나의 파일로 통합합니다. Animal 부모와 세 자식 클래스, Zoo 관리 클래스가 함께 동작하는 완전한 동물원 시뮬레이터입니다.</p>
+
+    <!-- SVG: 전체 코드 흐름 -->
+    <div style="text-align:center;margin:10px 0;">
+        <svg viewBox="0 0 480 64" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="arwFin" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="5" y="10" width="80" height="44" rx="6" fill="#1e3a5f"/>
+            <text x="45" y="29" text-anchor="middle" font-size="8" fill="#fff" font-weight="700">Animal</text>
+            <text x="45" y="43" text-anchor="middle" font-size="7" fill="#93c5fd">부모 클래스</text>
+            <line x1="88" y1="32" x2="108" y2="32" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwFin)"/>
+            <rect x="111" y="10" width="80" height="44" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="151" y="25" text-anchor="middle" font-size="7" fill="#92400e" font-weight="700">Lion</text>
+            <text x="151" y="37" text-anchor="middle" font-size="7" fill="#64748b">Penguin</text>
+            <text x="151" y="49" text-anchor="middle" font-size="7" fill="#64748b">Monkey</text>
+            <line x1="194" y1="32" x2="214" y2="32" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwFin)"/>
+            <rect x="217" y="10" width="80" height="44" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="257" y="29" text-anchor="middle" font-size="8" fill="#1d4ed8" font-weight="700">Zoo</text>
+            <text x="257" y="43" text-anchor="middle" font-size="7" fill="#64748b">동물 관리</text>
+            <line x1="300" y1="32" x2="320" y2="32" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwFin)"/>
+            <rect x="323" y="10" width="80" height="44" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="363" y="29" text-anchor="middle" font-size="8" fill="#166534" font-weight="700">실행</text>
+            <text x="363" y="43" text-anchor="middle" font-size="7" fill="#64748b">add/feed/status</text>
+            <line x1="406" y1="32" x2="426" y2="32" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwFin)"/>
+            <rect x="429" y="10" width="46" height="44" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="452" y="29" text-anchor="middle" font-size="8" fill="#374151" font-weight="700">출력</text>
+            <text x="452" y="43" text-anchor="middle" font-size="7" fill="#64748b">결과</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># zoo_simulator.py — 완성 코드</span>
+
+<span class="kw">class</span> <span class="cls">Animal</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="dec">self</span>, name, sound):
+        <span class="dec">self</span>.name = name; <span class="dec">self</span>.sound = sound; <span class="dec">self</span>.hunger = <span class="num">5</span>
+    <span class="kw">def</span> <span class="fn">speak</span>(<span class="dec">self</span>):   <span class="fn">print</span>(<span class="str">f"{self.name}: {self.sound}!"</span>)
+    <span class="kw">def</span> <span class="fn">eat</span>(<span class="dec">self</span>, n=<span class="num">2</span>):
+        <span class="dec">self</span>.hunger = <span class="fn">max</span>(<span class="num">0</span>, <span class="dec">self</span>.hunger - n)
+        <span class="fn">print</span>(<span class="str">f"{self.name} 먹이 완료 (배고픔:{self.hunger})"</span>)
+    <span class="kw">def</span> <span class="fn">status</span>(<span class="dec">self</span>):
+        bar = <span class="str">"#"</span> * <span class="dec">self</span>.hunger + <span class="str">"-"</span> * (<span class="num">10</span> - <span class="dec">self</span>.hunger)
+        <span class="fn">print</span>(<span class="str">f"[{self.name}] [{bar}] {self.hunger}/10"</span>)
+
+<span class="kw">class</span> <span class="cls">Lion</span>(<span class="cls">Animal</span>):
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="dec">self</span>, name):
+        <span class="fn">super</span>().<span class="fn">__init__</span>(name, <span class="str">"어흥"</span>); <span class="dec">self</span>.mane = <span class="dec">True</span>
+    <span class="kw">def</span> <span class="fn">speak</span>(<span class="dec">self</span>):
+        <span class="fn">super</span>().<span class="fn">speak</span>(); <span class="fn">print</span>(<span class="str">f"  ({self.name} 갈기를 흔듭니다)"</span>)
+    <span class="kw">def</span> <span class="fn">roar</span>(<span class="dec">self</span>):   <span class="fn">print</span>(<span class="str">f"{self.name} 포효: 어흥!!"</span>)
+    <span class="kw">def</span> <span class="fn">hunt</span>(<span class="dec">self</span>):
+        <span class="dec">self</span>.hunger = <span class="fn">max</span>(<span class="num">0</span>, <span class="dec">self</span>.hunger - <span class="num">3</span>); <span class="fn">print</span>(<span class="str">f"{self.name} 사냥 성공!"</span>)
+
+<span class="kw">class</span> <span class="cls">Penguin</span>(<span class="cls">Animal</span>):
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="dec">self</span>, name):
+        <span class="fn">super</span>().<span class="fn">__init__</span>(name, <span class="str">"크왁"</span>); <span class="dec">self</span>.swim_speed = <span class="num">25</span>
+    <span class="kw">def</span> <span class="fn">speak</span>(<span class="dec">self</span>):
+        <span class="fn">super</span>().<span class="fn">speak</span>(); <span class="fn">print</span>(<span class="str">f"  ({self.name} 날개 퍼덕)"</span>)
+    <span class="kw">def</span> <span class="fn">swim</span>(<span class="dec">self</span>):   <span class="fn">print</span>(<span class="str">f"{self.name} {self.swim_speed}km/h 수영!"</span>)
+    <span class="kw">def</span> <span class="fn">slide</span>(<span class="dec">self</span>):  <span class="fn">print</span>(<span class="str">f"{self.name} 배로 미끄러집니다 슝~"</span>)
+
+<span class="kw">class</span> <span class="cls">Monkey</span>(<span class="cls">Animal</span>):
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="dec">self</span>, name):
+        <span class="fn">super</span>().<span class="fn">__init__</span>(name, <span class="str">"우키"</span>); <span class="dec">self</span>.energy = <span class="num">10</span>
+    <span class="kw">def</span> <span class="fn">speak</span>(<span class="dec">self</span>):
+        <span class="fn">super</span>().<span class="fn">speak</span>(); <span class="fn">print</span>(<span class="str">f"  ({self.name} 바나나 먹으며 웃음)"</span>)
+    <span class="kw">def</span> <span class="fn">climb</span>(<span class="dec">self</span>):
+        <span class="dec">self</span>.energy -= <span class="num">2</span>; <span class="fn">print</span>(<span class="str">f"{self.name} 나무 오르기 (에너지:{self.energy})"</span>)
+    <span class="kw">def</span> <span class="fn">play</span>(<span class="dec">self</span>):  <span class="fn">print</span>(<span class="str">f"{self.name} 신나게 놀기 우키우키!"</span>)
+
+<span class="kw">class</span> <span class="cls">Zoo</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="dec">self</span>, name):
+        <span class="dec">self</span>.zoo_name = name; <span class="dec">self</span>.animals = []
+    <span class="kw">def</span> <span class="fn">add_animal</span>(<span class="dec">self</span>, a):
+        <span class="dec">self</span>.animals.<span class="fn">append</span>(a); <span class="fn">print</span>(<span class="str">f"{a.name} 입소!"</span>)
+    <span class="kw">def</span> <span class="fn">feed_all</span>(<span class="dec">self</span>, n=<span class="num">2</span>):
+        <span class="kw">for</span> a <span class="kw">in</span> <span class="dec">self</span>.animals: a.<span class="fn">eat</span>(n)
+    <span class="kw">def</span> <span class="fn">show_status</span>(<span class="dec">self</span>):
+        <span class="fn">print</span>(<span class="str">f"\n=== {self.zoo_name} ({len(self.animals)}마리) ==="</span>)
+        <span class="kw">for</span> a <span class="kw">in</span> <span class="dec">self</span>.animals: a.<span class="fn">status</span>()
+
+<span class="cmt"># 메인 실행</span>
+zoo = <span class="cls">Zoo</span>(<span class="str">"코딩쏙 동물원"</span>)
+zoo.<span class="fn">add_animal</span>(<span class="cls">Lion</span>(<span class="str">"심바"</span>))
+zoo.<span class="fn">add_animal</span>(<span class="cls">Penguin</span>(<span class="str">"뽀로로"</span>))
+zoo.<span class="fn">add_animal</span>(<span class="cls">Monkey</span>(<span class="str">"마리오"</span>))
+zoo.<span class="fn">show_status</span>()
+zoo.<span class="fn">feed_all</span>(<span class="num">3</span>)
+zoo.<span class="fn">show_status</span>()</div>
+
+    <!-- 핵심 요약 -->
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>핵심 요약</h3>
+        <ul>
+            <li><code>class Animal:</code> — 부모(기반) 클래스. 공통 속성과 메서드를 정의한다.</li>
+            <li><code>def __init__(self, ...)</code> — 객체 생성 시 자동 실행. <code>self.속성</code>으로 인스턴스 속성을 초기화한다.</li>
+            <li><code>class Lion(Animal):</code> — 상속. Animal의 모든 기능을 물려받고 새 기능을 추가할 수 있다.</li>
+            <li><code>super().__init__(...)</code> — 부모 클래스의 <code>__init__</code>을 자식에서 호출. 코드 중복 방지.</li>
+            <li>메서드 오버라이드 — 자식에서 같은 이름 메서드를 재정의하면 자식 버전이 우선 실행된다.</li>
+            <li><code>Zoo</code> 클래스 — 다형성 활용. 동물 종류와 무관하게 <code>eat()</code>, <code>status()</code>를 동일하게 호출할 수 있다.</li>
+        </ul>
+    </div>
+</div>
+
+<!-- 7페이지: 문제 -->
+<div class="page">
+    <h2>확인 문제</h2>
+
+    <!-- 문제 1 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">1</div>
+            <div class="problem-label">Animal 클래스 — __init__과 메서드 작성</div>
+            <span class="problem-diff easy">기초</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">아래 조건에 맞는 <code>Animal</code> 클래스를 작성하고 인스턴스를 만들어 각 메서드를 호출하세요.<br>
+            조건: <code>name</code>, <code>age</code> 속성 보유 / <code>introduce()</code> 메서드 — "나는 (이름), (나이)살이야." 출력</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">입력</span>
+                    <span class="problem-example-value">Animal("바둑이", 3)</span>
+                </div>
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력</span>
+                    <span class="problem-example-value">나는 바둑이, 3살이야.</span>
+                </div>
+            </div>
+            <details class="problem-toggle">
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">__init__(self, name, age)에서 self.name = name, self.age = age 로 초기화하세요.</div>
+                </div>
+            </details>
+            <details class="problem-toggle">
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code">class Animal:
+    def __init__(self, name, age):
+        self.name = name
+        self.age = age
+    def introduce(self):
+        print(f"나는 {self.name}, {self.age}살이야.")
+
+a = Animal("바둑이", 3)
+a.introduce()</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <!-- 문제 2 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">2</div>
+            <div class="problem-label">상속 — Dog 자식 클래스 만들기</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">위 <code>Animal</code>을 상속받아 <code>Dog</code> 클래스를 만드세요. <code>Dog</code>는 <code>breed</code>(견종) 속성을 추가로 가지고, <code>bark()</code> 메서드로 "왈왈!" 을 출력합니다. <code>super().__init__()</code>을 반드시 사용하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">입력</span>
+                    <span class="problem-example-value">Dog("초코", 2, "말티즈")</span>
+                </div>
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력</span>
+                    <span class="problem-example-value">나는 초코, 2살이야. / 초코(말티즈): 왈왈!</span>
+                </div>
+            </div>
+            <details class="problem-toggle">
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">class Dog(Animal):  def __init__(self, name, age, breed):  super().__init__(name, age) 로 부모 초기화 후 self.breed = breed</div>
+                </div>
+            </details>
+            <details class="problem-toggle">
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code">class Dog(Animal):
+    def __init__(self, name, age, breed):
+        super().__init__(name, age)
+        self.breed = breed
+    def bark(self):
+        print(f"{self.name}({self.breed}): 왈왈!")
+
+d = Dog("초코", 2, "말티즈")
+d.introduce()
+d.bark()</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <!-- 문제 3 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">3</div>
+            <div class="problem-label">Zoo 클래스 — 동물 수 세기와 배고픈 동물 찾기</div>
+            <span class="problem-diff hard">심화</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text"><code>Zoo</code> 클래스에 두 메서드를 추가하세요.<br>
+            (1) <code>count_by_type(cls)</code>: 특정 클래스 타입 동물 수를 반환 (예: <code>count_by_type(Lion)</code> → 사자 수)<br>
+            (2) <code>hungry_animals(threshold=7)</code>: 배고픔이 threshold 이상인 동물 이름 리스트 반환</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력1</span>
+                    <span class="problem-example-value">zoo.count_by_type(Lion) → 2</span>
+                </div>
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력2</span>
+                    <span class="problem-example-value">zoo.hungry_animals(7) → ['심바', '마리오']</span>
+                </div>
+            </div>
+            <details class="problem-toggle">
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">isinstance(animal, cls)로 타입을 확인하고, 리스트 컴프리헨션으로 hungry 조건을 필터링하세요.</div>
+                </div>
+            </details>
+            <details class="problem-toggle">
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code">def count_by_type(self, cls):
+    return sum(1 for a in self.animals if isinstance(a, cls))
+
+def hungry_animals(self, threshold=7):
+    return [a.name for a in self.animals if a.hunger >= threshold]
+
+# 테스트
+zoo = Zoo("테스트")
+lion1 = Lion("심바"); lion1.hunger = 8
+lion2 = Lion("무파사")
+peng = Penguin("뽀로로")
+monkey = Monkey("마리오"); monkey.hunger = 9
+for a in [lion1, lion2, peng, monkey]: zoo.add_animal(a)
+print(zoo.count_by_type(Lion))      # 2
+print(zoo.hungry_animals(7))        # ['심바', '마리오']</div>
+                </div>
+            </details>
+        </div>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

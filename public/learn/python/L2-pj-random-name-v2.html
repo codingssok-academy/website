@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 랜덤 팀 나누기</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+.cover { display: flex; min-height: 297mm; padding: 0; }
+.cover-sidebar { width: 10px; background: #1e3a5f; flex-shrink: 0; }
+.cover-accent { width: 7px; background: #e6a817; flex-shrink: 0; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 160px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 14px;
+    color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; white-space: pre-wrap; }
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- 1페이지: 표지 -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">TEAM</div>
+        <div class="cover-label">L2 Project 04</div>
+        <h1 class="cover-title">랜덤 팀 나누기</h1>
+        <p class="cover-sub">이름 리스트를 random.shuffle로 섞고 원하는 팀 수에 맞게 자동으로 배정하는 프로그램을 만듭니다.</p>
+        <!-- SVG 1: 학습 로드맵 -->
+        <div style="margin:20px 0;">
+            <svg viewBox="0 0 460 55" style="max-width:460px;width:100%">
+                <rect x="5" y="10" width="90" height="30" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="50" y="30" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">import random</text>
+                <line x1="100" y1="25" x2="120" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="125" y="10" width="90" height="30" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="170" y="30" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">shuffle()</text>
+                <line x1="220" y1="25" x2="240" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="245" y="10" width="90" height="30" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="290" y="30" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">슬라이싱</text>
+                <line x1="340" y1="25" x2="360" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="365" y="10" width="90" height="30" rx="6" fill="#eff6ff" stroke="#6366f1" stroke-width="1.5"/>
+                <text x="410" y="30" text-anchor="middle" font-size="10" fill="#4338ca" font-weight="700">팀 출력</text>
+            </svg>
+        </div>
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/puzzle.png" alt="모듈" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 프로젝트에서 배우는 것</h3>
+            <ul>
+                <li>import random으로 표준 라이브러리 모듈을 불러올 수 있습니다.</li>
+                <li>random.shuffle()로 리스트를 무작위로 섞을 수 있습니다.</li>
+                <li>리스트 슬라이싱으로 원하는 부분만 잘라낼 수 있습니다.</li>
+                <li>for 루프와 range()로 팀을 자동으로 나눌 수 있습니다.</li>
+                <li>random.choice()와 random.sample()도 활용할 수 있습니다.</li>
+            </ul>
+        </div>
+        <!-- SVG 2: shuffle 시각화 -->
+        <div style="margin:20px 0;">
+            <svg viewBox="0 0 460 65" style="max-width:460px;width:100%">
+                <rect x="10" y="5" width="440" height="55" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+                <text x="230" y="22" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="800">random.shuffle() 동작</text>
+                <text x="80" y="40" text-anchor="middle" font-size="9" fill="#64748b" font-weight="600">전</text>
+                <rect x="20" y="45" width="60" height="10" rx="3" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+                <text x="50" y="53" text-anchor="middle" font-size="7" fill="#1d4ed8">A B C D E</text>
+                <text x="140" y="42" text-anchor="middle" font-size="14" fill="#f59e0b" font-weight="700">shuffle</text>
+                <text x="230" y="35" text-anchor="middle" font-size="8" fill="#64748b">→</text>
+                <text x="330" y="40" text-anchor="middle" font-size="9" fill="#166534" font-weight="600">후</text>
+                <rect x="280" y="45" width="60" height="10" rx="3" fill="#f0fdf4" stroke="#22c55e" stroke-width="1"/>
+                <text x="310" y="53" text-anchor="middle" font-size="7" fill="#166534">C E A D B</text>
+            </svg>
+        </div>
+    </div>
+</div>
+
+<!-- 2페이지: random 모듈 -->
+<div class="page">
+    <h2>random 모듈 사용하기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/folder.png" alt="패키지" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p><code>import random</code>으로 random 모듈을 불러옵니다. 모듈이란 미리 만들어진 기능 묶음입니다. <code>random.shuffle()</code>은 리스트를 제자리에서 섞습니다.</p>
+
+    <!-- SVG 3: import 개념 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 75" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="65" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="24" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="800">모듈(module)이란?</text>
+            <rect x="25" y="32" width="130" height="30" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="90" y="50" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">random 모듈</text>
+            <text x="90" y="62" text-anchor="middle" font-size="8" fill="#64748b">shuffle, choice, randint...</text>
+            <rect x="165" y="32" width="130" height="30" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+            <text x="230" y="50" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">math 모듈</text>
+            <text x="230" y="62" text-anchor="middle" font-size="8" fill="#64748b">sqrt, floor, ceil, pi...</text>
+            <rect x="305" y="32" width="130" height="30" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1"/>
+            <text x="370" y="50" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">os 모듈</text>
+            <text x="370" y="62" text-anchor="middle" font-size="8" fill="#64748b">path, getcwd, listdir...</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">import</span> random
+
+names = [<span class="str">"김민준"</span>, <span class="str">"이서연"</span>, <span class="str">"박지호"</span>, <span class="str">"최유진"</span>, <span class="str">"정다은"</span>,
+         <span class="str">"황민서"</span>, <span class="str">"조현우"</span>, <span class="str">"신지민"</span>]
+
+<span class="cmt"># 리스트 섞기</span>
+random.shuffle(names)
+<span class="fn">print</span>(<span class="str">"섞은 결과:"</span>, names)
+
+<span class="cmt"># 무작위로 한 명 뽑기</span>
+picked = random.choice(names)
+<span class="fn">print</span>(<span class="str">f"오늘의 발표자: {picked}"</span>)</div>
+
+    <!-- SVG 4: shuffle vs choice vs sample -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 75" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="65" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="22" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="800">random 주요 함수 비교</text>
+            <rect x="20" y="28" width="130" height="34" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="85" y="45" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">shuffle(리스트)</text>
+            <text x="85" y="58" text-anchor="middle" font-size="8" fill="#64748b">리스트 자체를 섞음</text>
+            <rect x="165" y="28" width="130" height="34" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+            <text x="230" y="45" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">choice(리스트)</text>
+            <text x="230" y="58" text-anchor="middle" font-size="8" fill="#64748b">무작위 1개 반환</text>
+            <rect x="310" y="28" width="130" height="34" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1"/>
+            <text x="375" y="45" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">sample(리스트, k)</text>
+            <text x="375" y="58" text-anchor="middle" font-size="8" fill="#64748b">중복없이 k개 반환</text>
+        </svg>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/lightbulb.png" alt="아이디어" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">names 리스트를 shuffle로 섞고 결과를 출력하세요. 실행할 때마다 다른 순서가 나옵니다.</div>
+                <div class="code"><span class="kw">import</span> random
+names = [<span class="str">"A"</span>, <span class="str">"B"</span>, <span class="str">"C"</span>, <span class="str">"D"</span>]
+random.shuffle(names)
+<span class="fn">print</span>(names)</div>
+                <div class="practice-result">실행마다 순서가 달라짐</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">random.choice()로 리스트에서 무작위 1명을 뽑아 출력하세요.</div>
+                <div class="code">winner = random.choice(names)
+<span class="fn">print</span>(<span class="str">f"당첨자: {winner}"</span>)</div>
+                <div class="practice-result">실행마다 다른 이름 출력</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">random.sample()로 중복 없이 3명을 뽑아보세요.</div>
+                <div class="code">three = random.sample(names, <span class="num">3</span>)
+<span class="fn">print</span>(<span class="str">f"뽑힌 3명: {three}"</span>)</div>
+                <div class="practice-result">중복 없이 3명 선발</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3페이지: 팀 나누기 -->
+<div class="page">
+    <h2>팀 나누기 로직</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>셔플된 리스트를 슬라이싱으로 잘라 팀을 만듭니다. 8명을 2팀으로 나누면 팀당 4명, 3팀으로 나누면 팀당 약 3명이 됩니다.</p>
+
+    <!-- SVG 5: 슬라이싱으로 팀 나누기 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="70" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="22" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="800">8명을 2팀으로 슬라이싱</text>
+            <rect x="20" y="30" width="40" height="28" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="40" y="48" text-anchor="middle" font-size="8" fill="#1d4ed8">민준</text>
+            <rect x="68" y="30" width="40" height="28" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="88" y="48" text-anchor="middle" font-size="8" fill="#1d4ed8">서연</text>
+            <rect x="116" y="30" width="40" height="28" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="136" y="48" text-anchor="middle" font-size="8" fill="#1d4ed8">지호</text>
+            <rect x="164" y="30" width="40" height="28" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="184" y="48" text-anchor="middle" font-size="8" fill="#1d4ed8">유진</text>
+            <text x="218" y="48" text-anchor="middle" font-size="14" fill="#94a3b8">|</text>
+            <rect x="228" y="30" width="40" height="28" rx="4" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+            <text x="248" y="48" text-anchor="middle" font-size="8" fill="#92400e">다은</text>
+            <rect x="276" y="30" width="40" height="28" rx="4" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+            <text x="296" y="48" text-anchor="middle" font-size="8" fill="#92400e">민서</text>
+            <rect x="324" y="30" width="40" height="28" rx="4" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+            <text x="344" y="48" text-anchor="middle" font-size="8" fill="#92400e">현우</text>
+            <rect x="372" y="30" width="40" height="28" rx="4" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+            <text x="392" y="48" text-anchor="middle" font-size="8" fill="#92400e">지민</text>
+            <text x="112" y="70" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">팀 1: [0:4]</text>
+            <text x="320" y="70" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">팀 2: [4:8]</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">import</span> random
+
+names = [<span class="str">"김민준"</span>, <span class="str">"이서연"</span>, <span class="str">"박지호"</span>, <span class="str">"최유진"</span>,
+         <span class="str">"정다은"</span>, <span class="str">"황민서"</span>, <span class="str">"조현우"</span>, <span class="str">"신지민"</span>]
+
+num_teams = <span class="fn">int</span>(<span class="fn">input</span>(<span class="str">"팀 수를 입력하세요: "</span>))
+random.shuffle(names)
+
+team_size = <span class="fn">len</span>(names) // num_teams  <span class="cmt"># 팀당 인원 (몫)</span>
+
+<span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(num_teams):
+    start = i * team_size
+    end = start + team_size
+    team = names[start:end]
+    <span class="fn">print</span>(<span class="str">f"팀 {i+1}: {team}"</span>)
+
+<span class="cmt"># 나머지 인원 처리</span>
+leftover = names[num_teams * team_size:]
+<span class="kw">if</span> leftover:
+    <span class="fn">print</span>(<span class="str">f"남은 인원: {leftover}"</span>)</div>
+
+    <!-- SVG 6: 실행 결과 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 380 110" style="max-width:380px;width:100%">
+            <rect x="10" y="5" width="360" height="100" rx="8" fill="#0f172a"/>
+            <text x="20" y="28" font-family="monospace" font-size="11" fill="#94a3b8">팀 수를 입력하세요: <tspan fill="#86efac">2</tspan></text>
+            <line x1="20" y1="38" x2="360" y2="38" stroke="#334155" stroke-width="0.5"/>
+            <text x="20" y="58" font-family="monospace" font-size="11" fill="#7dd3fc">팀 1: ['박지호', '최유진', '황민서', '신지민']</text>
+            <text x="20" y="78" font-family="monospace" font-size="11" fill="#fcd34d">팀 2: ['이서연', '김민준', '조현우', '정다은']</text>
+        </svg>
+    </div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">6명을 2팀으로 나누는 코드를 작성하고 슬라이싱 [0:3]과 [3:6]을 확인하세요.</div>
+                <div class="code">names = [<span class="str">"A"</span>,<span class="str">"B"</span>,<span class="str">"C"</span>,<span class="str">"D"</span>,<span class="str">"E"</span>,<span class="str">"F"</span>]
+random.shuffle(names)
+<span class="fn">print</span>(<span class="str">"팀1:"</span>, names[<span class="num">0</span>:<span class="num">3</span>])
+<span class="fn">print</span>(<span class="str">"팀2:"</span>, names[<span class="num">3</span>:<span class="num">6</span>])</div>
+                <div class="practice-result">각 팀에 3명씩 랜덤 배정</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">// 연산자(정수 나누기)로 팀당 인원을 계산하세요.</div>
+                <div class="code">n = <span class="num">8</span>
+teams = <span class="num">3</span>
+per_team = n // teams
+<span class="fn">print</span>(<span class="str">f"팀당 인원: {per_team}명"</span>)
+<span class="fn">print</span>(<span class="str">f"나머지: {n % teams}명"</span>)</div>
+                <div class="practice-result">팀당 인원: 2명, 나머지: 2명</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">random.randint(1, 100)으로 1~100 사이 랜덤 숫자 5개를 출력하세요.</div>
+                <div class="code"><span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(<span class="num">5</span>):
+    n = random.randint(<span class="num">1</span>, <span class="num">100</span>)
+    <span class="fn">print</span>(n, end=<span class="str">" "</span>)</div>
+                <div class="practice-result">1~100 사이 랜덤 숫자 5개</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 4페이지: 완성 코드 -->
+<div class="page">
+    <h2>완성: 랜덤 팀 나누기 프로그램</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="도구" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+    <!-- SVG 7: 완성 구조 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 50" style="max-width:460px;width:100%">
+            <rect x="5" y="8" width="440" height="35" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <rect x="15" y="15" width="100" height="20" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="65" y="28" text-anchor="middle" font-size="8" fill="#1d4ed8" font-weight="600">import random</text>
+            <rect x="125" y="15" width="100" height="20" rx="4" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+            <text x="175" y="28" text-anchor="middle" font-size="8" fill="#92400e" font-weight="600">이름 리스트 입력</text>
+            <rect x="235" y="15" width="100" height="20" rx="4" fill="#f0fdf4" stroke="#22c55e" stroke-width="1"/>
+            <text x="285" y="28" text-anchor="middle" font-size="8" fill="#166534" font-weight="600">shuffle + 팀 수</text>
+            <rect x="345" y="15" width="105" height="20" rx="4" fill="#eff6ff" stroke="#6366f1" stroke-width="1"/>
+            <text x="397" y="28" text-anchor="middle" font-size="8" fill="#4338ca" font-weight="600">슬라이싱 팀 출력</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">import</span> random
+
+<span class="fn">print</span>(<span class="str">"=== 랜덤 팀 나누기 ==="</span>)
+n = <span class="fn">int</span>(<span class="fn">input</span>(<span class="str">"학생 수를 입력하세요: "</span>))
+
+names = []
+<span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(n):
+    name = <span class="fn">input</span>(<span class="str">f"{i+1}번째 이름: "</span>)
+    names.append(name)
+
+num_teams = <span class="fn">int</span>(<span class="fn">input</span>(<span class="str">"팀 수: "</span>))
+random.shuffle(names)
+
+team_size = <span class="fn">len</span>(names) // num_teams
+
+<span class="fn">print</span>(<span class="str">"\n=== 팀 배정 결과 ==="</span>)
+<span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(num_teams):
+    start = i * team_size
+    end = start + team_size
+    team = names[start:end]
+    members = <span class="str">" / "</span>.join(team)
+    <span class="fn">print</span>(<span class="str">f"[팀 {i+1}] {members}"</span>)
+
+leftover = names[num_teams * team_size:]
+<span class="kw">if</span> leftover:
+    extra = <span class="str">" / "</span>.join(leftover)
+    <span class="fn">print</span>(<span class="str">f"[추가] {extra} (팀 배정 필요)"</span>)</div>
+
+    <!-- SVG 8: join 메서드 설명 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 380 60" style="max-width:380px;width:100%">
+            <rect x="10" y="5" width="360" height="50" rx="8" fill="#0f172a"/>
+            <text x="20" y="26" font-family="monospace" font-size="10" fill="#94a3b8">team = ['김민준', '이서연', '박지호']</text>
+            <text x="20" y="46" font-family="monospace" font-size="10" fill="#67e8f9">" / "</text>
+            <text x="58" y="46" font-family="monospace" font-size="10" fill="#e2e8f0">.join(team)</text>
+            <text x="168" y="46" font-family="monospace" font-size="10" fill="#64748b"> = </text>
+            <text x="185" y="46" font-family="monospace" font-size="10" fill="#86efac">"김민준 / 이서연 / 박지호"</text>
+        </svg>
+    </div>
+</div>
+
+<!-- 5페이지: 문제 -->
+<div class="page">
+    <h2>직접 풀어보세요</h2>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q1</div>
+            <div class="problem-label">1~45 로또 번호 뽑기</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text"><code>random.sample()</code>로 1~45 중 중복 없이 6개 숫자를 뽑아 오름차순으로 출력하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">로또 번호: [3, 12, 18, 24, 36, 45]</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle"><summary>힌트 보기</summary><div class="problem-toggle-content"><div class="hint-text">numbers = list(range(1, 46)), result = random.sample(numbers, 6), result.sort()</div></div></details>
+        <details class="problem-toggle"><summary>정답 확인</summary><div class="problem-toggle-content"><div class="answer-code">import random
+numbers = list(range(1, 46))
+result = random.sample(numbers, 6)
+result.sort()
+print(f"로또 번호: {result}")</div></div></details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q2</div>
+            <div class="problem-label">발표 순서 무작위 정하기</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">학생 이름 리스트를 shuffle해서 발표 순서를 번호와 함께 출력하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">1번 발표자: 박지호</span></div>
+                <div class="problem-example-row"><span class="problem-example-label"></span><span class="problem-example-value">2번 발표자: 김민준 ...</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle"><summary>힌트 보기</summary><div class="problem-toggle-content"><div class="hint-text">random.shuffle(names), for i, name in enumerate(names, 1): print(f"{i}번 발표자: {name}")</div></div></details>
+        <details class="problem-toggle"><summary>정답 확인</summary><div class="problem-toggle-content"><div class="answer-code">import random
+names = ["김민준","이서연","박지호","최유진"]
+random.shuffle(names)
+for i, name in enumerate(names, 1):
+    print(f"{i}번 발표자: {name}")</div></div></details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q3</div>
+            <div class="problem-label">가위바위보 랜덤 컴퓨터</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">사용자가 "가위", "바위", "보" 중 하나를 입력하면, 컴퓨터가 random.choice()로 선택해 승패를 판정하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">입력</span><span class="problem-example-value">가위</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">컴퓨터: 바위 → 컴퓨터 승!</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle"><summary>힌트 보기</summary><div class="problem-toggle-content"><div class="hint-text">options = ["가위","바위","보"], computer = random.choice(options), 판정은 if/elif로</div></div></details>
+        <details class="problem-toggle"><summary>정답 확인</summary><div class="problem-toggle-content"><div class="answer-code">import random
+options = ["가위","바위","보"]
+user = input("가위/바위/보: ")
+comp = random.choice(options)
+print(f"컴퓨터: {comp}")
+if user == comp:
+    print("비김!")
+elif (user=="가위" and comp=="보") or (user=="바위" and comp=="가위") or (user=="보" and comp=="바위"):
+    print("사용자 승!")
+else:
+    print("컴퓨터 승!")</div></div></details>
+    </div>
+</div>
+
+<!-- 6페이지: 핵심 요약 -->
+<div class="page">
+    <h2>핵심 요약</h2>
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>이 유닛에서 배운 것</h3>
+        <ul>
+            <li><code>import random</code>으로 랜덤 관련 기능을 불러온다</li>
+            <li><code>random.shuffle(리스트)</code>: 리스트를 무작위로 섞는다 (반환값 없음, 원본 변경)</li>
+            <li><code>random.choice(리스트)</code>: 리스트에서 무작위 1개를 선택해 반환</li>
+            <li><code>random.sample(리스트, k)</code>: 중복 없이 k개를 뽑아 리스트로 반환</li>
+            <li><code>리스트[start:end]</code>: 슬라이싱으로 원하는 범위만 추출</li>
+            <li><code>n // m</code>: 정수 나누기 (나머지 버림)</li>
+        </ul>
+    </div>
+
+    <!-- SVG 9: shuffle vs sample 비교 -->
+    <div style="text-align:center;margin:20px 0;">
+        <svg viewBox="0 0 460 65" style="max-width:460px;width:100%">
+            <rect x="5" y="5" width="220" height="55" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="115" y="24" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">shuffle — 원본 수정</text>
+            <text x="115" y="42" text-anchor="middle" font-size="9" fill="#64748b">random.shuffle(names)</text>
+            <text x="115" y="56" text-anchor="middle" font-size="9" fill="#64748b">반환값 없음, 리스트 변경</text>
+            <rect x="235" y="5" width="220" height="55" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="345" y="24" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">sample — 새 리스트 반환</text>
+            <text x="345" y="42" text-anchor="middle" font-size="9" fill="#64748b">result = random.sample(names, 3)</text>
+            <text x="345" y="56" text-anchor="middle" font-size="9" fill="#64748b">원본 유지, 새 리스트 반환</text>
+        </svg>
+    </div>
+
+    <!-- SVG 10: 슬라이싱 인덱스 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 65" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="55" rx="8" fill="#0f172a" stroke="#334155" stroke-width="1.5"/>
+            <text x="30" y="26" font-family="monospace" font-size="10" fill="#64748b"># 슬라이싱 패턴</text>
+            <text x="30" y="44" font-family="monospace" font-size="10" fill="#67e8f9">names</text>
+            <text x="70" y="44" font-family="monospace" font-size="10" fill="#e2e8f0">[0:4]</text>
+            <text x="110" y="44" font-family="monospace" font-size="10" fill="#64748b">  # 0번 ~ 3번 (4개)</text>
+            <text x="280" y="44" font-family="monospace" font-size="10" fill="#67e8f9">names</text>
+            <text x="320" y="44" font-family="monospace" font-size="10" fill="#e2e8f0">[4:8]</text>
+            <text x="360" y="44" font-family="monospace" font-size="10" fill="#64748b"> # 4번 ~ 7번</text>
+        </svg>
+    </div>
+
+    <!-- SVG 11: random 함수 비교 요약 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 55" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="45" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <rect x="20" y="12" width="130" height="30" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="85" y="30" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">shuffle(list)</text>
+            <text x="85" y="42" text-anchor="middle" font-size="8" fill="#64748b">리스트 섞기</text>
+            <rect x="160" y="12" width="130" height="30" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+            <text x="225" y="30" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">choice(list)</text>
+            <text x="225" y="42" text-anchor="middle" font-size="8" fill="#64748b">1개 선택</text>
+            <rect x="300" y="12" width="140" height="30" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1"/>
+            <text x="370" y="30" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">sample(list, k)</text>
+            <text x="370" y="42" text-anchor="middle" font-size="8" fill="#64748b">k개 중복없이</text>
+        </svg>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

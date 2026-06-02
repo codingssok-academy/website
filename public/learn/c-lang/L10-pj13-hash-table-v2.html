@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 프로젝트: 해시 테이블</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+.page { width: 210mm; min-height: 297mm; margin: 16px auto; padding: 18mm 20mm 15mm 22mm; background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: relative; page-break-after: always; }
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after { content: counter(pagenum); position: absolute; bottom: 10mm; right: 16mm; font-size: 10px; color: #94a3b8; font-weight: 600; }
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #0f766e; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark { position: absolute; top: -10px; right: -15px; font-size: 200px; font-weight: 900; color: rgba(180,195,212,0.3); line-height: 1; pointer-events: none; }
+.cover-label { font-size: 14px; font-weight: 500; color: #0f766e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 36px; font-weight: 900; color: #134e4a; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #134e4a; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #0f766e; font-weight: 900; }
+h2 { font-size: 20px; font-weight: 800; color: #134e4a; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code { background: #f0fdfa; padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #0f766e; font-weight: 600; }
+.code { background: #0f172a; border-radius: 8px; padding: 16px 20px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap; }
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.output-box { background: #0f172a; border-radius: 8px; padding: 14px 18px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #86efac; line-height: 1.8; margin: 14px 0; }
+.challenge { background: #fef3c7; border: 1.5px solid #f59e0b; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.challenge h3 { font-size: 14px; font-weight: 800; color: #92400e; margin-bottom: 8px; }
+.challenge p { font-size: 13px; color: #78350f; margin: 0; }
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<div class="page cover">
+  <div class="cover-sidebar"></div>
+  <div class="cover-accent"></div>
+  <div class="cover-body">
+    <div class="cover-watermark">P13</div>
+    <div class="cover-label">Chapter 10 · Project 13</div>
+    <h1 class="cover-title">간단 해시 테이블<br>체이닝 충돌 해결</h1>
+    <p class="cover-sub">key-value 쌍을 O(1)에 저장/검색하는 해시 테이블을 구현합니다. 충돌(collision)은 연결 리스트로 해결하는 체이닝(chaining) 방식을 사용합니다.</p>
+    <div class="cover-goals">
+      <h3>이 프로젝트에서 만드는 것</h3>
+      <ul>
+        <li>해시 함수로 키를 버킷 인덱스로 변환합니다.</li>
+        <li>각 버킷은 연결 리스트로 충돌을 처리합니다.</li>
+        <li>key-value 쌍을 삽입하는 ht_set() 함수를 만듭니다.</li>
+        <li>키로 값을 검색하는 ht_get() 함수를 만듭니다.</li>
+        <li>해시 테이블 전체를 해제합니다.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+  <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/computer-basics/ram.png" alt="RAM - 동적 메모리 할당 공간" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>해시 테이블 구조</h2>
+  <p>해시 함수는 키 문자열의 모든 문자 ASCII 값을 더해 버킷 수로 나눈 나머지를 인덱스로 사용합니다. 같은 인덱스에 여러 항목이 충돌하면 연결 리스트로 연결합니다.</p>
+  <div style="text-align:center;margin:10px 0;">
+    <svg viewBox="0 0 460 100" style="max-width:460px;width:100%">
+      <rect x="10" y="10" width="80" height="20" rx="3" fill="#f0fdfa" stroke="#0f766e" stroke-width="1.2"/>
+      <text x="50" y="25" text-anchor="middle" font-size="9" fill="#0f766e">bucket[0]</text>
+      <rect x="10" y="36" width="80" height="20" rx="3" fill="#f0fdfa" stroke="#0f766e" stroke-width="1.2"/>
+      <text x="50" y="51" text-anchor="middle" font-size="9" fill="#0f766e">bucket[1]</text>
+      <rect x="10" y="62" width="80" height="20" rx="3" fill="#f0fdfa" stroke="#0f766e" stroke-width="1.2"/>
+      <text x="50" y="77" text-anchor="middle" font-size="9" fill="#0f766e">bucket[2]</text>
+      <line x1="90" y1="46" x2="130" y2="46" stroke="#0f766e" stroke-width="1.2" marker-end="url(#ha)"/>
+      <rect x="130" y="36" width="80" height="20" rx="3" fill="#bbf7d0" stroke="#16a34a" stroke-width="1.2"/>
+      <text x="170" y="51" text-anchor="middle" font-size="9" fill="#166534">apple=red</text>
+      <line x1="210" y1="46" x2="250" y2="46" stroke="#0f766e" stroke-width="1.2" marker-end="url(#ha)"/>
+      <rect x="250" y="36" width="80" height="20" rx="3" fill="#bbf7d0" stroke="#16a34a" stroke-width="1.2"/>
+      <text x="290" y="51" text-anchor="middle" font-size="9" fill="#166534">lemon=yellow</text>
+      <text x="345" y="51" font-size="9" fill="#64748b">→ NULL</text>
+      <text x="180" y="30" text-anchor="middle" font-size="8" fill="#64748b">충돌! 체이닝</text>
+      <line x1="90" y1="72" x2="130" y2="72" stroke="#0f766e" stroke-width="1.2" marker-end="url(#ha)"/>
+      <rect x="130" y="62" width="80" height="20" rx="3" fill="#bbf7d0" stroke="#16a34a" stroke-width="1.2"/>
+      <text x="170" y="77" text-anchor="middle" font-size="9" fill="#166534">sky=blue</text>
+      <text x="225" y="77" font-size="9" fill="#64748b">→ NULL</text>
+      <defs><marker id="ha" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#0f766e"/></marker></defs>
+    </svg>
+  </div>
+  <div class="code"><span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="kw">#include</span> <span class="str">&lt;stdlib.h&gt;</span>
+<span class="kw">#include</span> <span class="str">&lt;string.h&gt;</span>
+
+<span class="kw">#define</span> BUCKET_SIZE <span class="num">8</span>
+
+<span class="kw">typedef struct</span> Entry {
+    <span class="kw">char</span>  key[<span class="num">32</span>]; <span class="kw">char</span>  val[<span class="num">64</span>];
+    <span class="kw">struct</span> Entry *next;
+} Entry;
+
+Entry *table[BUCKET_SIZE];  <span class="cmt">// 버킷 배열</span>
+
+<span class="kw">int</span> <span class="fn">hash</span>(<span class="kw">const char</span> *key) {
+    <span class="kw">unsigned int</span> h = <span class="num">0</span>;
+    <span class="kw">while</span>(*key) h += (unsigned char)(*key++);
+    <span class="kw">return</span> h % BUCKET_SIZE;
+}
+
+<span class="kw">void</span> <span class="fn">ht_set</span>(<span class="kw">const char</span>*key, <span class="kw">const char</span>*val) {
+    <span class="kw">int</span> idx = <span class="fn">hash</span>(key);
+    <span class="cmt">/* 기존 키 업데이트 */</span>
+    <span class="kw">for</span>(Entry*e=table[idx]; e; e=e-&gt;next)
+        <span class="kw">if</span>(<span class="fn">strcmp</span>(e-&gt;key,key)==<span class="num">0</span>) { <span class="fn">strcpy</span>(e-&gt;val,val); <span class="kw">return</span>; }
+    <span class="cmt">/* 새 항목 앞에 추가 */</span>
+    Entry *e=(Entry*)<span class="fn">malloc</span>(<span class="kw">sizeof</span>(Entry));
+    <span class="fn">strcpy</span>(e-&gt;key,key); <span class="fn">strcpy</span>(e-&gt;val,val);
+    e-&gt;next=table[idx]; table[idx]=e;
+}
+
+<span class="kw">const char</span>* <span class="fn">ht_get</span>(<span class="kw">const char</span>*key) {
+    <span class="kw">int</span> idx = <span class="fn">hash</span>(key);
+    <span class="kw">for</span>(Entry*e=table[idx]; e; e=e-&gt;next)
+        <span class="kw">if</span>(<span class="fn">strcmp</span>(e-&gt;key,key)==<span class="num">0</span>) <span class="kw">return</span> e-&gt;val;
+    <span class="kw">return</span> <span class="num">NULL</span>;
+}
+
+<span class="kw">void</span> <span class="fn">ht_free</span>() {
+    <span class="kw">for</span>(<span class="kw">int</span> i=<span class="num">0</span>;i&lt;BUCKET_SIZE;i++) {
+        Entry*e=table[i],*nx;
+        <span class="kw">while</span>(e){nx=e-&gt;next;<span class="fn">free</span>(e);e=nx;}
+        table[i]=<span class="num">NULL</span>;
+    }
+}
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="fn">ht_set</span>(<span class="str">"name"</span>,<span class="str">"홍길동"</span>); <span class="fn">ht_set</span>(<span class="str">"age"</span>,<span class="str">"17"</span>);
+    <span class="fn">ht_set</span>(<span class="str">"city"</span>,<span class="str">"Seoul"</span>); <span class="fn">ht_set</span>(<span class="str">"age"</span>,<span class="str">"18"</span>); <span class="cmt">// 업데이트</span>
+    <span class="fn">printf</span>(<span class="str">"name=%s\n"</span>, <span class="fn">ht_get</span>(<span class="str">"name"</span>));
+    <span class="fn">printf</span>(<span class="str">"age =%s\n"</span>, <span class="fn">ht_get</span>(<span class="str">"age"</span>));
+    <span class="kw">const char</span>*r=<span class="fn">ht_get</span>(<span class="str">"email"</span>);
+    <span class="fn">printf</span>(<span class="str">"email=%s\n"</span>, r?r:<span class="str">"없음"</span>);
+    <span class="fn">ht_free</span>();
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+</div>
+
+<div class="page">
+  <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/computer-basics/cpu.png" alt="CPU - 동적 메모리 처리 장치" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>실행 결과</h2>
+  <div class="output-box">name=홍길동
+age =18
+email=없음</div>
+  <div style="display:flex;align-items:center;gap:8px;margin:12px 0 6px;padding:7px 12px;background:#fefce8;border-radius:6px;border-left:3px solid #f59e0b;">
+    <img src="/images/learn/c-lang/database.png" alt="데이터베이스 - 동적 데이터 관리" style="width:24px;height:24px;object-fit:contain;background:#fff;border-radius:8px;">
+    <span style="font-size:12px;color:#92400e;font-weight:600;">도전 과제</span>
+</div>
+<div class="challenge">
+    <h3>도전 과제</h3>
+    <p>1. ht_delete(key) 함수를 만들어 특정 키를 삭제하세요.<br>2. 모든 key-value 쌍을 출력하는 ht_print() 함수를 추가하세요.<br>3. BUCKET_SIZE를 크게 늘리면 충돌이 줄어드는 것을 확인해보세요.</p>
+  </div>
+</div>
+
+<div class="page">
+  <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/computer-basics/hard-drive.png" alt="하드 드라이브 - 메모리 저장 개념" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>스스로 만들어보기</h2>
+  <div class="code"><span class="cmt">// 해시 함수 — 키 문자 합산</span>
+<span class="kw">int</span> hash(<span class="kw">const char</span> *key) {
+    <span class="kw">unsigned int</span> h = <span class="num">0</span>;
+    <span class="kw">while</span>(*key) h += _______; <span class="cmt">// 1. 문자를 숫자로</span>
+    <span class="kw">return</span> h % _______;       <span class="cmt">// 2. 버킷 수로 나눈 나머지</span>
+}
+
+<span class="cmt">// ht_set — 새 항목을 앞에 추가</span>
+Entry *e=(Entry*)<span class="fn">malloc</span>(<span class="kw">sizeof</span>(Entry));
+e-&gt;next = _______[idx];   <span class="cmt">// 3. 기존 체인 연결</span>
+_______[idx] = e;          <span class="cmt">// 4. 새 항목을 head로</span></div>
+  <p style="margin-top:16px;"><strong>정답:</strong> 1. (unsigned char)(*key++)  2. BUCKET_SIZE  3. table  4. table</p>
+
+    <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:20px;padding-top:10px;border-top:1px solid #f1f5f9;">
+        <img src="/images/learn/c-lang/binary-code.png" alt="이진 코드 - 메모리 할당 구조" style="width:22px;height:22px;object-fit:contain;opacity:0.6;background:#fff;border-radius:8px;">
+        <span style="font-size:10px;color:#cbd5e1;">코딩쏙 C언어</span>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

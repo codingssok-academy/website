@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Unit 48. 메모리 관리와 디버깅 — C 언어 코딩 도장</title>
+    <link rel="stylesheet" href="../common.css">
+</head>
+
+<body>
+    <div class="wrap">
+        <div class="hdr">
+            <h1>Unit 48. 메모리 관리와 디버깅</h1>
+            <div class="sub">스택/힙 · 메모리 누수 · 버퍼 오버플로우 · assert</div>
+            <span class="unit-badge">Chapter 15 · 고급 주제</span>
+            <div class="level-bar"><span class="on"></span><span class="on"></span><span class="on"></span></div>
+            <div class="meta"><span class="tag pri">🖥️ C언어</span><span class="tag acc">📝 15문제</span><span
+                    class="tag">⏱ 25~35분</span></div>
+        </div>
+        <div class="stu-bar"><label>👤 이름 <input type="text" id="stu-name" placeholder="이름"></label><label>📅 날짜 <input
+                    type="date" id="stu-date"></label></div>
+        <div class="learn">
+            <h2><span class="ico" style="background:rgba(239,68,68,.15)">🛡️</span> C의 메모리 = 직접 관리!</h2>
+            <p>메모리 누수, 댕글링 포인터, 버퍼 오버플로우... C 프로그래밍의 핵심 도전 과제!</p>
+        </div>
+        <div id="problems"></div>
+        <div class="submit-section">
+            <p>모든 문제를 풀었나요? 📨</p><button class="btn-submit" id="btn-submit">📄 제출하기</button>
+        </div>
+        <div class="modal-overlay" id="submit-modal">
+            <div class="modal-box">
+                <div class="modal-icon">✅</div>
+                <h3>제출 완료!</h3>
+                <p>학습지가 저장되었습니다.</p>
+                <div style="margin:12px 0"><span class="info-tag" id="modal-name"></span> <span class="info-tag"
+                        id="modal-date"></span> <span class="info-tag" id="modal-count"></span></div>
+                <p style="font-size:.78rem;color:var(--dim)">📁 <strong id="modal-filename"></strong></p><button
+                    class="btn-close-modal" id="btn-close-modal">확인</button>
+            </div>
+        </div>
+        <div class="pg"><a href="Unit47_열거형.html">← Unit 47</a><span class="tag active">Unit 48</span><a
+                href="../16_자료구조/Unit49_연결리스트.html">Unit 49 →</a></div>
+        <div class="ft">🖥️ C 언어 코딩 도장 · Unit 48 · 메모리 관리</div>
+    </div>
+    <script>
+        const P = [
+            {
+                n: 1, t: "메모리 영역 4가지", d: 2,
+                q: `C 프로그램의 메모리 영역을 설명하세요.`,
+                a: `<span class="key">정답</span><div class="trace">1️⃣ <span class="val">코드(Text)</span>: 실행할 기계어 코드<br>2️⃣ <span class="val">데이터(Data)</span>: 전역/static 변수<br>3️⃣ <span class="val">스택(Stack)</span>: 지역변수, 함수 호출<br>4️⃣ <span class="val">힙(Heap)</span>: malloc으로 동적 할당<br><br>스택: 자동 해제 (함수 종료 시)<br>힙: 수동 해제 (free 필수!)</div>`
+            },
+
+            {
+                n: 2, t: "스택 vs 힙", d: 2,
+                q: `스택과 힙의 차이를 쓰세요.`,
+                a: `<span class="key">정답</span><div class="trace">| 구분 | 스택 | 힙 |<br>|------|------|-----|<br>| 할당 | 자동 | malloc/free |<br>| 속도 | 빠름 | 느림 |<br>| 크기 | 작음(~1MB) | 큼(수GB) |<br>| 해제 | 자동 | 수동 |<br>| 위험 | 오버플로우 | 누수 |</div>`
+            },
+
+            {
+                n: 3, t: "메모리 누수 찾기", d: 2,
+                q: `메모리 누수가 있는 코드를 찾으세요.<pre class="code-c">void process() {
+    int *a = (int*)malloc(100*sizeof(int));
+    int *b = (int*)malloc(200*sizeof(int));
+    if (a[0] == 0) return; <span class="cm">// ← 여기!</span>
+    free(a); free(b);
+}</pre>`,
+                a: `<span class="key">정답</span><div class="trace"><span class="err">조기 return에서 free 누락!</span><br>a[0]==0이면 a, b 모두 해제 안 됨<br><br>해결:</div><pre class="code-c">if (a[0] == 0) {
+    free(a); free(b);
+    return;
+}</pre>`},
+
+            {
+                n: 4, t: "댕글링 포인터", d: 2,
+                q: `댕글링 포인터를 설명하세요.<pre class="code-c">int *p = (int*)malloc(sizeof(int));
+*p = 42;
+free(p);
+printf("%d\\n", *p); <span class="cm">// ???</span></pre>`,
+                a: `<span class="key">정답</span><div class="trace"><span class="err">free 후에도 *p 접근 → 정의되지 않은 동작!</span><br>p는 해제된 메모리를 가리킴 (댕글링)<br><br>해결: <span class="val">free 후 NULL 대입!</span></div><pre class="code-c">free(p);
+p = NULL; <span class="cm">// 안전!</span></pre>`},
+
+            {
+                n: 5, t: "이중 해제(Double Free)", d: 2,
+                q: `다음 코드의 문제점은?<pre class="code-c">int *p = (int*)malloc(sizeof(int));
+free(p);
+free(p); <span class="cm">// ???</span></pre>`,
+                a: `<span class="key">정답</span><div class="trace"><span class="err">이중 해제 → 정의되지 않은 동작!</span><br>메모리 관리자가 같은 메모리를 두 번 해제<br>→ 프로그램 충돌 또는 보안 취약점<br><br>해결: free 후 p=NULL → free(NULL)은 안전!</div>`
+            },
+
+            {
+                n: 6, t: "버퍼 오버플로우", d: 2,
+                q: `다음 코드의 위험성은?<pre class="code-c">char buf[10];
+scanf("%s", buf); <span class="cm">// 입력: "Hello World!!!"</span></pre>`,
+                a: `<span class="key">정답</span><div class="trace"><span class="err">버퍼 오버플로우!</span><br>10바이트 배열에 14글자 입력 → 경계 넘김<br>스택의 다른 데이터 덮어쓰기 → 보안 위험!<br><br>해결: <span class="val">fgets(buf, 10, stdin)</span> 또는<br><span class="val">scanf("%9s", buf)</span> (최대 9글자)</div>`
+            },
+
+            {
+                n: 7, t: "assert 디버깅", d: 2,
+                q: `assert로 조건을 검사하세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">#include &lt;assert.h&gt;
+
+int divide(int a, int b) {
+    assert(b != 0); <span class="cm">// 거짓이면 프로그램 중단!</span>
+    return a / b;
+}
+<span class="cm">// divide(10, 0) → 에러 메시지 출력 후 종료</span>
+<span class="cm">// Assertion failed: b != 0, file main.c, line 4</span></pre>`},
+
+            {
+                n: 8, t: "errno 에러 처리", d: 2,
+                q: `errno로 에러를 처리하세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">#include &lt;errno.h&gt;
+#include &lt;string.h&gt;
+
+FILE *fp = fopen("없는파일.txt", "r");
+if (fp == NULL) {
+    printf("에러 번호: %d\\n", errno);
+    printf("에러 메시지: %s\\n", strerror(errno));
+    perror("fopen"); <span class="cm">// perror도 사용 가능</span>
+}</pre>`},
+
+            {
+                n: 9, t: "심사: 안전한 동적 배열", d: 3,
+                q: `크기를 동적으로 늘리는 안전한 배열을 만드세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">typedef struct {
+    int *data;
+    int size, capacity;
+} DynArray;
+
+DynArray* create() {
+    DynArray *a = malloc(sizeof(DynArray));
+    a->capacity = 4;
+    a->size = 0;
+    a->data = malloc(a->capacity * sizeof(int));
+    return a;
+}
+void push(DynArray *a, int val) {
+    if (a->size >= a->capacity) {
+        a->capacity *= 2;
+        a->data = realloc(a->data,
+            a->capacity*sizeof(int));
+    }
+    a->data[a->size++] = val;
+}
+void destroy(DynArray *a) {
+    free(a->data); free(a);
+}</pre>`},
+
+            {
+                n: 10, t: "심사: 메모리 정렬", d: 3,
+                q: `구조체 패딩과 정렬을 설명하세요.`,
+                a: `<span class="key">정답</span><pre class="code-c"><span class="cm">// 비효율적 (패딩 多)</span>
+struct Bad { char a; int b; char c; };
+<span class="cm">// sizeof = 12 (a:1+pad:3+b:4+c:1+pad:3)</span>
+
+<span class="cm">// 효율적 (멤버 크기 내림차순)</span>
+struct Good { int b; char a; char c; };
+<span class="cm">// sizeof = 8 (b:4+a:1+c:1+pad:2)</span></pre><div class="trace"><span class="val">큰 멤버부터 선언하면 패딩 절약!</span></div>`},
+
+            {
+                n: 11, t: "심사: Valgrind 사용법", d: 2,
+                q: `Valgrind로 메모리 누수를 찾으세요.`,
+                a: `<span class="key">정답</span><pre class="code-c"><span class="cm">// 컴파일: gcc -g main.c -o program</span>
+<span class="cm">// 실행: valgrind --leak-check=full ./program</span>
+<span class="cm">//</span>
+<span class="cm">// 출력 예:</span>
+<span class="cm">// definitely lost: 40 bytes in 1 blocks</span>
+<span class="cm">// → malloc 했는데 free 안 한 곳!</span></pre>`},
+
+            {
+                n: 12, t: "심사: 안전한 문자열 함수", d: 2,
+                q: `안전한 문자열 함수를 사용하세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">char dst[10];
+<span class="cm">// 위험: strcpy(dst, longString);</span>
+<span class="cm">// 안전:</span>
+strncpy(dst, longString, sizeof(dst)-1);
+dst[sizeof(dst)-1] = '\\0';
+
+<span class="cm">// snprintf도 안전:</span>
+snprintf(dst, sizeof(dst), "%s", longString);</pre>`},
+
+            {
+                n: 13, t: "심사: goto로 에러 처리", d: 3,
+                q: `goto를 사용한 정리 패턴을 쓰세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">int process() {
+    FILE *fp = fopen("a.txt", "r");
+    if (!fp) goto err1;
+    int *buf = malloc(100);
+    if (!buf) goto err2;
+    <span class="cm">// 작업 수행...</span>
+    free(buf);
+    fclose(fp);
+    return 0;
+err2: fclose(fp);
+err1: return -1;
+}</pre><div class="trace">C에서 자원 정리에 goto를 쓰는 건<br>리눅스 커널에서도 사용하는 합법적 패턴!</div>`},
+
+            {
+                n: 14, t: "심사: 스택 오버플로우", d: 2,
+                q: `스택 오버플로우가 발생하는 경우는?`,
+                a: `<span class="key">정답</span><pre class="code-c"><span class="cm">// 1) 무한 재귀</span>
+void inf() { inf(); } <span class="cm">// Stack Overflow!</span>
+
+<span class="cm">// 2) 너무 큰 지역 배열</span>
+void bad() {
+    int arr[10000000]; <span class="cm">// ~40MB → 스택 초과!</span>
+}
+<span class="cm">// 해결: malloc 사용 (힙 할당)</span></pre>`},
+
+            {
+                n: 15, t: "🏆 Unit 48 종합", d: 3,
+                q: `다음 코드에서 모든 버그를 찾으세요.<pre class="code-c">int *createArr(int n) {
+    int arr[n];
+    for (int i=0;i<=n;i++) arr[i] = i;
+    return arr;
+}</pre>`,
+                a: `<span class="key">정답</span><div class="trace">버그 3개:<br><br>1️⃣ <span class="err">지역 배열 주소 반환!</span> (댕글링 포인터)<br>→ malloc으로 힙에 할당해야<br><br>2️⃣ <span class="err">i<=n → 배열 범위 초과!</span> (i<n이어야)<br>→ arr[n]은 존재하지 않음<br><br>3️⃣ VLA은 함수 반환 시 소멸<br>→ 동적 할당으로 대체</div>`
+            }
+        ];
+        const c = document.getElementById('problems'); P.forEach(p => { const dc = p.d <= 1 ? 'ez' : p.d <= 2 ? 'md' : 'hd'; const dots = Array.from({ length: 5 }, (_, i) => `<span${i < p.d ? ' class="on"' : ''}>​</span>`).join(''); c.innerHTML += `<div class="prob"><div class="prob-top"><div class="prob-num ${dc}">${p.n}</div><div class="prob-title">${p.t}</div><div class="diff-dots">${dots}</div></div><div class="prob-body"><div class="q">${p.q}</div><textarea class="write" placeholder="✍️ 답을 작성하세요"></textarea><details class="ans"><summary>정답 및 해설 보기</summary><div class="ans-body">${p.a}</div></details></div></div>`; });
+    </script>
+    <script src="../submit.js"></script>
+    <script src="../../platform.js"></script>
+</body>
+
+</html>

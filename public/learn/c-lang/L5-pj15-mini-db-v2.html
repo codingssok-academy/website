@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 미니 데이터베이스</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+.page { width: 210mm; min-height: 297mm; margin: 16px auto; padding: 18mm 20mm 15mm 22mm; background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: relative; page-break-after: always; }
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after { content: counter(pagenum); position: absolute; bottom: 10mm; right: 16mm; font-size: 10px; color: #94a3b8; font-weight: 600; }
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark { position: absolute; top: -10px; right: -15px; font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3); line-height: 1; pointer-events: none; }
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #2563eb; font-weight: 600; }
+.code { background: #0f172a; border-radius: 8px; padding: 16px 20px; font-family: 'JetBrains Mono', monospace; font-size: 14px; color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap; }
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fce7f3; color: #9d174d; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<div class="page cover">
+  <div class="cover-sidebar"></div>
+  <div class="cover-accent"></div>
+  <div class="cover-body">
+    <div class="cover-watermark">P15</div>
+    <div class="cover-label">Project 15 · Level 5</div>
+    <h1 class="cover-title">미니 데이터베이스</h1>
+    <p class="cover-sub">병렬 배열(이름/점수)로 여러 레코드를 관리하고, 메뉴를 통해 검색·정렬·삭제 기능을 구현합니다.</p>
+    <div style="margin:24px 0;">
+      <svg viewBox="0 0 460 120" style="max-width:460px;width:100%">
+        <text x="230" y="16" text-anchor="middle" font-size="11" fill="#64748b" font-weight="600">병렬 배열 — 이름과 점수를 인덱스로 연결</text>
+        <!-- 병렬 배열 -->
+        <text x="10" y="36" font-size="10" fill="#374151" font-weight="700">names:</text>
+        <rect x="65" y="24" width="65" height="22" rx="3" fill="#dbeafe" stroke="#3b82f6"/><text x="97" y="38" text-anchor="middle" font-size="9" fill="#1d4ed8">"김민준"</text>
+        <rect x="135" y="24" width="65" height="22" rx="3" fill="#dbeafe" stroke="#3b82f6"/><text x="167" y="38" text-anchor="middle" font-size="9" fill="#1d4ed8">"이서연"</text>
+        <rect x="205" y="24" width="65" height="22" rx="3" fill="#dbeafe" stroke="#3b82f6"/><text x="237" y="38" text-anchor="middle" font-size="9" fill="#1d4ed8">"박도현"</text>
+        <rect x="275" y="24" width="65" height="22" rx="3" fill="#dbeafe" stroke="#3b82f6"/><text x="307" y="38" text-anchor="middle" font-size="9" fill="#1d4ed8">"최유나"</text>
+        <text x="10" y="62" font-size="10" fill="#374151" font-weight="700">scores:</text>
+        <rect x="65" y="50" width="65" height="22" rx="3" fill="#f0fdf4" stroke="#22c55e"/><text x="97" y="64" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">88</text>
+        <rect x="135" y="50" width="65" height="22" rx="3" fill="#fefce8" stroke="#f59e0b" stroke-width="2"/><text x="167" y="64" text-anchor="middle" font-size="10" fill="#92400e" font-weight="800">94</text>
+        <rect x="205" y="50" width="65" height="22" rx="3" fill="#f0fdf4" stroke="#22c55e"/><text x="237" y="64" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">72</text>
+        <rect x="275" y="50" width="65" height="22" rx="3" fill="#f0fdf4" stroke="#22c55e"/><text x="307" y="64" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">85</text>
+        <!-- 인덱스 -->
+        <text x="97" y="82" text-anchor="middle" font-size="8" fill="#94a3b8">[0]</text>
+        <text x="167" y="82" text-anchor="middle" font-size="8" fill="#94a3b8">[1]</text>
+        <text x="237" y="82" text-anchor="middle" font-size="8" fill="#94a3b8">[2]</text>
+        <text x="307" y="82" text-anchor="middle" font-size="8" fill="#94a3b8">[3]</text>
+        <!-- 메뉴 -->
+        <rect x="10" y="90" width="440" height="24" rx="6" fill="#f1f5f9" stroke="#e2e8f0"/>
+        <text x="230" y="106" text-anchor="middle" font-size="10" fill="#374151">1.목록 | 2.추가 | 3.검색 | 4.정렬 | 5.삭제 | 0.종료</text>
+      </svg>
+    </div>
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/database.png" alt="데이터베이스" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+      <h3>이 프로젝트에서 배우는 것</h3>
+      <ul>
+        <li>병렬 배열로 여러 필드를 가진 레코드를 관리합니다.</li>
+        <li>메뉴 기반 프로그램 구조를 설계합니다.</li>
+        <li>이름으로 검색하는 선형 탐색을 구현합니다.</li>
+        <li>레코드를 삭제할 때 배열을 앞으로 당기는 방법을 익힙니다.</li>
+        <li>이름 비교에 strcmp 함수를 사용합니다.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+  <h2>병렬 배열 설계 & 검색</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/folder.png" alt="데이터" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+  <p>이름 배열과 점수 배열을 같은 인덱스로 연결합니다. 현재 레코드 수를 n으로 관리합니다.</p>
+  <div class="code">#<span class="kw">include</span> <span class="str">&lt;stdio.h&gt;</span>
+#<span class="kw">include</span> <span class="str">&lt;string.h&gt;</span>
+#<span class="kw">define</span> MAX <span class="num">50</span>
+
+<span class="kw">char</span>  names[MAX][<span class="num">20</span>];  <span class="cmt">// 이름 (최대 19글자+null)</span>
+<span class="kw">int</span>   scores[MAX];     <span class="cmt">// 점수</span>
+<span class="kw">int</span>   n = <span class="num">0</span>;           <span class="cmt">// 현재 레코드 수</span>
+
+<span class="cmt">// 이름으로 검색 — 인덱스 반환 (없으면 -1)</span>
+<span class="kw">int</span> <span class="fn">search</span>(<span class="kw">char</span> *name) {
+    <span class="kw">for</span> (<span class="kw">int</span> i=<span class="num">0</span>;i&lt;n;i++)
+        <span class="kw">if</span> (<span class="fn">strcmp</span>(names[i], name) == <span class="num">0</span>) <span class="kw">return</span> i;
+    <span class="kw">return</span> -<span class="num">1</span>;
+}</div>
+  <h2>추가 & 삭제 구현</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/hard-drive.png" alt="저장소" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+  <div style="text-align:center;margin:14px 0;">
+    <svg viewBox="0 0 460 90" style="max-width:460px;width:100%">
+      <text x="230" y="16" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="800">삭제 — 뒤 요소를 앞으로 당기기</text>
+      <!-- 삭제 전 -->
+      <text x="10" y="36" font-size="9" fill="#64748b">삭제전:</text>
+      <rect x="55" y="24" width="40" height="20" rx="3" fill="#dbeafe" stroke="#3b82f6"/><text x="75" y="38" text-anchor="middle" font-size="9" fill="#1d4ed8">A</text>
+      <rect x="100" y="24" width="40" height="20" rx="3" fill="#fef2f2" stroke="#ef4444" stroke-width="2"/><text x="120" y="38" text-anchor="middle" font-size="9" fill="#dc2626" font-weight="800">B</text>
+      <rect x="145" y="24" width="40" height="20" rx="3" fill="#dbeafe" stroke="#3b82f6"/><text x="165" y="38" text-anchor="middle" font-size="9" fill="#1d4ed8">C</text>
+      <rect x="190" y="24" width="40" height="20" rx="3" fill="#dbeafe" stroke="#3b82f6"/><text x="210" y="38" text-anchor="middle" font-size="9" fill="#1d4ed8">D</text>
+      <text x="120" y="52" text-anchor="middle" font-size="8" fill="#dc2626">삭제!</text>
+      <!-- 화살표 -->
+      <path d="M165,35 L100,35" fill="none" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#arD)"/>
+      <path d="M210,50 L155,50" fill="none" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#arD)"/>
+      <!-- 삭제 후 -->
+      <text x="10" y="78" font-size="9" fill="#64748b">삭제후:</text>
+      <rect x="55" y="64" width="40" height="20" rx="3" fill="#dbeafe" stroke="#3b82f6"/><text x="75" y="78" text-anchor="middle" font-size="9" fill="#1d4ed8">A</text>
+      <rect x="100" y="64" width="40" height="20" rx="3" fill="#f0fdf4" stroke="#22c55e"/><text x="120" y="78" text-anchor="middle" font-size="9" fill="#166534">C</text>
+      <rect x="145" y="64" width="40" height="20" rx="3" fill="#f0fdf4" stroke="#22c55e"/><text x="165" y="78" text-anchor="middle" font-size="9" fill="#166534">D</text>
+      <text x="230" y="72" font-size="9" fill="#374151">n-- 후 배열 크기 감소</text>
+      <defs><marker id="arD" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#f59e0b"/></marker></defs>
+    </svg>
+  </div>
+  <div class="code"><span class="cmt">// 추가</span>
+<span class="kw">void</span> <span class="fn">addRecord</span>(<span class="kw">char</span> *name, <span class="kw">int</span> score) {
+    <span class="kw">if</span> (n &gt;= MAX) { <span class="fn">printf</span>(<span class="str">"가득 찼습니다!\n"</span>); <span class="kw">return</span>; }
+    <span class="fn">strcpy</span>(names[n], name);
+    scores[n] = score;
+    n++;
+}
+<span class="cmt">// 삭제 (인덱스 기준)</span>
+<span class="kw">void</span> <span class="fn">deleteRecord</span>(<span class="kw">int</span> idx) {
+    <span class="kw">for</span> (<span class="kw">int</span> i=idx; i&lt;n-<span class="num">1</span>; i++) {
+        <span class="fn">strcpy</span>(names[i], names[i+<span class="num">1</span>]);
+        scores[i] = scores[i+<span class="num">1</span>];
+    }
+    n--;
+}</div>
+</div>
+
+<div class="page">
+  <h2>메뉴 기반 완성 코드</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="처리" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+  <div class="code"><span class="kw">void</span> <span class="fn">printAll</span>() {
+    <span class="kw">if</span>(n==<span class="num">0</span>){<span class="fn">printf</span>(<span class="str">"데이터 없음\n"</span>);<span class="kw">return</span>;}
+    <span class="fn">printf</span>(<span class="str">"%-12s %6s\n"</span>,<span class="str">"이름"</span>,<span class="str">"점수"</span>);
+    <span class="kw">for</span>(<span class="kw">int</span> i=<span class="num">0</span>;i&lt;n;i++)
+        <span class="fn">printf</span>(<span class="str">"%-12s %6d\n"</span>, names[i], scores[i]);
+}
+<span class="kw">void</span> <span class="fn">sortByScore</span>() {
+    <span class="cmt">// 버블 정렬 (내림차순)</span>
+    <span class="kw">for</span>(<span class="kw">int</span> i=<span class="num">0</span>;i&lt;n-<span class="num">1</span>;i++)
+      <span class="kw">for</span>(<span class="kw">int</span> j=<span class="num">0</span>;j&lt;n-<span class="num">1</span>-i;j++)
+        <span class="kw">if</span>(scores[j]&lt;scores[j+<span class="num">1</span>]){
+            <span class="kw">int</span> ts=scores[j];scores[j]=scores[j+<span class="num">1</span>];scores[j+<span class="num">1</span>]=ts;
+            <span class="kw">char</span> tn[<span class="num">20</span>]; <span class="fn">strcpy</span>(tn,names[j]); <span class="fn">strcpy</span>(names[j],names[j+<span class="num">1</span>]); <span class="fn">strcpy</span>(names[j+<span class="num">1</span>],tn);
+        }
+}
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="fn">addRecord</span>(<span class="str">"김민준"</span>,<span class="num">88</span>); <span class="fn">addRecord</span>(<span class="str">"이서연"</span>,<span class="num">94</span>); <span class="fn">addRecord</span>(<span class="str">"박도현"</span>,<span class="num">72</span>);
+
+    <span class="kw">int</span> choice;
+    <span class="kw">do</span> {
+        <span class="fn">printf</span>(<span class="str">"\n1.목록 2.추가 3.검색 4.정렬 5.삭제 0.종료: "</span>);
+        <span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;choice);
+        <span class="kw">if</span>(choice==<span class="num">1</span>) { <span class="fn">printAll</span>(); }
+        <span class="kw">else if</span>(choice==<span class="num">2</span>) {
+            <span class="kw">char</span> nm[<span class="num">20</span>]; <span class="kw">int</span> sc;
+            <span class="fn">printf</span>(<span class="str">"이름 점수: "</span>); <span class="fn">scanf</span>(<span class="str">"%s %d"</span>,nm,&amp;sc);
+            <span class="fn">addRecord</span>(nm,sc);
+        }
+        <span class="kw">else if</span>(choice==<span class="num">3</span>) {
+            <span class="kw">char</span> nm[<span class="num">20</span>]; <span class="fn">printf</span>(<span class="str">"검색 이름: "</span>); <span class="fn">scanf</span>(<span class="str">"%s"</span>,nm);
+            <span class="kw">int</span> idx=<span class="fn">search</span>(nm);
+            <span class="kw">if</span>(idx&gt;=<span class="num">0</span>) <span class="fn">printf</span>(<span class="str">"%s: %d점\n"</span>,names[idx],scores[idx]);
+            <span class="kw">else</span> <span class="fn">printf</span>(<span class="str">"없음\n"</span>);
+        }
+        <span class="kw">else if</span>(choice==<span class="num">4</span>) { <span class="fn">sortByScore</span>(); <span class="fn">printAll</span>(); }
+        <span class="kw">else if</span>(choice==<span class="num">5</span>) {
+            <span class="kw">char</span> nm[<span class="num">20</span>]; <span class="fn">printf</span>(<span class="str">"삭제 이름: "</span>); <span class="fn">scanf</span>(<span class="str">"%s"</span>,nm);
+            <span class="kw">int</span> idx=<span class="fn">search</span>(nm);
+            <span class="kw">if</span>(idx&gt;=<span class="num">0</span>){<span class="fn">deleteRecord</span>(idx);<span class="fn">printf</span>(<span class="str">"삭제됨\n"</span>);}
+            <span class="kw">else</span> <span class="fn">printf</span>(<span class="str">"없음\n"</span>);
+        }
+    } <span class="kw">while</span>(choice!=<span class="num">0</span>);
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+</div>
+
+<div class="page">
+  <h2>연습 문제</h2>
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">1</div>
+      <div class="problem-label">중복 이름 체크</div>
+      <span class="problem-diff easy">쉬움</span>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">추가 시 이미 같은 이름이 있으면 "이미 존재합니다" 메시지를 출력하고 추가를 막으세요.</div>
+      <div class="problem-example">
+        <div class="problem-example-row"><span class="problem-example-label">입력</span><span class="problem-example-value">김민준 90 (이미 존재)</span></div>
+        <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">이미 존재합니다!</span></div>
+      </div>
+      <details class="problem-toggle">
+        <summary>정답 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="answer-code"><span class="kw">if</span>(<span class="fn">search</span>(name) &gt;= <span class="num">0</span>) {
+  <span class="fn">printf</span>(<span class="str">"이미 존재합니다!\n"</span>);
+  <span class="kw">return</span>;
+}</div>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">2</div>
+      <div class="problem-label">점수 수정 기능</div>
+      <span class="problem-diff medium">중간</span>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">메뉴에 6번 "수정" 기능을 추가하세요. 이름을 검색하고 새 점수를 입력받아 업데이트합니다.</div>
+      <div class="problem-example">
+        <div class="problem-example-row"><span class="problem-example-label">입력</span><span class="problem-example-value">김민준 95</span></div>
+        <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">김민준 점수 88 → 95 수정됨</span></div>
+      </div>
+      <details class="problem-toggle">
+        <summary>힌트 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="hint-text">search(name)으로 인덱스 찾고 scores[idx] = newScore; 로 수정.</div>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">3</div>
+      <div class="problem-label">통계 기능</div>
+      <span class="problem-diff medium">중간</span>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">메뉴 7번에 통계 기능을 추가하세요. 전체 평균, 최고점 학생, 최저점 학생을 출력합니다.</div>
+      <div class="problem-example">
+        <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">평균: 84.7 / 최고: 이서연(94) / 최저: 박도현(72)</span></div>
+      </div>
+      <details class="problem-toggle">
+        <summary>힌트 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="hint-text">sum/n으로 평균, scores[0]부터 max/min 탐색. 이름 인덱스로 names[maxIdx] 출력.</div>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+    <h3>핵심 정리</h3>
+    <ul>
+      <li>병렬 배열: names[MAX][20], scores[MAX], 같은 인덱스로 연결</li>
+      <li>레코드 수: n 변수로 관리, 추가 시 n++, 삭제 시 n--</li>
+      <li>이름 비교: strcmp(a,b)==0 (같으면 0 반환)</li>
+      <li>삭제: for(i=idx;i&lt;n-1;i++) 앞으로 당기기 + n--</li>
+      <li>이름 복사: strcpy(dest, src) — string.h 필요</li>
+    </ul>
+  </div>
+  <div style="text-align:center;margin:20px 0 0;">
+    <svg viewBox="0 0 460 60" style="max-width:460px;width:100%">
+      <rect x="10" y="8" width="440" height="48" rx="8" fill="#1e3a5f"/>
+      <text x="230" y="28" text-anchor="middle" font-size="14" fill="#e6a817" font-weight="900">Level 5 프로젝트 완료!</text>
+      <text x="230" y="46" text-anchor="middle" font-size="10" fill="#94a3b8">15개 프로젝트로 배열, 정렬, 2차원배열, 문자열 마스터</text>
+    </svg>
+  </div>
+</div>
+
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="완성" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

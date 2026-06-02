@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Unit 78. 실전 모의고사 2회 — C 언어</title>
+    <link rel="stylesheet" href="../common.css">
+</head>
+
+<body>
+    <div class="wrap">
+        <div class="hdr">
+            <h1>Unit 78. 🎯 실전 모의고사 2회</h1>
+            <div class="sub">DP · 그래프 · 고급 포인터 · 파일 I/O · 전처리기 · 종합 20문제</div>
+            <span class="unit-badge">Chapter 28 · 실전 모의고사</span>
+            <div class="level-bar"><span class="on"></span><span class="on"></span><span class="on"></span><span
+                    class="on"></span><span class="on"></span></div>
+            <div class="meta"><span class="tag pri">🎯 모의2</span><span class="tag acc">📝 20문제</span><span class="tag">⏱
+                    60분</span></div>
+        </div>
+        <div class="stu-bar"><label>👤 이름 <input type="text" id="stu-name" placeholder="이름"></label><label>📅 날짜 <input
+                    type="date" id="stu-date"></label></div>
+        <div id="problems"></div>
+        <div class="submit-section">
+            <p>모든 문제를 풀었나요? 📨</p><button class="btn-submit" id="btn-submit">📄 제출하기</button>
+        </div>
+        <div class="modal-overlay" id="submit-modal">
+            <div class="modal-box">
+                <div class="modal-icon">✅</div>
+                <h3>제출 완료!</h3>
+                <p>학습지가 저장되었습니다.</p>
+                <div style="margin:12px 0"><span class="info-tag" id="modal-name"></span> <span class="info-tag"
+                        id="modal-date"></span> <span class="info-tag" id="modal-count"></span></div>
+                <p style="font-size:.78rem;color:var(--dim)">📁 <strong id="modal-filename"></strong></p><button
+                    class="btn-close-modal" id="btn-close-modal">확인</button>
+            </div>
+        </div>
+        <div class="pg"><a href="Unit77_모의고사1.html">← Unit 77</a><span class="tag active">Unit 78</span><span
+                class="tag">🎉 C 언어 완전 마스터!</span></div>
+        <div class="ft">🎯 실전 모의고사 2회 · Unit 78 · FINAL</div>
+    </div>
+    <script>
+        const P = [
+            {
+                n: 1, t: "[출력예측] 문자열 + 포인터", d: 2,
+                q: `<pre class="code-c">char s[] = "ABCDEFGHIJ";
+char *p = s + 3;
+char *q = s + 7;
+printf("%c %c\\n", *p, *q);
+printf("%ld\\n", q - p);
+while (p < q) printf("%c", *p++);</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">D H<br>4<br>DEFG</div>`
+            },
+
+            {
+                n: 2, t: "[코드작성] DP: 동전 경우의 수", d: 3,
+                q: `동전으로 금액을 만드는 방법의 수를 구하세요.
+<pre class="code-c"><span class="cm">// coins={1,2,5}, amount=5 → 4가지</span>
+<span class="cm">// (5), (2+2+1), (2+1+1+1), (1+1+1+1+1)</span>
+int coinWays(int coins[], int n, int amount) { <span class="cm">/* ? */</span> }</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">int coinWays(int coins[], int n, int amount) {
+    int dp[10001] = {0};
+    dp[0] = 1;
+    for (int i=0;i<n;i++)
+        for (int j=coins[i];j<=amount;j++)
+            dp[j] += dp[j-coins[i]];
+    return dp[amount];
+}</pre><div class="trace">동전 종류별로 순차 처리 → 순서 무시!<br>(1+2 와 2+1이 같은 것으로 셈)<br>배낭 DP의 변형!</div>`},
+
+            {
+                n: 3, t: "[출력예측] union + 비트", d: 3,
+                q: `<pre class="code-c">union { unsigned int i; unsigned char bytes[4]; } u;
+u.i = 0x12345678;
+printf("%02X %02X %02X %02X\\n",
+       u.bytes[0], u.bytes[1], u.bytes[2], u.bytes[3]);</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">78 56 34 12</div><div class="trace">리틀 엔디안 (x86/x64)!<br>최하위 바이트(0x78)가 가장 낮은 주소<br>bytes[0]=78, bytes[3]=12<br>빅 엔디안이면: 12 34 56 78</div>`
+            },
+
+            {
+                n: 4, t: "[코드작성] BFS 최단 거리", d: 3,
+                q: `2D 격자에서 (0,0)→(n-1,m-1) 최단 거리를 BFS로 구하세요.
+<pre class="code-c"><span class="cm">// 0: 통로, 1: 벽</span>
+int shortestPath(int grid[][100], int n, int m) {
+    <span class="cm">// BFS로 최단 이동 횟수</span>
+}</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">int shortestPath(int grid[][100], int n, int m) {
+    if (grid[0][0]||grid[n-1][m-1]) return -1;
+    int dist[100][100], q[20000][2], f=0,r=0;
+    memset(dist,-1,sizeof(dist));
+    dist[0][0]=0; q[r][0]=0; q[r++][1]=0;
+    int dx[]={0,0,1,-1}, dy[]={1,-1,0,0};
+    while (f<r) {
+        int x=q[f][0], y=q[f++][1];
+        if (x==n-1 && y==m-1) return dist[x][y];
+        for (int d=0;d<4;d++) {
+            int nx=x+dx[d], ny=y+dy[d];
+            if (nx>=0&&nx<n&&ny>=0&&ny<m&&
+                !grid[nx][ny]&&dist[nx][ny]==-1) {
+                dist[nx][ny]=dist[x][y]+1;
+                q[r][0]=nx; q[r++][1]=ny;
+            }
+        }
+    }
+    return -1;
+}</pre>`},
+
+            {
+                n: 5, t: "[출력예측] typedef + 함수 포인터", d: 3,
+                q: `<pre class="code-c">typedef int (*Op)(int, int);
+int apply(Op f, int a, int b) { return f(a, b); }
+int add(int a,int b){return a+b;}
+int mul(int a,int b){return a*b;}
+
+Op ops[] = {add, mul, add};
+int res = 0;
+for (int i=0;i<3;i++) res = apply(ops[i], res, i+1);
+printf("%d", res);</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">5</div><div class="trace">i=0: res=add(0,1)=1<br>i=1: res=mul(1,2)=2<br>i=2: res=add(2,3)=5</div>`
+            },
+
+            {
+                n: 6, t: "[코드작성] 유니온파인드 사이클 검출", d: 3,
+                q: `무방향 그래프에서 Union-Find로 사이클을 검출하세요.
+<pre class="code-c"><span class="cm">// 간선 (u,v) 추가 시 같은 집합이면 사이클!</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">int parent[100];
+int find(int x) { return parent[x]==x?x:parent[x]=find(parent[x]); }
+int hasCycle(int edges[][2], int E, int V) {
+    for (int i=0;i<V;i++) parent[i]=i;
+    for (int i=0;i<E;i++) {
+        int pu=find(edges[i][0]), pv=find(edges[i][1]);
+        if (pu==pv) return 1; <span class="cm">// 사이클!</span>
+        parent[pu]=pv;
+    }
+    return 0;
+}</pre>`},
+
+            {
+                n: 7, t: "[출력예측] sizeof 구조체 패딩", d: 2,
+                q: `<pre class="code-c">struct X { char a; double b; char c; };
+struct Y { double b; char a; char c; };
+struct Z { char a; char c; double b; };
+printf("%lu %lu %lu", sizeof(struct X),
+       sizeof(struct Y), sizeof(struct Z));</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">24 16 16</div><div class="trace">X: a(1)+패딩(7)+b(8)+c(1)+패딩(7)=24<br>Y: b(8)+a(1)+c(1)+패딩(6)=16<br>Z: a(1)+c(1)+패딩(6)+b(8)=16<br><br>double 정렬: 8바이트 경계!<br>멤버 순서로 24→16 절약!</div>`
+            },
+
+            {
+                n: 8, t: "[코드작성] 파일에서 구조체 정렬 저장", d: 2,
+                q: `학생 배열을 점수 내림차순으로 정렬한 후 파일에 저장하세요.
+<pre class="code-c">typedef struct { char name[20]; int score; } Student;</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">int cmpDesc(const void*a,const void*b){
+    return ((Student*)b)->score - ((Student*)a)->score;
+}
+void saveRanked(Student s[], int n, const char*fn) {
+    qsort(s, n, sizeof(Student), cmpDesc);
+    FILE *f = fopen(fn, "wb");
+    fwrite(&n, sizeof(int), 1, f);
+    fwrite(s, sizeof(Student), n, f);
+    fclose(f);
+}</pre>`},
+
+            {
+                n: 9, t: "[출력예측] #define 중첩", d: 3,
+                q: `<pre class="code-c">#define A(x) ((x)+1)
+#define B(x) (A(x)*A(x))
+#define C(x,y) (B(x)+B(y))
+printf("%d\\n", A(2));
+printf("%d\\n", B(3));
+printf("%d\\n", C(1,2));</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">3<br>16<br>13</div><div class="trace">A(2)=(2+1)=3<br>B(3)=A(3)*A(3)=(3+1)*(3+1)=16<br>C(1,2)=B(1)+B(2)<br>=A(1)*A(1)+A(2)*A(2)<br>=2*2+3*3=4+9=13</div>`
+            },
+
+            {
+                n: 10, t: "[코드작성] 다익스트라 경로 출력", d: 3,
+                q: `최단 경로의 거리뿐 아니라 실제 경로도 출력하세요.
+<pre class="code-c"><span class="cm">// prev[] 배열로 경로 역추적</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">void dijkstraPath(int g[][100], int n, int src, int dst) {
+    int dist[100], vis[100]={0}, prev[100];
+    for (int i=0;i<n;i++) { dist[i]=999999; prev[i]=-1; }
+    dist[src]=0;
+    for (int cnt=0;cnt<n;cnt++) {
+        int u=-1,m=999999;
+        for (int i=0;i<n;i++) if(!vis[i]&&dist[i]<m){m=dist[i];u=i;}
+        if (u==-1) break; vis[u]=1;
+        for (int v=0;v<n;v++)
+            if (g[u][v]&&!vis[v]&&dist[u]+g[u][v]<dist[v]) {
+                dist[v]=dist[u]+g[u][v]; prev[v]=u;
+            }
+    }
+    <span class="cm">// 경로 역추적</span>
+    int path[100],len=0;
+    for (int v=dst;v!=-1;v=prev[v]) path[len++]=v;
+    printf("거리: %d, 경로: ",dist[dst]);
+    for (int i=len-1;i>=0;i--) printf("%d→",path[i]);
+}</pre>`},
+
+            {
+                n: 11, t: "[출력예측] volatile + const", d: 2,
+                q: `<pre class="code-c">const int a = 10;
+int *p = (int*)&a;
+*p = 20;
+printf("%d %d\\n", a, *p);
+
+const char *s1 = "Hello";
+char const *s2 = "World";
+char *const s3 = "Fixed";
+<span class="cm">// 어떤 것이 수정 가능?</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c"><span class="cm">// const 수정: UB! 결과 예측 불가</span>
+<span class="cm">// 가능한 출력: 10 20 (최적화 시)</span>
+<span class="cm">//           20 20 (최적화 안 할 시)</span>
+
+const char *s1;  <span class="cm">// 가리키는 내용 수정 불가</span>
+char const *s2;  <span class="cm">// 같은 의미!</span>
+char *const s3;  <span class="cm">// 포인터 자체 수정 불가</span>
+
+s1 = "Other";  <span class="cm">// ✅ 포인터 변경 OK</span>
+<span class="cm">// s1[0]='h';  ❌ 내용 변경 불가</span>
+<span class="cm">// s3 = "X";   ❌ 포인터 변경 불가</span>
+s3[0] = 'f';   <span class="cm">// ⚠️ 리터럴이면 UB!</span></pre>`},
+
+            {
+                n: 12, t: "[코드작성] LCS 문자열 복원", d: 3,
+                q: `LCS의 길이뿐 아니라 실제 문자열도 출력하세요.
+<pre class="code-c"><span class="cm">// "ABCBDAB", "BDCAB" → "BCAB"</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">void printLCS(char *a, char *b) {
+    int m=strlen(a),n=strlen(b),dp[101][101]={0};
+    for (int i=1;i<=m;i++)
+        for (int j=1;j<=n;j++)
+            dp[i][j] = (a[i-1]==b[j-1]) ?
+                dp[i-1][j-1]+1 :
+                (dp[i-1][j]>dp[i][j-1]?dp[i-1][j]:dp[i][j-1]);
+    <span class="cm">// 역추적</span>
+    char lcs[101]; int k=dp[m][n], i=m,j=n;
+    lcs[k--] = '\\0';
+    while (i>0 && j>0) {
+        if (a[i-1]==b[j-1]) { lcs[k--]=a[i-1]; i--;j--; }
+        else if (dp[i-1][j]>dp[i][j-1]) i--;
+        else j--;
+    }
+    printf("LCS: %s (길이: %d)", lcs, dp[m][n]);
+}</pre>`},
+
+            {
+                n: 13, t: "[출력예측] 가변 인자 함수", d: 3,
+                q: `<pre class="code-c">#include &lt;stdarg.h&gt;
+int sum(int n, ...) {
+    va_list ap;
+    va_start(ap, n);
+    int s = 0;
+    for (int i=0;i<n;i++) s += va_arg(ap, int);
+    va_end(ap);
+    return s;
+}
+printf("%d\\n", sum(3, 10, 20, 30));
+printf("%d\\n", sum(5, 1, 2, 3, 4, 5));</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">60<br>15</div><div class="trace">sum(3, 10,20,30) = 60<br>sum(5, 1,2,3,4,5) = 15<br><br>va_list: 가변 인자 리스트<br>va_start: 초기화<br>va_arg: 다음 인자 꺼내기<br>va_end: 정리</div>`
+            },
+
+            {
+                n: 14, t: "[코드작성] 원형 버퍼 (Ring Buffer)", d: 3,
+                q: `원형 버퍼를 구현하세요.
+<pre class="code-c">typedef struct { int buf[100]; int head,tail,size,cap; } RingBuf;</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">void rbInit(RingBuf *r, int cap) {
+    r->head=0; r->tail=0; r->size=0; r->cap=cap;
+}
+int rbPush(RingBuf *r, int val) {
+    if (r->size==r->cap) return 0; <span class="cm">// 가득 참</span>
+    r->buf[r->tail] = val;
+    r->tail = (r->tail+1) % r->cap;
+    r->size++; return 1;
+}
+int rbPop(RingBuf *r, int *val) {
+    if (r->size==0) return 0; <span class="cm">// 비어있음</span>
+    *val = r->buf[r->head];
+    r->head = (r->head+1) % r->cap;
+    r->size--; return 1;
+}</pre><div class="trace">모듈러로 순환! head/tail이 끝에서 0으로<br>고정 크기 버퍼 → 메모리 효율적<br>임베디드, 네트워크 프로그래밍에서 핵심!</div>`},
+
+            {
+                n: 15, t: "[출력예측] 2의 보수 + 오버플로", d: 2,
+                q: `<pre class="code-c">signed char a = 127;
+a += 1;
+printf("%d\\n", a);
+unsigned char b = 255;
+b += 1;
+printf("%d\\n", b);
+int c = -1;
+printf("%u\\n", (unsigned)c);</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">-128<br>0<br>4294967295</div><div class="trace">127+1: 01111111+1=10000000=-128 (오버플로)<br>255+1: 11111111+1=00000000=0 (wrapping)<br>-1 unsigned: 0xFFFFFFFF=4294967295</div>`
+            },
+
+            {
+                n: 16, t: "[코드작성] 미니 쉘 (명령어 파서)", d: 3,
+                q: `간단한 명령어 파서를 만드세요.
+<pre class="code-c"><span class="cm">// "echo Hello World" → cmd="echo", args={"Hello","World"}</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">typedef struct { char cmd[50]; char args[10][50]; int argc; } Cmd;
+Cmd parseCmd(char *line) {
+    Cmd c; c.argc=0;
+    char copy[256]; strcpy(copy, line);
+    char *tok = strtok(copy, " \\t\\n");
+    if (tok) strcpy(c.cmd, tok);
+    while ((tok=strtok(NULL," \\t\\n")) && c.argc<10)
+        strcpy(c.args[c.argc++], tok);
+    return c;
+}
+<span class="cm">// 실행 루프:</span>
+char line[256];
+while (printf("> "), fgets(line,sizeof(line),stdin)) {
+    Cmd c = parseCmd(line);
+    if (!strcmp(c.cmd,"exit")) break;
+    if (!strcmp(c.cmd,"echo"))
+        for (int i=0;i<c.argc;i++) printf("%s ",c.args[i]);
+    printf("\\n");
+}</pre>`},
+
+            {
+                n: 17, t: "[출력예측] 재귀 하노이", d: 2,
+                q: `<pre class="code-c">int moves = 0;
+void hanoi(int n, char from, char to, char aux) {
+    if (n==0) return;
+    hanoi(n-1, from, aux, to);
+    moves++;
+    hanoi(n-1, aux, to, from);
+}
+hanoi(4, 'A', 'C', 'B');
+printf("%d", moves);</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">15</div><div class="trace">하노이 이동 횟수 = 2^n - 1<br>n=4: 2⁴-1 = 15<br>n=1→1, n=2→3, n=3→7, n=4→15</div>`
+            },
+
+            {
+                n: 18, t: "[코드작성] 문자열 → 정수 (16진수)", d: 2,
+                q: `16진수 문자열을 정수로 변환하세요.
+<pre class="code-c"><span class="cm">// "0xFF" → 255, "1A" → 26</span>
+int hexToInt(const char *s) { <span class="cm">/* ? */</span> }</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">int hexToInt(const char *s) {
+    int result = 0;
+    if (s[0]=='0' && (s[1]=='x'||s[1]=='X')) s+=2;
+    while (*s) {
+        int d;
+        if (*s>='0'&&*s<='9') d=*s-'0';
+        else if (*s>='a'&&*s<='f') d=*s-'a'+10;
+        else if (*s>='A'&&*s<='F') d=*s-'A'+10;
+        else break;
+        result = result*16 + d;
+        s++;
+    }
+    return result;
+}</pre>`},
+
+            {
+                n: 19, t: "[출력예측] 복합 리터럴 + 지정 초기화", d: 2,
+                q: `<pre class="code-c">int *p = (int[]){10, 20, 30};
+printf("%d\\n", p[1]);
+
+struct { int x,y; } pt = {.y=5, .x=3};
+printf("%d %d\\n", pt.x, pt.y);
+
+int a[5] = {[2]=100, [4]=200};
+for (int i=0;i<5;i++) printf("%d ",a[i]);</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">20<br>3 5<br>0 0 100 0 200 </div><div class="trace">복합 리터럴: (int[]){10,20,30} = 임시 배열<br>지정 초기화: .y=5 먼저, .x=3<br>배열 지정: [2]=100, 나머지=0</div>`
+            },
+
+            {
+                n: 20, t: "🏆 FINAL: C 완전 마스터 인증", d: 1,
+                q: `아래 빈칸을 채워 마스터 인증서를 출력하세요!
+<pre class="code-c">#include &lt;stdio.h&gt;
+#include &lt;time.h&gt;
+int main() {
+    char name[50];
+    printf("🏆 C MASTER 이름: ");
+    scanf("%[^\\n]", name);
+    time_t now = time(NULL);
+    struct tm *t = localtime(&now);
+    printf("\\n");
+    printf("╔════════════════════════════════════════╗\\n");
+    printf("║  🏆 C LANGUAGE COMPLETE MASTER 🏆     ║\\n");
+    printf("║                                        ║\\n");
+    printf("║  이름: %-30s║\\n", <span class="cm">/* (A) */</span>);
+    printf("║  날짜: %04d-%02d-%02d                      ║\\n",
+           <span class="cm">/* (B) */</span>);
+    printf("║  과정: Ch01~Ch28 전 %d과목 완료           ║\\n",
+           <span class="cm">/* (C) */</span>);
+    printf("║  문제: 총 %d문제 달성!                  ║\\n",
+           <span class="cm">/* (D) */</span>);
+    printf("║                                        ║\\n");
+    printf("╚════════════════════════════════════════╝\\n");
+    return 0;
+}</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">(A) name
+(B) t->tm_year+1900, t->tm_mon+1, t->tm_mday
+(C) 28
+(D) 1280</pre><div class="trace">scanf("%[^\\n]"): 줄바꿈 전까지 (공백 포함)<br>tm_year: 1900년부터, tm_mon: 0부터<br><br>🎉 <span class="val">C언어를 완전히 마스터했습니다!</span><br>78 Units · 1,280문제 · 28 Chapters!<br>여기까지 온 당신은 진정한 C언어 마스터입니다! 🏆</div>`}
+        ];
+        const c = document.getElementById('problems'); P.forEach(p => { const dc = p.d <= 1 ? 'ez' : p.d <= 2 ? 'md' : 'hd'; const dots = Array.from({ length: 5 }, (_, i) => `<span${i < p.d ? ' class="on"' : ''}>​</span>`).join(''); c.innerHTML += `<div class="prob"><div class="prob-top"><div class="prob-num ${dc}">${p.n}</div><div class="prob-title">${p.t}</div><div class="diff-dots">${dots}</div></div><div class="prob-body"><div class="q">${p.q}</div><textarea class="write" placeholder="✍️ 답을 작성하세요" rows="8"></textarea><details class="ans"><summary>정답 및 해설 보기</summary><div class="ans-body">${p.a}</div></details></div></div>`; });
+    </script>
+    <script src="../submit.js"></script>
+    <script src="../../platform.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 프로젝트: 퀴즈 프로그램 (파일 연동)</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+/* -- 페이지 -- */
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+/* -- 챕터 표지 -- */
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+
+/* -- 본문 -- */
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 16px; font-weight: 700; color: #1e3a5f; margin: 18px 0 10px; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+ul, ol { margin: 0 0 12px 20px; }
+li { font-size: 14px; color: #374151; line-height: 1.8; }
+
+/* -- 코드 블록 -- */
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13.5px;
+    color: #e2e8f0; line-height: 1.85; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.code .dec { color: #f9a8d4; }
+
+/* -- 따라해보세요 -- */
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+
+/* -- 문제 -- */
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+
+/* -- 요약 -- */
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+/* -- 출력 박스 -- */
+.output-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #334155; line-height: 1.7; margin: 10px 0; }
+
+/* -- 비교 테이블 -- */
+.compare-table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13px; }
+.compare-table th { background: #1e3a5f; color: #fff; padding: 8px 12px; text-align: left; font-weight: 700; }
+.compare-table td { padding: 7px 12px; border-bottom: 1px solid #e2e8f0; color: #374151; }
+.compare-table tr:nth-child(even) td { background: #f8fafc; }
+.compare-table code { background: #e0e7ff; padding: 1px 5px; border-radius: 3px; font-family: 'JetBrains Mono', monospace; color: #3730a3; font-size: 12px; }
+
+/* -- 단계 박스 -- */
+.step-box { border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 14px 18px; margin: 14px 0; background: #fff; }
+.step-label { font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+.step-title { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 8px; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- 1페이지: 표지 -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">62</div>
+        <div class="cover-label">L3 — Unit 62 Project</div>
+        <h1 class="cover-title">프로젝트:<br>퀴즈 프로그램<br>(파일 연동)</h1>
+        <p class="cover-sub">JSON/CSV에서 문제를 불러오고, 랜덤 출제·정답 체크·점수 기록·오답 노트 저장·난이도 필터링을 단계별로 구현합니다.</p>
+
+        <!-- SVG: 전체 시스템 구조도 -->
+        <div style="margin:24px 0;">
+            <svg viewBox="0 0 520 200" style="max-width:520px;width:100%">
+                <defs>
+                    <marker id="arwCov" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                    </marker>
+                </defs>
+                <!-- JSON/CSV 파일 -->
+                <rect x="5" y="5" width="110" height="42" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="60" y="23" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">JSON / CSV</text>
+                <text x="60" y="38" text-anchor="middle" font-size="9" fill="#64748b">문제 데이터 파일</text>
+                <line x1="118" y1="26" x2="148" y2="55" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+                <!-- 문제 로더 -->
+                <rect x="150" y="40" width="120" height="42" rx="8" fill="#1e3a5f"/>
+                <text x="210" y="58" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">load_questions()</text>
+                <text x="210" y="73" text-anchor="middle" font-size="9" fill="#93c5fd">파일 읽기 + 파싱</text>
+                <line x1="273" y1="61" x2="303" y2="61" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+                <!-- 랜덤 출제 -->
+                <rect x="305" y="40" width="110" height="42" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="360" y="58" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">random.shuffle</text>
+                <text x="360" y="73" text-anchor="middle" font-size="9" fill="#64748b">랜덤 출제</text>
+                <line x1="360" y1="85" x2="360" y2="105" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+                <!-- 난이도 필터 -->
+                <rect x="5" y="55" width="110" height="42" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="60" y="73" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">난이도 필터링</text>
+                <text x="60" y="88" text-anchor="middle" font-size="9" fill="#64748b">easy / medium / hard</text>
+                <line x1="118" y1="76" x2="148" y2="68" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+                <!-- 정답 체크 -->
+                <rect x="150" y="108" width="120" height="42" rx="8" fill="#3b82f6"/>
+                <text x="210" y="126" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">check_answer()</text>
+                <text x="210" y="141" text-anchor="middle" font-size="9" fill="#bfdbfe">정답 비교 + 점수</text>
+                <line x1="303" y1="126" x2="273" y2="126" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+                <!-- 점수 기록 -->
+                <rect x="305" y="108" width="110" height="42" rx="8" fill="#fdf4ff" stroke="#a855f7" stroke-width="1.5"/>
+                <text x="360" y="126" text-anchor="middle" font-size="10" fill="#7e22ce" font-weight="700">점수 기록</text>
+                <text x="360" y="141" text-anchor="middle" font-size="9" fill="#64748b">scores.json 저장</text>
+                <line x1="210" y1="153" x2="210" y2="173" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+                <!-- 오답 노트 -->
+                <rect x="150" y="175" width="260" height="20" rx="6" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+                <text x="280" y="189" text-anchor="middle" font-size="9" fill="#991b1b" font-weight="700">오답 노트 저장 (wrong_notes.json)</text>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/puzzle.png" alt="고급 기능" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 유닛에서 만드는 것</h3>
+            <ul>
+                <li><code>json.load()</code>와 <code>csv.DictReader</code>로 파일에서 문제를 불러올 수 있습니다.</li>
+                <li><code>random.shuffle()</code>로 문제 순서를 섞어 랜덤 출제할 수 있습니다.</li>
+                <li>정답을 비교하고 점수를 누적·저장하는 함수를 만들 수 있습니다.</li>
+                <li>오답을 별도 파일에 저장하는 오답 노트 기능을 구현할 수 있습니다.</li>
+                <li>난이도 키워드로 문제를 필터링해 원하는 레벨만 출제할 수 있습니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- 2페이지: JSON 문제 파일 로드 -->
+<div class="page">
+    <h2>Step 1 — JSON 파일에서 문제 불러오기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="처리" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>퀴즈 데이터를 코드 안에 직접 넣으면 수정이 어렵습니다. <code>json.load()</code>로 외부 파일에서 문제를 읽으면, 코드 수정 없이 문제를 추가·변경할 수 있습니다.</p>
+
+    <!-- SVG: JSON 파일 구조 시각화 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 120" style="max-width:500px;width:100%">
+            <rect x="5" y="5" width="230" height="110" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="20" y="24" font-size="10" fill="#64748b" font-weight="700">questions.json</text>
+            <text x="20" y="42" font-size="9" fill="#3b82f6" font-family="monospace">[</text>
+            <text x="32" y="57" font-size="9" fill="#374151" font-family="monospace">{"id": 1,</text>
+            <text x="32" y="70" font-size="9" fill="#374151" font-family="monospace"> "question": "파이썬 ...",</text>
+            <text x="32" y="83" font-size="9" fill="#374151" font-family="monospace"> "answer": "python",</text>
+            <text x="32" y="96" font-size="9" fill="#374151" font-family="monospace"> "level": "easy"}</text>
+            <text x="20" y="110" font-size="9" fill="#3b82f6" font-family="monospace">]</text>
+            <!-- 화살표 -->
+            <line x1="238" y1="60" x2="268" y2="60" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwStep1)"/>
+            <defs>
+                <marker id="arwStep1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="270" y="30" width="220" height="60" rx="8" fill="#1e3a5f"/>
+            <text x="380" y="52" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">json.load(f)</text>
+            <text x="380" y="67" text-anchor="middle" font-size="9" fill="#93c5fd">Python 리스트로 변환</text>
+            <text x="380" y="82" text-anchor="middle" font-size="8" fill="#64748b">[{...}, {...}, {...}]</text>
+        </svg>
+    </div>
+
+    <h3>문제 파일 형식 (questions.json)</h3>
+    <div class="code"><span class="cmt"># questions.json</span>
+[
+  {
+    <span class="str">"id"</span>: <span class="num">1</span>,
+    <span class="str">"question"</span>: <span class="str">"파이썬에서 리스트를 정렬하는 내장 함수는?"</span>,
+    <span class="str">"answer"</span>: <span class="str">"sorted"</span>,
+    <span class="str">"level"</span>: <span class="str">"easy"</span>
+  },
+  {
+    <span class="str">"id"</span>: <span class="num">2</span>,
+    <span class="str">"question"</span>: <span class="str">"딕셔너리에서 키 목록을 반환하는 메서드는?"</span>,
+    <span class="str">"answer"</span>: <span class="str">"keys"</span>,
+    <span class="str">"level"</span>: <span class="str">"medium"</span>
+  }
+]</div>
+
+    <h3>JSON 파일 로드 함수</h3>
+    <div class="code"><span class="kw">import</span> json
+
+<span class="kw">def</span> <span class="fn">load_questions_json</span>(filepath):
+    <span class="str">"""JSON 파일에서 문제 리스트를 읽어 반환"""</span>
+    <span class="kw">with</span> <span class="fn">open</span>(filepath, <span class="str">"r"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+        questions = json.<span class="fn">load</span>(f)
+    <span class="fn">print</span>(<span class="str">f"문제 {len(questions)}개 로드 완료"</span>)
+    <span class="kw">return</span> questions
+
+<span class="cmt"># 사용 예</span>
+questions = <span class="fn">load_questions_json</span>(<span class="str">"questions.json"</span>)</div>
+
+    <div class="output-box">문제 10개 로드 완료</div>
+
+    <!-- SVG: json.load vs json.loads 비교 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 90" style="max-width:500px;width:100%">
+            <rect x="5" y="10" width="230" height="70" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="120" y="30" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">json.load(f)</text>
+            <text x="120" y="48" text-anchor="middle" font-size="9" fill="#374151">파일 객체를 받아 파싱</text>
+            <text x="120" y="63" text-anchor="middle" font-size="8" fill="#64748b">with open() as f: json.load(f)</text>
+            <rect x="265" y="10" width="230" height="70" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="380" y="30" text-anchor="middle" font-size="11" fill="#92400e" font-weight="700">json.loads(s)</text>
+            <text x="380" y="48" text-anchor="middle" font-size="9" fill="#374151">문자열을 받아 파싱</text>
+            <text x="380" y="63" text-anchor="middle" font-size="8" fill="#64748b">data = json.loads('{"key": 1}')</text>
+        </svg>
+    </div>
+
+    <!-- 따라해보세요 -->
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="완성" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+        <div class="practice-head">따라해보세요 1 — JSON 파일 읽기</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">STEP 1</div>
+                <div class="practice-desc">questions.json 파일을 만들고 문제 2개를 작성하세요. id, question, answer, level 키를 포함해야 합니다.</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">STEP 2</div>
+                <div class="practice-desc"><code>load_questions_json("questions.json")</code>를 호출해 문제 리스트를 받아 변수에 저장하세요.</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">STEP 3</div>
+                <div class="practice-desc">for 반복문으로 각 문제의 <code>question</code> 값을 출력하세요.</div>
+                <div class="practice-result">파이썬에서 리스트를 정렬하는 내장 함수는?</div>
+                <div class="practice-result">딕셔너리에서 키 목록을 반환하는 메서드는?</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3페이지: CSV 파일 로드 + 랜덤 출제 -->
+<div class="page">
+    <h2>Step 2 — CSV 파일 로드 + 랜덤 출제</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/database.png" alt="데이터" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>CSV 형식은 스프레드시트(엑셀 등)에서 편집하기 좋습니다. <code>csv.DictReader</code>를 쓰면 첫 줄 헤더를 키로 자동 매핑해 딕셔너리 리스트로 읽을 수 있습니다.</p>
+
+    <!-- SVG: CSV 파일 구조 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 100" style="max-width:500px;width:100%">
+            <defs>
+                <marker id="arwCsv" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="5" y="5" width="210" height="90" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="20" y="24" font-size="10" fill="#64748b" font-weight="700">questions.csv</text>
+            <rect x="15" y="30" width="190" height="18" rx="3" fill="#1e3a5f"/>
+            <text x="110" y="43" text-anchor="middle" font-size="8" fill="#fff" font-weight="700">id,question,answer,level</text>
+            <text x="20" y="62" font-size="8" fill="#374151" font-family="monospace">1,sorted 함수는?,sorted,easy</text>
+            <text x="20" y="76" font-size="8" fill="#374151" font-family="monospace">2,keys 메서드는?,keys,medium</text>
+            <text x="20" y="90" font-size="8" fill="#64748b" font-family="monospace">...</text>
+            <line x1="218" y1="50" x2="248" y2="50" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCsv)"/>
+            <rect x="250" y="25" width="240" height="50" rx="8" fill="#3b82f6"/>
+            <text x="370" y="47" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">csv.DictReader</text>
+            <text x="370" y="62" text-anchor="middle" font-size="9" fill="#bfdbfe">헤더 자동 키 매핑</text>
+        </svg>
+    </div>
+
+    <h3>CSV 로드 함수</h3>
+    <div class="code"><span class="kw">import</span> csv
+
+<span class="kw">def</span> <span class="fn">load_questions_csv</span>(filepath):
+    <span class="str">"""CSV 파일에서 문제 리스트를 읽어 반환"""</span>
+    questions = []
+    <span class="kw">with</span> <span class="fn">open</span>(filepath, <span class="str">"r"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+        reader = csv.<span class="fn">DictReader</span>(f)
+        <span class="kw">for</span> row <span class="kw">in</span> reader:
+            questions.<span class="fn">append</span>(dict(row))
+    <span class="kw">return</span> questions</div>
+
+    <h3>랜덤 출제 — random.shuffle</h3>
+    <p><code>random.shuffle(list)</code>는 리스트를 제자리에서(in-place) 무작위로 섞습니다. 원본 리스트가 바뀌므로, 원본을 보존하려면 <code>copy()</code>로 복사 후 섞어야 합니다.</p>
+
+    <!-- SVG: shuffle vs sample 비교 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 80" style="max-width:500px;width:100%">
+            <rect x="5" y="8" width="230" height="64" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="120" y="27" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="700">random.shuffle(lst)</text>
+            <text x="120" y="44" text-anchor="middle" font-size="9" fill="#374151">원본 리스트를 직접 섞음</text>
+            <text x="120" y="60" text-anchor="middle" font-size="8" fill="#64748b">반환값 없음 (None)</text>
+            <rect x="265" y="8" width="230" height="64" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="380" y="27" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="700">random.sample(lst, k)</text>
+            <text x="380" y="44" text-anchor="middle" font-size="9" fill="#374151">원본 유지, 새 리스트 반환</text>
+            <text x="380" y="60" text-anchor="middle" font-size="8" fill="#64748b">k개만 뽑을 때 사용</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">import</span> random
+
+<span class="kw">def</span> <span class="fn">get_random_questions</span>(questions, count=<span class="num">5</span>):
+    <span class="str">"""문제를 랜덤하게 섞어 count개 반환"""</span>
+    pool = questions.<span class="fn">copy</span>()     <span class="cmt"># 원본 보존</span>
+    random.<span class="fn">shuffle</span>(pool)
+    <span class="kw">return</span> pool[:count]         <span class="cmt"># 앞에서 count개</span>
+
+<span class="cmt"># 5문제 랜덤 추출</span>
+quiz = <span class="fn">get_random_questions</span>(questions, <span class="num">5</span>)
+<span class="fn">print</span>(<span class="str">f"출제 문제 수: {len(quiz)}"</span>)</div>
+
+    <div class="output-box">출제 문제 수: 5</div>
+
+    <!-- 따라해보세요 -->
+    <div class="practice">
+        <div class="practice-head">따라해보세요 2 — CSV 로드 + 랜덤 섞기</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">STEP 1</div>
+                <div class="practice-desc">questions.csv 파일을 만들고 헤더와 문제 3개를 작성하세요.</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">STEP 2</div>
+                <div class="practice-desc"><code>load_questions_csv()</code>로 파일을 읽은 뒤 <code>get_random_questions(questions, 3)</code>을 호출하세요.</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">STEP 3</div>
+                <div class="practice-desc">두 번 실행해 출제 순서가 달라지는지 확인하세요.</div>
+                <div class="practice-result">실행마다 문제 순서가 무작위로 바뀝니다</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 4페이지: 정답 체크 + 점수 기록 -->
+<div class="page">
+    <h2>Step 3 — 정답 체크 + 점수 기록</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>사용자 입력을 정답과 비교할 때, 대소문자 차이와 공백을 무시하도록 <code>.strip().lower()</code>로 정규화합니다. 점수와 시간은 딕셔너리에 담아 JSON으로 저장합니다.</p>
+
+    <!-- SVG: 정답 체크 흐름 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 90" style="max-width:500px;width:100%">
+            <defs>
+                <marker id="arwChk" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="5" y="25" width="90" height="40" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="50" y="43" text-anchor="middle" font-size="9" fill="#374151" font-weight="700">사용자 입력</text>
+            <text x="50" y="58" text-anchor="middle" font-size="8" fill="#64748b">"  Python  "</text>
+            <line x1="98" y1="45" x2="118" y2="45" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwChk)"/>
+            <rect x="120" y="25" width="110" height="40" rx="8" fill="#1e3a5f"/>
+            <text x="175" y="43" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">.strip().lower()</text>
+            <text x="175" y="58" text-anchor="middle" font-size="8" fill="#93c5fd">"python"</text>
+            <line x1="233" y1="45" x2="253" y2="45" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwChk)"/>
+            <rect x="255" y="25" width="100" height="40" rx="8" fill="#22c55e"/>
+            <text x="305" y="43" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">정답과 비교</text>
+            <text x="305" y="58" text-anchor="middle" font-size="8" fill="#dcfce7">== "python"</text>
+            <line x1="358" y1="45" x2="378" y2="35" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwChk)"/>
+            <line x1="358" y1="45" x2="378" y2="65" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwChk)"/>
+            <rect x="380" y="20" width="110" height="26" rx="6" fill="#dcfce7" stroke="#22c55e" stroke-width="1"/>
+            <text x="435" y="37" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">정답 +1점</text>
+            <rect x="380" y="54" width="110" height="26" rx="6" fill="#fee2e2" stroke="#ef4444" stroke-width="1"/>
+            <text x="435" y="71" text-anchor="middle" font-size="9" fill="#991b1b" font-weight="700">오답 노트 저장</text>
+        </svg>
+    </div>
+
+    <h3>정답 체크 함수</h3>
+    <div class="code"><span class="kw">def</span> <span class="fn">check_answer</span>(user_input, correct_answer):
+    <span class="str">"""대소문자·공백 무시하고 정답 비교"""</span>
+    user = user_input.<span class="fn">strip</span>().<span class="fn">lower</span>()
+    correct = correct_answer.<span class="fn">strip</span>().<span class="fn">lower</span>()
+    <span class="kw">return</span> user == correct</div>
+
+    <h3>점수 기록 + JSON 저장</h3>
+    <div class="code"><span class="kw">import</span> json
+<span class="kw">from</span> datetime <span class="kw">import</span> datetime
+
+<span class="kw">def</span> <span class="fn">save_score</span>(name, score, total, filepath=<span class="str">"scores.json"</span>):
+    <span class="str">"""점수 기록을 scores.json에 추가 저장"""</span>
+    <span class="cmt"># 기존 데이터 읽기 (없으면 빈 리스트)</span>
+    <span class="kw">try</span>:
+        <span class="kw">with</span> <span class="fn">open</span>(filepath, <span class="str">"r"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+            records = json.<span class="fn">load</span>(f)
+    <span class="kw">except</span> FileNotFoundError:
+        records = []
+
+    <span class="cmt"># 새 기록 추가</span>
+    records.<span class="fn">append</span>({
+        <span class="str">"name"</span>: name,
+        <span class="str">"score"</span>: score,
+        <span class="str">"total"</span>: total,
+        <span class="str">"percent"</span>: <span class="fn">round</span>(score / total * <span class="num">100</span>, <span class="num">1</span>),
+        <span class="str">"date"</span>: datetime.<span class="fn">now</span>().<span class="fn">strftime</span>(<span class="str">"%Y-%m-%d %H:%M"</span>)
+    })
+
+    <span class="cmt"># 저장</span>
+    <span class="kw">with</span> <span class="fn">open</span>(filepath, <span class="str">"w"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+        json.<span class="fn">dump</span>(records, f, ensure_ascii=<span class="kw">False</span>, indent=<span class="num">2</span>)
+    <span class="fn">print</span>(<span class="str">f"점수 저장 완료: {score}/{total}"</span>)</div>
+
+    <div class="output-box">점수 저장 완료: 4/5</div>
+
+    <!-- 따라해보세요 -->
+    <div class="practice">
+        <div class="practice-head">따라해보세요 3 — 정답 체크 + 저장</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">STEP 1</div>
+                <div class="practice-desc"><code>check_answer("  Sorted  ", "sorted")</code>를 호출해 <code>True</code>가 반환되는지 확인하세요.</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">STEP 2</div>
+                <div class="practice-desc"><code>save_score("홍길동", 4, 5)</code>를 호출하고 scores.json 파일이 생성되었는지 확인하세요.</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">STEP 3</div>
+                <div class="practice-desc">저장된 scores.json을 열어 date, percent 필드가 올바르게 기록되었는지 확인하세요.</div>
+                <div class="practice-result">scores.json에 {"name": "홍길동", "score": 4, ...} 형태로 저장됩니다</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 5페이지: 오답 노트 + 난이도 필터링 -->
+<div class="page">
+    <h2>Step 4 — 오답 노트 저장 + 난이도 필터링</h2>
+    <p>틀린 문제를 <code>wrong_notes.json</code>에 저장해 두면 나중에 다시 꺼내 복습할 수 있습니다. 리스트 컴프리헨션으로 난이도 조건을 걸면 원하는 레벨만 출제됩니다.</p>
+
+    <!-- SVG: 오답 노트 저장 흐름 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 80" style="max-width:500px;width:100%">
+            <defs>
+                <marker id="arwNote" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="5" y="20" width="100" height="40" rx="8" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="55" y="38" text-anchor="middle" font-size="9" fill="#991b1b" font-weight="700">오답 발생</text>
+            <text x="55" y="52" text-anchor="middle" font-size="8" fill="#64748b">check_answer() == False</text>
+            <line x1="108" y1="40" x2="128" y2="40" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwNote)"/>
+            <rect x="130" y="20" width="120" height="40" rx="8" fill="#1e3a5f"/>
+            <text x="190" y="38" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">save_wrong_note()</text>
+            <text x="190" y="52" text-anchor="middle" font-size="8" fill="#93c5fd">오답 정보 구성</text>
+            <line x1="253" y1="40" x2="273" y2="40" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwNote)"/>
+            <rect x="275" y="20" width="100" height="40" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="325" y="38" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">json.dump()</text>
+            <text x="325" y="52" text-anchor="middle" font-size="8" fill="#64748b">wrong_notes.json</text>
+            <line x1="378" y1="40" x2="398" y2="40" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwNote)"/>
+            <rect x="400" y="20" width="95" height="40" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="447" y="38" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">복습 출제</text>
+            <text x="447" y="52" text-anchor="middle" font-size="8" fill="#64748b">load + shuffle</text>
+        </svg>
+    </div>
+
+    <h3>오답 노트 저장 함수</h3>
+    <div class="code"><span class="kw">def</span> <span class="fn">save_wrong_note</span>(question_dict, user_answer, filepath=<span class="str">"wrong_notes.json"</span>):
+    <span class="str">"""틀린 문제를 오답 노트 파일에 추가"""</span>
+    <span class="kw">try</span>:
+        <span class="kw">with</span> <span class="fn">open</span>(filepath, <span class="str">"r"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+            notes = json.<span class="fn">load</span>(f)
+    <span class="kw">except</span> FileNotFoundError:
+        notes = []
+
+    notes.<span class="fn">append</span>({
+        <span class="str">"question"</span>: question_dict[<span class="str">"question"</span>],
+        <span class="str">"correct"</span>: question_dict[<span class="str">"answer"</span>],
+        <span class="str">"my_answer"</span>: user_answer,
+        <span class="str">"level"</span>: question_dict[<span class="str">"level"</span>]
+    })
+
+    <span class="kw">with</span> <span class="fn">open</span>(filepath, <span class="str">"w"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+        json.<span class="fn">dump</span>(notes, f, ensure_ascii=<span class="kw">False</span>, indent=<span class="num">2</span>)</div>
+
+    <h3>난이도 필터링</h3>
+    <p>리스트 컴프리헨션으로 <code>level</code> 키가 일치하는 문제만 걸러냅니다. <code>level</code> 값이 없는 문항은 <code>get()</code>으로 안전하게 처리합니다.</p>
+
+    <!-- SVG: 난이도 필터 시각화 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 80" style="max-width:500px;width:100%">
+            <rect x="5" y="15" width="460" height="50" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <rect x="18" y="25" width="80" height="30" rx="5" fill="#dcfce7" stroke="#22c55e" stroke-width="1"/>
+            <text x="58" y="44" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">easy x 4</text>
+            <rect x="108" y="25" width="80" height="30" rx="5" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+            <text x="148" y="44" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">medium x 3</text>
+            <rect x="198" y="25" width="80" height="30" rx="5" fill="#fee2e2" stroke="#ef4444" stroke-width="1"/>
+            <text x="238" y="44" text-anchor="middle" font-size="9" fill="#991b1b" font-weight="700">hard x 3</text>
+            <text x="310" y="35" font-size="9" fill="#94a3b8">filter("easy")</text>
+            <text x="310" y="52" font-size="9" fill="#3b82f6" font-weight="700">→ easy 4개만 반환</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">def</span> <span class="fn">filter_by_level</span>(questions, level):
+    <span class="str">"""난이도(level)로 문제 필터링. level이 없으면 전체 반환"""</span>
+    <span class="kw">if</span> level <span class="kw">is</span> <span class="kw">None</span>:
+        <span class="kw">return</span> questions
+    <span class="kw">return</span> [q <span class="kw">for</span> q <span class="kw">in</span> questions <span class="kw">if</span> q.<span class="fn">get</span>(<span class="str">"level"</span>) == level]
+
+<span class="cmt"># 사용 예</span>
+easy_qs  = <span class="fn">filter_by_level</span>(questions, <span class="str">"easy"</span>)
+hard_qs  = <span class="fn">filter_by_level</span>(questions, <span class="str">"hard"</span>)
+all_qs   = <span class="fn">filter_by_level</span>(questions, <span class="kw">None</span>)
+<span class="fn">print</span>(<span class="str">f"쉬움: {len(easy_qs)}개, 어려움: {len(hard_qs)}개"</span>)</div>
+
+    <div class="output-box">쉬움: 4개, 어려움: 3개</div>
+</div>
+
+<!-- 6페이지: 전체 통합 + 문제 -->
+<div class="page">
+    <h2>Step 5 — 퀴즈 메인 루프 통합</h2>
+    <p>지금까지 만든 함수들을 <code>run_quiz()</code> 하나로 묶습니다. 로드 → 필터 → 섞기 → 출제 → 정답 체크 → 오답 기록 → 점수 저장 순서로 실행합니다.</p>
+
+    <!-- SVG: run_quiz 실행 흐름 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 500 60" style="max-width:500px;width:100%">
+            <defs>
+                <marker id="arwMain" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="5" y="15" width="72" height="30" rx="6" fill="#1e3a5f"/>
+            <text x="41" y="34" text-anchor="middle" font-size="8" fill="#fff" font-weight="700">load</text>
+            <line x1="80" y1="30" x2="98" y2="30" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwMain)"/>
+            <rect x="100" y="15" width="72" height="30" rx="6" fill="#3b82f6"/>
+            <text x="136" y="34" text-anchor="middle" font-size="8" fill="#fff" font-weight="700">filter</text>
+            <line x1="175" y1="30" x2="193" y2="30" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwMain)"/>
+            <rect x="195" y="15" width="72" height="30" rx="6" fill="#22c55e"/>
+            <text x="231" y="34" text-anchor="middle" font-size="8" fill="#fff" font-weight="700">shuffle</text>
+            <line x1="270" y1="30" x2="288" y2="30" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwMain)"/>
+            <rect x="290" y="15" width="72" height="30" rx="6" fill="#f59e0b"/>
+            <text x="326" y="34" text-anchor="middle" font-size="8" fill="#fff" font-weight="700">check</text>
+            <line x1="365" y1="30" x2="383" y2="30" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwMain)"/>
+            <rect x="385" y="15" width="110" height="30" rx="6" fill="#a855f7"/>
+            <text x="440" y="34" text-anchor="middle" font-size="8" fill="#fff" font-weight="700">save score + notes</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">def</span> <span class="fn">run_quiz</span>(filepath, name, level=<span class="kw">None</span>, count=<span class="num">5</span>):
+    questions = <span class="fn">load_questions_json</span>(filepath)
+    filtered  = <span class="fn">filter_by_level</span>(questions, level)
+    quiz      = <span class="fn">get_random_questions</span>(filtered, count)
+
+    score = <span class="num">0</span>
+    <span class="kw">for</span> i, q <span class="kw">in</span> <span class="fn">enumerate</span>(quiz, <span class="num">1</span>):
+        <span class="fn">print</span>(<span class="str">f"\nQ{i}. {q['question']}"</span>)
+        ans = <span class="fn">input</span>(<span class="str">"정답: "</span>)
+        <span class="kw">if</span> <span class="fn">check_answer</span>(ans, q[<span class="str">"answer"</span>]):
+            <span class="fn">print</span>(<span class="str">"정답입니다!"</span>)
+            score += <span class="num">1</span>
+        <span class="kw">else</span>:
+            <span class="fn">print</span>(<span class="str">f"오답! 정답: {q['answer']}"</span>)
+            <span class="fn">save_wrong_note</span>(q, ans)
+
+    <span class="fn">save_score</span>(name, score, <span class="fn">len</span>(quiz))
+    <span class="fn">print</span>(<span class="str">f"\n최종 점수: {score}/{len(quiz)}"</span>)</div>
+
+    <!-- 문제 1 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">1</div>
+            <div class="problem-label">json.load 빈칸 채우기</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">아래 코드의 <code>___</code>를 채워 questions.json 파일을 읽어 리스트로 반환하는 함수를 완성하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">코드</span>
+                    <span class="problem-example-value">with open(filepath, "r", encoding="utf-8") as f:</span>
+                </div>
+                <div class="problem-example-row">
+                    <span class="problem-example-label"></span>
+                    <span class="problem-example-value">    data = json.___(f)</span>
+                </div>
+                <div class="problem-example-row">
+                    <span class="problem-example-label">반환</span>
+                    <span class="problem-example-value">리스트 (각 원소는 딕셔너리)</span>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">파일 객체를 받아 파싱하는 함수는 <code>json.load(f)</code>입니다. 문자열을 파싱할 때는 <code>json.loads(s)</code>를 씁니다.</div>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code"><span style="color:#c084fc">with</span> <span style="color:#67e8f9">open</span>(filepath, <span style="color:#86efac">"r"</span>, encoding=<span style="color:#86efac">"utf-8"</span>) <span style="color:#c084fc">as</span> f:
+    data = json.<span style="color:#67e8f9">load</span>(f)</div>
+            </div>
+        </details>
+    </div>
+
+    <!-- 문제 2 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">2</div>
+            <div class="problem-label">난이도 필터 함수 작성</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text"><code>filter_by_level(questions, "hard")</code>를 호출했을 때 level 값이 "hard"인 문제만 담긴 리스트를 반환하는 함수를 리스트 컴프리헨션으로 작성하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">입력</span>
+                    <span class="problem-example-value">questions = [{...,"level":"easy"}, {...,"level":"hard"}]</span>
+                </div>
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력</span>
+                    <span class="problem-example-value">[{..., "level": "hard"}]  (hard 항목만)</span>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text"><code>[q for q in questions if q.get("level") == level]</code> 형태로 작성하세요. <code>q.get("level")</code>은 키가 없어도 오류가 나지 않습니다.</div>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code"><span style="color:#c084fc">def</span> <span style="color:#67e8f9">filter_by_level</span>(questions, level):
+    <span style="color:#c084fc">if</span> level <span style="color:#c084fc">is</span> <span style="color:#c084fc">None</span>:
+        <span style="color:#c084fc">return</span> questions
+    <span style="color:#c084fc">return</span> [q <span style="color:#c084fc">for</span> q <span style="color:#c084fc">in</span> questions <span style="color:#c084fc">if</span> q.<span style="color:#67e8f9">get</span>(<span style="color:#86efac">"level"</span>) == level]</div>
+            </div>
+        </details>
+    </div>
+</div>
+
+<!-- 7페이지: 문제 3 + 핵심 요약 -->
+<div class="page">
+    <!-- 문제 3 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">3</div>
+            <div class="problem-label">오답 노트 출력 함수 작성</div>
+            <span class="problem-diff hard">어려움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text"><code>wrong_notes.json</code>을 읽어 각 오답의 질문·정답·내가 쓴 답을 아래처럼 출력하는 <code>show_wrong_notes()</code> 함수를 작성하세요. 파일이 없으면 "오답 기록 없음"을 출력합니다.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력</span>
+                    <span class="problem-example-value">== 오답 노트 ==</span>
+                </div>
+                <div class="problem-example-row">
+                    <span class="problem-example-label"></span>
+                    <span class="problem-example-value">Q. sorted 함수는?  정답: sorted  내 답: sort</span>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">파일 열기를 try/except FileNotFoundError로 감싸세요. 각 노트 딕셔너리에서 "question", "correct", "my_answer" 키를 사용합니다.</div>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code"><span style="color:#c084fc">def</span> <span style="color:#67e8f9">show_wrong_notes</span>(filepath=<span style="color:#86efac">"wrong_notes.json"</span>):
+    <span style="color:#c084fc">try</span>:
+        <span style="color:#c084fc">with</span> <span style="color:#67e8f9">open</span>(filepath, <span style="color:#86efac">"r"</span>, encoding=<span style="color:#86efac">"utf-8"</span>) <span style="color:#c084fc">as</span> f:
+            notes = json.<span style="color:#67e8f9">load</span>(f)
+    <span style="color:#c084fc">except</span> FileNotFoundError:
+        <span style="color:#67e8f9">print</span>(<span style="color:#86efac">"오답 기록 없음"</span>)
+        <span style="color:#c084fc">return</span>
+    <span style="color:#67e8f9">print</span>(<span style="color:#86efac">"== 오답 노트 =="</span>)
+    <span style="color:#c084fc">for</span> n <span style="color:#c084fc">in</span> notes:
+        <span style="color:#67e8f9">print</span>(<span style="color:#86efac">f"Q. {n['question']}  정답: {n['correct']}  내 답: {n['my_answer']}"</span>)</div>
+            </div>
+        </details>
+    </div>
+
+    <!-- SVG: 전체 시스템 요약 다이어그램 -->
+    <div style="text-align:center;margin:18px 0;">
+        <svg viewBox="0 0 500 130" style="max-width:500px;width:100%">
+            <defs>
+                <marker id="arwSumQ" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <!-- 파일 -->
+            <rect x="5" y="45" width="80" height="40" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="45" y="63" text-anchor="middle" font-size="8" fill="#1d4ed8" font-weight="700">JSON/CSV</text>
+            <text x="45" y="78" text-anchor="middle" font-size="7" fill="#64748b">문제 파일</text>
+            <line x1="88" y1="65" x2="108" y2="65" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwSumQ)"/>
+            <!-- 로드 -->
+            <rect x="110" y="45" width="80" height="40" rx="8" fill="#1e3a5f"/>
+            <text x="150" y="63" text-anchor="middle" font-size="8" fill="#fff" font-weight="700">load()</text>
+            <text x="150" y="78" text-anchor="middle" font-size="7" fill="#93c5fd">파싱</text>
+            <line x1="193" y1="65" x2="213" y2="65" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwSumQ)"/>
+            <!-- 필터 -->
+            <rect x="215" y="45" width="80" height="40" rx="8" fill="#f59e0b"/>
+            <text x="255" y="63" text-anchor="middle" font-size="8" fill="#fff" font-weight="700">filter()</text>
+            <text x="255" y="78" text-anchor="middle" font-size="7" fill="#fff">난이도</text>
+            <line x1="298" y1="65" x2="318" y2="65" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwSumQ)"/>
+            <!-- shuffle -->
+            <rect x="320" y="45" width="80" height="40" rx="8" fill="#22c55e"/>
+            <text x="360" y="63" text-anchor="middle" font-size="8" fill="#fff" font-weight="700">shuffle()</text>
+            <text x="360" y="78" text-anchor="middle" font-size="7" fill="#dcfce7">랜덤 출제</text>
+            <line x1="403" y1="65" x2="423" y2="65" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwSumQ)"/>
+            <!-- check -->
+            <rect x="425" y="45" width="70" height="40" rx="8" fill="#3b82f6"/>
+            <text x="460" y="63" text-anchor="middle" font-size="8" fill="#fff" font-weight="700">check()</text>
+            <text x="460" y="78" text-anchor="middle" font-size="7" fill="#bfdbfe">정답 비교</text>
+            <!-- scores.json -->
+            <rect x="150" y="100" width="100" height="26" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+            <text x="200" y="117" text-anchor="middle" font-size="8" fill="#92400e" font-weight="700">scores.json</text>
+            <line x1="200" y1="100" x2="200" y2="88" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwSumQ)"/>
+            <!-- wrong_notes.json -->
+            <rect x="310" y="100" width="130" height="26" rx="6" fill="#fee2e2" stroke="#ef4444" stroke-width="1"/>
+            <text x="375" y="117" text-anchor="middle" font-size="8" fill="#991b1b" font-weight="700">wrong_notes.json</text>
+            <line x1="375" y1="100" x2="375" y2="88" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwSumQ)"/>
+        </svg>
+    </div>
+
+    <!-- 핵심 요약 -->
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>핵심 요약</h3>
+        <ul>
+            <li><code>json.load(f)</code> — 파일 객체를 받아 Python 객체(리스트/딕셔너리)로 변환</li>
+            <li><code>json.dump(data, f, ensure_ascii=False, indent=2)</code> — Python 객체를 JSON 파일로 저장</li>
+            <li><code>csv.DictReader(f)</code> — CSV 첫 줄을 헤더로 쓰고, 각 행을 딕셔너리로 변환</li>
+            <li><code>random.shuffle(lst)</code> — 리스트를 제자리에서 섞음 (반환값 없음)</li>
+            <li><code>str.strip().lower()</code> — 공백 제거 + 소문자 변환으로 입력 정규화</li>
+            <li>파일 읽기 시 <code>try/except FileNotFoundError</code>로 파일 없음 예외를 처리</li>
+            <li>리스트 컴프리헨션 <code>[q for q in qs if q.get("level") == lv]</code>로 난이도 필터링</li>
+            <li>오답 노트: 틀린 문제를 JSON에 누적 저장해 복습 시 재활용 가능</li>
+        </ul>
+    </div>
+
+    <!-- SVG: json.dump 파라미터 설명 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 70" style="max-width:500px;width:100%">
+            <rect x="5" y="10" width="490" height="50" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="20" y="30" font-size="10" fill="#1e3a5f" font-weight="700">json.dump(data, f, ensure_ascii=False, indent=2)</text>
+            <rect x="20" y="40" width="55" height="14" rx="3" fill="#dbeafe"/>
+            <text x="47" y="51" text-anchor="middle" font-size="7" fill="#1d4ed8">data</text>
+            <text x="47" y="62" text-anchor="middle" font-size="7" fill="#64748b">Python 객체</text>
+            <rect x="85" y="40" width="20" height="14" rx="3" fill="#dbeafe"/>
+            <text x="95" y="51" text-anchor="middle" font-size="7" fill="#1d4ed8">f</text>
+            <text x="95" y="62" text-anchor="middle" font-size="7" fill="#64748b">파일</text>
+            <rect x="115" y="40" width="110" height="14" rx="3" fill="#fef3c7"/>
+            <text x="170" y="51" text-anchor="middle" font-size="7" fill="#92400e">ensure_ascii=False</text>
+            <text x="170" y="62" text-anchor="middle" font-size="7" fill="#64748b">한글 유지</text>
+            <rect x="235" y="40" width="60" height="14" rx="3" fill="#f0fdf4"/>
+            <text x="265" y="51" text-anchor="middle" font-size="7" fill="#166534">indent=2</text>
+            <text x="265" y="62" text-anchor="middle" font-size="7" fill="#64748b">들여쓰기</text>
+        </svg>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

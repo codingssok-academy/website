@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Unit 77. 실전 모의고사 1회 — C 언어</title>
+    <link rel="stylesheet" href="../common.css">
+</head>
+
+<body>
+    <div class="wrap">
+        <div class="hdr">
+            <h1>Unit 77. 🎯 실전 모의고사 1회</h1>
+            <div class="sub">전 범위 종합 · 출력예측 · 코드작성 · 디버깅 · 20문제</div>
+            <span class="unit-badge">Chapter 28 · 실전 모의고사</span>
+            <div class="level-bar"><span class="on"></span><span class="on"></span><span class="on"></span><span
+                    class="on"></span></div>
+            <div class="meta"><span class="tag pri">🎯 모의1</span><span class="tag acc">📝 20문제</span><span class="tag">⏱
+                    60분</span></div>
+        </div>
+        <div class="stu-bar"><label>👤 이름 <input type="text" id="stu-name" placeholder="이름"></label><label>📅 날짜 <input
+                    type="date" id="stu-date"></label></div>
+        <div id="problems"></div>
+        <div class="submit-section">
+            <p>모든 문제를 풀었나요? 📨</p><button class="btn-submit" id="btn-submit">📄 제출하기</button>
+        </div>
+        <div class="modal-overlay" id="submit-modal">
+            <div class="modal-box">
+                <div class="modal-icon">✅</div>
+                <h3>제출 완료!</h3>
+                <p>학습지가 저장되었습니다.</p>
+                <div style="margin:12px 0"><span class="info-tag" id="modal-name"></span> <span class="info-tag"
+                        id="modal-date"></span> <span class="info-tag" id="modal-count"></span></div>
+                <p style="font-size:.78rem;color:var(--dim)">📁 <strong id="modal-filename"></strong></p><button
+                    class="btn-close-modal" id="btn-close-modal">확인</button>
+            </div>
+        </div>
+        <div class="pg"><a href="../27_C함정실전/Unit76_멀티파일.html">← Unit 76</a><span class="tag active">Unit 77</span><a
+                href="Unit78_모의고사2.html">Unit 78 →</a></div>
+        <div class="ft">🎯 실전 모의고사 1회 · Unit 77</div>
+    </div>
+    <script>
+        const P = [
+            {
+                n: 1, t: "[출력예측] 포인터 연산", d: 2,
+                q: `<pre class="code-c">int a[] = {10,20,30,40,50};
+int *p = a + 2;
+printf("%d\\n", *p);
+printf("%d\\n", *(p-1));
+printf("%d\\n", p[-2]);
+printf("%d\\n", p[2]);
+printf("%ld\\n", p - a);</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">30<br>20<br>10<br>50<br>2</div><div class="trace">p = a+2 → a[2]=30<br>*(p-1) = a[1]=20<br>p[-2] = *(p-2) = a[0]=10<br>p[2] = *(p+2) = a[4]=50<br>p-a = 2 (포인터 차 = 인덱스 차)</div>`
+            },
+
+            {
+                n: 2, t: "[출력예측] 재귀 + static", d: 3,
+                q: `<pre class="code-c">void f(int n) {
+    static int depth = 0;
+    depth++;
+    printf("%d(%d) ", n, depth);
+    if (n > 1) f(n/2);
+    depth--;
+}
+int main() { f(8); printf("\\n"); f(4); }</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">8(1) 4(2) 2(3) 1(4) <br>4(1) 2(2) 1(3) </div><div class="trace">static depth는 유지됨!<br>f(8): 8(1)→4(2)→2(3)→1(4)<br>재귀 풀리며: depth-- → 3→2→1→0<br>f(4): depth=0부터 다시 시작<br>4(1)→2(2)→1(3)</div>`
+            },
+
+            {
+                n: 3, t: "[코드작성] 배열에서 두 번째 큰 수", d: 2,
+                q: `배열에서 두 번째로 큰 수를 찾으세요.
+<pre class="code-c"><span class="cm">// {3,7,1,9,5,4} → 7</span>
+int secondMax(int a[], int n) { <span class="cm">/* ? */</span> }</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">int secondMax(int a[], int n) {
+    int max1=INT_MIN, max2=INT_MIN;
+    for (int i=0;i<n;i++) {
+        if (a[i]>max1) { max2=max1; max1=a[i]; }
+        else if (a[i]>max2 && a[i]!=max1)
+            max2=a[i];
+    }
+    return max2;
+}</pre>`},
+
+            {
+                n: 4, t: "[출력예측] 구조체 + typedef", d: 2,
+                q: `<pre class="code-c">typedef struct { int x, y; } Vec;
+Vec add(Vec a, Vec b) { return (Vec){a.x+b.x, a.y+b.y}; }
+double len(Vec v) { return sqrt(v.x*v.x + v.y*v.y); }
+
+Vec a={3,0}, b={0,4};
+Vec c = add(a, b);
+printf("(%d,%d) len=%.1f", c.x, c.y, len(c));</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">(3,4) len=5.0</div><div class="trace">(3,0)+(0,4)=(3,4)<br>len=√(9+16)=√25=5.0<br>구조체 반환 + 복합 리터럴 활용!</div>`
+            },
+
+            {
+                n: 5, t: "[디버깅] 메모리 누수 3개", d: 2,
+                q: `아래 코드의 메모리 누수를 모두 찾으세요.
+<pre class="code-c">void process() {
+    int *a = malloc(100 * sizeof(int));
+    int *b = malloc(200 * sizeof(int));
+    if (!a) return;           <span class="cm">// (A)</span>
+    a = realloc(a, 200);      <span class="cm">// (B)</span>
+    char *s = strdup("hello"); <span class="cm">// (C)</span>
+    free(a);
+}</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">(A) <span class="err">b가 free되지 않음!</span>
+    a NULL이면 return → b 누수
+
+(B) <span class="err">realloc 실패 시 a 손실!</span>
+    realloc이 NULL 반환하면 원래 a 접근 불가
+    int *tmp = realloc(a, 200);
+    if (tmp) a = tmp; else free(a);
+
+(C) <span class="err">s(strdup)가 free되지 않음!</span>
+    strdup은 내부적으로 malloc 호출
+    free(s) 추가 필요!</pre>`},
+
+            {
+                n: 6, t: "[코드작성] 단어 빈도 세기", d: 3,
+                q: `문자열에서 각 단어의 등장 빈도를 세세요.
+<pre class="code-c"><span class="cm">// "the cat sat on the mat the cat"</span>
+<span class="cm">// the: 3, cat: 2, sat: 1, on: 1, mat: 1</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">typedef struct { char word[50]; int count; } WordCount;
+int wordFreq(char *text, WordCount wc[]) {
+    int n=0;
+    char copy[500]; strcpy(copy, text);
+    char *tok = strtok(copy, " ");
+    while (tok) {
+        int found = 0;
+        for (int i=0;i<n;i++)
+            if (strcmp(wc[i].word,tok)==0) {
+                wc[i].count++; found=1; break;
+            }
+        if (!found) {
+            strcpy(wc[n].word,tok); wc[n].count=1; n++;
+        }
+        tok = strtok(NULL, " ");
+    }
+    return n;
+}</pre>`},
+
+            {
+                n: 7, t: "[출력예측] 비트 + 시프트", d: 2,
+                q: `<pre class="code-c">unsigned int x = 0xABCD;
+printf("%X\\n", x & 0xFF);
+printf("%X\\n", (x >> 8) & 0xFF);
+printf("%X\\n", x << 4);
+printf("%d\\n", __builtin_popcount(x));</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">CD<br>AB<br>ABCD0<br>10</div><div class="trace">x&0xFF = 하위 바이트 CD<br>(x>>8)&0xFF = 상위 바이트 AB<br>x<<4 = ABCD0 (16진수 한 자리 추가)<br>0xABCD=1010101111001101 → 1이 10개</div>`
+            },
+
+            {
+                n: 8, t: "[코드작성] 문자열 압축", d: 2,
+                q: `연속 문자를 압축하되, 압축이 더 길면 원본을 반환하세요.
+<pre class="code-c"><span class="cm">// "aabcccccaaa" → "a2b1c5a3"</span>
+<span class="cm">// "abc" → "abc" (a1b1c1=6 > 3)</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">void compress(char *s, char *out) {
+    int len=strlen(s), j=0;
+    char tmp[500]; int k=0;
+    for (int i=0;i<len;) {
+        char c=s[i]; int cnt=0;
+        while (i<len && s[i]==c) { cnt++; i++; }
+        k += sprintf(tmp+k, "%c%d", c, cnt);
+    }
+    if (k < len) strcpy(out, tmp);
+    else strcpy(out, s);
+}</pre>`},
+
+            {
+                n: 9, t: "[출력예측] 매크로 전개", d: 3,
+                q: `<pre class="code-c">#define F(x,y) ((x)*(y)+(y))
+#define G(x) F(x,x+1)
+printf("%d\\n", G(2));
+printf("%d\\n", F(1+2, 3));</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">9<br>12</div><div class="trace">G(2) → F(2, 2+1) → F(2, 3)<br>→ ((2)*(3)+(3)) = 6+3 = 9<br><br>F(1+2, 3) → ((1+2)*(3)+(3))<br>→ 3*3+3 = 9+3 = 12</div>`
+            },
+
+            {
+                n: 10, t: "[코드작성] 링크드리스트 k번째 뒤 노드", d: 3,
+                q: `끝에서 k번째 노드를 찾으세요 (한 번 순회로).
+<pre class="code-c">Node* kthFromEnd(Node *head, int k) {
+    <span class="cm">// 두 포인터 기법!</span>
+}</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">Node* kthFromEnd(Node *head, int k) {
+    Node *fast=head, *slow=head;
+    for (int i=0;i<k;i++) {
+        if (!fast) return NULL;
+        fast = fast->next;
+    }
+    while (fast) {
+        fast = fast->next;
+        slow = slow->next;
+    }
+    return slow;
+}</pre><div class="trace">fast를 k칸 먼저 보냄!<br>동시에 이동 → fast가 끝에 도달하면<br>slow는 끝에서 k번째!</div>`},
+
+            {
+                n: 11, t: "[출력예측] 전처리기 조건", d: 2,
+                q: `<pre class="code-c">#define A 5
+#define B (A*2)
+#if B > 8
+    #define MSG "big"
+#else
+    #define MSG "small"
+#endif
+printf("%s %d", MSG, B);
+
+#undef A
+#define A 3
+printf(" %d", B);</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">big 10 6</div><div class="trace">A=5, B=(5*2)=10, 10>8 → "big"<br>첫 printf: "big 10"<br>A재정의=3, B=(3*2)=6<br>printf: " 6"</div>`
+            },
+
+            {
+                n: 12, t: "[코드작성] 이진 탐색 (재귀)", d: 2,
+                q: `재귀 이진 탐색을 작성하세요.
+<pre class="code-c">int bSearch(int a[], int lo, int hi, int key) {
+    <span class="cm">// 찾으면 인덱스, 없으면 -1</span>
+}</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">int bSearch(int a[], int lo, int hi, int key) {
+    if (lo > hi) return -1;
+    int mid = lo + (hi-lo)/2;
+    if (a[mid]==key) return mid;
+    if (key<a[mid]) return bSearch(a,lo,mid-1,key);
+    return bSearch(a,mid+1,hi,key);
+}</pre>`},
+
+            {
+                n: 13, t: "[디버깅] 논리 오류 3개", d: 2,
+                q: `아래 버블 정렬의 버그를 모두 찾으세요.
+<pre class="code-c">void bubbleSort(int a[], int n) {
+    for (int i=0; i<=n; i++)
+        for (int j=0; j<n; j++)
+            if (a[j] < a[j+1]) {
+                int t=a[j]; a[j]=a[j+1]; a[j+1]=t;
+            }
+}</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c"><span class="err">버그 1: i<=n → i<n-1 (불필요한 반복 + 범위초과)</span>
+<span class="err">버그 2: j<n → j<n-1-i (범위초과 + 최적화)</span>
+<span class="err">버그 3: a[j]<a[j+1] → a[j]>a[j+1] (오름차순이면!)</span>
+
+void bubbleSort(int a[], int n) {
+    for (int i=0; i<n-1; i++)
+        for (int j=0; j<n-1-i; j++)
+            if (a[j] > a[j+1]) {
+                int t=a[j]; a[j]=a[j+1]; a[j+1]=t;
+            }
+}</pre>`},
+
+            {
+                n: 14, t: "[출력예측] 함수 포인터 배열", d: 3,
+                q: `<pre class="code-c">int add(int a,int b){return a+b;}
+int sub(int a,int b){return a-b;}
+int mul(int a,int b){return a*b;}
+int main() {
+    int (*ops[])(int,int) = {add,sub,mul};
+    for (int i=0;i<3;i++)
+        printf("%d ", ops[i](10, 3));
+}</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">13 7 30 </div><div class="trace">ops[0]=add → 10+3=13<br>ops[1]=sub → 10-3=7<br>ops[2]=mul → 10*3=30<br><br>함수 포인터 배열: C의 다형성!</div>`
+            },
+
+            {
+                n: 15, t: "[코드작성] 스택 2개로 큐 (구조체)", d: 3,
+                q: `스택 2개로 큐를 구조체로 구현하세요.
+<pre class="code-c">typedef struct { int s1[100],top1; int s2[100],top2; } MyQueue;</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">void qInit(MyQueue *q) { q->top1=-1; q->top2=-1; }
+void qPush(MyQueue *q, int val) { q->s1[++q->top1]=val; }
+int qPop(MyQueue *q) {
+    if (q->top2==-1)
+        while (q->top1>=0) q->s2[++q->top2]=q->s1[q->top1--];
+    return q->s2[q->top2--];
+}</pre>`},
+
+            {
+                n: 16, t: "[출력예측] 다차원 포인터", d: 3,
+                q: `<pre class="code-c">int a[2][3] = {{1,2,3},{4,5,6}};
+printf("%d\\n", **a);
+printf("%d\\n", *(*a+2));
+printf("%d\\n", *(a[1]+1));
+printf("%ld\\n", (long)(a[1]-a[0]));</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">1<br>3<br>5<br>3</div><div class="trace">**a = *a[0] = a[0][0] = 1<br>*(*a+2) = *(a[0]+2) = a[0][2] = 3<br>*(a[1]+1) = a[1][1] = 5<br>a[1]-a[0] = 3 (int 3개 차이)</div>`
+            },
+
+            {
+                n: 17, t: "[코드작성] 행렬 나선형 출력", d: 3,
+                q: `N×N 행렬을 시계방향 나선형으로 출력하세요.
+<pre class="code-c"><span class="cm">// 1  2  3       출력: 1 2 3 6 9 8 7 4 5</span>
+<span class="cm">// 4  5  6</span>
+<span class="cm">// 7  8  9</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">void spiral(int m[][100], int n) {
+    int top=0,bot=n-1,left=0,right=n-1;
+    while (top<=bot && left<=right) {
+        for (int i=left;i<=right;i++) printf("%d ",m[top][i]);
+        top++;
+        for (int i=top;i<=bot;i++) printf("%d ",m[i][right]);
+        right--;
+        if (top<=bot)
+            for (int i=right;i>=left;i--) printf("%d ",m[bot][i]);
+        bot--;
+        if (left<=right)
+            for (int i=bot;i>=top;i--) printf("%d ",m[i][left]);
+        left++;
+    }
+}</pre>`},
+
+            {
+                n: 18, t: "[출력예측] enum + switch", d: 2,
+                q: `<pre class="code-c">enum Season { SPRING=1, SUMMER, FALL=10, WINTER };
+printf("%d %d %d %d\\n", SPRING,SUMMER,FALL,WINTER);
+enum Season s = WINTER;
+switch(s) {
+    case SPRING: case SUMMER: printf("warm"); break;
+    case FALL: printf("cool"); break;
+    default: printf("cold");
+}</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">1 2 10 11<br>cold</div><div class="trace">SPRING=1, SUMMER=2 (자동+1)<br>FALL=10 (재설정), WINTER=11<br>s=WINTER=11 → default → "cold"</div>`
+            },
+
+            {
+                n: 19, t: "[코드작성] 해시맵 (체이닝)", d: 3,
+                q: `간단한 해시맵을 구현하세요.
+<pre class="code-c"><span class="cm">// put(key, value), get(key) → value</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">#define SIZE 101
+typedef struct Entry { char key[50]; int val; struct Entry*next; } Entry;
+Entry *table[SIZE];
+
+unsigned hash(char *s) {
+    unsigned h=5381;
+    while (*s) h=h*33+*s++;
+    return h%SIZE;
+}
+void put(char *k, int v) {
+    unsigned idx = hash(k);
+    Entry *e = malloc(sizeof(Entry));
+    strcpy(e->key,k); e->val=v;
+    e->next = table[idx]; table[idx]=e;
+}
+int get(char *k) {
+    for (Entry *e=table[hash(k)];e;e=e->next)
+        if (!strcmp(e->key,k)) return e->val;
+    return -1;
+}</pre>`},
+
+            {
+                n: 20, t: "🏆 종합 코드 추적", d: 3,
+                q: `<pre class="code-c">int mystery(int a[], int n) {
+    int dp[100];
+    dp[0]=a[0];
+    for (int i=1;i<n;i++)
+        dp[i] = (dp[i-1]+a[i] > a[i]) ? dp[i-1]+a[i] : a[i];
+    int max=dp[0];
+    for (int i=1;i<n;i++) if(dp[i]>max) max=dp[i];
+    return max;
+}
+int arr[] = {-2, 1, -3, 4, -1, 2, 1, -5, 4};
+printf("%d", mystery(arr, 9));</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">6</div><div class="trace">이것은 Kadane's Algorithm!<br>최대 부분배열 합!<br>dp: -2,1,-2,4,3,5,6,1,5<br>max = 6 (부분배열: {4,-1,2,1})</div>`
+            }
+        ];
+        const c = document.getElementById('problems'); P.forEach(p => { const dc = p.d <= 1 ? 'ez' : p.d <= 2 ? 'md' : 'hd'; const dots = Array.from({ length: 5 }, (_, i) => `<span${i < p.d ? ' class="on"' : ''}>​</span>`).join(''); c.innerHTML += `<div class="prob"><div class="prob-top"><div class="prob-num ${dc}">${p.n}</div><div class="prob-title">${p.t}</div><div class="diff-dots">${dots}</div></div><div class="prob-body"><div class="q">${p.q}</div><textarea class="write" placeholder="✍️ 답을 작성하세요" rows="8"></textarea><details class="ans"><summary>정답 및 해설 보기</summary><div class="ans-body">${p.a}</div></details></div></div>`; });
+    </script>
+    <script src="../submit.js"></script>
+    <script src="../../platform.js"></script>
+</body>
+
+</html>

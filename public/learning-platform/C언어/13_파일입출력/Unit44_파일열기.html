@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Unit 44. 파일 열기/닫기 — C 언어 코딩 도장</title>
+    <link rel="stylesheet" href="../common.css">
+</head>
+
+<body>
+    <div class="wrap">
+        <div class="hdr">
+            <h1>Unit 44. 파일 열기와 닫기</h1>
+            <div class="sub">fopen · fclose · 모드 · fprintf · fscanf</div>
+            <span class="unit-badge">Chapter 13 · 파일 입출력</span>
+            <div class="level-bar"><span class="on"></span><span class="on"></span><span></span></div>
+            <div class="meta"><span class="tag pri">🖥️ C언어</span><span class="tag acc">📝 15문제</span><span
+                    class="tag">⏱ 25~35분</span></div>
+        </div>
+        <div class="stu-bar"><label>👤 이름 <input type="text" id="stu-name" placeholder="이름"></label><label>📅 날짜 <input
+                    type="date" id="stu-date"></label></div>
+        <div class="learn">
+            <h2><span class="ico" style="background:rgba(236,72,153,.15)">📁</span> 파일 = 디스크에 저장되는 데이터</h2>
+            <p><code>fopen</code>으로 열고, 읽기/쓰기 후, <code>fclose</code>로 닫기. 반드시 짝을 이루어야!</p>
+        </div>
+        <div id="problems"></div>
+        <div class="submit-section">
+            <p>모든 문제를 풀었나요? 📨</p><button class="btn-submit" id="btn-submit">📄 제출하기</button>
+        </div>
+        <div class="modal-overlay" id="submit-modal">
+            <div class="modal-box">
+                <div class="modal-icon">✅</div>
+                <h3>제출 완료!</h3>
+                <p>학습지가 저장되었습니다.</p>
+                <div style="margin:12px 0"><span class="info-tag" id="modal-name"></span> <span class="info-tag"
+                        id="modal-date"></span> <span class="info-tag" id="modal-count"></span></div>
+                <p style="font-size:.78rem;color:var(--dim)">📁 <strong id="modal-filename"></strong></p><button
+                    class="btn-close-modal" id="btn-close-modal">확인</button>
+            </div>
+        </div>
+        <div class="pg"><a href="../12_구조체/Unit43_구조체.html">← Unit 43</a><span class="tag active">Unit 44</span><a
+                href="Unit45_파일읽기.html">Unit 45 →</a></div>
+        <div class="ft">🖥️ C 언어 코딩 도장 · Unit 44 · 파일 열기/닫기</div>
+    </div>
+    <script>
+        const P = [
+            {
+                n: 1, t: "fopen — 파일 열기", d: 1,
+                q: `파일을 쓰기 모드로 여세요.<pre class="code-c">FILE *fp = fopen("test.txt", "w");
+if (fp == NULL) {
+    printf("파일 열기 실패!\\n");
+    return 1;
+}</pre>`,
+                a: `<span class="key">정답</span><div class="trace">FILE *fp = fopen("파일명", "모드");<br>실패시 NULL 반환 → <span class="val">반드시 확인!</span></div>`
+            },
+
+            {
+                n: 2, t: "파일 모드", d: 2,
+                q: `각 모드의 의미를 쓰세요.<pre class="code-c">// "r"  → ?
+// "w"  → ?
+// "a"  → ?
+// "r+" → ?
+// "rb" → ?</pre>`,
+                a: `<span class="key">정답</span><div class="trace">"r" → <span class="val">읽기</span> (파일 없으면 실패)<br>"w" → <span class="val">쓰기</span> (파일 없으면 생성, 있으면 지움!)<br>"a" → <span class="val">추가</span> (파일 끝에 이어쓰기)<br>"r+" → <span class="val">읽기+쓰기</span><br>"rb" → <span class="val">바이너리 읽기</span></div>`
+            },
+
+            {
+                n: 3, t: "fprintf — 파일에 쓰기", d: 1,
+                q: `파일에 문자열을 쓰세요.<pre class="code-c">FILE *fp = fopen("output.txt", "w");
+fprintf(fp, "Hello, File!\\n");
+fprintf(fp, "숫자: %d\\n", 42);
+fclose(fp);</pre>`,
+                a: `<span class="key">정답</span><div class="trace">fprintf = printf와 동일, 첫 인자가 FILE*<br>output.txt 내용:<br>Hello, File!<br>숫자: 42</div>`
+            },
+
+            {
+                n: 4, t: "fclose — 파일 닫기", d: 1,
+                q: `fclose를 안 하면 어떻게 될까?`,
+                a: `<span class="key">정답</span><div class="trace"><span class="err">데이터 손실 가능!</span><br>- 버퍼에 남은 데이터가 저장 안 될 수 있음<br>- 파일 핸들 누수 (시스템 자원 고갈)<br><br><span class="val">fopen ↔ fclose 반드시 짝!</span></div>`
+            },
+
+            {
+                n: 5, t: "fputs/fgets — 줄 단위", d: 2,
+                q: `파일에 줄 단위로 쓰고 읽으세요.`,
+                a: `<span class="key">정답</span><pre class="code-c"><span class="cm">// 쓰기</span>
+FILE *fp = fopen("data.txt", "w");
+fputs("Line 1\\n", fp);
+fputs("Line 2\\n", fp);
+fclose(fp);
+
+<span class="cm">// 읽기</span>
+fp = fopen("data.txt", "r");
+char buf[100];
+while (fgets(buf, 100, fp) != NULL)
+    printf("%s", buf);
+fclose(fp);</pre>`},
+
+            {
+                n: 6, t: "fscanf — 파일에서 읽기", d: 2,
+                q: `파일에서 숫자를 읽으세요.<pre class="code-c"><span class="cm">// numbers.txt: 10 20 30</span>
+FILE *fp = fopen("numbers.txt", "r");
+int a, b, c;
+fscanf(fp, "%d %d %d", &a, &b, &c);
+printf("합: %d\\n", a+b+c);
+fclose(fp);</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">합: 60</div><div class="trace">fscanf = scanf와 동일, 첫 인자가 FILE*</div>`
+            },
+
+            {
+                n: 7, t: "fgetc/fputc — 문자 단위", d: 2,
+                q: `파일을 한 글자씩 읽으세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">FILE *fp = fopen("test.txt", "r");
+int ch;
+while ((ch = fgetc(fp)) != EOF)
+    putchar(ch);
+fclose(fp);</pre><div class="trace">fgetc 반환형: <span class="val">int</span> (EOF=-1 구분 위해)<br>EOF = End Of File</div>`},
+
+            {
+                n: 8, t: "파일 복사", d: 2,
+                q: `파일을 다른 이름으로 복사하세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">FILE *src = fopen("a.txt", "r");
+FILE *dst = fopen("b.txt", "w");
+int ch;
+while ((ch = fgetc(src)) != EOF)
+    fputc(ch, dst);
+fclose(src);
+fclose(dst);</pre>`},
+
+            {
+                n: 9, t: "feof — 파일 끝 확인", d: 2,
+                q: `feof 함수로 파일 끝을 확인하세요.<pre class="code-c">FILE *fp = fopen("data.txt", "r");
+char buf[100];
+while (!feof(fp)) {
+    if (fgets(buf, 100, fp))
+        printf("%s", buf);
+}
+fclose(fp);</pre>`,
+                a: `<span class="key">정답</span><div class="trace">feof(fp): 파일 끝에 도달하면 0이 아닌 값<br><span class="err">주의: feof는 읽기 시도 후에만 참!</span></div>`
+            },
+
+            {
+                n: 10, t: "fwrite/fread — 바이너리", d: 3,
+                q: `구조체를 파일에 바이너리로 저장하세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">typedef struct { char name[20]; int score; } Student;
+Student s = {"Alice", 95};
+
+<span class="cm">// 쓰기</span>
+FILE *fp = fopen("stu.bin", "wb");
+fwrite(&s, sizeof(Student), 1, fp);
+fclose(fp);
+
+<span class="cm">// 읽기</span>
+Student s2;
+fp = fopen("stu.bin", "rb");
+fread(&s2, sizeof(Student), 1, fp);
+fclose(fp);
+printf("%s: %d\\n", s2.name, s2.score);</pre>`},
+
+            {
+                n: 11, t: "심사: 줄 수 세기", d: 2,
+                q: `파일의 줄 수를 세는 프로그램을 만드세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">FILE *fp = fopen("test.txt", "r");
+int lines = 0, ch;
+while ((ch = fgetc(fp)) != EOF)
+    if (ch == '\\n') lines++;
+fclose(fp);
+printf("줄 수: %d\\n", lines);</pre>`},
+
+            {
+                n: 12, t: "심사: 성적 파일 읽기", d: 2,
+                q: `CSV 형식의 성적 파일을 읽어 평균을 구하세요.`,
+                a: `<span class="key">정답</span><pre class="code-c"><span class="cm">// grades.txt: Alice,90\\nBob,85\\nCharlie,95</span>
+FILE *fp = fopen("grades.txt", "r");
+char name[20]; int score, sum=0, cnt=0;
+while (fscanf(fp, "%[^,],%d\\n", name, &score)==2) {
+    printf("%s: %d\\n", name, score);
+    sum += score; cnt++;
+}
+fclose(fp);
+printf("평균: %.1f\\n", (double)sum/cnt);</pre>`},
+
+            {
+                n: 13, t: "심사: 파일에 구구단 저장", d: 2,
+                q: `구구단을 파일에 저장하세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">FILE *fp = fopen("gugudan.txt", "w");
+for (int i=2;i<=9;i++) {
+    fprintf(fp, "=== %d단 ===\\n", i);
+    for (int j=1;j<=9;j++)
+        fprintf(fp, "%d x %d = %d\\n", i, j, i*j);
+    fprintf(fp, "\\n");
+}
+fclose(fp);</pre>`},
+
+            {
+                n: 14, t: "심사: fseek/ftell", d: 3,
+                q: `파일의 특정 위치로 이동하세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">FILE *fp = fopen("test.txt", "r");
+fseek(fp, 0, SEEK_END);    <span class="cm">// 끝으로</span>
+long size = ftell(fp);      <span class="cm">// 현재 위치 = 파일 크기</span>
+fseek(fp, 0, SEEK_SET);    <span class="cm">// 처음으로</span>
+printf("파일 크기: %ld 바이트\\n", size);
+fclose(fp);</pre><div class="trace">SEEK_SET: 처음부터<br>SEEK_CUR: 현재 위치부터<br>SEEK_END: 끝부터</div>`},
+
+            {
+                n: 15, t: "🏆 Unit 44 종합", d: 3,
+                q: `파일에서 단어 빈도를 세는 프로그램을 설계하세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">FILE *fp = fopen("text.txt", "r");
+char word[50];
+int wordCount = 0, charCount = 0, lineCount = 0;
+int ch;
+while ((ch = fgetc(fp)) != EOF) {
+    charCount++;
+    if (ch == '\\n') lineCount++;
+    if (ch == ' ' || ch == '\\n') wordCount++;
+}
+wordCount++; <span class="cm">// 마지막 단어</span>
+fclose(fp);
+printf("글자:%d 단어:%d 줄:%d\\n",
+    charCount, wordCount, lineCount);</pre>`}
+        ];
+        const c = document.getElementById('problems'); P.forEach(p => { const dc = p.d <= 1 ? 'ez' : p.d <= 2 ? 'md' : 'hd'; const dots = Array.from({ length: 5 }, (_, i) => `<span${i < p.d ? ' class="on"' : ''}>​</span>`).join(''); c.innerHTML += `<div class="prob"><div class="prob-top"><div class="prob-num ${dc}">${p.n}</div><div class="prob-title">${p.t}</div><div class="diff-dots">${dots}</div></div><div class="prob-body"><div class="q">${p.q}</div><textarea class="write" placeholder="✍️ 답을 작성하세요"></textarea><details class="ans"><summary>정답 및 해설 보기</summary><div class="ans-body">${p.a}</div></details></div></div>`; });
+    </script>
+    <script src="../submit.js"></script>
+    <script src="../../platform.js"></script>
+</body>
+
+</html>

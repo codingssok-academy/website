@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 프로젝트: 문장 뒤집기 도구</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute; bottom: 10mm; right: 16mm;
+    font-size: 10px; color: #94a3b8; font-weight: 600;
+}
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #db2777; }
+.cover-accent { width: 7px; background: #f59e0b; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 200px; font-weight: 900; color: rgba(219,39,119,0.08);
+    line-height: 1; pointer-events: none; font-family: 'JetBrains Mono', monospace;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #db2777; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 36px; font-weight: 900; color: #500724; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #500724; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #db2777; font-weight: 900; }
+h2 { font-size: 20px; font-weight: 800; color: #500724; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 16px; font-weight: 700; color: #500724; margin: 18px 0 10px; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #fdf2f8; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #db2777; font-weight: 600;
+}
+ul, ol { margin: 0 0 12px 20px; }
+li { font-size: 14px; color: #374151; line-height: 1.8; }
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13.5px;
+    color: #e2e8f0; line-height: 1.85; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.code .dec { color: #f9a8d4; }
+.practice { margin: 20px 0; border-left: 4px solid #db2777; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #9d174d; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #db2777; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #db2777; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#db2777,#f43f5e); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #500724; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; white-space: pre-wrap; }
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #500724; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+.output-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #334155; line-height: 1.7; margin: 10px 0; white-space: pre-wrap; }
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- ===== 1페이지: 표지 ===== -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">L2</div>
+        <div class="cover-label">L2 — Project</div>
+        <h1 class="cover-title">프로젝트:<br>문장 뒤집기 도구</h1>
+        <p class="cover-sub">문자열을 다양한 방법으로 변환하는 도구를 만듭니다. 글자 뒤집기, 단어 순서 뒤집기, 대소문자 변환을 구현합니다.</p>
+
+        <!-- SVG: 변환 예시 시각화 -->
+        <div style="margin:20px 0;">
+            <svg viewBox="0 0 480 130" style="max-width:480px;width:100%">
+                <defs>
+                    <marker id="arrR" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#db2777"/>
+                    </marker>
+                </defs>
+                <!-- 원본 -->
+                <rect x="5" y="45" width="120" height="40" rx="8" fill="#fdf2f8" stroke="#db2777" stroke-width="1.5"/>
+                <text x="65" y="62" text-anchor="middle" font-size="9" fill="#9d174d" font-weight="700">원본 문자열</text>
+                <text x="65" y="77" text-anchor="middle" font-family="monospace" font-size="10" fill="#500724">"Hello World"</text>
+                <!-- 화살표 -->
+                <line x1="130" y1="65" x2="155" y2="40" stroke="#db2777" stroke-width="1.2" marker-end="url(#arrR)"/>
+                <line x1="130" y1="65" x2="155" y2="65" stroke="#db2777" stroke-width="1.2" marker-end="url(#arrR)"/>
+                <line x1="130" y1="65" x2="155" y2="90" stroke="#db2777" stroke-width="1.2" marker-end="url(#arrR)"/>
+                <!-- 글자 뒤집기 -->
+                <rect x="157" y="8" width="130" height="40" rx="6" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="222" y="26" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">글자 뒤집기</text>
+                <text x="222" y="40" text-anchor="middle" font-family="monospace" font-size="9" fill="#14532d">"dlroW olleH"</text>
+                <!-- 단어 뒤집기 -->
+                <rect x="157" y="52" width="130" height="40" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="222" y="70" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">단어 순서 뒤집기</text>
+                <text x="222" y="84" text-anchor="middle" font-family="monospace" font-size="9" fill="#78350f">"World Hello"</text>
+                <!-- 대소문자 -->
+                <rect x="157" y="98" width="130" height="40" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+                <text x="222" y="116" text-anchor="middle" font-size="9" fill="#5b21b6" font-weight="700">대소문자 변환</text>
+                <text x="222" y="130" text-anchor="middle" font-family="monospace" font-size="9" fill="#3b0764">"hELLO wORLD"</text>
+                <!-- 슬라이싱 설명 -->
+                <rect x="300" y="8" width="175" height="130" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+                <text x="387" y="28" text-anchor="middle" font-size="9" fill="#374151" font-weight="700">슬라이싱 [::-1]</text>
+                <text x="310" y="46" font-size="8" fill="#64748b">text = "Hello"</text>
+                <text x="310" y="60" font-size="8" fill="#64748b">text[::-1]</text>
+                <text x="310" y="74" font-family="monospace" font-size="9" fill="#db2777">→ "olleH"</text>
+                <text x="310" y="92" font-size="7.5" fill="#94a3b8">시작: 끝부터</text>
+                <text x="310" y="106" font-size="7.5" fill="#94a3b8">끝: 처음까지</text>
+                <text x="310" y="120" font-size="7.5" fill="#94a3b8">스텝: -1 (역방향)</text>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/laptop.png" alt="노트북" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 프로젝트에서 배우는 것</h3>
+            <ul>
+                <li><code>text[::-1]</code> 슬라이싱으로 문자열을 뒤집습니다.</li>
+                <li><code>text.split()</code>으로 단어 리스트를 만들고 순서를 바꿉니다.</li>
+                <li><code>text.upper()</code>, <code>text.lower()</code>로 대소문자를 변환합니다.</li>
+                <li><code>text.swapcase()</code>로 대소문자를 뒤바꿉니다.</li>
+                <li>여러 기능을 함수로 분리해 도구 모음을 만듭니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- ===== 2페이지: 슬라이싱 + 단어 뒤집기 ===== -->
+<div class="page">
+    <h2>Step 1 — 슬라이싱으로 문자열 뒤집기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>파이썬의 슬라이싱 <code>text[start:stop:step]</code>에서 step을 <code>-1</code>로 하면 문자열이 역순으로 복사됩니다. <code>text[::-1]</code>은 "처음부터 끝까지 역순으로"를 의미합니다.</p>
+
+    <!-- SVG: 슬라이싱 step 설명 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 460 48" style="max-width:460px;width:100%">
+            <rect x="5" y="8" width="215" height="32" rx="8" fill="#fdf2f8" stroke="#db2777" stroke-width="1.5"/>
+            <text x="113" y="24" text-anchor="middle" font-size="9" fill="#9d174d" font-weight="700">text[::1] → 정방향 (기본값)</text>
+            <text x="113" y="36" text-anchor="middle" font-size="8" fill="#64748b">"Hello" → "Hello" (변화 없음)</text>
+            <rect x="235" y="8" width="220" height="32" rx="8" fill="#fdf2f8" stroke="#db2777" stroke-width="1.5"/>
+            <text x="345" y="24" text-anchor="middle" font-size="9" fill="#9d174d" font-weight="700">text[::-1] → 역방향</text>
+            <text x="345" y="36" text-anchor="middle" font-size="8" fill="#64748b">"Hello" → "olleH" (거꾸로)</text>
+        </svg>
+    </div>
+
+    <!-- SVG: 슬라이싱 인덱스 원리 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+            <rect x="5" y="8" width="450" height="64" rx="8" fill="#fdf2f8" stroke="#db2777" stroke-width="1.5"/>
+            <text x="230" y="26" text-anchor="middle" font-size="9" fill="#9d174d" font-weight="700">text = "Hello" 의 인덱스</text>
+            <!-- 글자 박스 -->
+            <rect x="30" y="34" width="36" height="24" rx="3" fill="#dcfce7" stroke="#22c55e" stroke-width="1"/>
+            <text x="48" y="48" text-anchor="middle" font-family="monospace" font-size="11" fill="#166534">H</text>
+            <rect x="100" y="34" width="36" height="24" rx="3" fill="#dcfce7" stroke="#22c55e" stroke-width="1"/>
+            <text x="118" y="48" text-anchor="middle" font-family="monospace" font-size="11" fill="#166534">e</text>
+            <rect x="170" y="34" width="36" height="24" rx="3" fill="#dcfce7" stroke="#22c55e" stroke-width="1"/>
+            <text x="188" y="48" text-anchor="middle" font-family="monospace" font-size="11" fill="#166534">l</text>
+            <rect x="240" y="34" width="36" height="24" rx="3" fill="#dcfce7" stroke="#22c55e" stroke-width="1"/>
+            <text x="258" y="48" text-anchor="middle" font-family="monospace" font-size="11" fill="#166534">l</text>
+            <rect x="310" y="34" width="36" height="24" rx="3" fill="#dcfce7" stroke="#22c55e" stroke-width="1"/>
+            <text x="328" y="48" text-anchor="middle" font-family="monospace" font-size="11" fill="#166534">o</text>
+            <!-- 양수 인덱스 -->
+            <text x="48" y="66" text-anchor="middle" font-size="8" fill="#64748b">[0]</text>
+            <text x="118" y="66" text-anchor="middle" font-size="8" fill="#64748b">[1]</text>
+            <text x="188" y="66" text-anchor="middle" font-size="8" fill="#64748b">[2]</text>
+            <text x="258" y="66" text-anchor="middle" font-size="8" fill="#64748b">[3]</text>
+            <text x="328" y="66" text-anchor="middle" font-size="8" fill="#64748b">[4]</text>
+            <!-- 음수 인덱스 -->
+            <text x="48" y="78" text-anchor="middle" font-size="8" fill="#db2777">[-5]</text>
+            <text x="118" y="78" text-anchor="middle" font-size="8" fill="#db2777">[-4]</text>
+            <text x="188" y="78" text-anchor="middle" font-size="8" fill="#db2777">[-3]</text>
+            <text x="258" y="78" text-anchor="middle" font-size="8" fill="#db2777">[-2]</text>
+            <text x="328" y="78" text-anchor="middle" font-size="8" fill="#db2777">[-1]</text>
+            <!-- 설명 -->
+            <text x="390" y="48" text-anchor="middle" font-size="8" fill="#374151">[::-1]</text>
+            <text x="390" y="60" text-anchor="middle" font-family="monospace" font-size="8" fill="#db2777">"olleH"</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># 문자열 뒤집기</span>
+text = <span class="str">"Hello World"</span>
+
+<span class="cmt"># 방법 1: 슬라이싱 (가장 간단)</span>
+reversed_text = text[::<span class="num">-1</span>]
+<span class="fn">print</span>(reversed_text)  <span class="cmt"># dlroW olleH</span>
+
+<span class="cmt"># 방법 2: reversed() + join</span>
+reversed_text2 = <span class="str">""</span>.<span class="fn">join</span>(<span class="fn">reversed</span>(text))
+<span class="fn">print</span>(reversed_text2)  <span class="cmt"># dlroW olleH</span></div>
+
+    <h3>단어 순서 뒤집기</h3>
+    <p><code>split()</code>으로 단어 리스트를 만든 뒤 <code>[::-1]</code>로 순서를 뒤집고, <code>join()</code>으로 다시 문자열로 합칩니다.</p>
+
+    <!-- SVG: split -> reverse -> join 흐름 -->
+    <div style="text-align:center;margin:10px 0;">
+        <svg viewBox="0 0 460 52" style="max-width:460px;width:100%">
+            <defs>
+                <marker id="arrJ" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="5" y="10" width="90" height="32" rx="6" fill="#fdf2f8" stroke="#db2777" stroke-width="1.5"/>
+            <text x="50" y="26" text-anchor="middle" font-family="monospace" font-size="9" fill="#500724">"Hi Py"</text>
+            <line x1="100" y1="26" x2="118" y2="26" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrJ)"/>
+            <text x="110" y="20" text-anchor="middle" font-size="7" fill="#64748b">split()</text>
+            <rect x="120" y="10" width="100" height="32" rx="6" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="170" y="26" text-anchor="middle" font-family="monospace" font-size="9" fill="#14532d">["Hi","Py"]</text>
+            <line x1="224" y1="26" x2="242" y2="26" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrJ)"/>
+            <text x="233" y="20" text-anchor="middle" font-size="7" fill="#64748b">[::-1]</text>
+            <rect x="244" y="10" width="100" height="32" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="294" y="26" text-anchor="middle" font-family="monospace" font-size="9" fill="#78350f">["Py","Hi"]</text>
+            <line x1="348" y1="26" x2="366" y2="26" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrJ)"/>
+            <text x="357" y="20" text-anchor="middle" font-size="7" fill="#64748b">join()</text>
+            <rect x="368" y="10" width="87" height="32" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+            <text x="411" y="26" text-anchor="middle" font-family="monospace" font-size="9" fill="#3b0764">"Py Hi"</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># 단어 순서 뒤집기</span>
+sentence = <span class="str">"I love Python programming"</span>
+
+words = sentence.<span class="fn">split</span>()       <span class="cmt"># 단어 리스트로 분리</span>
+words_reversed = words[::<span class="num">-1</span>]  <span class="cmt"># 리스트 뒤집기</span>
+result = <span class="str">" "</span>.<span class="fn">join</span>(words_reversed)  <span class="cmt"># 다시 문자열로</span>
+
+<span class="fn">print</span>(result)  <span class="cmt"># programming Python love I</span>
+
+<span class="cmt"># 한 줄로도 가능</span>
+<span class="fn">print</span>(<span class="str">" "</span>.<span class="fn">join</span>(sentence.<span class="fn">split</span>()[::<span class="num">-1</span>]))</div>
+
+    <!-- SVG: join() 설명 -->
+    <div style="text-align:center;margin:10px 0;">
+        <svg viewBox="0 0 460 48" style="max-width:460px;width:100%">
+            <rect x="5" y="8" width="450" height="32" rx="8" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="230" y="24" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">" ".join(["사과","바나나","포도"]) → "사과 바나나 포도"</text>
+            <text x="230" y="36" text-anchor="middle" font-size="8" fill="#64748b">구분자.join(리스트) — 리스트 항목을 구분자로 연결해 문자열 반환</text>
+        </svg>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="완성" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+        <div class="practice-head">따라해보세요 — Step 1</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">"Python"을 [::-1]로 뒤집으세요.</div>
+                <div class="practice-result">"nohtyP" 출력</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">"나는 밥을 먹었다"의 단어 순서를 뒤집으세요.</div>
+                <div class="practice-result">"먹었다 밥을 나는" 출력</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">"racecar"가 앞뒤로 똑같은 단어(팰린드롬)인지 확인하세요.</div>
+                <div class="practice-result">text == text[::-1] → True 출력</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== 3페이지: 대소문자 + 완성 + 문제 ===== -->
+<div class="page">
+    <h2>Step 2 — 대소문자 변환 & 완성</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/flowchart.png" alt="흐름" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>파이썬 문자열에는 대소문자를 변환하는 내장 메서드가 여러 개 있습니다. <code>upper()</code>, <code>lower()</code>, <code>title()</code>, <code>swapcase()</code>를 익힙니다.</p>
+
+    <!-- SVG: replace() 활용 -->
+    <div style="text-align:center;margin:10px 0;">
+        <svg viewBox="0 0 460 48" style="max-width:460px;width:100%">
+            <rect x="5" y="8" width="450" height="32" rx="8" fill="#fffbeb" stroke="#d97706" stroke-width="1.5"/>
+            <text x="230" y="24" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">"Hello World".replace("l", "L") → "HeLLo WorLd"</text>
+            <text x="230" y="36" text-anchor="middle" font-size="8" fill="#64748b">replace(old, new) — 모든 old를 new로 바꿈</text>
+        </svg>
+    </div>
+
+    <!-- SVG: 대소문자 메서드 비교 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 62" style="max-width:460px;width:100%">
+            <rect x="5" y="8" width="100" height="46" rx="6" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="55" y="26" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">.upper()</text>
+            <text x="55" y="40" text-anchor="middle" font-family="monospace" font-size="9" fill="#14532d">"HELLO"</text>
+            <text x="55" y="52" text-anchor="middle" font-size="7" fill="#64748b">전부 대문자</text>
+            <rect x="115" y="8" width="100" height="46" rx="6" fill="#f0f9ff" stroke="#0369a1" stroke-width="1.5"/>
+            <text x="165" y="26" text-anchor="middle" font-size="9" fill="#0369a1" font-weight="700">.lower()</text>
+            <text x="165" y="40" text-anchor="middle" font-family="monospace" font-size="9" fill="#0c4a6e">"hello"</text>
+            <text x="165" y="52" text-anchor="middle" font-size="7" fill="#64748b">전부 소문자</text>
+            <rect x="225" y="8" width="100" height="46" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="275" y="26" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">.title()</text>
+            <text x="275" y="40" text-anchor="middle" font-family="monospace" font-size="9" fill="#78350f">"Hello"</text>
+            <text x="275" y="52" text-anchor="middle" font-size="7" fill="#64748b">첫 글자 대문자</text>
+            <rect x="335" y="8" width="120" height="46" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+            <text x="395" y="26" text-anchor="middle" font-size="9" fill="#5b21b6" font-weight="700">.swapcase()</text>
+            <text x="395" y="40" text-anchor="middle" font-family="monospace" font-size="9" fill="#3b0764">"hELLO"</text>
+            <text x="395" y="52" text-anchor="middle" font-size="7" fill="#64748b">대소문자 뒤바꿈</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># 완성된 뒤집기 도구</span>
+<span class="kw">def</span> <span class="fn">reverse_chars</span>(text):
+    <span class="kw">return</span> text[::<span class="num">-1</span>]
+
+<span class="kw">def</span> <span class="fn">reverse_words</span>(text):
+    <span class="kw">return</span> <span class="str">" "</span>.<span class="fn">join</span>(text.<span class="fn">split</span>()[::<span class="num">-1</span>])
+
+<span class="kw">def</span> <span class="fn">toggle_case</span>(text):
+    <span class="kw">return</span> text.<span class="fn">swapcase</span>()
+
+<span class="kw">def</span> <span class="fn">is_palindrome</span>(text):
+    clean = text.<span class="fn">lower</span>().<span class="fn">replace</span>(<span class="str">" "</span>, <span class="str">""</span>)
+    <span class="kw">return</span> clean == clean[::<span class="num">-1</span>]
+
+text = <span class="fn">input</span>(<span class="str">"문장 입력: "</span>)
+<span class="fn">print</span>(<span class="str">"글자 뒤집기:"</span>, <span class="fn">reverse_chars</span>(text))
+<span class="fn">print</span>(<span class="str">"단어 뒤집기:"</span>, <span class="fn">reverse_words</span>(text))
+<span class="fn">print</span>(<span class="str">"대소문자 변환:"</span>, <span class="fn">toggle_case</span>(text))
+<span class="fn">print</span>(<span class="str">"팰린드롬?"</span>, <span class="fn">is_palindrome</span>(text))</div>
+
+    <!-- SVG: 팰린드롬 확인 원리 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 460 48" style="max-width:460px;width:100%">
+            <rect x="5" y="8" width="215" height="32" rx="8" fill="#fdf2f8" stroke="#db2777" stroke-width="1.5"/>
+            <text x="113" y="24" text-anchor="middle" font-size="9" fill="#9d174d" font-weight="700">"racecar" == "racecar"[::-1]</text>
+            <text x="113" y="36" text-anchor="middle" font-size="8" fill="#64748b">→ True (팰린드롬)</text>
+            <rect x="235" y="8" width="220" height="32" rx="8" fill="#f0f9ff" stroke="#0369a1" stroke-width="1.5"/>
+            <text x="345" y="24" text-anchor="middle" font-size="9" fill="#0369a1" font-weight="700">"hello" == "hello"[::-1]</text>
+            <text x="345" y="36" text-anchor="middle" font-size="8" fill="#64748b">→ False (팰린드롬 아님)</text>
+        </svg>
+    </div>
+
+    <!-- SVG: 암호화 단계 -->
+    <div style="text-align:center;margin:10px 0;">
+        <svg viewBox="0 0 460 44" style="max-width:460px;width:100%">
+            <rect x="5" y="8" width="450" height="28" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+            <text x="230" y="21" text-anchor="middle" font-size="9" fill="#5b21b6" font-weight="700">암호화: 각 단어 뒤집기 → w[::-1]  +  대소문자 변환 → .swapcase()</text>
+            <text x="230" y="33" text-anchor="middle" font-size="8" fill="#64748b">"Hello" → "olleH" → "OLLEh"</text>
+        </svg>
+    </div>
+
+    <!-- 문제 1 -->
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/lightbulb.png" alt="아이디어" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q1</div>
+            <div class="problem-label">각 단어를 뒤집기</div>
+            <div class="problem-diff easy">쉬움</div>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">문장의 단어 순서는 유지하되, 각 단어의 글자를 뒤집으세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">입력</span><span class="problem-example-value">"Hello World"</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">"olleH dlroW"</span></div>
+            </div>
+        </div>
+        <div class="problem-toggle">
+            <details>
+                <summary>힌트 / 정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">힌트: [w[::-1] for w in text.split()]</div>
+                    <div class="answer-code">text = "Hello World"
+result = " ".join(w[::-1] for w in text.split())
+print(result)</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <!-- 문제 2 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q2</div>
+            <div class="problem-label">팰린드롬 검사기</div>
+            <div class="problem-diff medium">보통</div>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">입력한 단어가 팰린드롬(앞뒤로 읽어도 같은 단어)인지 확인하세요. "racecar", "level", "noon"을 테스트해보세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">입력</span><span class="problem-example-value">racecar</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">팰린드롬입니다!</span></div>
+            </div>
+        </div>
+        <div class="problem-toggle">
+            <details>
+                <summary>힌트 / 정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">힌트: word == word[::-1]</div>
+                    <div class="answer-code">word = input("단어 입력: ").lower()
+if word == word[::-1]:
+    print("팰린드롬입니다!")
+else:
+    print("팰린드롬이 아닙니다.")</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <!-- 문제 3 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q3</div>
+            <div class="problem-label">암호 메시지 만들기</div>
+            <div class="problem-diff hard">어려움</div>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">각 단어를 뒤집고 대소문자도 바꾸는 암호 변환기를 만드세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">입력</span><span class="problem-example-value">"Hello World"</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">"OLLEh DLROw"</span></div>
+            </div>
+        </div>
+        <div class="problem-toggle">
+            <details>
+                <summary>힌트 / 정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">힌트: 각 단어를 뒤집은 뒤 swapcase() 적용</div>
+                    <div class="answer-code">text = "Hello World"
+result = " ".join(w[::-1].swapcase() for w in text.split())
+print(result)</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <!-- SVG: 문자열 메서드 총정리 -->
+    <div style="text-align:center;margin:10px 0;">
+        <svg viewBox="0 0 460 44" style="max-width:460px;width:100%">
+            <rect x="5" y="8" width="450" height="28" rx="8" fill="#fdf2f8" stroke="#db2777" stroke-width="1.5"/>
+            <text x="230" y="21" text-anchor="middle" font-size="9" fill="#9d174d" font-weight="700">문자열 변환 도구: [::-1]  split()  join()  upper/lower  swapcase  title</text>
+            <text x="230" y="33" text-anchor="middle" font-size="8" fill="#64748b">이 도구들을 조합하면 다양한 텍스트 변환이 가능</text>
+        </svg>
+    </div>
+
+    <!-- 핵심 요약 -->
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/keyboard.png" alt="키보드" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>핵심 요약</h3>
+        <ul>
+            <li><code>text[::-1]</code> — 문자열 전체를 거꾸로 뒤집기</li>
+            <li><code>" ".join(list)</code> — 리스트를 공백으로 연결해 문자열로</li>
+            <li><code>text.upper()</code> / <code>text.lower()</code> — 대문자 / 소문자 변환</li>
+            <li><code>text.swapcase()</code> — 대소문자 뒤바꾸기</li>
+            <li><code>text.title()</code> — 각 단어의 첫 글자를 대문자로</li>
+        </ul>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

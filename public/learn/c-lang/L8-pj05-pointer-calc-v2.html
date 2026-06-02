@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>L8-PJ05 포인터로 사칙연산 결과 여러 개 반환</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #e2e8f0; font-family: 'Noto Sans KR', sans-serif; }
+  .page { width: 210mm; min-height: 297mm; background: white; margin: 0 auto 12px; padding: 18mm 20mm 15mm 22mm; position: relative; overflow: hidden; page-break-after: always; counter-increment: pagenum; }
+  .cover-sidebar { position: absolute; left: 0; top: 0; bottom: 0; width: 10px; background: #1e3a5f; }
+  .cover-accent  { position: absolute; left: 10px; top: 0; bottom: 0; width: 7px; background: #0891b2; }
+  .page::after { content: counter(pagenum); position: absolute; bottom: 10mm; right: 15mm; font-size: 10px; color: #94a3b8; font-family: 'JetBrains Mono', monospace; }
+  .page::before { content: 'PJ'; position: absolute; right: 18mm; top: 12mm; font-size: 72px; font-weight: 900; color: rgba(8,145,178,0.04); font-family: 'JetBrains Mono', monospace; pointer-events: none; }
+  .cover-header { display: flex; gap: 6px; align-items: center; margin-bottom: 8mm; }
+  .cover-chapter-badge { background: #0e7490; color: white; font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+  .cover-unit-badge { background: #ecfeff; color: #0891b2; font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 20px; border: 1px solid #a5f3fc; }
+  .cover-title { font-size: 26px; font-weight: 900; color: #0c4a6e; line-height: 1.25; margin-bottom: 4px; }
+  .cover-subtitle { font-size: 13px; color: #0891b2; font-weight: 500; margin-bottom: 6mm; }
+  .cover-desc { font-size: 11.5px; color: #475569; line-height: 1.75; background: #f0f9ff; padding: 10px 14px; border-left: 3px solid #0891b2; border-radius: 0 6px 6px 0; margin-bottom: 6mm; }
+  .cover-meta { display: flex; gap: 8px; flex-wrap: wrap; }
+  .cover-meta span { background: #f1f5f9; border: 1px solid #e2e8f0; padding: 3px 10px; border-radius: 12px; font-size: 10px; color: #64748b; }
+  .section-title { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 800; color: #0c4a6e; margin-bottom: 8px; padding-bottom: 5px; border-bottom: 2px solid #e0f2fe; }
+  .section-title .icon { background: #0891b2; color: white; width: 24px; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 13px; }
+  .code { background: #0f172a; border-radius: 8px; padding: 12px 15px; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; line-height: 1.7; color: #e2e8f0; margin: 8px 0; position: relative; }
+  .code-label { position: absolute; top: 6px; right: 10px; font-size: 9px; color: #475569; font-family: 'JetBrains Mono', monospace; }
+  .code .kw { color: #c084fc; } .code .fn { color: #67e8f9; } .code .str { color: #86efac; }
+  .code .num { color: #7dd3fc; } .code .cmt { color: #64748b; font-style: italic; }
+  .code .ptr { color: #fbbf24; }
+  .output-box { background: #0f172a; border: 1px solid #1e3a5f; border-radius: 8px; padding: 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: #86efac; margin: 8px 0; }
+  .output-box .prompt { color: #64748b; } .output-box .label { color: #7dd3fc; }
+  .step { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 14px; margin: 6px 0; position: relative; }
+  .step-num { position: absolute; top: -10px; left: 12px; background: #0891b2; color: white; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px; font-family: 'JetBrains Mono', monospace; }
+  .step h4 { font-size: 12px; font-weight: 700; color: #0c4a6e; margin-bottom: 4px; margin-top: 4px; }
+  .step p { font-size: 11px; color: #475569; line-height: 1.6; }
+  .info-box { background: #f0f9ff; border-left: 3px solid #0891b2; border-radius: 0 6px 6px 0; padding: 8px 12px; margin: 6px 0; font-size: 11px; color: #0c4a6e; line-height: 1.6; }
+  .challenge { background: linear-gradient(135deg, #ecfeff 0%, #f0f9ff 100%); border: 1.5px solid #67e8f9; border-radius: 10px; padding: 12px 15px; margin: 8px 0; }
+  .challenge h3 { font-size: 13px; font-weight: 800; color: #0891b2; margin-bottom: 8px; }
+  .challenge-item { background: white; border: 1px solid #e0f2fe; border-radius: 6px; padding: 8px 12px; margin: 5px 0; font-size: 11px; }
+  .challenge-item .num { display: inline-block; background: #0891b2; color: white; width: 18px; height: 18px; border-radius: 50%; font-size: 10px; font-weight: 700; text-align: center; line-height: 18px; margin-right: 6px; }
+  .problem { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 14px; margin: 6px 0; }
+  .problem summary { font-size: 11.5px; font-weight: 700; color: #0c4a6e; cursor: pointer; list-style: none; display: flex; align-items: flex-start; gap: 6px; }
+  .problem summary::marker { display: none; }
+  .problem .q-num { background: #0891b2; color: white; width: 20px; height: 20px; border-radius: 50%; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .answer { margin-top: 8px; padding: 8px 10px; background: #ecfeff; border-radius: 6px; font-size: 11px; color: #0c4a6e; line-height: 1.6; border: 1px solid #a5f3fc; }
+  .summary-box { background: linear-gradient(135deg, #0c4a6e 0%, #0e7490 100%); color: white; border-radius: 10px; padding: 12px 15px; margin: 8px 0; }
+  .summary-box h3 { font-size: 13px; font-weight: 800; margin-bottom: 8px; color: #7dd3fc; }
+  .summary-box ul { list-style: none; padding: 0; }
+  .summary-box ul li { font-size: 11px; line-height: 1.75; padding-left: 12px; position: relative; }
+  .summary-box ul li::before { content: '→'; position: absolute; left: 0; color: #67e8f9; }
+  body { counter-reset: pagenum; }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- PAGE 1: 커버 -->
+<div class="page">
+  <div class="cover-sidebar"></div>
+  <div class="cover-accent"></div>
+  <div class="cover-header">
+    <span class="cover-chapter-badge">CHAPTER 8</span>
+    <span class="cover-unit-badge">PROJECT 05</span>
+  </div>
+  <div class="cover-title">포인터로 사칙연산<br>결과 여러 개 반환</div>
+  <div class="cover-subtitle">Return Multiple Results via Output Pointers</div>
+  <div class="cover-desc">
+    C 함수는 return으로 값 하나만 돌려줄 수 있다. 하지만 포인터 매개변수를 "출력 파라미터"로 쓰면<br>
+    한 함수에서 여러 결과를 동시에 전달할 수 있다. 이 패턴은 실무에서 매우 자주 사용된다.
+  </div>
+
+  <!-- 커버 SVG: 출력 파라미터 패턴 시각화 -->
+  <svg width="100%" height="200" viewBox="0 0 520 200">
+    <defs>
+      <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+        <path d="M0,0 L0,6 L8,3 z" fill="#0891b2"/>
+      </marker>
+      <marker id="arrG" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+        <path d="M0,0 L0,6 L8,3 z" fill="#22c55e"/>
+      </marker>
+    </defs>
+
+    <!-- 함수 호출 다이어그램 -->
+    <text x="10" y="18" font-family="Noto Sans KR" font-size="11" fill="#0c4a6e" font-weight="700">출력 파라미터 패턴</text>
+
+    <!-- 호출자 박스 -->
+    <rect x="10" y="26" width="130" height="130" rx="8" fill="#f0f9ff" stroke="#0891b2" stroke-width="1.5"/>
+    <text x="75" y="44" text-anchor="middle" font-family="Noto Sans KR" font-size="10" fill="#0c4a6e" font-weight="700">main 함수</text>
+
+    <rect x="20" y="52" width="52" height="28" rx="4" fill="white" stroke="#cbd5e1"/>
+    <text x="46" y="63" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#64748b">add</text>
+    <text x="46" y="75" text-anchor="middle" font-family="JetBrains Mono" font-size="12" font-weight="700" fill="#0c4a6e">?</text>
+
+    <rect x="78" y="52" width="52" height="28" rx="4" fill="white" stroke="#cbd5e1"/>
+    <text x="104" y="63" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#64748b">sub</text>
+    <text x="104" y="75" text-anchor="middle" font-family="JetBrains Mono" font-size="12" font-weight="700" fill="#0c4a6e">?</text>
+
+    <rect x="20" y="88" width="52" height="28" rx="4" fill="white" stroke="#cbd5e1"/>
+    <text x="46" y="99" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#64748b">mul</text>
+    <text x="46" y="111" text-anchor="middle" font-family="JetBrains Mono" font-size="12" font-weight="700" fill="#0c4a6e">?</text>
+
+    <rect x="78" y="88" width="52" height="28" rx="4" fill="white" stroke="#cbd5e1"/>
+    <text x="104" y="99" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#64748b">div</text>
+    <text x="104" y="111" text-anchor="middle" font-family="JetBrains Mono" font-size="12" font-weight="700" fill="#0c4a6e">?</text>
+
+    <text x="75" y="140" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#64748b">int a=10, b=3;</text>
+    <text x="75" y="152" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#0891b2">calc(a,b, &amp;add,...);</text>
+
+    <!-- 화살표들 -->
+    <path d="M140,80 L175,80" stroke="#0891b2" stroke-width="2" marker-end="url(#arr)"/>
+    <text x="157" y="75" text-anchor="middle" font-family="Noto Sans KR" font-size="8" fill="#0891b2">주소 전달</text>
+
+    <!-- calc 함수 박스 -->
+    <rect x="175" y="26" width="165" height="130" rx="8" fill="#ecfeff" stroke="#0891b2" stroke-width="2"/>
+    <text x="257" y="44" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#0891b2" font-weight="700">calc 함수</text>
+
+    <rect x="185" y="52" width="145" height="96" rx="4" fill="#0f172a"/>
+    <text x="193" y="68" font-family="JetBrains Mono" font-size="9" fill="#fbbf24">*add</text>
+    <text x="230" y="68" font-family="JetBrains Mono" font-size="9" fill="#e2e8f0"> = a + b;</text>
+    <text x="193" y="83" font-family="JetBrains Mono" font-size="9" fill="#fbbf24">*sub</text>
+    <text x="230" y="83" font-family="JetBrains Mono" font-size="9" fill="#e2e8f0"> = a - b;</text>
+    <text x="193" y="98" font-family="JetBrains Mono" font-size="9" fill="#fbbf24">*mul</text>
+    <text x="230" y="98" font-family="JetBrains Mono" font-size="9" fill="#e2e8f0"> = a * b;</text>
+    <text x="193" y="113" font-family="JetBrains Mono" font-size="9" fill="#fbbf24">*divq</text>
+    <text x="230" y="113" font-family="JetBrains Mono" font-size="9" fill="#e2e8f0"> = a / b;</text>
+    <text x="193" y="128" font-family="JetBrains Mono" font-size="9" fill="#fbbf24">*rem</text>
+    <text x="230" y="128" font-family="JetBrains Mono" font-size="9" fill="#e2e8f0"> = a % b;</text>
+    <text x="193" y="143" font-family="JetBrains Mono" font-size="9" fill="#64748b">// return 없이 저장!</text>
+
+    <!-- 결과 화살표 -->
+    <path d="M340,80 L375,80" stroke="#22c55e" stroke-width="2" marker-end="url(#arrG)"/>
+    <text x="357" y="75" text-anchor="middle" font-family="Noto Sans KR" font-size="8" fill="#22c55e">결과 저장됨</text>
+
+    <!-- 결과 박스 -->
+    <rect x="375" y="26" width="135" height="130" rx="8" fill="#f0fdf4" stroke="#86efac" stroke-width="1.5"/>
+    <text x="442" y="44" text-anchor="middle" font-family="Noto Sans KR" font-size="10" fill="#166534" font-weight="700">결과 (main)</text>
+
+    <rect x="385" y="52" width="55" height="24" rx="4" fill="#dcfce7" stroke="#86efac"/>
+    <text x="412" y="61" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#64748b">add</text>
+    <text x="412" y="71" text-anchor="middle" font-family="JetBrains Mono" font-size="12" font-weight="700" fill="#16a34a">13</text>
+
+    <rect x="447" y="52" width="55" height="24" rx="4" fill="#dcfce7" stroke="#86efac"/>
+    <text x="474" y="61" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#64748b">sub</text>
+    <text x="474" y="71" text-anchor="middle" font-family="JetBrains Mono" font-size="12" font-weight="700" fill="#16a34a">7</text>
+
+    <rect x="385" y="84" width="55" height="24" rx="4" fill="#dcfce7" stroke="#86efac"/>
+    <text x="412" y="93" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#64748b">mul</text>
+    <text x="412" y="103" text-anchor="middle" font-family="JetBrains Mono" font-size="12" font-weight="700" fill="#16a34a">30</text>
+
+    <rect x="447" y="84" width="55" height="24" rx="4" fill="#dcfce7" stroke="#86efac"/>
+    <text x="474" y="93" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#64748b">div</text>
+    <text x="474" y="103" text-anchor="middle" font-family="JetBrains Mono" font-size="12" font-weight="700" fill="#16a34a">3</text>
+
+    <rect x="416" y="116" width="55" height="24" rx="4" fill="#dcfce7" stroke="#86efac"/>
+    <text x="443" y="125" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#64748b">rem</text>
+    <text x="443" y="135" text-anchor="middle" font-family="JetBrains Mono" font-size="12" font-weight="700" fill="#16a34a">1</text>
+
+    <!-- 핵심 설명 -->
+    <text x="10" y="178" font-family="Noto Sans KR" font-size="11" fill="#0c4a6e" font-weight="700">핵심: 포인터 매개변수 = 입력(a,b) + 출력(주소들)</text>
+    <rect x="10" y="184" width="500" height="14" rx="4" fill="#0f172a"/>
+    <text x="260" y="195" text-anchor="middle" font-family="JetBrains Mono" font-size="9.5" fill="#e2e8f0">void calc(int a, int b, int *add, int *sub, int *mul, int *divq, int *rem)</text>
+  </svg>
+
+  <div class="cover-meta">
+    <span>난이도 </span>
+    <span>출력 파라미터 패턴</span>
+    <span>void 반환 함수</span>
+    <span>5가지 연산 동시 반환</span>
+  </div>
+</div>
+
+<!-- PAGE 2: 원리 + 완성 코드 -->
+<div class="page">
+  <div class="cover-sidebar"></div>
+  <div class="cover-accent"></div>
+
+  <div style="display:flex;align-items:center;gap:8px;margin:10px 0 6px;padding:6px 12px;background:#eff6ff;border-radius:6px;">
+    <img src="/images/learn/computer-basics/cpu.png" alt="CPU - 포인터와 메모리 처리" style="width:26px;height:26px;object-fit:contain;background:#fff;border-radius:8px;">
+</div>
+<div class="section-title">
+    <div class="icon"></div>
+    출력 파라미터 패턴 이해
+  </div>
+
+  <!-- 메모리 주소 흐름 SVG -->
+  <svg width="100%" height="110" viewBox="0 0 520 110">
+    <defs>
+      <marker id="arrB" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto">
+        <path d="M0,0 L0,6 L7,3 z" fill="#0891b2"/>
+      </marker>
+    </defs>
+
+    <text x="10" y="16" font-family="Noto Sans KR" font-size="10" fill="#0c4a6e" font-weight="700">주소 전달 → 역참조 → 결과 저장 흐름</text>
+
+    <!-- main의 변수들 -->
+    <rect x="10" y="24" width="55" height="36" rx="5" fill="#f0f9ff" stroke="#0891b2" stroke-width="1.5"/>
+    <text x="37" y="38" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#64748b">add</text>
+    <text x="37" y="54" text-anchor="middle" font-family="JetBrains Mono" font-size="13" font-weight="700" fill="#0c4a6e">?</text>
+
+    <rect x="72" y="24" width="55" height="36" rx="5" fill="#f0f9ff" stroke="#0891b2" stroke-width="1.5"/>
+    <text x="99" y="38" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#64748b">sub</text>
+    <text x="99" y="54" text-anchor="middle" font-family="JetBrains Mono" font-size="13" font-weight="700" fill="#0c4a6e">?</text>
+
+    <text x="75" y="78" text-anchor="middle" font-family="Noto Sans KR" font-size="9" fill="#0891b2">① &amp;add, &amp;sub 전달</text>
+
+    <!-- 화살표 -->
+    <line x1="145" y1="42" x2="175" y2="42" stroke="#0891b2" stroke-width="2" marker-end="url(#arrB)"/>
+    <text x="160" y="37" text-anchor="middle" font-family="Noto Sans KR" font-size="8" fill="#64748b">전달</text>
+
+    <!-- calc 함수 내부 -->
+    <rect x="175" y="18" width="170" height="56" rx="6" fill="#ecfeff" stroke="#67e8f9" stroke-width="1.5"/>
+    <text x="260" y="32" text-anchor="middle" font-family="Noto Sans KR" font-size="10" fill="#0891b2" font-weight="700">② calc 내부 실행</text>
+    <rect x="183" y="38" width="154" height="30" rx="4" fill="#0f172a"/>
+    <text x="191" y="52" font-family="JetBrains Mono" font-size="9" fill="#fbbf24">*add</text>
+    <text x="222" y="52" font-family="JetBrains Mono" font-size="9" fill="#e2e8f0"> = a + b;</text>
+    <text x="191" y="63" font-family="JetBrains Mono" font-size="9" fill="#fbbf24">*sub</text>
+    <text x="222" y="63" font-family="JetBrains Mono" font-size="9" fill="#e2e8f0"> = a - b;</text>
+
+    <!-- 화살표 -->
+    <line x1="346" y1="42" x2="375" y2="42" stroke="#22c55e" stroke-width="2" marker-end="url(#arrB)"/>
+    <text x="360" y="37" text-anchor="middle" font-family="Noto Sans KR" font-size="8" fill="#22c55e">저장됨</text>
+
+    <!-- 결과 -->
+    <rect x="375" y="24" width="55" height="36" rx="5" fill="#dcfce7" stroke="#86efac" stroke-width="2"/>
+    <text x="402" y="38" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#64748b">add</text>
+    <text x="402" y="54" text-anchor="middle" font-family="JetBrains Mono" font-size="13" font-weight="700" fill="#16a34a">13</text>
+
+    <rect x="437" y="24" width="55" height="36" rx="5" fill="#dcfce7" stroke="#86efac" stroke-width="2"/>
+    <text x="464" y="38" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#64748b">sub</text>
+    <text x="464" y="54" text-anchor="middle" font-family="JetBrains Mono" font-size="13" font-weight="700" fill="#16a34a">7</text>
+
+    <text x="450" y="78" text-anchor="middle" font-family="Noto Sans KR" font-size="9" fill="#22c55e">③ main 변수에 결과 저장됨!</text>
+  </svg>
+
+  <div style="display:flex;align-items:center;gap:8px;margin:10px 0 6px;padding:6px 12px;background:#eff6ff;border-radius:6px;">
+    <img src="/images/learn/computer-basics/ram.png" alt="RAM - 포인터가 가리키는 메모리" style="width:26px;height:26px;object-fit:contain;background:#fff;border-radius:8px;">
+</div>
+<div class="section-title">
+    <div class="icon"></div>
+    완성 코드
+  </div>
+
+  <div class="code">
+    <span class="code-label">calc.c</span>
+    <span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span><br>
+    <br>
+    <span class="cmt">/* 출력 파라미터: 포인터로 결과 5개 동시 전달 */</span><br>
+    <span class="kw">void</span> <span class="fn">calc</span>(<span class="kw">int</span> a, <span class="kw">int</span> b,<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">int</span> <span class="ptr">*add</span>, <span class="kw">int</span> <span class="ptr">*sub</span>, <span class="kw">int</span> <span class="ptr">*mul</span>,<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">int</span> <span class="ptr">*divq</span>, <span class="kw">int</span> <span class="ptr">*rem</span>) {<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="ptr">*add</span>  = a + b;<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="ptr">*sub</span>  = a - b;<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="ptr">*mul</span>  = a * b;<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="ptr">*divq</span> = a / b;  <span class="cmt">// 정수 나눗셈</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="ptr">*rem</span>  = a % b;  <span class="cmt">// 나머지</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="cmt">// return 없음 — 포인터로 직접 저장!</span><br>
+    }<br>
+    <br>
+    <span class="kw">int</span> <span class="fn">main</span>() {<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">int</span> a = <span class="num">10</span>, b = <span class="num">3</span>;<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">int</span> r_add, r_sub, r_mul, r_div, r_rem;<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">calc</span>(a, b, &amp;r_add, &amp;r_sub, &amp;r_mul, &amp;r_div, &amp;r_rem);<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">printf</span>(<span class="str">"%d + %d = %d\n"</span>, a, b, r_add);<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">printf</span>(<span class="str">"%d - %d = %d\n"</span>, a, b, r_sub);<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">printf</span>(<span class="str">"%d * %d = %d\n"</span>, a, b, r_mul);<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">printf</span>(<span class="str">"%d / %d = %d\n"</span>, a, b, r_div);<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">printf</span>(<span class="str">"%d %% %d = %d\n"</span>, a, b, r_rem);<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">return</span> <span class="num">0</span>;<br>
+    }
+  </div>
+
+  <div class="output-box">
+    <span class="prompt">$ gcc calc.c -o calc &amp;&amp; ./calc</span><br>
+    10 + 3 = 13<br>
+    10 - 3 = 7<br>
+    10 * 3 = 30<br>
+    10 / 3 = 3<br>
+    10 % 3 = 1
+  </div>
+</div>
+
+<!-- PAGE 3: 단계별 구현 가이드 -->
+<div class="page">
+  <div class="cover-sidebar"></div>
+  <div class="cover-accent"></div>
+
+  <div class="section-title">
+    <div class="icon"></div>
+    단계별 구현 가이드
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+    <div style="display:flex;align-items:center;gap:8px;margin:10px 0 6px;padding:6px 12px;background:#f0fdf4;border-radius:6px;border-left:3px solid #22c55e;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드 화면 - 포인터 코드 예시" style="width:24px;height:24px;object-fit:contain;background:#fff;border-radius:8px;">
+</div>
+<div class="step">
+      <div class="step-num">STEP 1</div>
+      <h4>결과 저장할 변수 선언</h4>
+      <p>main에서 결과를 받을 변수들을 미리 선언한다.<br>
+      <code style="font-family:'JetBrains Mono';font-size:10px;background:#1e293b;color:#7dd3fc;padding:2px 5px;border-radius:3px">int r_add, r_sub, r_mul, r_div, r_rem;</code></p>
+    </div>
+    <div class="step">
+      <div class="step-num">STEP 2</div>
+      <h4>포인터 매개변수 선언</h4>
+      <p>함수 시그니처에 출력용 포인터 추가.<br>
+      <code style="font-family:'JetBrains Mono';font-size:10px;background:#1e293b;color:#fbbf24;padding:2px 5px;border-radius:3px">void calc(int a, int b, int *add, ...)</code></p>
+    </div>
+    <div class="step">
+      <div class="step-num">STEP 3</div>
+      <h4>역참조로 결과 저장</h4>
+      <p>함수 내부에서 *로 역참조하여 저장.<br>
+      <code style="font-family:'JetBrains Mono';font-size:10px;background:#1e293b;color:#fbbf24;padding:2px 5px;border-radius:3px">*add = a + b;</code></p>
+    </div>
+    <div class="step">
+      <div class="step-num">STEP 4</div>
+      <h4>주소 전달로 호출</h4>
+      <p>&amp;연산자로 결과 변수의 주소를 전달.<br>
+      <code style="font-family:'JetBrains Mono';font-size:10px;background:#1e293b;color:#67e8f9;padding:2px 5px;border-radius:3px">calc(10, 3, &amp;r_add, ...)</code></p>
+    </div>
+  </div>
+
+  <div class="section-title">
+    <div class="icon"></div>
+    실무 활용 예: 나눗셈 결과 (몫 + 나머지)
+  </div>
+
+  <div class="code">
+    <span class="code-label">divmod.c</span>
+    <span class="cmt">/* 나눗셈: 몫과 나머지를 동시에 반환 */</span><br>
+    <span class="kw">void</span> <span class="fn">divmod</span>(<span class="kw">int</span> dividend, <span class="kw">int</span> divisor,<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">int</span> <span class="ptr">*quotient</span>, <span class="kw">int</span> <span class="ptr">*remainder</span>) {<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="ptr">*quotient</span>  = dividend / divisor;<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="ptr">*remainder</span> = dividend % divisor;<br>
+    }<br>
+    <br>
+    <span class="kw">int</span> <span class="fn">main</span>() {<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">int</span> q, r;<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">divmod</span>(<span class="num">17</span>, <span class="num">5</span>, &amp;q, &amp;r);<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">printf</span>(<span class="str">"17 ÷ 5 = 몫 %d, 나머지 %d\n"</span>, q, r);<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="cmt">// 출력: 17 ÷ 5 = 몫 3, 나머지 2</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">return</span> <span class="num">0</span>;<br>
+    }
+  </div>
+
+  <!-- 비교 표 SVG -->
+  <svg width="100%" height="90" viewBox="0 0 520 90">
+    <rect x="10" y="8" width="500" height="74" rx="8" fill="#f8fafc" stroke="#e2e8f0"/>
+    <rect x="10" y="8" width="500" height="24" rx="8" fill="#0891b2"/>
+    <rect x="10" y="24" width="500" height="8" fill="#0891b2"/>
+    <text x="90" y="24" text-anchor="middle" font-family="Noto Sans KR" font-size="10" fill="white" font-weight="700">방법</text>
+    <text x="280" y="24" text-anchor="middle" font-family="Noto Sans KR" font-size="10" fill="white" font-weight="700">코드</text>
+    <text x="450" y="24" text-anchor="middle" font-family="Noto Sans KR" font-size="10" fill="white" font-weight="700">제한</text>
+    <line x1="165" y1="32" x2="165" y2="82" stroke="#e2e8f0"/>
+    <line x1="390" y1="32" x2="390" y2="82" stroke="#e2e8f0"/>
+    <line x1="10" y1="57" x2="510" y2="57" stroke="#e2e8f0"/>
+    <text x="90" y="50" text-anchor="middle" font-family="Noto Sans KR" font-size="9.5" fill="#334155">값 반환 (return)</text>
+    <text x="280" y="50" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#334155">return a+b;</text>
+    <text x="450" y="50" text-anchor="middle" font-family="Noto Sans KR" font-size="9.5" fill="#dc2626">1개만 가능</text>
+    <text x="90" y="72" text-anchor="middle" font-family="Noto Sans KR" font-size="9.5" fill="#334155">출력 파라미터</text>
+    <text x="280" y="72" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#334155">*add=a+b; *sub=a-b;</text>
+    <text x="450" y="72" text-anchor="middle" font-family="Noto Sans KR" font-size="9.5" fill="#16a34a">무제한 가능</text>
+  </svg>
+</div>
+
+<!-- PAGE 4: 도전 과제 + 연습문제 -->
+<div class="page">
+  <div class="cover-sidebar"></div>
+  <div class="cover-accent"></div>
+
+  <div style="display:flex;align-items:center;gap:8px;margin:12px 0 6px;padding:7px 12px;background:#fefce8;border-radius:6px;border-left:3px solid #f59e0b;">
+    <img src="/images/learn/c-lang/binary-code.png" alt="이진 코드 - 메모리 주소 표현" style="width:24px;height:24px;object-fit:contain;background:#fff;border-radius:8px;">
+    <span style="font-size:12px;color:#92400e;font-weight:600;">도전 과제</span>
+</div>
+<div class="challenge">
+    <h3>도전 과제</h3>
+    <div class="challenge-item">
+      <span class="num">1</span>
+      <strong>통계 함수:</strong> 정수 배열을 받아 합계, 평균, 최대, 최소를 동시에 반환하는 <code>stats(int *arr, int n, int *sum, double *avg, int *max, int *min)</code>를 작성하라.
+    </div>
+    <div class="challenge-item">
+      <span class="num">2</span>
+      <strong>2차 방정식 근:</strong> ax² + bx + c = 0의 두 근을 포인터로 반환하는 함수를 작성하라 (판별식 계산 포함).
+    </div>
+    <div class="challenge-item">
+      <span class="num">3</span>
+      <strong>RGB 분해:</strong> 32비트 색상값(예: 0xFF8040)을 받아 R, G, B 각각의 값을 포인터로 분리하는 함수를 작성하라.
+    </div>
+  </div>
+
+  <div class="section-title" style="margin-top:10px">
+    <div class="icon"></div>
+    연습문제
+  </div>
+
+  <details class="problem">
+    <summary><span class="q-num">1</span> <code>void calc(int a, int b, int *add, ...)</code>에서 void를 쓰는 이유는?</summary>
+    <div class="answer">이미 포인터로 결과를 전달하기 때문에 return으로 추가 값을 반환할 필요가 없다. void는 "반환값 없음"을 명시한다. 실무에서는 성공/실패 여부를 int로 반환하고 나머지는 출력 파라미터로 처리하기도 한다.</div>
+  </details>
+
+  <details class="problem">
+    <summary><span class="q-num">2</span> <code>calc(10, 3, r_add, r_sub, ...)</code>와 <code>calc(10, 3, &amp;r_add, &amp;r_sub, ...)</code>의 차이는?</summary>
+    <div class="answer">r_add는 변수의 값(초기화 전이면 쓰레기값)을 전달 — 함수는 이 값을 포인터로 사용하려 해서 잘못된 메모리 주소를 건드린다 (undefined behavior). &amp;r_add는 변수의 주소를 전달 — 함수가 올바른 메모리에 결과를 저장한다.</div>
+  </details>
+
+  <details class="problem">
+    <summary><span class="q-num">3</span> calc 함수 내에서 <code>*add = a + b;</code>가 실행될 때 실제로 무슨 일이 일어나는가?</summary>
+    <div class="answer">add는 main의 r_add 변수 주소(예: 0x7fff2000)를 담고 있다. *add = a + b는 "주소 0x7fff2000에 13을 저장"한다. main으로 돌아오면 r_add = 13이 되어 있다.</div>
+  </details>
+
+  <details class="problem">
+    <summary><span class="q-num">4</span> 출력 파라미터로 NULL을 전달하면 어떻게 되는가? 안전하게 처리하려면?</summary>
+    <div class="answer">NULL을 역참조(*NULL = 값)하면 세그멘테이션 폴트가 발생한다. 안전하게 처리하려면 사용 전에 if (add != NULL) *add = a + b; 로 NULL 체크를 해야 한다. 일부 결과가 필요 없을 때 NULL을 전달하는 패턴에서 유용하다.</div>
+  </details>
+
+  <details class="problem">
+    <summary><span class="q-num">5</span> C의 출력 파라미터와 다른 언어(Python, JS)의 여러 값 반환 방식의 차이는?</summary>
+    <div class="answer">Python/JS는 tuple/array로 여러 값을 묶어 return할 수 있다. C는 구조체를 반환하거나(복사 발생), 포인터로 출력 파라미터를 쓴다. C의 포인터 방식은 메모리 복사 없이 직접 저장하므로 성능상 유리하지만 코드가 복잡해진다.</div>
+  </details>
+
+  <div class="summary-box">
+    <h3>이번 프로젝트 핵심</h3>
+    <ul>
+      <li>C 함수는 return으로 값 1개만 반환 — 포인터로 이 제한을 극복</li>
+      <li>출력 파라미터: 결과를 저장할 변수의 주소를 함수에 전달</li>
+      <li>함수 내부에서 역참조(*)로 호출자의 메모리에 직접 결과 저장</li>
+      <li>호출 시 반드시 &amp;로 주소를 전달해야 한다</li>
+      <li>scanf("%d", &amp;n)도 같은 패턴이다 — &amp;n으로 주소 전달</li>
+    </ul>
+  </div>
+
+    <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:20px;padding-top:10px;border-top:1px solid #f1f5f9;">
+        <img src="/images/learn/c-lang/code-screen.png" alt="코드 화면 - 포인터 코드 예시" style="width:22px;height:22px;object-fit:contain;opacity:0.6;background:#fff;border-radius:8px;">
+        <span style="font-size:10px;color:#cbd5e1;">코딩쏙 C언어</span>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

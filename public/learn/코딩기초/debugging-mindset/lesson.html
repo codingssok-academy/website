@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>디버깅 탐정 수업 — 코딩쏙</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root {
+    --ink: #1a1a1a;
+    --muted: #737373;
+    --line: #e5e5e5;
+    --bg: #fafafa;
+    --card: #ffffff;
+    --accent: #2563eb;
+    --success: #16a34a;
+    --warn: #d97706;
+    --danger: #dc2626;
+    --yellow-bg: #fef3c7;
+    --green-bg: #d1fae5;
+    --blue-bg: #dbeafe;
+    --red-bg: #fee2e2;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: 'Pretendard', 'Noto Sans KR', -apple-system, sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+    line-height: 1.7;
+    font-size: 17px;
+}
+.container { max-width: 860px; margin: 0 auto; padding: 24px 20px 80px; }
+
+/* 상단 타이틀 */
+.cover {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    color: #fff;
+    border-radius: 24px;
+    padding: 48px 32px;
+    margin-bottom: 40px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+.cover::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(circle at 20% 30%, rgba(59,130,246,0.15), transparent 40%),
+                      radial-gradient(circle at 80% 70%, rgba(236,72,153,0.1), transparent 40%);
+}
+.cover > * { position: relative; }
+.cover .badge {
+    display: inline-block;
+    padding: 6px 16px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.1);
+    color: #cbd5e1;
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    letter-spacing: 0.05em;
+}
+.cover h1 {
+    font-size: 40px;
+    font-weight: 900;
+    margin-bottom: 12px;
+    letter-spacing: -0.02em;
+}
+.cover p {
+    font-size: 16px;
+    color: #94a3b8;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+/* 섹션 */
+section {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 32px 28px;
+    margin-bottom: 24px;
+}
+.section-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+.section-num {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    background: var(--ink);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    font-size: 15px;
+    flex-shrink: 0;
+}
+.section-title {
+    font-size: 22px;
+    font-weight: 800;
+}
+.section-meta {
+    margin-left: auto;
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 600;
+}
+
+/* 본문 */
+h3 {
+    font-size: 18px;
+    font-weight: 800;
+    margin: 24px 0 12px;
+}
+p { margin-bottom: 14px; color: #374151; }
+.highlight {
+    background: linear-gradient(to bottom, transparent 60%, var(--yellow-bg) 60%);
+    font-weight: 700;
+    padding: 0 2px;
+}
+
+/* 훅: 이상한 레시피 */
+.weird-recipe {
+    background: var(--yellow-bg);
+    border: 2px dashed #f59e0b;
+    border-radius: 16px;
+    padding: 20px 24px;
+    margin: 20px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+}
+.weird-recipe .title {
+    font-weight: 900;
+    margin-bottom: 10px;
+    color: #92400e;
+    font-family: inherit;
+}
+.weird-recipe ol { padding-left: 20px; }
+.weird-recipe li { margin-bottom: 6px; }
+
+/* LAF 카드 */
+.laf-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin: 20px 0;
+}
+.laf-card {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 22px 18px;
+    text-align: center;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.laf-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
+.laf-letter {
+    font-size: 40px;
+    font-weight: 900;
+    color: var(--accent);
+    margin-bottom: 6px;
+}
+.laf-word { font-size: 12px; color: var(--muted); font-weight: 600; margin-bottom: 8px; }
+.laf-kor { font-size: 16px; font-weight: 800; margin-bottom: 6px; }
+.laf-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+/* 퀴즈 */
+.quiz {
+    background: var(--bg);
+    border-radius: 14px;
+    padding: 20px 22px;
+    margin: 16px 0;
+    border-left: 4px solid var(--accent);
+}
+.quiz-q {
+    font-weight: 800;
+    font-size: 16px;
+    margin-bottom: 12px;
+    color: var(--ink);
+}
+.quiz-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+.quiz-opt {
+    padding: 12px 16px;
+    background: var(--card);
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 14px;
+    font-weight: 500;
+    text-align: left;
+    color: #374151;
+    font-family: inherit;
+    width: 100%;
+}
+.quiz-opt:hover { border-color: #cbd5e1; background: #f9fafb; }
+.quiz-opt.correct { background: var(--green-bg); border-color: var(--success); color: #064e3b; font-weight: 700; }
+.quiz-opt.wrong { background: var(--red-bg); border-color: var(--danger); color: #7f1d1d; }
+.quiz-feedback {
+    display: none;
+    padding: 12px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.6;
+}
+.quiz-feedback.correct { background: var(--green-bg); color: #064e3b; display: block; }
+.quiz-feedback.wrong { background: var(--red-bg); color: #7f1d1d; display: block; }
+
+/* 코드 디버깅 */
+.code-bug {
+    background: #0f172a;
+    color: #e2e8f0;
+    border-radius: 12px;
+    padding: 18px 20px;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 14px;
+    line-height: 1.8;
+    margin: 14px 0;
+    overflow-x: auto;
+}
+.code-bug .bug-line { background: rgba(220,38,38,0.25); display: inline-block; padding: 0 4px; border-radius: 3px; }
+.code-bug .fix-line { background: rgba(22,163,74,0.25); display: inline-block; padding: 0 4px; border-radius: 3px; }
+.code-bug .kw { color: #c084fc; }
+.code-bug .str { color: #86efac; }
+.code-bug .num { color: #7dd3fc; }
+.code-bug .com { color: #64748b; font-style: italic; }
+
+/* AI 질문 비교 */
+.ai-compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin: 16px 0;
+}
+.ai-card {
+    border-radius: 14px;
+    padding: 18px;
+}
+.ai-bad { background: var(--red-bg); border-left: 4px solid var(--danger); }
+.ai-good { background: var(--green-bg); border-left: 4px solid var(--success); }
+.ai-label { font-size: 11px; font-weight: 800; margin-bottom: 6px; letter-spacing: 0.05em; }
+.ai-bad .ai-label { color: var(--danger); }
+.ai-good .ai-label { color: var(--success); }
+.ai-prompt {
+    background: var(--card);
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    margin-bottom: 8px;
+}
+.ai-reason { font-size: 12px; color: #374151; line-height: 1.6; }
+
+/* 숙제 박스 */
+.homework {
+    background: linear-gradient(135deg, #1e293b, #0f172a);
+    color: #fff;
+    border-radius: 20px;
+    padding: 32px 28px;
+    margin-top: 32px;
+}
+.homework h2 {
+    font-size: 24px;
+    font-weight: 900;
+    margin-bottom: 12px;
+}
+.homework p { color: #cbd5e1; margin-bottom: 16px; }
+.homework ol {
+    padding-left: 20px;
+    color: #e2e8f0;
+}
+.homework li {
+    margin-bottom: 10px;
+    padding-left: 6px;
+    line-height: 1.7;
+}
+
+/* 강조 박스 */
+.big-point {
+    background: var(--blue-bg);
+    border: 2px solid #93c5fd;
+    border-radius: 16px;
+    padding: 20px 24px;
+    margin: 20px 0;
+    font-size: 17px;
+    font-weight: 700;
+    color: #1e40af;
+    text-align: center;
+}
+
+/* 반응형 */
+@media (max-width: 640px) {
+    body { font-size: 15px; }
+    .cover { padding: 36px 24px; }
+    .cover h1 { font-size: 28px; }
+    .laf-grid { grid-template-columns: 1fr; }
+    .ai-compare { grid-template-columns: 1fr; }
+    section { padding: 24px 20px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+    <!-- 표지 -->
+    <div class="cover">
+        <div class="badge">초등 · 90분 수업</div>
+        <h1>🕵️ 디버깅 탐정 수업</h1>
+        <p>"왜 안 될까?" 찾아내는 슈퍼파워 배우기</p>
+    </div>
+
+    <!-- 1. 훅 -->
+    <section>
+        <div class="section-head">
+            <div class="section-num">1</div>
+            <div class="section-title">라면, 먹을 수 있을까?</div>
+            <div class="section-meta">5분</div>
+        </div>
+        <p>선생님이 라면 끓이는 법을 이렇게 알려줬어. 이 순서대로 하면 맛있는 라면이 될까?</p>
+
+        <div class="weird-recipe">
+            <div class="title">📝 선생님의 라면 레시피</div>
+            <ol>
+                <li>물을 끓인다</li>
+                <li>면을 넣는다</li>
+                <li>면을 꺼낸다</li>
+                <li>먹는다</li>
+            </ol>
+        </div>
+
+        <div class="big-point">
+            ❓ 뭐가 빠졌지? 한 번 찾아볼까?
+        </div>
+
+        <p><strong>같이 생각해보기</strong> — 위 레시피에는 <span class="highlight">수프 넣기</span>, <span class="highlight">시간 재기</span>, <span class="highlight">그릇에 담기</span>가 빠져있어. 이렇게 지시가 이상하거나 빠진 걸 <strong>버그(Bug)</strong>라고 해!</p>
+    </section>
+
+    <!-- 2. 디버깅이란? -->
+    <section>
+        <div class="section-head">
+            <div class="section-num">2</div>
+            <div class="section-title">버그? 그게 뭔데?</div>
+            <div class="section-meta">10분</div>
+        </div>
+
+        <h3>🐛 "버그"의 역사</h3>
+        <p>옛날에 어떤 컴퓨터가 갑자기 고장 났어. 알고 보니 컴퓨터 안에 <strong>진짜 나방(벌레)</strong>이 들어가서 부품을 건드렸대! 그 이후로 <strong>컴퓨터가 이상하게 동작하는 이유</strong>를 "버그(벌레)"라고 부르게 됐어.</p>
+
+        <h3>🔍 "디버깅"은 뭐야?</h3>
+        <p><strong>De(없애다) + Bug(벌레) = Debug(버그를 없앤다)</strong></p>
+        <p>즉, <span class="highlight">"왜 안 될까?"를 찾아서 고치는 일</span>이야. 이건 엄청 중요한 능력이야. 왜냐면…</p>
+
+        <div class="big-point">
+            💡 모든 프로그래머는 하루의 절반을 디버깅에 쓴다!
+        </div>
+
+        <p>너희들이 나중에 뭘 만들든 — 게임, 앱, 로봇, AI — <strong>버그는 항상 생겨</strong>. 버그를 잘 찾는 사람이 진짜 실력자야.</p>
+    </section>
+
+    <!-- 3. LAF 3단계 -->
+    <section>
+        <div class="section-head">
+            <div class="section-num">3</div>
+            <div class="section-title">디버깅 탐정 3단계 — LAF 🔎</div>
+            <div class="section-meta">10분</div>
+        </div>
+
+        <p>버그를 찾는 방법은 탐정이 범인 찾는 거랑 똑같아. <strong>LAF</strong> 3단계만 기억해!</p>
+
+        <div class="laf-grid">
+            <div class="laf-card">
+                <div class="laf-letter">L</div>
+                <div class="laf-word">LOOK</div>
+                <div class="laf-kor">잘 봐</div>
+                <div class="laf-desc">지금 결과가 뭐야? 뭐가 이상해? 눈으로 자세히 관찰!</div>
+            </div>
+            <div class="laf-card">
+                <div class="laf-letter">A</div>
+                <div class="laf-word">ASK</div>
+                <div class="laf-kor">물어봐</div>
+                <div class="laf-desc">원래 뭐가 되어야 하지? 왜 지금은 다르지?</div>
+            </div>
+            <div class="laf-card">
+                <div class="laf-letter">F</div>
+                <div class="laf-word">FIX</div>
+                <div class="laf-kor">고쳐봐</div>
+                <div class="laf-desc">어디가 다른지 한 글자씩 비교해서 고쳐!</div>
+            </div>
+        </div>
+
+        <p><strong>예를 들어볼까?</strong></p>
+        <p>계산기에 <code>1 + 1</code>을 넣었는데 결과가 <code>3</code>이 나왔어.</p>
+        <ul style="padding-left: 28px; margin-bottom: 14px;">
+            <li><strong>Look</strong>: 결과가 3이네</li>
+            <li><strong>Ask</strong>: 원래 1+1은 2가 나와야 하는데 왜 3이지?</li>
+            <li><strong>Fix</strong>: 계산기가 +를 -로 바꿔놨네! 고치자</li>
+        </ul>
+    </section>
+
+    <!-- 4. 실습 1: 일상 디버깅 -->
+    <section>
+        <div class="section-head">
+            <div class="section-num">4</div>
+            <div class="section-title">일상 속 버그 찾기 🎯</div>
+            <div class="section-meta">20분</div>
+        </div>
+
+        <p>이제 너희가 탐정이 되어볼 차례야. 아래 이상한 지시들에서 <strong>뭐가 빠졌는지</strong> 찾아봐!</p>
+
+        <!-- 퀴즈 1 -->
+        <div class="quiz">
+            <div class="quiz-q">🔎 문제 1. 학교 가는 길</div>
+            <div style="background: var(--card); padding: 12px 16px; border-radius: 8px; margin-bottom: 12px; font-family: 'JetBrains Mono', monospace; font-size: 14px;">
+                1. 집에서 나간다<br>
+                2. 학교에 도착한다
+            </div>
+            <div class="quiz-options">
+                <button class="quiz-opt" onclick="answer(this, false, 'q1')">알맞은 시간을 재야 해요</button>
+                <button class="quiz-opt" onclick="answer(this, true, 'q1')">걸어가는 길이 빠졌어요</button>
+                <button class="quiz-opt" onclick="answer(this, false, 'q1')">숙제를 챙겨야 해요</button>
+            </div>
+            <div id="q1-feedback" class="quiz-feedback"></div>
+        </div>
+
+        <!-- 퀴즈 2 -->
+        <div class="quiz">
+            <div class="quiz-q">🔎 문제 2. 손 씻기</div>
+            <div style="background: var(--card); padding: 12px 16px; border-radius: 8px; margin-bottom: 12px; font-family: 'JetBrains Mono', monospace; font-size: 14px;">
+                1. 물을 튼다<br>
+                2. 비누를 묻힌다<br>
+                3. 수건으로 닦는다
+            </div>
+            <div class="quiz-options">
+                <button class="quiz-opt" onclick="answer(this, true, 'q2')">비누 거품을 물로 헹궈내야 해요!</button>
+                <button class="quiz-opt" onclick="answer(this, false, 'q2')">비누 대신 샴푸를 써야 해요</button>
+                <button class="quiz-opt" onclick="answer(this, false, 'q2')">수건을 두 번 써야 해요</button>
+            </div>
+            <div id="q2-feedback" class="quiz-feedback"></div>
+        </div>
+
+        <!-- 퀴즈 3 -->
+        <div class="quiz">
+            <div class="quiz-q">🔎 문제 3. 자전거 타기</div>
+            <div style="background: var(--card); padding: 12px 16px; border-radius: 8px; margin-bottom: 12px; font-family: 'JetBrains Mono', monospace; font-size: 14px;">
+                1. 자전거에 올라탄다<br>
+                2. 페달을 돌린다<br>
+                3. 원하는 곳에 도착한다
+            </div>
+            <div class="quiz-options">
+                <button class="quiz-opt" onclick="answer(this, false, 'q3')">헬멧은 선택이에요</button>
+                <button class="quiz-opt" onclick="answer(this, false, 'q3')">자전거는 항상 빨리 달려야 해요</button>
+                <button class="quiz-opt" onclick="answer(this, true, 'q3')">'핸들을 잡고 방향을 조절한다'가 빠졌어요!</button>
+            </div>
+            <div id="q3-feedback" class="quiz-feedback"></div>
+        </div>
+    </section>
+
+    <!-- 5. 실습 2: 코드 디버깅 -->
+    <section>
+        <div class="section-head">
+            <div class="section-num">5</div>
+            <div class="section-title">컴퓨터 코드 속 버그 찾기 💻</div>
+            <div class="section-meta">20분</div>
+        </div>
+
+        <p>이번엔 진짜 컴퓨터 코드야. 파이썬으로 "고양이"라는 단어를 10번 출력하려고 했어. 그런데…</p>
+
+        <h3>🐱 버그가 숨어있는 코드</h3>
+        <div class="code-bug">
+<span class="com"># 고양이를 10번 출력하고 싶다</span>
+<span class="kw">for</span> i <span class="kw">in</span> <span class="kw">range</span>(<span class="num">10</span>):
+    <span class="kw">print</span>(<span class="str">"강아지"</span>)  <span class="com">← 🐛 버그 발견!</span>
+        </div>
+
+        <p><strong>LAF로 풀어볼까?</strong></p>
+        <ul style="padding-left: 28px;">
+            <li><strong>Look</strong>: "강아지"가 10번 나올 거야</li>
+            <li><strong>Ask</strong>: 우리가 원한 건 "고양이"인데?</li>
+            <li><strong>Fix</strong>: <code>"강아지"</code> → <code>"고양이"</code>로 바꿔!</li>
+        </ul>
+
+        <h3>✨ 고친 코드</h3>
+        <div class="code-bug">
+<span class="kw">for</span> i <span class="kw">in</span> <span class="kw">range</span>(<span class="num">10</span>):
+    <span class="kw">print</span>(<span class="str">"고양이"</span>)  <span class="com">✅ 버그 수정 완료!</span>
+        </div>
+
+        <!-- 두 번째 버그 -->
+        <h3>🎯 이번엔 혼자 찾아봐</h3>
+        <p>1부터 5까지 더하고 싶어. 답은 15(1+2+3+4+5)가 나와야 해.</p>
+
+        <div class="code-bug">
+<span class="kw">total</span> = <span class="num">0</span>
+<span class="kw">for</span> i <span class="kw">in</span> <span class="kw">range</span>(<span class="num">1</span>, <span class="num">5</span>):
+    <span class="kw">total</span> = <span class="kw">total</span> + i
+<span class="kw">print</span>(<span class="kw">total</span>)  <span class="com"># 결과: 10 (15가 나와야 하는데!)</span>
+        </div>
+
+        <div class="quiz">
+            <div class="quiz-q">🔎 어디가 버그일까?</div>
+            <div class="quiz-options">
+                <button class="quiz-opt" onclick="answer(this, false, 'qc1')">total = 0이 틀렸어요</button>
+                <button class="quiz-opt" onclick="answer(this, true, 'qc1')">range(1, 5)는 1~4까지만! range(1, 6)이어야 해요</button>
+                <button class="quiz-opt" onclick="answer(this, false, 'qc1')">print가 잘못됐어요</button>
+            </div>
+            <div id="qc1-feedback" class="quiz-feedback"></div>
+        </div>
+    </section>
+
+    <!-- 6. AI에게 잘 물어보기 -->
+    <section>
+        <div class="section-head">
+            <div class="section-num">6</div>
+            <div class="section-title">AI도 디버깅이 필요해 🤖</div>
+            <div class="section-meta">15분</div>
+        </div>
+
+        <p>AI한테 물어봤는데 <strong>이상한 답</strong>이 나올 때가 있어. 이럴 때 어떻게 할까? <strong>내 질문을 디버깅</strong>해보는 거야!</p>
+
+        <h3>😵 나쁜 질문 vs 좋은 질문</h3>
+
+        <div class="ai-compare">
+            <div class="ai-card ai-bad">
+                <div class="ai-label">🐛 나쁜 질문</div>
+                <div class="ai-prompt">"코드 짜줘"</div>
+                <div class="ai-reason">AI가 뭐를, 어떤 언어로, 어떻게 짜야 할지 모름. 이상한 답 나옴.</div>
+            </div>
+            <div class="ai-card ai-good">
+                <div class="ai-label">✨ 좋은 질문</div>
+                <div class="ai-prompt">"파이썬으로 1부터 10까지 더하는 코드를 초등학생도 알 수 있게 주석 달아서 짜줘"</div>
+                <div class="ai-reason">언어, 목적, 대상이 명확해서 정확한 답 받음.</div>
+            </div>
+        </div>
+
+        <div class="ai-compare">
+            <div class="ai-card ai-bad">
+                <div class="ai-label">🐛 나쁜 질문</div>
+                <div class="ai-prompt">"이거 왜 안 돼?"</div>
+                <div class="ai-reason">AI는 "이거"가 뭔지 몰라! 코드도 에러도 안 보여줬음.</div>
+            </div>
+            <div class="ai-card ai-good">
+                <div class="ai-label">✨ 좋은 질문</div>
+                <div class="ai-prompt">"[내 코드 붙여넣기] 이 코드 돌렸더니 '인덱스 에러'라고 나왔어. 왜 그래?"</div>
+                <div class="ai-reason">코드와 정확한 에러 메시지를 주니까 AI가 바로 원인 파악.</div>
+            </div>
+        </div>
+
+        <div class="big-point">
+            🎯 AI에게 물을 때 기억할 3가지:<br>
+            <span style="font-size: 14px; font-weight: 500; color: #1e40af;">① 뭘 하고 싶은지 ② 무슨 언어인지 ③ 문제 상황이 뭔지</span>
+        </div>
+
+        <p><strong>중요한 사실!</strong> AI 답이 항상 맞는 건 아니야. <span class="highlight">항상 직접 실행해서 확인</span>하는 습관을 들이자!</p>
+    </section>
+
+    <!-- 7. 오늘 배운 것 -->
+    <section>
+        <div class="section-head">
+            <div class="section-num">7</div>
+            <div class="section-title">오늘의 정리 📝</div>
+            <div class="section-meta">5분</div>
+        </div>
+
+        <h3>🎉 오늘 배운 슈퍼파워</h3>
+        <ol style="padding-left: 28px; font-size: 16px;">
+            <li style="margin-bottom: 10px;"><strong>버그</strong>는 "컴퓨터가 이상하게 동작하는 이유"</li>
+            <li style="margin-bottom: 10px;"><strong>디버깅</strong>은 그걸 찾아서 고치는 일 (엔지니어의 50% 일!)</li>
+            <li style="margin-bottom: 10px;"><strong>LAF 3단계</strong>: <span style="color: var(--accent); font-weight: 700;">Look → Ask → Fix</span></li>
+            <li style="margin-bottom: 10px;"><strong>코드</strong>, <strong>일상</strong>, <strong>AI 질문</strong>… 전부 디버깅할 수 있음</li>
+            <li style="margin-bottom: 10px;"><strong>AI 답은 항상 검증</strong>하기! (실행해봐, 정말 맞나?)</li>
+        </ol>
+
+        <div class="big-point">
+            💪 "왜 안 될까?"를 잘 찾는 사람이 진짜 코딩쏙 학생이야!
+        </div>
+    </section>
+
+    <!-- 8. 숙제 -->
+    <div class="homework">
+        <h2>🏠 이번 주 탐정 미션</h2>
+        <p>집에서 다음 주까지 해올 숙제야. 공책에 적어서 다음 수업에 가져오기!</p>
+        <ol>
+            <li><strong>일상 버그 3개 찾기</strong> — 우리 집/학교에서 "이상하게 돌아가는 것" 3개를 찾고, LAF로 원인 분석하기 (예: 엄마가 시킨 심부름에 뭐가 빠졌나?)</li>
+            <li><strong>AI에게 좋은 질문 3개 만들기</strong> — 나바쌤에게 질문할 "좋은 질문" 3개를 미리 만들어오기 (① 뭘 원해 ② 어떤 언어 ③ 어떤 상황)</li>
+            <li><strong>보너스</strong> — 나쁜 질문을 일부러 해보고, AI 답이 이상한지 확인하기. 왜 이상한지 공책에 적기!</li>
+        </ol>
+    </div>
+
+</div>
+
+<script>
+function answer(btn, isCorrect, quizId) {
+    // 다른 버튼 비활성화
+    const container = btn.parentElement;
+    const buttons = container.querySelectorAll('.quiz-opt');
+    buttons.forEach(b => { b.disabled = true; b.style.cursor = 'default'; });
+
+    const feedback = document.getElementById(quizId + '-feedback');
+
+    if (isCorrect) {
+        btn.classList.add('correct');
+        feedback.className = 'quiz-feedback correct';
+        feedback.textContent = '✅ 정답! 훌륭한 탐정이야!';
+    } else {
+        btn.classList.add('wrong');
+        feedback.className = 'quiz-feedback wrong';
+        feedback.textContent = '❌ 다시 생각해볼까? LAF 3단계로 접근해봐. 정답을 보려면 선생님과 함께 토론!';
+        // 정답 표시
+        const correctBtn = Array.from(buttons).find(b =>
+            b.getAttribute('onclick').includes('true')
+        );
+        if (correctBtn) correctBtn.classList.add('correct');
+    }
+}
+</script>
+</body>
+</html>

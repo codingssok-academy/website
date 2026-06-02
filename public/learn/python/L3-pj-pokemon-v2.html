@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 프로젝트: 포켓몬 도감</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute; bottom: 10mm; right: 16mm;
+    font-size: 10px; color: #94a3b8; font-weight: 600;
+}
+
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 16px; font-weight: 700; color: #1e3a5f; margin: 18px 0 10px; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+ul, ol { margin: 0 0 12px 20px; }
+li { font-size: 14px; color: #374151; line-height: 1.8; }
+
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13.5px;
+    color: #e2e8f0; line-height: 1.85; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.code .dec { color: #f9a8d4; }
+
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '->'; color: #94a3b8; font-weight: 700; }
+
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; white-space: pre-wrap; }
+
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+.output-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #334155; line-height: 1.7; margin: 10px 0; white-space: pre-wrap; }
+.compare-table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13px; }
+.compare-table th { background: #1e3a5f; color: #fff; padding: 8px 12px; text-align: left; font-weight: 700; }
+.compare-table td { padding: 7px 12px; border-bottom: 1px solid #e2e8f0; color: #374151; }
+.compare-table tr:nth-child(even) td { background: #f8fafc; }
+.compare-table code { background: #e0e7ff; padding: 1px 5px; border-radius: 3px; font-family: 'JetBrains Mono', monospace; color: #3730a3; font-size: 12px; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- 1페이지: 표지 -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">PJ</div>
+        <div class="cover-label">L3 — Project</div>
+        <h1 class="cover-title">프로젝트:<br>포켓몬 도감</h1>
+        <p class="cover-sub">딕셔너리로 포켓몬 정보(이름, 타입, HP, 기술)를 저장하고, 검색/추가/배틀 시뮬레이션 기능을 가진 나만의 포켓몬 도감을 만듭니다.</p>
+
+        <!-- SVG: 포켓몬 딕셔너리 구조 -->
+        <div style="margin:24px 0;">
+            <svg viewBox="0 0 500 160" style="max-width:500px;width:100%">
+                <defs>
+                    <marker id="arwPk" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                    </marker>
+                </defs>
+                <!-- pokedex 딕셔너리 -->
+                <rect x="5" y="10" width="120" height="140" rx="8" fill="#1e3a5f"/>
+                <text x="65" y="30" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">pokedex</text>
+                <text x="65" y="48" text-anchor="middle" font-size="8" fill="#93c5fd">(딕셔너리)</text>
+                <text x="65" y="70" text-anchor="middle" font-size="8" fill="#fbbf24">"피카츄"</text>
+                <text x="65" y="90" text-anchor="middle" font-size="8" fill="#fbbf24">"파이리"</text>
+                <text x="65" y="110" text-anchor="middle" font-size="8" fill="#fbbf24">"꼬부기"</text>
+                <text x="65" y="130" text-anchor="middle" font-size="8" fill="#94a3b8">+ 더 추가 가능</text>
+                <!-- 화살표 -->
+                <line x1="128" y1="70" x2="148" y2="70" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwPk)"/>
+                <line x1="128" y1="90" x2="148" y2="90" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwPk)"/>
+                <!-- 포켓몬 정보 딕셔너리 -->
+                <rect x="151" y="10" width="200" height="140" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+                <text x="251" y="30" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">포켓몬 정보</text>
+                <text x="165" y="52" font-size="8" fill="#374151">"타입": "전기"</text>
+                <text x="165" y="66" font-size="8" fill="#374151">"hp": 35</text>
+                <text x="165" y="80" font-size="8" fill="#374151">"공격": 55</text>
+                <text x="165" y="94" font-size="8" fill="#374151">"방어": 40</text>
+                <text x="165" y="108" font-size="8" fill="#374151">"기술": ["번개,...]</text>
+                <!-- 기능 -->
+                <rect x="365" y="10" width="130" height="140" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="430" y="30" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">기능</text>
+                <text x="430" y="52" text-anchor="middle" font-size="8" fill="#374151">search()</text>
+                <text x="430" y="68" text-anchor="middle" font-size="8" fill="#374151">이름으로 검색</text>
+                <text x="430" y="88" text-anchor="middle" font-size="8" fill="#374151">add()</text>
+                <text x="430" y="104" text-anchor="middle" font-size="8" fill="#374151">새 포켓몬 추가</text>
+                <text x="430" y="124" text-anchor="middle" font-size="8" fill="#374151">battle()</text>
+                <text x="430" y="140" text-anchor="middle" font-size="8" fill="#374151">배틀 시뮬레이션</text>
+                <line x1="354" y1="80" x2="362" y2="80" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwPk)"/>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/gamepad.png" alt="게임" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 프로젝트에서 만드는 것</h3>
+            <ul>
+                <li>중첩 딕셔너리로 포켓몬 이름, 타입, HP, 공격력, 기술 목록을 저장합니다.</li>
+                <li>이름으로 포켓몬을 검색하고 상세 정보를 출력하는 함수를 만듭니다.</li>
+                <li>새 포켓몬 정보를 입력받아 도감에 추가하는 함수를 만듭니다.</li>
+                <li>두 포켓몬이 배틀할 때 공격력, 방어력, HP로 승패를 계산합니다.</li>
+                <li>타입 상성표 딕셔너리로 공격 배율을 적용합니다.</li>
+                <li>전체 메뉴 루프로 도감을 자유롭게 탐색할 수 있습니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- 2페이지: 포켓몬 데이터 구조 -->
+<div class="page">
+    <h2>Step 1 — 포켓몬 도감 데이터 구조</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="우승" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>포켓몬 도감은 <strong>중첩 딕셔너리(nested dictionary)</strong>로 구현합니다. 바깥 딕셔너리의 키는 포켓몬 이름, 값은 포켓몬 정보가 담긴 딕셔너리입니다.</p>
+
+    <!-- SVG: 중첩 딕셔너리 구조 시각화 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 100" style="max-width:500px;width:100%">
+            <rect x="5" y="8" width="490" height="84" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="20" y="26" font-size="9" fill="#1e3a5f" font-weight="700">pokedex = {</text>
+            <text x="35" y="42" font-size="8" fill="#fbbf24" font-weight="700">"피카츄":</text>
+            <text x="105" y="42" font-size="8" fill="#64748b">{"타입": "전기", "hp": 35, "공격": 55, "방어": 40, "기술": ["번개", "전기충격"]}</text>
+            <text x="35" y="58" font-size="8" fill="#fbbf24" font-weight="700">"파이리":</text>
+            <text x="105" y="58" font-size="8" fill="#64748b">{"타입": "불꽃", "hp": 39, "공격": 52, "방어": 43, "기술": ["화염방사", "불꽃소용돌이"]}</text>
+            <text x="35" y="74" font-size="8" fill="#fbbf24" font-weight="700">"꼬부기":</text>
+            <text x="105" y="74" font-size="8" fill="#64748b">{"타입": "물", "hp": 44, "공격": 48, "방어": 65, "기술": ["물대포", "거품광선"]}</text>
+            <text x="20" y="90" font-size="9" fill="#1e3a5f" font-weight="700">}</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># 포켓몬 도감 — 중첩 딕셔너리</span>
+pokedex = {
+    <span class="str">"피카츄"</span>: {
+        <span class="str">"타입"</span>: <span class="str">"전기"</span>,
+        <span class="str">"hp"</span>: <span class="num">35</span>,
+        <span class="str">"공격"</span>: <span class="num">55</span>,
+        <span class="str">"방어"</span>: <span class="num">40</span>,
+        <span class="str">"기술"</span>: [<span class="str">"번개"</span>, <span class="str">"전기충격"</span>, <span class="str">"볼트태클"</span>]
+    },
+    <span class="str">"파이리"</span>: {
+        <span class="str">"타입"</span>: <span class="str">"불꽃"</span>,
+        <span class="str">"hp"</span>: <span class="num">39</span>,
+        <span class="str">"공격"</span>: <span class="num">52</span>,
+        <span class="str">"방어"</span>: <span class="num">43</span>,
+        <span class="str">"기술"</span>: [<span class="str">"화염방사"</span>, <span class="str">"불꽃소용돌이"</span>]
+    },
+    <span class="str">"꼬부기"</span>: {
+        <span class="str">"타입"</span>: <span class="str">"물"</span>,
+        <span class="str">"hp"</span>: <span class="num">44</span>,
+        <span class="str">"공격"</span>: <span class="num">48</span>,
+        <span class="str">"방어"</span>: <span class="num">65</span>,
+        <span class="str">"기술"</span>: [<span class="str">"물대포"</span>, <span class="str">"거품광선"</span>]
+    }
+}
+
+<span class="cmt"># 접근 방법</span>
+<span class="fn">print</span>(pokedex[<span class="str">"피카츄"</span>][<span class="str">"hp"</span>])        <span class="cmt"># 35</span>
+<span class="fn">print</span>(pokedex[<span class="str">"파이리"</span>][<span class="str">"기술"</span>][<span class="num">0</span>])   <span class="cmt"># 화염방사</span>
+<span class="fn">print</span>(<span class="fn">list</span>(pokedex.<span class="fn">keys</span>()))         <span class="cmt"># 전체 포켓몬 목록</span></div>
+
+    <div class="output-box">35
+화염방사
+['피카츄', '파이리', '꼬부기']</div>
+
+    <!-- SVG: 딕셔너리 접근 경로 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 500 58" style="max-width:500px;width:100%">
+            <defs>
+                <marker id="arwAcc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="5" y="14" width="90" height="30" rx="6" fill="#1e3a5f"/>
+            <text x="50" y="33" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">pokedex</text>
+            <line x1="98" y1="29" x2="118" y2="29" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwAcc)"/>
+            <rect x="121" y="14" width="90" height="30" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="166" y="33" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">["피카츄"]</text>
+            <line x1="214" y1="29" x2="234" y2="29" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwAcc)"/>
+            <rect x="237" y="14" width="90" height="30" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="282" y="33" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">["hp"]</text>
+            <line x1="330" y1="29" x2="350" y2="29" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwAcc)"/>
+            <rect x="353" y="14" width="90" height="30" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="398" y="33" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">35</text>
+        </svg>
+    </div>
+
+    <h3>검색 함수 만들기</h3>
+    <div class="code"><span class="kw">def</span> <span class="fn">search_pokemon</span>(name):
+    <span class="str">"""포켓몬 이름으로 도감 검색"""</span>
+    <span class="kw">if</span> name <span class="kw">not in</span> pokedex:
+        <span class="fn">print</span>(<span class="str">f"'{name}'은 도감에 없습니다."</span>)
+        <span class="kw">return</span>
+    info = pokedex[name]
+    <span class="fn">print</span>(<span class="str">f"===== {name} ====="</span>)
+    <span class="fn">print</span>(<span class="str">f"타입: {info['타입']}"</span>)
+    <span class="fn">print</span>(<span class="str">f"HP: {info['hp']}  공격: {info['공격']}  방어: {info['방어']}"</span>)
+    <span class="fn">print</span>(<span class="str">f"기술: {', '.join(info['기술'])}"</span>)
+
+<span class="fn">search_pokemon</span>(<span class="str">"피카츄"</span>)</div>
+
+    <div class="output-box">===== 피카츄 =====
+타입: 전기
+HP: 35  공격: 55  방어: 40
+기술: 번개, 전기충격, 볼트태클</div>
+
+    <!-- SVG: get()과 in 비교 -->
+    <div style="text-align:center;margin:10px 0;">
+        <svg viewBox="0 0 500 50" style="max-width:500px;width:100%">
+            <rect x="5" y="8" width="490" height="34" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="20" y="22" font-size="9" fill="#92400e" font-weight="700">딕셔너리 키 존재 확인:</text>
+            <text x="20" y="38" font-size="9" fill="#374151">if name in pokedex — KeyError 없이 안전하게 접근 가능 / dict.get(key, 기본값)도 사용 가능</text>
+        </svg>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+        <div class="practice-head">따라해보세요 — Step 1</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">pokedex를 완성하고 꼬부기의 방어력을 출력하세요.</div>
+                <div class="code"><span class="fn">print</span>(pokedex[<span class="str">"꼬부기"</span>][<span class="str">"방어"</span>])</div>
+                <div class="practice-result">65 출력</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">for 루프로 도감의 모든 포켓몬 이름을 출력하세요.</div>
+                <div class="code"><span class="kw">for</span> name <span class="kw">in</span> pokedex:
+    <span class="fn">print</span>(name)</div>
+                <div class="practice-result">피카츄, 파이리, 꼬부기 순서대로 출력</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc"><code>search_pokemon("이상해씨")</code>를 호출해 없는 포켓몬 처리를 확인하세요.</div>
+                <div class="code"><span class="fn">search_pokemon</span>(<span class="str">"이상해씨"</span>)</div>
+                <div class="practice-result">'이상해씨'은 도감에 없습니다. 출력</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3페이지: 배틀 시뮬레이션 -->
+<div class="page">
+    <h2>Step 2 — 새 포켓몬 추가 & 배틀 시뮬레이션</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/flowchart.png" alt="게임 흐름" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>새 포켓몬을 도감에 추가하는 함수와, 두 포켓몬이 타입 상성을 고려해 배틀하는 함수를 만듭니다.</p>
+
+    <!-- SVG: 타입 상성표 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 90" style="max-width:500px;width:100%">
+            <rect x="5" y="8" width="490" height="74" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="250" y="26" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">타입 상성 (공격측 기준)</text>
+            <!-- 전기 -->
+            <rect x="20" y="36" width="140" height="36" rx="6" fill="#fefce8" stroke="#eab308" stroke-width="1.5"/>
+            <text x="90" y="52" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">전기 타입 공격</text>
+            <text x="90" y="66" text-anchor="middle" font-size="8" fill="#374151">물 포켓몬에게 2배 피해</text>
+            <!-- 불꽃 -->
+            <rect x="180" y="36" width="140" height="36" rx="6" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="250" y="52" text-anchor="middle" font-size="9" fill="#991b1b" font-weight="700">불꽃 타입 공격</text>
+            <text x="250" y="66" text-anchor="middle" font-size="8" fill="#374151">풀 포켓몬에게 2배 피해</text>
+            <!-- 물 -->
+            <rect x="340" y="36" width="140" height="36" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="410" y="52" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">물 타입 공격</text>
+            <text x="410" y="66" text-anchor="middle" font-size="8" fill="#374151">불꽃 포켓몬에게 2배 피해</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># 타입 상성 딕셔너리: 공격타입 -> 2배 피해 받는 타입</span>
+TYPE_CHART = {
+    <span class="str">"전기"</span>: [<span class="str">"물"</span>],
+    <span class="str">"불꽃"</span>: [<span class="str">"풀"</span>, <span class="str">"얼음"</span>],
+    <span class="str">"물"</span>: [<span class="str">"불꽃"</span>, <span class="str">"땅"</span>],
+    <span class="str">"풀"</span>: [<span class="str">"물"</span>, <span class="str">"땅"</span>]
+}
+
+<span class="kw">def</span> <span class="fn">add_pokemon</span>(name, ptype, hp, attack, defense, moves):
+    <span class="str">"""새 포켓몬을 도감에 추가"""</span>
+    <span class="kw">if</span> name <span class="kw">in</span> pokedex:
+        <span class="fn">print</span>(<span class="str">f"'{name}'은 이미 도감에 있습니다."</span>)
+        <span class="kw">return</span>
+    pokedex[name] = {
+        <span class="str">"타입"</span>: ptype,
+        <span class="str">"hp"</span>: hp,
+        <span class="str">"공격"</span>: attack,
+        <span class="str">"방어"</span>: defense,
+        <span class="str">"기술"</span>: moves
+    }
+    <span class="fn">print</span>(<span class="str">f"'{name}' 도감에 추가됨!"</span>)
+
+<span class="fn">add_pokemon</span>(<span class="str">"이상해씨"</span>, <span class="str">"풀"</span>, <span class="num">45</span>, <span class="num">49</span>, <span class="num">49</span>, [<span class="str">"넝쿨채찍"</span>, <span class="str">"씨뿌리기"</span>])
+
+<span class="kw">def</span> <span class="fn">battle</span>(name1, name2):
+    <span class="str">"""두 포켓몬 배틀 시뮬레이션"""</span>
+    <span class="kw">if</span> name1 <span class="kw">not in</span> pokedex <span class="kw">or</span> name2 <span class="kw">not in</span> pokedex:
+        <span class="fn">print</span>(<span class="str">"존재하지 않는 포켓몬입니다."</span>)
+        <span class="kw">return</span>
+
+    p1 = pokedex[name1]
+    p2 = pokedex[name2]
+
+    <span class="cmt"># 타입 상성 배율 계산</span>
+    mul1 = <span class="num">2.0</span> <span class="kw">if</span> p2[<span class="str">"타입"</span>] <span class="kw">in</span> TYPE_CHART.<span class="fn">get</span>(p1[<span class="str">"타입"</span>], []) <span class="kw">else</span> <span class="num">1.0</span>
+    mul2 = <span class="num">2.0</span> <span class="kw">if</span> p1[<span class="str">"타입"</span>] <span class="kw">in</span> TYPE_CHART.<span class="fn">get</span>(p2[<span class="str">"타입"</span>], []) <span class="kw">else</span> <span class="num">1.0</span>
+
+    <span class="cmt"># 실제 데미지 = (공격력 - 상대 방어력 / 2) * 배율</span>
+    dmg1 = <span class="fn">max</span>(<span class="num">1</span>, <span class="fn">int</span>((p1[<span class="str">"공격"</span>] - p2[<span class="str">"방어"</span>] / <span class="num">2</span>) * mul1))
+    dmg2 = <span class="fn">max</span>(<span class="num">1</span>, <span class="fn">int</span>((p2[<span class="str">"공격"</span>] - p1[<span class="str">"방어"</span>] / <span class="num">2</span>) * mul2))
+
+    <span class="fn">print</span>(<span class="str">f"\n[{name1}] HP:{p1['hp']} 공:{p1['공격']} 방:{p1['방어']} 타입:{p1['타입']}"</span>)
+    <span class="fn">print</span>(<span class="str">f"[{name2}] HP:{p2['hp']} 공:{p2['공격']} 방:{p2['방어']} 타입:{p2['타입']}"</span>)
+    <span class="fn">print</span>(<span class="str">f"\n{name1} -> {name2}: {dmg1} 데미지 (x{mul1})"</span>)
+    <span class="fn">print</span>(<span class="str">f"{name2} -> {name1}: {dmg2} 데미지 (x{mul2})"</span>)
+
+    turns1 = p2[<span class="str">"hp"</span>] // dmg1 + <span class="num">1</span>
+    turns2 = p1[<span class="str">"hp"</span>] // dmg2 + <span class="num">1</span>
+
+    <span class="kw">if</span> turns1 < turns2:
+        <span class="fn">print</span>(<span class="str">f"\n승자: {name1}! ({turns1}턴만에 쓰러뜨림)"</span>)
+    <span class="kw">elif</span> turns2 < turns1:
+        <span class="fn">print</span>(<span class="str">f"\n승자: {name2}! ({turns2}턴만에 쓰러뜨림)"</span>)
+    <span class="kw">else</span>:
+        <span class="fn">print</span>(<span class="str">"\n무승부!"</span>)
+
+<span class="fn">battle</span>(<span class="str">"피카츄"</span>, <span class="str">"꼬부기"</span>)</div>
+
+    <div class="output-box">'이상해씨' 도감에 추가됨!
+
+[피카츄] HP:35 공:55 방:40 타입:전기
+[꼬부기] HP:44 공:48 방:65 타입:물
+
+피카츄 -> 꼬부기: 30 데미지 (x2.0)
+꼬부기 -> 피카츄: 28 데미지 (x1.0)
+
+승자: 피카츄! (2턴만에 쓰러뜨림)</div>
+
+    <!-- SVG: 배틀 데미지 계산 흐름 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 500 56" style="max-width:500px;width:100%">
+            <rect x="5" y="8" width="490" height="40" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="20" y="24" font-size="9" fill="#1e3a5f" font-weight="700">데미지 공식:</text>
+            <text x="20" y="40" font-size="9" fill="#374151">(공격력 - 상대방어력/2) x 타입배율  =  최종 데미지 (최소 1)</text>
+            <text x="300" y="24" font-size="9" fill="#1e3a5f" font-weight="700">max(1, ...) 이유:</text>
+            <text x="300" y="40" font-size="9" fill="#374151">방어력이 높아도 최소 1 데미지 보장</text>
+        </svg>
+    </div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요 — Step 2</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc"><code>add_pokemon</code>으로 자신만의 포켓몬을 도감에 추가하고 확인하세요.</div>
+                <div class="code"><span class="fn">add_pokemon</span>(<span class="str">"나만의몬"</span>, <span class="str">"불꽃"</span>, <span class="num">60</span>, <span class="num">70</span>, <span class="num">30</span>, [<span class="str">"불꽃펀치"</span>])
+<span class="fn">search_pokemon</span>(<span class="str">"나만의몬"</span>)</div>
+                <div class="practice-result">추가된 포켓몬 정보 출력</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc"><code>battle("파이리", "꼬부기")</code>를 실행해 불꽃 vs 물 타입 결과를 확인하세요.</div>
+                <div class="code"><span class="fn">battle</span>(<span class="str">"파이리"</span>, <span class="str">"꼬부기"</span>)</div>
+                <div class="practice-result">물 타입 꼬부기가 2배 데미지를 받아 승리</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">도감의 모든 포켓몬 이름과 타입을 출력하는 코드를 작성하세요.</div>
+                <div class="code"><span class="kw">for</span> name, info <span class="kw">in</span> pokedex.<span class="fn">items</span>():
+    <span class="fn">print</span>(<span class="str">f"{name}: {info['타입']} 타입"</span>)</div>
+                <div class="practice-result">모든 포켓몬 타입 목록 출력</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 4페이지: 문제 -->
+<div class="page">
+    <h2>연습 문제</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+    <!-- SVG: 딕셔너리 메서드 정리 -->
+    <div style="text-align:center;margin:10px 0 16px;">
+        <svg viewBox="0 0 500 52" style="max-width:500px;width:100%">
+            <rect x="5" y="8" width="490" height="36" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="20" y="22" font-size="9" fill="#1d4ed8" font-weight="700">딕셔너리 주요 메서드:</text>
+            <text x="20" y="38" font-size="9" fill="#374151">keys() 키 목록 / values() 값 목록 / items() 키-값 쌍 / get(k, 기본값) 안전 접근</text>
+        </svg>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q1</div>
+            <div class="problem-label">포켓몬 목록 출력</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">pokedex에서 HP가 가장 높은 포켓몬의 이름을 출력하는 코드를 작성하세요. (힌트: max() 함수와 key 매개변수를 활용하세요.)</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">꼬부기 (HP 44로 가장 높음)</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">max(pokedex, key=lambda n: pokedex[n]["hp"]) — max에 key 함수를 전달하면 딕셔너리 키를 비교 기준으로 설정할 수 있습니다.</div>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">best = max(pokedex, key=lambda n: pokedex[n]["hp"])
+print(f"HP 최고: {best} (HP {pokedex[best]['hp']})")</div>
+            </div>
+        </details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q2</div>
+            <div class="problem-label">기술 추가 기능</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">포켓몬 이름과 새 기술 이름을 받아서, 해당 포켓몬의 기술 목록에 추가하는 함수 <code>learn_move(name, move)</code>를 작성하세요. 이미 아는 기술이면 "이미 알고 있는 기술입니다."를 출력하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">입력</span><span class="problem-example-value">learn_move("피카츄", "10만볼트")</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">피카츄가 '10만볼트'를 배웠습니다!</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">pokedex[name]["기술"]은 리스트입니다. move in 리스트로 중복을 확인하고, .append()로 추가하세요.</div>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">def learn_move(name, move):
+    if name not in pokedex:
+        print(f"'{name}'은 도감에 없습니다.")
+        return
+    if move in pokedex[name]["기술"]:
+        print("이미 알고 있는 기술입니다.")
+    else:
+        pokedex[name]["기술"].append(move)
+        print(f"{name}가 '{move}'를 배웠습니다!")</div>
+            </div>
+        </details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q3</div>
+            <div class="problem-label">타입별 포켓몬 목록</div>
+            <span class="problem-diff hard">어려움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">특정 타입의 포켓몬만 출력하는 함수 <code>filter_by_type(ptype)</code>을 작성하세요. 해당 타입이 없으면 "해당 타입의 포켓몬이 없습니다."를 출력하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">입력</span><span class="problem-example-value">filter_by_type("불꽃")</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">불꽃 타입 포켓몬: 파이리</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">리스트 컴프리헨션: [n for n, info in pokedex.items() if info["타입"] == ptype] 로 타입 필터링하세요.</div>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">def filter_by_type(ptype):
+    result = [n for n, info in pokedex.items()
+              if info["타입"] == ptype]
+    if not result:
+        print("해당 타입의 포켓몬이 없습니다.")
+    else:
+        print(f"{ptype} 타입 포켓몬: {', '.join(result)}")</div>
+            </div>
+        </details>
+    </div>
+
+    <!-- SVG: 포켓몬 도감 전체 구조 요약 -->
+    <div style="text-align:center;margin:10px 0;">
+        <svg viewBox="0 0 500 54" style="max-width:500px;width:100%">
+            <rect x="5" y="8" width="110" height="38" rx="6" fill="#1e3a5f"/>
+            <text x="60" y="23" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">pokedex</text>
+            <text x="60" y="38" text-anchor="middle" font-size="8" fill="#93c5fd">중첩 딕셔너리</text>
+            <rect x="125" y="8" width="110" height="38" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="180" y="23" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">search_pokemon</text>
+            <text x="180" y="38" text-anchor="middle" font-size="8" fill="#374151">이름으로 검색</text>
+            <rect x="245" y="8" width="110" height="38" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="300" y="23" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">add_pokemon</text>
+            <text x="300" y="38" text-anchor="middle" font-size="8" fill="#374151">새 포켓몬 추가</text>
+            <rect x="365" y="8" width="130" height="38" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="430" y="23" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">battle</text>
+            <text x="430" y="38" text-anchor="middle" font-size="8" fill="#374151">타입 상성 배틀</text>
+        </svg>
+    </div>
+
+    <!-- SVG: 타입 상성 삼각형 -->
+    <div style="text-align:center;margin:10px 0;">
+        <svg viewBox="0 0 500 54" style="max-width:500px;width:100%">
+            <defs>
+                <marker id="arwType" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="5" y="10" width="100" height="34" rx="6" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="55" y="31" text-anchor="middle" font-size="10" fill="#991b1b" font-weight="700">불꽃</text>
+            <line x1="108" y1="27" x2="195" y2="27" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwType)"/>
+            <text x="152" y="22" text-anchor="middle" font-size="8" fill="#64748b">2배 약점</text>
+            <rect x="198" y="10" width="100" height="34" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="248" y="31" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">물</text>
+            <line x1="301" y1="27" x2="388" y2="27" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwType)"/>
+            <text x="345" y="22" text-anchor="middle" font-size="8" fill="#64748b">2배 약점</text>
+            <rect x="391" y="10" width="104" height="34" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="443" y="31" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">풀</text>
+        </svg>
+    </div>
+
+    <!-- SVG: items() 메서드 사용법 -->
+    <div style="text-align:center;margin:10px 0;">
+        <svg viewBox="0 0 500 54" style="max-width:500px;width:100%">
+            <rect x="5" y="8" width="490" height="38" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="20" y="24" font-size="9" fill="#1e3a5f" font-weight="700">for name, info in pokedex.items():</text>
+            <text x="20" y="40" font-size="9" fill="#374151">keys()=키만 / values()=값만 / items()=키+값 동시에 — 딕셔너리 순회의 표준 방법</text>
+        </svg>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/lightbulb.png" alt="아이디어" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>핵심 요약</h3>
+        <ul>
+            <li>중첩 딕셔너리 — 딕셔너리 안에 딕셔너리로 복잡한 데이터 구조 표현</li>
+            <li><code>dict[키1][키2]</code> — 중첩 딕셔너리 접근 방법</li>
+            <li><code>name in pokedex</code> — KeyError 없이 키 존재 여부 확인</li>
+            <li><code>dict.items()</code> — 키와 값을 동시에 순회할 때 사용</li>
+            <li>타입 상성 같은 게임 규칙도 딕셔너리로 표현 가능</li>
+            <li><code>max(dict, key=함수)</code> — 딕셔너리에서 조건으로 최댓값 찾기</li>
+        </ul>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

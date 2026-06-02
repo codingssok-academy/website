@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>L8-PJ08 포인터 매개변수로 min, max, avg 동시 반환</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #e2e8f0; font-family: 'Noto Sans KR', sans-serif; }
+  .page { width: 210mm; min-height: 297mm; background: white; margin: 0 auto 12px; padding: 18mm 20mm 15mm 22mm; position: relative; overflow: hidden; page-break-after: always; counter-increment: pagenum; }
+  .cover-sidebar { position: absolute; left: 0; top: 0; bottom: 0; width: 10px; background: #1e3a5f; }
+  .cover-accent  { position: absolute; left: 10px; top: 0; bottom: 0; width: 7px; background: #0891b2; }
+  .page::after { content: counter(pagenum); position: absolute; bottom: 10mm; right: 15mm; font-size: 10px; color: #94a3b8; font-family: 'JetBrains Mono', monospace; }
+  .page::before { content: 'PJ'; position: absolute; right: 18mm; top: 12mm; font-size: 72px; font-weight: 900; color: rgba(8,145,178,0.04); font-family: 'JetBrains Mono', monospace; pointer-events: none; }
+  .cover-header { display: flex; gap: 6px; align-items: center; margin-bottom: 8mm; }
+  .cover-chapter-badge { background: #0e7490; color: white; font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+  .cover-unit-badge { background: #ecfeff; color: #0891b2; font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 20px; border: 1px solid #a5f3fc; }
+  .cover-title { font-size: 26px; font-weight: 900; color: #0c4a6e; line-height: 1.25; margin-bottom: 4px; }
+  .cover-subtitle { font-size: 13px; color: #0891b2; font-weight: 500; margin-bottom: 6mm; }
+  .cover-desc { font-size: 11.5px; color: #475569; line-height: 1.75; background: #f0f9ff; padding: 10px 14px; border-left: 3px solid #0891b2; border-radius: 0 6px 6px 0; margin-bottom: 6mm; }
+  .cover-meta { display: flex; gap: 8px; flex-wrap: wrap; }
+  .cover-meta span { background: #f1f5f9; border: 1px solid #e2e8f0; padding: 3px 10px; border-radius: 12px; font-size: 10px; color: #64748b; }
+  .section-title { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 800; color: #0c4a6e; margin-bottom: 8px; padding-bottom: 5px; border-bottom: 2px solid #e0f2fe; }
+  .section-title .icon { background: #0891b2; color: white; width: 24px; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 13px; }
+  .code { background: #0f172a; border-radius: 8px; padding: 12px 15px; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; line-height: 1.7; color: #e2e8f0; margin: 8px 0; position: relative; }
+  .code-label { position: absolute; top: 6px; right: 10px; font-size: 9px; color: #475569; font-family: 'JetBrains Mono', monospace; }
+  .code .kw { color: #c084fc; } .code .fn { color: #67e8f9; } .code .str { color: #86efac; }
+  .code .num { color: #7dd3fc; } .code .cmt { color: #64748b; font-style: italic; }
+  .code .ptr { color: #fbbf24; }
+  .output-box { background: #0f172a; border: 1px solid #1e3a5f; border-radius: 8px; padding: 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: #86efac; margin: 8px 0; }
+  .output-box .prompt { color: #64748b; } .output-box .label { color: #7dd3fc; }
+  .info-box { background: #f0f9ff; border-left: 3px solid #0891b2; border-radius: 0 6px 6px 0; padding: 8px 12px; margin: 6px 0; font-size: 11px; color: #0c4a6e; line-height: 1.6; }
+  .challenge { background: linear-gradient(135deg, #ecfeff 0%, #f0f9ff 100%); border: 1.5px solid #67e8f9; border-radius: 10px; padding: 12px 15px; margin: 8px 0; }
+  .challenge h3 { font-size: 13px; font-weight: 800; color: #0891b2; margin-bottom: 8px; }
+  .challenge-item { background: white; border: 1px solid #e0f2fe; border-radius: 6px; padding: 8px 12px; margin: 5px 0; font-size: 11px; }
+  .challenge-item .num { display: inline-block; background: #0891b2; color: white; width: 18px; height: 18px; border-radius: 50%; font-size: 10px; font-weight: 700; text-align: center; line-height: 18px; margin-right: 6px; }
+  .problem { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 14px; margin: 6px 0; }
+  .problem summary { font-size: 11.5px; font-weight: 700; color: #0c4a6e; cursor: pointer; list-style: none; display: flex; align-items: flex-start; gap: 6px; }
+  .problem summary::marker { display: none; }
+  .problem .q-num { background: #0891b2; color: white; width: 20px; height: 20px; border-radius: 50%; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .answer { margin-top: 8px; padding: 8px 10px; background: #ecfeff; border-radius: 6px; font-size: 11px; color: #0c4a6e; line-height: 1.6; border: 1px solid #a5f3fc; }
+  .summary-box { background: linear-gradient(135deg, #0c4a6e 0%, #0e7490 100%); color: white; border-radius: 10px; padding: 12px 15px; margin: 8px 0; }
+  .summary-box h3 { font-size: 13px; font-weight: 800; margin-bottom: 8px; color: #7dd3fc; }
+  .summary-box ul { list-style: none; padding: 0; }
+  .summary-box ul li { font-size: 11px; line-height: 1.75; padding-left: 12px; position: relative; }
+  .summary-box ul li::before { content: '→'; position: absolute; left: 0; color: #67e8f9; }
+  body { counter-reset: pagenum; }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- PAGE 1: 커버 -->
+<div class="page">
+  <div class="cover-sidebar"></div>
+  <div class="cover-accent"></div>
+  <div class="cover-header">
+    <span class="cover-chapter-badge">CHAPTER 8</span>
+    <span class="cover-unit-badge">PROJECT 08</span>
+  </div>
+  <div class="cover-title">min, max, avg<br>동시 반환</div>
+  <div class="cover-subtitle">Return min, max, avg Simultaneously</div>
+  <div class="cover-desc">
+    배열 한 번 순회로 최솟값, 최댓값, 평균을 동시에 계산한다.<br>
+    세 결과를 포인터 매개변수로 호출자에게 전달 — 이것이 C의 다중 반환 패턴이다.
+  </div>
+
+  <!-- 커버 SVG -->
+  <svg width="100%" height="195" viewBox="0 0 520 195">
+    <defs>
+      <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+        <path d="M0,0 L0,6 L8,3 z" fill="#0891b2"/>
+      </marker>
+    </defs>
+
+    <!-- 배열 -->
+    <text x="10" y="18" font-family="Noto Sans KR" font-size="11" fill="#0c4a6e" font-weight="700">배열 {3, 1, 4, 1, 5, 9, 2, 6} → 한 번 순회로 3가지 계산</text>
+
+    <rect x="10"  y="24" width="48" height="36" rx="5" fill="#f1f5f9" stroke="#cbd5e1"/>
+    <text x="34" y="46" text-anchor="middle" font-family="JetBrains Mono" font-size="16" font-weight="700" fill="#334155">3</text>
+
+    <rect x="62"  y="24" width="48" height="36" rx="5" fill="#fee2e2" stroke="#fca5a5" stroke-width="2"/>
+    <text x="86" y="46" text-anchor="middle" font-family="JetBrains Mono" font-size="16" font-weight="700" fill="#dc2626">1</text>
+
+    <rect x="114" y="24" width="48" height="36" rx="5" fill="#f1f5f9" stroke="#cbd5e1"/>
+    <text x="138" y="46" text-anchor="middle" font-family="JetBrains Mono" font-size="16" font-weight="700" fill="#334155">4</text>
+
+    <rect x="166" y="24" width="48" height="36" rx="5" fill="#fee2e2" stroke="#fca5a5" stroke-width="2"/>
+    <text x="190" y="46" text-anchor="middle" font-family="JetBrains Mono" font-size="16" font-weight="700" fill="#dc2626">1</text>
+
+    <rect x="218" y="24" width="48" height="36" rx="5" fill="#f1f5f9" stroke="#cbd5e1"/>
+    <text x="242" y="46" text-anchor="middle" font-family="JetBrains Mono" font-size="16" font-weight="700" fill="#334155">5</text>
+
+    <rect x="270" y="22" width="48" height="40" rx="5" fill="#dcfce7" stroke="#22c55e" stroke-width="3"/>
+    <text x="294" y="46" text-anchor="middle" font-family="JetBrains Mono" font-size="18" font-weight="900" fill="#166534">9</text>
+
+    <rect x="322" y="24" width="48" height="36" rx="5" fill="#f1f5f9" stroke="#cbd5e1"/>
+    <text x="346" y="46" text-anchor="middle" font-family="JetBrains Mono" font-size="16" font-weight="700" fill="#334155">2</text>
+
+    <rect x="374" y="24" width="48" height="36" rx="5" fill="#f1f5f9" stroke="#cbd5e1"/>
+    <text x="398" y="46" text-anchor="middle" font-family="JetBrains Mono" font-size="16" font-weight="700" fill="#334155">6</text>
+
+    <!-- 레이블 -->
+    <text x="86" y="72" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#dc2626">min=1</text>
+    <text x="190" y="72" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#dc2626">min=1</text>
+    <text x="294" y="72" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#166534">max=9</text>
+
+    <!-- 결과 박스들 -->
+    <rect x="10" y="84" width="148" height="44" rx="8" fill="#fee2e2" stroke="#fca5a5" stroke-width="2"/>
+    <text x="84" y="102" text-anchor="middle" font-family="Noto Sans KR" font-size="10" fill="#dc2626" font-weight="700">최솟값 (min)</text>
+    <text x="84" y="120" text-anchor="middle" font-family="JetBrains Mono" font-size="16" font-weight="900" fill="#dc2626">1</text>
+
+    <rect x="170" y="84" width="148" height="44" rx="8" fill="#dcfce7" stroke="#86efac" stroke-width="2"/>
+    <text x="244" y="102" text-anchor="middle" font-family="Noto Sans KR" font-size="10" fill="#166534" font-weight="700">최댓값 (max)</text>
+    <text x="244" y="120" text-anchor="middle" font-family="JetBrains Mono" font-size="16" font-weight="900" fill="#166534">9</text>
+
+    <rect x="330" y="84" width="180" height="44" rx="8" fill="#fef9c3" stroke="#fbbf24" stroke-width="2"/>
+    <text x="420" y="102" text-anchor="middle" font-family="Noto Sans KR" font-size="10" fill="#d97706" font-weight="700">평균 (avg)</text>
+    <text x="420" y="120" text-anchor="middle" font-family="JetBrains Mono" font-size="16" font-weight="900" fill="#d97706">3.875</text>
+
+    <!-- 함수 시그니처 -->
+    <rect x="10" y="140" width="500" height="48" rx="8" fill="#0f172a"/>
+    <text x="20" y="158" font-family="Noto Sans KR" font-size="10" fill="#64748b">함수 시그니처:</text>
+    <text x="20" y="178" font-family="JetBrains Mono" font-size="10" fill="#c084fc">void</text>
+    <text x="48" y="178" font-family="JetBrains Mono" font-size="10" fill="#67e8f9"> stats</text>
+    <text x="85" y="178" font-family="JetBrains Mono" font-size="10" fill="#e2e8f0">(int *arr, int n, </text>
+    <text x="222" y="178" font-family="JetBrains Mono" font-size="10" fill="#c084fc">int</text>
+    <text x="242" y="178" font-family="JetBrains Mono" font-size="10" fill="#fbbf24"> *mn</text>
+    <text x="268" y="178" font-family="JetBrains Mono" font-size="10" fill="#e2e8f0">, </text>
+    <text x="278" y="178" font-family="JetBrains Mono" font-size="10" fill="#c084fc">int</text>
+    <text x="298" y="178" font-family="JetBrains Mono" font-size="10" fill="#fbbf24"> *mx</text>
+    <text x="324" y="178" font-family="JetBrains Mono" font-size="10" fill="#e2e8f0">, </text>
+    <text x="334" y="178" font-family="JetBrains Mono" font-size="10" fill="#c084fc">double</text>
+    <text x="372" y="178" font-family="JetBrains Mono" font-size="10" fill="#fbbf24"> *avg</text>
+    <text x="398" y="178" font-family="JetBrains Mono" font-size="10" fill="#e2e8f0">)</text>
+  </svg>
+
+  <div class="cover-meta">
+    <span>난이도 </span>
+    <span>배열 1회 순회</span>
+    <span>3가지 동시 계산</span>
+    <span>double 평균 처리</span>
+  </div>
+</div>
+
+<!-- PAGE 2: 완성 코드 -->
+<div class="page">
+  <div class="cover-sidebar"></div>
+  <div class="cover-accent"></div>
+
+  <div style="display:flex;align-items:center;gap:8px;margin:10px 0 6px;padding:6px 12px;background:#eff6ff;border-radius:6px;">
+    <img src="/images/learn/computer-basics/cpu.png" alt="CPU - 포인터와 메모리 처리" style="width:26px;height:26px;object-fit:contain;background:#fff;border-radius:8px;">
+</div>
+<div class="section-title">
+    <div class="icon"></div>
+    완성 코드
+  </div>
+
+  <div class="code">
+    <span class="code-label">stats.c</span>
+    <span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span><br>
+    <br>
+    <span class="cmt">/* 배열 한 번 순회로 min, max, avg 동시 계산 */</span><br>
+    <span class="kw">void</span> <span class="fn">stats</span>(<span class="kw">int</span> <span class="ptr">*arr</span>, <span class="kw">int</span> n,<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">int</span> <span class="ptr">*mn</span>, <span class="kw">int</span> <span class="ptr">*mx</span>, <span class="kw">double</span> <span class="ptr">*avg</span>) {<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="ptr">*mn</span> = arr[<span class="num">0</span>];  <span class="cmt">// 첫 원소로 초기화</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="ptr">*mx</span> = arr[<span class="num">0</span>];<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">int</span> sum = <span class="num">0</span>;<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; n; i++) {<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">if</span> (arr[i] &lt; <span class="ptr">*mn</span>) <span class="ptr">*mn</span> = arr[i];  <span class="cmt">// 최솟값 갱신</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">if</span> (arr[i] &gt; <span class="ptr">*mx</span>) <span class="ptr">*mx</span> = arr[i];  <span class="cmt">// 최댓값 갱신</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sum += arr[i];<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="ptr">*avg</span> = (<span class="kw">double</span>)sum / n;  <span class="cmt">// 형변환 후 나눗셈</span><br>
+    }<br>
+    <br>
+    <span class="kw">int</span> <span class="fn">main</span>() {<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">int</span> arr[] = {<span class="num">3</span>, <span class="num">1</span>, <span class="num">4</span>, <span class="num">1</span>, <span class="num">5</span>, <span class="num">9</span>, <span class="num">2</span>, <span class="num">6</span>};<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">int</span> n = <span class="kw">sizeof</span>(arr) / <span class="kw">sizeof</span>(arr[<span class="num">0</span>]);<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">int</span> min_val, max_val;<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">double</span> avg_val;<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">stats</span>(arr, n, &amp;min_val, &amp;max_val, &amp;avg_val);<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">printf</span>(<span class="str">"최솟값: %d\n"</span>, min_val);<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">printf</span>(<span class="str">"최댓값: %d\n"</span>, max_val);<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">printf</span>(<span class="str">"평균:   %.2f\n"</span>, avg_val);<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">return</span> <span class="num">0</span>;<br>
+    }
+  </div>
+
+  <div class="output-box">
+    <span class="prompt">$ gcc stats.c -o stats &amp;&amp; ./stats</span><br>
+    <span class="label">최솟값:</span> 1<br>
+    <span class="label">최댓값:</span> 9<br>
+    <span class="label">평균: </span> 3.88
+  </div>
+
+  <!-- 순회 시각화 SVG -->
+  <svg width="100%" height="90" viewBox="0 0 520 90">
+    <text x="10" y="16" font-family="Noto Sans KR" font-size="10" fill="#0c4a6e" font-weight="700">i=5 (arr[5]=9) 에서 min, max, sum 상태</text>
+    <rect x="10" y="24" width="500" height="58" rx="8" fill="#f8fafc" stroke="#e2e8f0"/>
+    <rect x="20" y="32" width="80" height="42" rx="5" fill="#fee2e2" stroke="#fca5a5"/>
+    <text x="60" y="48" text-anchor="middle" font-family="Noto Sans KR" font-size="9" fill="#dc2626" font-weight="700">*mn (최솟값)</text>
+    <text x="60" y="66" text-anchor="middle" font-family="JetBrains Mono" font-size="18" font-weight="900" fill="#dc2626">1</text>
+    <rect x="115" y="32" width="80" height="42" rx="5" fill="#dcfce7" stroke="#86efac"/>
+    <text x="155" y="48" text-anchor="middle" font-family="Noto Sans KR" font-size="9" fill="#166534" font-weight="700">*mx (최댓값)</text>
+    <text x="155" y="66" text-anchor="middle" font-family="JetBrains Mono" font-size="18" font-weight="900" fill="#166534">9</text>
+    <rect x="210" y="32" width="80" height="42" rx="5" fill="#fef9c3" stroke="#fbbf24"/>
+    <text x="250" y="48" text-anchor="middle" font-family="Noto Sans KR" font-size="9" fill="#d97706" font-weight="700">sum</text>
+    <text x="250" y="66" text-anchor="middle" font-family="JetBrains Mono" font-size="18" font-weight="900" fill="#d97706">25</text>
+    <rect x="305" y="32" width="195" height="42" rx="5" fill="#f0f9ff" stroke="#7dd3fc"/>
+    <text x="402" y="44" text-anchor="middle" font-family="Noto Sans KR" font-size="9" fill="#0891b2" font-weight="700">*avg = (double)sum / n</text>
+    <text x="402" y="64" text-anchor="middle" font-family="JetBrains Mono" font-size="14" font-weight="700" fill="#0891b2">31 / 8 = 3.875</text>
+  </svg>
+</div>
+
+<!-- PAGE 3: 응용 + double 처리 주의사항 -->
+<div class="page">
+  <div class="cover-sidebar"></div>
+  <div class="cover-accent"></div>
+
+  <div style="display:flex;align-items:center;gap:8px;margin:10px 0 6px;padding:6px 12px;background:#eff6ff;border-radius:6px;">
+    <img src="/images/learn/computer-basics/ram.png" alt="RAM - 포인터가 가리키는 메모리" style="width:26px;height:26px;object-fit:contain;background:#fff;border-radius:8px;">
+</div>
+<div class="section-title">
+    <div class="icon"></div>
+    평균 계산 주의: 정수 나눗셈 vs 실수 나눗셈
+  </div>
+
+  <div class="code">
+    <span class="code-label">avg_warning.c</span>
+    <span class="cmt">/* 잘못된 평균 계산 */</span><br>
+    <span class="kw">int</span> sum = <span class="num">31</span>;<br>
+    <span class="kw">int</span> n = <span class="num">8</span>;<br>
+    <span class="kw">double</span> avg1 = sum / n;          <span class="cmt">// → 3.000000 (정수 나눗셈 후 대입!)</span><br>
+    <span class="kw">double</span> avg2 = (<span class="kw">double</span>)sum / n;   <span class="cmt">// → 3.875000 (올바른 방법)</span><br>
+    <span class="kw">double</span> avg3 = sum / (<span class="kw">double</span>)n;   <span class="cmt">// → 3.875000 (이것도 가능)</span><br>
+    <span class="kw">double</span> avg4 = (<span class="kw">double</span>)(sum / n); <span class="cmt">// → 3.000000 (이미 정수 나눗셈 후 캐스팅)</span>
+  </div>
+
+  <div class="info-box">
+    <strong>핵심:</strong> (double)sum / n 에서 먼저 sum을 double로 변환 → sum/n 나눗셈이 실수 나눗셈이 된다. 괄호 위치가 결과를 완전히 바꾼다.
+  </div>
+
+  <div class="section-title" style="margin-top:8px">
+    <div class="icon"></div>
+    활용: 성적 통계 프로그램
+  </div>
+
+  <div class="code">
+    <span class="code-label">grade_stats.c</span>
+    <span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span><br>
+    <br>
+    <span class="kw">void</span> <span class="fn">grade_stats</span>(<span class="kw">int</span> <span class="ptr">*scores</span>, <span class="kw">int</span> n,<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">int</span> <span class="ptr">*pass</span>, <span class="kw">int</span> <span class="ptr">*fail</span>, <span class="kw">double</span> <span class="ptr">*avg</span>) {<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="ptr">*pass</span> = <span class="ptr">*fail</span> = <span class="num">0</span>;<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">int</span> sum = <span class="num">0</span>;<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; n; i++) {<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sum += <span class="ptr">*scores</span>;<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">if</span> (<span class="ptr">*scores</span> &gt;= <span class="num">60</span>) (<span class="ptr">*pass</span>)++; <span class="kw">else</span> (<span class="ptr">*fail</span>)++;<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="ptr">scores</span>++;<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="ptr">*avg</span> = (<span class="kw">double</span>)sum / n;<br>
+    }<br>
+    <br>
+    <span class="kw">int</span> <span class="fn">main</span>() {<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">int</span> scores[] = {<span class="num">85</span>, <span class="num">42</span>, <span class="num">73</span>, <span class="num">91</span>, <span class="num">55</span>, <span class="num">68</span>};<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">int</span> pass, fail; <span class="kw">double</span> avg;<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">grade_stats</span>(scores, <span class="num">6</span>, &amp;pass, &amp;fail, &amp;avg);<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">printf</span>(<span class="str">"합격: %d명, 불합격: %d명, 평균: %.1f\n"</span>, pass, fail, avg);<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">return</span> <span class="num">0</span>;<br>
+    }
+  </div>
+
+  <div class="output-box">
+    <span class="prompt">$ ./grade_stats</span><br>
+    합격: 4명, 불합격: 2명, 평균: 69.0
+  </div>
+</div>
+
+<!-- PAGE 4: 도전 과제 + 연습문제 -->
+<div class="page">
+  <div class="cover-sidebar"></div>
+  <div class="cover-accent"></div>
+
+  <div style="display:flex;align-items:center;gap:8px;margin:12px 0 6px;padding:7px 12px;background:#fefce8;border-radius:6px;border-left:3px solid #f59e0b;">
+    <img src="/images/learn/c-lang/binary-code.png" alt="이진 코드 - 메모리 주소 표현" style="width:24px;height:24px;object-fit:contain;background:#fff;border-radius:8px;">
+    <span style="font-size:12px;color:#92400e;font-weight:600;">도전 과제</span>
+</div>
+<div class="challenge">
+    <h3>도전 과제</h3>
+    <div class="challenge-item">
+      <span class="num">1</span>
+      <strong>중앙값 추가:</strong> stats 함수에 중앙값을 반환하는 *median 파라미터를 추가하라. 배열 정렬 후 중간 인덱스 값.
+    </div>
+    <div class="challenge-item">
+      <span class="num">2</span>
+      <strong>표준편차:</strong> avg를 먼저 구한 뒤, 다시 순회하여 분산(variance)과 표준편차(stddev)를 계산하는 함수를 작성하라.
+    </div>
+    <div class="challenge-item">
+      <span class="num">3</span>
+      <strong>성적 분포:</strong> A(90+), B(80~89), C(70~79), D(60~69), F(60 미만) 각 개수를 포인터로 반환하는 함수를 작성하라.
+    </div>
+  </div>
+
+  <div class="section-title" style="margin-top:10px">
+    <div class="icon"></div>
+    연습문제
+  </div>
+
+  <details class="problem">
+    <summary><span class="q-num">1</span> <code>*avg = (double)sum / n</code>에서 (double) 캐스팅 없이 쓰면 어떤 결과가 나오는가?</summary>
+    <div class="answer">sum과 n이 모두 int이면 sum/n은 정수 나눗셈. 결과도 int (소수점 버림). 이후 *avg에 대입할 때 정수 → double 변환이 되지만 이미 소수점이 사라졌다. 예: 31/8 = 3 (정수), *avg = 3.0.</div>
+  </details>
+
+  <details class="problem">
+    <summary><span class="q-num">2</span> *mn = arr[0] 초기화가 필요한 이유는? *mn = 0으로 하면 안 되는가?</summary>
+    <div class="answer">*mn = 0으로 초기화하면 배열의 모든 값이 양수일 때 최솟값이 항상 0이 된다 (arr의 실제 최솟값보다 작음). 첫 원소로 초기화해야 실제 최솟값을 찾을 수 있다. 음수 배열에서는 특히 중요하다.</div>
+  </details>
+
+  <details class="problem">
+    <summary><span class="q-num">3</span> stats 함수에서 n=0을 전달하면 어떤 문제가 발생하는가?</summary>
+    <div class="answer">*avg = (double)sum / n에서 0으로 나누기 = 정의되지 않은 동작(UB). 실행 시 프로그램 충돌. 방어적으로 if (n == 0) { *mn = *mx = 0; *avg = 0.0; return; } 처리가 필요하다.</div>
+  </details>
+
+  <details class="problem">
+    <summary><span class="q-num">4</span> 포인터 매개변수 방식과 구조체 반환 방식 중 어느 것이 더 좋은가?</summary>
+    <div class="answer">구조체 반환: 코드가 더 깔끔하고 실수 줄어듦. 단, 구조체 복사 오버헤드.<br>
+    포인터 매개변수: 복사 없이 직접 저장. NULL 전달로 일부 결과 무시 가능. C 표준 라이브러리에서 널리 사용.<br>
+    최신 C/C++ 실무에서는 구조체 반환이 선호되지만, 순수 C 교육에서는 포인터 방식이 중요하다.</div>
+  </details>
+
+  <details class="problem">
+    <summary><span class="q-num">5</span> grade_stats에서 (*pass)++ 대신 *pass++를 쓰면 어떻게 되는가?</summary>
+    <div class="answer">*pass++는 *(pass++)로 해석 — pass 포인터 자체가 다음 주소로 이동하고, 역참조는 이전 주소에서 읽은 값. pass 카운터가 증가하는 게 아니라 포인터가 엉뚱한 메모리를 가리키게 된다. (*pass)++로 괄호를 써야 한다.</div>
+  </details>
+
+  <div class="summary-box">
+    <h3>이번 프로젝트 핵심</h3>
+    <ul>
+      <li>배열 한 번 순회로 여러 통계 값 동시 계산 — O(n) 효율</li>
+      <li>min, max는 첫 원소로 초기화 (0이나 큰 값으로 하면 안 됨)</li>
+      <li>(double)sum / n — 형변환 위치가 결과를 결정한다</li>
+      <li>(*count)++ — 역참조 값 증가는 반드시 괄호 필요</li>
+    </ul>
+  </div>
+
+    <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:20px;padding-top:10px;border-top:1px solid #f1f5f9;">
+        <img src="/images/learn/c-lang/code-screen.png" alt="코드 화면 - 포인터 코드 예시" style="width:22px;height:22px;object-fit:contain;opacity:0.6;background:#fff;border-radius:8px;">
+        <span style="font-size:10px;color:#cbd5e1;">코딩쏙 C언어</span>
+    </div>
+</div>
+
+
+<div style="display:flex;align-items:center;gap:10px;margin:16px 0;padding:10px 16px;background:#f8fafc;border-radius:8px;border:1px solid #e5e7eb;">
+    <img src="/images/learn/computer-basics/cpu.png" alt="CPU - 포인터와 메모리 처리" style="width:32px;height:32px;object-fit:contain;background:#fff;border-radius:8px;">
+</div>
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — dangling 포인터</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+.page { width: 210mm; min-height: 297mm; margin: 16px auto; padding: 18mm 20mm 15mm 22mm; background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: relative; page-break-after: always; }
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after { content: counter(pagenum); position: absolute; bottom: 10mm; right: 16mm; font-size: 10px; color: #94a3b8; font-weight: 600; }
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark { position: absolute; top: -10px; right: -15px; font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3); line-height: 1; pointer-events: none; }
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #2563eb; font-weight: 600; }
+.code { background: #0f172a; border-radius: 8px; padding: 16px 20px; font-family: 'JetBrains Mono', monospace; font-size: 14px; color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap; }
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fce7f3; color: #9d174d; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+.warn-box { background: #fff7ed; border-left: 4px solid #f59e0b; border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 14px 0; font-size: 14px; color: #92400e; }
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<div class="page cover">
+  <div class="cover-sidebar"></div>
+  <div class="cover-accent"></div>
+  <div class="cover-body">
+    <div class="cover-watermark">L10</div>
+    <div class="cover-label">Chapter 10 · Unit 06</div>
+    <h1 class="cover-title">dangling 포인터<br>use-after-free, double free</h1>
+    <p class="cover-sub">해제된 메모리를 가리키는 dangling 포인터, 해제 후 사용(use-after-free), 두 번 해제(double free) 오류를 이해하고 방지합니다.</p>
+    <div style="margin:20px 0;">
+      <svg viewBox="0 0 500 60" style="max-width:500px;width:100%">
+        <rect x="5" y="10" width="110" height="35" rx="6" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+        <text x="60" y="32" text-anchor="middle" font-size="10" fill="#dc2626" font-weight="700">dangling 포인터</text>
+        <line x1="120" y1="27" x2="135" y2="27" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#cv1)"/>
+        <rect x="140" y="10" width="110" height="35" rx="6" fill="#fff1f2" stroke="#f43f5e" stroke-width="1.5"/>
+        <text x="195" y="32" text-anchor="middle" font-size="10" fill="#be123c" font-weight="700">use-after-free</text>
+        <line x1="255" y1="27" x2="270" y2="27" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#cv1)"/>
+        <rect x="275" y="10" width="100" height="35" rx="6" fill="#fdf4ff" stroke="#a855f7" stroke-width="1.5"/>
+        <text x="325" y="32" text-anchor="middle" font-size="10" fill="#7e22ce" font-weight="700">double free</text>
+        <line x1="380" y1="27" x2="395" y2="27" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#cv1)"/>
+        <rect x="400" y="10" width="95" height="35" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+        <text x="447" y="32" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">NULL 대입으로 방지</text>
+        <defs><marker id="cv1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker></defs>
+      </svg>
+    </div>
+    <div class="cover-goals">
+      <h3>이 유닛에서 배우는 것</h3>
+      <ul>
+        <li>dangling 포인터가 무엇인지 설명할 수 있습니다.</li>
+        <li>use-after-free 오류를 인식하고 방지합니다.</li>
+        <li>double free 오류를 이해하고 예방합니다.</li>
+        <li>NULL 대입으로 세 가지 문제를 모두 방지합니다.</li>
+        <li>스택 변수를 가리키는 dangling 포인터도 인식합니다.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+  <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/computer-basics/ram.png" alt="RAM - 동적 메모리 할당 공간" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>dangling 포인터 — 유령을 가리키는 포인터</h2>
+  <p><strong>dangling 포인터</strong>는 이미 해제되었거나 더 이상 유효하지 않은 메모리를 가리키는 포인터입니다. "허공을 가리키는 포인터"라고 생각하면 됩니다.</p>
+  <div style="text-align:center;margin:18px 0;">
+    <svg viewBox="0 0 460 150" style="max-width:460px;width:100%">
+      <text x="10" y="20" font-size="11" fill="#374151" font-weight="700">1. free() 후 p는 여전히 old 주소를 기억</text>
+      <rect x="10" y="30" width="80" height="35" rx="6" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+      <text x="50" y="48" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">포인터 p</text>
+      <text x="50" y="62" text-anchor="middle" font-size="9" fill="#64748b">0x1234</text>
+      <path d="M95,47 L120,47" stroke="#ef4444" stroke-width="2" stroke-dasharray="5,3" marker-end="url(#dg1)"/>
+      <rect x="125" y="30" width="80" height="35" rx="6" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="5,3"/>
+      <text x="165" y="48" text-anchor="middle" font-size="10" fill="#ef4444" font-weight="700">해제된 메모리</text>
+      <text x="165" y="62" text-anchor="middle" font-size="9" fill="#ef4444">0x1234 (무효!)</text>
+      <text x="10" y="95" font-size="11" fill="#374151" font-weight="700">2. *p = 99 → 해제된 곳에 쓰기 = 위험!</text>
+      <rect x="10" y="105" width="200" height="35" rx="6" fill="#fef2f2" stroke="#ef4444" stroke-width="2"/>
+      <text x="110" y="127" text-anchor="middle" font-size="11" fill="#dc2626" font-weight="700">정의되지 않은 동작 (UB) — 프로그램 오작동!</text>
+      <text x="250" y="95" font-size="11" fill="#166534" font-weight="700">해결: free 후 p = NULL</text>
+      <rect x="250" y="105" width="200" height="35" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="2"/>
+      <text x="350" y="120" text-anchor="middle" font-size="10" fill="#166534">free(p); p = NULL;</text>
+      <text x="350" y="135" text-anchor="middle" font-size="9" fill="#166534">NULL 체크로 사용 차단 가능</text>
+      <defs><marker id="dg1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#ef4444"/></marker></defs>
+    </svg>
+  </div>
+  <div class="code"><span class="cmt">// dangling 포인터 예시</span>
+<span class="kw">int</span> *p = (<span class="kw">int</span>*)<span class="fn">malloc</span>(<span class="kw">sizeof</span>(<span class="kw">int</span>));
+*p = <span class="num">42</span>;
+<span class="fn">free</span>(p);        <span class="cmt">// 메모리 반납</span>
+
+<span class="cmt">// p는 아직 옛 주소를 기억함 — dangling 포인터!</span>
+*p = <span class="num">99</span>;        <span class="cmt">// use-after-free! 위험한 코드</span>
+<span class="fn">printf</span>(<span class="str">"%d\n"</span>, *p); <span class="cmt">// 결과 예측 불가</span>
+
+<span class="cmt">// 해결: free 직후 NULL 대입</span>
+<span class="fn">free</span>(p);
+p = <span class="num">NULL</span>;       <span class="cmt">// dangling 포인터 방지</span></div>
+</div>
+
+<div class="page">
+  <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/computer-basics/cpu.png" alt="CPU - 동적 메모리 처리 장치" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>use-after-free와 double free</h2>
+  <div style="text-align:center;margin:16px 0;">
+    <svg viewBox="0 0 460 130" style="max-width:460px;width:100%">
+      <rect x="10" y="10" width="210" height="110" rx="8" fill="#fff1f2" stroke="#f43f5e" stroke-width="2"/>
+      <text x="115" y="34" text-anchor="middle" font-size="12" fill="#be123c" font-weight="800">use-after-free</text>
+      <text x="20" y="58" font-size="10" fill="#374151" font-family="JetBrains Mono">free(p);</text>
+      <text x="20" y="76" font-size="10" fill="#ef4444" font-family="JetBrains Mono">*p = 10; // 위험!</text>
+      <text x="20" y="94" font-size="10" fill="#374151">해제된 메모리에 접근</text>
+      <text x="115" y="112" text-anchor="middle" font-size="10" fill="#be123c" font-weight="700">프로그램 오작동 / 보안 취약점</text>
+      <rect x="240" y="10" width="210" height="110" rx="8" fill="#fdf4ff" stroke="#a855f7" stroke-width="2"/>
+      <text x="345" y="34" text-anchor="middle" font-size="12" fill="#7e22ce" font-weight="800">double free</text>
+      <text x="250" y="58" font-size="10" fill="#374151" font-family="JetBrains Mono">free(p);</text>
+      <text x="250" y="76" font-size="10" fill="#a855f7" font-family="JetBrains Mono">free(p); // 위험!</text>
+      <text x="250" y="94" font-size="10" fill="#374151">같은 주소를 두 번 해제</text>
+      <text x="345" y="112" text-anchor="middle" font-size="10" fill="#7e22ce" font-weight="700">힙 손상 / 프로그램 충돌</text>
+    </svg>
+  </div>
+  <div class="code"><span class="cmt">// double free 예시와 방지</span>
+<span class="kw">int</span> *p = (<span class="kw">int</span>*)<span class="fn">malloc</span>(<span class="num">40</span>);
+
+<span class="fn">free</span>(p);
+<span class="fn">free</span>(p);   <span class="cmt">// double free! → 오류</span>
+
+<span class="cmt">// 방지: free 후 NULL 대입</span>
+<span class="fn">free</span>(p);
+p = <span class="num">NULL</span>;
+<span class="fn">free</span>(p);   <span class="cmt">// free(NULL) → 아무 일도 안 함 (안전)</span></div>
+  <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/computer-basics/hard-drive.png" alt="하드 드라이브 - 메모리 저장 개념" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>스택 변수 dangling 포인터</h2>
+  <p>함수가 끝난 후 지역 변수의 주소를 사용하는 것도 dangling 포인터입니다.</p>
+  <div class="code"><span class="cmt">// 스택 변수 dangling 예시</span>
+<span class="kw">int</span>* <span class="fn">bad</span>() {
+    <span class="kw">int</span> x = <span class="num">10</span>;   <span class="cmt">// 스택 변수</span>
+    <span class="kw">return</span> &x;    <span class="cmt">// 함수 끝나면 x는 사라짐 → dangling!</span>
+}
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="kw">int</span> *p = <span class="fn">bad</span>();  <span class="cmt">// p는 사라진 x를 가리킴</span>
+    <span class="fn">printf</span>(<span class="str">"%d\n"</span>, *p); <span class="cmt">// 미정의 동작!</span>
+}</div>
+  <div class="warn-box">지역 변수의 주소를 반환하지 마세요! 함수가 끝나면 스택 변수는 사라집니다.</div>
+  <div style="display:flex;align-items:center;gap:6px;margin:14px 0 4px;">
+        <img src="/images/learn/computer-basics/hard-drive.png" alt="하드 드라이브 - 메모리 저장 개념" style="width:24px;height:24px;object-fit:contain;background:#fff;border-radius:8px;">
+        <span style="font-size:12px;color:#1d4ed8;font-weight:600;">실습 구역</span>
+    </div>
+<div class="practice">
+    <div class="practice-head">따라해보세요</div>
+    <div class="practice-body">
+      <div class="practice-item">
+        <div class="practice-num">1</div>
+        <div class="practice-desc">dangling 포인터를 방지하는 올바른 패턴을 연습하세요.</div>
+        <div class="code"><span class="kw">int</span> *p = (<span class="kw">int</span>*)<span class="fn">malloc</span>(<span class="kw">sizeof</span>(<span class="kw">int</span>));
+<span class="kw">if</span> (p == <span class="num">NULL</span>) <span class="kw">return</span> <span class="num">1</span>;
+*p = <span class="num">42</span>;
+<span class="fn">printf</span>(<span class="str">"%d\n"</span>, *p);
+<span class="fn">free</span>(p);
+p = <span class="num">NULL</span>;  <span class="cmt">// dangling 방지</span>
+<span class="kw">if</span> (p != <span class="num">NULL</span>) *p = <span class="num">99</span>; <span class="cmt">// 이 줄은 실행 안 됨 (안전)</span></div>
+        <div class="practice-result">42 출력 후 p=NULL로 안전하게 처리됩니다</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+  <h2>연습 문제</h2>
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">1</div>
+      <div class="problem-label">dangling 포인터 정의</div>
+      <div class="problem-diff easy">쉬움</div>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">dangling 포인터란 무엇인가요?<br>① NULL을 가리키는 포인터<br>② 해제되었거나 유효하지 않은 메모리를 가리키는 포인터<br>③ 초기화 안 된 포인터<br>④ 다른 포인터를 가리키는 포인터</div>
+      <details class="problem-toggle">
+        <summary>힌트 / 정답 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="answer-code">정답: ②
+dangling 포인터는 이미 해제된 메모리나 유효하지 않은 주소를 가리키는 포인터입니다.</div>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">2</div>
+      <div class="problem-label">double free 방지</div>
+      <div class="problem-diff easy">쉬움</div>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">double free를 방지하기 위한 가장 간단한 방법은?</div>
+      <details class="problem-toggle">
+        <summary>힌트 / 정답 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="answer-code">free(p) 후 바로 p = NULL 대입.
+free(NULL)은 아무 일도 하지 않으므로
+실수로 두 번 free해도 안전합니다.</div>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">3</div>
+      <div class="problem-label">코드 오류 찾기</div>
+      <div class="problem-diff medium">보통</div>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">다음 코드의 문제점을 설명하세요.</div>
+      <div class="problem-example">
+        <div class="problem-example-row"><span class="problem-example-label">코드</span><span class="problem-example-value">int *p = malloc(sizeof(int));</span></div>
+        <div class="problem-example-row"><span class="problem-example-label"></span><span class="problem-example-value">free(p);  *p = 100;  printf("%d", *p);</span></div>
+      </div>
+      <details class="problem-toggle">
+        <summary>힌트 / 정답 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="answer-code">use-after-free 오류입니다.
+free(p) 후에 *p = 100으로 접근하면
+해제된 메모리에 쓰는 것입니다.
+결과를 예측할 수 없고 프로그램이 오작동할 수 있습니다.
+수정: free(p) 전에 값을 사용하거나, free 후 p=NULL 대입.</div>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">4</div>
+      <div class="problem-label">스택 dangling</div>
+      <div class="problem-diff medium">보통</div>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">다음 코드가 위험한 이유는?</div>
+      <div class="problem-example">
+        <div class="problem-example-row"><span class="problem-example-label">코드</span><span class="problem-example-value">int* getVal() { int x = 5; return &amp;x; }</span></div>
+      </div>
+      <details class="problem-toggle">
+        <summary>힌트 / 정답 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="answer-code">x는 스택 변수입니다.
+함수 getVal()이 끝나면 x는 스택에서 사라집니다.
+반환된 &x를 사용하면 이미 사라진 메모리를 접근합니다 (dangling).
+수정: static int x나 동적 할당을 사용하세요.</div>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">5</div>
+      <div class="problem-label">안전한 코드 완성</div>
+      <div class="problem-diff hard">어려움</div>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">다음 코드에서 dangling, double free, use-after-free를 모두 방지하도록 수정하세요.</div>
+      <div class="problem-example">
+        <div class="problem-example-row"><span class="problem-example-label">원본</span><span class="problem-example-value">int *p = malloc(40); free(p); free(p); *p = 5;</span></div>
+      </div>
+      <details class="problem-toggle">
+        <summary>힌트 / 정답 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="answer-code">int *p = (int*)malloc(40);
+if (p == NULL) return 1;
+// 사용...
+free(p);
+p = NULL;  // 모든 문제 방지
+// free(p) → free(NULL) → 안전
+// *p = 5 전에 if(p != NULL) 체크 가능</div>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;margin:16px 0 6px;padding:8px 14px;background:#f0f9ff;border-radius:6px;border:1px solid #bae6fd;">
+        <img src="/images/learn/computer-basics/ram.png" alt="RAM - 동적 메모리 할당 공간" style="width:28px;height:28px;object-fit:contain;background:#fff;border-radius:8px;">
+        <img src="/images/learn/computer-basics/cpu.png" alt="CPU - 동적 메모리 처리 장치" style="width:28px;height:28px;object-fit:contain;background:#fff;border-radius:8px;">
+        <span style="font-size:12px;color:#0369a1;font-weight:600;">핵심 정리</span>
+    </div>
+<div class="summary">
+    <h3>핵심 정리</h3>
+    <ul>
+      <li>dangling 포인터 — 해제된 메모리를 가리키는 포인터</li>
+      <li>use-after-free — 해제 후 메모리 접근 → 미정의 동작</li>
+      <li>double free — 같은 메모리 두 번 해제 → 힙 손상</li>
+      <li>방지법 — free 후 즉시 p = NULL 대입</li>
+      <li>스택 dangling — 지역 변수 주소를 반환하지 말 것</li>
+    </ul>
+  </div>
+
+    <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:20px;padding-top:10px;border-top:1px solid #f1f5f9;">
+        <img src="/images/learn/c-lang/binary-code.png" alt="이진 코드 - 메모리 할당 구조" style="width:22px;height:22px;object-fit:contain;opacity:0.6;background:#fff;border-radius:8px;">
+        <span style="font-size:10px;color:#cbd5e1;">코딩쏙 C언어</span>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

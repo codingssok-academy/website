@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 프로젝트 12: 미로 탐색기</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+.page { width: 210mm; min-height: 297mm; margin: 16px auto; padding: 18mm 20mm 15mm 22mm; background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: relative; page-break-after: always; }
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after { content: counter(pagenum); position: absolute; bottom: 10mm; right: 16mm; font-size: 10px; color: #94a3b8; font-weight: 600; }
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark { position: absolute; top: -10px; right: -15px; font-size: 200px; font-weight: 900; color: rgba(180,195,212,0.3); line-height: 1; pointer-events: none; }
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 34px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #2563eb; font-weight: 600; }
+.code { background: #0f172a; border-radius: 8px; padding: 16px 20px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.8; margin: 14px 0; white-space: pre-wrap; }
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.practice { margin: 18px 0; border-left: 4px solid #3b82f6; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 14px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+.problem { margin: 16px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+.summary { border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+.pj-banner { background: linear-gradient(135deg, #1e3a5f 0%, #2d5a8e 100%); border-radius: 10px; padding: 16px 20px; margin: 0 0 20px; color: #fff; }
+.pj-banner-label { font-size: 11px; font-weight: 700; color: #93c5fd; letter-spacing: 2px; margin-bottom: 4px; }
+.pj-banner-title { font-size: 18px; font-weight: 900; }
+.pj-banner-desc { font-size: 13px; color: #bfdbfe; margin-top: 4px; }
+.callout { border-radius: 8px; padding: 12px 16px; margin: 14px 0; font-size: 14px; line-height: 1.7; }
+.callout.blue { background: #eff6ff; border-left: 4px solid #3b82f6; color: #1e40af; }
+.callout.purple { background: #faf5ff; border-left: 4px solid #a855f7; color: #7e22ce; }
+.maze-legend { display: flex; gap: 16px; margin: 10px 0; flex-wrap: wrap; }
+.maze-legend-item { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #374151; }
+.maze-dot { width: 16px; height: 16px; border-radius: 3px; }
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">P12</div>
+        <div class="cover-label">Level 6 · Project 12</div>
+        <h1 class="cover-title">미로 탐색기<br>— 2차원 배열 + 재귀 탐색</h1>
+        <p class="cover-sub">2차원 배열로 미로를 만들고, 재귀 함수로 출구를 찾는 DFS(깊이 우선 탐색) 알고리즘을 구현합니다.</p>
+
+        <div style="text-align:center;margin:24px 0;">
+            <svg viewBox="0 0 480 130" style="max-width:480px;width:100%">
+                <!-- 미로 그리드 (5x5) -->
+                <defs>
+                    <pattern id="wall" width="30" height="30" patternUnits="userSpaceOnUse">
+                        <rect width="30" height="30" fill="#374151"/>
+                    </pattern>
+                </defs>
+                <!-- 배경 -->
+                <rect x="10" y="10" width="150" height="110" rx="4" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+                <!-- 미로 셀 -->
+                <!-- 행0 -->
+                <rect x="10" y="10" width="30" height="22" fill="#374151"/>
+                <rect x="40" y="10" width="30" height="22" fill="#374151"/>
+                <rect x="70" y="10" width="30" height="22" fill="#374151"/>
+                <rect x="100" y="10" width="30" height="22" fill="#374151"/>
+                <rect x="130" y="10" width="30" height="22" fill="#374151"/>
+                <!-- 행1 -->
+                <rect x="10" y="32" width="30" height="22" fill="#374151"/>
+                <rect x="40" y="32" width="30" height="22" fill="#fef9c3"/>
+                <text x="55" y="47" text-anchor="middle" font-size="8" fill="#854d0e">S</text>
+                <rect x="70" y="32" width="30" height="22" fill="#f8fafc"/>
+                <rect x="100" y="32" width="30" height="22" fill="#374151"/>
+                <rect x="130" y="32" width="30" height="22" fill="#374151"/>
+                <!-- 행2 -->
+                <rect x="10" y="54" width="30" height="22" fill="#374151"/>
+                <rect x="40" y="54" width="30" height="22" fill="#374151"/>
+                <rect x="70" y="54" width="30" height="22" fill="#f8fafc"/>
+                <rect x="100" y="54" width="30" height="22" fill="#f8fafc"/>
+                <rect x="130" y="54" width="30" height="22" fill="#374151"/>
+                <!-- 행3 -->
+                <rect x="10" y="76" width="30" height="22" fill="#374151"/>
+                <rect x="40" y="76" width="30" height="22" fill="#f8fafc"/>
+                <rect x="70" y="76" width="30" height="22" fill="#374151"/>
+                <rect x="100" y="76" width="30" height="22" fill="#f8fafc"/>
+                <rect x="130" y="76" width="30" height="22" fill="#374151"/>
+                <!-- 행4 -->
+                <rect x="10" y="98" width="30" height="22" fill="#374151"/>
+                <rect x="40" y="98" width="30" height="22" fill="#374151"/>
+                <rect x="70" y="98" width="30" height="22" fill="#374151"/>
+                <rect x="100" y="98" width="30" height="22" fill="#dcfce7"/>
+                <text x="115" y="113" text-anchor="middle" font-size="8" fill="#166534">E</text>
+                <rect x="130" y="98" width="30" height="22" fill="#374151"/>
+                <!-- 경로 표시 -->
+                <rect x="70" y="32" width="30" height="22" fill="#dbeafe" opacity="0.7"/>
+                <rect x="70" y="54" width="30" height="22" fill="#dbeafe" opacity="0.7"/>
+                <rect x="100" y="54" width="30" height="22" fill="#dbeafe" opacity="0.7"/>
+                <rect x="100" y="76" width="30" height="22" fill="#dbeafe" opacity="0.7"/>
+                <!-- 설명 -->
+                <text x="200" y="30" font-size="12" fill="#374151" font-weight="700">미로 표현</text>
+                <rect x="200" y="40" width="14" height="14" fill="#374151" rx="2"/>
+                <text x="220" y="52" font-size="11" fill="#374151">1 = 벽</text>
+                <rect x="200" y="62" width="14" height="14" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" rx="2"/>
+                <text x="220" y="74" font-size="11" fill="#374151">0 = 길</text>
+                <rect x="200" y="84" width="14" height="14" fill="#fef9c3" stroke="#eab308" stroke-width="1" rx="2"/>
+                <text x="220" y="96" font-size="11" fill="#374151">S = 시작</text>
+                <rect x="200" y="106" width="14" height="14" fill="#dcfce7" stroke="#22c55e" stroke-width="1" rx="2"/>
+                <text x="220" y="118" font-size="11" fill="#374151">E = 출구</text>
+                <rect x="320" y="84" width="14" height="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="1" rx="2"/>
+                <text x="340" y="96" font-size="11" fill="#374151">. = 경로</text>
+            </svg>
+        </div>
+
+        <div class="cover-goals">
+            <h3>이 프로젝트에서 배우는 것</h3>
+            <ul>
+                <li>2차원 배열로 미로를 표현하는 방법을 배웁니다.</li>
+                <li>재귀로 상하좌우 4방향을 탐색하는 DFS를 구현합니다.</li>
+                <li>방문 처리(visited)로 무한 루프를 방지합니다.</li>
+                <li>백트래킹(막히면 돌아가기) 원리를 이해합니다.</li>
+                <li>printMaze 함수로 미로를 시각적으로 출력합니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="page">
+    <div class="pj-banner">
+        <div class="pj-banner-label">PROJECT 12</div>
+        <div class="pj-banner-title">미로 탐색기</div>
+        <div class="pj-banner-desc">2차원 배열 + DFS 재귀 + 백트래킹</div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/c-lang/gear.png" alt="함수 기어 - 재사용 가능한 코드 구조" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>미로 표현 — 2차원 배열</h2>
+    <p>미로는 2차원 배열로 표현합니다. 1은 벽, 0은 길입니다. <code>maze[행][열]</code>으로 접근합니다.</p>
+
+    <div class="code"><span class="kw">int</span> maze[<span class="num">5</span>][<span class="num">5</span>] = {
+    {<span class="num">1</span>,<span class="num">1</span>,<span class="num">1</span>,<span class="num">1</span>,<span class="num">1</span>},   <span class="cmt">// 모두 벽</span>
+    {<span class="num">1</span>,<span class="num">0</span>,<span class="num">0</span>,<span class="num">1</span>,<span class="num">1</span>},   <span class="cmt">// (1,1)=시작, (1,2)=길</span>
+    {<span class="num">1</span>,<span class="num">1</span>,<span class="num">0</span>,<span class="num">0</span>,<span class="num">1</span>},
+    {<span class="num">1</span>,<span class="num">0</span>,<span class="num">1</span>,<span class="num">0</span>,<span class="num">1</span>},
+    {<span class="num">1</span>,<span class="num">1</span>,<span class="num">1</span>,<span class="num">0</span>,<span class="num">1</span>}    <span class="cmt">// (4,3)=출구</span>
+};</div>
+
+    <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/c-lang/puzzle.png" alt="퍼즐 조각 - 함수 조합으로 완성되는 프로그램" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>DFS 재귀 탐색 함수</h2>
+
+    <div class="code"><span class="kw">int</span> visited[<span class="num">5</span>][<span class="num">5</span>] = {<span class="num">0</span>};  <span class="cmt">// 방문 체크</span>
+
+<span class="kw">int</span> <span class="fn">solve</span>(<span class="kw">int</span> row, <span class="kw">int</span> col) {
+    <span class="cmt">// 경계 이탈 체크</span>
+    <span class="kw">if</span> (row &lt; <span class="num">0</span> || row &gt;= <span class="num">5</span> || col &lt; <span class="num">0</span> || col &gt;= <span class="num">5</span>) <span class="kw">return</span> <span class="num">0</span>;
+    <span class="cmt">// 벽 또는 방문한 곳</span>
+    <span class="kw">if</span> (maze[row][col] == <span class="num">1</span> || visited[row][col]) <span class="kw">return</span> <span class="num">0</span>;
+    <span class="cmt">// 출구 도착!</span>
+    <span class="kw">if</span> (row == <span class="num">4</span> &amp;&amp; col == <span class="num">3</span>) { <span class="fn">printf</span>(<span class="str">"출구 발견!\n"</span>); <span class="kw">return</span> <span class="num">1</span>; }
+
+    visited[row][col] = <span class="num">1</span>;  <span class="cmt">// 방문 표시</span>
+    maze[row][col] = <span class="num">2</span>;     <span class="cmt">// 경로 표시</span>
+
+    <span class="cmt">// 4방향 탐색: 아래, 오른쪽, 위, 왼쪽</span>
+    <span class="kw">if</span> (<span class="fn">solve</span>(row+<span class="num">1</span>,col) || <span class="fn">solve</span>(row,col+<span class="num">1</span>) ||
+        <span class="fn">solve</span>(row-<span class="num">1</span>,col) || <span class="fn">solve</span>(row,col-<span class="num">1</span>)) <span class="kw">return</span> <span class="num">1</span>;
+
+    maze[row][col] = <span class="num">0</span>;     <span class="cmt">// 백트래킹: 경로 취소</span>
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+
+    <div class="callout purple">
+        <strong>백트래킹(Backtracking):</strong> 막다른 길에서 돌아가는 것입니다. 4방향 모두 실패하면 <code>maze[row][col] = 0</code>으로 경로 표시를 지우고 이전 단계로 돌아갑니다.
+    </div>
+</div>
+
+<div class="page">
+    <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/c-lang/book.png" alt="교재 - 함수 개념 학습" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>미로 탐색기 — 전체 코드</h2>
+
+    <div class="code"><span class="cmt">/* ====== 미로 탐색기 ====== */</span>
+#include &lt;stdio.h&gt;
+#define R 5
+#define C 5
+
+<span class="kw">int</span> maze[R][C] = {
+    {<span class="num">1</span>,<span class="num">1</span>,<span class="num">1</span>,<span class="num">1</span>,<span class="num">1</span>},{<span class="num">1</span>,<span class="num">0</span>,<span class="num">0</span>,<span class="num">1</span>,<span class="num">1</span>},
+    {<span class="num">1</span>,<span class="num">1</span>,<span class="num">0</span>,<span class="num">0</span>,<span class="num">1</span>},{<span class="num">1</span>,<span class="num">0</span>,<span class="num">1</span>,<span class="num">0</span>,<span class="num">1</span>},{<span class="num">1</span>,<span class="num">1</span>,<span class="num">1</span>,<span class="num">0</span>,<span class="num">1</span>}
+};
+<span class="kw">int</span> visited[R][C] = {<span class="num">0</span>};
+
+<span class="kw">void</span> <span class="fn">printMaze</span>() {
+    <span class="kw">int</span> r, c;
+    <span class="kw">for</span>(r=<span class="num">0</span>;r&lt;R;r++){ <span class="kw">for</span>(c=<span class="num">0</span>;c&lt;C;c++){
+        <span class="kw">if</span>(maze[r][c]==<span class="num">1</span>)      <span class="fn">printf</span>(<span class="str">"# "</span>);
+        <span class="kw">else if</span>(maze[r][c]==<span class="num">2</span>) <span class="fn">printf</span>(<span class="str">". "</span>);
+        <span class="kw">else</span>                   <span class="fn">printf</span>(<span class="str">"  "</span>);
+    } <span class="fn">printf</span>(<span class="str">"\n"</span>); }
+}
+
+<span class="kw">int</span> <span class="fn">solve</span>(<span class="kw">int</span> r, <span class="kw">int</span> c) {
+    <span class="kw">if</span>(r&lt;<span class="num">0</span>||r&gt;=R||c&lt;<span class="num">0</span>||c&gt;=C) <span class="kw">return</span> <span class="num">0</span>;
+    <span class="kw">if</span>(maze[r][c]==<span class="num">1</span>||visited[r][c]) <span class="kw">return</span> <span class="num">0</span>;
+    <span class="kw">if</span>(r==<span class="num">4</span>&amp;&amp;c==<span class="num">3</span>){ <span class="fn">printf</span>(<span class="str">"출구!\n"</span>); <span class="kw">return</span> <span class="num">1</span>; }
+    visited[r][c]=<span class="num">1</span>; maze[r][c]=<span class="num">2</span>;
+    <span class="kw">if</span>(<span class="fn">solve</span>(r+<span class="num">1</span>,c)||<span class="fn">solve</span>(r,c+<span class="num">1</span>)||
+       <span class="fn">solve</span>(r-<span class="num">1</span>,c)||<span class="fn">solve</span>(r,c-<span class="num">1</span>)) <span class="kw">return</span> <span class="num">1</span>;
+    maze[r][c]=<span class="num">0</span>; <span class="kw">return</span> <span class="num">0</span>;
+}
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="fn">printf</span>(<span class="str">"[초기 미로]\n"</span>); <span class="fn">printMaze</span>();
+    <span class="kw">if</span>(!<span class="fn">solve</span>(<span class="num">1</span>,<span class="num">1</span>)) <span class="fn">printf</span>(<span class="str">"출구 없음\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"[경로]\n"</span>); <span class="fn">printMaze</span>();
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+</div>
+
+<div class="page">
+    <h2>연습 문제</h2>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">1</div>
+            <div class="problem-label">미로 배열 읽기</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text"><code>maze[2][2]</code> 의 값은? (위 코드에서) 그 위치는 길인가요 벽인가요?</div>
+            <details class="problem-toggle">
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">maze[2][2] = 0 → 길입니다. 3행(인덱스2), 3열(인덱스2) 위치.</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">2</div>
+            <div class="problem-label">방문 배열의 역할</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">visited 배열이 없으면 어떤 문제가 생기나요?</div>
+            <details class="problem-toggle">
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">같은 칸을 계속 방문하며 무한 재귀가 발생합니다(스택 오버플로우). visited로 이미 간 곳은 다시 가지 않도록 막습니다.</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">3</div>
+            <div class="problem-label">printMaze 함수 수정</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">printMaze를 수정해서 시작점(1,1)은 'S', 출구(4,3)는 'E'로 출력하도록 변경하세요.</div>
+            <details class="problem-toggle">
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">출력 전에 <code>if(r==1&&c==1) printf("S ");</code> / <code>else if(r==4&&c==3) printf("E ");</code> 조건을 추가합니다.</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">4</div>
+            <div class="problem-label">미로 직접 설계</div>
+            <span class="problem-diff hard">어려움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">길이 있는 새로운 5x5 미로를 직접 설계하고, 출구를 (4,4)로 변경해서 프로그램을 실행해 보세요.</div>
+            <details class="problem-toggle">
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">시작(1,1)에서 출구(4,4)까지 0으로 연결된 경로가 최소 하나 있어야 합니다. solve 함수의 출구 조건도 r==4&&c==4로 바꾸세요.</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:8px;margin:16px 0 6px;padding:8px 14px;background:#f0f9ff;border-radius:6px;border:1px solid #bae6fd;">
+        <img src="/images/learn/c-lang/gear.png" alt="함수 기어 - 재사용 가능한 코드 구조" style="width:28px;height:28px;object-fit:contain;background:#fff;border-radius:8px;">
+        <img src="/images/learn/c-lang/puzzle.png" alt="퍼즐 조각 - 함수 조합으로 완성되는 프로그램" style="width:28px;height:28px;object-fit:contain;background:#fff;border-radius:8px;">
+        <span style="font-size:12px;color:#0369a1;font-weight:600;">핵심 정리</span>
+    </div>
+<div class="summary">
+        <h3>핵심 정리</h3>
+        <ul>
+            <li>2차원 배열: <code>int maze[R][C]</code>, 접근: <code>maze[행][열]</code></li>
+            <li>DFS 탐색: 한 방향으로 최대한 깊이 간 후 막히면 돌아옴</li>
+            <li>visited 배열로 무한 재귀 방지</li>
+            <li>백트래킹: 실패 시 maze[r][c]=0으로 되돌리기</li>
+        </ul>
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:20px;padding-top:10px;border-top:1px solid #f1f5f9;">
+        <img src="/images/learn/c-lang/flowchart.png" alt="순서도 - 함수 호출 흐름" style="width:22px;height:22px;object-fit:contain;opacity:0.6;background:#fff;border-radius:8px;">
+        <span style="font-size:10px;color:#cbd5e1;">코딩쏙 C언어</span>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

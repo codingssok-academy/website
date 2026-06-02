@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 프로젝트: 회문(팰린드롬) 판별기</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+/* ── 페이지 ── */
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+/* ── 챕터 표지 ── */
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+
+/* ── 본문 ── */
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 16px; font-weight: 700; color: #1e3a5f; margin: 18px 0 10px; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+ul, ol { margin: 0 0 12px 20px; }
+li { font-size: 14px; color: #374151; line-height: 1.8; }
+
+/* ── 코드 블록 ── */
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13.5px;
+    color: #e2e8f0; line-height: 1.85; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.code .dec { color: #f9a8d4; }
+
+/* ── 따라해보세요 ── */
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+
+/* ── 문제 ── */
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+
+/* ── 요약 ── */
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+/* ── 단계 박스 ── */
+.step-box { border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 14px 18px; margin: 14px 0; background: #fff; }
+.step-label { font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+.step-title { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 8px; }
+
+/* ── 출력 박스 ── */
+.output-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #334155; line-height: 1.7; margin: 10px 0; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- ═══ 1페이지: 표지 ═══ -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">31</div>
+        <div class="cover-label">L3 — Unit 31 Project · R1</div>
+        <h1 class="cover-title">프로젝트:<br>회문(팰린드롬)<br>판별기</h1>
+        <p class="cover-sub">슬라이싱 <code>[::-1]</code>로 문자열을 뒤집고, <code>lower()</code>와 <code>replace()</code>로 전처리한 뒤, 리스트 컴프리헨션으로 복수 단어를 한 번에 검사하는 판별기를 완성합니다.</p>
+
+        <!-- SVG: 회문 판별 흐름도 -->
+        <div style="margin:24px 0;">
+            <svg viewBox="0 0 480 140" style="max-width:480px;width:100%">
+                <defs>
+                    <marker id="arwCov" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                    </marker>
+                </defs>
+                <!-- 입력 -->
+                <rect x="5" y="50" width="90" height="40" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="50" y="67" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">입력 문자열</text>
+                <text x="50" y="82" text-anchor="middle" font-size="8" fill="#374151">"A man a plan"</text>
+                <line x1="98" y1="70" x2="118" y2="70" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+                <!-- 전처리 -->
+                <rect x="121" y="35" width="110" height="70" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="176" y="53" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">전처리</text>
+                <text x="176" y="67" text-anchor="middle" font-size="8" fill="#64748b">lower()</text>
+                <text x="176" y="80" text-anchor="middle" font-size="8" fill="#64748b">replace(" ", "")</text>
+                <text x="176" y="93" text-anchor="middle" font-size="8" fill="#374151">"amanaplana..."</text>
+                <line x1="234" y1="70" x2="254" y2="70" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+                <!-- 뒤집기 -->
+                <rect x="257" y="35" width="100" height="70" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="307" y="53" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">뒤집기</text>
+                <text x="307" y="67" text-anchor="middle" font-size="8" fill="#64748b">s[::-1]</text>
+                <text x="307" y="80" text-anchor="middle" font-size="8" fill="#374151">"...analpamana"</text>
+                <text x="307" y="93" text-anchor="middle" font-size="8" fill="#166534">== 원본?</text>
+                <line x1="360" y1="70" x2="380" y2="70" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+                <!-- 결과 -->
+                <rect x="383" y="40" width="90" height="60" rx="8" fill="#eff6ff" stroke="#6366f1" stroke-width="1.5"/>
+                <text x="428" y="58" text-anchor="middle" font-size="9" fill="#4338ca" font-weight="700">판별 결과</text>
+                <text x="428" y="73" text-anchor="middle" font-size="8" fill="#166534">True: 회문</text>
+                <text x="428" y="87" text-anchor="middle" font-size="8" fill="#991b1b">False: 아님</text>
+                <!-- 상단 라벨 -->
+                <text x="50" y="20" text-anchor="middle" font-size="8" fill="#94a3b8">Step 1</text>
+                <text x="176" y="20" text-anchor="middle" font-size="8" fill="#94a3b8">Step 2</text>
+                <text x="307" y="20" text-anchor="middle" font-size="8" fill="#94a3b8">Step 3</text>
+                <text x="428" y="20" text-anchor="middle" font-size="8" fill="#94a3b8">Step 4</text>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/puzzle.png" alt="고급 기능" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 프로젝트에서 만드는 것</h3>
+            <ul>
+                <li><code>[::-1]</code> 슬라이싱으로 문자열을 역순으로 뒤집을 수 있습니다.</li>
+                <li><code>lower()</code>와 <code>replace()</code>로 대소문자와 공백을 전처리할 수 있습니다.</li>
+                <li>전처리된 문자열과 역순을 비교해 회문을 판별할 수 있습니다.</li>
+                <li>리스트 컴프리헨션으로 여러 단어를 한 번에 검사할 수 있습니다.</li>
+                <li>문장 단위의 회문(공백 제거 후 판별)도 처리할 수 있습니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ 2페이지: 핵심 개념 + Step 1 ═══ -->
+<div class="page">
+    <h2>핵심 개념 — 슬라이싱 역순과 문자열 전처리</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="처리" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+    <!-- SVG: [::-1] 슬라이싱 원리 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 90" style="max-width:460px;width:100%">
+            <!-- 제목 -->
+            <text x="230" y="14" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">s[::-1] 슬라이싱 — 문자열 역순</text>
+            <!-- 원본 문자 칸 -->
+            <rect x="10" y="22" width="40" height="30" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.2"/>
+            <text x="30" y="42" text-anchor="middle" font-size="13" fill="#1d4ed8" font-weight="700">r</text>
+            <text x="30" y="63" text-anchor="middle" font-size="8" fill="#94a3b8">0</text>
+            <rect x="55" y="22" width="40" height="30" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.2"/>
+            <text x="75" y="42" text-anchor="middle" font-size="13" fill="#1d4ed8" font-weight="700">a</text>
+            <text x="75" y="63" text-anchor="middle" font-size="8" fill="#94a3b8">1</text>
+            <rect x="100" y="22" width="40" height="30" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.2"/>
+            <text x="120" y="42" text-anchor="middle" font-size="13" fill="#1d4ed8" font-weight="700">d</text>
+            <text x="120" y="63" text-anchor="middle" font-size="8" fill="#94a3b8">2</text>
+            <rect x="145" y="22" width="40" height="30" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.2"/>
+            <text x="165" y="42" text-anchor="middle" font-size="13" fill="#1d4ed8" font-weight="700">a</text>
+            <text x="165" y="63" text-anchor="middle" font-size="8" fill="#94a3b8">3</text>
+            <rect x="190" y="22" width="40" height="30" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.2"/>
+            <text x="210" y="42" text-anchor="middle" font-size="13" fill="#1d4ed8" font-weight="700">r</text>
+            <text x="210" y="63" text-anchor="middle" font-size="8" fill="#94a3b8">4</text>
+            <!-- 화살표 -->
+            <path d="M240,37 L270,37" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov2)"/>
+            <defs>
+                <marker id="arwCov2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <text x="255" y="33" text-anchor="middle" font-size="8" fill="#64748b">[::-1]</text>
+            <!-- 역순 결과 칸 -->
+            <rect x="275" y="22" width="40" height="30" rx="4" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.2"/>
+            <text x="295" y="42" text-anchor="middle" font-size="13" fill="#166534" font-weight="700">r</text>
+            <rect x="320" y="22" width="40" height="30" rx="4" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.2"/>
+            <text x="340" y="42" text-anchor="middle" font-size="13" fill="#166534" font-weight="700">a</text>
+            <rect x="365" y="22" width="40" height="30" rx="4" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.2"/>
+            <text x="385" y="42" text-anchor="middle" font-size="13" fill="#166534" font-weight="700">d</text>
+            <rect x="410" y="22" width="40" height="30" rx="4" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.2"/>
+            <text x="430" y="42" text-anchor="middle" font-size="13" fill="#166534" font-weight="700">a</text>
+            <!-- 같음 표시 -->
+            <text x="450" y="72" text-anchor="end" font-size="9" fill="#166534" font-weight="700">"radar" == "radar" → 회문</text>
+        </svg>
+    </div>
+
+    <p><code>s[::-1]</code>은 슬라이싱의 세 번째 인수(step)를 <code>-1</code>로 설정해 문자열을 역순으로 읽습니다. 시작·끝을 생략하면 전체 문자열이 대상입니다. 이 결과가 원본 문자열과 같으면 회문입니다.</p>
+
+    <h3>Step 1 — 기본 회문 판별 함수</h3>
+    <p>가장 간단한 형태로 시작합니다. 입력을 <code>lower()</code>로 소문자 통일 후 <code>[::-1]</code>와 비교합니다.</p>
+
+    <div class="code"><span class="cmt"># Step 1: 기본 회문 판별</span>
+
+<span class="kw">def</span> <span class="fn">is_palindrome</span>(word):
+    <span class="str">"""단어가 회문이면 True 반환"""</span>
+    cleaned = word.<span class="fn">lower</span>()          <span class="cmt"># 소문자 통일</span>
+    reversed_word = cleaned[<span class="num">::-1</span>]  <span class="cmt"># 역순 슬라이싱</span>
+    <span class="kw">return</span> cleaned == reversed_word
+
+<span class="cmt"># 테스트</span>
+<span class="fn">print</span>(<span class="fn">is_palindrome</span>(<span class="str">"radar"</span>))   <span class="cmt"># True</span>
+<span class="fn">print</span>(<span class="fn">is_palindrome</span>(<span class="str">"Radar"</span>))   <span class="cmt"># True  (대소문자 무시)</span>
+<span class="fn">print</span>(<span class="fn">is_palindrome</span>(<span class="str">"python"</span>))  <span class="cmt"># False</span></div>
+
+    <div class="output-box">True
+True
+False</div>
+
+    <!-- SVG: lower() + replace() 전처리 흐름 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 72" style="max-width:460px;width:100%">
+            <defs>
+                <marker id="arwS1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="5" y="16" width="100" height="40" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="55" y="33" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">원문</text>
+            <text x="55" y="48" text-anchor="middle" font-size="8" fill="#374151">"A man a plan"</text>
+            <line x1="108" y1="36" x2="128" y2="36" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwS1)"/>
+            <rect x="131" y="16" width="100" height="40" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="181" y="33" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">lower()</text>
+            <text x="181" y="48" text-anchor="middle" font-size="8" fill="#374151">"a man a plan"</text>
+            <line x1="234" y1="36" x2="254" y2="36" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwS1)"/>
+            <rect x="257" y="16" width="118" height="40" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="316" y="33" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">replace(" ","")</text>
+            <text x="316" y="48" text-anchor="middle" font-size="8" fill="#374151">"amanaplan"</text>
+            <line x1="378" y1="36" x2="398" y2="36" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwS1)"/>
+            <rect x="401" y="16" width="56" height="40" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="429" y="33" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">[::-1]</text>
+            <text x="429" y="48" text-anchor="middle" font-size="8" fill="#166534">비교</text>
+        </svg>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="완성" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+        <div class="practice-head">따라해보세요 — Step 1</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc"><code>is_palindrome()</code> 함수를 작성하고 "level", "hello", "madam"으로 테스트하세요.</div>
+                <div class="code"><span class="fn">print</span>(<span class="fn">is_palindrome</span>(<span class="str">"level"</span>))
+<span class="fn">print</span>(<span class="fn">is_palindrome</span>(<span class="str">"hello"</span>))
+<span class="fn">print</span>(<span class="fn">is_palindrome</span>(<span class="str">"madam"</span>))</div>
+                <div class="practice-result">True / False / True</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">빈 문자열 <code>""</code>과 한 글자 <code>"a"</code>를 테스트하세요. 결과가 무엇인지 확인합니다.</div>
+                <div class="code"><span class="fn">print</span>(<span class="fn">is_palindrome</span>(<span class="str">""</span>))
+<span class="fn">print</span>(<span class="fn">is_palindrome</span>(<span class="str">"a"</span>))</div>
+                <div class="practice-result">True / True — 빈 문자열과 한 글자는 회문으로 처리됨</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc"><code>lower()</code>를 제거하면 "Radar"는 어떤 결과가 나오는지 확인하고, 왜 그런지 설명하세요.</div>
+                <div class="code"><span class="kw">def</span> <span class="fn">is_palindrome_strict</span>(word):
+    <span class="kw">return</span> word == word[<span class="num">::-1</span>]
+
+<span class="fn">print</span>(<span class="fn">is_palindrome_strict</span>(<span class="str">"Radar"</span>))</div>
+                <div class="practice-result">False — 대문자 R과 소문자 r은 다른 문자로 처리됨</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ 3페이지: Step 2 문장 회문 + Step 3 리스트 컴프리헨션 ═══ -->
+<div class="page">
+    <h2>Step 2 — 문장 단위 회문 (공백/구두점 제거)</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/database.png" alt="데이터" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>문장 회문 판별은 공백과 특수문자를 모두 제거해야 합니다. <code>replace()</code>를 연쇄 호출하거나 리스트 컴프리헨션으로 알파벳만 걸러냅니다.</p>
+
+    <!-- SVG: 리스트 컴프리헨션 필터링 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+            <defs>
+                <marker id="arwS2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="5" y="20" width="120" height="40" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="65" y="37" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">입력 문자열</text>
+            <text x="65" y="52" text-anchor="middle" font-size="8" fill="#374151">"A man, a plan!"</text>
+            <line x1="128" y1="40" x2="148" y2="40" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwS2)"/>
+            <rect x="151" y="12" width="148" height="56" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="225" y="30" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">컴프리헨션 필터</text>
+            <text x="225" y="44" text-anchor="middle" font-size="8" fill="#64748b">[c for c in s.lower()</text>
+            <text x="225" y="58" text-anchor="middle" font-size="8" fill="#64748b"> if c.isalpha()]</text>
+            <line x1="302" y1="40" x2="322" y2="40" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwS2)"/>
+            <rect x="325" y="20" width="130" height="40" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="390" y="37" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">알파벳만 추출</text>
+            <text x="390" y="52" text-anchor="middle" font-size="8" fill="#374151">['a','m','a','n'...]</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># Step 2: 문장 회문 — isalpha()로 알파벳만 추출</span>
+
+<span class="kw">def</span> <span class="fn">is_sentence_palindrome</span>(sentence):
+    <span class="str">"""공백/구두점을 무시하고 문장 회문 판별"""</span>
+    <span class="cmt"># 리스트 컴프리헨션: 소문자 변환 후 알파벳만 추출</span>
+    chars = [c <span class="kw">for</span> c <span class="kw">in</span> sentence.<span class="fn">lower</span>() <span class="kw">if</span> c.<span class="fn">isalpha</span>()]
+    cleaned = <span class="str">""</span>.<span class="fn">join</span>(chars)    <span class="cmt"># 리스트 → 문자열</span>
+    <span class="kw">return</span> cleaned == cleaned[<span class="num">::-1</span>]
+
+<span class="fn">print</span>(<span class="fn">is_sentence_palindrome</span>(<span class="str">"A man a plan a canal Panama"</span>))  <span class="cmt"># True</span>
+<span class="fn">print</span>(<span class="fn">is_sentence_palindrome</span>(<span class="str">"Was it a car or a cat I saw"</span>))   <span class="cmt"># True</span>
+<span class="fn">print</span>(<span class="fn">is_sentence_palindrome</span>(<span class="str">"Hello World"</span>))                   <span class="cmt"># False</span></div>
+
+    <div class="output-box">True
+True
+False</div>
+
+    <h3>Step 3 — 리스트 컴프리헨션으로 복수 단어 검사</h3>
+    <p>단어 목록을 받아 회문인 단어만 골라내는 함수를 만듭니다. 리스트 컴프리헨션의 <code>if</code> 조건에 <code>is_palindrome()</code>을 넣으면 한 줄로 해결됩니다.</p>
+
+    <!-- SVG: 컴프리헨션 필터링 시각화 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 100" style="max-width:460px;width:100%">
+            <defs>
+                <marker id="arwS3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <!-- 단어 목록 -->
+            <rect x="5" y="10" width="130" height="80" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="70" y="28" text-anchor="middle" font-size="9" fill="#374151" font-weight="700">단어 목록</text>
+            <text x="70" y="43" text-anchor="middle" font-size="8" fill="#64748b">"radar"</text>
+            <text x="70" y="56" text-anchor="middle" font-size="8" fill="#64748b">"python"</text>
+            <text x="70" y="69" text-anchor="middle" font-size="8" fill="#64748b">"level"</text>
+            <text x="70" y="82" text-anchor="middle" font-size="8" fill="#64748b">"code"</text>
+            <line x1="138" y1="50" x2="158" y2="50" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwS3)"/>
+            <!-- 필터 박스 -->
+            <rect x="161" y="20" width="148" height="60" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="235" y="38" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">[w for w in words</text>
+            <text x="235" y="52" text-anchor="middle" font-size="8" fill="#64748b"> if is_palindrome(w)]</text>
+            <text x="235" y="68" text-anchor="middle" font-size="8" fill="#94a3b8">조건 True만 통과</text>
+            <line x1="312" y1="50" x2="332" y2="50" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwS3)"/>
+            <!-- 결과 -->
+            <rect x="335" y="20" width="120" height="60" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="395" y="38" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">회문만 추출</text>
+            <text x="395" y="52" text-anchor="middle" font-size="8" fill="#374151">"radar"</text>
+            <text x="395" y="65" text-anchor="middle" font-size="8" fill="#374151">"level"</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># Step 3: 목록에서 회문만 골라내기</span>
+
+<span class="kw">def</span> <span class="fn">find_palindromes</span>(word_list):
+    <span class="str">"""리스트 컴프리헨션으로 회문만 필터링"""</span>
+    <span class="kw">return</span> [w <span class="kw">for</span> w <span class="kw">in</span> word_list <span class="kw">if</span> <span class="fn">is_palindrome</span>(w)]
+
+words = [<span class="str">"radar"</span>, <span class="str">"python"</span>, <span class="str">"level"</span>, <span class="str">"code"</span>, <span class="str">"civic"</span>, <span class="str">"hello"</span>, <span class="str">"noon"</span>]
+palindromes = <span class="fn">find_palindromes</span>(words)
+<span class="fn">print</span>(<span class="str">f"전체 단어: {len(words)}개"</span>)
+<span class="fn">print</span>(<span class="str">f"회문 단어: {palindromes}"</span>)
+<span class="fn">print</span>(<span class="str">f"회문 비율: {len(palindromes)/len(words)*100:.1f}%"</span>)</div>
+
+    <div class="output-box">전체 단어: 7개
+회문 단어: ['radar', 'level', 'civic', 'noon']
+회문 비율: 57.1%</div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요 — Step 2 & 3</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc"><code>is_sentence_palindrome()</code>를 작성하고 "racecar"와 "A santa at NASA"로 테스트하세요.</div>
+                <div class="practice-result">True / True</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc"><code>find_palindromes()</code>를 <code>is_sentence_palindrome</code> 버전으로 수정해 문장 목록에서도 동작하게 만드세요.</div>
+                <div class="practice-result">문장 회문도 True 반환하면 성공</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">회문이 <strong>아닌</strong> 단어만 골라내는 <code>find_non_palindromes()</code>를 컴프리헨션으로 작성하세요.</div>
+                <div class="code"><span class="kw">def</span> <span class="fn">find_non_palindromes</span>(word_list):
+    <span class="kw">return</span> [w <span class="kw">for</span> w <span class="kw">in</span> word_list <span class="kw">if</span> <span class="kw">not</span> <span class="fn">is_palindrome</span>(w)]</div>
+                <div class="practice-result">['python', 'code', 'hello'] 출력되면 성공</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ 4페이지: 완성 통합 + 문제 ═══ -->
+<div class="page">
+    <h2>Step 4 — 완성 프로그램 통합</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>세 단계를 하나의 <code>palindrome_checker.py</code>로 통합합니다. 사용자가 단어를 입력하면 회문 여부와 역순 문자열을 함께 출력합니다.</p>
+
+    <!-- SVG: 완성 프로그램 구조 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 110" style="max-width:460px;width:100%">
+            <defs>
+                <marker id="arwF" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <!-- 모듈 박스들 -->
+            <rect x="5" y="30" width="100" height="50" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="55" y="50" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">is_palindrome()</text>
+            <text x="55" y="65" text-anchor="middle" font-size="8" fill="#64748b">단어 단위</text>
+            <text x="55" y="76" text-anchor="middle" font-size="8" fill="#64748b">lower + [::-1]</text>
+            <line x1="108" y1="55" x2="128" y2="55" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwF)"/>
+            <rect x="131" y="20" width="115" height="70" rx="8" fill="#1e3a5f"/>
+            <text x="188" y="42" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">palindrome_</text>
+            <text x="188" y="55" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">checker.py</text>
+            <text x="188" y="70" text-anchor="middle" font-size="8" fill="#93c5fd">완성 프로그램</text>
+            <text x="188" y="82" text-anchor="middle" font-size="8" fill="#64748b">main() 통합</text>
+            <line x1="249" y1="55" x2="269" y2="55" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwF)"/>
+            <rect x="272" y="30" width="100" height="50" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="322" y="50" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">결과 출력</text>
+            <text x="322" y="65" text-anchor="middle" font-size="8" fill="#64748b">회문 여부</text>
+            <text x="322" y="76" text-anchor="middle" font-size="8" fill="#64748b">역순 문자열</text>
+            <!-- 위쪽 연결: is_sentence_palindrome -->
+            <rect x="5" y="5" width="118" height="22" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.2"/>
+            <text x="64" y="20" text-anchor="middle" font-size="8" fill="#92400e" font-weight="700">is_sentence_palindrome()</text>
+            <line x1="123" y1="16" x2="149" y2="30" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#arwF)"/>
+            <!-- 아래쪽 연결: find_palindromes -->
+            <rect x="5" y="83" width="118" height="22" rx="6" fill="#eff6ff" stroke="#6366f1" stroke-width="1.2"/>
+            <text x="64" y="98" text-anchor="middle" font-size="8" fill="#4338ca" font-weight="700">find_palindromes()</text>
+            <line x1="123" y1="94" x2="149" y2="80" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#arwF)"/>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># palindrome_checker.py — 완성 프로그램</span>
+
+<span class="kw">def</span> <span class="fn">is_palindrome</span>(word):
+    cleaned = word.<span class="fn">lower</span>()
+    <span class="kw">return</span> cleaned == cleaned[<span class="num">::-1</span>]
+
+<span class="kw">def</span> <span class="fn">is_sentence_palindrome</span>(sentence):
+    chars = [c <span class="kw">for</span> c <span class="kw">in</span> sentence.<span class="fn">lower</span>() <span class="kw">if</span> c.<span class="fn">isalpha</span>()]
+    cleaned = <span class="str">""</span>.<span class="fn">join</span>(chars)
+    <span class="kw">return</span> cleaned == cleaned[<span class="num">::-1</span>]
+
+<span class="kw">def</span> <span class="fn">find_palindromes</span>(word_list):
+    <span class="kw">return</span> [w <span class="kw">for</span> w <span class="kw">in</span> word_list <span class="kw">if</span> <span class="fn">is_palindrome</span>(w)]
+
+<span class="kw">def</span> <span class="fn">main</span>():
+    test_words = [<span class="str">"racecar"</span>, <span class="str">"hello"</span>, <span class="str">"deified"</span>, <span class="str">"world"</span>, <span class="str">"noon"</span>]
+    <span class="fn">print</span>(<span class="str">"=== 회문 판별기 ==="</span>)
+    <span class="kw">for</span> word <span class="kw">in</span> test_words:
+        result = <span class="str">"회문"</span> <span class="kw">if</span> <span class="fn">is_palindrome</span>(word) <span class="kw">else</span> <span class="str">"아님"</span>
+        rev = word[<span class="num">::-1</span>]
+        <span class="fn">print</span>(<span class="str">f"{word:<10} 역순: {rev:<10} [{result}]"</span>)
+    palindromes = <span class="fn">find_palindromes</span>(test_words)
+    <span class="fn">print</span>(<span class="str">f"\n회문 단어: {palindromes}"</span>)
+
+<span class="fn">main</span>()</div>
+
+    <div class="output-box">=== 회문 판별기 ===
+racecar    역순: racecar    [회문]
+hello      역순: olleh      [아님]
+deified    역순: deified    [회문]
+world      역순: dlrow      [아님]
+noon       역순: noon       [회문]
+
+회문 단어: ['racecar', 'deified', 'noon']</div>
+
+    <!-- 문제 1 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">1</div>
+            <div class="problem-label">Q1. 숫자 회문 판별</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">정수를 받아 숫자 회문(앞뒤가 같은 숫자)인지 판별하는 <code>is_num_palindrome(n)</code>을 작성하세요. 숫자를 문자열로 변환한 뒤 <code>[::-1]</code>로 판별합니다.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">입력</span><span class="problem-example-value">12321</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">True</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">입력</span><span class="problem-example-value">12345</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">False</span></div>
+            </div>
+        </div>
+        <div class="problem-toggle">
+            <details>
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text"><code>str(n)</code>으로 숫자를 문자열로 변환하면 <code>[::-1]</code>을 바로 적용할 수 있습니다.</div>
+                </div>
+            </details>
+            <details>
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code">def is_num_palindrome(n):
+    s = str(n)
+    return s == s[::-1]
+
+print(is_num_palindrome(12321))  # True
+print(is_num_palindrome(12345))  # False</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <!-- 문제 2 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">2</div>
+            <div class="problem-label">Q2. 회문 인덱스 찾기</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">단어 목록에서 회문의 인덱스 번호와 단어를 함께 출력하세요. <code>enumerate()</code>와 리스트 컴프리헨션을 활용합니다.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">입력</span><span class="problem-example-value">["cat", "level", "dog", "radar", "bird"]</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">[(1, 'level'), (3, 'radar')]</span></div>
+            </div>
+        </div>
+        <div class="problem-toggle">
+            <details>
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text"><code>enumerate()</code>는 <code>(인덱스, 값)</code> 튜플을 반환합니다. 컴프리헨션에서 <code>for i, w in enumerate(words)</code>로 사용하세요.</div>
+                </div>
+            </details>
+            <details>
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code">words = ["cat", "level", "dog", "radar", "bird"]
+result = [(i, w) for i, w in enumerate(words)
+          if is_palindrome(w)]
+print(result)  # [(1, 'level'), (3, 'radar')]</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <!-- 문제 3 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">3</div>
+            <div class="problem-label">Q3. 가장 긴 회문 찾기</div>
+            <span class="problem-diff hard">어려움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">단어 목록에서 회문 중 가장 긴 단어를 반환하는 <code>longest_palindrome(words)</code>를 작성하세요. 회문이 없으면 빈 문자열을 반환합니다.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">입력</span><span class="problem-example-value">["radar", "civic", "racecar", "noon", "hello"]</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">racecar</span></div>
+            </div>
+        </div>
+        <div class="problem-toggle">
+            <details>
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text"><code>find_palindromes()</code>로 회문 목록을 먼저 만든 뒤, 그 목록에 <code>max(key=len)</code>을 적용하세요. 목록이 비어있으면 <code>""</code>을 반환합니다.</div>
+                </div>
+            </details>
+            <details>
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code">def longest_palindrome(words):
+    pals = find_palindromes(words)
+    if not pals:
+        return ""
+    return max(pals, key=len)
+
+words = ["radar", "civic", "racecar", "noon", "hello"]
+print(longest_palindrome(words))  # racecar</div>
+                </div>
+            </details>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ 5페이지: 핵심 요약 ═══ -->
+<div class="page">
+    <h2>핵심 요약 — 회문 판별기 완성</h2>
+
+    <!-- SVG: 전체 흐름 요약 -->
+    <div style="text-align:center;margin:18px 0;">
+        <svg viewBox="0 0 460 120" style="max-width:460px;width:100%">
+            <defs>
+                <marker id="arwSum" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <!-- 배경 -->
+            <rect x="0" y="0" width="460" height="120" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <!-- 각 단계 -->
+            <rect x="10" y="30" width="80" height="60" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="50" y="52" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">lower()</text>
+            <text x="50" y="66" text-anchor="middle" font-size="8" fill="#64748b">소문자</text>
+            <text x="50" y="79" text-anchor="middle" font-size="8" fill="#64748b">통일</text>
+            <line x1="93" y1="60" x2="113" y2="60" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwSum)"/>
+            <rect x="116" y="30" width="80" height="60" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="156" y="52" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">isalpha()</text>
+            <text x="156" y="66" text-anchor="middle" font-size="8" fill="#64748b">알파벳만</text>
+            <text x="156" y="79" text-anchor="middle" font-size="8" fill="#64748b">추출</text>
+            <line x1="199" y1="60" x2="219" y2="60" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwSum)"/>
+            <rect x="222" y="30" width="80" height="60" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="262" y="52" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">[::-1]</text>
+            <text x="262" y="66" text-anchor="middle" font-size="8" fill="#64748b">역순</text>
+            <text x="262" y="79" text-anchor="middle" font-size="8" fill="#64748b">슬라이싱</text>
+            <line x1="305" y1="60" x2="325" y2="60" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwSum)"/>
+            <rect x="328" y="30" width="120" height="60" rx="8" fill="#eff6ff" stroke="#6366f1" stroke-width="1.5"/>
+            <text x="388" y="48" text-anchor="middle" font-size="9" fill="#4338ca" font-weight="700">== 비교</text>
+            <text x="388" y="62" text-anchor="middle" font-size="8" fill="#166534">True → 회문</text>
+            <text x="388" y="76" text-anchor="middle" font-size="8" fill="#991b1b">False → 아님</text>
+            <!-- 단계 번호 -->
+            <text x="50" y="18" text-anchor="middle" font-size="8" fill="#94a3b8">Step 1</text>
+            <text x="156" y="18" text-anchor="middle" font-size="8" fill="#94a3b8">Step 2</text>
+            <text x="262" y="18" text-anchor="middle" font-size="8" fill="#94a3b8">Step 3</text>
+            <text x="388" y="18" text-anchor="middle" font-size="8" fill="#94a3b8">Step 4</text>
+        </svg>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>핵심 요약</h3>
+        <ul>
+            <li><code>s[::-1]</code> — 슬라이싱 step -1로 문자열 역순 생성. 원본과 같으면 회문.</li>
+            <li><code>lower()</code> — 대소문자를 통일해 대소문자 구분 없는 회문 판별을 가능하게 함.</li>
+            <li><code>replace(old, new)</code> — 특정 문자를 다른 문자로 일괄 치환. 공백 제거에 활용.</li>
+            <li><code>isalpha()</code> — 문자가 알파벳인지 확인. 숫자, 공백, 구두점은 False 반환.</li>
+            <li>리스트 컴프리헨션 <code>[x for x in lst if 조건]</code> — 조건에 맞는 항목만 새 리스트로 생성.</li>
+            <li><code>"".join(chars)</code> — 문자 리스트를 하나의 문자열로 합침.</li>
+        </ul>
+    </div>
+
+    <!-- SVG: 자주 쓰는 패턴 비교 -->
+    <div style="text-align:center;margin:18px 0;">
+        <svg viewBox="0 0 460 100" style="max-width:460px;width:100%">
+            <text x="230" y="14" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">회문 판별 패턴 비교</text>
+            <!-- 단순 패턴 -->
+            <rect x="5" y="22" width="218" height="72" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="114" y="39" text-anchor="middle" font-size="9" fill="#374151" font-weight="700">단어 회문</text>
+            <text x="114" y="54" text-anchor="middle" font-size="8" fill="#64748b">s.lower() == s.lower()[::-1]</text>
+            <text x="114" y="68" text-anchor="middle" font-size="8" fill="#64748b">대소문자만 무시</text>
+            <text x="114" y="82" text-anchor="middle" font-size="8" fill="#94a3b8">예: "Radar" → True</text>
+            <!-- 문장 패턴 -->
+            <rect x="237" y="22" width="218" height="72" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="346" y="39" text-anchor="middle" font-size="9" fill="#374151" font-weight="700">문장 회문</text>
+            <text x="346" y="54" text-anchor="middle" font-size="8" fill="#64748b">[c for c in s.lower()</text>
+            <text x="346" y="67" text-anchor="middle" font-size="8" fill="#64748b"> if c.isalpha()]</text>
+            <text x="346" y="82" text-anchor="middle" font-size="8" fill="#94a3b8">공백/구두점도 무시</text>
+        </svg>
+    </div>
+
+    <!-- SVG: isalpha() 동작 예시 -->
+    <div style="text-align:center;margin:18px 0;">
+        <svg viewBox="0 0 460 72" style="max-width:460px;width:100%">
+            <text x="230" y="12" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">isalpha() 동작 예시</text>
+            <!-- 각 문자 -->
+            <rect x="10" y="20" width="44" height="30" rx="5" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.2"/>
+            <text x="32" y="37" text-anchor="middle" font-size="12" fill="#166534" font-weight="700">A</text>
+            <text x="32" y="60" text-anchor="middle" font-size="8" fill="#166534">True</text>
+            <rect x="60" y="20" width="44" height="30" rx="5" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.2"/>
+            <text x="82" y="37" text-anchor="middle" font-size="12" fill="#166534" font-weight="700">z</text>
+            <text x="82" y="60" text-anchor="middle" font-size="8" fill="#166534">True</text>
+            <rect x="110" y="20" width="44" height="30" rx="5" fill="#fee2e2" stroke="#ef4444" stroke-width="1.2"/>
+            <text x="132" y="37" text-anchor="middle" font-size="12" fill="#991b1b" font-weight="700">3</text>
+            <text x="132" y="60" text-anchor="middle" font-size="8" fill="#991b1b">False</text>
+            <rect x="160" y="20" width="44" height="30" rx="5" fill="#fee2e2" stroke="#ef4444" stroke-width="1.2"/>
+            <text x="182" y="37" text-anchor="middle" font-size="12" fill="#991b1b" font-weight="700"> </text>
+            <text x="182" y="60" text-anchor="middle" font-size="8" fill="#991b1b">False</text>
+            <rect x="210" y="20" width="44" height="30" rx="5" fill="#fee2e2" stroke="#ef4444" stroke-width="1.2"/>
+            <text x="232" y="37" text-anchor="middle" font-size="12" fill="#991b1b" font-weight="700">!</text>
+            <text x="232" y="60" text-anchor="middle" font-size="8" fill="#991b1b">False</text>
+            <rect x="260" y="20" width="44" height="30" rx="5" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.2"/>
+            <text x="282" y="37" text-anchor="middle" font-size="12" fill="#166534" font-weight="700">가</text>
+            <text x="282" y="60" text-anchor="middle" font-size="8" fill="#166534">True</text>
+            <text x="340" y="38" text-anchor="start" font-size="8" fill="#64748b">알파벳, 한글 등</text>
+            <text x="340" y="52" text-anchor="start" font-size="8" fill="#64748b">문자 → True</text>
+            <text x="340" y="65" text-anchor="start" font-size="8" fill="#94a3b8">숫자, 공백, 기호 → False</text>
+        </svg>
+    </div>
+
+    <div class="step-box">
+        <div class="step-label">확장 아이디어</div>
+        <div class="step-title">더 나아가기</div>
+        <ul>
+            <li>한국어 회문도 판별할 수 있습니다. 예: "기러기", "토마토" — <code>isalpha()</code>는 한글도 True 반환합니다.</li>
+            <li><code>input()</code>으로 사용자 입력을 받아 실시간 판별기로 만들 수 있습니다.</li>
+            <li>텍스트 파일에서 가장 긴 회문 단어를 자동으로 찾는 프로그램으로 확장할 수 있습니다.</li>
+        </ul>
+    </div>
+
+    <!-- SVG: 한국어 회문 예시 -->
+    <div style="text-align:center;margin:18px 0;">
+        <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+            <text x="230" y="14" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">한국어 회문 예시</text>
+            <rect x="10" y="22" width="130" height="50" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="75" y="40" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">"기러기"</text>
+            <text x="75" y="58" text-anchor="middle" font-size="8" fill="#166534">역순: "기러기" → True</text>
+            <rect x="165" y="22" width="130" height="50" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="230" y="40" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">"토마토"</text>
+            <text x="230" y="58" text-anchor="middle" font-size="8" fill="#166534">역순: "토마토" → True</text>
+            <rect x="320" y="22" width="130" height="50" rx="8" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="385" y="40" text-anchor="middle" font-size="11" fill="#991b1b" font-weight="700">"파이썬"</text>
+            <text x="385" y="58" text-anchor="middle" font-size="8" fill="#991b1b">역순: "썬이파" → False</text>
+        </svg>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

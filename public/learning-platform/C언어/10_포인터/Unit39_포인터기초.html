@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Unit 39. 포인터 기초 — C 언어 코딩 도장</title>
+    <link rel="stylesheet" href="../common.css">
+</head>
+
+<body>
+    <div class="wrap">
+        <div class="hdr">
+            <h1>Unit 39. 포인터 사용하기</h1>
+            <div class="sub">주소 · & · * · 포인터 변수 · sizeof</div>
+            <span class="unit-badge">Chapter 10 · 포인터</span>
+            <div class="level-bar"><span class="on"></span><span class="on"></span><span class="on"></span></div>
+            <div class="meta"><span class="tag pri">🖥️ C언어</span><span class="tag acc">📝 20문제</span><span
+                    class="tag">⏱ 35~50분</span></div>
+        </div>
+        <div class="stu-bar"><label>👤 이름 <input type="text" id="stu-name" placeholder="이름"></label><label>📅 날짜 <input
+                    type="date" id="stu-date"></label></div>
+        <div class="learn">
+            <h2><span class="ico" style="background:rgba(168,85,247,.15)">📍</span> 포인터 = 메모리 주소를 저장하는 변수</h2>
+            <p>C의 핵심! <code>&</code>로 주소를 얻고, <code>*</code>로 값에 접근.</p>
+        </div>
+        <div id="problems"></div>
+        <div class="submit-section">
+            <p>모든 문제를 풀었나요? 📨</p><button class="btn-submit" id="btn-submit">📄 제출하기</button>
+        </div>
+        <div class="modal-overlay" id="submit-modal">
+            <div class="modal-box">
+                <div class="modal-icon">✅</div>
+                <h3>제출 완료!</h3>
+                <p>학습지가 저장되었습니다.</p>
+                <div style="margin:12px 0"><span class="info-tag" id="modal-name"></span> <span class="info-tag"
+                        id="modal-date"></span> <span class="info-tag" id="modal-count"></span></div>
+                <p style="font-size:.78rem;color:var(--dim)">📁 <strong id="modal-filename"></strong></p><button
+                    class="btn-close-modal" id="btn-close-modal">확인</button>
+            </div>
+        </div>
+        <div class="pg"><a href="../09_문자열/Unit38_문자열변환.html">← Unit 38</a><span class="tag active">Unit 39</span><a
+                href="Unit40_역참조.html">Unit 40 →</a></div>
+        <div class="ft">🖥️ C 언어 코딩 도장 · Unit 39 · 포인터 기초</div>
+    </div>
+    <script>
+        const P = [
+            {
+                n: 1, t: "메모리 주소란?", d: 1,
+                q: `다음 코드의 출력을 설명하세요.<pre class="code-c">int a = 42;
+printf("값: %d\\n", a);
+printf("주소: %p\\n", &a);</pre>`,
+                a: `<span class="key">정답</span><div class="trace">값: 42<br>주소: 0x7ffc... (메모리 위치, 실행마다 다름)<br><br><span class="val">&a</span> = 변수 a의 메모리 주소!<br>%p = 포인터(주소) 출력 서식</div>`
+            },
+
+            {
+                n: 2, t: "포인터 변수 선언", d: 1,
+                q: `int형 포인터를 선언하세요.<pre class="code-c">int a = 42;
+int *p = &a;  <span class="cm">// p는 a의 주소를 저장</span></pre>`,
+                a: `<span class="key">정답</span><div class="trace">int *p → "int형 주소를 저장하는 변수 p"<br>p = &a → p에 a의 주소를 저장<br><br>p는 a를 <span class="val">가리킨다(point)</span></div>`
+            },
+
+            {
+                n: 3, t: "역참조 연산자 *", d: 2,
+                q: `다음 코드의 출력을 쓰세요.<pre class="code-c">int a = 42;
+int *p = &a;
+printf("%d\\n", *p);   <span class="cm">// 역참조</span>
+*p = 100;
+printf("%d\\n", a);</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">42<br>100</div><div class="trace">*p = "p가 가리키는 곳의 값" = a의 값<br>*p = 100 → a의 값도 100으로 변경!<br><br><span class="val">포인터를 통해 원본 수정 가능!</span></div>`
+            },
+
+            {
+                n: 4, t: "& 와 * 의 관계", d: 2,
+                q: `다음이 참인지 거짓인지 판단하세요.<pre class="code-c">int a = 42;
+int *p = &a;
+// 1) p == &a
+// 2) *p == a
+// 3) *&a == a
+// 4) &*p == &a</pre>`,
+                a: `<span class="key">정답</span><div class="trace">1) p == &a → <span class="ok">참</span> (p는 a의 주소)<br>2) *p == a → <span class="ok">참</span> (*p는 a의 값)<br>3) *&a == a → <span class="ok">참</span> (주소의 값 = 원본)<br>4) &*p == &a → <span class="ok">참</span> (값의 주소 = 원본 주소)<br><br><span class="val">& 와 *는 서로 반대!</span></div>`
+            },
+
+            {
+                n: 5, t: "포인터의 크기", d: 2,
+                q: `다음 코드의 출력을 쓰세요. (64비트 시스템)<pre class="code-c">int *p1; double *p2; char *p3;
+printf("%zu %zu %zu\\n", sizeof(p1), sizeof(p2), sizeof(p3));</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">8 8 8</div><div class="trace"><span class="val">포인터 크기는 자료형에 관계없이 동일!</span><br>32비트: 4바이트, 64비트: 8바이트<br>주소의 크기 = CPU 아키텍처에 의존</div>`
+            },
+
+            {
+                n: 6, t: "포인터와 자료형", d: 2,
+                q: `왜 포인터에 자료형이 필요할까?<pre class="code-c">int a = 0x12345678;
+int *pi = &a;
+char *pc = (char*)&a;</pre>`,
+                a: `<span class="key">정답</span><div class="trace">자료형이 있어야 *p로 역참조할 때<br><span class="val">몇 바이트를 읽을지</span> 결정!<br><br>*pi → 4바이트 읽음 (int)<br>*pc → 1바이트만 읽음 (char)</div>`
+            },
+
+            {
+                n: 7, t: "NULL 포인터", d: 2,
+                q: `NULL 포인터를 설명하세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">int *p = NULL;  <span class="cm">// 아무것도 가리키지 않음</span>
+if (p != NULL)
+    printf("%d\\n", *p);
+else
+    printf("NULL!\\n");</pre><div class="trace"><span class="err">NULL 역참조 → 프로그램 충돌!</span><br>사용 전 반드시 NULL 체크!</div>`},
+
+            {
+                n: 8, t: "포인터로 swap", d: 2,
+                q: `포인터를 사용하여 두 변수의 값을 교환하세요.<pre class="code-c">void swap(int *a, int *b) {
+    int temp = *a;
+    *a = *b;
+    *b = temp;
+}
+int x=10, y=20;
+swap(&x, &y);
+printf("%d %d\\n", x, y);</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">20 10</div><div class="trace">함수에 &x, &y (주소)를 전달<br>*a, *b로 원본에 접근하여 교환!<br><br><span class="val">Call by Reference 패턴!</span></div>`
+            },
+
+            {
+                n: 9, t: "Call by Value vs Reference", d: 2,
+                q: `두 코드의 차이점을 설명하세요.<pre class="code-c">void addOne_v(int n) { n++; }    <span class="cm">// 값</span>
+void addOne_r(int *n) { (*n)++; } <span class="cm">// 참조</span>
+
+int a = 5;
+addOne_v(a);  printf("%d\\n", a);
+addOne_r(&a); printf("%d\\n", a);</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">5<br>6</div><div class="trace">addOne_v: 복사본 수정 → 원본 그대로 (5)<br>addOne_r: 주소로 원본 수정 → 6으로 변경!<br><br>원본을 바꾸려면 포인터(주소) 전달!</div>`
+            },
+
+            {
+                n: 10, t: "포인터와 배열", d: 2,
+                q: `배열 이름 = 첫 번째 요소의 주소?<pre class="code-c">int arr[3] = {10, 20, 30};
+int *p = arr;  <span class="cm">// &arr[0]과 동일</span>
+printf("%d\\n", *p);
+printf("%d\\n", *(p+1));
+printf("%d\\n", *(p+2));</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">10<br>20<br>30</div><div class="trace">arr == &arr[0]<br>*(p+i) == arr[i] == p[i]<br><br><span class="val">배열이름은 상수 포인터!</span></div>`
+            },
+
+            {
+                n: 11, t: "포인터 산술", d: 2,
+                q: `다음 코드의 출력을 쓰세요.<pre class="code-c">int arr[] = {10,20,30,40,50};
+int *p = arr;
+printf("%d\\n", *p);
+p++;
+printf("%d\\n", *p);
+p += 2;
+printf("%d\\n", *p);</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">10<br>20<br>40</div><div class="trace">p++ → 다음 int 위치(+4바이트)로 이동<br>p+=2 → 2칸 뒤(+8바이트)로 이동<br><br>포인터 +1 = sizeof(자료형)만큼 이동</div>`
+            },
+
+            {
+                n: 12, t: "포인터 뺄셈", d: 2,
+                q: `두 포인터의 차이는?<pre class="code-c">int arr[] = {10,20,30,40,50};
+int *p1 = &arr[1], *p2 = &arr[4];
+printf("%ld\\n", p2 - p1);</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">3</div><div class="trace">포인터 뺄셈 = 두 요소 사이의 <span class="val">간격(개수)</span><br>바이트 차이가 아니라 요소 개수!</div>`
+            },
+
+            {
+                n: 13, t: "const 포인터", d: 2,
+                q: `const의 위치에 따른 의미를 설명하세요.<pre class="code-c">// 1) 가리키는 값 변경 불가
+const int *p1 = &a;
+// 2) 포인터 자체 변경 불가
+int *const p2 = &a;
+// 3) 둘 다 불가
+const int *const p3 = &a;</pre>`,
+                a: `<span class="key">정답</span><div class="trace">1) const int *p → *p = 5; <span class="err">❌</span> p = &b; <span class="ok">✅</span><br>2) int *const p → *p = 5; <span class="ok">✅</span> p = &b; <span class="err">❌</span><br>3) const int *const p → 둘 다 <span class="err">❌</span><br><br>규칙: const가 * 앞 → 값 보호<br>const가 * 뒤 → 포인터 보호</div>`
+            },
+
+            {
+                n: 14, t: "void 포인터", d: 2,
+                q: `void 포인터를 설명하세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">int a = 42;
+void *vp = &a;
+<span class="cm">// printf("%d", *vp);  // 에러!</span>
+printf("%d\\n", *(int*)vp); <span class="cm">// OK! 캐스팅</span></pre><div class="trace">void*: 어떤 자료형 주소든 저장 가능<br>역참조 시 반드시 <span class="val">캐스팅</span> 필요!</div>`},
+
+            {
+                n: 15, t: "심사: 최대값 함수", d: 2,
+                q: `배열의 최대값과 위치를 포인터로 반환하세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">void findMax(int *arr, int n,
+             int *maxVal, int *maxIdx) {
+    *maxVal = arr[0]; *maxIdx = 0;
+    for (int i=1;i<n;i++)
+        if (arr[i] > *maxVal) {
+            *maxVal = arr[i]; *maxIdx = i;
+        }
+}
+int arr[]={3,8,1,9,5}, val, idx;
+findMax(arr, 5, &val, &idx);
+printf("max=%d at %d\\n", val, idx);</pre>`},
+
+            {
+                n: 16, t: "심사: 문자열과 포인터", d: 2,
+                q: `문자열을 포인터로 순회하세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">char str[] = "Hello";
+char *p = str;
+while (*p != '\\0') {
+    printf("%c ", *p);
+    p++;
+}
+<span class="cm">// H e l l o</span></pre><div class="trace">*p로 현재 문자, p++로 다음 문자!</div>`},
+
+            {
+                n: 17, t: "심사: 포인터 배열", d: 3,
+                q: `문자열 포인터 배열을 만드세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">char *fruits[] = {"Apple","Banana","Cherry"};
+for (int i = 0; i < 3; i++)
+    printf("%s\\n", fruits[i]);</pre><div class="trace">char *fruits[3] = 문자열 포인터 3개짜리 배열<br>각 포인터는 문자열 리터럴을 가리킴</div>`},
+
+            {
+                n: 18, t: "심사: 배열을 포인터로 역순", d: 2,
+                q: `포인터를 사용하여 배열을 뒤집으세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">void reverse(int *arr, int n) {
+    int *left = arr, *right = arr+n-1;
+    while (left < right) {
+        int t = *left;
+        *left = *right;
+        *right = t;
+        left++; right--;
+    }
+}</pre>`},
+
+            {
+                n: 19, t: "심사: 함수 반환과 포인터", d: 3,
+                q: `다음 코드의 문제점은?<pre class="code-c">int* badFunc() {
+    int x = 42;
+    return &x;  <span class="cm">// ???</span>
+}</pre>`,
+                a: `<span class="key">정답</span><div class="trace"><span class="err">위험! Dangling Pointer!</span><br><br>지역변수 x는 함수 종료 시 소멸 →<br>반환된 주소는 무효! 쓰레기값 접근!<br><br>해결: static 변수, malloc, 또는 매개변수 포인터 사용</div>`
+            },
+
+            {
+                n: 20, t: "🏆 Unit 39 종합", d: 3,
+                q: `다음 코드의 출력을 쓰세요.<pre class="code-c">int arr[] = {10, 20, 30, 40, 50};
+int *p = arr + 2;
+printf("%d\\n", *p);
+printf("%d\\n", p[-1]);
+printf("%d\\n", p[2]);
+printf("%ld\\n", p - arr);</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">30<br>20<br>50<br>2</div><div class="trace">p = arr+2 → arr[2] 위치<br>*p = arr[2] = 30<br>p[-1] = *(p-1) = arr[1] = 20<br>p[2] = *(p+2) = arr[4] = 50<br>p-arr = 2 (인덱스 차이)</div>`
+            }
+        ];
+        const c = document.getElementById('problems'); P.forEach(p => { const dc = p.d <= 1 ? 'ez' : p.d <= 2 ? 'md' : 'hd'; const dots = Array.from({ length: 5 }, (_, i) => `<span${i < p.d ? ' class="on"' : ''}>​</span>`).join(''); c.innerHTML += `<div class="prob"><div class="prob-top"><div class="prob-num ${dc}">${p.n}</div><div class="prob-title">${p.t}</div><div class="diff-dots">${dots}</div></div><div class="prob-body"><div class="q">${p.q}</div><textarea class="write" placeholder="✍️ 답을 작성하세요"></textarea><details class="ans"><summary>정답 및 해설 보기</summary><div class="ans-body">${p.a}</div></details></div></div>`; });
+    </script>
+    <script src="../submit.js"></script>
+    <script src="../../platform.js"></script>
+</body>
+
+</html>

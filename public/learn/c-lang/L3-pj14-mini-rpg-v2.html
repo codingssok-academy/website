@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 프로젝트: 미니 RPG 전투</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+/* ── 페이지 ── */
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+/* ── 챕터 표지 ── */
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+
+/* ── 난이도 배지 ── */
+.diff-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #fef2f2; border: 1.5px solid #fca5a5;
+    color: #dc2626; font-size: 12px; font-weight: 800;
+    padding: 4px 14px; border-radius: 99px; margin-bottom: 16px;
+}
+.diff-badge::before {
+    content: '';
+    width: 8px; height: 8px; background: #ef4444; border-radius: 50%;
+}
+
+/* ── 본문 ── */
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 16px; font-weight: 800; color: #1e3a5f; margin: 18px 0 10px; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code, td code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+ul, ol { padding-left: 20px; }
+li { font-size: 14px; color: #374151; line-height: 1.8; }
+
+/* ── 코드 블록 ── */
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; font-style: italic; }
+.code .op { color: #fb923c; }
+.code .type { color: #f9a8d4; }
+
+/* ── 코드 파일 헤더 ── */
+.code-file {
+    background: #0f172a; border-radius: 8px; margin: 14px 0; overflow: hidden;
+}
+.code-file-header {
+    background: #1e293b; padding: 8px 16px; display: flex; align-items: center; gap: 8px;
+}
+.code-file-dot { width: 10px; height: 10px; border-radius: 50%; }
+.code-file-name { font-size: 12px; color: #94a3b8; font-family: 'JetBrains Mono', monospace; font-weight: 600; }
+.code-file-body {
+    padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #e2e8f0; line-height: 1.8; white-space: pre-wrap;
+}
+
+/* ── 정보 박스 ── */
+.info-box {
+    background: #eff6ff; border-left: 4px solid #3b82f6; border-radius: 0 8px 8px 0;
+    padding: 12px 16px; margin: 12px 0; font-size: 14px; color: #1e40af; line-height: 1.7;
+}
+.warn-box {
+    background: #fffbeb; border-left: 4px solid #f59e0b; border-radius: 0 8px 8px 0;
+    padding: 12px 16px; margin: 12px 0; font-size: 14px; color: #92400e; line-height: 1.7;
+}
+.success-box {
+    background: #f0fdf4; border-left: 4px solid #22c55e; border-radius: 0 8px 8px 0;
+    padding: 12px 16px; margin: 12px 0; font-size: 14px; color: #166534; line-height: 1.7;
+}
+
+/* ── 스탯 테이블 ── */
+.stat-table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 14px; }
+.stat-table th {
+    background: #1e3a5f; color: #fff; padding: 9px 14px; text-align: center;
+    font-size: 13px; font-weight: 700;
+}
+.stat-table td {
+    padding: 8px 14px; text-align: center; border: 1px solid #e2e8f0;
+    color: #334155; font-size: 13px;
+}
+.stat-table tr:nth-child(even) td { background: #f8fafc; }
+.stat-table .hero-row td { background: #eff6ff; color: #1d4ed8; font-weight: 700; }
+.stat-table .monster-row td { background: #fef2f2; color: #dc2626; font-weight: 700; }
+
+/* ── 흐름도 레이블 ── */
+.flow-label {
+    display: inline-block; background: #e0f2fe; color: #0369a1;
+    font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 99px;
+    margin: 2px 0;
+}
+
+/* ── 문제 ── */
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fef2f2; color: #dc2626; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #e2e8f0; line-height: 1.7; white-space: pre-wrap; }
+
+/* ── 요약 ── */
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+/* ── 도전 카드 ── */
+.challenge-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0; }
+.challenge-card { border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 14px 16px; }
+.challenge-card .c-level { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 99px; margin-bottom: 8px; display: inline-block; }
+.c-level.lv1 { background: #dcfce7; color: #166534; }
+.c-level.lv2 { background: #fef3c7; color: #92400e; }
+.c-level.lv3 { background: #fee2e2; color: #dc2626; }
+.c-level.lv4 { background: #f3e8ff; color: #7c3aed; }
+.challenge-card h4 { font-size: 14px; font-weight: 800; color: #1e3a5f; margin-bottom: 6px; }
+.challenge-card p { font-size: 13px; color: #64748b; line-height: 1.6; margin: 0; }
+
+/* ── 직업 카드 ── */
+.job-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin: 14px 0; }
+.job-card { border-radius: 10px; padding: 14px; text-align: center; }
+.job-card.warrior { background: #fef2f2; border: 1.5px solid #fca5a5; }
+.job-card.mage { background: #faf5ff; border: 1.5px solid #d8b4fe; }
+.job-card.archer { background: #f0fdf4; border: 1.5px solid #86efac; }
+.job-card .job-icon { font-size: 28px; margin-bottom: 6px; }
+.job-card .job-name { font-size: 14px; font-weight: 800; color: #1e3a5f; margin-bottom: 6px; }
+.job-card .job-stat { font-size: 12px; color: #64748b; line-height: 1.7; }
+
+/* ── HP 바 ── */
+.hp-bar-wrap { margin: 14px 0; }
+.hp-label { font-size: 12px; font-weight: 700; color: #64748b; margin-bottom: 4px; }
+.hp-bar-bg { background: #f1f5f9; border-radius: 99px; height: 18px; overflow: hidden; }
+.hp-bar-fill { height: 100%; border-radius: 99px; display: flex; align-items: center; padding-left: 10px; font-size: 11px; font-weight: 700; color: #fff; }
+.hp-bar-fill.hero { background: linear-gradient(90deg, #3b82f6, #6366f1); width: 75%; }
+.hp-bar-fill.monster { background: linear-gradient(90deg, #ef4444, #f97316); width: 45%; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+
+<!-- ======================================================
+     PAGE 1 — COVER
+     ====================================================== -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">PJ</div>
+        <div class="cover-label">PROJECT 14</div>
+        <h1 class="cover-title">미니 RPG 전투 — 턴제 배틀 시스템</h1>
+        <p class="cover-sub">조건문과 변수 관리를 모두 녹여낸 종합 프로젝트. 용사와 몬스터가 번갈아 싸우는 턴제 전투 게임을 만들어보자.</p>
+
+        <div class="diff-badge">어려움 — 조건문 종합 + 변수 관리</div>
+
+        <!-- 용사 vs 몬스터 대결 SVG -->
+        <div style="text-align:center; margin: 20px 0;">
+            <svg viewBox="0 0 500 210" style="max-width:500px;width:100%">
+                <defs>
+                    <marker id="arr1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+                    </marker>
+                    <marker id="arr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#ef4444"/>
+                    </marker>
+                    <marker id="arr3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#3b82f6"/>
+                    </marker>
+                </defs>
+                <!-- 배경 -->
+                <rect x="5" y="5" width="490" height="200" rx="14" fill="#1e293b" opacity="0.95"/>
+                <rect x="5" y="5" width="490" height="200" rx="14" fill="none" stroke="#334155" stroke-width="1.5"/>
+                <!-- 바닥 -->
+                <rect x="20" y="175" width="460" height="6" rx="3" fill="#334155"/>
+                <!-- VS 텍스트 -->
+                <text x="250" y="105" text-anchor="middle" font-size="28" fill="#f59e0b" font-weight="900" font-family="'Noto Sans KR', sans-serif">VS</text>
+                <text x="250" y="125" text-anchor="middle" font-size="10" fill="#64748b" font-weight="600">턴제 전투</text>
+
+                <!-- ── 용사 ── -->
+                <!-- 몸통 -->
+                <rect x="60" y="100" width="36" height="50" rx="4" fill="#3b82f6"/>
+                <!-- 머리 -->
+                <circle cx="78" cy="88" r="18" fill="#fcd34d" stroke="#f59e0b" stroke-width="1.5"/>
+                <!-- 눈 -->
+                <circle cx="72" cy="86" r="3" fill="#1e293b"/>
+                <circle cx="84" cy="86" r="3" fill="#1e293b"/>
+                <!-- 입 -->
+                <path d="M73,94 Q78,98 83,94" stroke="#1e293b" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+                <!-- 팔 -->
+                <rect x="44" y="104" width="14" height="8" rx="4" fill="#3b82f6"/>
+                <!-- 검 -->
+                <rect x="30" y="80" width="6" height="36" rx="2" fill="#94a3b8"/>
+                <rect x="24" y="104" width="18" height="4" rx="2" fill="#f59e0b"/>
+                <!-- 다리 -->
+                <rect x="62" y="150" width="12" height="22" rx="4" fill="#1d4ed8"/>
+                <rect x="82" y="150" width="12" height="22" rx="4" fill="#1d4ed8"/>
+                <!-- HP 바 -->
+                <rect x="40" y="60" width="80" height="10" rx="5" fill="#334155"/>
+                <rect x="40" y="60" width="80" height="10" rx="5" fill="#22c55e"/>
+                <text x="80" y="55" text-anchor="middle" font-size="9" fill="#86efac" font-weight="700">HP 100</text>
+                <text x="80" y="185" text-anchor="middle" font-size="12" fill="#93c5fd" font-weight="800">용사</text>
+
+                <!-- ── 몬스터 ── -->
+                <!-- 몸통 -->
+                <rect x="390" y="95" width="50" height="55" rx="6" fill="#7c3aed"/>
+                <!-- 머리 -->
+                <rect x="385" y="65" width="60" height="45" rx="8" fill="#9333ea"/>
+                <!-- 뿔 좌 -->
+                <polygon points="390,68 382,42 398,62" fill="#ef4444"/>
+                <!-- 뿔 우 -->
+                <polygon points="440,68 448,42 432,62" fill="#ef4444"/>
+                <!-- 눈 -->
+                <circle cx="400" cy="82" r="5" fill="#fef08a"/>
+                <circle cx="430" cy="82" r="5" fill="#fef08a"/>
+                <circle cx="401" cy="82" r="2.5" fill="#1e293b"/>
+                <circle cx="431" cy="82" r="2.5" fill="#1e293b"/>
+                <!-- 이빨 -->
+                <path d="M405,95 L408,103 L411,95 L414,103 L417,95 L420,103 L423,95 L426,103 L429,95" stroke="#fff" stroke-width="1.5" fill="none" stroke-linejoin="round"/>
+                <!-- 팔 -->
+                <rect x="350" y="100" width="38" height="10" rx="5" fill="#7c3aed"/>
+                <rect x="440" y="100" width="36" height="10" rx="5" fill="#7c3aed"/>
+                <!-- 발톱 좌 -->
+                <polygon points="350,110 344,125 354,118" fill="#4c1d95"/>
+                <polygon points="358,110 352,127 362,118" fill="#4c1d95"/>
+                <!-- 다리 -->
+                <rect x="392" y="150" width="14" height="24" rx="4" fill="#6d28d9"/>
+                <rect x="424" y="150" width="14" height="24" rx="4" fill="#6d28d9"/>
+                <!-- HP 바 -->
+                <rect x="370" y="42" width="90" height="10" rx="5" fill="#334155"/>
+                <rect x="370" y="42" width="90" height="10" rx="5" fill="#ef4444"/>
+                <text x="415" y="37" text-anchor="middle" font-size="9" fill="#fca5a5" font-weight="700">HP 80</text>
+                <text x="415" y="185" text-anchor="middle" font-size="12" fill="#c4b5fd" font-weight="800">슬라임 킹</text>
+
+                <!-- 공격 화살표 -->
+                <path d="M130,120 C175,100 210,100 235,115" stroke="#3b82f6" stroke-width="2" stroke-dasharray="5,3" fill="none" marker-end="url(#arr3)"/>
+                <text x="182" y="97" font-size="9" fill="#93c5fd" font-weight="700">공격 -20</text>
+                <path d="M375,130 C345,148 315,148 270,135" stroke="#ef4444" stroke-width="2" stroke-dasharray="5,3" fill="none" marker-end="url(#arr2)"/>
+                <text x="300" y="156" font-size="9" fill="#fca5a5" font-weight="700">반격 -15</text>
+            </svg>
+        </div>
+
+        <!-- 전투 흐름도 -->
+        <div style="margin: 16px 0;">
+            <svg viewBox="0 0 500 56" style="max-width:500px;width:100%">
+                <!-- 시작 -->
+                <ellipse cx="42" cy="28" rx="38" ry="18" fill="#1e3a5f"/>
+                <text x="42" y="32" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">게임 시작</text>
+                <!-- → -->
+                <line x1="82" y1="28" x2="98" y2="28" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arr1)"/>
+                <!-- 행동 선택 -->
+                <rect x="100" y="10" width="78" height="36" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="139" y="26" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">행동 선택</text>
+                <text x="139" y="40" text-anchor="middle" font-size="9" fill="#3b82f6">1/2/3</text>
+                <!-- → -->
+                <line x1="180" y1="28" x2="196" y2="28" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arr1)"/>
+                <!-- switch 분기 -->
+                <polygon points="220,10 270,28 220,46 170,28" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5" transform="translate(28,0)"/>
+                <text x="228" y="32" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">switch</text>
+                <!-- → -->
+                <line x1="296" y1="28" x2="312" y2="28" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arr1)"/>
+                <!-- 몬스터 반격 -->
+                <rect x="314" y="10" width="80" height="36" rx="6" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+                <text x="354" y="26" text-anchor="middle" font-size="10" fill="#dc2626" font-weight="700">몬스터 반격</text>
+                <text x="354" y="40" text-anchor="middle" font-size="9" fill="#ef4444">항상 공격</text>
+                <!-- → -->
+                <line x1="396" y1="28" x2="412" y2="28" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arr1)"/>
+                <!-- HP 판정 -->
+                <polygon points="450,10 490,28 450,46 410,28" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5" transform="translate(2,0)"/>
+                <text x="454" y="32" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">HP≤0?</text>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/gamepad.png" alt="게임" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 프로젝트에서 배우는 것</h3>
+            <ul>
+                <li>여러 변수를 동시에 선언하고 관리할 수 있습니다.</li>
+                <li>switch문으로 플레이어 행동을 분기할 수 있습니다.</li>
+                <li>while 반복 + if 조건으로 게임 루프를 구성할 수 있습니다.</li>
+                <li>HP 관리(공격·방어·회복)를 코드로 표현할 수 있습니다.</li>
+                <li>rand()로 랜덤 값을 생성해 크리티컬 히트를 구현할 수 있습니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+
+<!-- ======================================================
+     PAGE 2 — 기본 구현
+     ====================================================== -->
+<div class="page">
+    <h2>기본 구현 — 변수 설계부터 시작</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="우승" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+    <p>RPG 전투 게임을 만들기 전에, 어떤 데이터가 필요한지 먼저 설계한다. 프로그래밍은 코딩보다 <strong>설계</strong>가 먼저다.</p>
+
+    <!-- 스탯 테이블 -->
+    <table class="stat-table">
+        <thead>
+            <tr>
+                <th>캐릭터</th>
+                <th>변수명</th>
+                <th>초기값</th>
+                <th>역할</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr class="hero-row">
+                <td>용사</td>
+                <td><code>hero_hp</code></td>
+                <td>100</td>
+                <td>용사 체력. 0 이하면 게임 오버</td>
+            </tr>
+            <tr class="hero-row">
+                <td>용사</td>
+                <td><code>hero_atk</code></td>
+                <td>20</td>
+                <td>고정 공격력 (기본값)</td>
+            </tr>
+            <tr class="hero-row">
+                <td>용사</td>
+                <td><code>defense_mode</code></td>
+                <td>0</td>
+                <td>방어 모드 여부 (0=일반, 1=방어)</td>
+            </tr>
+            <tr class="monster-row">
+                <td>몬스터</td>
+                <td><code>monster_hp</code></td>
+                <td>80</td>
+                <td>몬스터 체력. 0 이하면 승리</td>
+            </tr>
+            <tr class="monster-row">
+                <td>몬스터</td>
+                <td><code>monster_atk</code></td>
+                <td>15</td>
+                <td>고정 공격력 (기본값)</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>게임 흐름 — while 루프 + switch 분기</h3>
+
+    <!-- 턴 흐름 SVG -->
+    <div style="text-align:center; margin: 14px 0;">
+        <svg viewBox="0 0 500 130" style="max-width:500px;width:100%">
+            <defs>
+                <marker id="fa" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+                </marker>
+            </defs>
+            <!-- 루프 배경 -->
+            <rect x="8" y="8" width="484" height="84" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="6,3"/>
+            <text x="22" y="24" font-size="9" fill="#94a3b8" font-weight="700">while (hero_hp &gt; 0 &amp;&amp; monster_hp &gt; 0)</text>
+
+            <!-- 블록 1: 행동 입력 -->
+            <rect x="18" y="30" width="80" height="50" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="58" y="52" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="800">행동 입력</text>
+            <text x="58" y="68" text-anchor="middle" font-size="9" fill="#3b82f6">scanf("%d")</text>
+            <line x1="100" y1="55" x2="118" y2="55" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#fa)"/>
+
+            <!-- 블록 2: switch -->
+            <polygon points="140,30 190,55 140,80 90,55" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5" transform="translate(30,0)"/>
+            <text x="170" y="59" text-anchor="middle" font-size="10" fill="#92400e" font-weight="800">switch</text>
+            <line x1="200" y1="55" x2="218" y2="55" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#fa)"/>
+
+            <!-- 블록 3: 용사 행동 처리 -->
+            <rect x="220" y="30" width="88" height="50" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="264" y="52" text-anchor="middle" font-size="10" fill="#166534" font-weight="800">용사 행동</text>
+            <text x="264" y="66" text-anchor="middle" font-size="9" fill="#22c55e">공격/방어/회복</text>
+            <line x1="310" y1="55" x2="328" y2="55" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#fa)"/>
+
+            <!-- 블록 4: 몬스터 반격 -->
+            <rect x="330" y="30" width="88" height="50" rx="6" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="374" y="52" text-anchor="middle" font-size="10" fill="#dc2626" font-weight="800">몬스터 반격</text>
+            <text x="374" y="66" text-anchor="middle" font-size="9" fill="#ef4444">항상 공격</text>
+            <line x1="420" y1="55" x2="438" y2="55" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#fa)"/>
+
+            <!-- 블록 5: HP 체크 -->
+            <polygon points="460,30 492,55 460,80 428,55" fill="#eff6ff" stroke="#6366f1" stroke-width="1.5"/>
+            <text x="460" y="59" text-anchor="middle" font-size="9" fill="#4338ca" font-weight="800">HP?</text>
+
+            <!-- 아래 루프 화살표 -->
+            <path d="M460,80 Q460,115 250,115 Q130,115 58,108 Q58,90 58,80" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4,3" fill="none" marker-end="url(#fa)"/>
+            <text x="250" y="127" text-anchor="middle" font-size="9" fill="#94a3b8" font-weight="600">두 HP 모두 양수면 다음 턴 반복</text>
+        </svg>
+    </div>
+
+    <!-- 전체 기본 코드 -->
+    <div class="code-file">
+        <div class="code-file-header">
+            <div class="code-file-dot" style="background:#ef4444"></div>
+            <div class="code-file-dot" style="background:#f59e0b"></div>
+            <div class="code-file-dot" style="background:#22c55e"></div>
+            <span class="code-file-name">mini_rpg_basic.c</span>
+        </div>
+        <div class="code-file-body"><span class="cmt">/* 미니 RPG 전투 — 기본 버전 */</span>
+<span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+
+<span class="type">int</span> <span class="fn">main</span>() {
+    <span class="cmt">/* ── 캐릭터 스탯 선언 ── */</span>
+    <span class="type">int</span> hero_hp    <span class="op">=</span> <span class="num">100</span>;   <span class="cmt">/* 용사 체력 */</span>
+    <span class="type">int</span> hero_atk   <span class="op">=</span> <span class="num">20</span>;    <span class="cmt">/* 용사 공격력 */</span>
+    <span class="type">int</span> monster_hp  <span class="op">=</span> <span class="num">80</span>;    <span class="cmt">/* 몬스터 체력 */</span>
+    <span class="type">int</span> monster_atk <span class="op">=</span> <span class="num">15</span>;    <span class="cmt">/* 몬스터 공격력 */</span>
+    <span class="type">int</span> action;              <span class="cmt">/* 플레이어 선택 입력값 */</span>
+    <span class="type">int</span> turn <span class="op">=</span> <span class="num">1</span>;            <span class="cmt">/* 현재 턴 번호 */</span>
+
+    <span class="fn">printf</span>(<span class="str">"=== 미니 RPG 전투 시작! ===\n\n"</span>);
+
+    <span class="cmt">/* ── 게임 메인 루프 ── */</span>
+    <span class="kw">while</span> (hero_hp <span class="op">&gt;</span> <span class="num">0</span> <span class="op">&amp;&amp;</span> monster_hp <span class="op">&gt;</span> <span class="num">0</span>) {
+
+        <span class="fn">printf</span>(<span class="str">"--- 턴 %d ---\n"</span>, turn);
+        <span class="fn">printf</span>(<span class="str">"[용사] HP: %d  |  [몬스터] HP: %d\n"</span>, hero_hp, monster_hp);
+        <span class="fn">printf</span>(<span class="str">"행동을 선택하세요: 1=공격  2=방어  3=회복\n"</span>);
+        <span class="fn">printf</span>(<span class="str">"입력 &gt; "</span>);
+        <span class="fn">scanf</span>(<span class="str">"%d"</span>, <span class="op">&amp;</span>action);
+
+        <span class="cmt">/* ── switch: 행동 분기 ── */</span>
+        <span class="kw">switch</span> (action) {
+            <span class="kw">case</span> <span class="num">1</span>: <span class="cmt">/* 공격 */</span>
+                monster_hp <span class="op">-=</span> hero_atk;
+                <span class="fn">printf</span>(<span class="str">"용사의 공격! 몬스터에게 %d 데미지!\n"</span>, hero_atk);
+                <span class="kw">break</span>;
+            <span class="kw">case</span> <span class="num">2</span>: <span class="cmt">/* 방어 */</span>
+                <span class="fn">printf</span>(<span class="str">"용사가 방어 태세를 취했다!\n"</span>);
+                <span class="kw">break</span>;
+            <span class="kw">case</span> <span class="num">3</span>: <span class="cmt">/* 회복 */</span>
+                hero_hp <span class="op">+=</span> <span class="num">20</span>;
+                <span class="kw">if</span> (hero_hp <span class="op">&gt;</span> <span class="num">100</span>) hero_hp <span class="op">=</span> <span class="num">100</span>;  <span class="cmt">/* 최대 HP 제한 */</span>
+                <span class="fn">printf</span>(<span class="str">"용사가 포션을 사용! HP +20 (현재: %d)\n"</span>, hero_hp);
+                <span class="kw">break</span>;
+            <span class="kw">default</span>:
+                <span class="fn">printf</span>(<span class="str">"잘못된 입력입니다. 턴을 소비합니다.\n"</span>);
+        }
+
+        <span class="cmt">/* ── 몬스터 반격 (몬스터가 살아있을 때만) ── */</span>
+        <span class="kw">if</span> (monster_hp <span class="op">&gt;</span> <span class="num">0</span>) {
+            <span class="kw">if</span> (action <span class="op">==</span> <span class="num">2</span>) {  <span class="cmt">/* 방어 중이면 데미지 절반 */</span>
+                hero_hp <span class="op">-=</span> monster_atk <span class="op">/</span> <span class="num">2</span>;
+                <span class="fn">printf</span>(<span class="str">"몬스터 공격! 방어로 %d 데미지만 받음.\n"</span>, monster_atk <span class="op">/</span> <span class="num">2</span>);
+            } <span class="kw">else</span> {
+                hero_hp <span class="op">-=</span> monster_atk;
+                <span class="fn">printf</span>(<span class="str">"몬스터의 공격! 용사에게 %d 데미지!\n"</span>, monster_atk);
+            }
+        }
+        turn<span class="op">++</span>;
+        <span class="fn">printf</span>(<span class="str">"\n"</span>);
+    }
+
+    <span class="cmt">/* ── 결과 판정 ── */</span>
+    <span class="kw">if</span> (monster_hp <span class="op">&lt;=</span> <span class="num">0</span>)
+        <span class="fn">printf</span>(<span class="str">"*** 승리! 몬스터를 물리쳤다! ***\n"</span>);
+    <span class="kw">else</span>
+        <span class="fn">printf</span>(<span class="str">"*** 게임 오버. 용사가 쓰러졌다... ***\n"</span>);
+
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+    </div>
+
+    <!-- 출력 예시 -->
+    <div class="info-box">
+        <strong>출력 예시</strong><br>
+        <code style="font-size:12px; color:#1d4ed8; display:block; margin-top:6px; line-height:1.9">
+=== 미니 RPG 전투 시작! ===<br>
+--- 턴 1 ---<br>
+[용사] HP: 100  |  [몬스터] HP: 80<br>
+행동을 선택하세요: 1=공격  2=방어  3=회복<br>
+입력 > 1<br>
+용사의 공격! 몬스터에게 20 데미지!<br>
+몬스터의 공격! 용사에게 15 데미지!
+        </code>
+    </div>
+
+    <!-- 핵심 포인트 -->
+    <div class="warn-box">
+        <strong>핵심 포인트 3가지</strong><br>
+        1. <code>while (hero_hp &gt; 0 &amp;&amp; monster_hp &gt; 0)</code> — 두 조건 모두 참일 때만 루프 유지<br>
+        2. 방어 중이면 <code>monster_atk / 2</code> — 정수 나눗셈으로 절반 데미지<br>
+        3. 회복 후 <code>if (hero_hp &gt; 100) hero_hp = 100;</code> — HP 상한 제한 필수
+    </div>
+</div>
+
+
+<!-- ======================================================
+     PAGE 3 — 확장 구현
+     ====================================================== -->
+<div class="page">
+    <h2>확장 구현 — 직업 선택 + 크리티컬 히트 + 아이템</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/flowchart.png" alt="게임 흐름" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+    <!-- 직업 카드 -->
+    <h3>직업 선택 시스템</h3>
+    <div class="job-grid">
+        <div class="job-card warrior">
+            <!-- SVG 아이콘: 전사 방패+검 -->
+            <div style="text-align:center; margin-bottom:6px;">
+                <svg viewBox="0 0 50 50" width="40" height="40">
+                    <polygon points="25,5 45,15 45,35 25,48 5,35 5,15" fill="#fef2f2" stroke="#ef4444" stroke-width="2"/>
+                    <line x1="25" y1="12" x2="25" y2="38" stroke="#dc2626" stroke-width="3" stroke-linecap="round"/>
+                    <line x1="16" y1="22" x2="34" y2="22" stroke="#dc2626" stroke-width="3" stroke-linecap="round"/>
+                </svg>
+            </div>
+            <div class="job-name">전사</div>
+            <div class="job-stat">HP: 120<br>공격력: 25<br>특기: 높은 체력</div>
+        </div>
+        <div class="job-card mage">
+            <!-- SVG 아이콘: 마법사 지팡이 -->
+            <div style="text-align:center; margin-bottom:6px;">
+                <svg viewBox="0 0 50 50" width="40" height="40">
+                    <circle cx="25" cy="12" r="9" fill="#faf5ff" stroke="#9333ea" stroke-width="2"/>
+                    <circle cx="25" cy="12" r="4" fill="#c084fc"/>
+                    <line x1="25" y1="21" x2="25" y2="46" stroke="#7c3aed" stroke-width="3" stroke-linecap="round"/>
+                    <line x1="18" y1="32" x2="32" y2="32" stroke="#a855f7" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+            </div>
+            <div class="job-name">마법사</div>
+            <div class="job-stat">HP: 70<br>공격력: 35<br>특기: 높은 화력</div>
+        </div>
+        <div class="job-card archer">
+            <!-- SVG 아이콘: 궁수 활+화살 -->
+            <div style="text-align:center; margin-bottom:6px;">
+                <svg viewBox="0 0 50 50" width="40" height="40">
+                    <path d="M12,40 Q25,8 38,10" stroke="#16a34a" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                    <path d="M12,40 Q25,42 38,10" stroke="#16a34a" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                    <line x1="10" y1="25" x2="42" y2="25" stroke="#15803d" stroke-width="2" stroke-linecap="round"/>
+                    <polygon points="42,25 36,21 38,25 36,29" fill="#15803d"/>
+                </svg>
+            </div>
+            <div class="job-name">궁수</div>
+            <div class="job-stat">HP: 90<br>공격력: 20<br>특기: 크리티컬 확률 2배</div>
+        </div>
+    </div>
+
+    <!-- 직업 선택 코드 -->
+    <div class="code-file">
+        <div class="code-file-header">
+            <div class="code-file-dot" style="background:#ef4444"></div>
+            <div class="code-file-dot" style="background:#f59e0b"></div>
+            <div class="code-file-dot" style="background:#22c55e"></div>
+            <span class="code-file-name">mini_rpg_advanced.c — 직업 선택 부분</span>
+        </div>
+        <div class="code-file-body"><span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="kw">#include</span> <span class="str">&lt;stdlib.h&gt;</span>   <span class="cmt">/* rand(), srand() */</span>
+<span class="kw">#include</span> <span class="str">&lt;time.h&gt;</span>      <span class="cmt">/* time() */</span>
+
+<span class="type">int</span> <span class="fn">main</span>() {
+    <span class="fn">srand</span>(<span class="fn">time</span>(<span class="num">NULL</span>));  <span class="cmt">/* 랜덤 시드 초기화 */</span>
+
+    <span class="type">int</span> hero_hp, hero_atk, crit_bonus;
+    <span class="type">int</span> job;
+
+    <span class="fn">printf</span>(<span class="str">"직업을 선택하세요: 1=전사  2=마법사  3=궁수\n입력 > "</span>);
+    <span class="fn">scanf</span>(<span class="str">"%d"</span>, <span class="op">&amp;</span>job);
+
+    <span class="kw">switch</span> (job) {
+        <span class="kw">case</span> <span class="num">1</span>:  <span class="cmt">/* 전사 */</span>
+            hero_hp = <span class="num">120</span>; hero_atk = <span class="num">25</span>; crit_bonus = <span class="num">10</span>;
+            <span class="fn">printf</span>(<span class="str">"전사를 선택했습니다! HP:%d ATK:%d\n"</span>, hero_hp, hero_atk);
+            <span class="kw">break</span>;
+        <span class="kw">case</span> <span class="num">2</span>:  <span class="cmt">/* 마법사 */</span>
+            hero_hp = <span class="num">70</span>;  hero_atk = <span class="num">35</span>; crit_bonus = <span class="num">10</span>;
+            <span class="fn">printf</span>(<span class="str">"마법사를 선택했습니다! HP:%d ATK:%d\n"</span>, hero_hp, hero_atk);
+            <span class="kw">break</span>;
+        <span class="kw">case</span> <span class="num">3</span>:  <span class="cmt">/* 궁수: 크리티컬 확률 2배 */</span>
+            hero_hp = <span class="num">90</span>;  hero_atk = <span class="num">20</span>; crit_bonus = <span class="num">20</span>;
+            <span class="fn">printf</span>(<span class="str">"궁수를 선택했습니다! HP:%d ATK:%d\n"</span>, hero_hp, hero_atk);
+            <span class="kw">break</span>;
+        <span class="kw">default</span>:
+            hero_hp = <span class="num">100</span>; hero_atk = <span class="num">20</span>; crit_bonus = <span class="num">10</span>;
+            <span class="fn">printf</span>(<span class="str">"기본 직업으로 시작합니다.\n"</span>);
+    }</div>
+    </div>
+
+    <!-- 크리티컬 히트 코드 -->
+    <h3>크리티컬 히트 — rand()로 확률 판정</h3>
+
+    <!-- rand 설명 SVG -->
+    <div style="text-align:center; margin: 10px 0;">
+        <svg viewBox="0 0 500 70" style="max-width:500px;width:100%">
+            <!-- 수직선 -->
+            <line x1="30" y1="35" x2="470" y2="35" stroke="#e2e8f0" stroke-width="2"/>
+            <!-- 0 ~ 99 범위 표시 -->
+            <rect x="30" y="22" width="440" height="26" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/>
+            <!-- 크리티컬 구간 강조 (0~19 = 20%) -->
+            <rect x="30" y="22" width="88" height="26" rx="4" fill="#fef9c3" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="74" y="39" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">0 ~ 19</text>
+            <text x="74" y="58" text-anchor="middle" font-size="9" fill="#f59e0b" font-weight="600">크리티컬 (20%)</text>
+            <!-- 일반 구간 -->
+            <text x="290" y="39" text-anchor="middle" font-size="10" fill="#64748b" font-weight="600">20 ~ 99 — 일반 공격</text>
+            <!-- 수식 -->
+            <text x="30" y="15" font-size="10" fill="#64748b">rand() % 100 → 0 이상 99 이하 정수 무작위 생성</text>
+        </svg>
+    </div>
+
+    <div class="code-file">
+        <div class="code-file-header">
+            <div class="code-file-dot" style="background:#ef4444"></div>
+            <div class="code-file-dot" style="background:#f59e0b"></div>
+            <div class="code-file-dot" style="background:#22c55e"></div>
+            <span class="code-file-name">크리티컬 히트 + 아이템 코드 (공격 case 1 부분 교체)</span>
+        </div>
+        <div class="code-file-body"><span class="kw">case</span> <span class="num">1</span>: {  <span class="cmt">/* 공격 + 크리티컬 히트 */</span>
+    <span class="type">int</span> roll <span class="op">=</span> <span class="fn">rand</span>() <span class="op">%</span> <span class="num">100</span>;   <span class="cmt">/* 0~99 난수 생성 */</span>
+    <span class="type">int</span> dmg;
+
+    <span class="kw">if</span> (roll <span class="op">&lt;</span> crit_bonus) {  <span class="cmt">/* crit_bonus% 확률로 크리티컬 */</span>
+        dmg <span class="op">=</span> hero_atk <span class="op">*</span> <span class="num">2</span>;   <span class="cmt">/* 2배 데미지 */</span>
+        <span class="fn">printf</span>(<span class="str">" 크리티컬 히트! %d 데미지!\n"</span>, dmg);
+    } <span class="kw">else</span> {
+        dmg <span class="op">=</span> hero_atk;
+        <span class="fn">printf</span>(<span class="str">"용사의 공격! %d 데미지!\n"</span>, dmg);
+    }
+    monster_hp <span class="op">-=</span> dmg;
+    <span class="kw">break</span>;
+}
+
+<span class="cmt">/* ── 아이템 사용 (case 3 교체) ── */</span>
+<span class="kw">case</span> <span class="num">3</span>: {
+    <span class="kw">if</span> (item_count <span class="op">&gt;</span> <span class="num">0</span>) {
+        hero_hp <span class="op">+=</span> <span class="num">30</span>;
+        <span class="kw">if</span> (hero_hp <span class="op">&gt;</span> max_hp) hero_hp <span class="op">=</span> max_hp;
+        item_count<span class="op">--</span>;
+        <span class="fn">printf</span>(<span class="str">"포션 사용! HP +30 (남은 포션: %d개)\n"</span>, item_count);
+    } <span class="kw">else</span> {
+        <span class="fn">printf</span>(<span class="str">"포션이 없습니다!\n"</span>);
+    }
+    <span class="kw">break</span>;
+}</div>
+    </div>
+
+    <div class="success-box">
+        <strong>아이템 변수 추가 (게임 시작 전 선언)</strong><br>
+        <code>int item_count = 3;</code> — 포션 개수<br>
+        <code>int max_hp = hero_hp;</code> — 직업별 최대 HP 저장 (회복 상한용)
+    </div>
+
+    <!-- 문제 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q</div>
+            <div class="problem-label">확인 문제 — 방어 + 크리티컬 동시 적용</div>
+            <span class="problem-diff medium">중간</span>
+        </div>
+        <div class="problem-body">
+            <p class="problem-text">몬스터가 크리티컬 히트(30% 확률)를 칠 수 있도록 몬스터 반격 코드를 수정하라. 용사가 방어 중이면 크리티컬도 절반만 받는다.</p>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">
+                    몬스터 반격 직전에 <code>int mroll = rand() % 100;</code>으로 판정한다.<br>
+                    <code>int mdmg = (mroll &lt; 30) ? monster_atk * 2 : monster_atk;</code><br>
+                    그 다음 <code>if (action == 2) mdmg /= 2;</code>로 방어 처리.
+                </div>
+            </div>
+        </details>
+    </div>
+</div>
+
+
+<!-- ======================================================
+     PAGE 4 — 전체 완성 코드 + 도전 과제
+     ====================================================== -->
+<div class="page">
+    <h2>전체 완성 코드</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+    <div class="code-file">
+        <div class="code-file-header">
+            <div class="code-file-dot" style="background:#ef4444"></div>
+            <div class="code-file-dot" style="background:#f59e0b"></div>
+            <div class="code-file-dot" style="background:#22c55e"></div>
+            <span class="code-file-name">mini_rpg_final.c</span>
+        </div>
+        <div class="code-file-body"><span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="kw">#include</span> <span class="str">&lt;stdlib.h&gt;</span>
+<span class="kw">#include</span> <span class="str">&lt;time.h&gt;</span>
+
+<span class="type">int</span> <span class="fn">main</span>() {
+    <span class="fn">srand</span>(<span class="fn">time</span>(<span class="num">NULL</span>));
+
+    <span class="cmt">/* ── 스탯 선언 ── */</span>
+    <span class="type">int</span> hero_hp, hero_atk, max_hp, crit_bonus;
+    <span class="type">int</span> monster_hp  <span class="op">=</span> <span class="num">80</span>;
+    <span class="type">int</span> monster_atk <span class="op">=</span> <span class="num">15</span>;
+    <span class="type">int</span> item_count  <span class="op">=</span> <span class="num">3</span>;
+    <span class="type">int</span> action, turn <span class="op">=</span> <span class="num">1</span>;
+    <span class="type">int</span> job;
+
+    <span class="cmt">/* ── 직업 선택 ── */</span>
+    <span class="fn">printf</span>(<span class="str">"=== 미니 RPG ===\n직업 선택: 1=전사  2=마법사  3=궁수\n> "</span>);
+    <span class="fn">scanf</span>(<span class="str">"%d"</span>, <span class="op">&amp;</span>job);
+    <span class="kw">switch</span> (job) {
+        <span class="kw">case</span> <span class="num">1</span>: hero_hp<span class="op">=</span><span class="num">120</span>; hero_atk<span class="op">=</span><span class="num">25</span>; crit_bonus<span class="op">=</span><span class="num">10</span>; <span class="fn">printf</span>(<span class="str">"전사!\n"</span>); <span class="kw">break</span>;
+        <span class="kw">case</span> <span class="num">2</span>: hero_hp<span class="op">=</span><span class="num">70</span>;  hero_atk<span class="op">=</span><span class="num">35</span>; crit_bonus<span class="op">=</span><span class="num">10</span>; <span class="fn">printf</span>(<span class="str">"마법사!\n"</span>); <span class="kw">break</span>;
+        <span class="kw">case</span> <span class="num">3</span>: hero_hp<span class="op">=</span><span class="num">90</span>;  hero_atk<span class="op">=</span><span class="num">20</span>; crit_bonus<span class="op">=</span><span class="num">20</span>; <span class="fn">printf</span>(<span class="str">"궁수!\n"</span>); <span class="kw">break</span>;
+        <span class="kw">default</span>: hero_hp<span class="op">=</span><span class="num">100</span>; hero_atk<span class="op">=</span><span class="num">20</span>; crit_bonus<span class="op">=</span><span class="num">10</span>;
+    }
+    max_hp <span class="op">=</span> hero_hp;
+
+    <span class="fn">printf</span>(<span class="str">"HP:%d  ATK:%d  포션:%d개\n\n"</span>, hero_hp, hero_atk, item_count);
+
+    <span class="cmt">/* ── 게임 루프 ── */</span>
+    <span class="kw">while</span> (hero_hp <span class="op">&gt;</span> <span class="num">0</span> <span class="op">&amp;&amp;</span> monster_hp <span class="op">&gt;</span> <span class="num">0</span>) {
+        <span class="fn">printf</span>(<span class="str">"--- 턴 %d | [용사] HP:%d / [몬스터] HP:%d ---\n"</span>,
+               turn, hero_hp, monster_hp);
+        <span class="fn">printf</span>(<span class="str">"1=공격  2=방어  3=포션(%d개)  > "</span>, item_count);
+        <span class="fn">scanf</span>(<span class="str">"%d"</span>, <span class="op">&amp;</span>action);
+
+        <span class="cmt">/* 용사 행동 */</span>
+        <span class="kw">switch</span> (action) {
+            <span class="kw">case</span> <span class="num">1</span>: {
+                <span class="type">int</span> roll <span class="op">=</span> <span class="fn">rand</span>() <span class="op">%</span> <span class="num">100</span>;
+                <span class="type">int</span> dmg <span class="op">=</span> (roll <span class="op">&lt;</span> crit_bonus) <span class="op">?</span> hero_atk <span class="op">*</span> <span class="num">2</span> : hero_atk;
+                <span class="kw">if</span> (roll <span class="op">&lt;</span> crit_bonus)
+                    <span class="fn">printf</span>(<span class="str">" 크리티컬! 몬스터에게 %d 데미지!\n"</span>, dmg);
+                <span class="kw">else</span>
+                    <span class="fn">printf</span>(<span class="str">"공격! 몬스터에게 %d 데미지!\n"</span>, dmg);
+                monster_hp <span class="op">-=</span> dmg;
+                <span class="kw">break</span>;
+            }
+            <span class="kw">case</span> <span class="num">2</span>:
+                <span class="fn">printf</span>(<span class="str">"방어 태세!\n"</span>);
+                <span class="kw">break</span>;
+            <span class="kw">case</span> <span class="num">3</span>:
+                <span class="kw">if</span> (item_count <span class="op">&gt;</span> <span class="num">0</span>) {
+                    hero_hp <span class="op">+=</span> <span class="num">30</span>;
+                    <span class="kw">if</span> (hero_hp <span class="op">&gt;</span> max_hp) hero_hp <span class="op">=</span> max_hp;
+                    item_count<span class="op">--</span>;
+                    <span class="fn">printf</span>(<span class="str">"포션 사용! HP+30 → %d (남은:%d)\n"</span>, hero_hp, item_count);
+                } <span class="kw">else</span> {
+                    <span class="fn">printf</span>(<span class="str">"포션 없음!\n"</span>);
+                }
+                <span class="kw">break</span>;
+            <span class="kw">default</span>: <span class="fn">printf</span>(<span class="str">"잘못된 입력.\n"</span>);
+        }
+
+        <span class="cmt">/* 몬스터 반격 */</span>
+        <span class="kw">if</span> (monster_hp <span class="op">&gt;</span> <span class="num">0</span>) {
+            <span class="type">int</span> mroll <span class="op">=</span> <span class="fn">rand</span>() <span class="op">%</span> <span class="num">100</span>;
+            <span class="type">int</span> mdmg  <span class="op">=</span> (mroll <span class="op">&lt;</span> <span class="num">30</span>) <span class="op">?</span> monster_atk <span class="op">*</span> <span class="num">2</span> : monster_atk;
+            <span class="kw">if</span> (action <span class="op">==</span> <span class="num">2</span>) mdmg <span class="op">/=</span> <span class="num">2</span>;
+            hero_hp <span class="op">-=</span> mdmg;
+            <span class="fn">printf</span>(<span class="str">"몬스터 공격%s → %d 데미지!\n"</span>,
+                   (mroll <span class="op">&lt;</span> <span class="num">30</span>) <span class="op">?</span> <span class="str">" (크리티컬!)"</span> : <span class="str">""</span>, mdmg);
+        }
+        turn<span class="op">++</span>;
+        <span class="fn">printf</span>(<span class="str">"\n"</span>);
+    }
+
+    <span class="cmt">/* 결과 */</span>
+    <span class="fn">printf</span>(<span class="str">"=== %s ===\n"</span>,
+           (monster_hp <span class="op">&lt;=</span> <span class="num">0</span>) <span class="op">?</span> <span class="str">"승리! 몬스터를 물리쳤다!"</span>
+                              : <span class="str">"게임 오버. 용사가 쓰러졌다..."</span>);
+    <span class="fn">printf</span>(<span class="str">"총 %d턴 진행\n"</span>, turn <span class="op">-</span> <span class="num">1</span>);
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+    </div>
+
+    <!-- 요약 -->
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>이 프로젝트에서 사용한 기술 총정리</h3>
+        <ul>
+            <li><strong>변수 관리</strong>: <code>hero_hp</code>, <code>monster_hp</code>, <code>item_count</code> 등 다수의 변수를 동시 추적</li>
+            <li><strong>while 루프</strong>: 두 조건 <code>&amp;&amp;</code>으로 게임 종료 시점 자동 판단</li>
+            <li><strong>switch문</strong>: 직업 선택, 플레이어 행동 분기 — 2회 사용</li>
+            <li><strong>rand() % 100</strong>: 0~99 난수로 확률 이벤트(크리티컬) 구현</li>
+            <li><strong>삼항 연산자</strong>: <code>? :</code>로 크리티컬/일반 데미지 간결하게 표현</li>
+            <li><strong>HP 상한 제한</strong>: 회복 후 <code>if (hp &gt; max_hp) hp = max_hp;</code> 패턴</li>
+        </ul>
+    </div>
+
+    <!-- 도전 과제 -->
+    <h2 style="margin-top:20px">도전 과제</h2>
+
+    <div class="challenge-grid">
+        <div class="challenge-card">
+            <span class="c-level lv1">Lv.1 쉬움</span>
+            <h4>몬스터 체력바 표시</h4>
+            <p>몬스터 HP를 숫자 대신 <code>#</code> 기호로 표시하라.<br>(예: <code>########  80/80</code>)<br>for 루프를 사용해 HP/10 개수만큼 출력.</p>
+        </div>
+        <div class="challenge-card">
+            <span class="c-level lv2">Lv.2 보통</span>
+            <h4>스킬 게이지 시스템</h4>
+            <p>공격할 때마다 스킬 포인트(SP)가 10 쌓인다. SP가 30 이상이면 행동 선택에 4=필살기 추가. 필살기는 공격력 3배, SP 30 소모.</p>
+        </div>
+        <div class="challenge-card">
+            <span class="c-level lv2">Lv.2 보통</span>
+            <h4>몬스터 2단계 분노</h4>
+            <p>몬스터 HP가 40 이하로 떨어지면 공격력이 25로 증가하고 <code>"몬스터가 분노했다!"</code> 메시지 출력. if문 하나로 구현.</p>
+        </div>
+        <div class="challenge-card">
+            <span class="c-level lv3">Lv.3 어려움</span>
+            <h4>연속 전투 (보스전)</h4>
+            <p>몬스터를 처치하면 HP를 20% 회복하고 더 강한 몬스터(HP+20, ATK+5)와 재전투. 3번 승리 시 최종 보스 등장.</p>
+        </div>
+        <div class="challenge-card">
+            <span class="c-level lv3">Lv.3 어려움</span>
+            <h4>장비 강화 시스템</h4>
+            <p>전투 승리 시 골드 획득. 전투 전 상점에서 장비 구매(<code>switch</code> 메뉴)로 공격력 또는 최대 HP 업그레이드.</p>
+        </div>
+        <div class="challenge-card">
+            <span class="c-level lv4">Lv.4 심화</span>
+            <h4>2인 협동 모드</h4>
+            <p>용사 A(공격형)와 용사 B(지원형) 두 캐릭터의 행동을 번갈아 입력. 두 캐릭터 중 한 명이라도 쓰러지면 게임 오버.</p>
+        </div>
+    </div>
+
+    <!-- 마무리 SVG: 승리/패배 분기 흐름 -->
+    <div style="text-align:center; margin: 20px 0 8px;">
+        <svg viewBox="0 0 500 70" style="max-width:500px;width:100%">
+            <defs>
+                <marker id="fb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+                </marker>
+            </defs>
+            <!-- while 종료 -->
+            <rect x="10" y="20" width="100" height="32" rx="6" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5"/>
+            <text x="60" y="40" text-anchor="middle" font-size="10" fill="#334155" font-weight="700">while 루프 종료</text>
+            <line x1="112" y1="36" x2="130" y2="36" stroke="#64748b" stroke-width="1.5" marker-end="url(#fb)"/>
+            <!-- 마름모 -->
+            <polygon points="170,14 220,36 170,58 120,36" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5" transform="translate(12,0)"/>
+            <text x="184" y="40" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">monster_hp≤0?</text>
+            <!-- 승리 -->
+            <line x1="235" y1="36" x2="260" y2="36" stroke="#22c55e" stroke-width="1.5" marker-end="url(#fb)"/>
+            <rect x="262" y="18" width="90" height="36" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="307" y="35" text-anchor="middle" font-size="10" fill="#166534" font-weight="800">WIN</text>
+            <text x="307" y="49" text-anchor="middle" font-size="9" fill="#22c55e">승리 메시지 출력</text>
+            <!-- YES 라벨 -->
+            <text x="248" y="32" font-size="9" fill="#22c55e" font-weight="700">YES</text>
+            <!-- 패배 -->
+            <line x1="184" y1="58" x2="184" y2="68" stroke="#ef4444" stroke-width="1.5"/>
+            <line x1="184" y1="68" x2="400" y2="68" stroke="#ef4444" stroke-width="1.5"/>
+            <line x1="400" y1="68" x2="400" y2="54" stroke="#ef4444" stroke-width="1.5" marker-end="url(#fb)"/>
+            <rect x="355" y="18" width="90" height="36" rx="6" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="400" y="35" text-anchor="middle" font-size="10" fill="#dc2626" font-weight="800">GAME OVER</text>
+            <text x="400" y="49" text-anchor="middle" font-size="9" fill="#ef4444">패배 메시지 출력</text>
+            <text x="184" y="65" font-size="9" fill="#ef4444" font-weight="700" text-anchor="middle">NO</text>
+        </svg>
+    </div>
+
+    <div class="info-box" style="margin-top:12px">
+        <strong>이 프로젝트를 완성했다면</strong> — 변수, 조건문, 반복문, switch, rand()를 모두 사용한 것이다. 지금까지 배운 C언어 핵심 개념을 전부 녹여낸 종합 프로젝트를 완주한 걸 축하한다.
+    </div>
+</div>
+
+
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/lightbulb.png" alt="아이디어" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+
+
+
+<script>
+(function(){
+  var KEY = 'cs_ans_' + location.pathname.replace(/[^a-zA-Z0-9]/g,'_');
+  var pagePath = location.pathname;
+  var userId = null;
+  try {
+    userId = window.parent?.localStorage?.getItem('codingssok_user_id')
+      || localStorage.getItem('codingssok_user_id');
+  } catch(e) {}
+
+  function save(){
+    var areas = document.querySelectorAll('textarea');
+    var saved = 0;
+    areas.forEach(function(ta, i){
+      if(ta.value.trim()) {
+        localStorage.setItem(KEY + '_' + i, ta.value);
+        saved++;
+      } else {
+        localStorage.removeItem(KEY + '_' + i);
+      }
+    });
+    if(saved > 0) showSaveIndicator();
+  }
+
+  function load(){
+    var areas = document.querySelectorAll('textarea');
+    var restored = 0;
+    areas.forEach(function(ta, i){
+      var val = localStorage.getItem(KEY + '_' + i);
+      if(val && val.trim()) {
+        ta.value = val;
+        ta.style.borderColor = '#10b981';
+        ta.style.boxShadow = '0 0 0 2px rgba(16,185,129,0.15)';
+        setTimeout(function(){ ta.style.borderColor = ''; ta.style.boxShadow = ''; }, 2000);
+        restored++;
+      }
+    });
+    if(restored > 0) showRestoreIndicator(restored);
+  }
+
+  function saveToDb(){
+    if(!userId) return;
+    var areas = document.querySelectorAll('textarea');
+    var answers = [];
+    areas.forEach(function(ta, i){
+      if(ta.value.trim()) answers.push({ field_index: i, answer_text: ta.value });
+    });
+    if(answers.length === 0) return;
+    fetch('/api/answers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId, page_path: pagePath, answers: answers })
+    }).catch(function(){});
+  }
+
+  function loadFromDb(){
+    if(!userId) return;
+    fetch('/api/answers?user_id=' + encodeURIComponent(userId) + '&page_path=' + encodeURIComponent(pagePath))
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(!d.answers || !d.answers.length) return;
+        var areas = document.querySelectorAll('textarea');
+        d.answers.forEach(function(a){
+          if(areas[a.field_index] && a.answer_text) {
+            areas[a.field_index].value = a.answer_text;
+            localStorage.setItem(KEY + '_' + a.field_index, a.answer_text);
+          }
+        });
+      }).catch(function(){});
+  }
+
+  function showSaveIndicator(){
+    var el = document.getElementById('cs-save-ind');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'cs-save-ind';
+      el.style.cssText = 'position:fixed;bottom:16px;right:16px;padding:6px 14px;border-radius:8px;background:#0f172a;color:#22c55e;font-size:11px;font-weight:700;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+      document.body.appendChild(el);
+    }
+    el.textContent = '\u2713 \uB2F5\uC548 \uC800\uC7A5\uB428'; // ✓ 답안 저장됨
+    el.style.opacity = '1';
+    setTimeout(function(){ el.style.opacity = '0'; }, 1500);
+  }
+
+  function showRestoreIndicator(n){
+    var el = document.getElementById('cs-save-ind');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'cs-save-ind';
+      el.style.cssText = 'position:fixed;bottom:16px;right:16px;padding:6px 14px;border-radius:8px;background:#0f172a;color:#3b82f6;font-size:11px;font-weight:700;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+      document.body.appendChild(el);
+    }
+    el.textContent = '\u21BB ' + n + '\uAC1C \uB2F5\uC548 \uBCF5\uC6D0'; // ↻ n개 답안 복원
+    el.style.color = '#3b82f6';
+    el.style.opacity = '1';
+    setTimeout(function(){ el.style.opacity = '0'; }, 2500);
+  }
+
+  var t = null;
+  document.addEventListener('input', function(e){
+    if(e.target.tagName === 'TEXTAREA'){
+      clearTimeout(t);
+      t = setTimeout(function(){ save(); saveToDb(); }, 300);
+    }
+  });
+  document.addEventListener('change', function(e){
+    if(e.target.tagName === 'TEXTAREA'){ save(); saveToDb(); }
+  });
+  document.addEventListener('focusout', function(e){
+    if(e.target.tagName === 'TEXTAREA'){ save(); saveToDb(); }
+  });
+  window.addEventListener('beforeunload', function(){ save(); saveToDb(); });
+
+  // 즉시 로드
+  load();
+  loadFromDb();
+})();
+</script>
+</body>
+</html>

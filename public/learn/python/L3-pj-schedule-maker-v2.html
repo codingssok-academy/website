@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 프로젝트: 시험 공부 스케줄러</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute; bottom: 10mm; right: 16mm;
+    font-size: 10px; color: #94a3b8; font-weight: 600;
+}
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 170px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 36px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 16px; font-weight: 700; color: #1e3a5f; margin: 18px 0 10px; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+ul, ol { margin: 0 0 12px 20px; }
+li { font-size: 14px; color: #374151; line-height: 1.8; }
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #e2e8f0; line-height: 1.85; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.code .dec { color: #f9a8d4; }
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; display: inline-block; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; white-space: pre-wrap; }
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+.output-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #334155; line-height: 1.7; margin: 10px 0; white-space: pre-wrap; }
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- 1페이지: 표지 -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">SCHED</div>
+        <div class="cover-label">L3 — Project</div>
+        <h1 class="cover-title">프로젝트:<br>시험 공부<br>스케줄러</h1>
+        <p class="cover-sub">datetime으로 D-day를 계산하고, 과목별 시간을 우선순위대로 배분하며, 학습 진행률을 파일에 저장하는 실전 프로젝트.</p>
+
+        <div style="margin:24px 0;">
+            <svg viewBox="0 0 500 160" style="max-width:500px;width:100%">
+                <defs>
+                    <marker id="arwSC" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                    </marker>
+                </defs>
+                <!-- D-day 계산 -->
+                <rect x="5" y="10" width="110" height="70" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="60" y="30" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">D-day 계산</text>
+                <text x="60" y="46" text-anchor="middle" font-size="9" fill="#374151">datetime.today()</text>
+                <text x="60" y="60" text-anchor="middle" font-size="9" fill="#374151">exam_date - today</text>
+                <text x="60" y="72" text-anchor="middle" font-size="9" fill="#64748b">.days 속성</text>
+                <line x1="118" y1="45" x2="138" y2="45" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwSC)"/>
+                <!-- 시간 배분 -->
+                <rect x="140" y="10" width="120" height="70" rx="8" fill="#1e3a5f"/>
+                <text x="200" y="30" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">시간 배분</text>
+                <text x="200" y="46" text-anchor="middle" font-size="9" fill="#93c5fd">우선순위 정렬</text>
+                <text x="200" y="60" text-anchor="middle" font-size="9" fill="#93c5fd">비율 계산</text>
+                <text x="200" y="72" text-anchor="middle" font-size="9" fill="#93c5fd">일별 배분</text>
+                <line x1="263" y1="45" x2="283" y2="45" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwSC)"/>
+                <!-- 진행률 -->
+                <rect x="285" y="10" width="110" height="70" rx="8" fill="#fef9c3" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="340" y="30" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">진행률 추적</text>
+                <text x="340" y="46" text-anchor="middle" font-size="9" fill="#374151">done / total</text>
+                <text x="340" y="60" text-anchor="middle" font-size="9" fill="#374151">*100 = %</text>
+                <text x="340" y="72" text-anchor="middle" font-size="9" fill="#64748b">막대 시각화</text>
+                <line x1="398" y1="45" x2="418" y2="45" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwSC)"/>
+                <!-- 파일 저장 -->
+                <rect x="420" y="10" width="75" height="70" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="457" y="30" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">파일 저장</text>
+                <text x="457" y="46" text-anchor="middle" font-size="9" fill="#374151">JSON</text>
+                <text x="457" y="60" text-anchor="middle" font-size="9" fill="#374151">저장/불러오기</text>
+                <!-- 전체 흐름 -->
+                <rect x="60" y="92" width="380" height="60" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+                <text x="250" y="112" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">스케줄러 핵심 데이터 구조</text>
+                <text x="250" y="128" text-anchor="middle" font-size="9" fill="#374151">{"과목명": {"priority": 1~5, "hours_needed": 10, "done": 4}}</text>
+                <text x="250" y="142" text-anchor="middle" font-size="9" fill="#64748b">우선순위 높을수록 더 많은 시간 배분</text>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/database.png" alt="데이터베이스" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 프로젝트에서 만드는 것</h3>
+            <ul>
+                <li><code>datetime</code> 모듈로 시험 날짜까지 남은 일수(D-day)를 계산합니다.</li>
+                <li>과목별 우선순위와 필요 시간을 기반으로 일별 공부 계획을 세웁니다.</li>
+                <li>학습 완료 시간을 업데이트하며 진행률(%)을 막대로 시각화합니다.</li>
+                <li>스케줄 데이터를 JSON으로 저장하고 불러와 연속으로 사용합니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- 2페이지: D-day 계산 + 데이터 구조 -->
+<div class="page">
+    <h2>Step 1 — datetime으로 D-day 계산</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/folder.png" alt="데이터" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p><code>datetime</code> 모듈의 <code>date</code> 클래스로 날짜를 다룹니다. 두 날짜를 빼면 <code>timedelta</code> 객체가 나오고, <code>.days</code> 속성으로 남은 일수를 얻습니다.</p>
+
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 480 70" style="max-width:480px;width:100%">
+            <rect x="5" y="5" width="470" height="60" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="20" y="24" font-size="10" fill="#1e3a5f" font-weight="700">datetime.date 날짜 연산</text>
+            <rect x="20" y="32" width="130" height="22" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="85" y="47" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="600">date(2026, 6, 10) — 시험일</text>
+            <text x="162" y="47" text-anchor="middle" font-size="9" fill="#94a3b8">-</text>
+            <rect x="172" y="32" width="130" height="22" rx="4" fill="#1e3a5f"/>
+            <text x="237" y="47" text-anchor="middle" font-size="9" fill="#67e8f9" font-weight="600">date.today() — 오늘</text>
+            <text x="315" y="47" text-anchor="middle" font-size="9" fill="#94a3b8">→</text>
+            <rect x="325" y="32" width="140" height="22" rx="4" fill="#f0fdf4" stroke="#22c55e" stroke-width="1"/>
+            <text x="395" y="47" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">timedelta.days = D-14</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># Step 1: D-day 계산 + 데이터 구조</span>
+<span class="kw">from</span> datetime <span class="kw">import</span> date, datetime
+<span class="kw">import</span> json
+
+<span class="cmt"># 과목 데이터 구조</span>
+schedule = {
+    <span class="str">"수학"</span>: {<span class="str">"priority"</span>: <span class="num">5</span>, <span class="str">"hours_needed"</span>: <span class="num">20</span>, <span class="str">"done"</span>: <span class="num">4</span>},
+    <span class="str">"영어"</span>: {<span class="str">"priority"</span>: <span class="num">4</span>, <span class="str">"hours_needed"</span>: <span class="num">15</span>, <span class="str">"done"</span>: <span class="num">8</span>},
+    <span class="str">"과학"</span>: {<span class="str">"priority"</span>: <span class="num">3</span>, <span class="str">"hours_needed"</span>: <span class="num">10</span>, <span class="str">"done"</span>: <span class="num">2</span>},
+    <span class="str">"국어"</span>: {<span class="str">"priority"</span>: <span class="num">4</span>, <span class="str">"hours_needed"</span>: <span class="num">12</span>, <span class="str">"done"</span>: <span class="num">3</span>},
+}
+
+EXAM_DATE = <span class="fn">date</span>(<span class="num">2026</span>, <span class="num">6</span>, <span class="num">10</span>)   <span class="cmt"># 시험일 설정</span>
+
+<span class="kw">def</span> <span class="fn">get_dday</span>():
+    today   = <span class="fn">date</span>.<span class="fn">today</span>()
+    delta   = EXAM_DATE - today
+    <span class="kw">if</span> delta.days > <span class="num">0</span>:
+        <span class="kw">return</span> <span class="str">f"D-{delta.days}"</span>
+    <span class="kw">elif</span> delta.days == <span class="num">0</span>:
+        <span class="kw">return</span> <span class="str">"D-Day!"</span>
+    <span class="kw">else</span>:
+        <span class="kw">return</span> <span class="str">f"D+{abs(delta.days)} (시험 종료)"</span>
+
+<span class="fn">print</span>(<span class="fn">get_dday</span>())   <span class="cmt"># 예: D-81</span></div>
+
+    <div style="text-align:center;margin:10px 0;">
+        <svg viewBox="0 0 480 50" style="max-width:480px;width:100%">
+            <rect x="5" y="5" width="470" height="40" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="20" y="22" font-size="10" fill="#1e3a5f" font-weight="700">우선순위(priority) 기준</text>
+            <rect x="20" y="30" width="60" height="10" rx="3" fill="#fee2e2"/>
+            <text x="50" y="39" text-anchor="middle" font-size="7" fill="#991b1b" font-weight="700">5: 매우 중요</text>
+            <rect x="90" y="30" width="60" height="10" rx="3" fill="#fef3c7"/>
+            <text x="120" y="39" text-anchor="middle" font-size="7" fill="#92400e" font-weight="700">4: 중요</text>
+            <rect x="160" y="30" width="60" height="10" rx="3" fill="#fffbeb"/>
+            <text x="190" y="39" text-anchor="middle" font-size="7" fill="#92400e">3: 보통</text>
+            <rect x="230" y="30" width="60" height="10" rx="3" fill="#f0fdf4"/>
+            <text x="260" y="39" text-anchor="middle" font-size="7" fill="#166534">2: 낮음</text>
+            <rect x="300" y="30" width="60" height="10" rx="3" fill="#f8fafc"/>
+            <text x="330" y="39" text-anchor="middle" font-size="7" fill="#374151">1: 최저</text>
+        </svg>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="완성" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">STEP 01</div>
+                <div class="practice-desc">EXAM_DATE를 다음 달 말일로 수정하고 <code>get_dday()</code>를 실행해보세요.</div>
+                <div class="practice-result">오늘로부터 설정한 날까지의 D-day가 출력됩니다.</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">STEP 02</div>
+                <div class="practice-desc">schedule에 자신의 시험 과목 3개를 추가하세요. priority 1~5, hours_needed 5~20 범위로 설정하세요.</div>
+                <div class="practice-result">schedule["새 과목"] = {"priority": 3, "hours_needed": 8, "done": 0} 형태입니다.</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">STEP 03</div>
+                <div class="practice-desc">schedule을 priority 기준 내림차순으로 정렬해 출력하세요. (<code>sorted(..., key=...)</code> 사용)</div>
+                <div class="practice-result">priority 높은 과목이 먼저 출력됩니다.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3페이지: 시간 배분 + 진행률 -->
+<div class="page">
+    <h2>Step 2 — 우선순위 기반 시간 배분 + 진행률 시각화</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/hard-drive.png" alt="저장소" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>과목별 <code>priority</code>를 비율로 환산해 하루 공부 가능 시간을 배분합니다. 각 과목의 진행률은 텍스트 막대(progress bar)로 시각화합니다.</p>
+
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 480 70" style="max-width:480px;width:100%">
+            <rect x="5" y="5" width="470" height="60" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="20" y="24" font-size="10" fill="#1e3a5f" font-weight="700">우선순위 비율 계산 예시</text>
+            <text x="20" y="40" font-size="9" fill="#374151">과목별 priority: 수학5, 영어4, 과학3, 국어4 → 합계=16</text>
+            <text x="20" y="56" font-size="9" fill="#64748b">수학 배분 = 6시간 × (5/16) = 1.875시간  →  round(..., 1) = 1.9시간</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># Step 2: 시간 배분 + 진행률</span>
+<span class="kw">def</span> <span class="fn">allocate_time</span>(daily_hours):
+    total_priority = <span class="fn">sum</span>(v[<span class="str">"priority"</span>] <span class="kw">for</span> v <span class="kw">in</span> schedule.<span class="fn">values</span>())
+    result = {}
+    <span class="kw">for</span> subject, data <span class="kw">in</span> schedule.<span class="fn">items</span>():
+        ratio   = data[<span class="str">"priority"</span>] / total_priority
+        alloc   = <span class="fn">round</span>(daily_hours * ratio, <span class="num">1</span>)
+        result[subject] = alloc
+    <span class="kw">return</span> result
+
+<span class="kw">def</span> <span class="fn">progress_bar</span>(done, total, width=<span class="num">20</span>):
+    <span class="kw">if</span> total == <span class="num">0</span>: <span class="kw">return</span> <span class="str">"[없음]"</span>
+    pct  = done / total
+    fill = <span class="fn">int</span>(pct * width)
+    bar  = <span class="str">"#"</span> * fill + <span class="str">"-"</span> * (width - fill)
+    <span class="kw">return</span> <span class="str">f"[{bar}] {pct*100:.0f}%"</span>
+
+<span class="kw">def</span> <span class="fn">show_schedule</span>(daily_hours=<span class="num">6</span>):
+    alloc = <span class="fn">allocate_time</span>(daily_hours)
+    dday  = <span class="fn">get_dday</span>()
+    <span class="fn">print</span>(<span class="str">f"시험까지: {dday}  |  오늘 공부 시간: {daily_hours}시간"</span>)
+    <span class="fn">print</span>(<span class="str">"-"</span> * <span class="num">50</span>)
+    sorted_subjects = <span class="fn">sorted</span>(schedule, key=<span class="kw">lambda</span> k: schedule[k][<span class="str">"priority"</span>], reverse=<span class="kw">True</span>)
+    <span class="kw">for</span> sub <span class="kw">in</span> sorted_subjects:
+        data = schedule[sub]
+        bar  = <span class="fn">progress_bar</span>(data[<span class="str">"done"</span>], data[<span class="str">"hours_needed"</span>])
+        <span class="fn">print</span>(<span class="str">f"{sub:4s}(P{data['priority']}) {alloc[sub]}h/일  {bar}"</span>)
+        <span class="fn">print</span>(<span class="str">f"       {data['done']}/{data['hours_needed']}h 완료"</span>)</div>
+
+    <div style="text-align:center;margin:10px 0;">
+        <svg viewBox="0 0 480 55" style="max-width:480px;width:100%">
+            <rect x="5" y="5" width="470" height="45" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="20" y="24" font-size="10" fill="#1e3a5f" font-weight="700">진행률 막대 출력 예시</text>
+            <text x="20" y="38" font-size="9" fill="#64748b" font-family="JetBrains Mono, monospace">수학 (P5) 1.9h/일  [####----------------]  20%  (4/20h)</text>
+        </svg>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q1</div>
+            <div class="problem-label">완료 시간 업데이트</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <p class="problem-text"><code>update_progress(subject, hours)</code> 함수를 만드세요. 해당 과목의 <code>done</code> 값에 hours를 더하고, 최대 <code>hours_needed</code>를 넘지 않도록 합니다.</p>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <p class="hint-text">schedule[subject]["done"] += hours 후 min(done, hours_needed)로 최대값을 제한하세요.</p>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">def update_progress(subject, hours):
+    if subject not in schedule:
+        print(f"'{subject}' 없음")
+        return
+    data = schedule[subject]
+    data["done"] = min(data["done"] + hours, data["hours_needed"])
+    bar = progress_bar(data["done"], data["hours_needed"])
+    print(f"{subject} 업데이트: {bar}")</div>
+            </div>
+        </details>
+    </div>
+</div>
+
+<!-- 4페이지: JSON 저장 -->
+<div class="page">
+    <h2>Step 3 — JSON으로 스케줄 저장/불러오기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="처리" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>스케줄 데이터를 JSON 파일로 저장해두면 프로그램을 다시 실행해도 이어서 공부 기록을 관리할 수 있습니다.</p>
+
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 480 65" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="arwSJ" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="5" y="10" width="120" height="45" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="65" y="28" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">schedule 딕셔너리</text>
+            <text x="65" y="44" text-anchor="middle" font-size="9" fill="#374151">메모리 내 데이터</text>
+            <line x1="128" y1="32" x2="148" y2="32" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwSJ)"/>
+            <rect x="150" y="10" width="150" height="45" rx="8" fill="#1e3a5f"/>
+            <text x="225" y="28" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">json.dump()</text>
+            <text x="225" y="44" text-anchor="middle" font-size="9" fill="#93c5fd">indent=2, ensure_ascii=False</text>
+            <line x1="303" y1="32" x2="323" y2="32" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwSJ)"/>
+            <rect x="325" y="10" width="150" height="45" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="400" y="28" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">schedule.json</text>
+            <text x="400" y="44" text-anchor="middle" font-size="9" fill="#374151">영구 저장 완료</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># Step 3: JSON 저장/불러오기</span>
+SAVE_FILE = <span class="str">"schedule.json"</span>
+
+<span class="kw">def</span> <span class="fn">save_schedule</span>():
+    data = {
+        <span class="str">"exam_date"</span>: EXAM_DATE.<span class="fn">isoformat</span>(),   <span class="cmt"># "2026-06-10"</span>
+        <span class="str">"subjects"</span>:  schedule,
+    }
+    <span class="kw">with</span> <span class="fn">open</span>(SAVE_FILE, <span class="str">"w"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+        json.<span class="fn">dump</span>(data, f, ensure_ascii=<span class="kw">False</span>, indent=<span class="num">2</span>)
+    <span class="fn">print</span>(<span class="str">"저장 완료!"</span>)
+
+<span class="kw">def</span> <span class="fn">load_schedule</span>():
+    <span class="kw">global</span> schedule, EXAM_DATE
+    <span class="kw">try</span>:
+        <span class="kw">with</span> <span class="fn">open</span>(SAVE_FILE, <span class="str">"r"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+            data = json.<span class="fn">load</span>(f)
+        EXAM_DATE = <span class="fn">date</span>.<span class="fn">fromisoformat</span>(data[<span class="str">"exam_date"</span>])
+        schedule  = data[<span class="str">"subjects"</span>]
+        <span class="fn">print</span>(<span class="str">"불러오기 완료!"</span>)
+    <span class="kw">except</span> FileNotFoundError:
+        <span class="fn">print</span>(<span class="str">"저장 파일 없음 — 기본값 사용"</span>)</div>
+
+    <div style="text-align:center;margin:10px 0;">
+        <svg viewBox="0 0 480 50" style="max-width:480px;width:100%">
+            <rect x="5" y="5" width="470" height="40" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="20" y="22" font-size="10" fill="#1e3a5f" font-weight="700">isoformat() / fromisoformat() 패턴</text>
+            <text x="20" y="36" font-size="9" fill="#64748b" font-family="JetBrains Mono, monospace">date(2026,6,10).isoformat() → "2026-06-10"  /  date.fromisoformat("2026-06-10") → date 객체</text>
+        </svg>
+    </div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">STEP 01</div>
+                <div class="practice-desc"><code>show_schedule(6)</code>을 실행해 현재 스케줄을 확인하고, <code>save_schedule()</code>로 저장하세요.</div>
+                <div class="practice-result">schedule.json 파일이 생성됩니다.</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">STEP 02</div>
+                <div class="practice-desc"><code>update_progress("수학", 2)</code>를 실행해 수학을 2시간 더 공부한 뒤, 다시 저장하고 재실행해서 기록이 유지되는지 확인하세요.</div>
+                <div class="practice-result">수학의 done 값이 누적됩니다.</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">STEP 03</div>
+                <div class="practice-desc">전체 완료 시간 합계를 출력하는 <code>total_done()</code> 함수를 만드세요.</div>
+                <div class="practice-result">sum(v["done"] for v in schedule.values()) 패턴 사용.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q2</div>
+            <div class="problem-label">남은 공부 시간 계산</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <p class="problem-text">시험까지 남은 일수와 과목별 남은 시간(hours_needed - done)을 고려해 하루 필요 공부량(시간)을 계산하는 <code>daily_required()</code> 함수를 만드세요.</p>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <p class="hint-text">남은 시간 합계 = sum(v["hours_needed"] - v["done"] for v in schedule.values()). D-day = (EXAM_DATE - date.today()).days. 하루 필요 = 남은 시간 / D-day</p>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">def daily_required():
+    remaining = sum(v["hours_needed"] - v["done"] for v in schedule.values())
+    ddays = (EXAM_DATE - date.today()).days
+    if ddays <= 0:
+        return "시험이 이미 지났습니다."
+    per_day = round(remaining / ddays, 1)
+    return f"남은 공부: {remaining}h / {ddays}일 = 하루 {per_day}h"</div>
+            </div>
+        </details>
+    </div>
+</div>
+
+<!-- 5페이지: 완성 + 연습문제 -->
+<div class="page">
+    <h2>Step 4 — 완성: 스케줄러 앱</h2>
+    <p>모든 기능을 메뉴 기반으로 합쳐 완성합니다.</p>
+
+    <div class="code"><span class="cmt"># 완성 — 스케줄러 앱</span>
+<span class="kw">def</span> <span class="fn">run_scheduler</span>():
+    <span class="fn">load_schedule</span>()
+
+    <span class="kw">while True</span>:
+        <span class="fn">print</span>(<span class="str">f"\n{get_dday()}  1.스케줄  2.진행 업데이트  3.필요 시간  4.저장  0.종료"</span>)
+        c = <span class="fn">input</span>(<span class="str">"선택: "</span>)
+
+        <span class="kw">if</span> c == <span class="str">"1"</span>:
+            h = <span class="fn">float</span>(<span class="fn">input</span>(<span class="str">"오늘 공부 시간(h): "</span>))
+            <span class="fn">show_schedule</span>(h)
+        <span class="kw">elif</span> c == <span class="str">"2"</span>:
+            sub = <span class="fn">input</span>(<span class="str">"과목명: "</span>)
+            hrs = <span class="fn">float</span>(<span class="fn">input</span>(<span class="str">"공부한 시간(h): "</span>))
+            <span class="fn">update_progress</span>(sub, hrs)
+        <span class="kw">elif</span> c == <span class="str">"3"</span>:
+            <span class="fn">print</span>(<span class="fn">daily_required</span>())
+        <span class="kw">elif</span> c == <span class="str">"4"</span>:
+            <span class="fn">save_schedule</span>()
+        <span class="kw">elif</span> c == <span class="str">"0"</span>:
+            <span class="fn">save_schedule</span>()
+            <span class="kw">break</span>
+
+<span class="fn">run_scheduler</span>()</div>
+
+    <div style="text-align:center;margin:10px 0;">
+        <svg viewBox="0 0 480 50" style="max-width:480px;width:100%">
+            <rect x="5" y="5" width="470" height="40" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="20" y="22" font-size="10" fill="#1e3a5f" font-weight="700">sorted() + lambda key 패턴</text>
+            <text x="20" y="36" font-size="9" fill="#64748b" font-family="JetBrains Mono, monospace">sorted(schedule, key=lambda k: schedule[k]["priority"], reverse=True)  →  우선순위 내림차순</text>
+        </svg>
+    </div>
+
+    <div style="text-align:center;margin:10px 0;">
+        <svg viewBox="0 0 480 50" style="max-width:480px;width:100%">
+            <rect x="5" y="5" width="470" height="40" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="20" y="22" font-size="10" fill="#1e3a5f" font-weight="700">date.fromisoformat() 패턴</text>
+            <text x="20" y="36" font-size="9" fill="#64748b" font-family="JetBrains Mono, monospace">date.fromisoformat("2026-06-10")  →  JSON에서 불러온 날짜 문자열을 date 객체로 변환</text>
+        </svg>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q3</div>
+            <div class="problem-label">완료 예상일 계산</div>
+            <span class="problem-diff hard">어려움</span>
+        </div>
+        <div class="problem-body">
+            <p class="problem-text">오늘부터 하루 6시간씩 공부한다고 가정할 때, 각 과목의 <code>완료 예상일</code>을 계산하는 <code>estimate_completion()</code> 함수를 만드세요. 우선순위 높은 과목을 먼저 완료합니다.</p>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <p class="hint-text">sorted()로 우선순위 내림차순 정렬 후, 각 과목의 남은 시간을 누적하고 date.today() + timedelta(days=ceil(누적시간/6))로 예상일을 계산하세요.</p>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">from math import ceil
+from datetime import timedelta
+
+def estimate_completion(daily_hours=6):
+    today = date.today()
+    cum_hours = 0
+    order = sorted(schedule, key=lambda k: schedule[k]["priority"], reverse=True)
+    for sub in order:
+        data = schedule[sub]
+        remaining = data["hours_needed"] - data["done"]
+        cum_hours += remaining
+        days_needed = ceil(cum_hours / daily_hours)
+        completion = today + timedelta(days=days_needed)
+        print(f"{sub}: {completion.isoformat()} 완료 예상")</div>
+            </div>
+        </details>
+    </div>
+
+    <div style="text-align:center;margin:10px 0;">
+        <svg viewBox="0 0 480 50" style="max-width:480px;width:100%">
+            <rect x="5" y="5" width="470" height="40" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="20" y="22" font-size="10" fill="#1e3a5f" font-weight="700">timedelta + ceil로 완료 예상일 계산</text>
+            <text x="20" y="36" font-size="9" fill="#64748b" font-family="JetBrains Mono, monospace">from math import ceil  /  days_needed = ceil(cum_hours / daily)  →  today + timedelta(days=days_needed)</text>
+        </svg>
+    </div>
+
+    <p>이 프로젝트에서는 <b>하루에 얼마나 공부해야 하는지</b> 자동 계산하는 스케줄러를 만듭니다.</p>
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 480 70" style="max-width:480px;width:100%">
+            <rect x="10" y="10" width="100" height="50" rx="8" fill="#f8fafc" stroke="#1e3a5f" stroke-width="1.5"/>
+            <text x="60" y="38" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">과목 입력</text>
+            <polygon points="115,35 130,25 130,45" fill="#3b82f6"/>
+            <rect x="135" y="10" width="100" height="50" rx="8" fill="#f8fafc" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="185" y="38" text-anchor="middle" font-size="10" fill="#3b82f6" font-weight="700">시간 배분</text>
+            <polygon points="240,35 255,25 255,45" fill="#3b82f6"/>
+            <rect x="260" y="10" width="100" height="50" rx="8" fill="#f8fafc" stroke="#059669" stroke-width="1.5"/>
+            <text x="310" y="38" text-anchor="middle" font-size="10" fill="#059669" font-weight="700">D-day 계산</text>
+            <polygon points="365,35 380,25 380,45" fill="#059669"/>
+            <rect x="385" y="10" width="85" height="50" rx="8" fill="#f8fafc" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="427" y="38" text-anchor="middle" font-size="10" fill="#f59e0b" font-weight="700">파일 저장</text>
+        </svg>
+    </div>
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 300 80" style="max-width:300px;width:100%">
+            <rect x="10" y="10" width="280" height="60" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+            <text x="150" y="32" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="700">하루 공부 시간 = 총 시간 / 남은 일수</text>
+            <text x="150" y="52" text-anchor="middle" font-size="9" fill="#64748b">timedelta.days로 남은 일수 계산</text>
+        </svg>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>핵심 요약</h3>
+        <ul>
+            <li><code>from datetime import date</code> — <code>date.today()</code>와 <code>date(y,m,d)</code>로 날짜 객체를 만들고 뺄셈으로 <code>timedelta</code>를 얻습니다.</li>
+            <li>우선순위 비율 배분: <code>priority / sum(priorities) * daily_hours</code> 공식 사용.</li>
+            <li><code>sorted(dict, key=lambda k: dict[k]["field"], reverse=True)</code> — 딕셔너리 키 정렬.</li>
+            <li>진행률 막대: <code>"#" * fill + "-" * (width-fill)</code>로 텍스트 시각화.</li>
+            <li><code>date.isoformat()</code>으로 날짜를 문자열로, <code>date.fromisoformat()</code>으로 역변환합니다.</li>
+        </ul>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

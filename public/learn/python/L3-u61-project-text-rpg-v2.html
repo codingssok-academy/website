@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 프로젝트: 텍스트 RPG 게임</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+/* -- 페이지 -- */
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+/* -- 챕터 표지 -- */
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+
+/* -- 본문 -- */
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 16px; font-weight: 700; color: #1e3a5f; margin: 18px 0 10px; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+ul, ol { margin: 0 0 12px 20px; }
+li { font-size: 14px; color: #374151; line-height: 1.8; }
+
+/* -- 코드 블록 -- */
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13.5px;
+    color: #e2e8f0; line-height: 1.85; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.code .dec { color: #f9a8d4; }
+.code .self { color: #fb923c; }
+
+/* -- 따라해보세요 -- */
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+
+/* -- 문제 -- */
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+
+/* -- 요약 -- */
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+/* -- 단계 박스 -- */
+.step-box { border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 14px 18px; margin: 14px 0; background: #fff; }
+.step-label { font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+.step-title { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 8px; }
+
+/* -- 출력 박스 -- */
+.output-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #334155; line-height: 1.7; margin: 10px 0; }
+
+/* -- 비교 테이블 -- */
+.compare-table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13px; }
+.compare-table th { background: #1e3a5f; color: #fff; padding: 8px 12px; text-align: left; font-weight: 700; }
+.compare-table td { padding: 7px 12px; border-bottom: 1px solid #e2e8f0; color: #374151; }
+.compare-table tr:nth-child(even) td { background: #f8fafc; }
+.compare-table code { background: #e0e7ff; padding: 1px 5px; border-radius: 3px; font-family: 'JetBrains Mono', monospace; color: #3730a3; font-size: 12px; }
+
+/* -- 정보 박스 -- */
+.info-box { border-left: 4px solid #3b82f6; background: #eff6ff; border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 14px 0; }
+.info-box p { font-size: 14px; color: #1e40af; margin: 0; }
+.warn-box { border-left: 4px solid #f59e0b; background: #fffbeb; border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 14px 0; }
+.warn-box p { font-size: 14px; color: #92400e; margin: 0; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- 1페이지: 표지 -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">61</div>
+        <div class="cover-label">L3 — Unit 61 Project</div>
+        <h1 class="cover-title">프로젝트:<br>텍스트 RPG 게임</h1>
+        <p class="cover-sub">클래스로 Player·Monster·Item을 설계하고, while 게임 루프 안에서 전투·레벨업·아이템 사용·저장/불러오기를 단계별로 구현합니다.</p>
+
+        <!-- SVG: 게임 전체 구조도 -->
+        <div style="margin:24px 0;">
+            <svg viewBox="0 0 540 200" style="max-width:540px;width:100%">
+                <defs>
+                    <marker id="arwCov" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                    </marker>
+                </defs>
+                <!-- 중앙: 게임 루프 -->
+                <rect x="185" y="75" width="170" height="50" rx="8" fill="#1e3a5f"/>
+                <text x="270" y="96" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">while 게임 루프</text>
+                <text x="270" y="113" text-anchor="middle" font-size="9" fill="#93c5fd">battle() / menu()</text>
+                <!-- Player -->
+                <rect x="10" y="10" width="130" height="44" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="75" y="29" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">Player 클래스</text>
+                <text x="75" y="44" text-anchor="middle" font-size="9" fill="#64748b">hp, attack, level, exp</text>
+                <line x1="143" y1="33" x2="182" y2="88" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+                <!-- Monster -->
+                <rect x="10" y="80" width="130" height="44" rx="8" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+                <text x="75" y="99" text-anchor="middle" font-size="10" fill="#991b1b" font-weight="700">Monster 클래스</text>
+                <text x="75" y="114" text-anchor="middle" font-size="9" fill="#64748b">name, hp, attack, reward</text>
+                <line x1="143" y1="100" x2="182" y2="100" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+                <!-- Item -->
+                <rect x="10" y="150" width="130" height="44" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="75" y="169" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">Item 클래스</text>
+                <text x="75" y="184" text-anchor="middle" font-size="9" fill="#64748b">name, effect, use()</text>
+                <line x1="143" y1="170" x2="182" y2="115" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+                <!-- 레벨업 -->
+                <rect x="400" y="10" width="130" height="44" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="465" y="29" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">레벨업 시스템</text>
+                <text x="465" y="44" text-anchor="middle" font-size="9" fill="#64748b">exp >= level * 10</text>
+                <line x1="358" y1="88" x2="397" y2="33" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+                <!-- 파일 저장 -->
+                <rect x="400" y="80" width="130" height="44" rx="8" fill="#fdf4ff" stroke="#a855f7" stroke-width="1.5"/>
+                <text x="465" y="99" text-anchor="middle" font-size="10" fill="#7e22ce" font-weight="700">파일 저장/불러오기</text>
+                <text x="465" y="114" text-anchor="middle" font-size="9" fill="#64748b">json.dump / json.load</text>
+                <line x1="358" y1="100" x2="397" y2="100" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+                <!-- random -->
+                <rect x="400" y="150" width="130" height="44" rx="8" fill="#fff7ed" stroke="#f97316" stroke-width="1.5"/>
+                <text x="465" y="169" text-anchor="middle" font-size="10" fill="#c2410c" font-weight="700">random 모듈</text>
+                <text x="465" y="184" text-anchor="middle" font-size="9" fill="#64748b">randint, choice</text>
+                <line x1="358" y1="115" x2="397" y2="162" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/puzzle.png" alt="고급 기능" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 유닛에서 만드는 것</h3>
+            <ul>
+                <li><code>Player</code>, <code>Monster</code>, <code>Item</code> 클래스를 설계하고 인스턴스를 생성할 수 있습니다.</li>
+                <li><code>while</code> 루프로 게임이 계속 돌아가는 메인 루프를 만들 수 있습니다.</li>
+                <li><code>random.randint</code>으로 전투 피해량을 계산하고 전투 시스템을 구현할 수 있습니다.</li>
+                <li>경험치와 레벨업 로직을 클래스 메서드로 구현할 수 있습니다.</li>
+                <li><code>json</code> 모듈로 게임 상태를 파일에 저장하고 불러올 수 있습니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- 2페이지: Player / Monster 클래스 설계 -->
+<div class="page">
+    <h2>Step 1 — Player와 Monster 클래스 설계</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="처리" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>RPG의 핵심은 캐릭터입니다. <code>Player</code>는 플레이어가 조종하는 영웅, <code>Monster</code>는 싸워야 할 적입니다. 두 클래스 모두 <code>hp</code>, <code>attack</code> 속성을 가지므로 공통 구조를 먼저 잡겠습니다.</p>
+
+    <!-- SVG: Player 클래스 다이어그램 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 520 130" style="max-width:520px;width:100%">
+            <!-- Player -->
+            <rect x="20" y="10" width="220" height="110" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <rect x="20" y="10" width="220" height="30" rx="8" fill="#3b82f6"/>
+            <rect x="20" y="32" width="220" height="8" fill="#3b82f6"/>
+            <text x="130" y="31" text-anchor="middle" font-size="12" fill="#fff" font-weight="800">Player</text>
+            <text x="35" y="58" font-size="9" fill="#1d4ed8">name: str</text>
+            <text x="35" y="72" font-size="9" fill="#1d4ed8">hp: int = 100</text>
+            <text x="35" y="86" font-size="9" fill="#1d4ed8">attack: int = 15</text>
+            <text x="35" y="100" font-size="9" fill="#1d4ed8">level: int = 1</text>
+            <text x="35" y="114" font-size="9" fill="#1d4ed8">exp: int = 0</text>
+            <!-- Monster -->
+            <rect x="280" y="10" width="220" height="110" rx="8" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+            <rect x="280" y="10" width="220" height="30" rx="8" fill="#ef4444"/>
+            <rect x="280" y="32" width="220" height="8" fill="#ef4444"/>
+            <text x="390" y="31" text-anchor="middle" font-size="12" fill="#fff" font-weight="800">Monster</text>
+            <text x="295" y="58" font-size="9" fill="#991b1b">name: str</text>
+            <text x="295" y="72" font-size="9" fill="#991b1b">hp: int</text>
+            <text x="295" y="86" font-size="9" fill="#991b1b">attack: int</text>
+            <text x="295" y="100" font-size="9" fill="#991b1b">reward_exp: int</text>
+            <text x="295" y="114" font-size="9" fill="#991b1b">reward_gold: int</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">class</span> <span class="fn">Player</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="self">self</span>, name):
+        <span class="self">self</span>.name = name
+        <span class="self">self</span>.hp = <span class="num">100</span>
+        <span class="self">self</span>.max_hp = <span class="num">100</span>
+        <span class="self">self</span>.attack = <span class="num">15</span>
+        <span class="self">self</span>.level = <span class="num">1</span>
+        <span class="self">self</span>.exp = <span class="num">0</span>
+        <span class="self">self</span>.gold = <span class="num">0</span>
+        <span class="self">self</span>.inventory = []   <span class="cmt"># 아이템 목록</span>
+
+    <span class="kw">def</span> <span class="fn">is_alive</span>(<span class="self">self</span>):
+        <span class="kw">return</span> <span class="self">self</span>.hp > <span class="num">0</span>
+
+    <span class="kw">def</span> <span class="fn">take_damage</span>(<span class="self">self</span>, amount):
+        <span class="self">self</span>.hp = <span class="fn">max</span>(<span class="num">0</span>, <span class="self">self</span>.hp - amount)
+
+    <span class="kw">def</span> <span class="fn">status</span>(<span class="self">self</span>):
+        <span class="fn">print</span>(<span class="str">f"[{self.name}] HP: {self.hp}/{self.max_hp}  ATK: {self.attack}  LV: {self.level}  EXP: {self.exp}"</span>)
+
+
+<span class="kw">class</span> <span class="fn">Monster</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="self">self</span>, name, hp, attack, reward_exp, reward_gold):
+        <span class="self">self</span>.name = name
+        <span class="self">self</span>.hp = hp
+        <span class="self">self</span>.attack = attack
+        <span class="self">self</span>.reward_exp = reward_exp
+        <span class="self">self</span>.reward_gold = reward_gold
+
+    <span class="kw">def</span> <span class="fn">is_alive</span>(<span class="self">self</span>):
+        <span class="kw">return</span> <span class="self">self</span>.hp > <span class="num">0</span>
+
+    <span class="kw">def</span> <span class="fn">take_damage</span>(<span class="self">self</span>, amount):
+        <span class="self">self</span>.hp = <span class="fn">max</span>(<span class="num">0</span>, <span class="self">self</span>.hp - amount)</div>
+
+    <div class="info-box"><p><code>max(0, self.hp - amount)</code> 패턴을 쓰면 HP가 음수가 되지 않아 안전합니다. 이처럼 경계값을 처리하는 것이 실전 코드의 습관입니다.</p></div>
+
+    <h3>몬스터 목록 만들기</h3>
+    <p>게임에 등장할 몬스터들을 리스트로 정의합니다. <code>random.choice()</code>로 매 전투마다 다른 몬스터를 만납니다.</p>
+
+    <div class="code"><span class="kw">import</span> random
+
+MONSTERS = [
+    Monster(<span class="str">"슬라임"</span>,  <span class="num">30</span>, <span class="num">5</span>,  <span class="num">10</span>, <span class="num">5</span>),
+    Monster(<span class="str">"고블린"</span>,  <span class="num">50</span>, <span class="num">10</span>, <span class="num">20</span>, <span class="num">15</span>),
+    Monster(<span class="str">"오크"</span>,    <span class="num">80</span>, <span class="num">18</span>, <span class="num">35</span>, <span class="num">25</span>),
+    Monster(<span class="str">"드래곤"</span>,  <span class="num">200</span>,<span class="num">40</span>, <span class="num">80</span>, <span class="num">100</span>),
+]
+
+<span class="kw">def</span> <span class="fn">spawn_monster</span>():
+    <span class="str">"""몬스터 목록에서 무작위로 한 마리를 반환"""</span>
+    template = random.<span class="fn">choice</span>(MONSTERS)
+    <span class="cmt"># 원본 객체를 그대로 쓰면 HP가 줄어든 채로 재사용되므로 새 인스턴스를 만든다</span>
+    <span class="kw">return</span> <span class="fn">Monster</span>(template.name, template.hp, template.attack,
+                   template.reward_exp, template.reward_gold)</div>
+</div>
+
+<!-- 3페이지: Item 클래스 + 전투 시스템 -->
+<div class="page">
+    <h2>Step 2 — Item 클래스와 전투 시스템</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/database.png" alt="데이터" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+    <h3>Item 클래스</h3>
+    <p>아이템은 <code>use(player)</code> 메서드를 가집니다. 포션은 HP 회복, 파워업은 공격력 증가처럼 효과가 다양하므로 <code>effect_type</code>으로 종류를 구분합니다.</p>
+
+    <!-- SVG: Item use() 흐름 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 500 80" style="max-width:500px;width:100%">
+            <defs>
+                <marker id="arwItem" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="5" y="20" width="110" height="40" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="60" y="37" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">item.use(player)</text>
+            <text x="60" y="52" text-anchor="middle" font-size="8" fill="#64748b">아이템 사용</text>
+            <line x1="118" y1="40" x2="145" y2="40" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwItem)"/>
+            <!-- 분기 -->
+            <rect x="148" y="20" width="90" height="40" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="193" y="37" text-anchor="middle" font-size="9" fill="#374151" font-weight="700">effect_type</text>
+            <text x="193" y="52" text-anchor="middle" font-size="8" fill="#64748b">확인</text>
+            <!-- heal -->
+            <line x1="238" y1="33" x2="268" y2="18" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#arwItem)"/>
+            <rect x="270" y="5" width="105" height="30" rx="5" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.2"/>
+            <text x="322" y="19" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">heal</text>
+            <text x="322" y="30" text-anchor="middle" font-size="8" fill="#64748b">player.hp += value</text>
+            <!-- attack -->
+            <line x1="238" y1="47" x2="268" y2="62" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#arwItem)"/>
+            <rect x="270" y="48" width="105" height="30" rx="5" fill="#fff7ed" stroke="#f97316" stroke-width="1.2"/>
+            <text x="322" y="62" text-anchor="middle" font-size="9" fill="#c2410c" font-weight="700">attack_up</text>
+            <text x="322" y="73" text-anchor="middle" font-size="8" fill="#64748b">player.attack += value</text>
+            <!-- 인벤토리 삭제 -->
+            <line x1="378" y1="33" x2="408" y2="40" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#arwItem)"/>
+            <line x1="378" y1="63" x2="408" y2="40" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#arwItem)"/>
+            <rect x="410" y="28" width="85" height="24" rx="5" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.2"/>
+            <text x="452" y="44" text-anchor="middle" font-size="9" fill="#334155">inventory 삭제</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">class</span> <span class="fn">Item</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="self">self</span>, name, effect_type, value):
+        <span class="self">self</span>.name = name          <span class="cmt"># 아이템 이름</span>
+        <span class="self">self</span>.effect_type = effect_type  <span class="cmt"># "heal" 또는 "attack_up"</span>
+        <span class="self">self</span>.value = value        <span class="cmt"># 효과 수치</span>
+
+    <span class="kw">def</span> <span class="fn">use</span>(<span class="self">self</span>, player):
+        <span class="kw">if</span> <span class="self">self</span>.effect_type == <span class="str">"heal"</span>:
+            healed = <span class="fn">min</span>(<span class="self">self</span>.value, player.max_hp - player.hp)
+            player.hp += healed
+            <span class="fn">print</span>(<span class="str">f"{self.name} 사용! HP +{healed} (현재 HP: {player.hp})"</span>)
+        <span class="kw">elif</span> <span class="self">self</span>.effect_type == <span class="str">"attack_up"</span>:
+            player.attack += <span class="self">self</span>.value
+            <span class="fn">print</span>(<span class="str">f"{self.name} 사용! 공격력 +{self.value} (현재 공격력: {player.attack})"</span>)
+        player.inventory.<span class="fn">remove</span>(<span class="self">self</span>)  <span class="cmt"># 사용 후 인벤토리에서 제거</span></div>
+
+    <h3>전투 함수</h3>
+    <p><code>battle(player, monster)</code> 함수는 <code>while</code> 루프로 구현합니다. 플레이어와 몬스터가 번갈아 공격하고, 어느 한 쪽의 HP가 0이 될 때 루프가 끝납니다.</p>
+
+    <div class="code"><span class="kw">def</span> <span class="fn">battle</span>(player, monster):
+    <span class="fn">print</span>(<span class="str">f"\n[전투 시작] {monster.name} 등장! (HP: {monster.hp})"</span>)
+
+    <span class="kw">while</span> player.<span class="fn">is_alive</span>() <span class="kw">and</span> monster.<span class="fn">is_alive</span>():
+        <span class="cmt"># 1. 플레이어 공격 (랜덤 변동 ±3)</span>
+        dmg = player.attack + random.<span class="fn">randint</span>(-<span class="num">3</span>, <span class="num">3</span>)
+        dmg = <span class="fn">max</span>(<span class="num">1</span>, dmg)  <span class="cmt"># 최소 1 보장</span>
+        monster.<span class="fn">take_damage</span>(dmg)
+        <span class="fn">print</span>(<span class="str">f"  {player.name} 공격! -{dmg}  (몬스터 HP: {monster.hp})"</span>)
+
+        <span class="kw">if</span> <span class="kw">not</span> monster.<span class="fn">is_alive</span>():
+            <span class="kw">break</span>
+
+        <span class="cmt"># 2. 몬스터 공격</span>
+        m_dmg = monster.attack + random.<span class="fn">randint</span>(-<span class="num">2</span>, <span class="num">2</span>)
+        m_dmg = <span class="fn">max</span>(<span class="num">1</span>, m_dmg)
+        player.<span class="fn">take_damage</span>(m_dmg)
+        <span class="fn">print</span>(<span class="str">f"  {monster.name} 반격! -{m_dmg}  (내 HP: {player.hp})"</span>)
+
+    <span class="kw">if</span> monster.<span class="fn">is_alive</span>():
+        <span class="fn">print</span>(<span class="str">"패배했습니다..."</span>)
+        <span class="kw">return</span> <span class="kw">False</span>
+    <span class="kw">else</span>:
+        player.exp += monster.reward_exp
+        player.gold += monster.reward_gold
+        <span class="fn">print</span>(<span class="str">f"승리! EXP +{monster.reward_exp}, Gold +{monster.reward_gold}"</span>)
+        <span class="kw">return</span> <span class="kw">True</span></div>
+
+    <div class="output-box">[전투 시작] 고블린 등장! (HP: 50)
+  영웅 공격! -17  (몬스터 HP: 33)
+  고블린 반격! -9  (내 HP: 91)
+  영웅 공격! -14  (몬스터 HP: 19)
+  고블린 반격! -11  (내 HP: 80)
+  영웅 공격! -19  (몬스터 HP: 0)
+승리! EXP +20, Gold +15</div>
+</div>
+
+<!-- 4페이지: 레벨업 + 아이템 사용 -->
+<div class="page">
+    <h2>Step 3 — 레벨업과 아이템 사용</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+    <h3>레벨업 시스템</h3>
+    <p>경험치가 <code>level * 10</code> 이상이 되면 레벨이 올라갑니다. 레벨이 오르면 최대 HP와 공격력이 증가하고 HP가 완전 회복됩니다.</p>
+
+    <!-- SVG: 레벨업 조건 흐름 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 480 70" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="arwLv" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="5" y="20" width="110" height="30" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="60" y="39" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">exp 획득</text>
+            <line x1="118" y1="35" x2="140" y2="35" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwLv)"/>
+            <rect x="143" y="20" width="130" height="30" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="208" y="39" text-anchor="middle" font-size="10" fill="#374151" font-weight="700">exp >= level * 10?</text>
+            <!-- YES -->
+            <line x1="276" y1="35" x2="300" y2="35" stroke="#22c55e" stroke-width="1.5" marker-end="url(#arwLv)"/>
+            <text x="286" y="28" font-size="9" fill="#166534" font-weight="700">YES</text>
+            <rect x="303" y="15" width="170" height="50" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="388" y="34" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">level += 1</text>
+            <text x="388" y="48" text-anchor="middle" font-size="9" fill="#64748b">max_hp +20, attack +5, hp 완전회복</text>
+            <!-- NO 화살표 -->
+            <line x1="208" y1="53" x2="208" y2="66" stroke="#ef4444" stroke-width="1.2" marker-end="url(#arwLv)"/>
+            <text x="215" y="64" font-size="9" fill="#991b1b">NO: 유지</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">def</span> <span class="fn">check_levelup</span>(player):
+    needed = player.level * <span class="num">10</span>  <span class="cmt"># 레벨업에 필요한 경험치</span>
+    <span class="kw">if</span> player.exp >= needed:
+        player.level += <span class="num">1</span>
+        player.max_hp += <span class="num">20</span>
+        player.hp = player.max_hp     <span class="cmt"># 레벨업 시 HP 완전 회복</span>
+        player.attack += <span class="num">5</span>
+        player.exp -= needed          <span class="cmt"># 초과분을 다음 레벨로 이월</span>
+        <span class="fn">print</span>(<span class="str">f"\n*** 레벨 업! LV {player.level} ***"</span>)
+        <span class="fn">print</span>(<span class="str">f"최대 HP: {player.max_hp}  공격력: {player.attack}"</span>)</div>
+
+    <h3>아이템 사용 메뉴</h3>
+    <p>전투 후 메뉴에서 아이템을 선택해 사용합니다. 인벤토리가 비어 있으면 안내 메시지를 출력합니다.</p>
+
+    <div class="code"><span class="kw">def</span> <span class="fn">use_item_menu</span>(player):
+    <span class="kw">if</span> <span class="kw">not</span> player.inventory:
+        <span class="fn">print</span>(<span class="str">"인벤토리가 비어 있습니다."</span>)
+        <span class="kw">return</span>
+
+    <span class="fn">print</span>(<span class="str">"\n[인벤토리]"</span>)
+    <span class="kw">for</span> i, item <span class="kw">in</span> <span class="fn">enumerate</span>(player.inventory, <span class="num">1</span>):
+        <span class="fn">print</span>(<span class="str">f"  {i}. {item.name} ({item.effect_type}: +{item.value})"</span>)
+    <span class="fn">print</span>(<span class="str">"  0. 취소"</span>)
+
+    choice = <span class="fn">input</span>(<span class="str">"사용할 아이템 번호: "</span>)
+    <span class="kw">if</span> choice.isdigit():
+        idx = <span class="fn">int</span>(choice) - <span class="num">1</span>
+        <span class="kw">if</span> <span class="num">0</span> <= idx < <span class="fn">len</span>(player.inventory):
+            player.inventory[idx].<span class="fn">use</span>(player)
+        <span class="kw">else</span>:
+            <span class="fn">print</span>(<span class="str">"잘못된 번호입니다."</span>)</div>
+
+    <!-- 따라해보세요 -->
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="완성" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">STEP 1</div>
+                <div class="practice-desc">Player 클래스를 정의하고 인스턴스를 만든 뒤 <code>status()</code>를 호출해 보세요.</div>
+                <div class="code"><span class="kw">class</span> <span class="fn">Player</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="self">self</span>, name):
+        <span class="self">self</span>.name = name
+        <span class="self">self</span>.hp = <span class="num">100</span>
+        <span class="self">self</span>.attack = <span class="num">15</span>
+        <span class="self">self</span>.level = <span class="num">1</span>
+        <span class="self">self</span>.exp = <span class="num">0</span>
+
+    <span class="kw">def</span> <span class="fn">status</span>(<span class="self">self</span>):
+        <span class="fn">print</span>(<span class="str">f"[{self.name}] HP:{self.hp} ATK:{self.attack} LV:{self.level}"</span>)
+
+hero = <span class="fn">Player</span>(<span class="str">"영웅"</span>)
+hero.<span class="fn">status</span>()</div>
+                <div class="practice-result">출력: [영웅] HP:100 ATK:15 LV:1</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">STEP 2</div>
+                <div class="practice-desc">Monster 인스턴스를 만들고 Player의 <code>take_damage</code>를 사용해 전투를 1라운드 시뮬레이션하세요.</div>
+                <div class="code">slime = <span class="fn">Monster</span>(<span class="str">"슬라임"</span>, <span class="num">30</span>, <span class="num">5</span>, <span class="num">10</span>, <span class="num">5</span>)
+slime.<span class="fn">take_damage</span>(hero.attack)
+<span class="fn">print</span>(<span class="str">f"슬라임 HP: {slime.hp}"</span>)
+hero.<span class="fn">take_damage</span>(slime.attack)
+<span class="fn">print</span>(<span class="str">f"영웅 HP: {hero.hp}"</span>)</div>
+                <div class="practice-result">출력: 슬라임 HP: 15 / 영웅 HP: 95</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">STEP 3</div>
+                <div class="practice-desc">포션 아이템을 만들고 플레이어의 인벤토리에 추가한 뒤 <code>use()</code>를 호출하세요.</div>
+                <div class="code">potion = <span class="fn">Item</span>(<span class="str">"포션"</span>, <span class="str">"heal"</span>, <span class="num">30</span>)
+hero.inventory.<span class="fn">append</span>(potion)
+hero.hp = <span class="num">60</span>  <span class="cmt"># HP를 낮춰두기</span>
+potion.<span class="fn">use</span>(hero)
+hero.<span class="fn">status</span>()</div>
+                <div class="practice-result">출력: 포션 사용! HP +30 (현재 HP: 90)</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 5페이지: 파일 저장/불러오기 -->
+<div class="page">
+    <h2>Step 4 — 파일 저장과 불러오기</h2>
+    <p>게임을 껐다 켜도 진행 상황이 유지되도록 플레이어 상태를 파일에 저장합니다. <code>json</code> 모듈을 사용하면 딕셔너리를 파일에 쉽게 저장하고 읽어올 수 있습니다.</p>
+
+    <!-- SVG: json 저장/불러오기 흐름 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 90" style="max-width:500px;width:100%">
+            <defs>
+                <marker id="arwJson" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <!-- Player 객체 -->
+            <rect x="5" y="25" width="120" height="40" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="65" y="42" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">Player 객체</text>
+            <text x="65" y="57" text-anchor="middle" font-size="9" fill="#64748b">속성들: dict 변환</text>
+            <!-- 저장 화살표 -->
+            <line x1="128" y1="38" x2="168" y2="38" stroke="#22c55e" stroke-width="1.5" marker-end="url(#arwJson)"/>
+            <text x="148" y="30" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">save</text>
+            <!-- json 파일 -->
+            <rect x="172" y="15" width="156" height="60" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="250" y="36" text-anchor="middle" font-size="10" fill="#374151" font-weight="700">save.json</text>
+            <text x="250" y="52" text-anchor="middle" font-size="9" fill="#64748b">{"name": "영웅",</text>
+            <text x="250" y="65" text-anchor="middle" font-size="9" fill="#64748b"> "hp": 85, "level": 2}</text>
+            <!-- 불러오기 화살표 -->
+            <line x1="331" y1="57" x2="371" y2="57" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#arwJson)"/>
+            <text x="351" y="50" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">load</text>
+            <!-- 복원된 Player -->
+            <rect x="375" y="25" width="120" height="40" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="435" y="42" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">Player 복원</text>
+            <text x="435" y="57" text-anchor="middle" font-size="9" fill="#64748b">dict → 속성 대입</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">import</span> json
+
+SAVE_FILE = <span class="str">"save.json"</span>
+
+<span class="kw">def</span> <span class="fn">save_game</span>(player):
+    <span class="str">"""플레이어 상태를 JSON 파일에 저장"""</span>
+    data = {
+        <span class="str">"name"</span>: player.name,
+        <span class="str">"hp"</span>: player.hp,
+        <span class="str">"max_hp"</span>: player.max_hp,
+        <span class="str">"attack"</span>: player.attack,
+        <span class="str">"level"</span>: player.level,
+        <span class="str">"exp"</span>: player.exp,
+        <span class="str">"gold"</span>: player.gold,
+    }
+    <span class="kw">with</span> <span class="fn">open</span>(SAVE_FILE, <span class="str">"w"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+        json.<span class="fn">dump</span>(data, f, ensure_ascii=<span class="kw">False</span>, indent=<span class="num">2</span>)
+    <span class="fn">print</span>(<span class="str">"게임을 저장했습니다."</span>)
+
+
+<span class="kw">def</span> <span class="fn">load_game</span>():
+    <span class="str">"""저장 파일이 있으면 불러오고, 없으면 None 반환"""</span>
+    <span class="kw">try</span>:
+        <span class="kw">with</span> <span class="fn">open</span>(SAVE_FILE, <span class="str">"r"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+            data = json.<span class="fn">load</span>(f)
+        player = <span class="fn">Player</span>(data[<span class="str">"name"</span>])
+        player.hp      = data[<span class="str">"hp"</span>]
+        player.max_hp  = data[<span class="str">"max_hp"</span>]
+        player.attack  = data[<span class="str">"attack"</span>]
+        player.level   = data[<span class="str">"level"</span>]
+        player.exp     = data[<span class="str">"exp"</span>]
+        player.gold    = data[<span class="str">"gold"</span>]
+        <span class="fn">print</span>(<span class="str">f"저장 데이터를 불러왔습니다. [{player.name}] LV {player.level}"</span>)
+        <span class="kw">return</span> player
+    <span class="kw">except</span> FileNotFoundError:
+        <span class="fn">print</span>(<span class="str">"저장 파일 없음. 새 게임을 시작합니다."</span>)
+        <span class="kw">return</span> <span class="kw">None</span></div>
+
+    <div class="warn-box"><p><code>try / except FileNotFoundError</code>로 파일이 없을 때를 처리합니다. 처음 실행할 때는 save.json이 없으므로 <code>None</code>을 반환해 새 게임을 시작하게 합니다.</p></div>
+
+    <h3>저장 파일 형태 (save.json)</h3>
+    <div class="output-box">{
+  "name": "영웅",
+  "hp": 85,
+  "max_hp": 120,
+  "attack": 20,
+  "level": 2,
+  "exp": 5,
+  "gold": 40
+}</div>
+
+    <!-- SVG: JSON 파일 구조 설명 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 60" style="max-width:500px;width:100%">
+            <rect x="5" y="10" width="120" height="40" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="65" y="28" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">json.dump()</text>
+            <text x="65" y="43" text-anchor="middle" font-size="8" fill="#64748b">dict → 파일 쓰기</text>
+            <rect x="160" y="10" width="120" height="40" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="220" y="28" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">json.load()</text>
+            <text x="220" y="43" text-anchor="middle" font-size="8" fill="#64748b">파일 읽기 → dict</text>
+            <rect x="315" y="10" width="180" height="40" rx="6" fill="#fdf4ff" stroke="#a855f7" stroke-width="1.5"/>
+            <text x="405" y="28" text-anchor="middle" font-size="10" fill="#7e22ce" font-weight="700">ensure_ascii=False</text>
+            <text x="405" y="43" text-anchor="middle" font-size="8" fill="#64748b">한글이 깨지지 않게 저장</text>
+        </svg>
+    </div>
+</div>
+
+<!-- 6페이지: while 게임 루프 완성 -->
+<div class="page">
+    <h2>Step 5 — while 게임 루프 완성</h2>
+    <p>지금까지 만든 모든 함수와 클래스를 연결하는 메인 게임 루프입니다. 플레이어가 계속 선택을 할 수 있도록 <code>while True</code>로 무한 루프를 돌리고, 특정 조건에서 <code>break</code>로 종료합니다.</p>
+
+    <!-- SVG: 게임 루프 상태 다이어그램 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 520 170" style="max-width:520px;width:100%">
+            <defs>
+                <marker id="arwLoop" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+                </marker>
+            </defs>
+            <!-- 시작 -->
+            <ellipse cx="60" cy="30" rx="50" ry="20" fill="#1e3a5f"/>
+            <text x="60" y="34" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">게임 시작</text>
+            <line x1="60" y1="50" x2="60" y2="68" stroke="#64748b" stroke-width="1.5" marker-end="url(#arwLoop)"/>
+            <!-- 메뉴 -->
+            <rect x="5" y="70" width="110" height="36" rx="8" fill="#3b82f6"/>
+            <text x="60" y="87" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">메뉴 출력</text>
+            <text x="60" y="100" text-anchor="middle" font-size="8" fill="#bfdbfe">1탐험 2아이템 3저장 4종료</text>
+            <!-- 분기 -->
+            <line x1="118" y1="88" x2="148" y2="88" stroke="#64748b" stroke-width="1.5" marker-end="url(#arwLoop)"/>
+            <!-- 탐험 -->
+            <rect x="152" y="55" width="100" height="34" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="202" y="70" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">1: 탐험</text>
+            <text x="202" y="83" text-anchor="middle" font-size="8" fill="#64748b">battle()</text>
+            <line x1="148" y1="82" x2="150" y2="73" stroke="#64748b" stroke-width="1.2" marker-end="url(#arwLoop)"/>
+            <!-- 아이템 -->
+            <rect x="152" y="100" width="100" height="34" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="202" y="115" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">2: 아이템</text>
+            <text x="202" y="128" text-anchor="middle" font-size="8" fill="#64748b">use_item_menu()</text>
+            <line x1="148" y1="93" x2="150" y2="117" stroke="#64748b" stroke-width="1.2" marker-end="url(#arwLoop)"/>
+            <!-- 저장 -->
+            <rect x="270" y="55" width="100" height="34" rx="6" fill="#fdf4ff" stroke="#a855f7" stroke-width="1.5"/>
+            <text x="320" y="70" text-anchor="middle" font-size="9" fill="#7e22ce" font-weight="700">3: 저장</text>
+            <text x="320" y="83" text-anchor="middle" font-size="8" fill="#64748b">save_game()</text>
+            <line x1="255" y1="73" x2="268" y2="73" stroke="#64748b" stroke-width="1.2" marker-end="url(#arwLoop)"/>
+            <!-- 종료 -->
+            <rect x="270" y="100" width="100" height="34" rx="6" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="320" y="115" text-anchor="middle" font-size="9" fill="#991b1b" font-weight="700">4: 종료</text>
+            <text x="320" y="128" text-anchor="middle" font-size="8" fill="#64748b">break</text>
+            <line x1="255" y1="117" x2="268" y2="117" stroke="#64748b" stroke-width="1.2" marker-end="url(#arwLoop)"/>
+            <!-- 레벨업 체크 -->
+            <rect x="390" y="75" width="120" height="34" rx="6" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5"/>
+            <text x="450" y="90" text-anchor="middle" font-size="9" fill="#0c4a6e" font-weight="700">check_levelup()</text>
+            <text x="450" y="103" text-anchor="middle" font-size="8" fill="#64748b">exp 충족 시 레벨업</text>
+            <line x1="373" y1="73" x2="387" y2="85" stroke="#64748b" stroke-width="1.2" marker-end="url(#arwLoop)"/>
+            <!-- 루프 화살표 -->
+            <path d="M 450 148 Q 450 165 280 165 Q 60 165 60 145" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arwLoop)"/>
+            <text x="255" y="162" text-anchor="middle" font-size="8" fill="#94a3b8">루프 계속</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">def</span> <span class="fn">main</span>():
+    <span class="cmt"># 저장 파일 확인 → 있으면 불러오기, 없으면 새 게임</span>
+    player = <span class="fn">load_game</span>()
+    <span class="kw">if</span> player <span class="kw">is</span> <span class="kw">None</span>:
+        name = <span class="fn">input</span>(<span class="str">"캐릭터 이름을 입력하세요: "</span>)
+        player = <span class="fn">Player</span>(name)
+
+    <span class="fn">print</span>(<span class="str">"\n텍스트 RPG 게임에 오신 것을 환영합니다!"</span>)
+    player.<span class="fn">status</span>()
+
+    <span class="kw">while</span> <span class="kw">True</span>:
+        <span class="fn">print</span>(<span class="str">"\n1. 탐험  2. 아이템 사용  3. 저장  4. 종료"</span>)
+        choice = <span class="fn">input</span>(<span class="str">"선택: "</span>).strip()
+
+        <span class="kw">if</span> choice == <span class="str">"1"</span>:
+            monster = <span class="fn">spawn_monster</span>()
+            result = <span class="fn">battle</span>(player, monster)
+            <span class="kw">if</span> result:
+                <span class="fn">check_levelup</span>(player)
+                <span class="cmt"># 낮은 확률로 포션 드롭</span>
+                <span class="kw">if</span> random.<span class="fn">randint</span>(<span class="num">1</span>, <span class="num">10</span>) <= <span class="num">3</span>:
+                    drop = <span class="fn">Item</span>(<span class="str">"포션"</span>, <span class="str">"heal"</span>, <span class="num">30</span>)
+                    player.inventory.<span class="fn">append</span>(drop)
+                    <span class="fn">print</span>(<span class="str">"포션을 획득했습니다!"</span>)
+            <span class="kw">else</span>:
+                <span class="fn">print</span>(<span class="str">"게임 오버..."</span>)
+                <span class="kw">break</span>
+
+        <span class="kw">elif</span> choice == <span class="str">"2"</span>:
+            <span class="fn">use_item_menu</span>(player)
+
+        <span class="kw">elif</span> choice == <span class="str">"3"</span>:
+            <span class="fn">save_game</span>(player)
+
+        <span class="kw">elif</span> choice == <span class="str">"4"</span>:
+            <span class="fn">save_game</span>(player)
+            <span class="fn">print</span>(<span class="str">"게임을 종료합니다."</span>)
+            <span class="kw">break</span>
+
+        player.<span class="fn">status</span>()
+
+<span class="kw">if</span> __name__ == <span class="str">"__main__"</span>:
+    <span class="fn">main</span>()</div>
+</div>
+
+<!-- 7페이지: 문제 3개 -->
+<div class="page">
+    <h2>연습 문제</h2>
+
+    <!-- 문제 1 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">1</div>
+            <div class="problem-label">Player 클래스에 heal() 메서드 추가하기</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">
+                <code>Player</code> 클래스에 <code>heal(amount)</code> 메서드를 추가하세요.<br>
+                HP를 <code>amount</code>만큼 회복하되, <code>max_hp</code>를 초과할 수 없습니다.<br>
+                메서드 안에서 실제 회복된 양을 출력하세요.
+            </div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <div class="problem-example-label">입력</div>
+                    <div class="problem-example-value">hero.hp = 60, hero.max_hp = 100, hero.heal(50)</div>
+                </div>
+                <div class="problem-example-row">
+                    <div class="problem-example-label">출력</div>
+                    <div class="problem-example-value">HP +40 회복! (현재 HP: 100)</div>
+                </div>
+            </div>
+        </div>
+        <div class="problem-toggle">
+            <details>
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">실제 회복량 = min(amount, max_hp - hp). min()을 사용하면 초과 회복을 막을 수 있습니다.</div>
+                </div>
+            </details>
+            <details>
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code"><span class="kw">def</span> <span class="fn">heal</span>(<span class="self">self</span>, amount):
+    actual = <span class="fn">min</span>(amount, <span class="self">self</span>.max_hp - <span class="self">self</span>.hp)
+    <span class="self">self</span>.hp += actual
+    <span class="fn">print</span>(<span class="str">f"HP +{actual} 회복! (현재 HP: {self.hp})"</span>)</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <!-- 문제 2 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">2</div>
+            <div class="problem-label">random으로 크리티컬 히트 구현하기</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">
+                전투 함수에서 <code>random.randint(1, 10)</code>이 <code>10</code>이면 크리티컬 히트가 발생해 피해량이 2배가 되도록 수정하세요.<br>
+                크리티컬 히트 시 <code>"크리티컬!"</code> 문구를 함께 출력하세요.
+            </div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <div class="problem-example-label">출력 예</div>
+                    <div class="problem-example-value">영웅 공격! -30 크리티컬! (몬스터 HP: 20)</div>
+                </div>
+            </div>
+        </div>
+        <div class="problem-toggle">
+            <details>
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">roll = random.randint(1, 10)을 먼저 저장한 뒤, roll == 10이면 dmg *= 2로 두 배로 만드세요.</div>
+                </div>
+            </details>
+            <details>
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code">roll = random.<span class="fn">randint</span>(<span class="num">1</span>, <span class="num">10</span>)
+dmg = player.attack + random.<span class="fn">randint</span>(-<span class="num">3</span>, <span class="num">3</span>)
+is_critical = (roll == <span class="num">10</span>)
+<span class="kw">if</span> is_critical:
+    dmg *= <span class="num">2</span>
+suffix = <span class="str">" 크리티컬!"</span> <span class="kw">if</span> is_critical <span class="kw">else</span> <span class="str">""</span>
+monster.<span class="fn">take_damage</span>(dmg)
+<span class="fn">print</span>(<span class="str">f"  {player.name} 공격! -{dmg}{suffix}  (몬스터 HP: {monster.hp})"</span>)</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <!-- 문제 3 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">3</div>
+            <div class="problem-label">상점(Shop) 기능 추가하기</div>
+            <span class="problem-diff hard">어려움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">
+                <code>shop(player)</code> 함수를 만드세요.<br>
+                상점에서 포션(비용 10 Gold)을 구매할 수 있고, Gold가 부족하면 "Gold가 부족합니다." 메시지를 출력합니다.<br>
+                구매 성공 시 포션이 인벤토리에 추가되고 Gold가 차감됩니다.
+            </div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <div class="problem-example-label">입력</div>
+                    <div class="problem-example-value">player.gold = 20, shop(player) → "1" 선택</div>
+                </div>
+                <div class="problem-example-row">
+                    <div class="problem-example-label">출력</div>
+                    <div class="problem-example-value">포션 구매 완료! 남은 Gold: 10</div>
+                </div>
+            </div>
+        </div>
+        <div class="problem-toggle">
+            <details>
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">if player.gold >= 10:으로 Gold를 확인하세요. 구매 후 player.gold -= 10, player.inventory.append(Item(...))을 차례로 실행합니다.</div>
+                </div>
+            </details>
+            <details>
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code"><span class="kw">def</span> <span class="fn">shop</span>(player):
+    <span class="fn">print</span>(<span class="str">f"\n[상점] Gold: {player.gold}"</span>)
+    <span class="fn">print</span>(<span class="str">"1. 포션 (HP+30) — 10 Gold"</span>)
+    <span class="fn">print</span>(<span class="str">"0. 나가기"</span>)
+    choice = <span class="fn">input</span>(<span class="str">"선택: "</span>)
+    <span class="kw">if</span> choice == <span class="str">"1"</span>:
+        <span class="kw">if</span> player.gold >= <span class="num">10</span>:
+            player.gold -= <span class="num">10</span>
+            player.inventory.<span class="fn">append</span>(<span class="fn">Item</span>(<span class="str">"포션"</span>, <span class="str">"heal"</span>, <span class="num">30</span>))
+            <span class="fn">print</span>(<span class="str">f"포션 구매 완료! 남은 Gold: {player.gold}"</span>)
+        <span class="kw">else</span>:
+            <span class="fn">print</span>(<span class="str">"Gold가 부족합니다."</span>)</div>
+                </div>
+            </details>
+        </div>
+    </div>
+</div>
+
+<!-- 8페이지: 핵심 요약 -->
+<div class="page">
+    <h2>핵심 요약</h2>
+
+    <!-- SVG: 전체 개념 맵 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 520 120" style="max-width:520px;width:100%">
+            <defs>
+                <marker id="arwSum" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <!-- 클래스 설계 -->
+            <rect x="5" y="10" width="110" height="44" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="60" y="30" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">클래스 설계</text>
+            <text x="60" y="46" text-anchor="middle" font-size="8" fill="#64748b">Player / Monster / Item</text>
+            <!-- while 루프 -->
+            <rect x="135" y="10" width="110" height="44" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="190" y="30" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">while 게임 루프</text>
+            <text x="190" y="46" text-anchor="middle" font-size="8" fill="#64748b">무한루프 + break</text>
+            <!-- random -->
+            <rect x="265" y="10" width="110" height="44" rx="8" fill="#fff7ed" stroke="#f97316" stroke-width="1.5"/>
+            <text x="320" y="30" text-anchor="middle" font-size="10" fill="#c2410c" font-weight="700">random 활용</text>
+            <text x="320" y="46" text-anchor="middle" font-size="8" fill="#64748b">randint / choice</text>
+            <!-- 파일 저장 -->
+            <rect x="395" y="10" width="120" height="44" rx="8" fill="#fdf4ff" stroke="#a855f7" stroke-width="1.5"/>
+            <text x="455" y="30" text-anchor="middle" font-size="10" fill="#7e22ce" font-weight="700">파일 저장/불러오기</text>
+            <text x="455" y="46" text-anchor="middle" font-size="8" fill="#64748b">json.dump / json.load</text>
+            <!-- 레벨업 -->
+            <rect x="5" y="72" width="110" height="40" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="60" y="89" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">레벨업 시스템</text>
+            <text x="60" y="105" text-anchor="middle" font-size="8" fill="#64748b">exp >= level * 10</text>
+            <!-- 인벤토리 -->
+            <rect x="135" y="72" width="110" height="40" rx="8" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="190" y="89" text-anchor="middle" font-size="10" fill="#991b1b" font-weight="700">인벤토리 관리</text>
+            <text x="190" y="105" text-anchor="middle" font-size="8" fill="#64748b">list + item.use(player)</text>
+            <!-- take_damage -->
+            <rect x="265" y="72" width="110" height="40" rx="8" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5"/>
+            <text x="320" y="89" text-anchor="middle" font-size="10" fill="#0c4a6e" font-weight="700">전투 패턴</text>
+            <text x="320" y="105" text-anchor="middle" font-size="8" fill="#64748b">take_damage / is_alive</text>
+            <!-- 예외처리 -->
+            <rect x="395" y="72" width="120" height="40" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="455" y="89" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">예외 처리</text>
+            <text x="455" y="105" text-anchor="middle" font-size="8" fill="#64748b">FileNotFoundError</text>
+        </svg>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>핵심 요약 — 텍스트 RPG 게임</h3>
+        <ul>
+            <li><strong>클래스 설계:</strong> <code>Player</code>, <code>Monster</code>, <code>Item</code>은 각각 속성과 메서드를 가진 독립적인 객체입니다.</li>
+            <li><strong>전투 시스템:</strong> <code>while player.is_alive() and monster.is_alive()</code>로 양쪽이 살아있는 동안 루프를 반복합니다.</li>
+            <li><strong>random 활용:</strong> <code>random.randint(a, b)</code>는 a~b 사이 정수, <code>random.choice(list)</code>는 리스트에서 무작위 1개를 선택합니다.</li>
+            <li><strong>레벨업:</strong> <code>exp >= level * 10</code> 조건으로 레벨을 올리고, 초과 경험치는 다음 레벨로 이월합니다.</li>
+            <li><strong>아이템 사용:</strong> <code>item.use(player)</code>는 effect_type에 따라 HP 회복 또는 공격력 증가 효과를 적용하고 인벤토리에서 제거합니다.</li>
+            <li><strong>파일 저장:</strong> <code>json.dump(data, f)</code>로 딕셔너리를 파일에 저장하고, <code>json.load(f)</code>로 다시 읽어옵니다.</li>
+            <li><strong>게임 루프:</strong> <code>while True</code>로 무한히 돌리고, 게임 종료 조건에서 <code>break</code>로 빠져나옵니다.</li>
+        </ul>
+    </div>
+
+    <!-- 클래스 vs 딕셔너리 비교 -->
+    <h3>클래스 vs 딕셔너리 — 언제 어느 것을?</h3>
+    <table class="compare-table">
+        <tr>
+            <th>구분</th>
+            <th>클래스</th>
+            <th>딕셔너리</th>
+        </tr>
+        <tr>
+            <td>메서드(기능)</td>
+            <td>직접 정의 가능 (<code>take_damage()</code>)</td>
+            <td>별도 함수 필요</td>
+        </tr>
+        <tr>
+            <td>타입 구분</td>
+            <td><code>isinstance(obj, Player)</code> 가능</td>
+            <td>타입 구분 어려움</td>
+        </tr>
+        <tr>
+            <td>파일 저장</td>
+            <td>직접 불가 → 딕셔너리로 변환 필요</td>
+            <td>json.dump() 바로 사용</td>
+        </tr>
+        <tr>
+            <td>적합한 상황</td>
+            <td>동작(메서드)이 많을 때</td>
+            <td>데이터 저장/전달만 할 때</td>
+        </tr>
+    </table>
+
+    <!-- SVG: 완성된 게임 실행 예시 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 500 120" style="max-width:500px;width:100%">
+            <rect x="0" y="0" width="500" height="120" rx="8" fill="#0f172a"/>
+            <circle cx="20" cy="16" r="5" fill="#ef4444"/>
+            <circle cx="36" cy="16" r="5" fill="#f59e0b"/>
+            <circle cx="52" cy="16" r="5" fill="#22c55e"/>
+            <text x="20" y="38" font-family="monospace" font-size="10" fill="#86efac">텍스트 RPG 게임에 오신 것을 환영합니다!</text>
+            <text x="20" y="54" font-family="monospace" font-size="10" fill="#e2e8f0">[영웅] HP:100/100  ATK:15  LV:1  EXP:0</text>
+            <text x="20" y="70" font-family="monospace" font-size="10" fill="#7dd3fc">1. 탐험  2. 아이템 사용  3. 저장  4. 종료</text>
+            <text x="20" y="86" font-family="monospace" font-size="10" fill="#f9a8d4">선택: 1</text>
+            <text x="20" y="102" font-family="monospace" font-size="10" fill="#fde68a">[전투 시작] 오크 등장! (HP: 80)</text>
+            <text x="20" y="115" font-family="monospace" font-size="9" fill="#64748b">  영웅 공격! -13  (몬스터 HP: 67)</text>
+        </svg>
+    </div>
+
+    <!-- SVG: random 함수 정리 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 70" style="max-width:500px;width:100%">
+            <rect x="5" y="10" width="150" height="50" rx="6" fill="#fff7ed" stroke="#f97316" stroke-width="1.5"/>
+            <text x="80" y="30" text-anchor="middle" font-size="10" fill="#c2410c" font-weight="700">random.randint(a, b)</text>
+            <text x="80" y="46" text-anchor="middle" font-size="9" fill="#64748b">a 이상 b 이하 정수 1개</text>
+            <text x="80" y="58" text-anchor="middle" font-size="8" fill="#94a3b8">피해량, 확률 계산</text>
+            <rect x="175" y="10" width="150" height="50" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="250" y="30" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">random.choice(seq)</text>
+            <text x="250" y="46" text-anchor="middle" font-size="9" fill="#64748b">시퀀스에서 1개 선택</text>
+            <text x="250" y="58" text-anchor="middle" font-size="8" fill="#94a3b8">몬스터 랜덤 등장</text>
+            <rect x="345" y="10" width="150" height="50" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="420" y="30" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">random.shuffle(lst)</text>
+            <text x="420" y="46" text-anchor="middle" font-size="9" fill="#64748b">리스트를 섞기</text>
+            <text x="420" y="58" text-anchor="middle" font-size="8" fill="#94a3b8">덱 카드 섞기</text>
+        </svg>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

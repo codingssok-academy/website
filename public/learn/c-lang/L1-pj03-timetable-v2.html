@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 프로젝트: 시간표 출력기</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+.page { width: 210mm; min-height: 297mm; margin: 16px auto; padding: 18mm 20mm 15mm 22mm; background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: relative; page-break-after: always; }
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after { content: counter(pagenum); position: absolute; bottom: 10mm; right: 16mm; font-size: 10px; color: #94a3b8; font-weight: 600; }
+
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark { position: absolute; top: -10px; right: -15px; font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3); line-height: 1; pointer-events: none; }
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #2563eb; font-weight: 600; }
+
+.code { background: #0f172a; border-radius: 8px; padding: 16px 20px; font-family: 'JetBrains Mono', monospace; font-size: 14px; color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap; }
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+.pj-badge { display: inline-block; background: #1e3a5f; color: #e6a817; font-size: 12px; font-weight: 800; padding: 3px 12px; border-radius: 99px; margin-bottom: 12px; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- ═══ 1페이지: 표지 ═══ -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">P3</div>
+        <div class="cover-label">Project 03</div>
+        <h1 class="cover-title">시간표 출력기</h1>
+        <p class="cover-sub">요일별 수업을 printf와 탭으로 정렬된 시간표로 출력합니다.</p>
+        <!-- SVG: 시간표 미리보기 -->
+        <div style="margin:20px 0;">
+            <svg viewBox="0 0 460 140" style="max-width:460px;width:100%">
+                <rect x="10" y="5" width="440" height="130" rx="12" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+                <text x="230" y="30" text-anchor="middle" font-size="13" fill="#1e3a5f" font-weight="800">시간표 출력 예시</text>
+                <line x1="30" y1="38" x2="430" y2="38" stroke="#e2e8f0" stroke-width="1"/>
+                <text x="40" y="60" font-family="monospace" font-size="11" fill="#1d4ed8" font-weight="700">요일    1교시    2교시    3교시</text>
+                <line x1="40" y1="68" x2="430" y2="68" stroke="#e2e8f0" stroke-width="1"/>
+                <text x="40" y="88" font-family="monospace" font-size="11" fill="#374151">월요일   국어     수학     영어</text>
+                <text x="40" y="106" font-family="monospace" font-size="11" fill="#374151">화요일   영어     과학     체육</text>
+                <text x="40" y="124" font-family="monospace" font-size="11" fill="#374151">수요일   수학     국어     음악</text>
+            </svg>
+        </div>
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>프로젝트 목표</h3>
+            <ul>
+                <li>\t로 표 형태의 출력을 만들 수 있습니다.</li>
+                <li>헤더 행(제목 줄)과 데이터 행을 구분해 출력합니다.</li>
+                <li>5일치 시간표를 완성합니다.</li>
+                <li>자기 실제 시간표로 수정할 수 있습니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ 2페이지: 표 출력 방법 ═══ -->
+<div class="page">
+    <div class="pj-badge">PROJECT 03</div>
+    <h2>표 형식으로 출력하기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/monitor.png" alt="모니터" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>C언어로 표를 출력하려면 각 칸을 <code>\t</code>로 구분합니다. 제목 줄과 데이터 줄을 나눠서 작성합니다.</p>
+
+    <!-- SVG 1: 탭으로 표 만들기 -->
+    <div style="text-align:center;margin:20px 0;">
+        <svg viewBox="0 0 460 100" style="max-width:460px;width:100%">
+            <rect x="10" y="10" width="440" height="80" rx="8" fill="#0f172a"/>
+            <text x="30" y="35" font-family="monospace" font-size="12" fill="#67e8f9">printf("요일\t1교시\t2교시\t3교시\n");</text>
+            <text x="30" y="58" font-family="monospace" font-size="12" fill="#94a3b8">// 출력: 요일   1교시   2교시   3교시</text>
+            <text x="30" y="80" font-family="monospace" font-size="12" fill="#86efac">printf("월요일\t국어\t수학\t영어\n");</text>
+        </svg>
+    </div>
+
+    <!-- SVG 2: 표 구조 분해 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+            <rect x="10" y="10" width="80" height="60" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="50" y="44" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">요일</text>
+            <rect x="30" y="5" width="40" height="14" rx="3" fill="#3b82f6"/>
+            <text x="50" y="16" text-anchor="middle" font-size="9" fill="#fff">헤더</text>
+            <rect x="100" y="10" width="80" height="60" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="140" y="44" text-anchor="middle" font-size="11" fill="#92400e" font-weight="700">1교시</text>
+            <rect x="190" y="10" width="80" height="60" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="230" y="44" text-anchor="middle" font-size="11" fill="#92400e" font-weight="700">2교시</text>
+            <rect x="280" y="10" width="80" height="60" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="320" y="44" text-anchor="middle" font-size="11" fill="#92400e" font-weight="700">3교시</text>
+            <text x="100" y="5" font-size="9" fill="#f59e0b" font-weight="700">← \t 로 구분 →</text>
+        </svg>
+    </div>
+
+    <!-- SVG 3: 구분선 추가 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 60" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="50" rx="8" fill="#0f172a"/>
+            <text x="30" y="27" font-family="monospace" font-size="12" fill="#67e8f9">printf("-----\t-----\t-----\t-----\n");</text>
+            <text x="30" y="48" font-family="monospace" font-size="11" fill="#64748b">// 헤더와 데이터를 구분하는 선</text>
+        </svg>
+    </div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/desktop-pc.png" alt="데스크탑" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/lightbulb.png" alt="아이디어" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">시간표 헤더(제목 줄)를 출력해 보세요.</div>
+                <div class="code"><span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="fn">printf</span>(<span class="str">"요일\t1교시\t2교시\t3교시\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"-----\t-----\t-----\t-----\n"</span>);
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+                <div class="practice-result">정렬된 표 헤더가 출력됩니다</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">월요일 수업을 추가해 보세요.</div>
+                <div class="code"><span class="fn">printf</span>(<span class="str">"월요일\t국어\t수학\t영어\n"</span>);</div>
+                <div class="practice-result">월요일 행이 추가됩니다</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">화요일도 추가해 보세요.</div>
+                <div class="code"><span class="fn">printf</span>(<span class="str">"화요일\t영어\t과학\t체육\n"</span>);</div>
+                <div class="practice-result">화요일 행이 추가됩니다</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ 3페이지: 완성 코드 ═══ -->
+<div class="page">
+    <div class="pj-badge">PROJECT 03</div>
+    <h2>완성 코드 — 5일치 시간표</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+    <!-- SVG 4: 주간 시간표 구조 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 60" style="max-width:460px;width:100%">
+            <rect x="10" y="10" width="80" height="40" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="50" y="34" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">월요일</text>
+            <rect x="100" y="10" width="80" height="40" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="140" y="34" text-anchor="middle" font-size="11" fill="#92400e" font-weight="700">화요일</text>
+            <rect x="190" y="10" width="80" height="40" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="230" y="34" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">수요일</text>
+            <rect x="280" y="10" width="80" height="40" rx="6" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="320" y="34" text-anchor="middle" font-size="11" fill="#dc2626" font-weight="700">목요일</text>
+            <rect x="370" y="10" width="80" height="40" rx="6" fill="#eff6ff" stroke="#6366f1" stroke-width="1.5"/>
+            <text x="410" y="34" text-anchor="middle" font-size="11" fill="#4338ca" font-weight="700">금요일</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="fn">printf</span>(<span class="str">"===== 1학년 1반 시간표 =====\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"요일\t1교시\t2교시\t3교시\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"-----\t-----\t-----\t-----\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"월요일\t국어\t수학\t영어\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"화요일\t영어\t과학\t체육\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"수요일\t수학\t국어\t음악\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"목요일\t과학\t미술\t수학\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"금요일\t체육\t영어\t국어\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"===========================\n"</span>);
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+
+    <!-- SVG 5: 출력 결과 시각화 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 130" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="120" rx="8" fill="#0f172a"/>
+            <text x="30" y="26" font-family="monospace" font-size="11" fill="#67e8f9">===== 1학년 1반 시간표 =====</text>
+            <text x="30" y="44" font-family="monospace" font-size="11" fill="#c084fc">요일    1교시   2교시   3교시</text>
+            <text x="30" y="60" font-family="monospace" font-size="11" fill="#64748b">-----   -----   -----   -----</text>
+            <text x="30" y="76" font-family="monospace" font-size="11" fill="#86efac">월요일  국어    수학    영어</text>
+            <text x="30" y="92" font-family="monospace" font-size="11" fill="#86efac">화요일  영어    과학    체육</text>
+            <text x="30" y="108" font-family="monospace" font-size="11" fill="#86efac">수요일  수학    국어    음악</text>
+        </svg>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q1</div>
+            <div class="problem-label">시간표 행 완성하기</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">목요일의 수업이 "사회, 음악, 수학" 일 때 printf를 완성하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">형식</span><span class="problem-example-value">printf("목요일\t____\t____\t____\n");</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">앞에서 쓴 패턴과 동일합니다. \t로 과목을 구분합니다.</div>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">printf("목요일\t사회\t음악\t수학\n");</div>
+            </div>
+        </details>
+    </div>
+</div>
+
+<!-- ═══ 4페이지: 확장 + 요약 ═══ -->
+<div class="page">
+    <div class="pj-badge">PROJECT 03</div>
+    <h2>4교시까지 확장하기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/keyboard.png" alt="키보드" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <!-- SVG extra: 탭 구분 원리 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 460 40" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="30" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="25" text-anchor="middle" font-family="monospace" font-size="11" fill="#1e3a5f">요일\t1교시\t2교시\t3교시\t4교시  — \t로 칸 구분</text>
+        </svg>
+    </div>
+    <p>3교시에서 4교시로 확장하려면 각 줄에 탭(\t)과 과목 하나만 추가하면 됩니다.</p>
+
+    <!-- SVG 6: 4교시 추가 비교 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 70" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="200" height="60" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="110" y="26" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="800">3교시 버전</text>
+            <text x="110" y="48" text-anchor="middle" font-family="monospace" font-size="10" fill="#64748b">월요일\t국어\t수학\t영어</text>
+            <rect x="250" y="5" width="200" height="60" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="350" y="26" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="800">4교시 추가</text>
+            <text x="350" y="48" text-anchor="middle" font-family="monospace" font-size="10" fill="#1d4ed8">월요일\t국어\t수학\t영어\t사회</text>
+        </svg>
+    </div>
+
+    <!-- SVG 7: 헤더도 수정 필요 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 60" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="50" rx="8" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="230" y="28" text-anchor="middle" font-size="12" fill="#92400e" font-weight="700">헤더도 함께 수정해야 합니다!</text>
+            <text x="230" y="48" text-anchor="middle" font-family="monospace" font-size="11" fill="#f59e0b">요일\t1교시\t2교시\t3교시\t4교시</text>
+        </svg>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q2</div>
+            <div class="problem-label">4교시 헤더 완성하기</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">4교시까지 있는 시간표 헤더를 완성하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">형식</span><span class="problem-example-value">printf("요일\t1교시\t2교시\t3교시\t____\n");</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">3교시 다음은 4교시입니다.</div>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">printf("요일\t1교시\t2교시\t3교시\t4교시\n");</div>
+            </div>
+        </details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q3</div>
+            <div class="problem-label">도전: 실제 시간표 입력</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">자기 학교의 실제 월요일 시간표를 printf로 출력하세요. (3교시 이상)</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">예시</span><span class="problem-example-value">월요일 실제 수업 3개 이상 출력</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">수업 이름만 실제 것으로 바꾸면 됩니다.</div>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">// 예시 (학교마다 다름)
+printf("월요일\t국어\t수학\t영어\t과학\n");</div>
+            </div>
+        </details>
+    </div>
+
+    <!-- SVG 8: 표 구조 요약 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 50" style="max-width:460px;width:100%">
+            <rect x="5" y="10" width="90" height="30" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="50" y="30" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">헤더 행</text>
+            <line x1="100" y1="25" x2="120" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+            <rect x="125" y="10" width="90" height="30" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="170" y="30" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">구분선</text>
+            <line x1="220" y1="25" x2="240" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+            <rect x="245" y="10" width="130" height="30" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="310" y="30" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">데이터 행 x5</text>
+            <line x1="380" y1="25" x2="400" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+            <rect x="405" y="10" width="50" height="30" rx="6" fill="#eff6ff" stroke="#6366f1" stroke-width="1.5"/>
+            <text x="430" y="30" text-anchor="middle" font-size="10" fill="#4338ca" font-weight="700">완성!</text>
+        </svg>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="완성" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>핵심 요약</h3>
+        <ul>
+            <li><code>\t</code> 탭으로 표의 각 칸을 구분한다</li>
+            <li>헤더(제목) 행을 먼저 출력하고, 구분선 후 데이터를 출력한다</li>
+            <li>열을 추가하려면 헤더와 모든 데이터 줄에 <code>\t항목</code>을 추가한다</li>
+            <li>문자열 내용만 바꾸면 어떤 시간표든 만들 수 있다</li>
+            <li>형식 통일이 표의 가독성을 결정한다</li>
+        </ul>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+
+
+
+<script>
+(function(){
+  var KEY = 'cs_ans_' + location.pathname.replace(/[^a-zA-Z0-9]/g,'_');
+  var pagePath = location.pathname;
+  var userId = null;
+  try {
+    userId = window.parent?.localStorage?.getItem('codingssok_user_id')
+      || localStorage.getItem('codingssok_user_id');
+  } catch(e) {}
+
+  function save(){
+    var areas = document.querySelectorAll('textarea');
+    var saved = 0;
+    areas.forEach(function(ta, i){
+      if(ta.value.trim()) {
+        localStorage.setItem(KEY + '_' + i, ta.value);
+        saved++;
+      } else {
+        localStorage.removeItem(KEY + '_' + i);
+      }
+    });
+    if(saved > 0) showSaveIndicator();
+  }
+
+  function load(){
+    var areas = document.querySelectorAll('textarea');
+    var restored = 0;
+    areas.forEach(function(ta, i){
+      var val = localStorage.getItem(KEY + '_' + i);
+      if(val && val.trim()) {
+        ta.value = val;
+        ta.style.borderColor = '#10b981';
+        ta.style.boxShadow = '0 0 0 2px rgba(16,185,129,0.15)';
+        setTimeout(function(){ ta.style.borderColor = ''; ta.style.boxShadow = ''; }, 2000);
+        restored++;
+      }
+    });
+    if(restored > 0) showRestoreIndicator(restored);
+  }
+
+  function saveToDb(){
+    if(!userId) return;
+    var areas = document.querySelectorAll('textarea');
+    var answers = [];
+    areas.forEach(function(ta, i){
+      if(ta.value.trim()) answers.push({ field_index: i, answer_text: ta.value });
+    });
+    if(answers.length === 0) return;
+    fetch('/api/answers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId, page_path: pagePath, answers: answers })
+    }).catch(function(){});
+  }
+
+  function loadFromDb(){
+    if(!userId) return;
+    fetch('/api/answers?user_id=' + encodeURIComponent(userId) + '&page_path=' + encodeURIComponent(pagePath))
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(!d.answers || !d.answers.length) return;
+        var areas = document.querySelectorAll('textarea');
+        d.answers.forEach(function(a){
+          if(areas[a.field_index] && a.answer_text) {
+            areas[a.field_index].value = a.answer_text;
+            localStorage.setItem(KEY + '_' + a.field_index, a.answer_text);
+          }
+        });
+      }).catch(function(){});
+  }
+
+  function showSaveIndicator(){
+    var el = document.getElementById('cs-save-ind');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'cs-save-ind';
+      el.style.cssText = 'position:fixed;bottom:16px;right:16px;padding:6px 14px;border-radius:8px;background:#0f172a;color:#22c55e;font-size:11px;font-weight:700;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+      document.body.appendChild(el);
+    }
+    el.textContent = '\u2713 \uB2F5\uC548 \uC800\uC7A5\uB428'; // ✓ 답안 저장됨
+    el.style.opacity = '1';
+    setTimeout(function(){ el.style.opacity = '0'; }, 1500);
+  }
+
+  function showRestoreIndicator(n){
+    var el = document.getElementById('cs-save-ind');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'cs-save-ind';
+      el.style.cssText = 'position:fixed;bottom:16px;right:16px;padding:6px 14px;border-radius:8px;background:#0f172a;color:#3b82f6;font-size:11px;font-weight:700;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+      document.body.appendChild(el);
+    }
+    el.textContent = '\u21BB ' + n + '\uAC1C \uB2F5\uC548 \uBCF5\uC6D0'; // ↻ n개 답안 복원
+    el.style.color = '#3b82f6';
+    el.style.opacity = '1';
+    setTimeout(function(){ el.style.opacity = '0'; }, 2500);
+  }
+
+  var t = null;
+  document.addEventListener('input', function(e){
+    if(e.target.tagName === 'TEXTAREA'){
+      clearTimeout(t);
+      t = setTimeout(function(){ save(); saveToDb(); }, 300);
+    }
+  });
+  document.addEventListener('change', function(e){
+    if(e.target.tagName === 'TEXTAREA'){ save(); saveToDb(); }
+  });
+  document.addEventListener('focusout', function(e){
+    if(e.target.tagName === 'TEXTAREA'){ save(); saveToDb(); }
+  });
+  window.addEventListener('beforeunload', function(){ save(); saveToDb(); });
+
+  // 즉시 로드
+  load();
+  loadFromDb();
+})();
+</script>
+</body>
+</html>

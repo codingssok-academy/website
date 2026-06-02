@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Gold &mdash; 도시 연결망 (다익스트라 + 충전소)</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--navy:#1a2e4a;--navy-mid:#2c4a6e;--navy-light:#3d6590;--orange:#e07830;--white:#ffffff;--bg:#f7f8fa;--gray-50:#f9fafb;--gray-100:#f3f4f6;--gray-200:#e5e7eb;--gray-300:#d1d5db;--gray-400:#9ca3af;--gray-500:#6b7280;--gray-600:#4b5563;--gray-700:#374151;--gray-800:#1f2937;--text:#2d3748;--green:#16a34a;--red:#dc2626;--blue:#2563eb;--font:'Noto Sans KR',sans-serif;--mono:'JetBrains Mono','Consolas',monospace;}
+  *{margin:0;padding:0;box-sizing:border-box;}body{font-family:var(--font);background:#e8eaed;font-size:15px;}
+  .page{width:210mm;min-height:295mm;margin:24px auto;background:var(--white);box-shadow:0 8px 30px rgba(0,0,0,0.12);position:relative;overflow:hidden;}
+  .chapter-page{display:flex;min-height:295mm;}.chapter-sidebar{width:10px;background:var(--navy);flex-shrink:0;}.chapter-accent-bar{width:7px;background:var(--orange);flex-shrink:0;}.chapter-body{flex:1;padding:70px 65px 50px 55px;position:relative;}
+  .chapter-watermark{position:absolute;top:-10px;right:-15px;font-size:200px;font-weight:900;color:rgba(180,195,212,0.25);line-height:1;pointer-events:none;letter-spacing:-10px;}
+  .chapter-label{font-size:15px;font-weight:500;color:var(--navy-mid);letter-spacing:2px;margin-bottom:4px;}.chapter-title{font-size:36px;font-weight:900;color:var(--navy);line-height:1.15;margin-bottom:12px;position:relative;z-index:1;}.chapter-sub{font-size:16px;color:var(--gray-500);font-weight:400;margin-bottom:20px;padding-bottom:28px;border-bottom:1px solid var(--gray-200);}
+  .obj-title{font-size:20px;font-weight:800;color:var(--navy);margin-bottom:16px;margin-top:32px;}.obj-list{list-style:none;margin-bottom:40px;}.obj-list li{padding:5px 0 5px 24px;position:relative;font-size:15px;color:var(--gray-700);line-height:1.6;}.obj-list li::before{content:'';position:absolute;left:8px;}
+  .content-page{padding:55px 65px;}.unit-header-bar{display:flex;align-items:baseline;gap:10px;margin-bottom:8px;}.unit-tag{font-size:12px;color:var(--orange);font-weight:600;letter-spacing:1px;}.unit-title-sm{font-size:14px;color:var(--gray-400);font-weight:400;}
+  .section-title{font-size:24px;font-weight:800;color:var(--navy);margin-bottom:24px;margin-top:8px;padding-left:16px;border-left:5px solid var(--orange);}
+  .section-title-sm{font-size:20px;font-weight:700;color:var(--navy);margin-bottom:16px;margin-top:28px;padding-left:14px;border-left:4px solid var(--navy-light);}
+  p{font-size:15.5px;line-height:1.9;color:var(--text);margin-bottom:18px;}p code,li code{font-family:var(--mono);font-size:13.5px;background:#f1f3f5;padding:2px 7px;border-radius:4px;color:var(--navy);font-weight:500;}
+  .code-wrap{border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.08);border:1px solid var(--gray-200);margin:22px 0;}.code-bar{display:flex;align-items:center;justify-content:space-between;padding:9px 18px;background:var(--navy);font-size:12px;}.code-bar-lang{font-family:var(--mono);font-weight:600;color:var(--white);}.code-bar-file{color:rgba(255,255,255,0.6);}
+  .code-body{background:#f8f9fb;padding:20px 24px;font-family:var(--mono);font-size:13.5px;line-height:1.75;white-space:pre;overflow-x:auto;}
+  .s-kw{color:#7c3aed;font-weight:600;}.s-type{color:#0369a1;font-weight:600;}.s-fn{color:#c2410c;}.s-str{color:#16a34a;}.s-num{color:#2563eb;}.s-cm{color:#9ca3af;font-style:italic;}.s-pp{color:#be185d;font-weight:600;}
+  .output-wrap{border-radius:10px;overflow:hidden;margin:10px 0 20px;box-shadow:0 2px 8px rgba(0,0,0,0.06);border:1px solid #d1d5db;}.output-bar{padding:9px 18px;background:#374151;font-size:12px;font-weight:600;color:var(--white);}.output-body{padding:16px 20px;font-family:var(--mono);font-size:13.5px;line-height:1.7;color:var(--gray-800);background:#f1f5f9;white-space:pre;}
+  .tip{margin:28px 0;padding:18px 24px;background:#dbeafe;border-left:5px solid #2563eb;border-radius:0 12px 12px 0;font-size:14.5px;line-height:1.8;}.tip-label{font-weight:700;color:#2563eb;font-size:13px;display:block;margin-bottom:4px;}
+  .warn{margin:28px 0;padding:18px 24px;background:#fef3c7;border-left:5px solid #d97706;border-radius:0 12px 12px 0;font-size:14.5px;line-height:1.8;}.warn-label{font-weight:700;color:#d97706;font-size:13px;display:block;margin-bottom:4px;}
+  .note-box{margin:28px 0;padding:18px 24px;background:#e2e8f0;border-left:5px solid #64748b;border-radius:0 12px 12px 0;font-size:14.5px;line-height:1.8;}.note-label{font-weight:700;color:var(--gray-600);font-size:13px;display:block;margin-bottom:4px;}
+  table.trace{width:100%;border-collapse:separate;border-spacing:0;margin:28px 0;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.07);font-size:14px;}table.trace th{background:var(--navy);color:var(--white);padding:10px 16px;text-align:left;font-weight:500;font-size:13px;}table.trace td{padding:10px 16px;border-bottom:1px solid var(--gray-200);color:var(--gray-700);}table.trace tr:nth-child(even) td{background:var(--gray-50);}table.trace tr:last-child td{border-bottom:none;}table.trace td code{font-family:var(--mono);font-size:12.5px;background:#eef1f5;padding:2px 6px;border-radius:4px;color:var(--navy);}
+  .io-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}.io-card{border-radius:8px;overflow:hidden;border:1px solid var(--gray-200);}.io-h{padding:6px 14px;font-size:12px;font-weight:600;color:var(--gray-600);background:#e2e8f0;}.io-c{padding:10px 14px;font-family:var(--mono);font-size:13px;line-height:1.5;background:var(--white);white-space:pre;}
+  .algo-tag{display:inline-block;padding:3px 10px;border-radius:4px;font-size:11px;font-weight:600;background:#ede9fe;color:#7c3aed;margin-right:6px;margin-bottom:6px;}.diff{display:inline-block;padding:3px 12px;border-radius:6px;font-size:12px;font-weight:700;}.diff-gold{background:#ffd700;color:#1a2e4a;}
+  .contest-write-area{border:2px dashed var(--gray-300);border-radius:10px;overflow:hidden;margin:20px 0;}.contest-write-area:focus-within{border-color:var(--orange);border-style:solid;}.contest-write-label{background:var(--bg);color:var(--gray-500);font-size:12px;font-weight:600;padding:8px 14px;border-bottom:1px solid var(--gray-200);text-transform:uppercase;letter-spacing:0.5px;}.contest-textarea{width:100%;min-height:160px;padding:16px 18px;font-family:var(--mono);font-size:14px;line-height:1.7;color:var(--text);background:#fafbfc;border:none;outline:none;resize:vertical;tab-size:4;}.contest-textarea::placeholder{color:var(--gray-300);}
+  .page-num{position:absolute;bottom:20px;right:30px;font-size:12px;color:var(--gray-400);}
+  .connect-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin:28px 0;}.connect-card{border-radius:12px;padding:20px;text-align:center;border:1px solid var(--gray-200);box-shadow:0 3px 14px rgba(0,0,0,0.05);}.connect-card h5{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}.connect-card p{font-size:13px;margin:0;color:var(--gray-600);line-height:1.6;}
+  .cc1{border-top:3px solid #ffd700;}.cc1 h5{color:#b8860b;}.cc2{border-top:3px solid #8b5cf6;}.cc2 h5{color:#8b5cf6;}.cc3{border-top:3px solid var(--green);}.cc3 h5{color:var(--green);}
+  .step-num{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:var(--navy);color:var(--white);font-size:13px;font-weight:700;margin-right:8px;flex-shrink:0;}
+  .step-row{display:flex;align-items:flex-start;margin-bottom:14px;}
+  .graph-visual{background:#f8f9fb;border:1px solid var(--gray-200);border-radius:12px;padding:24px;margin:20px 0;text-align:center;}
+  .graph-visual svg{max-width:100%;}
+  ol.line-explain{list-style:none;counter-reset:line-ex;margin:16px 0;}
+  ol.line-explain li{counter-increment:line-ex;padding:6px 0 6px 0;font-size:14.5px;line-height:1.7;color:var(--gray-700);border-bottom:1px solid var(--gray-100);}
+  ol.line-explain li b{color:var(--navy);font-weight:600;}
+  .highlight-row td{background:#fef3c7 !important;font-weight:600;}
+  img{background:#ffffff !important;}
+  @media print{body{background:white;}.page{box-shadow:none;margin:0;page-break-after:always;}}
+</style>
+</head>
+<body>
+
+<!-- ==================== COVER ==================== -->
+<div class="page">
+  <div class="chapter-page">
+    <div class="chapter-sidebar"></div>
+    <div class="chapter-accent-bar"></div>
+    <div class="chapter-body">
+      <div class="chapter-watermark">G1</div>
+      <div class="chapter-label">GOLD &middot; KOI 2024 유형 연습</div>
+      <div class="chapter-title">도시 연결망<br><span style="font-size:28px;color:var(--navy-mid);">다익스트라 + 충전소 할인</span></div>
+      <div class="chapter-sub">고등부 1번 &mdash; 최단경로 변형 문제 &mdash; C언어 완전 설명서</div>
+
+      <div class="obj-title">이 설명서의 목표</div>
+      <ul class="obj-list">
+        <li>그래프(도시와 도로)를 C 배열로 저장하는 법을 이해한다</li>
+        <li>다익스트라 알고리즘의 원리를 "가장 싼 것부터 확정" 전략으로 이해한다</li>
+        <li>최소 힙(우선순위 큐)을 배열로 직접 만들어본다</li>
+        <li>충전소 조건을 다익스트라에 추가하는 방법을 익힌다</li>
+        <li>예제를 한 단계씩 추적하며 코드 동작을 확인한다</li>
+      </ul>
+
+      <div class="obj-title">필요한 선행 지식</div>
+      <div style="display:flex;gap:0;flex-wrap:wrap;margin-bottom:40px;">
+        <span style="padding:9px 22px;border:1.5px solid var(--gray-300);border-radius:50px;font-size:13px;font-weight:500;color:var(--gray-600);background:var(--white);">배열, 반복문, 함수</span>
+        <span style="width:36px;text-align:center;color:var(--gray-300);font-size:18px;line-height:40px;">&rarr;</span>
+        <span style="padding:9px 22px;border:1.5px solid var(--gray-300);border-radius:50px;font-size:13px;font-weight:500;color:var(--gray-600);background:var(--white);">구조체, 포인터 기초</span>
+        <span style="width:36px;text-align:center;color:var(--gray-300);font-size:18px;line-height:40px;">&rarr;</span>
+        <span style="padding:9px 22px;border:1.5px solid var(--navy);border-radius:50px;font-size:13px;font-weight:700;color:var(--navy);background:#edf2f7;">이 설명서</span>
+      </div>
+
+      <div class="connect-grid">
+        <div class="connect-card cc1">
+          <h5>PART 1</h5>
+          <p>문제 이해<br>그래프란 뭔가<br>인접 리스트 저장</p>
+        </div>
+        <div class="connect-card cc2">
+          <h5>PART 2</h5>
+          <p>다익스트라 원리<br>최소 힙 만들기<br>충전소 처리</p>
+        </div>
+        <div class="connect-card cc3">
+          <h5>PART 3</h5>
+          <p>전체 코드<br>예제 추적<br>직접 풀어보기</p>
+        </div>
+      </div>
+      <div style="margin-top:20px;"><span class="diff diff-gold">GOLD</span> <span class="algo-tag">다익스트라</span><span class="algo-tag">그래프</span><span class="algo-tag">최소 힙</span></div>
+      <div class="page-num">1</div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== PAGE 2: 문제 설명 ==================== -->
+<div class="page"><div class="content-page">
+  <div class="unit-header-bar"><span class="unit-tag">PART 1</span><span class="unit-title-sm">문제 이해하기</span></div>
+  <div class="section-title">문제를 읽어보자</div>
+
+  <div class="note-box">
+    <span class="note-label">문제 요약</span>
+    N개의 도시와 M개의 <b>단방향</b> 도로가 있다.<br>
+    도시 S에서 E까지 이동하는 <b>최소 비용</b>을 구한다.<br>
+    이동 중 <b>충전소</b>가 있는 도시에 도착하면, 지금까지 쌓인 비용이 <b>절반</b>으로 줄어든다. (소수점 이하 버림)<br>
+    충전소는 여러 번 이용할 수 있다.
+  </div>
+
+  <div class="section-title-sm">입력 형식</div>
+  <div class="code-wrap">
+    <div class="code-bar"><span class="code-bar-lang">입력</span><span class="code-bar-file">stdin</span></div>
+    <div class="code-body"><span class="s-cm">// 첫째 줄: 도시 수 N, 도로 수 M, 출발 S, 도착 E</span>
+5 6 1 5
+<span class="s-cm">// 둘째 줄: 충전소 수 K, 이어서 충전소 도시 번호 K개</span>
+1 3
+<span class="s-cm">// 다음 M줄: 도로 (출발 도착 비용)</span>
+1 2 4
+2 3 3
+3 4 2
+4 5 5
+1 4 10
+2 5 15</div>
+  </div>
+
+  <div class="section-title-sm">제약 조건</div>
+  <table class="trace">
+    <tr><th>항목</th><th>범위</th><th>의미</th></tr>
+    <tr><td>N (도시 수)</td><td><code>2 ~ 100,000</code></td><td>도시가 최대 10만 개</td></tr>
+    <tr><td>M (도로 수)</td><td><code>1 ~ 300,000</code></td><td>도로가 최대 30만 개</td></tr>
+    <tr><td>K (충전소 수)</td><td><code>0 ~ N</code></td><td>충전소가 없을 수도 있다</td></tr>
+    <tr><td>c (도로 비용)</td><td><code>1 ~ 10,000</code></td><td>비용은 항상 양수</td></tr>
+  </table>
+
+  <div class="section-title-sm">예제 그래프를 그림으로 보자</div>
+  <div class="graph-visual">
+    <svg width="480" height="220" viewBox="0 0 480 220">
+      <!-- 도시 원 -->
+      <circle cx="60" cy="110" r="28" fill="#1a2e4a" />
+      <text x="60" y="116" text-anchor="middle" fill="white" font-size="16" font-weight="700" font-family="Noto Sans KR">1</text>
+      <circle cx="190" cy="50" r="28" fill="#1a2e4a" />
+      <text x="190" y="56" text-anchor="middle" fill="white" font-size="16" font-weight="700" font-family="Noto Sans KR">2</text>
+      <circle cx="300" cy="50" r="28" fill="#e07830" stroke="#c2410c" stroke-width="3" />
+      <text x="300" y="56" text-anchor="middle" fill="white" font-size="16" font-weight="700" font-family="Noto Sans KR">3</text>
+      <text x="300" y="16" text-anchor="middle" fill="#e07830" font-size="11" font-weight="600" font-family="Noto Sans KR">충전소</text>
+      <circle cx="350" cy="170" r="28" fill="#1a2e4a" />
+      <text x="350" y="176" text-anchor="middle" fill="white" font-size="16" font-weight="700" font-family="Noto Sans KR">4</text>
+      <circle cx="440" cy="110" r="28" fill="#16a34a" />
+      <text x="440" y="116" text-anchor="middle" fill="white" font-size="16" font-weight="700" font-family="Noto Sans KR">5</text>
+      <text x="440" y="82" text-anchor="middle" fill="#16a34a" font-size="11" font-weight="600" font-family="Noto Sans KR">도착</text>
+      <text x="60" y="152" text-anchor="middle" fill="#2563eb" font-size="11" font-weight="600" font-family="Noto Sans KR">출발</text>
+      <!-- 간선 (화살표) -->
+      <!-- 1->2: 4 -->
+      <line x1="88" y1="100" x2="162" y2="60" stroke="#6b7280" stroke-width="2" marker-end="url(#arrow)"/>
+      <text x="115" y="70" fill="#dc2626" font-size="13" font-weight="700" font-family="JetBrains Mono">4</text>
+      <!-- 2->3: 3 -->
+      <line x1="218" y1="50" x2="272" y2="50" stroke="#6b7280" stroke-width="2" marker-end="url(#arrow)"/>
+      <text x="245" y="42" fill="#dc2626" font-size="13" font-weight="700" font-family="JetBrains Mono">3</text>
+      <!-- 3->4: 2 -->
+      <line x1="315" y1="76" x2="340" y2="142" stroke="#6b7280" stroke-width="2" marker-end="url(#arrow)"/>
+      <text x="340" y="112" fill="#dc2626" font-size="13" font-weight="700" font-family="JetBrains Mono">2</text>
+      <!-- 4->5: 5 -->
+      <line x1="378" y1="160" x2="415" y2="128" stroke="#6b7280" stroke-width="2" marker-end="url(#arrow)"/>
+      <text x="405" y="155" fill="#dc2626" font-size="13" font-weight="700" font-family="JetBrains Mono">5</text>
+      <!-- 1->4: 10 -->
+      <line x1="82" y1="130" x2="322" y2="165" stroke="#6b7280" stroke-width="2" marker-end="url(#arrow)"/>
+      <text x="190" y="165" fill="#dc2626" font-size="13" font-weight="700" font-family="JetBrains Mono">10</text>
+      <!-- 2->5: 15 -->
+      <line x1="215" y1="65" x2="415" y2="100" stroke="#6b7280" stroke-width="2" marker-end="url(#arrow)"/>
+      <text x="310" y="92" fill="#dc2626" font-size="13" font-weight="700" font-family="JetBrains Mono">15</text>
+      <defs>
+        <marker id="arrow" markerWidth="8" markerHeight="8" refX="8" refY="4" orient="auto">
+          <path d="M0,0 L8,4 L0,8 Z" fill="#6b7280"/>
+        </marker>
+      </defs>
+    </svg>
+  </div>
+
+  <p>
+    주황색 원이 <b>충전소</b>(도시 3)이다. 여기에 도착하면 누적 비용이 절반으로 줄어든다.<br>
+    녹색 원이 <b>도착지</b>(도시 5)이다. 출발지는 도시 1이다.
+  </p>
+
+  <div class="tip">
+    <span class="tip-label">핵심 포인트</span>
+    "단방향"이라는 건, 1에서 2로 가는 도로가 있다고 해서 2에서 1로 갈 수 있는 게 아니라는 뜻이다.<br>
+    일방통행 도로라고 생각하면 된다.
+  </div>
+  <div class="page-num">2</div>
+</div></div>
+
+<!-- ==================== PAGE 3: 그래프 저장 ==================== -->
+<div class="page"><div class="content-page">
+  <div class="unit-header-bar"><span class="unit-tag">PART 1</span><span class="unit-title-sm">그래프 저장하기</span></div>
+  <div class="section-title">그래프를 컴퓨터에 어떻게 저장할까?</div>
+
+  <p>
+    도시와 도로의 관계를 저장하는 방법은 여러 가지가 있지만,
+    도시가 최대 10만 개이므로 <b>인접 리스트</b>를 사용한다.
+  </p>
+
+  <div class="note-box">
+    <span class="note-label">인접 리스트란?</span>
+    각 도시마다 "이 도시에서 갈 수 있는 도시 목록"을 따로 만드는 방식이다.<br>
+    <br>
+    도시 1의 목록: [(도시2, 비용4), (도시4, 비용10)]<br>
+    도시 2의 목록: [(도시3, 비용3), (도시5, 비용15)]<br>
+    도시 3의 목록: [(도시4, 비용2)]<br>
+    도시 4의 목록: [(도시5, 비용5)]<br>
+    도시 5의 목록: (없음)<br>
+    <br>
+    이렇게 하면 메모리도 적게 쓰고, 특정 도시에서 갈 수 있는 곳만 빠르게 확인할 수 있다.
+  </div>
+
+  <div class="section-title-sm">C 코드: 인접 리스트 저장</div>
+
+  <p>
+    C에서는 연결 리스트 대신 <b>배열 3개</b>로 인접 리스트를 만든다.
+    이게 가장 빠르고 간단하다.
+  </p>
+
+  <div class="code-wrap">
+    <div class="code-bar"><span class="code-bar-lang">C</span><span class="code-bar-file">인접 리스트 구조</span></div>
+    <div class="code-body"><span class="s-pp">#define</span> MAXN <span class="s-num">100001</span>
+<span class="s-pp">#define</span> MAXM <span class="s-num">300001</span>
+
+<span class="s-cm">// head[u] = 도시 u에서 나가는 간선 중 "첫 번째" 간선 번호</span>
+<span class="s-type">int</span> head[MAXN];
+
+<span class="s-cm">// to[i]   = i번 간선의 도착 도시</span>
+<span class="s-cm">// w[i]    = i번 간선의 비용</span>
+<span class="s-cm">// nxt[i]  = i번 간선과 같은 출발 도시를 가진 "다음" 간선 번호</span>
+<span class="s-type">int</span> to[MAXM], w[MAXM], nxt[MAXM];
+<span class="s-type">int</span> cnt = <span class="s-num">0</span>;  <span class="s-cm">// 간선 개수 카운터</span>
+
+<span class="s-cm">// 간선 추가 함수: u에서 v로, 비용 c</span>
+<span class="s-type">void</span> <span class="s-fn">add_edge</span>(<span class="s-type">int</span> u, <span class="s-type">int</span> v, <span class="s-type">int</span> c) {
+    cnt++;              <span class="s-cm">// 새 간선 번호</span>
+    to[cnt] = v;        <span class="s-cm">// 도착지 저장</span>
+    w[cnt]  = c;        <span class="s-cm">// 비용 저장</span>
+    nxt[cnt] = head[u]; <span class="s-cm">// 기존 첫 간선을 뒤로 밀기</span>
+    head[u] = cnt;      <span class="s-cm">// 새 간선을 첫 번째로</span>
+}</div>
+  </div>
+
+  <ol class="line-explain">
+    <li><b>head[u]</b> &mdash; 도시 u에서 나가는 간선들의 시작점이다. 처음엔 0(없음)이다.</li>
+    <li><b>to[i], w[i]</b> &mdash; i번 간선이 어디로 가는지, 비용이 얼마인지 저장한다.</li>
+    <li><b>nxt[i]</b> &mdash; 같은 도시에서 나가는 다른 간선을 연결한다. 체인처럼 엮는 거다.</li>
+    <li><b>add_edge</b> &mdash; 새 간선을 맨 앞에 끼워넣는다. 기존 목록 앞에 새 것을 붙이는 방식이다.</li>
+  </ol>
+
+  <div class="tip">
+    <span class="tip-label">비유하면</span>
+    head[1]은 "도시 1의 전화번호부 첫 페이지"이고,<br>
+    nxt[i]는 "다음 페이지"라고 생각하면 된다.<br>
+    새 연락처(간선)를 추가할 때마다 맨 앞 페이지에 끼워넣는 거다.
+  </div>
+
+  <div class="section-title-sm">도시 u에서 나가는 모든 간선 순회</div>
+  <div class="code-wrap">
+    <div class="code-bar"><span class="code-bar-lang">C</span><span class="code-bar-file">간선 순회</span></div>
+    <div class="code-body"><span class="s-cm">// 도시 u에서 나가는 모든 도로를 하나씩 확인</span>
+<span class="s-kw">for</span> (<span class="s-type">int</span> e = head[u]; e != <span class="s-num">0</span>; e = nxt[e]) {
+    <span class="s-type">int</span> v = to[e];   <span class="s-cm">// 도착 도시</span>
+    <span class="s-type">int</span> c = w[e];    <span class="s-cm">// 비용</span>
+    <span class="s-cm">// v까지 비용 c로 갈 수 있다!</span>
+}</div>
+  </div>
+
+  <p>
+    <code>e = head[u]</code>로 첫 간선부터 시작해서, <code>e = nxt[e]</code>로 다음 간선으로 이동한다.
+    <code>e</code>가 0이면 더 이상 간선이 없다는 뜻이다.
+  </p>
+
+  <div class="page-num">3</div>
+</div></div>
+
+<!-- ==================== PAGE 4: 다익스트라 개념 ==================== -->
+<div class="page"><div class="content-page">
+  <div class="unit-header-bar"><span class="unit-tag">PART 2</span><span class="unit-title-sm">다익스트라 알고리즘</span></div>
+  <div class="section-title">가장 싼 길부터 확정하는 전략</div>
+
+  <p>
+    다익스트라 알고리즘은 <b>"지금까지 가장 적은 비용으로 갈 수 있는 도시부터 확정한다"</b>는 전략이다.
+  </p>
+
+  <div class="note-box">
+    <span class="note-label">다익스트라의 핵심 아이디어</span>
+    1. 출발지의 비용을 0으로 놓고, 나머지는 모두 무한대로 놓는다.<br>
+    2. 비용이 가장 작은 도시를 하나 꺼낸다.<br>
+    3. 그 도시에서 갈 수 있는 이웃 도시들의 비용을 갱신한다.<br>
+    4. 2~3을 반복한다. 도착지를 꺼내면 끝!
+  </div>
+
+  <p>
+    "비용이 가장 작은 도시를 꺼내는" 작업이 핵심인데, 이걸 빠르게 하려면 <b>최소 힙</b>이 필요하다.
+  </p>
+
+  <div class="section-title-sm">최소 힙이란?</div>
+  <p>
+    최소 힙은 <b>"가장 작은 값을 빠르게 꺼낼 수 있는 자료구조"</b>이다.<br>
+    넣기(push)와 꺼내기(pop) 모두 <code>O(log N)</code>으로 빠르다.
+  </p>
+
+  <div class="tip">
+    <span class="tip-label">비유하면</span>
+    손님이 번호표를 뽑아서 대기하는 은행을 떠올려보자.<br>
+    일반 줄은 먼저 온 순서대로 부르지만, 최소 힙은 <b>번호가 가장 작은 사람</b>을 먼저 부른다.<br>
+    새 손님이 와도 자동으로 정렬되어 항상 가장 작은 번호가 맨 앞에 있다.
+  </div>
+
+  <div class="section-title-sm">C 코드: 최소 힙</div>
+  <div class="code-wrap">
+    <div class="code-bar"><span class="code-bar-lang">C</span><span class="code-bar-file">최소 힙 구현</span></div>
+    <div class="code-body"><span class="s-kw">typedef</span> <span class="s-kw">struct</span> {
+    <span class="s-type">long long</span> cost;  <span class="s-cm">// 비용</span>
+    <span class="s-type">int</span> node;         <span class="s-cm">// 도시 번호</span>
+} <span class="s-type">Node</span>;
+
+<span class="s-type">Node</span> heap[MAXM * <span class="s-num">2</span>];
+<span class="s-type">int</span> heap_size = <span class="s-num">0</span>;
+
+<span class="s-cm">// 힙에 넣기: 맨 끝에 넣고 위로 올린다</span>
+<span class="s-type">void</span> <span class="s-fn">push</span>(<span class="s-type">long long</span> c, <span class="s-type">int</span> n) {
+    <span class="s-type">int</span> i = ++heap_size;
+    heap[i].cost = c;
+    heap[i].node = n;
+    <span class="s-cm">// 부모보다 작으면 위로 올린다 (swap)</span>
+    <span class="s-kw">while</span> (i > <span class="s-num">1</span> && heap[i].cost < heap[i/<span class="s-num">2</span>].cost) {
+        <span class="s-type">Node</span> tmp = heap[i];
+        heap[i] = heap[i/<span class="s-num">2</span>];
+        heap[i/<span class="s-num">2</span>] = tmp;
+        i /= <span class="s-num">2</span>;
+    }
+}
+
+<span class="s-cm">// 힙에서 꺼내기: 맨 위(최솟값)를 꺼내고 재정렬</span>
+<span class="s-type">Node</span> <span class="s-fn">pop</span>() {
+    <span class="s-type">Node</span> top = heap[<span class="s-num">1</span>];         <span class="s-cm">// 최솟값 저장</span>
+    heap[<span class="s-num">1</span>] = heap[heap_size--]; <span class="s-cm">// 맨 끝을 맨 위로</span>
+    <span class="s-type">int</span> i = <span class="s-num">1</span>;
+    <span class="s-kw">while</span> (<span class="s-num">1</span>) {
+        <span class="s-type">int</span> s = i;  <span class="s-cm">// 가장 작은 자식 찾기</span>
+        <span class="s-kw">if</span> (<span class="s-num">2</span>*i <= heap_size && heap[<span class="s-num">2</span>*i].cost < heap[s].cost) s = <span class="s-num">2</span>*i;
+        <span class="s-kw">if</span> (<span class="s-num">2</span>*i+<span class="s-num">1</span> <= heap_size && heap[<span class="s-num">2</span>*i+<span class="s-num">1</span>].cost < heap[s].cost) s = <span class="s-num">2</span>*i+<span class="s-num">1</span>;
+        <span class="s-kw">if</span> (s == i) <span class="s-kw">break</span>;       <span class="s-cm">// 더 작은 자식 없으면 끝</span>
+        <span class="s-type">Node</span> tmp = heap[i];
+        heap[i] = heap[s];
+        heap[s] = tmp;
+        i = s;
+    }
+    <span class="s-kw">return</span> top;
+}</div>
+  </div>
+
+  <ol class="line-explain">
+    <li><b>push</b> &mdash; 새 값을 맨 끝에 넣고, 부모보다 작으면 자리를 바꾸며 올라간다.</li>
+    <li><b>pop</b> &mdash; 맨 위(가장 작은 값)를 꺼낸다. 맨 끝 값을 맨 위로 올리고, 자식보다 크면 내려보낸다.</li>
+    <li>이 두 연산 모두 트리 높이만큼만 반복하므로 <code>O(log N)</code>이다.</li>
+  </ol>
+
+  <div class="page-num">4</div>
+</div></div>
+
+<!-- ==================== PAGE 5: 충전소 처리 + 다익스트라 ==================== -->
+<div class="page"><div class="content-page">
+  <div class="unit-header-bar"><span class="unit-tag">PART 2</span><span class="unit-title-sm">충전소 처리</span></div>
+  <div class="section-title">이 문제의 핵심: 충전소에서 비용 절반</div>
+
+  <p>
+    일반 다익스트라에서는 이웃 도시에 도착할 때 비용을 이렇게 계산한다:
+  </p>
+  <div class="code-wrap">
+    <div class="code-bar"><span class="code-bar-lang">C</span><span class="code-bar-file">일반 다익스트라</span></div>
+    <div class="code-body"><span class="s-type">long long</span> new_cost = dist[u] + c;  <span class="s-cm">// 현재까지 비용 + 도로 비용</span>
+<span class="s-kw">if</span> (new_cost < dist[v]) {
+    dist[v] = new_cost;               <span class="s-cm">// 더 싸면 갱신</span>
+}</div>
+  </div>
+
+  <p>
+    이 문제에서는 <b>딱 한 줄만 추가</b>하면 된다:
+  </p>
+  <div class="code-wrap">
+    <div class="code-bar"><span class="code-bar-lang">C</span><span class="code-bar-file">충전소 추가</span></div>
+    <div class="code-body"><span class="s-type">long long</span> new_cost = dist[u] + c;
+<span class="s-kw">if</span> (charge[v]) new_cost /= <span class="s-num">2</span>;       <span class="s-cm">// *** 충전소면 비용 절반! ***</span>
+<span class="s-kw">if</span> (new_cost < dist[v]) {
+    dist[v] = new_cost;
+}</div>
+  </div>
+
+  <div class="warn">
+    <span class="warn-label">왜 이렇게 간단할까?</span>
+    충전소에 도착하면 비용이 줄어든다. 줄어든 비용은 항상 0 이상이다.<br>
+    그리고 같은 도시에 비용 10으로 도착하는 것과 비용 12로 도착하는 것 중,<br>
+    <b>10이 항상 더 유리하다</b> (이후 어떤 경로를 가든).<br>
+    그래서 <code>dist[v]</code>를 최솟값으로 갱신하기만 하면 다익스트라가 올바르게 동작한다.
+  </div>
+
+  <div class="section-title-sm">charge 배열은 이렇게 만든다</div>
+  <div class="code-wrap">
+    <div class="code-bar"><span class="code-bar-lang">C</span><span class="code-bar-file">충전소 입력</span></div>
+    <div class="code-body"><span class="s-type">int</span> charge[MAXN] = {<span class="s-num">0</span>};  <span class="s-cm">// 0이면 일반, 1이면 충전소</span>
+
+<span class="s-type">int</span> K;
+<span class="s-fn">scanf</span>(<span class="s-str">"%d"</span>, &K);
+<span class="s-kw">for</span> (<span class="s-type">int</span> i = <span class="s-num">0</span>; i < K; i++) {
+    <span class="s-type">int</span> x;
+    <span class="s-fn">scanf</span>(<span class="s-str">"%d"</span>, &x);
+    charge[x] = <span class="s-num">1</span>;           <span class="s-cm">// 이 도시는 충전소!</span>
+}</div>
+  </div>
+
+  <div class="section-title-sm">다익스트라 전체 함수</div>
+  <div class="code-wrap">
+    <div class="code-bar"><span class="code-bar-lang">C</span><span class="code-bar-file">dijkstra()</span></div>
+    <div class="code-body"><span class="s-pp">#define</span> INF <span class="s-num">1e18</span>   <span class="s-cm">// 아주 큰 수 (도달 불가능)</span>
+
+<span class="s-type">long long</span> dist[MAXN];  <span class="s-cm">// 각 도시까지의 최소 비용</span>
+
+<span class="s-type">void</span> <span class="s-fn">dijkstra</span>(<span class="s-type">int</span> S) {
+    <span class="s-cm">// 1단계: 모든 비용을 무한대로 초기화</span>
+    <span class="s-kw">for</span> (<span class="s-type">int</span> i = <span class="s-num">1</span>; i <= N; i++) dist[i] = INF;
+    dist[S] = <span class="s-num">0</span>;          <span class="s-cm">// 출발지 비용은 0</span>
+    heap_size = <span class="s-num">0</span>;
+    <span class="s-fn">push</span>(<span class="s-num">0</span>, S);            <span class="s-cm">// 출발지를 힙에 넣기</span>
+
+    <span class="s-cm">// 2단계: 힙이 빌 때까지 반복</span>
+    <span class="s-kw">while</span> (heap_size > <span class="s-num">0</span>) {
+        <span class="s-type">Node</span> cur = <span class="s-fn">pop</span>();  <span class="s-cm">// 가장 비용이 작은 도시 꺼내기</span>
+        <span class="s-type">int</span> u = cur.node;
+
+        <span class="s-cm">// 이미 더 싼 비용으로 처리됐으면 건너뛰기</span>
+        <span class="s-kw">if</span> (cur.cost > dist[u]) <span class="s-kw">continue</span>;
+
+        <span class="s-cm">// 3단계: u에서 갈 수 있는 모든 이웃 확인</span>
+        <span class="s-kw">for</span> (<span class="s-type">int</span> e = head[u]; e; e = nxt[e]) {
+            <span class="s-type">int</span> v = to[e];
+            <span class="s-type">long long</span> nc = dist[u] + w[e];  <span class="s-cm">// 새 비용</span>
+
+            <span class="s-kw">if</span> (charge[v]) nc /= <span class="s-num">2</span>;         <span class="s-cm">// 충전소면 절반!</span>
+
+            <span class="s-kw">if</span> (nc < dist[v]) {
+                dist[v] = nc;               <span class="s-cm">// 갱신</span>
+                <span class="s-fn">push</span>(nc, v);                <span class="s-cm">// 힙에 넣기</span>
+            }
+        }
+    }
+}</div>
+  </div>
+
+  <ol class="line-explain">
+    <li><b>1단계</b> &mdash; 출발지는 0, 나머지는 무한대(아직 모른다는 뜻)로 시작한다.</li>
+    <li><b>2단계</b> &mdash; 힙에서 가장 싼 도시를 꺼내서 처리한다.</li>
+    <li><b>continue</b> &mdash; 같은 도시가 힙에 여러 번 들어갈 수 있다. 이미 더 싸게 처리됐으면 무시한다.</li>
+    <li><b>3단계</b> &mdash; 이웃 도시들의 비용을 계산하고, 더 싸면 갱신한다. 충전소면 /2가 핵심이다.</li>
+  </ol>
+
+  <div class="page-num">5</div>
+</div></div>
+
+<!-- ==================== PAGE 6: 전체 코드 ==================== -->
+<div class="page"><div class="content-page">
+  <div class="unit-header-bar"><span class="unit-tag">PART 3</span><span class="unit-title-sm">전체 코드</span></div>
+  <div class="section-title">완성 코드 (복사해서 제출할 수 있다)</div>
+
+  <div class="code-wrap">
+    <div class="code-bar"><span class="code-bar-lang">C</span><span class="code-bar-file">city_network.c</span></div>
+    <div class="code-body"><span class="s-pp">#include</span> <span class="s-str">&lt;stdio.h&gt;</span>
+
+<span class="s-pp">#define</span> MAXN <span class="s-num">100001</span>
+<span class="s-pp">#define</span> MAXM <span class="s-num">300001</span>
+<span class="s-pp">#define</span> INF  (<span class="s-type">long long</span>)<span class="s-num">1e18</span>
+
+<span class="s-kw">typedef</span> <span class="s-kw">struct</span> { <span class="s-type">long long</span> cost; <span class="s-type">int</span> node; } <span class="s-type">Node</span>;
+
+<span class="s-cm">/* ---- 인접 리스트 ---- */</span>
+<span class="s-type">int</span> head[MAXN], to[MAXM], w[MAXM], nxt[MAXM], cnt;
+
+<span class="s-type">void</span> <span class="s-fn">add</span>(<span class="s-type">int</span> u, <span class="s-type">int</span> v, <span class="s-type">int</span> c) {
+    cnt++; to[cnt]=v; w[cnt]=c;
+    nxt[cnt]=head[u]; head[u]=cnt;
+}
+
+<span class="s-cm">/* ---- 최소 힙 ---- */</span>
+<span class="s-type">Node</span> H[MAXM*<span class="s-num">2</span>]; <span class="s-type">int</span> hs;
+
+<span class="s-type">void</span> <span class="s-fn">push</span>(<span class="s-type">long long</span> c, <span class="s-type">int</span> n) {
+    <span class="s-type">int</span> i=++hs; H[i].cost=c; H[i].node=n;
+    <span class="s-kw">while</span>(i><span class="s-num">1</span> && H[i].cost<H[i/<span class="s-num">2</span>].cost)
+        { <span class="s-type">Node</span> t=H[i]; H[i]=H[i/<span class="s-num">2</span>]; H[i/<span class="s-num">2</span>]=t; i/=<span class="s-num">2</span>; }
+}
+<span class="s-type">Node</span> <span class="s-fn">pop</span>() {
+    <span class="s-type">Node</span> r=H[<span class="s-num">1</span>]; H[<span class="s-num">1</span>]=H[hs--]; <span class="s-type">int</span> i=<span class="s-num">1</span>;
+    <span class="s-kw">while</span>(<span class="s-num">1</span>){<span class="s-type">int</span> s=i;
+        <span class="s-kw">if</span>(<span class="s-num">2</span>*i<=hs && H[<span class="s-num">2</span>*i].cost<H[s].cost) s=<span class="s-num">2</span>*i;
+        <span class="s-kw">if</span>(<span class="s-num">2</span>*i+<span class="s-num">1</span><=hs && H[<span class="s-num">2</span>*i+<span class="s-num">1</span>].cost<H[s].cost) s=<span class="s-num">2</span>*i+<span class="s-num">1</span>;
+        <span class="s-kw">if</span>(s==i)<span class="s-kw">break</span>;
+        <span class="s-type">Node</span> t=H[i]; H[i]=H[s]; H[s]=t; i=s;}
+    <span class="s-kw">return</span> r;
+}
+
+<span class="s-cm">/* ---- 전역 변수 ---- */</span>
+<span class="s-type">int</span> N, M, S, E, K;
+<span class="s-type">int</span> charge[MAXN];
+<span class="s-type">long long</span> dist[MAXN];
+
+<span class="s-cm">/* ---- 다익스트라 ---- */</span>
+<span class="s-type">void</span> <span class="s-fn">dijkstra</span>() {
+    <span class="s-kw">for</span>(<span class="s-type">int</span> i=<span class="s-num">1</span>;i<=N;i++) dist[i]=INF;
+    dist[S]=<span class="s-num">0</span>; hs=<span class="s-num">0</span>; <span class="s-fn">push</span>(<span class="s-num">0</span>,S);
+
+    <span class="s-kw">while</span>(hs><span class="s-num">0</span>){
+        <span class="s-type">Node</span> cur=<span class="s-fn">pop</span>();
+        <span class="s-type">int</span> u=cur.node;
+        <span class="s-kw">if</span>(cur.cost>dist[u]) <span class="s-kw">continue</span>;
+
+        <span class="s-kw">for</span>(<span class="s-type">int</span> e=head[u]; e; e=nxt[e]){
+            <span class="s-type">int</span> v=to[e];
+            <span class="s-type">long long</span> nc=dist[u]+w[e];
+            <span class="s-kw">if</span>(charge[v]) nc/=<span class="s-num">2</span>;     <span class="s-cm">// 충전소 할인</span>
+            <span class="s-kw">if</span>(nc<dist[v]){
+                dist[v]=nc;
+                <span class="s-fn">push</span>(nc,v);
+            }
+        }
+    }
+}
+
+<span class="s-cm">/* ---- main ---- */</span>
+<span class="s-type">int</span> <span class="s-fn">main</span>() {
+    <span class="s-fn">scanf</span>(<span class="s-str">"%d%d%d%d"</span>,&N,&M,&S,&E);
+    <span class="s-fn">scanf</span>(<span class="s-str">"%d"</span>,&K);
+    <span class="s-kw">for</span>(<span class="s-type">int</span> i=<span class="s-num">0</span>;i<K;i++){
+        <span class="s-type">int</span> x; <span class="s-fn">scanf</span>(<span class="s-str">"%d"</span>,&x);
+        charge[x]=<span class="s-num">1</span>;
+    }
+    <span class="s-kw">for</span>(<span class="s-type">int</span> i=<span class="s-num">0</span>;i<M;i++){
+        <span class="s-type">int</span> u,v,c; <span class="s-fn">scanf</span>(<span class="s-str">"%d%d%d"</span>,&u,&v,&c);
+        <span class="s-fn">add</span>(u,v,c);
+    }
+    <span class="s-fn">dijkstra</span>();
+    <span class="s-kw">if</span>(dist[E]>=INF) <span class="s-fn">printf</span>(<span class="s-str">"-1\n"</span>);
+    <span class="s-kw">else</span> <span class="s-fn">printf</span>(<span class="s-str">"%lld\n"</span>,dist[E]);
+    <span class="s-kw">return</span> <span class="s-num">0</span>;
+}</div>
+  </div>
+
+  <div class="tip">
+    <span class="tip-label">코드 구조 요약</span>
+    1. <b>add()</b> &mdash; 도로 정보를 인접 리스트에 저장<br>
+    2. <b>push() / pop()</b> &mdash; 최소 힙으로 가장 싼 도시를 빠르게 꺼내기<br>
+    3. <b>dijkstra()</b> &mdash; 가장 싼 도시부터 확정하며, 충전소면 /2 적용<br>
+    4. <b>main()</b> &mdash; 입력 받고 다익스트라 실행 후 결과 출력
+  </div>
+
+  <div class="page-num">6</div>
+</div></div>
+
+<!-- ==================== PAGE 7: 예제 추적 ==================== -->
+<div class="page"><div class="content-page">
+  <div class="unit-header-bar"><span class="unit-tag">PART 3</span><span class="unit-title-sm">예제 추적</span></div>
+  <div class="section-title">예제를 한 단계씩 따라가보자</div>
+
+  <p>
+    입력: N=5, M=6, S=1, E=5, 충전소=도시3<br>
+    <code>dist = [_, 0, INF, INF, INF, INF]</code> (1번부터 시작, _는 안 씀)
+  </p>
+
+  <table class="trace">
+    <tr>
+      <th>단계</th><th>꺼낸 도시 (비용)</th><th>이웃 확인</th><th>dist 변화</th>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td><code>1 (0)</code></td>
+      <td>1 &rarr; 2: 0+4=4<br>1 &rarr; 4: 0+10=10</td>
+      <td>dist[2]=<b>4</b>, dist[4]=<b>10</b></td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td><code>2 (4)</code></td>
+      <td>2 &rarr; 3: 4+3=7, <span style="color:#e07830;font-weight:700;">충전소! 7/2=3</span><br>2 &rarr; 5: 4+15=19</td>
+      <td>dist[3]=<b>3</b>, dist[5]=<b>19</b></td>
+    </tr>
+    <tr class="highlight-row">
+      <td>3</td>
+      <td><code>3 (3)</code></td>
+      <td>3 &rarr; 4: 3+2=5 (10보다 작다!)</td>
+      <td>dist[4]=10 &rarr; <b>5</b></td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td><code>4 (5)</code></td>
+      <td>4 &rarr; 5: 5+5=10 (19보다 작다!)</td>
+      <td>dist[5]=19 &rarr; <b>10</b></td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td><code>4 (10)</code></td>
+      <td>이미 dist[4]=5로 처리됨 &rarr; <b>건너뛰기</b></td>
+      <td>변화 없음</td>
+    </tr>
+    <tr>
+      <td>6</td>
+      <td><code>5 (10)</code></td>
+      <td>도착! 5에서 나가는 간선 없음</td>
+      <td><b>최종: dist[5] = 10</b></td>
+    </tr>
+  </table>
+
+  <div class="note-box">
+    <span class="note-label">최적 경로</span>
+    1 &rarr; 2 (비용 4) &rarr; 3 (비용 7, 충전소에서 3으로 감소) &rarr; 4 (비용 5) &rarr; 5 (비용 10)<br>
+    <br>
+    충전소(도시 3)를 경유해서 비용 7이 3으로 줄었기 때문에,<br>
+    직행 1 &rarr; 4(10) &rarr; 5(15)보다 훨씬 싸다.
+  </div>
+
+  <div class="section-title-sm">만약 충전소가 없었다면?</div>
+  <table class="trace">
+    <tr><th>경로</th><th>비용 (충전소 없을 때)</th><th>비용 (충전소 있을 때)</th></tr>
+    <tr><td>1 &rarr; 2 &rarr; 3 &rarr; 4 &rarr; 5</td><td>4+3+2+5 = <b>14</b></td><td>4+3=7 &rarr; 3(충전) +2+5 = <b>10</b></td></tr>
+    <tr><td>1 &rarr; 4 &rarr; 5</td><td>10+5 = <b>15</b></td><td>10+5 = <b>15</b> (충전소 안 거침)</td></tr>
+    <tr><td>1 &rarr; 2 &rarr; 5</td><td>4+15 = <b>19</b></td><td>4+15 = <b>19</b></td></tr>
+  </table>
+
+  <p>
+    충전소를 거치면 비용이 14에서 10으로 줄어든다.<br>
+    "돌아가더라도 충전소를 거치는 게 이득"인 경우가 이 문제의 핵심이다.
+  </p>
+
+  <div class="section-title-sm">시간 복잡도</div>
+  <div class="tip">
+    <span class="tip-label">얼마나 빠른가?</span>
+    다익스트라 + 최소 힙 = <code>O((N + M) log N)</code><br>
+    N=100,000, M=300,000이면 약 400만 번 연산. 2초 안에 충분하다.
+  </div>
+
+  <div class="page-num">7</div>
+</div></div>
+
+<!-- ==================== PAGE 8: 풀이 연습 ==================== -->
+<div class="page"><div class="content-page">
+  <div class="unit-header-bar"><span class="unit-tag">PART 3</span><span class="unit-title-sm">직접 풀어보기</span></div>
+  <div class="section-title">연습 문제</div>
+
+  <p>
+    아래 입력에 대해 답을 직접 구해보자. 힌트: 충전소를 전략적으로 이용해야 한다.
+  </p>
+
+  <div class="io-grid">
+    <div class="io-card">
+      <div class="io-h">입력</div>
+      <div class="io-c">4 5 1 4
+2 2 3
+1 2 6
+1 3 10
+2 3 2
+3 4 4
+2 4 20</div>
+    </div>
+    <div class="io-card">
+      <div class="io-h">출력</div>
+      <div class="io-c">?
+(직접 계산해보자)</div>
+    </div>
+  </div>
+
+  <div class="contest-write-area">
+    <div class="contest-write-label">풀이 과정을 여기에 적어보자</div>
+    <textarea class="contest-textarea" placeholder="각 단계별로 dist 배열이 어떻게 변하는지 적어보자...
+
+예시:
+단계 1: 도시 1(비용 0) 꺼냄
+  - 1->2: 비용 6, 도시2는 충전소이므로 6/2=3
+  - 1->3: 비용 10, 도시3은 충전소이므로 10/2=5
+  dist = [_, 0, 3, 5, INF]
+
+단계 2: ..."></textarea>
+  </div>
+
+  <div class="section-title-sm">핵심 정리</div>
+
+  <table class="trace">
+    <tr><th style="width:30%;">개념</th><th>한줄 요약</th></tr>
+    <tr><td><b>그래프 저장</b></td><td>인접 리스트 = head + to + w + nxt 배열 4개</td></tr>
+    <tr><td><b>다익스트라</b></td><td>가장 싼 도시부터 꺼내서 이웃 비용 갱신, 최소 힙 사용</td></tr>
+    <tr><td><b>충전소 처리</b></td><td>도착 도시가 충전소면 <code>new_cost /= 2</code> 한 줄 추가</td></tr>
+    <tr><td><b>건너뛰기</b></td><td><code>if (cur.cost > dist[u]) continue;</code>로 중복 방지</td></tr>
+    <tr><td><b>시간 복잡도</b></td><td>O((N+M) log N) &mdash; 10만 도시도 2초 안에 해결</td></tr>
+  </table>
+
+  <div class="warn">
+    <span class="warn-label">자주 하는 실수</span>
+    1. <code>dist</code>를 <code>int</code>로 선언하면 오버플로우 난다. <b>반드시 <code>long long</code></b> 사용!<br>
+    2. 충전소 처리를 dist 갱신 <b>전에</b> 해야 한다. 갱신 후에 하면 비교가 틀어진다.<br>
+    3. 도달 불가능한 경우(<code>dist[E] >= INF</code>) 반드시 <code>-1</code> 출력!<br>
+    4. <code>head</code> 배열 초기값은 0이어야 한다. 전역으로 선언하면 자동으로 0.
+  </div>
+
+  <div class="page-num">8</div>
+</div></div>
+
+</body>
+</html>

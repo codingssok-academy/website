@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 예외 처리 활용</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+/* -- 페이지 -- */
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+/* -- 챕터 표지 -- */
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+
+/* -- 본문 -- */
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 16px; font-weight: 700; color: #1e3a5f; margin: 18px 0 10px; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+ul, ol { margin: 0 0 12px 20px; }
+li { font-size: 14px; color: #374151; line-height: 1.8; }
+
+/* -- 코드 블록 -- */
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13.5px;
+    color: #e2e8f0; line-height: 1.85; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.code .dec { color: #f9a8d4; }
+
+/* -- 따라해보세요 -- */
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '->'; color: #94a3b8; font-weight: 700; }
+
+/* -- 문제 -- */
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+
+/* -- 요약 -- */
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+/* -- 출력 박스 -- */
+.output-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #334155; line-height: 1.7; margin: 10px 0; }
+
+/* -- 비교 테이블 -- */
+.compare-table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13px; }
+.compare-table th { background: #1e3a5f; color: #fff; padding: 8px 12px; text-align: left; font-weight: 700; }
+.compare-table td { padding: 7px 12px; border-bottom: 1px solid #e2e8f0; color: #374151; }
+.compare-table tr:nth-child(even) td { background: #f8fafc; }
+.compare-table code { background: #e0e7ff; padding: 1px 5px; border-radius: 3px; font-family: 'JetBrains Mono', monospace; color: #3730a3; font-size: 12px; }
+
+/* -- 박스 -- */
+.box-key { background: #eff6ff; border-left: 4px solid #3b82f6; border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 14px 0; }
+.box-key-title { font-size: 12px; font-weight: 800; color: #1d4ed8; margin-bottom: 6px; }
+.box-key-content { font-size: 14px; color: #1e3a5f; line-height: 1.7; }
+.box-warn { background: #fff7ed; border-left: 4px solid #f97316; border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 14px 0; }
+.box-warn-title { font-size: 12px; font-weight: 800; color: #c2410c; margin-bottom: 6px; }
+.box-warn-content { font-size: 14px; color: #7c2d12; line-height: 1.7; }
+.box-tip { background: #f0fdf4; border-left: 4px solid #22c55e; border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 14px 0; }
+.box-tip-title { font-size: 12px; font-weight: 800; color: #166534; margin-bottom: 6px; }
+.box-tip-content { font-size: 14px; color: #14532d; line-height: 1.7; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- 1페이지: 표지 -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">46</div>
+        <div class="cover-label">L3 — Unit 46 · Chapter e: 파일 &amp; 에러 처리 활용</div>
+        <h1 class="cover-title">예외 처리 활용:<br>여러 에러 잡기, finally</h1>
+        <p class="cover-sub">여러 except 블록, 튜플로 묶어서 잡기, else와 finally 블록의 역할, 그리고 입력 검증 루프까지 — 실전에서 쓰이는 예외 처리 패턴을 모두 익힙니다.</p>
+
+        <!-- SVG: try-except-else-finally 전체 흐름 -->
+        <div style="margin:24px 0;">
+            <svg viewBox="0 0 500 170" style="max-width:500px;width:100%">
+                <defs>
+                    <marker id="arwCov" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                    </marker>
+                </defs>
+                <!-- try 블록 -->
+                <rect x="5" y="10" width="90" height="44" rx="8" fill="#1e3a5f"/>
+                <text x="50" y="28" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">try</text>
+                <text x="50" y="44" text-anchor="middle" font-size="9" fill="#93c5fd">코드 실행</text>
+                <!-- 에러 발생 화살표 -->
+                <line x1="98" y1="28" x2="118" y2="28" stroke="#ef4444" stroke-width="1.5" marker-end="url(#arwCov)"/>
+                <text x="108" y="22" text-anchor="middle" font-size="7" fill="#ef4444">에러</text>
+                <!-- except 블록 -->
+                <rect x="121" y="10" width="110" height="44" rx="8" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+                <text x="176" y="27" text-anchor="middle" font-size="10" fill="#991b1b" font-weight="700">except</text>
+                <text x="176" y="42" text-anchor="middle" font-size="8" fill="#7f1d1d">에러 처리</text>
+                <!-- 성공 화살표 -->
+                <line x1="98" y1="42" x2="118" y2="58" stroke="#22c55e" stroke-width="1.5" marker-end="url(#arwCov)"/>
+                <text x="108" y="68" text-anchor="middle" font-size="7" fill="#22c55e">성공</text>
+                <!-- else 블록 -->
+                <rect x="121" y="52" width="110" height="44" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="176" y="69" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">else</text>
+                <text x="176" y="84" text-anchor="middle" font-size="8" fill="#14532d">에러 없을 때만</text>
+                <!-- 항상 화살표 -->
+                <line x1="234" y1="40" x2="270" y2="40" stroke="#6366f1" stroke-width="1.5" marker-end="url(#arwCov)"/>
+                <text x="252" y="34" text-anchor="middle" font-size="7" fill="#6366f1">항상</text>
+                <!-- finally 블록 -->
+                <rect x="273" y="16" width="120" height="48" rx="8" fill="#eff6ff" stroke="#6366f1" stroke-width="1.5"/>
+                <text x="333" y="34" text-anchor="middle" font-size="10" fill="#4338ca" font-weight="700">finally</text>
+                <text x="333" y="50" text-anchor="middle" font-size="8" fill="#3730a3">무조건 실행</text>
+                <!-- 실용 패턴 박스 -->
+                <rect x="5" y="115" width="490" height="48" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+                <text x="250" y="133" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">실용 패턴: 입력 검증 루프</text>
+                <text x="250" y="151" text-anchor="middle" font-size="9" fill="#64748b">while True → try → 올바른 입력 받으면 break → ValueError 잡아서 재입력 안내</text>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/magnifying-glass.png" alt="오류 탐지" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 유닛에서 배우는 것</h3>
+            <ul>
+                <li>여러 <code>except</code> 블록으로 에러 종류에 따라 다르게 처리할 수 있습니다.</li>
+                <li><code>except (TypeError, ValueError)</code>처럼 튜플로 묶어 한 번에 잡을 수 있습니다.</li>
+                <li><code>else</code> 블록이 "에러가 없었을 때만" 실행된다는 것을 이해합니다.</li>
+                <li><code>finally</code> 블록이 에러 여부와 상관없이 항상 실행된다는 것을 이해합니다.</li>
+                <li>입력 검증 루프 패턴으로 사용자가 올바른 값을 입력할 때까지 반복할 수 있습니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- 2페이지: 여러 except 블록 -->
+<div class="page">
+    <h2>여러 except 블록 — 에러 종류별로 다르게 처리</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/lock.png" alt="안전" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>하나의 <code>try</code> 블록에 <code>except</code>를 여러 개 붙이면, 에러 종류마다 다른 처리를 할 수 있습니다. 파이썬은 위에서 아래로 순서대로 확인하다가 일치하는 첫 번째 <code>except</code>만 실행합니다.</p>
+
+    <!-- SVG: 여러 except 매칭 구조 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 110" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="arwE1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <!-- try -->
+            <rect x="5" y="36" width="90" height="38" rx="8" fill="#1e3a5f"/>
+            <text x="50" y="53" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">try</text>
+            <text x="50" y="67" text-anchor="middle" font-size="8" fill="#93c5fd">에러 발생</text>
+            <line x1="98" y1="55" x2="120" y2="20" stroke="#ef4444" stroke-width="1.5" marker-end="url(#arwE1)"/>
+            <line x1="98" y1="55" x2="120" y2="55" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#arwE1)"/>
+            <line x1="98" y1="55" x2="120" y2="88" stroke="#8b5cf6" stroke-width="1.5" marker-end="url(#arwE1)"/>
+            <!-- ValueError -->
+            <rect x="123" y="5" width="148" height="30" rx="6" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="197" y="25" text-anchor="middle" font-size="9" fill="#991b1b" font-weight="700">except ValueError</text>
+            <!-- ZeroDivisionError -->
+            <rect x="123" y="40" width="148" height="30" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="197" y="60" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">except ZeroDivisionError</text>
+            <!-- TypeError -->
+            <rect x="123" y="75" width="148" height="30" rx="6" fill="#ede9fe" stroke="#8b5cf6" stroke-width="1.5"/>
+            <text x="197" y="95" text-anchor="middle" font-size="9" fill="#5b21b6" font-weight="700">except TypeError</text>
+            <!-- 처리 박스 -->
+            <line x1="274" y1="20" x2="300" y2="20" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwE1)"/>
+            <line x1="274" y1="55" x2="300" y2="55" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwE1)"/>
+            <line x1="274" y1="90" x2="300" y2="90" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwE1)"/>
+            <rect x="303" y="6" width="170" height="98" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="388" y="26" text-anchor="middle" font-size="8" fill="#64748b">숫자를 입력하세요</text>
+            <text x="388" y="58" text-anchor="middle" font-size="8" fill="#64748b">0으로 나눌 수 없어요</text>
+            <text x="388" y="90" text-anchor="middle" font-size="8" fill="#64748b">타입이 맞지 않아요</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># 여러 except 블록 예시</span>
+
+<span class="kw">def</span> <span class="fn">safe_divide</span>(a, b):
+    <span class="kw">try</span>:
+        result = a / b
+        <span class="fn">print</span>(<span class="str">f"결과: {result}"</span>)
+    <span class="kw">except</span> ZeroDivisionError:
+        <span class="fn">print</span>(<span class="str">"오류: 0으로 나눌 수 없습니다"</span>)
+    <span class="kw">except</span> TypeError:
+        <span class="fn">print</span>(<span class="str">"오류: 숫자만 입력해야 합니다"</span>)
+
+<span class="fn">safe_divide</span>(<span class="num">10</span>, <span class="num">2</span>)
+<span class="fn">safe_divide</span>(<span class="num">10</span>, <span class="num">0</span>)
+<span class="fn">safe_divide</span>(<span class="num">10</span>, <span class="str">"두"</span>)</div>
+
+    <div class="output-box">결과: 5.0
+오류: 0으로 나눌 수 없습니다
+오류: 숫자만 입력해야 합니다</div>
+
+    <!-- SVG: 에러 종류 구분 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 480 58" style="max-width:480px;width:100%">
+            <rect x="5" y="5" width="145" height="48" rx="8" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="77" y="23" text-anchor="middle" font-size="9" fill="#991b1b" font-weight="700">ValueError</text>
+            <text x="77" y="38" text-anchor="middle" font-size="8" fill="#7f1d1d">값이 잘못됨</text>
+            <text x="77" y="50" text-anchor="middle" font-size="7" fill="#9b1c1c">int("abc")</text>
+            <rect x="165" y="5" width="145" height="48" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="237" y="23" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">ZeroDivisionError</text>
+            <text x="237" y="38" text-anchor="middle" font-size="8" fill="#78350f">0으로 나눔</text>
+            <text x="237" y="50" text-anchor="middle" font-size="7" fill="#92400e">10 / 0</text>
+            <rect x="325" y="5" width="150" height="48" rx="8" fill="#ede9fe" stroke="#8b5cf6" stroke-width="1.5"/>
+            <text x="400" y="23" text-anchor="middle" font-size="9" fill="#5b21b6" font-weight="700">TypeError</text>
+            <text x="400" y="38" text-anchor="middle" font-size="8" fill="#4c1d95">타입이 맞지 않음</text>
+            <text x="400" y="50" text-anchor="middle" font-size="7" fill="#5b21b6">"abc" + 1</text>
+        </svg>
+    </div>
+
+    <div class="box-key">
+        <div class="box-key-title">핵심 규칙</div>
+        <div class="box-key-content">에러가 발생하면 파이썬은 <code>except</code> 블록을 위에서부터 차례로 확인해 일치하는 첫 번째 블록만 실행합니다. 나머지 <code>except</code>는 건너뜁니다.</div>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+        <div class="practice-head">따라해보세요 — 여러 except</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc"><code>safe_divide(10, 0)</code>와 <code>safe_divide(10, "두")</code>를 각각 실행해 다른 오류 메시지가 나오는지 확인하세요.</div>
+                <div class="code"><span class="fn">safe_divide</span>(<span class="num">10</span>, <span class="num">0</span>)
+<span class="fn">safe_divide</span>(<span class="num">10</span>, <span class="str">"두"</span>)</div>
+                <div class="practice-result">각각 다른 오류 메시지 출력</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc"><code>int("abc")</code>를 try-except ValueError로 잡아보세요.</div>
+                <div class="code"><span class="kw">try</span>:
+    n = <span class="fn">int</span>(<span class="str">"abc"</span>)
+<span class="kw">except</span> ValueError:
+    <span class="fn">print</span>(<span class="str">"숫자로 변환할 수 없습니다"</span>)</div>
+                <div class="practice-result">숫자로 변환할 수 없습니다 출력</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">리스트 인덱스 오류 <code>IndexError</code>를 별도 except로 추가해보세요.</div>
+                <div class="code">nums = [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>]
+<span class="kw">try</span>:
+    <span class="fn">print</span>(nums[<span class="num">10</span>])
+<span class="kw">except</span> IndexError:
+    <span class="fn">print</span>(<span class="str">"인덱스 범위를 벗어났습니다"</span>)</div>
+                <div class="practice-result">인덱스 범위를 벗어났습니다 출력</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3페이지: 튜플로 묶어 잡기 + else 블록 -->
+<div class="page">
+    <h2>튜플로 묶어 잡기 &amp; else 블록</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="처리" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+    <h3>except (TypeError, ValueError) — 한 번에 여러 에러 잡기</h3>
+    <p>같은 방식으로 처리할 에러가 여러 개면 튜플로 묶어서 하나의 <code>except</code> 블록으로 잡을 수 있습니다. 코드가 짧아지고 가독성이 높아집니다.</p>
+
+    <!-- SVG: 튜플로 묶기 비교 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 90" style="max-width:480px;width:100%">
+            <!-- 분리 방식 -->
+            <rect x="5" y="5" width="220" height="80" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="115" y="22" text-anchor="middle" font-size="9" fill="#64748b" font-weight="700">분리 방식 (반복)</text>
+            <text x="20" y="38" font-size="8" fill="#374151">except ValueError:</text>
+            <text x="20" y="52" font-size="8" fill="#374151">    print("입력 오류")</text>
+            <text x="20" y="66" font-size="8" fill="#374151">except TypeError:</text>
+            <text x="20" y="80" font-size="8" fill="#374151">    print("입력 오류")</text>
+            <!-- 화살표 -->
+            <text x="240" y="50" text-anchor="middle" font-size="18" fill="#94a3b8">→</text>
+            <!-- 묶음 방식 -->
+            <rect x="260" y="5" width="215" height="80" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="367" y="22" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">튜플 방식 (간결)</text>
+            <text x="275" y="42" font-size="8" fill="#374151">except (ValueError, TypeError):</text>
+            <text x="275" y="58" font-size="8" fill="#374151">    print("입력 오류")</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># 튜플로 여러 에러를 한 번에 잡기</span>
+
+<span class="kw">def</span> <span class="fn">parse_number</span>(text):
+    <span class="kw">try</span>:
+        result = <span class="fn">int</span>(text) * <span class="num">2</span>
+        <span class="fn">print</span>(<span class="str">f"두 배: {result}"</span>)
+    <span class="kw">except</span> (ValueError, TypeError):
+        <span class="fn">print</span>(<span class="str">"오류: 정수로 변환할 수 없습니다"</span>)
+
+<span class="fn">parse_number</span>(<span class="str">"5"</span>)
+<span class="fn">parse_number</span>(<span class="str">"abc"</span>)
+<span class="fn">parse_number</span>(<span class="dec">None</span>)</div>
+
+    <div class="output-box">두 배: 10
+오류: 정수로 변환할 수 없습니다
+오류: 정수로 변환할 수 없습니다</div>
+
+    <h3>else 블록 — 에러가 없었을 때만 실행</h3>
+    <p><code>else</code> 블록은 <code>try</code> 블록이 에러 없이 완료됐을 때만 실행됩니다. "성공 후 처리" 로직을 <code>try</code> 밖으로 분리해 코드를 명확하게 만듭니다.</p>
+
+    <!-- SVG: else 실행 조건 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 480 72" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="arwEl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="5" y="16" width="80" height="40" rx="8" fill="#1e3a5f"/>
+            <text x="45" y="34" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">try</text>
+            <text x="45" y="48" text-anchor="middle" font-size="8" fill="#93c5fd">코드 실행</text>
+            <!-- 에러 없음 -->
+            <line x1="88" y1="30" x2="118" y2="30" stroke="#22c55e" stroke-width="2" marker-end="url(#arwEl)"/>
+            <text x="103" y="24" text-anchor="middle" font-size="7" fill="#22c55e" font-weight="700">에러 없음</text>
+            <rect x="121" y="16" width="100" height="40" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="171" y="34" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">else</text>
+            <text x="171" y="48" text-anchor="middle" font-size="8" fill="#14532d">성공 처리</text>
+            <!-- 에러 있음 -->
+            <line x1="88" y1="50" x2="118" y2="50" stroke="#ef4444" stroke-width="2" marker-end="url(#arwEl)"/>
+            <text x="103" y="65" text-anchor="middle" font-size="7" fill="#ef4444" font-weight="700">에러 있음</text>
+            <rect x="121" y="52" width="100" height="14" rx="4" fill="#fee2e2" stroke="#ef4444" stroke-width="1"/>
+            <text x="171" y="63" text-anchor="middle" font-size="8" fill="#991b1b">else 건너뜀</text>
+            <!-- else 건너뜀 설명 -->
+            <rect x="250" y="10" width="224" height="52" rx="8" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="362" y="28" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">else 사용 이유</text>
+            <text x="362" y="44" text-anchor="middle" font-size="8" fill="#78350f">성공 로직을 try 밖으로 분리</text>
+            <text x="362" y="56" text-anchor="middle" font-size="8" fill="#78350f">→ 코드 의도가 명확해짐</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># else 블록 — 에러 없을 때만 실행</span>
+
+<span class="kw">def</span> <span class="fn">read_age</span>(text):
+    <span class="kw">try</span>:
+        age = <span class="fn">int</span>(text)
+    <span class="kw">except</span> ValueError:
+        <span class="fn">print</span>(<span class="str">"숫자를 입력해주세요"</span>)
+    <span class="kw">else</span>:
+        <span class="cmt"># try가 성공했을 때만 실행</span>
+        <span class="fn">print</span>(<span class="str">f"나이 {age}세 입력 완료"</span>)
+
+<span class="fn">read_age</span>(<span class="str">"20"</span>)
+<span class="fn">read_age</span>(<span class="str">"스무살"</span>)</div>
+
+    <div class="output-box">나이 20세 입력 완료
+숫자를 입력해주세요</div>
+
+    <div class="box-tip">
+        <div class="box-tip-title">else vs try 안에 바로 쓰기</div>
+        <div class="box-tip-content">성공 처리 코드를 <code>try</code> 안에 쓸 수도 있지만, <code>else</code>로 분리하면 "어디서 에러가 날 수 있는지"가 명확해집니다. 실무 코드에서는 <code>else</code>를 권장합니다.</div>
+    </div>
+</div>
+
+<!-- 4페이지: finally 블록 -->
+<div class="page">
+    <h2>finally 블록 — 무조건 실행</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p><code>finally</code> 블록은 <code>try</code> 블록이 성공하든, 에러가 나든, <code>return</code>으로 빠져나가든 무조건 실행됩니다. 파일 닫기, 연결 해제 등 "반드시 해야 하는 정리 작업"에 사용합니다.</p>
+
+    <!-- SVG: finally 실행 보장 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 100" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="arwFin" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <!-- 경우 1: 성공 -->
+            <rect x="5" y="10" width="80" height="34" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="45" y="28" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">try 성공</text>
+            <!-- 경우 2: 에러 -->
+            <rect x="5" y="54" width="80" height="34" rx="6" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="45" y="72" text-anchor="middle" font-size="9" fill="#991b1b" font-weight="700">에러 발생</text>
+            <!-- 화살표들 -->
+            <line x1="88" y1="27" x2="160" y2="47" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwFin)"/>
+            <line x1="88" y1="71" x2="160" y2="53" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwFin)"/>
+            <!-- finally -->
+            <rect x="163" y="32" width="120" height="36" rx="8" fill="#eff6ff" stroke="#6366f1" stroke-width="2"/>
+            <text x="223" y="50" text-anchor="middle" font-size="11" fill="#4338ca" font-weight="800">finally</text>
+            <text x="223" y="62" text-anchor="middle" font-size="8" fill="#3730a3">항상 실행</text>
+            <line x1="286" y1="50" x2="320" y2="50" stroke="#6366f1" stroke-width="2" marker-end="url(#arwFin)"/>
+            <!-- 정리 작업 -->
+            <rect x="323" y="20" width="152" height="60" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="399" y="38" text-anchor="middle" font-size="9" fill="#1e3a5f" font-weight="700">정리 작업 실행</text>
+            <text x="399" y="52" text-anchor="middle" font-size="8" fill="#64748b">파일 닫기</text>
+            <text x="399" y="66" text-anchor="middle" font-size="8" fill="#64748b">연결 해제</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># finally 블록 기본 사용</span>
+
+<span class="kw">def</span> <span class="fn">divide_with_log</span>(a, b):
+    <span class="fn">print</span>(<span class="str">"--- 계산 시작 ---"</span>)
+    <span class="kw">try</span>:
+        result = a / b
+        <span class="fn">print</span>(<span class="str">f"결과: {result}"</span>)
+    <span class="kw">except</span> ZeroDivisionError:
+        <span class="fn">print</span>(<span class="str">"오류: 0으로 나눌 수 없습니다"</span>)
+    <span class="kw">finally</span>:
+        <span class="fn">print</span>(<span class="str">"--- 계산 종료 ---"</span>)  <span class="cmt"># 항상 실행</span>
+
+<span class="fn">divide_with_log</span>(<span class="num">10</span>, <span class="num">2</span>)
+<span class="fn">print</span>()
+<span class="fn">divide_with_log</span>(<span class="num">10</span>, <span class="num">0</span>)</div>
+
+    <div class="output-box">--- 계산 시작 ---
+결과: 5.0
+--- 계산 종료 ---
+
+--- 계산 시작 ---
+오류: 0으로 나눌 수 없습니다
+--- 계산 종료 ---</div>
+
+    <h3>파일 처리에서의 finally 패턴</h3>
+    <p>파일을 열 때는 예외가 발생해도 반드시 파일을 닫아야 합니다. <code>finally</code>가 이 역할을 보장합니다.</p>
+
+    <!-- SVG: 파일 처리 흐름 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 480 64" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="arwFile" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="5" y="14" width="100" height="36" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="55" y="30" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">파일 열기</text>
+            <text x="55" y="44" text-anchor="middle" font-size="8" fill="#374151">open()</text>
+            <line x1="108" y1="32" x2="130" y2="32" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwFile)"/>
+            <rect x="133" y="14" width="120" height="36" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="193" y="30" text-anchor="middle" font-size="9" fill="#374151" font-weight="700">읽기/쓰기 (try)</text>
+            <text x="193" y="44" text-anchor="middle" font-size="8" fill="#64748b">에러 가능성 있음</text>
+            <line x1="256" y1="32" x2="280" y2="32" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwFile)"/>
+            <rect x="283" y="8" width="188" height="48" rx="8" fill="#eff6ff" stroke="#6366f1" stroke-width="2"/>
+            <text x="377" y="26" text-anchor="middle" font-size="9" fill="#4338ca" font-weight="700">finally: 파일 닫기</text>
+            <text x="377" y="42" text-anchor="middle" font-size="8" fill="#3730a3">f.close() — 에러 여부 무관</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># 파일 처리에서 finally로 반드시 닫기</span>
+
+f = <span class="dec">None</span>
+<span class="kw">try</span>:
+    f = <span class="fn">open</span>(<span class="str">"data.txt"</span>, <span class="str">"r"</span>)
+    content = f.<span class="fn">read</span>()
+    <span class="fn">print</span>(content)
+<span class="kw">except</span> FileNotFoundError:
+    <span class="fn">print</span>(<span class="str">"파일을 찾을 수 없습니다"</span>)
+<span class="kw">finally</span>:
+    <span class="kw">if</span> f <span class="kw">is not</span> <span class="dec">None</span>:
+        f.<span class="fn">close</span>()
+        <span class="fn">print</span>(<span class="str">"파일 닫힘"</span>)</div>
+
+    <div class="box-warn">
+        <div class="box-warn-title">실무 팁</div>
+        <div class="box-warn-content">파일 처리는 대부분 <code>with open(...) as f:</code> 방식으로 쓰며, 이 경우 <code>with</code> 블록이 끝나면 자동으로 파일이 닫힙니다. <code>finally</code>와 동일한 효과를 더 간결하게 제공합니다.</div>
+    </div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요 — finally</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc"><code>divide_with_log(10, 2)</code>와 <code>divide_with_log(10, 0)</code>을 모두 실행해 두 경우 모두 "--- 계산 종료 ---"가 나오는지 확인하세요.</div>
+                <div class="code"><span class="fn">divide_with_log</span>(<span class="num">10</span>, <span class="num">2</span>)
+<span class="fn">divide_with_log</span>(<span class="num">10</span>, <span class="num">0</span>)</div>
+                <div class="practice-result">두 경우 모두 "--- 계산 종료 ---" 출력됨</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc"><code>try</code> 안에서 <code>return</code>으로 함수를 빠져나가도 <code>finally</code>가 실행되는지 확인하세요.</div>
+                <div class="code"><span class="kw">def</span> <span class="fn">test_finally</span>():
+    <span class="kw">try</span>:
+        <span class="kw">return</span> <span class="str">"try에서 return"</span>
+    <span class="kw">finally</span>:
+        <span class="fn">print</span>(<span class="str">"finally 실행!"</span>)
+
+<span class="fn">print</span>(<span class="fn">test_finally</span>())</div>
+                <div class="practice-result">finally 실행! 출력 후 "try에서 return" 반환</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">try-except-else-finally를 모두 갖춘 구조를 작성하고 성공/실패 두 경우로 실행하세요.</div>
+                <div class="code"><span class="kw">def</span> <span class="fn">full_example</span>(x):
+    <span class="kw">try</span>:
+        result = <span class="num">100</span> / x
+    <span class="kw">except</span> ZeroDivisionError:
+        <span class="fn">print</span>(<span class="str">"0 불가"</span>)
+    <span class="kw">else</span>:
+        <span class="fn">print</span>(<span class="str">f"성공: {result}"</span>)
+    <span class="kw">finally</span>:
+        <span class="fn">print</span>(<span class="str">"완료"</span>)
+
+<span class="fn">full_example</span>(<span class="num">5</span>)
+<span class="fn">full_example</span>(<span class="num">0</span>)</div>
+                <div class="practice-result">성공 시 "성공: 20.0" + "완료", 실패 시 "0 불가" + "완료"</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 5페이지: 실용 패턴 — 입력 검증 루프 -->
+<div class="page">
+    <h2>실용 패턴 — 입력 검증 루프</h2>
+    <p>사용자가 올바른 값을 입력할 때까지 계속 다시 묻는 패턴입니다. <code>while True</code>로 무한 반복하고, 올바른 입력이 들어오면 <code>break</code>로 루프를 빠져나갑니다.</p>
+
+    <!-- SVG: 입력 검증 루프 흐름도 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 130" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="arwLoop" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <!-- while True -->
+            <rect x="180" y="5" width="120" height="30" rx="8" fill="#1e3a5f"/>
+            <text x="240" y="24" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">while True</text>
+            <!-- 화살표 아래 -->
+            <line x1="240" y1="38" x2="240" y2="53" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwLoop)"/>
+            <!-- input() -->
+            <rect x="160" y="55" width="160" height="28" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="240" y="73" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">input() 입력 받기</text>
+            <line x1="240" y1="86" x2="240" y2="99" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwLoop)"/>
+            <!-- try -->
+            <rect x="155" y="101" width="170" height="28" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="240" y="119" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">try: int() 변환</text>
+            <!-- 성공 화살표 오른쪽 -->
+            <line x1="328" y1="115" x2="410" y2="115" stroke="#22c55e" stroke-width="2" marker-end="url(#arwLoop)"/>
+            <text x="369" y="108" text-anchor="middle" font-size="8" fill="#22c55e" font-weight="700">성공</text>
+            <rect x="413" y="101" width="60" height="28" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="2"/>
+            <text x="443" y="119" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">break</text>
+            <!-- 실패 화살표 왼쪽 → 위로 루프백 -->
+            <line x1="155" y1="115" x2="60" y2="115" stroke="#ef4444" stroke-width="1.5" marker-end="url(#arwLoop)"/>
+            <text x="107" y="108" text-anchor="middle" font-size="8" fill="#ef4444" font-weight="700">ValueError</text>
+            <rect x="5" y="101" width="52" height="28" rx="6" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="31" y="119" text-anchor="middle" font-size="8" fill="#991b1b" font-weight="700">재입력</text>
+            <!-- 루프백 화살표 -->
+            <line x1="31" y1="101" x2="31" y2="20" stroke="#ef4444" stroke-width="1.5"/>
+            <line x1="31" y1="20" x2="178" y2="20" stroke="#ef4444" stroke-width="1.5" marker-end="url(#arwLoop)"/>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># 실용 패턴: 올바른 정수 입력 받기</span>
+
+<span class="kw">def</span> <span class="fn">get_integer</span>(prompt):
+    <span class="str">"""올바른 정수를 입력받을 때까지 반복"""</span>
+    <span class="kw">while</span> <span class="dec">True</span>:
+        text = <span class="fn">input</span>(prompt)
+        <span class="kw">try</span>:
+            number = <span class="fn">int</span>(text)
+        <span class="kw">except</span> ValueError:
+            <span class="fn">print</span>(<span class="str">f"'{text}'은 정수가 아닙니다. 다시 입력하세요."</span>)
+        <span class="kw">else</span>:
+            <span class="kw">return</span> number   <span class="cmt"># 성공 시 값 반환하며 루프 종료</span>
+
+age = <span class="fn">get_integer</span>(<span class="str">"나이를 입력하세요: "</span>)
+<span class="fn">print</span>(<span class="str">f"입력된 나이: {age}"</span>)</div>
+
+    <div class="output-box">나이를 입력하세요: 스무살
+'스무살'은 정수가 아닙니다. 다시 입력하세요.
+나이를 입력하세요: twenty
+'twenty'은 정수가 아닙니다. 다시 입력하세요.
+나이를 입력하세요: 20
+입력된 나이: 20</div>
+
+    <!-- SVG: 입력 검증 루프 활용 예시 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 480 58" style="max-width:480px;width:100%">
+            <rect x="5" y="5" width="145" height="48" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="77" y="22" text-anchor="middle" font-size="9" fill="#1e3a5f" font-weight="700">활용 1 — 범위 검증</text>
+            <text x="77" y="38" text-anchor="middle" font-size="8" fill="#64748b">1~100 사이 입력 요구</text>
+            <text x="77" y="50" text-anchor="middle" font-size="7" fill="#64748b">int 변환 + if 범위 체크</text>
+            <rect x="168" y="5" width="145" height="48" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="240" y="22" text-anchor="middle" font-size="9" fill="#1e3a5f" font-weight="700">활용 2 — 선택지 검증</text>
+            <text x="240" y="38" text-anchor="middle" font-size="8" fill="#64748b">메뉴 번호 1/2/3 중 선택</text>
+            <text x="240" y="50" text-anchor="middle" font-size="7" fill="#64748b">int 변환 + not in 체크</text>
+            <rect x="331" y="5" width="144" height="48" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="403" y="22" text-anchor="middle" font-size="9" fill="#1e3a5f" font-weight="700">활용 3 — 재시도 횟수 제한</text>
+            <text x="403" y="38" text-anchor="middle" font-size="8" fill="#64748b">attempts 카운터 추가</text>
+            <text x="403" y="50" text-anchor="middle" font-size="7" fill="#64748b">3회 초과 시 강제 종료</text>
+        </svg>
+    </div>
+
+    <h3>범위까지 검증하는 확장 패턴</h3>
+    <div class="code"><span class="cmt"># 범위 검증 포함 입력 루프</span>
+
+<span class="kw">def</span> <span class="fn">get_score</span>():
+    <span class="str">"""0~100 사이 점수 입력 받기"""</span>
+    <span class="kw">while</span> <span class="dec">True</span>:
+        <span class="kw">try</span>:
+            score = <span class="fn">int</span>(<span class="fn">input</span>(<span class="str">"점수 (0~100): "</span>))
+        <span class="kw">except</span> ValueError:
+            <span class="fn">print</span>(<span class="str">"숫자를 입력해주세요"</span>)
+            <span class="kw">continue</span>   <span class="cmt"># 루프 맨 위로</span>
+
+        <span class="kw">if not</span> (<span class="num">0</span> &lt;= score &lt;= <span class="num">100</span>):
+            <span class="fn">print</span>(<span class="str">"0과 100 사이로 입력해주세요"</span>)
+        <span class="kw">else</span>:
+            <span class="kw">return</span> score</div>
+</div>
+
+<!-- 6페이지: 종합 예제 + 문제 -->
+<div class="page">
+    <h2>전체 구조 요약 &amp; 종합 예제</h2>
+
+    <!-- SVG: try-except-else-finally 전체 흐름 요약 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 86" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="arwSum" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="5" y="26" width="72" height="34" rx="8" fill="#1e3a5f"/>
+            <text x="41" y="45" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">try</text>
+            <line x1="80" y1="43" x2="100" y2="43" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwSum)"/>
+            <rect x="103" y="5" width="100" height="34" rx="8" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="153" y="18" text-anchor="middle" font-size="8" fill="#991b1b" font-weight="700">except</text>
+            <text x="153" y="30" text-anchor="middle" font-size="7" fill="#7f1d1d">에러 처리</text>
+            <rect x="103" y="47" width="100" height="34" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="153" y="60" text-anchor="middle" font-size="8" fill="#166534" font-weight="700">else</text>
+            <text x="153" y="72" text-anchor="middle" font-size="7" fill="#14532d">에러 없을 때만</text>
+            <line x1="206" y1="20" x2="246" y2="43" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwSum)"/>
+            <line x1="206" y1="64" x2="246" y2="51" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwSum)"/>
+            <rect x="249" y="26" width="110" height="34" rx="8" fill="#eff6ff" stroke="#6366f1" stroke-width="2"/>
+            <text x="304" y="40" text-anchor="middle" font-size="9" fill="#4338ca" font-weight="700">finally</text>
+            <text x="304" y="54" text-anchor="middle" font-size="8" fill="#3730a3">무조건 실행</text>
+            <line x1="362" y1="43" x2="390" y2="43" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwSum)"/>
+            <rect x="393" y="26" width="82" height="34" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="434" y="45" text-anchor="middle" font-size="9" fill="#374151">프로그램 계속</text>
+        </svg>
+    </div>
+
+    <h3>종합 예제 — 계산기 (입력 검증 + 여러 except + finally)</h3>
+    <div class="code"><span class="cmt"># 종합: 계산기 — 입력검증 + 여러 except + finally</span>
+
+<span class="kw">def</span> <span class="fn">calculator</span>():
+    <span class="fn">print</span>(<span class="str">"=== 나누기 계산기 ==="</span>)
+    <span class="kw">while</span> <span class="dec">True</span>:
+        <span class="kw">try</span>:
+            a = <span class="fn">int</span>(<span class="fn">input</span>(<span class="str">"첫 번째 수: "</span>))
+            b = <span class="fn">int</span>(<span class="fn">input</span>(<span class="str">"두 번째 수: "</span>))
+            result = a / b
+        <span class="kw">except</span> ValueError:
+            <span class="fn">print</span>(<span class="str">"정수를 입력하세요. 다시 시도합니다."</span>)
+            <span class="kw">continue</span>
+        <span class="kw">except</span> ZeroDivisionError:
+            <span class="fn">print</span>(<span class="str">"0으로 나눌 수 없습니다. 다시 시도합니다."</span>)
+            <span class="kw">continue</span>
+        <span class="kw">else</span>:
+            <span class="fn">print</span>(<span class="str">f"결과: {a} / {b} = {result}"</span>)
+        <span class="kw">finally</span>:
+            <span class="fn">print</span>(<span class="str">"--- 시도 완료 ---"</span>)
+        <span class="kw">break</span>   <span class="cmt"># 성공 시 루프 종료</span>
+
+<span class="fn">calculator</span>()</div>
+
+    <div class="output-box">첫 번째 수: abc
+정수를 입력하세요. 다시 시도합니다.
+--- 시도 완료 ---
+첫 번째 수: 10
+두 번째 수: 0
+0으로 나눌 수 없습니다. 다시 시도합니다.
+--- 시도 완료 ---
+첫 번째 수: 10
+두 번째 수: 3
+결과: 10 / 3 = 3.3333333333333335
+--- 시도 완료 ---</div>
+
+    <!-- 핵심 요약 -->
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/lightbulb.png" alt="해결" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>핵심 요약</h3>
+        <ul>
+            <li><strong>여러 except</strong> — 에러 종류마다 다른 처리 블록을 연결할 수 있다</li>
+            <li><strong>except (A, B)</strong> — 튜플로 묶어 여러 에러를 같은 블록에서 처리한다</li>
+            <li><strong>else</strong> — try가 에러 없이 완료됐을 때만 실행, 성공 로직 분리에 사용</li>
+            <li><strong>finally</strong> — 성공/실패 무관하게 무조건 실행, 정리 작업에 사용</li>
+            <li><strong>입력 검증 루프</strong> — while True + try/except + break 패턴으로 올바른 입력 강제</li>
+        </ul>
+    </div>
+</div>
+
+<!-- 7페이지: 문제 -->
+<div class="page">
+    <h2>연습 문제</h2>
+
+    <!-- Q1 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q1</div>
+            <div class="problem-label">여러 except 블록 — 빈칸 채우기</div>
+            <div class="problem-diff easy">쉬움</div>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">아래 코드에서 빈칸 (a), (b)에 들어갈 에러 이름을 쓰세요. <code>int("abc")</code>는 <strong>(a)</strong>를 발생시키고, <code>10 / 0</code>은 <strong>(b)</strong>를 발생시킵니다.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <div class="problem-example-label">코드</div>
+                    <div class="problem-example-value">except (a): print("값 오류")<br>except (b): print("나누기 오류")</div>
+                </div>
+            </div>
+        </div>
+        <div class="problem-toggle">
+            <details>
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">int("abc")처럼 값이 맞지 않을 때는 ValueError, 0으로 나눌 때는 ZeroDivisionError입니다.</div>
+                </div>
+            </details>
+            <details>
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code"><span style="color:#86efac">(a)</span> ValueError
+<span style="color:#86efac">(b)</span> ZeroDivisionError</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q2</div>
+            <div class="problem-label">else와 finally 순서 이해</div>
+            <div class="problem-diff medium">보통</div>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">아래 코드를 실행하면 어떤 순서로 출력될까요? 실행 결과를 순서대로 쓰세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <div class="problem-example-label">코드</div>
+                    <div class="problem-example-value">try:<br>    x = int("5")<br>except ValueError:<br>    print("A")<br>else:<br>    print("B")<br>finally:<br>    print("C")</div>
+                </div>
+            </div>
+        </div>
+        <div class="problem-toggle">
+            <details>
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">int("5")는 성공합니다. 에러가 없으니 except는 실행되지 않고, else와 finally는 각각의 조건에 따라 실행됩니다.</div>
+                </div>
+            </details>
+            <details>
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code">B
+C
+
+<span style="color:#64748b"># int("5") 성공 → except 건너뜀
+# else 실행 → B 출력
+# finally 무조건 실행 → C 출력</span></div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q3</div>
+            <div class="problem-label">입력 검증 루프 작성</div>
+            <div class="problem-diff hard">어려움</div>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">1~10 사이의 정수만 받는 함수 <code>get_number()</code>를 작성하세요. 숫자가 아닌 입력이나 범위를 벗어난 숫자 입력 시 각각 다른 오류 메시지를 출력하고 다시 입력받아야 합니다.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <div class="problem-example-label">입력</div>
+                    <div class="problem-example-value">abc → "숫자를 입력하세요"<br>15 → "1~10 사이로 입력하세요"<br>7 → "입력됨: 7" 출력 후 종료</div>
+                </div>
+            </div>
+        </div>
+        <div class="problem-toggle">
+            <details>
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">while True 안에서 try로 int() 변환을 시도하고 ValueError는 except로 잡습니다. 변환 성공 후 if not (1 &lt;= n &lt;= 10)으로 범위를 별도로 검사합니다.</div>
+                </div>
+            </details>
+            <details>
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code"><span style="color:#c084fc">def</span> <span style="color:#67e8f9">get_number</span>():
+    <span style="color:#c084fc">while</span> <span style="color:#f9a8d4">True</span>:
+        <span style="color:#c084fc">try</span>:
+            n = <span style="color:#67e8f9">int</span>(<span style="color:#67e8f9">input</span>(<span style="color:#86efac">"1~10 사이 숫자: "</span>))
+        <span style="color:#c084fc">except</span> ValueError:
+            <span style="color:#67e8f9">print</span>(<span style="color:#86efac">"숫자를 입력하세요"</span>)
+            <span style="color:#c084fc">continue</span>
+        <span style="color:#c084fc">if not</span> (<span style="color:#7dd3fc">1</span> &lt;= n &lt;= <span style="color:#7dd3fc">10</span>):
+            <span style="color:#67e8f9">print</span>(<span style="color:#86efac">"1~10 사이로 입력하세요"</span>)
+        <span style="color:#c084fc">else</span>:
+            <span style="color:#67e8f9">print</span>(<span style="color:#86efac">f"입력됨: {n}"</span>)
+            <span style="color:#c084fc">return</span> n</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <!-- 에러 종류 비교 테이블 -->
+    <h3>자주 쓰는 에러 종류 정리</h3>
+    <table class="compare-table">
+        <tr>
+            <th>에러 이름</th>
+            <th>발생 상황</th>
+            <th>예시</th>
+        </tr>
+        <tr>
+            <td>ValueError</td>
+            <td>값의 형태가 잘못됨</td>
+            <td><code>int("abc")</code></td>
+        </tr>
+        <tr>
+            <td>TypeError</td>
+            <td>타입이 맞지 않음</td>
+            <td><code>"a" + 1</code></td>
+        </tr>
+        <tr>
+            <td>ZeroDivisionError</td>
+            <td>0으로 나눔</td>
+            <td><code>10 / 0</code></td>
+        </tr>
+        <tr>
+            <td>IndexError</td>
+            <td>리스트 범위 초과</td>
+            <td><code>[1,2,3][5]</code></td>
+        </tr>
+        <tr>
+            <td>FileNotFoundError</td>
+            <td>파일이 없음</td>
+            <td><code>open("없음.txt")</code></td>
+        </tr>
+    </table>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

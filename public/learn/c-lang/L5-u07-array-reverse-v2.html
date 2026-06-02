@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 배열 뒤집기와 복사</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+.page { width: 210mm; min-height: 297mm; margin: 16px auto; padding: 18mm 20mm 15mm 22mm; background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: relative; page-break-after: always; }
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after { content: counter(pagenum); position: absolute; bottom: 10mm; right: 16mm; font-size: 10px; color: #94a3b8; font-weight: 600; }
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark { position: absolute; top: -10px; right: -15px; font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3); line-height: 1; pointer-events: none; }
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 16px; font-weight: 700; color: #1e3a5f; margin: 14px 0 8px; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #2563eb; font-weight: 600; }
+.code { background: #0f172a; border-radius: 8px; padding: 16px 20px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap; }
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; margin-bottom: 8px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; white-space: pre-wrap; }
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+.info-box { background: #eff6ff; border: 1.5px solid #bfdbfe; border-radius: 8px; padding: 12px 16px; margin: 14px 0; }
+.info-box p { font-size: 14px; color: #1e40af; margin: 0; line-height: 1.7; }
+.warn-box { background: #fffbeb; border: 1.5px solid #fde68a; border-radius: 8px; padding: 12px 16px; margin: 14px 0; }
+.warn-box p { font-size: 14px; color: #92400e; margin: 0; line-height: 1.7; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 14px 0; }
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- PAGE 1 표지 -->
+<div class="page cover">
+  <div class="cover-sidebar"></div>
+  <div class="cover-accent"></div>
+  <div class="cover-body">
+    <div class="cover-watermark">07</div>
+    <div class="cover-label">Chapter L5-07</div>
+    <h1 class="cover-title">배열 뒤집기와<br>복사</h1>
+    <p class="cover-sub">배열을 제자리에서 뒤집는 "양끝 swap" 기법과, 원본을 보존하며 복사하는 패턴을 배웁니다. memcpy도 간단히 살펴봅니다.</p>
+    <div style="margin:24px 0;">
+      <svg viewBox="0 0 500 58" style="max-width:500px;width:100%">
+        <rect x="2" y="10" width="90" height="30" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+        <text x="47" y="30" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">양끝 포인터</text>
+        <line x1="93" y1="25" x2="109" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+        <rect x="113" y="10" width="80" height="30" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+        <text x="153" y="30" text-anchor="middle" font-size="11" fill="#92400e" font-weight="700">swap</text>
+        <line x1="194" y1="25" x2="210" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+        <rect x="214" y="10" width="80" height="30" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+        <text x="254" y="30" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">중앙으로</text>
+        <line x1="295" y1="25" x2="311" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+        <rect x="315" y="10" width="80" height="30" rx="6" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+        <text x="355" y="30" text-anchor="middle" font-size="11" fill="#dc2626" font-weight="700">복사</text>
+        <line x1="396" y1="25" x2="412" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+        <rect x="416" y="10" width="80" height="30" rx="6" fill="#eff6ff" stroke="#6366f1" stroke-width="1.5"/>
+        <text x="456" y="30" text-anchor="middle" font-size="11" fill="#4338ca" font-weight="700">원본 보존</text>
+        <defs><marker id="cv1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker></defs>
+      </svg>
+    </div>
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/database.png" alt="데이터" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+      <h3>이 유닛에서 배우는 것</h3>
+      <ul>
+        <li>양끝에서 중앙으로 swap하며 배열을 뒤집을 수 있습니다.</li>
+        <li>홀수/짝수 크기 배열 모두에서 올바르게 동작하는 이유를 이해합니다.</li>
+        <li>for 루프로 배열을 다른 배열에 복사할 수 있습니다.</li>
+        <li>원본 배열을 보존해야 할 때 복사 패턴을 적용할 수 있습니다.</li>
+        <li>memcpy의 사용법을 이해합니다 (선택 심화).</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 2 뒤집기 원리 -->
+<div class="page">
+  <h2>배열 뒤집기 — 양끝에서 중앙으로</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/folder.png" alt="배열" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+  <p>배열을 뒤집으려면 양쪽 끝에서 시작해 중앙을 향해 한 쌍씩 swap합니다. 왼쪽 인덱스(<code>left</code>)와 오른쪽 인덱스(<code>right</code>)가 교차할 때까지 반복합니다.</p>
+
+  <!-- 뒤집기 단계 SVG -->
+  <div style="text-align:center;margin:16px 0;">
+    <svg viewBox="0 0 480 220" style="max-width:480px;width:100%">
+      <defs>
+        <marker id="r1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#6366f1"/></marker>
+        <marker id="r2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#22c55e"/></marker>
+      </defs>
+      <!-- 초기 상태 -->
+      <text x="8" y="18" font-size="11" fill="#64748b" font-weight="700">초기: {1, 2, 3, 4, 5}</text>
+      <rect x="56" y="22" width="40" height="32" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+      <text x="76" y="43" text-anchor="middle" font-size="15" fill="#1d4ed8" font-weight="800">1</text>
+      <text x="76" y="65" text-anchor="middle" font-size="9" fill="#3b82f6" font-weight="700">left=0</text>
+      <rect x="100" y="22" width="40" height="32" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5"/>
+      <text x="120" y="43" text-anchor="middle" font-size="15" fill="#334155" font-weight="700">2</text>
+      <rect x="144" y="22" width="40" height="32" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5"/>
+      <text x="164" y="43" text-anchor="middle" font-size="15" fill="#334155" font-weight="700">3</text>
+      <rect x="188" y="22" width="40" height="32" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5"/>
+      <text x="208" y="43" text-anchor="middle" font-size="15" fill="#334155" font-weight="700">4</text>
+      <rect x="232" y="22" width="40" height="32" rx="4" fill="#fef2f2" stroke="#ef4444" stroke-width="2"/>
+      <text x="252" y="43" text-anchor="middle" font-size="15" fill="#dc2626" font-weight="800">5</text>
+      <text x="252" y="65" text-anchor="middle" font-size="9" fill="#ef4444" font-weight="700">right=4</text>
+      <!-- 화살표 교환 1 -->
+      <path d="M76,70 C76,84 252,84 252,70" stroke="#6366f1" stroke-width="1.5" fill="none" stroke-dasharray="4,2"/>
+      <text x="164" y="96" text-anchor="middle" font-size="10" fill="#6366f1" font-weight="700">swap(1,5)</text>
+      <!-- 1번 후 상태 -->
+      <text x="8" y="112" font-size="11" fill="#64748b" font-weight="700">1번 후:</text>
+      <rect x="56" y="116" width="40" height="32" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5"/>
+      <text x="76" y="137" text-anchor="middle" font-size="15" fill="#334155" font-weight="700">5</text>
+      <rect x="100" y="116" width="40" height="32" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+      <text x="120" y="137" text-anchor="middle" font-size="15" fill="#1d4ed8" font-weight="800">2</text>
+      <text x="120" y="158" text-anchor="middle" font-size="9" fill="#3b82f6" font-weight="700">left=1</text>
+      <rect x="144" y="116" width="40" height="32" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5"/>
+      <text x="164" y="137" text-anchor="middle" font-size="15" fill="#334155" font-weight="700">3</text>
+      <rect x="188" y="116" width="40" height="32" rx="4" fill="#fef2f2" stroke="#ef4444" stroke-width="2"/>
+      <text x="208" y="137" text-anchor="middle" font-size="15" fill="#dc2626" font-weight="800">4</text>
+      <text x="208" y="158" text-anchor="middle" font-size="9" fill="#ef4444" font-weight="700">right=3</text>
+      <rect x="232" y="116" width="40" height="32" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5"/>
+      <text x="252" y="137" text-anchor="middle" font-size="15" fill="#334155" font-weight="700">1</text>
+      <!-- 화살표 교환 2 -->
+      <path d="M120,162 C120,174 208,174 208,162" stroke="#6366f1" stroke-width="1.5" fill="none" stroke-dasharray="4,2"/>
+      <text x="164" y="186" text-anchor="middle" font-size="10" fill="#6366f1" font-weight="700">swap(2,4)</text>
+      <!-- 완료 상태 -->
+      <text x="8" y="202" font-size="11" fill="#166534" font-weight="700">완료:</text>
+      <rect x="56" y="206" width="40" height="20" rx="4" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+      <text x="76" y="220" text-anchor="middle" font-size="13" fill="#166534" font-weight="800">5</text>
+      <rect x="100" y="206" width="40" height="20" rx="4" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+      <text x="120" y="220" text-anchor="middle" font-size="13" fill="#166534" font-weight="800">4</text>
+      <rect x="144" y="206" width="40" height="20" rx="4" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+      <text x="164" y="220" text-anchor="middle" font-size="13" fill="#166534" font-weight="800">3</text>
+      <rect x="188" y="206" width="40" height="20" rx="4" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+      <text x="208" y="220" text-anchor="middle" font-size="13" fill="#166534" font-weight="800">2</text>
+      <rect x="232" y="206" width="40" height="20" rx="4" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+      <text x="252" y="220" text-anchor="middle" font-size="13" fill="#166534" font-weight="800">1</text>
+      <text x="310" y="220" font-size="11" fill="#166534" font-weight="700">{5,4,3,2,1}</text>
+    </svg>
+  </div>
+
+  <div class="info-box">
+    <p><strong>홀수 크기 배열:</strong> left == right가 되면 중앙 원소이므로 swap 불필요 — 조건 <code>left &lt; right</code>가 자동으로 이를 처리합니다.</p>
+  </div>
+
+  <div class="code"><span class="cmt">// 배열 뒤집기 — 양끝 swap</span>
+<span class="kw">int</span> arr[] = {<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>, <span class="num">5</span>};
+<span class="kw">int</span> n = <span class="num">5</span>;
+<span class="kw">int</span> left  = <span class="num">0</span>;
+<span class="kw">int</span> right = n - <span class="num">1</span>;
+
+<span class="kw">while</span> (left &lt; right) {
+    <span class="kw">int</span> temp   = arr[left];
+    arr[left]  = arr[right];
+    arr[right] = temp;
+    left++;
+    right--;
+}
+<span class="cmt">// 결과: {5, 4, 3, 2, 1}</span></div>
+</div>
+
+<!-- PAGE 3 복사 패턴 -->
+<div class="page">
+  <h2>배열 복사 — 원본 보존</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/hard-drive.png" alt="저장소" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+  <p>배열을 수정하기 전에 원본을 보존하고 싶을 때는 <strong>새 배열에 복사</strong>합니다. 단순히 <code>copy = original</code>은 배열에서 동작하지 않습니다.</p>
+
+  <!-- 복사 vs 직접 대입 비교 SVG -->
+  <div style="text-align:center;margin:14px 0;">
+    <svg viewBox="0 0 480 100" style="max-width:480px;width:100%">
+      <!-- 잘못된 방법 -->
+      <rect x="4" y="4" width="228" height="90" rx="8" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+      <text x="118" y="24" text-anchor="middle" font-size="12" fill="#dc2626" font-weight="800">잘못된 방법 (불가)</text>
+      <text x="118" y="46" text-anchor="middle" font-size="12" fill="#dc2626" font-family="monospace">int b[] = a;  // 오류!</text>
+      <text x="118" y="66" text-anchor="middle" font-size="12" fill="#dc2626" font-family="monospace">b = a;        // 오류!</text>
+      <text x="118" y="86" text-anchor="middle" font-size="10" fill="#ef4444">배열 이름은 주소, 대입 불가</text>
+      <!-- 올바른 방법 -->
+      <rect x="248" y="4" width="228" height="90" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+      <text x="362" y="24" text-anchor="middle" font-size="12" fill="#166534" font-weight="800">올바른 방법</text>
+      <text x="362" y="46" text-anchor="middle" font-size="12" fill="#166534" font-family="monospace">for (i=0; i&lt;n; i++)</text>
+      <text x="362" y="62" text-anchor="middle" font-size="12" fill="#166534" font-family="monospace">  b[i] = a[i];</text>
+      <text x="362" y="82" text-anchor="middle" font-size="10" fill="#22c55e" font-weight="600">원소를 하나씩 복사</text>
+    </svg>
+  </div>
+
+  <!-- 복사 과정 시각화 SVG -->
+  <div style="text-align:center;margin:14px 0;">
+    <svg viewBox="0 0 480 140" style="max-width:480px;width:100%">
+      <defs>
+        <marker id="cp1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#6366f1"/></marker>
+      </defs>
+      <!-- 원본 배열 -->
+      <text x="8" y="22" font-size="11" fill="#1d4ed8" font-weight="700">원본 arr[]</text>
+      <rect x="80" y="6" width="44" height="28" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+      <text x="102" y="25" text-anchor="middle" font-size="14" fill="#1d4ed8" font-weight="700">7</text>
+      <rect x="128" y="6" width="44" height="28" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+      <text x="150" y="25" text-anchor="middle" font-size="14" fill="#1d4ed8" font-weight="700">3</text>
+      <rect x="176" y="6" width="44" height="28" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+      <text x="198" y="25" text-anchor="middle" font-size="14" fill="#1d4ed8" font-weight="700">9</text>
+      <rect x="224" y="6" width="44" height="28" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+      <text x="246" y="25" text-anchor="middle" font-size="14" fill="#1d4ed8" font-weight="700">1</text>
+      <!-- 화살표 복사 -->
+      <path d="M102,36 L102,60" stroke="#6366f1" stroke-width="1.5" marker-end="url(#cp1)"/>
+      <path d="M150,36 L150,60" stroke="#6366f1" stroke-width="1.5" marker-end="url(#cp1)"/>
+      <path d="M198,36 L198,60" stroke="#6366f1" stroke-width="1.5" marker-end="url(#cp1)"/>
+      <path d="M246,36 L246,60" stroke="#6366f1" stroke-width="1.5" marker-end="url(#cp1)"/>
+      <text x="300" y="52" font-size="11" fill="#6366f1">for 루프 복사</text>
+      <!-- 복사본 배열 -->
+      <text x="8" y="84" font-size="11" fill="#166534" font-weight="700">복사본 copy[]</text>
+      <rect x="80" y="68" width="44" height="28" rx="4" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+      <text x="102" y="87" text-anchor="middle" font-size="14" fill="#166534" font-weight="700">7</text>
+      <rect x="128" y="68" width="44" height="28" rx="4" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+      <text x="150" y="87" text-anchor="middle" font-size="14" fill="#166534" font-weight="700">3</text>
+      <rect x="176" y="68" width="44" height="28" rx="4" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+      <text x="198" y="87" text-anchor="middle" font-size="14" fill="#166534" font-weight="700">9</text>
+      <rect x="224" y="68" width="44" height="28" rx="4" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+      <text x="246" y="87" text-anchor="middle" font-size="14" fill="#166534" font-weight="700">1</text>
+      <!-- 독립성 설명 -->
+      <rect x="8" y="106" width="464" height="30" rx="6" fill="#eff6ff" stroke="#6366f1" stroke-width="1.5"/>
+      <text x="240" y="120" text-anchor="middle" font-size="11" fill="#4338ca" font-weight="700">copy를 수정해도 arr 원본은 그대로!</text>
+      <text x="240" y="132" text-anchor="middle" font-size="10" fill="#64748b">두 배열은 독립된 메모리 공간을 사용합니다</text>
+    </svg>
+  </div>
+
+  <div class="code"><span class="cmt">// 배열 복사</span>
+<span class="kw">int</span> arr[]  = {<span class="num">7</span>, <span class="num">3</span>, <span class="num">9</span>, <span class="num">1</span>};
+<span class="kw">int</span> copy[<span class="num">4</span>];      <span class="cmt">// 같은 크기의 빈 배열</span>
+<span class="kw">int</span> n = <span class="num">4</span>;
+
+<span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; n; i++) {
+    copy[i] = arr[i];   <span class="cmt">// 원소 하나씩 복사</span>
+}
+
+<span class="cmt">// copy 수정해도 arr 영향 없음</span>
+copy[<span class="num">0</span>] = <span class="num">99</span>;
+<span class="fn">printf</span>(<span class="str">"원본: %d\n"</span>, arr[<span class="num">0</span>]);   <span class="cmt">// 7 (그대로)</span>
+<span class="fn">printf</span>(<span class="str">"복사본: %d\n"</span>, copy[<span class="num">0</span>]); <span class="cmt">// 99</span></div>
+
+  <h3>원본 보존이 필요한 상황</h3>
+  <p>정렬, 뒤집기 등 배열을 수정하는 작업 전에 원본을 보존해야 하면 먼저 복사합니다.</p>
+  <div class="code"><span class="cmt">// 원본 보존 패턴: 복사 후 수정</span>
+<span class="kw">int</span> original[] = {<span class="num">5</span>, <span class="num">2</span>, <span class="num">8</span>, <span class="num">1</span>};
+<span class="kw">int</span> n = <span class="num">4</span>;
+<span class="kw">int</span> work[<span class="num">4</span>];
+
+<span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; n; i++) work[i] = original[i]; <span class="cmt">// 복사</span>
+
+<span class="cmt">// work 배열을 정렬/수정 → original은 안전</span></div>
+</div>
+
+<!-- PAGE 4 memcpy + 전체 예제 -->
+<div class="page">
+  <h2>memcpy — 라이브러리 복사 함수 (심화)</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+  <p><code>memcpy</code>는 <code>string.h</code>에 정의된 표준 라이브러리 함수로, 메모리 블록을 바이트 단위로 빠르게 복사합니다.</p>
+
+  <!-- memcpy 매개변수 SVG -->
+  <div style="text-align:center;margin:14px 0;">
+    <svg viewBox="0 0 480 80" style="max-width:480px;width:100%">
+      <rect x="4" y="4" width="472" height="70" rx="8" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.5"/>
+      <text x="240" y="28" text-anchor="middle" font-size="13" fill="#0f172a" font-weight="700" font-family="monospace">memcpy(dest, src, n * sizeof(int))</text>
+      <!-- 화살표로 매개변수 설명 -->
+      <line x1="90" y1="34" x2="90" y2="52" stroke="#3b82f6" stroke-width="1.5"/>
+      <text x="90" y="64" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">목적지 배열</text>
+      <line x1="160" y1="34" x2="160" y2="52" stroke="#22c55e" stroke-width="1.5"/>
+      <text x="160" y="64" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">원본 배열</text>
+      <line x1="310" y1="34" x2="310" y2="52" stroke="#f59e0b" stroke-width="1.5"/>
+      <text x="360" y="64" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">복사할 바이트 수</text>
+    </svg>
+  </div>
+
+  <div class="code"><span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="kw">#include</span> <span class="str">&lt;string.h&gt;</span>   <span class="cmt">// memcpy 사용</span>
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="kw">int</span> src[]  = {<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>, <span class="num">5</span>};
+    <span class="kw">int</span> dest[<span class="num">5</span>];
+    <span class="kw">int</span> n = <span class="num">5</span>;
+
+    <span class="cmt">// for 루프 방법</span>
+    <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; n; i++) dest[i] = src[i];
+
+    <span class="cmt">// memcpy 방법 (같은 결과)</span>
+    <span class="fn">memcpy</span>(dest, src, n * <span class="kw">sizeof</span>(<span class="kw">int</span>));
+
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+
+  <div class="warn-box">
+    <p><strong>memcpy 주의:</strong> 복사할 크기를 <code>sizeof(int)</code>를 곱해 바이트 수로 정확히 계산해야 합니다. 크기를 틀리면 메모리 오류가 발생합니다.</p>
+  </div>
+
+  <h2>통합 예제 — 복사 후 뒤집기 (원본 보존)</h2>
+  <div class="code"><span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="kw">int</span> original[] = {<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>, <span class="num">5</span>};
+    <span class="kw">int</span> n = <span class="num">5</span>;
+    <span class="kw">int</span> work[<span class="num">5</span>];
+
+    <span class="cmt">// ① 복사</span>
+    <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; n; i++) work[i] = original[i];
+
+    <span class="cmt">// ② work 배열 뒤집기</span>
+    <span class="kw">int</span> left = <span class="num">0</span>, right = n - <span class="num">1</span>;
+    <span class="kw">while</span> (left &lt; right) {
+        <span class="kw">int</span> t    = work[left];
+        work[left]  = work[right];
+        work[right] = t;
+        left++;
+        right--;
+    }
+
+    <span class="cmt">// ③ 결과 출력</span>
+    <span class="fn">printf</span>(<span class="str">"원본: "</span>);
+    <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; n; i++) <span class="fn">printf</span>(<span class="str">"%d "</span>, original[i]); <span class="cmt">// 1 2 3 4 5</span>
+    <span class="fn">printf</span>(<span class="str">"\n뒤집기: "</span>);
+    <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; n; i++) <span class="fn">printf</span>(<span class="str">"%d "</span>, work[i]);     <span class="cmt">// 5 4 3 2 1</span>
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+
+  <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+    <h3>핵심 정리</h3>
+    <ul>
+      <li>뒤집기: left=0, right=n-1 → swap → left++, right-- → left&lt;right 반복</li>
+      <li>홀수 크기: left==right일 때 자동 중단 (중앙 원소 이동 불필요)</li>
+      <li>복사: <code>for</code>로 하나씩 <code>b[i]=a[i]</code> — 배열 직접 대입 불가</li>
+      <li>memcpy: 바이트 단위 복사, 크기는 <code>n*sizeof(타입)</code></li>
+      <li>원본 보존 패턴: 복사 → work 수정 → original 안전</li>
+    </ul>
+  </div>
+</div>
+
+<!-- PAGE 5 문제 -->
+<div class="page">
+  <h2>확인 문제</h2>
+
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">1</div>
+      <div class="problem-label">뒤집기 결과 추적</div>
+      <span class="problem-diff easy">쉬움</span>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">배열 <code>{2, 5, 8, 3}</code>을 위의 "양끝 swap" 방법으로 뒤집으면 결과는?</div>
+      <div style="height:32px;border-bottom:1px solid #e2e8f0;"></div>
+    </div>
+    <details class="problem-toggle">
+      <summary>정답 보기</summary>
+      <div class="problem-toggle-content">
+        <div class="answer-code">1단계: swap(2,3) → {3,5,8,2}
+2단계: swap(5,8) → {3,8,5,2}
+최종: {3, 8, 5, 2}</div>
+      </div>
+    </details>
+  </div>
+
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">2</div>
+      <div class="problem-label">홀수 크기 배열 뒤집기</div>
+      <span class="problem-diff easy">쉬움</span>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">배열 <code>{1, 2, 3, 4, 5}</code>를 뒤집으면 가운데 원소 3은 어떻게 되나요? 이유를 설명하세요.</div>
+      <div style="height:40px;border-bottom:1px solid #e2e8f0;"></div>
+    </div>
+    <details class="problem-toggle">
+      <summary>정답 보기</summary>
+      <div class="problem-toggle-content">
+        <div class="answer-code">3은 그대로 중앙에 있습니다.
+left=2, right=2가 되면 left &lt; right 조건이 거짓이므로
+while 루프가 종료되어 3은 swap되지 않습니다.</div>
+      </div>
+    </details>
+  </div>
+
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">3</div>
+      <div class="problem-label">배열 복사 코드 작성</div>
+      <span class="problem-diff medium">보통</span>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">크기 5인 정수 배열 <code>src</code>를 새 배열 <code>dst</code>에 복사하는 코드를 작성하세요.</div>
+      <div class="problem-example">
+        <div class="problem-example-row"><span class="problem-example-label">조건</span><span class="problem-example-value">src={10,20,30,40,50}, dst 수정 후 src는 변하지 않아야 함</span></div>
+      </div>
+      <div style="height:80px;border-bottom:1px solid #e2e8f0;"></div>
+    </div>
+    <details class="problem-toggle">
+      <summary>정답 보기</summary>
+      <div class="problem-toggle-content">
+        <div class="answer-code">int src[] = {10,20,30,40,50};
+int dst[5];
+for (int i = 0; i &lt; 5; i++) dst[i] = src[i];</div>
+      </div>
+    </details>
+  </div>
+
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">4</div>
+      <div class="problem-label">뒤집기 코드 구현</div>
+      <span class="problem-diff medium">보통</span>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">배열 <code>{6, 2, 9, 4, 7, 1}</code>을 제자리에서 뒤집는 코드를 작성하세요.</div>
+      <div class="problem-example">
+        <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">1 7 4 9 2 6</span></div>
+      </div>
+      <div style="height:90px;border-bottom:1px solid #e2e8f0;"></div>
+    </div>
+    <details class="problem-toggle">
+      <summary>정답 보기</summary>
+      <div class="problem-toggle-content">
+        <div class="answer-code">int arr[] = {6,2,9,4,7,1};
+int n = 6, left = 0, right = n-1;
+while (left &lt; right) {
+    int t = arr[left];
+    arr[left] = arr[right];
+    arr[right] = t;
+    left++; right--;
+}
+for (int i = 0; i &lt; n; i++) printf("%d ", arr[i]);</div>
+      </div>
+    </details>
+  </div>
+
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">5</div>
+      <div class="problem-label">원본 보존 뒤집기</div>
+      <span class="problem-diff hard">어려움</span>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">원본 배열 <code>{3, 1, 4, 1, 5}</code>를 보존하면서 뒤집은 결과를 새 배열에 저장하고 두 배열을 모두 출력하세요.</div>
+      <div class="problem-example">
+        <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">원본: 3 1 4 1 5 / 뒤집기: 5 1 4 1 3</span></div>
+      </div>
+      <div style="height:80px;border-bottom:1px solid #e2e8f0;"></div>
+    </div>
+    <details class="problem-toggle">
+      <summary>힌트 / 정답 보기</summary>
+      <div class="problem-toggle-content">
+        <div class="hint-text">복사 후 work 배열을 뒤집으세요. original은 그대로 유지됩니다.</div>
+        <div class="answer-code">int orig[] = {3,1,4,1,5}, n=5, work[5];
+for (int i=0; i&lt;n; i++) work[i]=orig[i];
+int l=0, r=n-1;
+while(l&lt;r){ int t=work[l]; work[l]=work[r]; work[r]=t; l++;r--; }
+printf("원본: ");   for(int i=0;i&lt;n;i++) printf("%d ",orig[i]);
+printf("\n뒤집기: "); for(int i=0;i&lt;n;i++) printf("%d ",work[i]);</div>
+      </div>
+    </details>
+  </div>
+
+  <!-- 보너스: 오류 분석 문제 -->
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge" style="background:linear-gradient(135deg,#6366f1,#818cf8);">+</div>
+      <div class="problem-label">오류 찾기 — 뒤집기 경계 조건</div>
+      <span class="problem-diff hard">어려움</span>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">아래 코드는 배열을 뒤집으려는 코드인데, 한 가지 오류가 있습니다. 찾아서 고치세요.</div>
+      <div class="problem-example">
+        <div class="answer-code">int arr[] = {1, 2, 3, 4, 5}, n = 5;
+int left = 0, right = n;  // 오류 위치
+while (left &lt; right) {
+    int t = arr[left];
+    arr[left] = arr[right];
+    arr[right] = t;
+    left++; right--;
+}</div>
+      </div>
+      <div style="height:32px;border-bottom:1px solid #e2e8f0;"></div>
+    </div>
+    <details class="problem-toggle">
+      <summary>힌트 / 정답 보기</summary>
+      <div class="problem-toggle-content">
+        <div class="hint-text">배열의 마지막 인덱스는 n-1입니다. right = n으로 설정하면 arr[n]에 접근하여 범위 초과가 발생합니다.</div>
+        <div class="answer-code">int right = n - 1;  // n → n-1 로 수정
+// arr[n]은 존재하지 않는 인덱스 (경계 초과)</div>
+      </div>
+    </details>
+  </div>
+</div>
+
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="정렬" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

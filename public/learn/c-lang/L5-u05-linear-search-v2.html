@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 배열 검색 (선형 탐색)</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+.page { width: 210mm; min-height: 297mm; margin: 16px auto; padding: 18mm 20mm 15mm 22mm; background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: relative; page-break-after: always; }
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after { content: counter(pagenum); position: absolute; bottom: 10mm; right: 16mm; font-size: 10px; color: #94a3b8; font-weight: 600; }
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark { position: absolute; top: -10px; right: -15px; font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3); line-height: 1; pointer-events: none; }
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 16px; font-weight: 700; color: #1e3a5f; margin: 14px 0 8px; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #2563eb; font-weight: 600; }
+.code { background: #0f172a; border-radius: 8px; padding: 16px 20px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap; }
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; margin-bottom: 8px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; white-space: pre-wrap; }
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+.info-box { background: #eff6ff; border: 1.5px solid #bfdbfe; border-radius: 8px; padding: 12px 16px; margin: 14px 0; }
+.info-box p { font-size: 14px; color: #1e40af; margin: 0; line-height: 1.7; }
+.warn-box { background: #fffbeb; border: 1.5px solid #fde68a; border-radius: 8px; padding: 12px 16px; margin: 14px 0; }
+.warn-box p { font-size: 14px; color: #92400e; margin: 0; line-height: 1.7; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 14px 0; }
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- PAGE 1 표지 -->
+<div class="page cover">
+  <div class="cover-sidebar"></div>
+  <div class="cover-accent"></div>
+  <div class="cover-body">
+    <div class="cover-watermark">05</div>
+    <div class="cover-label">Chapter L5-05</div>
+    <h1 class="cover-title">배열 검색 —<br>선형 탐색</h1>
+    <p class="cover-sub">배열에서 원하는 값을 앞에서부터 하나씩 비교하며 찾는 선형 탐색을 배웁니다. for + if + break 패턴과 -1 반환 관례를 익힙니다.</p>
+    <div style="margin:24px 0;">
+      <svg viewBox="0 0 500 58" style="max-width:500px;width:100%">
+        <rect x="2" y="10" width="84" height="30" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+        <text x="44" y="30" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">배열 순회</text>
+        <line x1="88" y1="25" x2="104" y2="25" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#cv1)"/>
+        <rect x="108" y="10" width="84" height="30" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+        <text x="150" y="30" text-anchor="middle" font-size="11" fill="#92400e" font-weight="700">값 비교</text>
+        <line x1="194" y1="25" x2="210" y2="25" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#cv1)"/>
+        <rect x="214" y="10" width="84" height="30" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+        <text x="256" y="30" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">break</text>
+        <line x1="300" y1="25" x2="316" y2="25" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#cv1)"/>
+        <rect x="320" y="10" width="84" height="30" rx="6" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+        <text x="362" y="30" text-anchor="middle" font-size="11" fill="#dc2626" font-weight="700">인덱스/-1</text>
+        <line x1="406" y1="25" x2="422" y2="25" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#cv1)"/>
+        <rect x="426" y="10" width="70" height="30" rx="6" fill="#eff6ff" stroke="#6366f1" stroke-width="1.5"/>
+        <text x="461" y="30" text-anchor="middle" font-size="11" fill="#4338ca" font-weight="700">응용</text>
+        <defs><marker id="cv1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker></defs>
+      </svg>
+    </div>
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/database.png" alt="데이터" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+      <h3>이 유닛에서 배우는 것</h3>
+      <ul>
+        <li>선형 탐색의 개념과 동작 방식을 설명할 수 있습니다.</li>
+        <li>for + if 패턴으로 배열에서 값을 찾을 수 있습니다.</li>
+        <li>break로 불필요한 반복을 줄이는 이유를 이해합니다.</li>
+        <li>찾은 경우는 인덱스, 못 찾은 경우는 -1을 반환하는 패턴을 익힙니다.</li>
+        <li>선형 탐색을 다양한 상황에 응용할 수 있습니다.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 2 개념 + 원리 -->
+<div class="page">
+  <h2>선형 탐색이란?</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/folder.png" alt="배열" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+  <p>선형 탐색(Linear Search)은 배열의 <strong>첫 번째 원소부터 마지막 원소까지 순서대로 하나씩 비교</strong>하며 원하는 값을 찾는 방법입니다. 구조가 단순해 처음 배우기에 좋습니다.</p>
+
+  <!-- 탐색 과정 SVG -->
+  <div style="text-align:center;margin:16px 0;">
+    <svg viewBox="0 0 480 180" style="max-width:480px;width:100%">
+      <defs>
+        <marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#3b82f6"/></marker>
+        <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#22c55e"/></marker>
+      </defs>
+      <text x="8" y="22" font-size="11" fill="#64748b" font-weight="700">arr[]</text>
+      <!-- 칸 6개 -->
+      <rect x="60" y="6" width="50" height="36" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5"/>
+      <text x="85" y="29" text-anchor="middle" font-size="17" fill="#334155" font-weight="700">3</text>
+      <text x="85" y="52" text-anchor="middle" font-size="10" fill="#94a3b8">[0]</text>
+      <rect x="116" y="6" width="50" height="36" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5"/>
+      <text x="141" y="29" text-anchor="middle" font-size="17" fill="#334155" font-weight="700">7</text>
+      <text x="141" y="52" text-anchor="middle" font-size="10" fill="#94a3b8">[1]</text>
+      <rect x="172" y="6" width="50" height="36" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5"/>
+      <text x="197" y="29" text-anchor="middle" font-size="17" fill="#334155" font-weight="700">1</text>
+      <text x="197" y="52" text-anchor="middle" font-size="10" fill="#94a3b8">[2]</text>
+      <!-- 찾음 칸 -->
+      <rect x="228" y="6" width="50" height="36" rx="4" fill="#fef9c3" stroke="#f59e0b" stroke-width="2"/>
+      <text x="253" y="29" text-anchor="middle" font-size="17" fill="#92400e" font-weight="800">9</text>
+      <text x="253" y="52" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">[3]</text>
+      <rect x="284" y="6" width="50" height="36" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5"/>
+      <text x="309" y="29" text-anchor="middle" font-size="17" fill="#334155" font-weight="700">4</text>
+      <text x="309" y="52" text-anchor="middle" font-size="10" fill="#94a3b8">[4]</text>
+      <rect x="340" y="6" width="50" height="36" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5"/>
+      <text x="365" y="29" text-anchor="middle" font-size="17" fill="#334155" font-weight="700">2</text>
+      <text x="365" y="52" text-anchor="middle" font-size="10" fill="#94a3b8">[5]</text>
+      <!-- 비교 표시 -->
+      <line x1="85" y1="44" x2="85" y2="62" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="3,2"/>
+      <text x="85" y="75" text-anchor="middle" font-size="10" fill="#ef4444">3≠9</text>
+      <line x1="141" y1="44" x2="141" y2="62" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="3,2"/>
+      <text x="141" y="75" text-anchor="middle" font-size="10" fill="#ef4444">7≠9</text>
+      <line x1="197" y1="44" x2="197" y2="62" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="3,2"/>
+      <text x="197" y="75" text-anchor="middle" font-size="10" fill="#ef4444">1≠9</text>
+      <line x1="253" y1="44" x2="253" y2="62" stroke="#22c55e" stroke-width="2"/>
+      <text x="253" y="75" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">9=9!</text>
+      <!-- 진행 화살표 -->
+      <path d="M68,90 L238,90" stroke="#3b82f6" stroke-width="2" marker-end="url(#a1)"/>
+      <text x="153" y="105" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="600">i=0 → 1 → 2 → 3 (찾음, break)</text>
+      <!-- 결과 박스 -->
+      <rect x="8" y="118" width="464" height="52" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+      <text x="240" y="140" text-anchor="middle" font-size="12" fill="#166534" font-weight="700">찾는 값: 9</text>
+      <text x="240" y="160" text-anchor="middle" font-size="12" fill="#166534">인덱스 [3]에서 발견 → result = 3</text>
+    </svg>
+  </div>
+
+  <h2>못 찾았을 때: -1 반환 패턴</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/hard-drive.png" alt="저장소" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+  <p>배열에 원하는 값이 없으면 끝까지 다 돌고 <code>-1</code>을 반환합니다. -1은 유효한 인덱스가 아니므로 "없음"을 뜻하는 관례입니다.</p>
+  <div style="text-align:center;margin:14px 0;">
+    <svg viewBox="0 0 480 90" style="max-width:480px;width:100%">
+      <text x="8" y="20" font-size="11" fill="#64748b" font-weight="700">찾는 값: 99</text>
+      <rect x="60" y="4" width="50" height="34" rx="4" fill="#fef2f2" stroke="#fca5a5" stroke-width="1.5"/>
+      <text x="85" y="27" text-anchor="middle" font-size="17" fill="#ef4444" font-weight="700">3</text>
+      <rect x="116" y="4" width="50" height="34" rx="4" fill="#fef2f2" stroke="#fca5a5" stroke-width="1.5"/>
+      <text x="141" y="27" text-anchor="middle" font-size="17" fill="#ef4444" font-weight="700">7</text>
+      <rect x="172" y="4" width="50" height="34" rx="4" fill="#fef2f2" stroke="#fca5a5" stroke-width="1.5"/>
+      <text x="197" y="27" text-anchor="middle" font-size="17" fill="#ef4444" font-weight="700">1</text>
+      <rect x="228" y="4" width="50" height="34" rx="4" fill="#fef2f2" stroke="#fca5a5" stroke-width="1.5"/>
+      <text x="253" y="27" text-anchor="middle" font-size="17" fill="#ef4444" font-weight="700">9</text>
+      <rect x="284" y="4" width="50" height="34" rx="4" fill="#fef2f2" stroke="#fca5a5" stroke-width="1.5"/>
+      <text x="309" y="27" text-anchor="middle" font-size="17" fill="#ef4444" font-weight="700">4</text>
+      <rect x="340" y="4" width="50" height="34" rx="4" fill="#fef2f2" stroke="#fca5a5" stroke-width="1.5"/>
+      <text x="365" y="27" text-anchor="middle" font-size="17" fill="#ef4444" font-weight="700">2</text>
+      <rect x="8" y="50" width="464" height="32" rx="6" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+      <text x="240" y="71" text-anchor="middle" font-size="12" fill="#dc2626" font-weight="700">모두 비교했지만 99 없음 → result = -1</text>
+    </svg>
+  </div>
+  <div class="warn-box">
+    <p><strong>왜 -1인가:</strong> 배열 인덱스는 항상 0 이상입니다. 따라서 -1은 절대 유효한 인덱스가 될 수 없으므로, "못 찾음" 신호로 쓰기에 딱 좋습니다.</p>
+  </div>
+</div>
+
+<!-- PAGE 3 코드 + 실전 패턴 -->
+<div class="page">
+  <h2>선형 탐색 코드 구조</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+  <p>핵심 패턴: <code>result = -1</code>로 시작 → <code>for</code>로 순회 → <code>if</code>로 비교 → 찾으면 <code>break</code></p>
+
+  <div class="code"><span class="cmt">// ① 선형 탐색 — 기본 구조</span>
+<span class="kw">int</span> arr[] = {<span class="num">3</span>, <span class="num">7</span>, <span class="num">1</span>, <span class="num">9</span>, <span class="num">4</span>, <span class="num">2</span>};
+<span class="kw">int</span> size   = <span class="num">6</span>;
+<span class="kw">int</span> target = <span class="num">9</span>;
+<span class="kw">int</span> result = -<span class="num">1</span>;  <span class="cmt">// 못 찾으면 -1 유지</span>
+
+<span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; size; i++) {
+    <span class="kw">if</span> (arr[i] == target) {
+        result = i;   <span class="cmt">// 인덱스 저장</span>
+        <span class="kw">break</span>;        <span class="cmt">// 더 볼 필요 없음</span>
+    }
+}
+
+<span class="kw">if</span> (result != -<span class="num">1</span>)
+    <span class="fn">printf</span>(<span class="str">"찾음! 인덱스: %d\n"</span>, result);
+<span class="kw">else</span>
+    <span class="fn">printf</span>(<span class="str">"없음\n"</span>);</div>
+
+  <!-- break 있을 때 vs 없을 때 비교 SVG -->
+  <div style="text-align:center;margin:14px 0;">
+    <svg viewBox="0 0 480 130" style="max-width:480px;width:100%">
+      <!-- break 없음 -->
+      <rect x="4" y="4" width="228" height="120" rx="8" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+      <text x="118" y="26" text-anchor="middle" font-size="12" fill="#dc2626" font-weight="800">break 없음</text>
+      <rect x="18" y="34" width="30" height="22" rx="3" fill="#fca5a5"/>
+      <text x="33" y="49" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">3</text>
+      <rect x="52" y="34" width="30" height="22" rx="3" fill="#fca5a5"/>
+      <text x="67" y="49" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">7</text>
+      <rect x="86" y="34" width="30" height="22" rx="3" fill="#fca5a5"/>
+      <text x="101" y="49" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">1</text>
+      <rect x="120" y="34" width="30" height="22" rx="3" fill="#fde68a"/>
+      <text x="135" y="49" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">9</text>
+      <rect x="154" y="34" width="30" height="22" rx="3" fill="#fca5a5"/>
+      <text x="169" y="49" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">4</text>
+      <rect x="188" y="34" width="30" height="22" rx="3" fill="#fca5a5"/>
+      <text x="203" y="49" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">2</text>
+      <text x="118" y="80" text-anchor="middle" font-size="11" fill="#dc2626">찾아도 계속 비교!</text>
+      <text x="118" y="98" text-anchor="middle" font-size="11" fill="#dc2626">6번 비교</text>
+      <text x="118" y="116" text-anchor="middle" font-size="10" fill="#ef4444" font-weight="600">불필요한 낭비</text>
+      <!-- break 있음 -->
+      <rect x="248" y="4" width="228" height="120" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+      <text x="362" y="26" text-anchor="middle" font-size="12" fill="#166534" font-weight="800">break 있음</text>
+      <rect x="262" y="34" width="30" height="22" rx="3" fill="#fca5a5"/>
+      <text x="277" y="49" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">3</text>
+      <rect x="296" y="34" width="30" height="22" rx="3" fill="#fca5a5"/>
+      <text x="311" y="49" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">7</text>
+      <rect x="330" y="34" width="30" height="22" rx="3" fill="#fca5a5"/>
+      <text x="345" y="49" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">1</text>
+      <rect x="364" y="34" width="30" height="22" rx="3" fill="#bbf7d0"/>
+      <text x="379" y="49" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">9</text>
+      <text x="409" y="45" font-size="18" fill="#22c55e" font-weight="900">!</text>
+      <text x="362" y="80" text-anchor="middle" font-size="11" fill="#166534">찾으면 즉시 중단</text>
+      <text x="362" y="98" text-anchor="middle" font-size="11" fill="#166534">4번 비교</text>
+      <text x="362" y="116" text-anchor="middle" font-size="10" fill="#22c55e" font-weight="600">효율적!</text>
+    </svg>
+  </div>
+
+  <h2>완성 코드 — 전체 실행 예제</h2>
+  <div class="code"><span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="kw">int</span> scores[] = {<span class="num">72</span>, <span class="num">85</span>, <span class="num">91</span>, <span class="num">60</span>, <span class="num">78</span>};
+    <span class="kw">int</span> size     = <span class="num">5</span>;
+    <span class="kw">int</span> target   = <span class="num">91</span>;
+    <span class="kw">int</span> result   = -<span class="num">1</span>;
+
+    <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; size; i++) {
+        <span class="fn">printf</span>(<span class="str">"비교: scores[%d] = %d\n"</span>, i, scores[i]);
+        <span class="kw">if</span> (scores[i] == target) {
+            result = i;
+            <span class="kw">break</span>;
+        }
+    }
+
+    <span class="kw">if</span> (result != -<span class="num">1</span>)
+        <span class="fn">printf</span>(<span class="str">"91점은 인덱스 %d에 있습니다.\n"</span>, result);
+    <span class="kw">else</span>
+        <span class="fn">printf</span>(<span class="str">"91점 없음\n"</span>);
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+
+  <div class="practice">
+    <div class="practice-head">따라해보세요</div>
+    <div class="practice-body">
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="정렬" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+      <div class="practice-item">
+        <div class="practice-num">실습 1</div>
+        <div class="practice-desc">위 코드를 그대로 입력하고 실행해보세요. 비교 과정이 출력되는 것을 확인하세요.</div>
+        <div class="practice-result">비교: scores[0] = 72 / 비교: scores[1] = 85 / 비교: scores[2] = 91 / 91점은 인덱스 2에 있습니다.</div>
+      </div>
+      <div class="practice-item">
+        <div class="practice-num">실습 2</div>
+        <div class="practice-desc">target을 99로 바꾸고 실행해보세요. 모든 칸을 비교한 뒤 "없음"이 출력되는지 확인하세요.</div>
+        <div class="practice-result">비교: scores[0~4] 모두 출력 후 → "91점 없음"</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 4 응용 + 심화 -->
+<div class="page">
+  <h2>선형 탐색 응용 — 중복값, 최솟값</h2>
+  <p>선형 탐색 패턴을 확장하면 중복 검색, 최솟값 찾기 등 다양한 문제를 풀 수 있습니다.</p>
+
+  <h3>첫 번째 vs 모든 위치 찾기</h3>
+  <div class="two-col">
+    <div>
+      <div class="practice-num">첫 번째 위치만</div>
+      <div class="code" style="font-size:12px;"><span class="cmt">// break 사용 → 첫 번째만</span>
+<span class="kw">int</span> result = -<span class="num">1</span>;
+<span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; n; i++) {
+  <span class="kw">if</span> (arr[i] == target) {
+    result = i;
+    <span class="kw">break</span>;
+  }
+}</div>
+    </div>
+    <div>
+      <div class="practice-num">모든 위치 출력</div>
+      <div class="code" style="font-size:12px;"><span class="cmt">// break 없음 → 전부 찾기</span>
+<span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; n; i++) {
+  <span class="kw">if</span> (arr[i] == target) {
+    <span class="fn">printf</span>(<span class="str">"%d "</span>, i);
+  }
+}</div>
+    </div>
+  </div>
+
+  <h3>최솟값 찾기 (선형 탐색 응용)</h3>
+  <!-- 최솟값 탐색 과정 SVG -->
+  <div style="text-align:center;margin:10px 0;">
+    <svg viewBox="0 0 480 110" style="max-width:480px;width:100%">
+      <defs>
+        <marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#6366f1"/></marker>
+      </defs>
+      <text x="4" y="20" font-size="11" fill="#64748b" font-weight="700">arr = {8, 3, 6, 1, 5}</text>
+      <!-- 칸 -->
+      <rect x="60" y="28" width="46" height="32" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5"/>
+      <text x="83" y="49" text-anchor="middle" font-size="16" fill="#334155" font-weight="700">8</text>
+      <rect x="112" y="28" width="46" height="32" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+      <text x="135" y="49" text-anchor="middle" font-size="16" fill="#1d4ed8" font-weight="800">3</text>
+      <rect x="164" y="28" width="46" height="32" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5"/>
+      <text x="187" y="49" text-anchor="middle" font-size="16" fill="#334155" font-weight="700">6</text>
+      <rect x="216" y="28" width="46" height="32" rx="4" fill="#fef9c3" stroke="#f59e0b" stroke-width="2.5"/>
+      <text x="239" y="49" text-anchor="middle" font-size="16" fill="#92400e" font-weight="800">1</text>
+      <rect x="268" y="28" width="46" height="32" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5"/>
+      <text x="291" y="49" text-anchor="middle" font-size="16" fill="#334155" font-weight="700">5</text>
+      <!-- 화살표 표시 -->
+      <text x="83" y="74" text-anchor="middle" font-size="9" fill="#64748b">min=8</text>
+      <text x="135" y="74" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">min=3</text>
+      <text x="187" y="74" text-anchor="middle" font-size="9" fill="#64748b">min=3</text>
+      <text x="239" y="74" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">min=1!</text>
+      <text x="291" y="74" text-anchor="middle" font-size="9" fill="#64748b">min=1</text>
+      <rect x="8" y="86" width="464" height="20" rx="4" fill="#eff6ff"/>
+      <text x="240" y="100" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">최솟값: 1 (인덱스 3)</text>
+    </svg>
+  </div>
+
+  <div class="code"><span class="kw">int</span> arr[] = {<span class="num">8</span>, <span class="num">3</span>, <span class="num">6</span>, <span class="num">1</span>, <span class="num">5</span>};
+<span class="kw">int</span> size = <span class="num">5</span>;
+<span class="kw">int</span> minVal = arr[<span class="num">0</span>];   <span class="cmt">// 첫 원소를 초기 최솟값으로</span>
+<span class="kw">int</span> minIdx = <span class="num">0</span>;
+
+<span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">1</span>; i &lt; size; i++) {
+    <span class="kw">if</span> (arr[i] &lt; minVal) {
+        minVal = arr[i];
+        minIdx = i;
+    }
+}
+<span class="fn">printf</span>(<span class="str">"최솟값: %d (인덱스 %d)\n"</span>, minVal, minIdx);</div>
+
+  <div class="info-box">
+    <p><strong>패턴 공통점:</strong> 모든 경우가 배열을 앞에서 뒤로 한 번 훑습니다. 이 "한 번 훑기" 패턴이 선형 탐색의 핵심입니다.</p>
+  </div>
+
+  <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+    <h3>핵심 정리</h3>
+    <ul>
+      <li>선형 탐색: 배열을 앞에서 뒤로 하나씩 비교</li>
+      <li><code>result = -1</code>로 초기화 → 찾으면 인덱스 저장 → break</li>
+      <li>break 없으면 모든 위치 검색 가능</li>
+      <li>-1은 "유효하지 않은 인덱스" = 못 찾음 신호</li>
+      <li>응용: 최솟값/최댓값, 중복 검색, 조건 검색</li>
+    </ul>
+  </div>
+</div>
+
+<!-- PAGE 5 문제 -->
+<div class="page">
+  <h2>확인 문제</h2>
+
+  <!-- 문제 1 -->
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">1</div>
+      <div class="problem-label">선형 탐색 결과 추적</div>
+      <span class="problem-diff easy">쉬움</span>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">아래 코드를 실행했을 때 출력 결과를 쓰세요.</div>
+      <div class="problem-example">
+        <div class="answer-code">int arr[] = {5, 2, 8, 3, 7};
+int target = 3, result = -1;
+for (int i = 0; i &lt; 5; i++) {
+    if (arr[i] == target) { result = i; break; }
+}
+printf("%d\n", result);</div>
+      </div>
+      <div style="margin-top:8px;height:28px;border-bottom:1px solid #e2e8f0;"></div>
+    </div>
+    <details class="problem-toggle">
+      <summary>힌트 / 정답 보기</summary>
+      <div class="problem-toggle-content">
+        <div class="hint-text">arr[0]=5(≠3), arr[1]=2(≠3), arr[2]=8(≠3), arr[3]=3(=3) → result=3, break</div>
+        <div class="answer-code">출력: 3</div>
+      </div>
+    </details>
+  </div>
+
+  <!-- 문제 2 -->
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">2</div>
+      <div class="problem-label">못 찾았을 때 출력</div>
+      <span class="problem-diff easy">쉬움</span>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">위 코드에서 <code>target = 99</code>로 바꾸면 출력은 무엇인가요? 이유도 함께 쓰세요.</div>
+      <div style="margin-top:8px;height:44px;border-bottom:1px solid #e2e8f0;"></div>
+    </div>
+    <details class="problem-toggle">
+      <summary>정답 보기</summary>
+      <div class="problem-toggle-content">
+        <div class="answer-code">출력: -1
+이유: 배열에 99가 없으므로 result가 -1인 채로 유지됨</div>
+      </div>
+    </details>
+  </div>
+
+  <!-- 문제 3 -->
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">3</div>
+      <div class="problem-label">선형 탐색 함수 작성</div>
+      <span class="problem-diff medium">보통</span>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">정수 배열 <code>arr</code>와 크기 <code>n</code>, 찾을 값 <code>target</code>을 받아 인덱스를 반환하는 코드를 작성하세요. 없으면 -1을 반환합니다.</div>
+      <div class="problem-example">
+        <div class="problem-example-row"><span class="problem-example-label">입력</span><span class="problem-example-value">arr={10,20,30,40}, n=4, target=30</span></div>
+        <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">2</span></div>
+      </div>
+      <div style="margin-top:8px;height:80px;border-bottom:1px solid #e2e8f0;"></div>
+    </div>
+    <details class="problem-toggle">
+      <summary>정답 보기</summary>
+      <div class="problem-toggle-content">
+        <div class="answer-code">int result = -1;
+for (int i = 0; i &lt; n; i++) {
+    if (arr[i] == target) {
+        result = i;
+        break;
+    }
+}
+printf("%d\n", result);  // 2</div>
+      </div>
+    </details>
+  </div>
+
+  <!-- 문제 4 -->
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">4</div>
+      <div class="problem-label">최솟값 인덱스 찾기</div>
+      <span class="problem-diff medium">보통</span>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">배열 <code>{14, 3, 22, 8, 1, 19}</code>에서 최솟값의 인덱스를 출력하는 코드를 작성하세요.</div>
+      <div class="problem-example">
+        <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">인덱스: 4 (값: 1)</span></div>
+      </div>
+      <div style="margin-top:8px;height:80px;border-bottom:1px solid #e2e8f0;"></div>
+    </div>
+    <details class="problem-toggle">
+      <summary>정답 보기</summary>
+      <div class="problem-toggle-content">
+        <div class="answer-code">int arr[] = {14, 3, 22, 8, 1, 19};
+int minIdx = 0;
+for (int i = 1; i &lt; 6; i++) {
+    if (arr[i] &lt; arr[minIdx]) minIdx = i;
+}
+printf("인덱스: %d (값: %d)\n", minIdx, arr[minIdx]);</div>
+      </div>
+    </details>
+  </div>
+
+  <!-- 문제 5 -->
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">5</div>
+      <div class="problem-label">중복값 모두 찾기</div>
+      <span class="problem-diff hard">어려움</span>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">배열 <code>{3, 7, 3, 5, 3, 2}</code>에서 값 3이 등장하는 모든 인덱스를 출력하는 코드를 작성하세요. (break 없이)</div>
+      <div class="problem-example">
+        <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">0 2 4</span></div>
+      </div>
+      <div style="margin-top:8px;height:60px;border-bottom:1px solid #e2e8f0;"></div>
+    </div>
+    <details class="problem-toggle">
+      <summary>힌트 / 정답 보기</summary>
+      <div class="problem-toggle-content">
+        <div class="hint-text">break를 빼면 모든 칸을 다 확인합니다. 찾을 때마다 printf로 인덱스를 출력하세요.</div>
+        <div class="answer-code">int arr[] = {3, 7, 3, 5, 3, 2};
+for (int i = 0; i &lt; 6; i++) {
+    if (arr[i] == 3) printf("%d ", i);
+}
+// 출력: 0 2 4</div>
+      </div>
+    </details>
+  </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 동적 구조체 배열</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+.page { width: 210mm; min-height: 297mm; margin: 16px auto; padding: 18mm 20mm 15mm 22mm; background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: relative; page-break-after: always; }
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after { content: counter(pagenum); position: absolute; bottom: 10mm; right: 16mm; font-size: 10px; color: #94a3b8; font-weight: 600; }
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark { position: absolute; top: -10px; right: -15px; font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3); line-height: 1; pointer-events: none; }
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #2563eb; font-weight: 600; }
+.code { background: #0f172a; border-radius: 8px; padding: 16px 20px; font-family: 'JetBrains Mono', monospace; font-size: 14px; color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap; }
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fce7f3; color: #9d174d; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+.info-box { background: #eff6ff; border-left: 4px solid #3b82f6; border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 14px 0; font-size: 14px; color: #1e40af; }
+.warn-box { background: #fff7ed; border-left: 4px solid #f59e0b; border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 14px 0; font-size: 14px; color: #92400e; }
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<div class="page cover">
+  <div class="cover-sidebar"></div>
+  <div class="cover-accent"></div>
+  <div class="cover-body">
+    <div class="cover-watermark">L10</div>
+    <div class="cover-label">Chapter 10 · Unit 08</div>
+    <h1 class="cover-title">동적 구조체 배열<br>크기 조절 패턴</h1>
+    <p class="cover-sub">구조체 포인터를 malloc으로 할당하고 realloc으로 크기를 조절하는 방법을 배웁니다. 실제 데이터 관리 프로그램의 핵심 패턴입니다.</p>
+    <div style="margin:20px 0;">
+      <svg viewBox="0 0 500 60" style="max-width:500px;width:100%">
+        <rect x="5" y="10" width="95" height="35" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+        <text x="52" y="32" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">struct 정의</text>
+        <line x1="105" y1="27" x2="120" y2="27" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#cv1)"/>
+        <rect x="125" y="10" width="95" height="35" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+        <text x="172" y="32" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">malloc 할당</text>
+        <line x1="225" y1="27" x2="240" y2="27" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#cv1)"/>
+        <rect x="245" y="10" width="95" height="35" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+        <text x="292" y="32" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">멤버 접근(->)</text>
+        <line x1="345" y1="27" x2="360" y2="27" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#cv1)"/>
+        <rect x="365" y="10" width="95" height="35" rx="6" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+        <text x="412" y="32" text-anchor="middle" font-size="10" fill="#dc2626" font-weight="700">realloc 확장</text>
+        <defs><marker id="cv1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker></defs>
+      </svg>
+    </div>
+    <div class="cover-goals">
+      <h3>이 유닛에서 배우는 것</h3>
+      <ul>
+        <li>구조체 포인터를 malloc으로 할당합니다.</li>
+        <li>화살표 연산자(-&gt;)로 동적 구조체 멤버에 접근합니다.</li>
+        <li>구조체 배열을 동적으로 할당합니다.</li>
+        <li>realloc으로 구조체 배열 크기를 늘립니다.</li>
+        <li>실제 데이터 관리 패턴을 구현합니다.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+  <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/computer-basics/ram.png" alt="RAM - 동적 메모리 할당 공간" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>구조체 포인터 동적 할당</h2>
+  <p>구조체도 malloc으로 동적 할당할 수 있습니다. 포인터로 멤버에 접근할 때는 <code>-&gt;</code> 연산자를 사용합니다.</p>
+  <div style="text-align:center;margin:18px 0;">
+    <svg viewBox="0 0 460 120" style="max-width:460px;width:100%">
+      <rect x="10" y="10" width="120" height="100" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="2"/>
+      <text x="70" y="32" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="800">Student *s</text>
+      <text x="70" y="52" text-anchor="middle" font-size="10" fill="#64748b">힙에 있는</text>
+      <text x="70" y="68" text-anchor="middle" font-size="10" fill="#64748b">구조체를</text>
+      <text x="70" y="84" text-anchor="middle" font-size="10" fill="#64748b">가리킴</text>
+      <path d="M135,60 L165,60" stroke="#3b82f6" stroke-width="2" marker-end="url(#sa1)"/>
+      <rect x="170" y="10" width="120" height="100" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+      <text x="230" y="32" text-anchor="middle" font-size="11" fill="#92400e" font-weight="800">힙의 Student</text>
+      <text x="190" y="55" font-size="10" fill="#374151">name: "홍길동"</text>
+      <text x="190" y="72" font-size="10" fill="#374151">age: 15</text>
+      <text x="190" y="89" font-size="10" fill="#374151">score: 95</text>
+      <text x="320" y="40" font-size="10" fill="#1d4ed8">s-&gt;name</text>
+      <text x="320" y="57" font-size="10" fill="#1d4ed8">s-&gt;age</text>
+      <text x="320" y="74" font-size="10" fill="#1d4ed8">s-&gt;score</text>
+      <text x="320" y="96" font-size="10" fill="#94a3b8">(*s).name 과 동일</text>
+      <defs><marker id="sa1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#3b82f6"/></marker></defs>
+    </svg>
+  </div>
+  <div class="code"><span class="kw">typedef struct</span> {
+    <span class="kw">char</span> name[<span class="num">30</span>];
+    <span class="kw">int</span>  age;
+    <span class="kw">int</span>  score;
+} Student;
+
+<span class="cmt">// 구조체 1개 동적 할당</span>
+Student *s = (Student*)<span class="fn">malloc</span>(<span class="kw">sizeof</span>(Student));
+<span class="kw">if</span> (s == <span class="num">NULL</span>) { <span class="kw">return</span> <span class="num">1</span>; }
+
+<span class="fn">strcpy</span>(s-&gt;name, <span class="str">"홍길동"</span>);
+s-&gt;age   = <span class="num">15</span>;
+s-&gt;score = <span class="num">95</span>;
+<span class="fn">printf</span>(<span class="str">"%s %d점\n"</span>, s-&gt;name, s-&gt;score);
+<span class="fn">free</span>(s);
+s = <span class="num">NULL</span>;</div>
+  <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/computer-basics/cpu.png" alt="CPU - 동적 메모리 처리 장치" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>구조체 배열 동적 할당</h2>
+  <div class="code"><span class="cmt">// n명의 학생 배열 동적 할당</span>
+<span class="kw">int</span> n = <span class="num">3</span>;
+Student *students = (Student*)<span class="fn">malloc</span>(<span class="kw">sizeof</span>(Student) * n);
+<span class="kw">if</span> (students == <span class="num">NULL</span>) { <span class="kw">return</span> <span class="num">1</span>; }
+
+students[<span class="num">0</span>].age = <span class="num">15</span>;    <span class="cmt">// 배열 인덱스로 접근 시 . 사용</span>
+(students+<span class="num">1</span>)-&gt;age = <span class="num">16</span>; <span class="cmt">// 포인터로 접근 시 -> 사용</span>
+<span class="fn">free</span>(students);</div>
+</div>
+
+<div class="page">
+  <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/computer-basics/hard-drive.png" alt="하드 드라이브 - 메모리 저장 개념" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>realloc으로 크기 조절</h2>
+  <div class="code"><span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="kw">#include</span> <span class="str">&lt;stdlib.h&gt;</span>
+<span class="kw">#include</span> <span class="str">&lt;string.h&gt;</span>
+
+<span class="kw">typedef struct</span> { <span class="kw">char</span> name[<span class="num">30</span>]; <span class="kw">int</span> score; } Student;
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="kw">int</span> capacity = <span class="num">2</span>, count = <span class="num">0</span>;
+    Student *list = (Student*)<span class="fn">malloc</span>(<span class="kw">sizeof</span>(Student) * capacity);
+
+    <span class="kw">char</span> name[<span class="num">30</span>]; <span class="kw">int</span> score;
+    <span class="kw">while</span> (<span class="fn">scanf</span>(<span class="str">"%s %d"</span>, name, &score) == <span class="num">2</span>) {
+        <span class="kw">if</span> (count == capacity) {
+            capacity *= <span class="num">2</span>;
+            Student *tmp = (Student*)<span class="fn">realloc</span>(list, <span class="kw">sizeof</span>(Student)*capacity);
+            <span class="kw">if</span> (tmp == <span class="num">NULL</span>) { <span class="fn">free</span>(list); <span class="kw">return</span> <span class="num">1</span>; }
+            list = tmp;
+        }
+        <span class="fn">strcpy</span>(list[count].name, name);
+        list[count].score = score;
+        count++;
+    }
+    <span class="kw">for</span> (<span class="kw">int</span> i=<span class="num">0</span>; i&lt;count; i++)
+        <span class="fn">printf</span>(<span class="str">"%s: %d\n"</span>, list[i].name, list[i].score);
+    <span class="fn">free</span>(list);
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+  <div class="info-box">capacity를 2배씩 늘리는 방식은 벡터(Vector) 자료구조의 핵심 아이디어입니다. 매번 realloc하면 느리므로 미리 여유를 두고 늘립니다.</div>
+  <div style="display:flex;align-items:center;gap:6px;margin:14px 0 4px;">
+        <img src="/images/learn/computer-basics/hard-drive.png" alt="하드 드라이브 - 메모리 저장 개념" style="width:24px;height:24px;object-fit:contain;background:#fff;border-radius:8px;">
+        <span style="font-size:12px;color:#1d4ed8;font-weight:600;">실습 구역</span>
+    </div>
+<div class="practice">
+    <div class="practice-head">따라해보세요</div>
+    <div class="practice-body">
+      <div class="practice-item">
+        <div class="practice-num">1</div>
+        <div class="practice-desc">Point 구조체(x, y)를 동적 할당하고 값을 설정한 뒤 출력하세요.</div>
+        <div class="code"><span class="kw">typedef struct</span> { <span class="kw">int</span> x, y; } Point;
+Point *p = (Point*)<span class="fn">malloc</span>(<span class="kw">sizeof</span>(Point));
+p-&gt;x = <span class="num">3</span>; p-&gt;y = <span class="num">7</span>;
+<span class="fn">printf</span>(<span class="str">"(%d, %d)\n"</span>, p-&gt;x, p-&gt;y);
+<span class="fn">free</span>(p); p = <span class="num">NULL</span>;</div>
+        <div class="practice-result">(3, 7) 출력됩니다</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+  <h2>연습 문제</h2>
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">1</div>
+      <div class="problem-label">구조체 포인터 멤버 접근</div>
+      <div class="problem-diff easy">쉬움</div>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">Student *s에서 s의 score 멤버에 접근하는 올바른 표현은?<br>① s.score<br>② *s.score<br>③ s-&gt;score<br>④ s::score</div>
+      <details class="problem-toggle">
+        <summary>힌트 / 정답 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="answer-code">정답: ③
+포인터로 구조체 멤버에 접근할 때는 -> 연산자를 씁니다.
+(*s).score 과 같은 의미입니다.</div>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">2</div>
+      <div class="problem-label">구조체 배열 할당</div>
+      <div class="problem-diff medium">보통</div>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">Student 구조체 5개를 동적으로 할당하는 코드를 작성하세요.</div>
+      <details class="problem-toggle">
+        <summary>힌트 / 정답 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="answer-code">Student *arr = (Student*)malloc(sizeof(Student) * 5);
+if (arr == NULL) return 1;
+// 사용...
+free(arr);</div>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">3</div>
+      <div class="problem-label">. vs -> 구분</div>
+      <div class="problem-diff medium">보통</div>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">Student arr[3]에서 arr[1].score와 Student *p = arr에서 (p+1)-&gt;score는 같은가요? 다른가요?</div>
+      <details class="problem-toggle">
+        <summary>힌트 / 정답 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="answer-code">같습니다.
+arr[1].score = *(arr+1).score = (p+1)->score
+모두 두 번째 Student 구조체의 score 멤버입니다.</div>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">4</div>
+      <div class="problem-label">capacity 패턴</div>
+      <div class="problem-diff medium">보통</div>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">capacity를 2배씩 늘리는 방식의 장점은 무엇인가요?</div>
+      <details class="problem-toggle">
+        <summary>힌트 / 정답 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="answer-code">데이터가 추가될 때마다 realloc을 호출하면 느립니다.
+2배씩 늘리면 realloc 호출 횟수가 log2(n)회로 줄어들어
+전체적으로 효율적입니다 (분할상환 분석 O(1) amortized).</div>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">5</div>
+      <div class="problem-label">구조체 배열 검색</div>
+      <div class="problem-diff hard">어려움</div>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">Student 배열에서 최고 점수 학생을 찾아 이름을 출력하는 함수를 작성하세요.</div>
+      <details class="problem-toggle">
+        <summary>힌트 / 정답 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="answer-code">void printBest(Student *arr, int n) {
+    int maxIdx = 0;
+    for (int i=1; i&lt;n; i++)
+        if (arr[i].score > arr[maxIdx].score) maxIdx = i;
+    printf("최고: %s %d점\n", arr[maxIdx].name, arr[maxIdx].score);
+}</div>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;margin:16px 0 6px;padding:8px 14px;background:#f0f9ff;border-radius:6px;border:1px solid #bae6fd;">
+        <img src="/images/learn/computer-basics/ram.png" alt="RAM - 동적 메모리 할당 공간" style="width:28px;height:28px;object-fit:contain;background:#fff;border-radius:8px;">
+        <img src="/images/learn/computer-basics/cpu.png" alt="CPU - 동적 메모리 처리 장치" style="width:28px;height:28px;object-fit:contain;background:#fff;border-radius:8px;">
+        <span style="font-size:12px;color:#0369a1;font-weight:600;">핵심 정리</span>
+    </div>
+<div class="summary">
+    <h3>핵심 정리</h3>
+    <ul>
+      <li>구조체 동적 할당 — malloc(sizeof(구조체))</li>
+      <li>포인터 멤버 접근 — s-&gt;멤버 ((*s).멤버와 동일)</li>
+      <li>구조체 배열 — malloc(sizeof(구조체) * n)</li>
+      <li>크기 조절 — realloc + 임시 포인터 + NULL 체크</li>
+      <li>capacity 2배 패턴 — realloc 호출 횟수 최소화</li>
+    </ul>
+  </div>
+
+    <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:20px;padding-top:10px;border-top:1px solid #f1f5f9;">
+        <img src="/images/learn/c-lang/binary-code.png" alt="이진 코드 - 메모리 할당 구조" style="width:22px;height:22px;object-fit:contain;opacity:0.6;background:#fff;border-radius:8px;">
+        <span style="font-size:10px;color:#cbd5e1;">코딩쏙 C언어</span>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

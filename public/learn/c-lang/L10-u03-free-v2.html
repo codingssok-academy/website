@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — free로 메모리 해제</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+.page { width: 210mm; min-height: 297mm; margin: 16px auto; padding: 18mm 20mm 15mm 22mm; background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: relative; page-break-after: always; }
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after { content: counter(pagenum); position: absolute; bottom: 10mm; right: 16mm; font-size: 10px; color: #94a3b8; font-weight: 600; }
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark { position: absolute; top: -10px; right: -15px; font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3); line-height: 1; pointer-events: none; }
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #2563eb; font-weight: 600; }
+.code { background: #0f172a; border-radius: 8px; padding: 16px 20px; font-family: 'JetBrains Mono', monospace; font-size: 14px; color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap; }
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fce7f3; color: #9d174d; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+.info-box { background: #eff6ff; border-left: 4px solid #3b82f6; border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 14px 0; font-size: 14px; color: #1e40af; }
+.warn-box { background: #fff7ed; border-left: 4px solid #f59e0b; border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 14px 0; font-size: 14px; color: #92400e; }
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<div class="page cover">
+  <div class="cover-sidebar"></div>
+  <div class="cover-accent"></div>
+  <div class="cover-body">
+    <div class="cover-watermark">L10</div>
+    <div class="cover-label">Chapter 10 · Unit 03</div>
+    <h1 class="cover-title">free로 메모리 해제<br>해제 후 NULL 패턴</h1>
+    <p class="cover-sub">malloc으로 빌린 메모리를 free로 반납하는 방법을 배웁니다. 해제 후 NULL 대입 패턴으로 안전한 코드를 작성합니다.</p>
+    <div style="margin:20px 0;">
+      <svg viewBox="0 0 500 60" style="max-width:500px;width:100%">
+        <rect x="5" y="10" width="80" height="35" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+        <text x="45" y="32" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">malloc()</text>
+        <line x1="90" y1="27" x2="105" y2="27" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#cv1)"/>
+        <rect x="110" y="10" width="80" height="35" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+        <text x="150" y="32" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">사용</text>
+        <line x1="195" y1="27" x2="210" y2="27" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#cv1)"/>
+        <rect x="215" y="10" width="80" height="35" rx="6" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+        <text x="255" y="32" text-anchor="middle" font-size="10" fill="#dc2626" font-weight="700">free(p)</text>
+        <line x1="300" y1="27" x2="315" y2="27" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#cv1)"/>
+        <rect x="320" y="10" width="100" height="35" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+        <text x="370" y="32" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">p = NULL 대입</text>
+        <line x1="425" y1="27" x2="440" y2="27" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#cv1)"/>
+        <rect x="445" y="10" width="50" height="35" rx="6" fill="#eff6ff" stroke="#6366f1" stroke-width="1.5"/>
+        <text x="470" y="32" text-anchor="middle" font-size="10" fill="#4338ca" font-weight="700">안전</text>
+        <defs><marker id="cv1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker></defs>
+      </svg>
+    </div>
+    <div class="cover-goals">
+      <h3>이 유닛에서 배우는 것</h3>
+      <ul>
+        <li>free() 함수로 동적 메모리를 반납할 수 있습니다.</li>
+        <li>해제 후 NULL 대입 패턴을 이해하고 사용합니다.</li>
+        <li>double free 문제를 예방하는 방법을 배웁니다.</li>
+        <li>메모리 해제를 빠뜨리지 않는 습관을 만듭니다.</li>
+        <li>안전한 메모리 관리 패턴을 익힙니다.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+  <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/computer-basics/ram.png" alt="RAM - 동적 메모리 할당 공간" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>free() — 메모리 반납</h2>
+  <p>malloc으로 빌린 메모리는 반드시 <code>free()</code>로 돌려줘야 합니다. 돌려주지 않으면 힙 메모리가 계속 줄어드는 <strong>메모리 누수(leak)</strong>가 발생합니다.</p>
+  <div style="text-align:center;margin:18px 0;">
+    <svg viewBox="0 0 460 150" style="max-width:460px;width:100%">
+      <rect x="10" y="10" width="200" height="130" rx="8" fill="#fef2f2" stroke="#ef4444" stroke-width="2"/>
+      <text x="110" y="34" text-anchor="middle" font-size="12" fill="#dc2626" font-weight="800">free 없이 (나쁜 예)</text>
+      <text x="25" y="58" font-size="11" fill="#374151" font-family="JetBrains Mono">int *p = malloc(40);</text>
+      <text x="25" y="78" font-size="11" fill="#374151" font-family="JetBrains Mono">// 사용...</text>
+      <text x="25" y="98" font-size="11" fill="#94a3b8" font-family="JetBrains Mono">// free 안 함</text>
+      <text x="110" y="128" text-anchor="middle" font-size="10" fill="#ef4444" font-weight="700">힙 메모리 낭비 / 누수</text>
+      <rect x="250" y="10" width="200" height="130" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="2"/>
+      <text x="350" y="34" text-anchor="middle" font-size="12" fill="#166534" font-weight="800">free 포함 (좋은 예)</text>
+      <text x="265" y="58" font-size="11" fill="#374151" font-family="JetBrains Mono">int *p = malloc(40);</text>
+      <text x="265" y="78" font-size="11" fill="#374151" font-family="JetBrains Mono">// 사용...</text>
+      <text x="265" y="98" font-size="11" fill="#22c55e" font-weight="700" font-family="JetBrains Mono">free(p);  // 반납!</text>
+      <text x="350" y="128" text-anchor="middle" font-size="10" fill="#22c55e" font-weight="700">힙 메모리 회수됨</text>
+    </svg>
+  </div>
+  <div class="code"><span class="cmt">// 기본 패턴</span>
+<span class="kw">int</span> *p = (<span class="kw">int</span>*)<span class="fn">malloc</span>(<span class="kw">sizeof</span>(<span class="kw">int</span>) * <span class="num">10</span>);
+<span class="kw">if</span> (p == <span class="num">NULL</span>) { <span class="kw">return</span> <span class="num">1</span>; }
+
+<span class="cmt">// ... p 사용 ...</span>
+p[<span class="num">0</span>] = <span class="num">100</span>;
+
+<span class="fn">free</span>(p);  <span class="cmt">// 메모리 반납</span></div>
+  <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/computer-basics/cpu.png" alt="CPU - 동적 메모리 처리 장치" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>free 후 NULL 대입 패턴</h2>
+  <p>free() 후에도 포인터는 이전 주소를 기억합니다. 이 상태에서 포인터를 사용하면 오류가 발생합니다. 따라서 <code>p = NULL</code>을 대입하는 습관을 들여야 합니다.</p>
+  <div style="text-align:center;margin:18px 0;">
+    <svg viewBox="0 0 460 120" style="max-width:460px;width:100%">
+      <rect x="10" y="15" width="80" height="35" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+      <text x="50" y="35" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">포인터 p</text>
+      <text x="50" y="50" text-anchor="middle" font-size="9" fill="#64748b">0x1234 기억</text>
+      <path d="M95,32 L120,32" stroke="#3b82f6" stroke-width="2" marker-end="url(#fr1)"/>
+      <rect x="125" y="15" width="80" height="35" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+      <text x="165" y="35" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">힙 메모리</text>
+      <text x="165" y="50" text-anchor="middle" font-size="9" fill="#64748b">0x1234</text>
+      <text x="110" y="75" text-anchor="middle" font-size="11" fill="#ef4444" font-weight="700">free(p) 호출</text>
+      <path d="M50,55 L50,85" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#fr2)"/>
+      <rect x="10" y="90" width="80" height="25" rx="6" fill="#fce7f3" stroke="#ec4899" stroke-width="1.5"/>
+      <text x="50" y="107" text-anchor="middle" font-size="10" fill="#be185d" font-weight="700">p → 0x1234</text>
+      <text x="150" y="107" text-anchor="middle" font-size="10" fill="#ef4444">아직 주소 기억중! 위험!</text>
+      <text x="330" y="75" text-anchor="middle" font-size="11" fill="#22c55e" font-weight="700">p = NULL 대입</text>
+      <rect x="310" y="90" width="80" height="25" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+      <text x="350" y="107" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">p → NULL</text>
+      <text x="350" y="120" text-anchor="middle" font-size="9" fill="#22c55e">안전! 사용 시 NULL 체크 가능</text>
+      <defs>
+        <marker id="fr1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#3b82f6"/></marker>
+        <marker id="fr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker>
+      </defs>
+    </svg>
+  </div>
+  <div class="code"><span class="cmt">// 안전한 해제 패턴</span>
+<span class="fn">free</span>(p);
+p = <span class="num">NULL</span>;   <span class="cmt">// 해제 후 반드시 NULL 대입!</span>
+
+<span class="cmt">// 이후에 실수로 사용해도 NULL 체크로 방어 가능</span>
+<span class="kw">if</span> (p != <span class="num">NULL</span>) {
+    <span class="cmt">// 여기만 실행됨 (안전)</span>
+}</div>
+</div>
+
+<div class="page">
+  <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/computer-basics/hard-drive.png" alt="하드 드라이브 - 메모리 저장 개념" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>함수에서 동적 메모리 사용하기</h2>
+  <p>함수에서 malloc으로 할당한 메모리는 함수가 끝나도 자동 해제되지 않습니다. 호출자가 직접 free해야 합니다.</p>
+  <div class="code"><span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="kw">#include</span> <span class="str">&lt;stdlib.h&gt;</span>
+
+<span class="cmt">// 동적 배열을 만들어 반환하는 함수</span>
+<span class="kw">int</span>* <span class="fn">createArray</span>(<span class="kw">int</span> n) {
+    <span class="kw">int</span> *arr = (<span class="kw">int</span>*)<span class="fn">malloc</span>(<span class="kw">sizeof</span>(<span class="kw">int</span>) * n);
+    <span class="kw">if</span> (arr == <span class="num">NULL</span>) <span class="kw">return</span> <span class="num">NULL</span>;
+    <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; n; i++) arr[i] = i * <span class="num">2</span>;
+    <span class="kw">return</span> arr;   <span class="cmt">// 주소 반환 (힙에 남아있음)</span>
+}
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="kw">int</span> *data = <span class="fn">createArray</span>(<span class="num">5</span>);
+    <span class="kw">if</span> (data == <span class="num">NULL</span>) <span class="kw">return</span> <span class="num">1</span>;
+
+    <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; <span class="num">5</span>; i++) <span class="fn">printf</span>(<span class="str">"%d "</span>, data[i]);
+
+    <span class="fn">free</span>(data);   <span class="cmt">// 호출자가 해제</span>
+    data = <span class="num">NULL</span>;  <span class="cmt">// NULL 대입</span>
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+  <div class="warn-box">함수 안에서 malloc하고 반환한 경우, 호출자가 반드시 free() 해야 합니다. 안 하면 메모리 누수!</div>
+  <h2>free의 주의사항</h2>
+  <div style="text-align:center;margin:16px 0;">
+    <svg viewBox="0 0 460 100" style="max-width:460px;width:100%">
+      <rect x="10" y="10" width="130" height="80" rx="8" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+      <text x="75" y="32" text-anchor="middle" font-size="11" fill="#dc2626" font-weight="800">double free 금지</text>
+      <text x="75" y="52" text-anchor="middle" font-size="10" fill="#64748b" font-family="JetBrains Mono">free(p);</text>
+      <text x="75" y="68" text-anchor="middle" font-size="10" fill="#ef4444" font-family="JetBrains Mono">free(p); // 오류!</text>
+      <text x="75" y="84" text-anchor="middle" font-size="9" fill="#ef4444">같은 주소 두 번 해제</text>
+      <rect x="165" y="10" width="130" height="80" rx="8" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+      <text x="230" y="32" text-anchor="middle" font-size="11" fill="#dc2626" font-weight="800">스택 변수 free 금지</text>
+      <text x="230" y="52" text-anchor="middle" font-size="10" fill="#64748b" font-family="JetBrains Mono">int x = 5;</text>
+      <text x="230" y="68" text-anchor="middle" font-size="10" fill="#ef4444" font-family="JetBrains Mono">free(&amp;x); // 오류!</text>
+      <text x="230" y="84" text-anchor="middle" font-size="9" fill="#ef4444">스택 메모리 해제 불가</text>
+      <rect x="320" y="10" width="130" height="80" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+      <text x="385" y="32" text-anchor="middle" font-size="11" fill="#166534" font-weight="800">안전 패턴</text>
+      <text x="385" y="52" text-anchor="middle" font-size="10" fill="#64748b" font-family="JetBrains Mono">free(p);</text>
+      <text x="385" y="68" text-anchor="middle" font-size="10" fill="#22c55e" font-family="JetBrains Mono">p = NULL;</text>
+      <text x="385" y="84" text-anchor="middle" font-size="9" fill="#22c55e">NULL이면 free 무시됨</text>
+    </svg>
+  </div>
+  <div class="info-box">free(NULL)은 아무 일도 하지 않습니다. 해제 후 NULL 대입하면 실수로 두 번 free해도 안전합니다.</div>
+  <div style="display:flex;align-items:center;gap:6px;margin:14px 0 4px;">
+        <img src="/images/learn/computer-basics/hard-drive.png" alt="하드 드라이브 - 메모리 저장 개념" style="width:24px;height:24px;object-fit:contain;background:#fff;border-radius:8px;">
+        <span style="font-size:12px;color:#1d4ed8;font-weight:600;">실습 구역</span>
+    </div>
+<div class="practice">
+    <div class="practice-head">따라해보세요</div>
+    <div class="practice-body">
+      <div class="practice-item">
+        <div class="practice-num">1</div>
+        <div class="practice-desc">안전한 해제 패턴을 직접 써보세요.</div>
+        <div class="code"><span class="kw">int</span> *arr = (<span class="kw">int</span>*)<span class="fn">malloc</span>(<span class="kw">sizeof</span>(<span class="kw">int</span>) * <span class="num">5</span>);
+<span class="kw">if</span> (arr == <span class="num">NULL</span>) <span class="kw">return</span> <span class="num">1</span>;
+arr[<span class="num">0</span>] = <span class="num">10</span>;
+<span class="fn">printf</span>(<span class="str">"%d\n"</span>, arr[<span class="num">0</span>]);
+<span class="fn">free</span>(arr);
+arr = <span class="num">NULL</span>;</div>
+        <div class="practice-result">10 출력 후 안전하게 해제됩니다</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+  <h2>연습 문제</h2>
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">1</div>
+      <div class="problem-label">free의 역할</div>
+      <div class="problem-diff easy">쉬움</div>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">free() 함수가 하는 일은 무엇인가요?<br>① 변수를 0으로 초기화한다<br>② 힙에서 빌린 메모리를 반납한다<br>③ 포인터를 삭제한다<br>④ 스택 메모리를 해제한다</div>
+      <details class="problem-toggle">
+        <summary>힌트 / 정답 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="answer-code">정답: ②
+free()는 malloc으로 힙에서 빌린 메모리를 운영체제에 반납합니다.</div>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">2</div>
+      <div class="problem-label">NULL 대입 이유</div>
+      <div class="problem-diff easy">쉬움</div>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">free() 후에 포인터에 NULL을 대입하는 이유는 무엇인가요?</div>
+      <details class="problem-toggle">
+        <summary>힌트 / 정답 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="answer-code">free() 후에도 포인터는 이전 주소를 기억합니다.
+실수로 해제된 메모리에 접근(use-after-free)하거나
+두 번 해제(double free)하는 것을 방지하기 위해
+NULL을 대입합니다. free(NULL)은 안전하게 무시됩니다.</div>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">3</div>
+      <div class="problem-label">잘못된 free 찾기</div>
+      <div class="problem-diff medium">보통</div>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">다음 코드에서 잘못된 부분을 찾아 수정하세요.</div>
+      <div class="problem-example">
+        <div class="problem-example-row"><span class="problem-example-label">코드</span><span class="problem-example-value">int x = 10;  free(&amp;x);</span></div>
+      </div>
+      <details class="problem-toggle">
+        <summary>힌트 / 정답 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="hint-text">free()는 malloc으로 할당한 메모리에만 사용해야 합니다.</div>
+          <div class="answer-code">잘못된 점: x는 스택 변수입니다. free(&amp;x)는 오류!
+스택 변수는 함수 종료 시 자동 해제됩니다.
+free()는 malloc/calloc/realloc 으로 할당한 것만 사용.</div>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">4</div>
+      <div class="problem-label">안전한 해제 코드 완성</div>
+      <div class="problem-diff medium">보통</div>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">아래 코드를 안전하게 완성하세요 — free 후 NULL 대입까지.</div>
+      <div class="problem-example">
+        <div class="problem-example-row"><span class="problem-example-label">코드</span><span class="problem-example-value">int *p = (int*)malloc(sizeof(int)*3);</span></div>
+        <div class="problem-example-row"><span class="problem-example-label"></span><span class="problem-example-value">p[0]=1; p[1]=2; p[2]=3;</span></div>
+        <div class="problem-example-row"><span class="problem-example-label"></span><span class="problem-example-value">// 여기에 안전한 해제 코드 추가</span></div>
+      </div>
+      <details class="problem-toggle">
+        <summary>힌트 / 정답 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="answer-code">free(p);
+p = NULL;</div>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">5</div>
+      <div class="problem-label">함수에서 동적 메모리</div>
+      <div class="problem-diff hard">어려움</div>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">함수에서 malloc으로 배열을 만들어 반환하고, main에서 사용 후 해제하는 코드를 작성하세요.</div>
+      <details class="problem-toggle">
+        <summary>힌트 / 정답 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="answer-code">int* makeArr(int n) {
+    int *a = (int*)malloc(sizeof(int)*n);
+    if (a == NULL) return NULL;
+    for (int i=0; i&lt;n; i++) a[i] = i+1;
+    return a;
+}
+int main() {
+    int *arr = makeArr(3);
+    if (arr == NULL) return 1;
+    for (int i=0; i&lt;3; i++) printf("%d ", arr[i]);
+    free(arr); arr = NULL;
+    return 0;
+}</div>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;margin:16px 0 6px;padding:8px 14px;background:#f0f9ff;border-radius:6px;border:1px solid #bae6fd;">
+        <img src="/images/learn/computer-basics/ram.png" alt="RAM - 동적 메모리 할당 공간" style="width:28px;height:28px;object-fit:contain;background:#fff;border-radius:8px;">
+        <img src="/images/learn/computer-basics/cpu.png" alt="CPU - 동적 메모리 처리 장치" style="width:28px;height:28px;object-fit:contain;background:#fff;border-radius:8px;">
+        <span style="font-size:12px;color:#0369a1;font-weight:600;">핵심 정리</span>
+    </div>
+<div class="summary">
+    <h3>핵심 정리</h3>
+    <ul>
+      <li>free(p) — malloc으로 빌린 메모리를 반납</li>
+      <li>free 후 p = NULL — 안전한 패턴, 이중 해제 방지</li>
+      <li>free(NULL) — 아무 일도 안 함 (안전)</li>
+      <li>스택 변수에 free 금지 — malloc 메모리에만 사용</li>
+      <li>함수에서 반환한 동적 메모리 — 호출자가 free 해야 함</li>
+    </ul>
+  </div>
+
+    <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:20px;padding-top:10px;border-top:1px solid #f1f5f9;">
+        <img src="/images/learn/c-lang/binary-code.png" alt="이진 코드 - 메모리 할당 구조" style="width:22px;height:22px;object-fit:contain;opacity:0.6;background:#fff;border-radius:8px;">
+        <span style="font-size:10px;color:#cbd5e1;">코딩쏙 C언어</span>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — BMI 계산기</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 14px;
+    color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; white-space: pre-wrap; }
+
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- 1페이지: 표지 -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">BMI</div>
+        <div class="cover-label">Project 01</div>
+        <h1 class="cover-title">BMI 계산기</h1>
+        <p class="cover-sub">키와 몸무게를 입력받아 BMI를 계산하고 체중 상태를 판정하는 프로그램을 만듭니다.</p>
+        <!-- SVG 1: 학습 로드맵 -->
+        <div style="margin:20px 0;">
+            <svg viewBox="0 0 460 55" style="max-width:460px;width:100%">
+                <rect x="5" y="10" width="90" height="30" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="50" y="30" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">input()</text>
+                <line x1="100" y1="25" x2="120" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="125" y="10" width="90" height="30" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="170" y="30" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">float() 변환</text>
+                <line x1="220" y1="25" x2="240" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="245" y="10" width="90" height="30" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="290" y="30" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">BMI 공식</text>
+                <line x1="340" y1="25" x2="360" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="365" y="10" width="90" height="30" rx="6" fill="#eff6ff" stroke="#6366f1" stroke-width="1.5"/>
+                <text x="410" y="30" text-anchor="middle" font-size="10" fill="#4338ca" font-weight="700">if/elif 판정</text>
+            </svg>
+        </div>
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/calculator.png" alt="계산기" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 프로젝트에서 배우는 것</h3>
+            <ul>
+                <li>float()로 소수점 숫자를 입력받을 수 있습니다.</li>
+                <li>BMI 공식(몸무게 / 키^2)을 코드로 구현할 수 있습니다.</li>
+                <li>if/elif/else로 조건에 따라 다른 메시지를 출력할 수 있습니다.</li>
+                <li>f-string으로 소수점 자릿수를 조절할 수 있습니다.</li>
+                <li>실생활 데이터를 활용한 프로그램을 만들 수 있습니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- 2페이지: BMI 공식 이해 -->
+<div class="page">
+    <h2>BMI란 무엇인가?</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/keyboard.png" alt="키보드" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>BMI(Body Mass Index)는 키와 몸무게로 체중 상태를 파악하는 지수입니다. 공식은 간단합니다.</p>
+
+    <!-- SVG 2: BMI 공식 시각화 -->
+    <div style="text-align:center;margin:20px 0;">
+        <svg viewBox="0 0 460 100" style="max-width:460px;width:100%">
+            <rect x="10" y="15" width="440" height="70" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="42" text-anchor="middle" font-size="14" fill="#1e3a5f" font-weight="800">BMI = 몸무게(kg)</text>
+            <line x1="130" y1="50" x2="330" y2="50" stroke="#1e3a5f" stroke-width="2"/>
+            <text x="230" y="70" text-anchor="middle" font-size="14" fill="#1e3a5f" font-weight="800">키(m) x 키(m)</text>
+            <text x="380" y="57" text-anchor="middle" font-size="20" fill="#3b82f6" font-weight="900">= ?</text>
+        </svg>
+    </div>
+
+    <p>예를 들어 키 170cm, 몸무게 65kg이면: BMI = 65 / (1.7 × 1.7) = 65 / 2.89 = 22.49</p>
+
+    <!-- SVG 3: BMI 판정 기준표 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 110" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="100" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="24" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="800">BMI 판정 기준</text>
+            <rect x="25" y="32" width="100" height="28" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="75" y="50" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">BMI 18.5 미만</text>
+            <text x="75" y="62" text-anchor="middle" font-size="9" fill="#64748b">저체중</text>
+            <rect x="135" y="32" width="100" height="28" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1"/>
+            <text x="185" y="50" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">18.5 ~ 24.9</text>
+            <text x="185" y="62" text-anchor="middle" font-size="9" fill="#64748b">정상</text>
+            <rect x="245" y="32" width="100" height="28" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1"/>
+            <text x="295" y="50" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">25.0 ~ 29.9</text>
+            <text x="295" y="62" text-anchor="middle" font-size="9" fill="#64748b">과체중</text>
+            <rect x="355" y="32" width="90" height="28" rx="6" fill="#fff4f4" stroke="#ef4444" stroke-width="1"/>
+            <text x="400" y="50" text-anchor="middle" font-size="10" fill="#dc2626" font-weight="700">30 이상</text>
+            <text x="400" y="62" text-anchor="middle" font-size="9" fill="#64748b">비만</text>
+            <text x="230" y="90" text-anchor="middle" font-size="10" fill="#475569">위 기준은 WHO 기준 (아시아 기준은 약간 다를 수 있음)</text>
+        </svg>
+    </div>
+
+    <p>파이썬에서 키를 m 단위로 바꾸는 것이 핵심입니다. <code>cm</code>를 <code>100</code>으로 나누면 m로 변환됩니다.</p>
+
+    <div class="code"><span class="cmt"># 키 단위 변환</span>
+height_cm = <span class="fn">float</span>(<span class="fn">input</span>(<span class="str">"키를 입력하세요(cm): "</span>))
+height_m = height_cm / <span class="num">100</span>    <span class="cmt"># cm → m 변환</span>
+
+<span class="fn">print</span>(<span class="str">f"키: {height_cm}cm = {height_m}m"</span>)</div>
+
+    <!-- SVG 4: cm에서 m 변환 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 380 60" style="max-width:380px;width:100%">
+            <rect x="10" y="10" width="130" height="40" rx="8" fill="#fff4f4" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="75" y="28" text-anchor="middle" font-size="11" fill="#dc2626" font-weight="700">170 (cm 단위)</text>
+            <text x="75" y="44" text-anchor="middle" font-size="9" fill="#94a3b8">직접 사용 불가</text>
+            <line x1="145" y1="30" x2="185" y2="30" stroke="#f59e0b" stroke-width="2" marker-end="url(#a1)"/>
+            <text x="165" y="22" text-anchor="middle" font-size="9" fill="#f59e0b" font-weight="700">/ 100</text>
+            <rect x="190" y="10" width="130" height="40" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="255" y="28" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">1.70 (m 단위)</text>
+            <text x="255" y="44" text-anchor="middle" font-size="9" fill="#64748b">BMI 공식에 사용</text>
+            <defs><marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#f59e0b"/></marker></defs>
+        </svg>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="완성" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">키를 cm로 입력받아 m로 변환해서 출력하세요.</div>
+                <div class="code">height_cm = <span class="fn">float</span>(<span class="fn">input</span>(<span class="str">"키(cm): "</span>))
+height_m = height_cm / <span class="num">100</span>
+<span class="fn">print</span>(<span class="str">f"키: {height_m}m"</span>)</div>
+                <div class="practice-result">170 입력 시 키: 1.7m 출력</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">몸무게도 함께 입력받고, BMI를 계산해보세요.</div>
+                <div class="code">height_cm = <span class="fn">float</span>(<span class="fn">input</span>(<span class="str">"키(cm): "</span>))
+weight = <span class="fn">float</span>(<span class="fn">input</span>(<span class="str">"몸무게(kg): "</span>))
+height_m = height_cm / <span class="num">100</span>
+bmi = weight / (height_m * height_m)
+<span class="fn">print</span>(<span class="str">f"BMI: {bmi}"</span>)</div>
+                <div class="practice-result">170cm, 65kg 입력 시 BMI: 22.49...가 나옵니다</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">BMI를 소수점 2자리로 반올림해서 출력하세요.</div>
+                <div class="code">height_cm = <span class="fn">float</span>(<span class="fn">input</span>(<span class="str">"키(cm): "</span>))
+weight = <span class="fn">float</span>(<span class="fn">input</span>(<span class="str">"몸무게(kg): "</span>))
+height_m = height_cm / <span class="num">100</span>
+bmi = weight / (height_m * height_m)
+<span class="fn">print</span>(<span class="str">f"BMI: {bmi:.2f}"</span>)</div>
+                <div class="practice-result">BMI: 22.49처럼 깔끔하게 출력됩니다</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3페이지: 판정 로직 -->
+<div class="page">
+    <h2>if/elif로 체중 판정하기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="로직" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>BMI 값에 따라 <code>if</code>, <code>elif</code>, <code>else</code>로 다른 판정 메시지를 출력합니다.</p>
+
+    <!-- SVG 5: if/elif 흐름도 -->
+    <div style="text-align:center;margin:20px 0;">
+        <svg viewBox="0 0 460 130" style="max-width:460px;width:100%">
+            <rect x="170" y="5" width="120" height="30" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="230" y="25" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">BMI 값 계산</text>
+            <line x1="230" y1="35" x2="230" y2="50" stroke="#94a3b8" stroke-width="1.5"/>
+            <polygon points="230,50 215,65 245,65" fill="#f59e0b" stroke="#f59e0b"/>
+            <text x="230" y="60" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">if</text>
+            <line x1="215" y1="57" x2="60" y2="80" stroke="#94a3b8" stroke-width="1.5"/>
+            <line x1="245" y1="57" x2="230" y2="80" stroke="#94a3b8" stroke-width="1.5"/>
+            <line x1="245" y1="57" x2="340" y2="80" stroke="#94a3b8" stroke-width="1.5"/>
+            <line x1="245" y1="57" x2="420" y2="80" stroke="#94a3b8" stroke-width="1.5"/>
+            <rect x="10" y="80" width="80" height="30" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="50" y="100" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">18.5 미만</text>
+            <text x="50" y="122" text-anchor="middle" font-size="8" fill="#64748b">저체중</text>
+            <rect x="100" y="80" width="80" height="30" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1"/>
+            <text x="140" y="100" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">18.5~24.9</text>
+            <text x="140" y="122" text-anchor="middle" font-size="8" fill="#64748b">정상</text>
+            <rect x="290" y="80" width="80" height="30" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1"/>
+            <text x="330" y="100" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">25~29.9</text>
+            <text x="330" y="122" text-anchor="middle" font-size="8" fill="#64748b">과체중</text>
+            <rect x="380" y="80" width="70" height="30" rx="6" fill="#fff4f4" stroke="#ef4444" stroke-width="1"/>
+            <text x="415" y="100" text-anchor="middle" font-size="9" fill="#dc2626" font-weight="700">30 이상</text>
+            <text x="415" y="122" text-anchor="middle" font-size="8" fill="#64748b">비만</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># BMI 판정 (if/elif/else)</span>
+<span class="kw">if</span> bmi < <span class="num">18.5</span>:
+    result = <span class="str">"저체중"</span>
+<span class="kw">elif</span> bmi < <span class="num">25</span>:
+    result = <span class="str">"정상"</span>
+<span class="kw">elif</span> bmi < <span class="num">30</span>:
+    result = <span class="str">"과체중"</span>
+<span class="kw">else</span>:
+    result = <span class="str">"비만"</span>
+
+<span class="fn">print</span>(<span class="str">f"판정: {result}"</span>)</div>
+
+    <!-- SVG 6: 완성 프로그램 실행 화면 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 380 140" style="max-width:380px;width:100%">
+            <rect x="10" y="5" width="360" height="130" rx="8" fill="#0f172a"/>
+            <text x="20" y="28" font-family="monospace" font-size="11" fill="#94a3b8">키를 입력하세요(cm): <tspan fill="#86efac">170</tspan></text>
+            <text x="20" y="48" font-family="monospace" font-size="11" fill="#94a3b8">몸무게를 입력하세요(kg): <tspan fill="#86efac">65</tspan></text>
+            <line x1="20" y1="58" x2="360" y2="58" stroke="#334155" stroke-width="0.5"/>
+            <text x="20" y="76" font-family="monospace" font-size="11" fill="#e2e8f0">--- BMI 결과 ---</text>
+            <text x="20" y="94" font-family="monospace" font-size="11" fill="#e2e8f0">BMI: 22.49</text>
+            <text x="20" y="112" font-family="monospace" font-size="11" fill="#86efac">판정: 정상</text>
+            <text x="20" y="128" font-family="monospace" font-size="11" fill="#64748b">건강한 체중을 유지하고 있습니다!</text>
+        </svg>
+    </div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">if/elif/else로 판정 메시지를 출력하는 코드를 만들고, BMI 22를 테스트하세요.</div>
+                <div class="code">bmi = <span class="fn">float</span>(<span class="fn">input</span>(<span class="str">"BMI 값: "</span>))
+<span class="kw">if</span> bmi < <span class="num">18.5</span>:
+    <span class="fn">print</span>(<span class="str">"저체중"</span>)
+<span class="kw">elif</span> bmi < <span class="num">25</span>:
+    <span class="fn">print</span>(<span class="str">"정상"</span>)
+<span class="kw">else</span>:
+    <span class="fn">print</span>(<span class="str">"과체중 이상"</span>)</div>
+                <div class="practice-result">22 입력 시 "정상" 출력</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">BMI 17, 27, 35를 각각 입력해서 판정이 맞는지 확인하세요.</div>
+                <div class="code">bmi = <span class="fn">float</span>(<span class="fn">input</span>(<span class="str">"BMI: "</span>))
+<span class="kw">if</span> bmi < <span class="num">18.5</span>:
+    result = <span class="str">"저체중"</span>
+<span class="kw">elif</span> bmi < <span class="num">25</span>:
+    result = <span class="str">"정상"</span>
+<span class="kw">elif</span> bmi < <span class="num">30</span>:
+    result = <span class="str">"과체중"</span>
+<span class="kw">else</span>:
+    result = <span class="str">"비만"</span>
+<span class="fn">print</span>(result)</div>
+                <div class="practice-result">17→저체중, 27→과체중, 35→비만</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">판정 결과에 따라 다른 조언 메시지도 출력해보세요.</div>
+                <div class="code">bmi = <span class="num">22.5</span>
+<span class="kw">if</span> bmi < <span class="num">18.5</span>:
+    msg = <span class="str">"더 많이 드세요!"</span>
+<span class="kw">elif</span> bmi < <span class="num">25</span>:
+    msg = <span class="str">"건강한 체중입니다!"</span>
+<span class="kw">else</span>:
+    msg = <span class="str">"운동을 시작해보세요!"</span>
+<span class="fn">print</span>(msg)</div>
+                <div class="practice-result">건강한 체중입니다! 출력</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 4페이지: 완성 프로그램 -->
+<div class="page">
+    <h2>완성: BMI 계산기 전체 코드</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/monitor.png" alt="모니터" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>지금까지 배운 내용을 합쳐서 완전한 BMI 계산기를 만듭니다.</p>
+
+    <!-- SVG 7: 프로그램 전체 구조 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+            <rect x="5" y="10" width="440" height="60" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="28" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="800">BMI 계산기 구조</text>
+            <rect x="20" y="36" width="70" height="24" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="55" y="52" text-anchor="middle" font-size="8" fill="#1d4ed8" font-weight="600">키 입력</text>
+            <rect x="100" y="36" width="70" height="24" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="135" y="52" text-anchor="middle" font-size="8" fill="#1d4ed8" font-weight="600">몸무게 입력</text>
+            <rect x="180" y="36" width="70" height="24" rx="4" fill="#fefce8" stroke="#f59e0b" stroke-width="1"/>
+            <text x="215" y="52" text-anchor="middle" font-size="8" fill="#92400e" font-weight="600">cm→m 변환</text>
+            <rect x="260" y="36" width="70" height="24" rx="4" fill="#f0fdf4" stroke="#22c55e" stroke-width="1"/>
+            <text x="295" y="52" text-anchor="middle" font-size="8" fill="#166534" font-weight="600">BMI 계산</text>
+            <rect x="340" y="36" width="90" height="24" rx="4" fill="#eff6ff" stroke="#6366f1" stroke-width="1"/>
+            <text x="385" y="52" text-anchor="middle" font-size="8" fill="#4338ca" font-weight="600">if/elif 판정</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># BMI 계산기 — 완성 버전</span>
+<span class="fn">print</span>(<span class="str">"=== BMI 계산기 ==="</span>)
+height_cm = <span class="fn">float</span>(<span class="fn">input</span>(<span class="str">"키를 입력하세요(cm): "</span>))
+weight = <span class="fn">float</span>(<span class="fn">input</span>(<span class="str">"몸무게를 입력하세요(kg): "</span>))
+
+height_m = height_cm / <span class="num">100</span>
+bmi = weight / (height_m * height_m)
+
+<span class="kw">if</span> bmi < <span class="num">18.5</span>:
+    result = <span class="str">"저체중"</span>
+    advice = <span class="str">"영양 섭취를 늘려보세요."</span>
+<span class="kw">elif</span> bmi < <span class="num">25</span>:
+    result = <span class="str">"정상"</span>
+    advice = <span class="str">"건강한 체중입니다!"</span>
+<span class="kw">elif</span> bmi < <span class="num">30</span>:
+    result = <span class="str">"과체중"</span>
+    advice = <span class="str">"운동을 시작해보세요."</span>
+<span class="kw">else</span>:
+    result = <span class="str">"비만"</span>
+    advice = <span class="str">"전문가 상담을 추천합니다."</span>
+
+<span class="fn">print</span>(<span class="str">f"\n--- 결과 ---"</span>)
+<span class="fn">print</span>(<span class="str">f"키: {height_cm}cm / 몸무게: {weight}kg"</span>)
+<span class="fn">print</span>(<span class="str">f"BMI: {bmi:.2f}"</span>)
+<span class="fn">print</span>(<span class="str">f"판정: {result}"</span>)
+<span class="fn">print</span>(<span class="str">f"조언: {advice}"</span>)</div>
+
+    <!-- SVG 8: 실행 결과 예시 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 380 130" style="max-width:380px;width:100%">
+            <rect x="10" y="5" width="360" height="120" rx="8" fill="#0f172a"/>
+            <text x="20" y="28" font-family="monospace" font-size="10" fill="#e2e8f0">키를 입력하세요(cm): <tspan fill="#86efac">160</tspan></text>
+            <text x="20" y="46" font-family="monospace" font-size="10" fill="#e2e8f0">몸무게를 입력하세요(kg): <tspan fill="#86efac">70</tspan></text>
+            <line x1="20" y1="55" x2="360" y2="55" stroke="#334155" stroke-width="0.5"/>
+            <text x="20" y="73" font-family="monospace" font-size="10" fill="#e2e8f0">키: 160.0cm / 몸무게: 70.0kg</text>
+            <text x="20" y="91" font-family="monospace" font-size="10" fill="#e2e8f0">BMI: 27.34</text>
+            <text x="20" y="109" font-family="monospace" font-size="10" fill="#fcd34d">판정: 과체중</text>
+        </svg>
+    </div>
+
+    <!-- SVG 9: 여러 BMI 값 비교표 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 70" style="max-width:460px;width:100%">
+            <text x="10" y="18" font-size="11" fill="#1e3a5f" font-weight="700">BMI 실제 예시</text>
+            <rect x="10" y="25" width="95" height="38" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="57" y="42" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="600">키 165, 50kg</text>
+            <text x="57" y="56" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">BMI 18.4 (저체중)</text>
+            <rect x="115" y="25" width="95" height="38" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1"/>
+            <text x="162" y="42" text-anchor="middle" font-size="9" fill="#166534" font-weight="600">키 170, 65kg</text>
+            <text x="162" y="56" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">BMI 22.5 (정상)</text>
+            <rect x="220" y="25" width="95" height="38" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1"/>
+            <text x="267" y="42" text-anchor="middle" font-size="9" fill="#92400e" font-weight="600">키 170, 75kg</text>
+            <text x="267" y="56" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">BMI 26.0 (과체중)</text>
+            <rect x="325" y="25" width="125" height="38" rx="6" fill="#fff4f4" stroke="#ef4444" stroke-width="1"/>
+            <text x="387" y="42" text-anchor="middle" font-size="9" fill="#dc2626" font-weight="600">키 160, 85kg</text>
+            <text x="387" y="56" text-anchor="middle" font-size="10" fill="#dc2626" font-weight="700">BMI 33.2 (비만)</text>
+        </svg>
+    </div>
+</div>
+
+<!-- 5페이지: 문제 -->
+<div class="page">
+    <h2>직접 풀어보세요</h2>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q1</div>
+            <div class="problem-label">BMI 기본 계산</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">키 175cm, 몸무게 68kg을 직접 변수에 넣고 BMI를 계산해 소수점 1자리로 출력하세요. <code>input()</code> 없이 변수값을 직접 대입하면 됩니다.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">BMI: 22.2</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle"><summary>힌트 보기</summary><div class="problem-toggle-content"><div class="hint-text">height_m = 175 / 100 으로 변환 후, bmi = weight / (height_m * height_m) 계산, f"{bmi:.1f}" 포맷 사용</div></div></details>
+        <details class="problem-toggle"><summary>정답 확인</summary><div class="problem-toggle-content"><div class="answer-code">height_cm = 175
+weight = 68
+height_m = height_cm / 100
+bmi = weight / (height_m * height_m)
+print(f"BMI: {bmi:.1f}")</div></div></details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q2</div>
+            <div class="problem-label">BMI + 판정 출력</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">키와 몸무게를 <code>input()</code>으로 입력받아 BMI를 계산하고, "저체중" / "정상" / "과체중" / "비만" 중 하나를 출력하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">입력</span><span class="problem-example-value">키: 158 / 몸무게: 55</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">BMI: 22.04 / 판정: 정상</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle"><summary>힌트 보기</summary><div class="problem-toggle-content"><div class="hint-text">float(input())으로 입력, /100으로 변환, if/elif/else로 판정</div></div></details>
+        <details class="problem-toggle"><summary>정답 확인</summary><div class="problem-toggle-content"><div class="answer-code">h = float(input("키(cm): "))
+w = float(input("몸무게(kg): "))
+m = h / 100
+bmi = w / (m * m)
+if bmi < 18.5:
+    r = "저체중"
+elif bmi < 25:
+    r = "정상"
+elif bmi < 30:
+    r = "과체중"
+else:
+    r = "비만"
+print(f"BMI: {bmi:.2f} / 판정: {r}")</div></div></details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q3</div>
+            <div class="problem-label">이상적인 몸무게 계산</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">키를 입력받아 BMI 22 기준의 "이상적인 몸무게"를 계산해 출력하세요. 공식: 이상 체중 = 22 × 키(m)^2</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">입력</span><span class="problem-example-value">키: 170</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">이상적인 몸무게: 63.58kg</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle"><summary>힌트 보기</summary><div class="problem-toggle-content"><div class="hint-text">height_m = float(input()) / 100, ideal = 22 * height_m * height_m</div></div></details>
+        <details class="problem-toggle"><summary>정답 확인</summary><div class="problem-toggle-content"><div class="answer-code">h_cm = float(input("키(cm): "))
+h_m = h_cm / 100
+ideal = 22 * h_m * h_m
+print(f"이상적인 몸무게: {ideal:.2f}kg")</div></div></details>
+    </div>
+</div>
+
+<!-- 6페이지: 핵심 요약 -->
+<div class="page">
+    <h2>핵심 요약</h2>
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>이 유닛에서 배운 것</h3>
+        <ul>
+            <li><code>float(input())</code>으로 소수점 숫자를 입력받는다</li>
+            <li>cm 단위를 / 100으로 m 단위로 변환한다</li>
+            <li>BMI 공식: 몸무게(kg) / (키(m) * 키(m))</li>
+            <li><code>if / elif / else</code>로 조건에 따라 다른 결과를 출력한다</li>
+            <li><code>f"{bmi:.2f}"</code>로 소수점 2자리까지 출력한다</li>
+            <li>변수에 판정 결과 문자열을 저장한 뒤 한 번에 출력하면 코드가 깔끔해진다</li>
+        </ul>
+    </div>
+
+    <!-- SVG 10: 핵심 흐름 요약 -->
+    <div style="text-align:center;margin:20px 0;">
+        <svg viewBox="0 0 460 60" style="max-width:460px;width:100%">
+            <rect x="5" y="10" width="80" height="40" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="45" y="28" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">float(input)</text>
+            <text x="45" y="42" text-anchor="middle" font-size="8" fill="#64748b">키/몸무게</text>
+            <line x1="90" y1="30" x2="110" y2="30" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#a2)"/>
+            <rect x="115" y="10" width="80" height="40" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="155" y="28" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">/ 100</text>
+            <text x="155" y="42" text-anchor="middle" font-size="8" fill="#64748b">cm → m</text>
+            <line x1="200" y1="30" x2="220" y2="30" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#a2)"/>
+            <rect x="225" y="10" width="90" height="40" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="270" y="28" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">w/(m*m)</text>
+            <text x="270" y="42" text-anchor="middle" font-size="8" fill="#64748b">BMI 계산</text>
+            <line x1="320" y1="30" x2="340" y2="30" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#a2)"/>
+            <rect x="345" y="10" width="110" height="40" rx="8" fill="#eff6ff" stroke="#6366f1" stroke-width="1.5"/>
+            <text x="400" y="28" text-anchor="middle" font-size="9" fill="#4338ca" font-weight="700">if/elif/else</text>
+            <text x="400" y="42" text-anchor="middle" font-size="8" fill="#64748b">판정 출력</text>
+            <defs><marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker></defs>
+        </svg>
+    </div>
+
+    <!-- SVG 11: 판정 기준 요약 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="70" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="24" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="800">BMI 판정 코드 요약</text>
+            <text x="30" y="44" font-family="monospace" font-size="10" fill="#c084fc">if</text>
+            <text x="50" y="44" font-family="monospace" font-size="10" fill="#e2e8f0"> bmi &lt; 18.5:</text>
+            <text x="200" y="44" font-family="monospace" font-size="10" fill="#7dd3fc">"저체중"</text>
+            <text x="30" y="60" font-family="monospace" font-size="10" fill="#c084fc">elif</text>
+            <text x="60" y="60" font-family="monospace" font-size="10" fill="#e2e8f0"> bmi &lt; 25:</text>
+            <text x="200" y="60" font-family="monospace" font-size="10" fill="#86efac">"정상"</text>
+            <text x="300" y="44" font-family="monospace" font-size="10" fill="#c084fc">elif</text>
+            <text x="330" y="44" font-family="monospace" font-size="10" fill="#e2e8f0"> bmi &lt; 30:</text>
+            <text x="300" y="60" font-family="monospace" font-size="10" fill="#fcd34d">"과체중"</text>
+            <text x="400" y="52" font-family="monospace" font-size="10" fill="#f87171">"비만"</text>
+        </svg>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

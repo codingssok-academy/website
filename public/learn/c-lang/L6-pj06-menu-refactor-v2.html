@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 프로젝트 06: 메뉴 시스템 리팩토링</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+.page { width: 210mm; min-height: 297mm; margin: 16px auto; padding: 18mm 20mm 15mm 22mm; background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: relative; page-break-after: always; }
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after { content: counter(pagenum); position: absolute; bottom: 10mm; right: 16mm; font-size: 10px; color: #94a3b8; font-weight: 600; }
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark { position: absolute; top: -10px; right: -15px; font-size: 200px; font-weight: 900; color: rgba(180,195,212,0.3); line-height: 1; pointer-events: none; }
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 34px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #2563eb; font-weight: 600; }
+.code { background: #0f172a; border-radius: 8px; padding: 16px 20px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.8; margin: 14px 0; white-space: pre-wrap; }
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.practice { margin: 18px 0; border-left: 4px solid #3b82f6; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 14px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+.problem { margin: 16px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+.summary { border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+.pj-banner { background: linear-gradient(135deg, #1e3a5f 0%, #2d5a8e 100%); border-radius: 10px; padding: 16px 20px; margin: 0 0 20px; color: #fff; }
+.pj-banner-label { font-size: 11px; font-weight: 700; color: #93c5fd; letter-spacing: 2px; margin-bottom: 4px; }
+.pj-banner-title { font-size: 18px; font-weight: 900; }
+.pj-banner-desc { font-size: 13px; color: #bfdbfe; margin-top: 4px; }
+.compare { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 16px 0; }
+.compare-box { border-radius: 8px; padding: 12px 14px; }
+.compare-box.before { background: #fef2f2; border: 1.5px solid #ef4444; }
+.compare-box.after { background: #f0fdf4; border: 1.5px solid #22c55e; }
+.compare-label { font-size: 11px; font-weight: 700; margin-bottom: 8px; }
+.compare-box.before .compare-label { color: #dc2626; }
+.compare-box.after .compare-label { color: #166534; }
+.compare-code { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #374151; line-height: 1.7; }
+.callout { border-radius: 8px; padding: 12px 16px; margin: 14px 0; font-size: 14px; line-height: 1.7; }
+.callout.green { background: #f0fdf4; border-left: 4px solid #22c55e; color: #166534; }
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">P6</div>
+        <div class="cover-label">Level 6 · Project 06</div>
+        <h1 class="cover-title">메뉴 시스템 리팩토링<br>— L4 메뉴를 함수로 분리</h1>
+        <p class="cover-sub">긴 main 함수에 뭉쳐있던 메뉴 코드를 역할별 함수(showMenu, processMenu, doAction)로 나누는 리팩토링 프로젝트입니다.</p>
+
+        <div style="text-align:center;margin:24px 0;">
+            <svg viewBox="0 0 480 120" style="max-width:480px;width:100%">
+                <defs><marker id="r1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker></defs>
+                <!-- 전: 긴 main -->
+                <rect x="10" y="15" width="160" height="90" rx="8" fill="#fef2f2" stroke="#ef4444" stroke-width="2"/>
+                <text x="90" y="35" text-anchor="middle" font-size="11" fill="#dc2626" font-weight="700">리팩토링 전</text>
+                <text x="90" y="53" text-anchor="middle" font-size="10" fill="#374151" font-family="JetBrains Mono">main() {</text>
+                <text x="90" y="68" text-anchor="middle" font-size="10" fill="#374151" font-family="JetBrains Mono">  printf 메뉴...</text>
+                <text x="90" y="83" text-anchor="middle" font-size="10" fill="#374151" font-family="JetBrains Mono">  switch...</text>
+                <text x="90" y="98" text-anchor="middle" font-size="10" fill="#ef4444">한 덩어리</text>
+                <!-- 화살표 -->
+                <line x1="175" y1="60" x2="210" y2="60" stroke="#94a3b8" stroke-width="2" marker-end="url(#r1)"/>
+                <text x="192" y="55" text-anchor="middle" font-size="9" fill="#64748b" font-weight="700">분리</text>
+                <!-- 후: 함수들 -->
+                <rect x="215" y="10" width="125" height="30" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="277" y="30" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">showMenu()</text>
+                <rect x="215" y="48" width="125" height="30" rx="6" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="277" y="68" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">processMenu(choice)</text>
+                <rect x="215" y="86" width="125" height="30" rx="6" fill="#fef9c3" stroke="#eab308" stroke-width="1.5"/>
+                <text x="277" y="106" text-anchor="middle" font-size="11" fill="#854d0e" font-weight="700">doAction(n)</text>
+                <!-- main 작아짐 -->
+                <rect x="370" y="45" width="100" height="40" rx="6" fill="#ede9fe" stroke="#6366f1" stroke-width="1.5"/>
+                <text x="420" y="62" text-anchor="middle" font-size="11" fill="#4338ca" font-weight="700">main()</text>
+                <text x="420" y="78" text-anchor="middle" font-size="9" fill="#6366f1">함수 호출만</text>
+            </svg>
+        </div>
+
+        <div class="cover-goals">
+            <h3>이 프로젝트에서 배우는 것</h3>
+            <ul>
+                <li>리팩토링이 무엇인지 이해합니다.</li>
+                <li>코드를 역할별로 나누는 단일 책임 원칙을 배웁니다.</li>
+                <li>showMenu / processMenu / doAction 패턴을 익힙니다.</li>
+                <li>while 루프와 함수 조합으로 메뉴 시스템을 만듭니다.</li>
+                <li>main이 짧고 읽기 쉬운 코드를 작성합니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="page">
+    <div class="pj-banner">
+        <div class="pj-banner-label">PROJECT 06</div>
+        <div class="pj-banner-title">메뉴 시스템 리팩토링</div>
+        <div class="pj-banner-desc">단일 책임 원칙 + showMenu/processMenu 패턴</div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/c-lang/gear.png" alt="함수 기어 - 재사용 가능한 코드 구조" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>리팩토링이란?</h2>
+    <p>리팩토링(Refactoring)은 코드의 <strong>동작은 바꾸지 않으면서</strong> 구조를 더 읽기 쉽게 개선하는 작업입니다. 긴 main 함수를 역할별로 나눕니다.</p>
+
+    <div class="compare">
+        <div class="compare-box before">
+            <div class="compare-label">리팩토링 전 (나쁜 예)</div>
+            <div class="compare-code">int main() {
+  // 메뉴 출력 코드 20줄
+  printf("1.덧셈\n");
+  printf("2.뺄셈\n");
+  ...
+  // 처리 코드 30줄
+  switch(choice) {
+    ...
+  }
+  // main이 100줄 넘어감
+}</div>
+        </div>
+        <div class="compare-box after">
+            <div class="compare-label">리팩토링 후 (좋은 예)</div>
+            <div class="compare-code">int main() {
+  int choice;
+  do {
+    showMenu();
+    scanf("%d", &choice);
+    processMenu(choice);
+  } while (choice != 0);
+  return 0;
+  // main은 5~10줄
+}</div>
+        </div>
+    </div>
+
+    <div class="code"><span class="cmt">// 메뉴 출력 전담 함수</span>
+<span class="kw">void</span> <span class="fn">showMenu</span>() {
+    <span class="fn">printf</span>(<span class="str">"=== 간단 계산기 ===\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"1. 덧셈\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"2. 뺄셈\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"3. 곱셈\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"0. 종료\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"선택: "</span>);
+}
+
+<span class="cmt">// 연산 처리 전담 함수</span>
+<span class="kw">void</span> <span class="fn">processMenu</span>(<span class="kw">int</span> choice) {
+    <span class="kw">int</span> a, b;
+    <span class="kw">if</span> (choice &gt;= <span class="num">1</span> &amp;&amp; choice &lt;= <span class="num">3</span>) {
+        <span class="fn">printf</span>(<span class="str">"a b 입력: "</span>); <span class="fn">scanf</span>(<span class="str">"%d %d"</span>, &amp;a, &amp;b);
+    }
+    <span class="kw">switch</span>(choice) {
+        <span class="kw">case</span> <span class="num">1</span>: <span class="fn">printf</span>(<span class="str">"%d+%d=%d\n"</span>, a, b, a+b); <span class="kw">break</span>;
+        <span class="kw">case</span> <span class="num">2</span>: <span class="fn">printf</span>(<span class="str">"%d-%d=%d\n"</span>, a, b, a-b); <span class="kw">break</span>;
+        <span class="kw">case</span> <span class="num">3</span>: <span class="fn">printf</span>(<span class="str">"%d*%d=%d\n"</span>, a, b, a*b); <span class="kw">break</span>;
+        <span class="kw">case</span> <span class="num">0</span>: <span class="fn">printf</span>(<span class="str">"종료합니다.\n"</span>);           <span class="kw">break</span>;
+        <span class="kw">default</span>: <span class="fn">printf</span>(<span class="str">"잘못된 선택\n"</span>);
+    }
+}</div>
+
+    <div class="callout green">
+        <strong>단일 책임 원칙:</strong> 하나의 함수는 하나의 일만 합니다. showMenu는 메뉴 출력만, processMenu는 처리만 담당합니다. 이렇게 하면 나중에 메뉴를 바꾸고 싶을 때 showMenu만 수정하면 됩니다.
+    </div>
+</div>
+
+<div class="page">
+    <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/c-lang/puzzle.png" alt="퍼즐 조각 - 함수 조합으로 완성되는 프로그램" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>메뉴 시스템 — 전체 코드</h2>
+
+    <div class="code"><span class="cmt">/* ====== 함수로 분리된 메뉴 시스템 ====== */</span>
+#include &lt;stdio.h&gt;
+
+<span class="kw">void</span> <span class="fn">showMenu</span>() {
+    <span class="fn">printf</span>(<span class="str">"\n=== 간단 계산기 ===\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"1. 덧셈\n2. 뺄셈\n3. 곱셈\n4. 나눗셈\n0. 종료\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"선택: "</span>);
+}
+
+<span class="kw">void</span> <span class="fn">doAdd</span>()  { <span class="kw">int</span> a,b; <span class="fn">scanf</span>(<span class="str">"%d%d"</span>,&amp;a,&amp;b); <span class="fn">printf</span>(<span class="str">"결과: %d\n"</span>,a+b); }
+<span class="kw">void</span> <span class="fn">doSub</span>()  { <span class="kw">int</span> a,b; <span class="fn">scanf</span>(<span class="str">"%d%d"</span>,&amp;a,&amp;b); <span class="fn">printf</span>(<span class="str">"결과: %d\n"</span>,a-b); }
+<span class="kw">void</span> <span class="fn">doMul</span>()  { <span class="kw">int</span> a,b; <span class="fn">scanf</span>(<span class="str">"%d%d"</span>,&amp;a,&amp;b); <span class="fn">printf</span>(<span class="str">"결과: %d\n"</span>,a*b); }
+<span class="kw">void</span> <span class="fn">doDiv</span>()  {
+    <span class="kw">int</span> a,b; <span class="fn">scanf</span>(<span class="str">"%d%d"</span>,&amp;a,&amp;b);
+    <span class="kw">if</span>(b==<span class="num">0</span>) <span class="fn">printf</span>(<span class="str">"0으로 나눌 수 없습니다!\n"</span>);
+    <span class="kw">else</span>     <span class="fn">printf</span>(<span class="str">"결과: %d\n"</span>,a/b);
+}
+
+<span class="kw">void</span> <span class="fn">processMenu</span>(<span class="kw">int</span> choice) {
+    <span class="fn">printf</span>(<span class="str">"두 수 입력: "</span>);
+    <span class="kw">switch</span>(choice) {
+        <span class="kw">case</span> <span class="num">1</span>: <span class="fn">doAdd</span>(); <span class="kw">break</span>;
+        <span class="kw">case</span> <span class="num">2</span>: <span class="fn">doSub</span>(); <span class="kw">break</span>;
+        <span class="kw">case</span> <span class="num">3</span>: <span class="fn">doMul</span>(); <span class="kw">break</span>;
+        <span class="kw">case</span> <span class="num">4</span>: <span class="fn">doDiv</span>(); <span class="kw">break</span>;
+        <span class="kw">case</span> <span class="num">0</span>: <span class="fn">printf</span>(<span class="str">"종료합니다!\n"</span>); <span class="kw">break</span>;
+        <span class="kw">default</span>: <span class="fn">printf</span>(<span class="str">"잘못된 선택입니다.\n"</span>);
+    }
+}
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="kw">int</span> choice;
+    <span class="kw">do</span> {
+        <span class="fn">showMenu</span>();
+        <span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;choice);
+        <span class="fn">processMenu</span>(choice);
+    } <span class="kw">while</span> (choice != <span class="num">0</span>);
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 60" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="50" rx="8" fill="#0f172a"/>
+            <text x="25" y="25" font-size="11" fill="#67e8f9" font-family="JetBrains Mono">=== 간단 계산기 ===  선택: 1</text>
+            <text x="25" y="45" font-size="11" fill="#86efac" font-family="JetBrains Mono">두 수 입력: 7 3  결과: 10</text>
+        </svg>
+    </div>
+</div>
+
+<div class="page">
+    <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/c-lang/book.png" alt="교재 - 함수 개념 학습" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>연습 문제</h2>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">1</div>
+            <div class="problem-label">리팩토링 이유</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">main 함수가 100줄이 넘으면 어떤 문제가 생기나요? 2가지 이상 설명하세요.</div>
+            <details class="problem-toggle">
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">① 읽기 어려워진다 ② 버그 위치를 찾기 힘들다 ③ 특정 부분만 수정하기 어렵다 ④ 코드 재사용이 불가능하다</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">2</div>
+            <div class="problem-label">do-while 이해</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">메뉴에서 <code>do { ... } while(choice != 0);</code>을 쓰는 이유는?</div>
+            <details class="problem-toggle">
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">do-while은 조건 검사 전에 한 번 반드시 실행됩니다. 메뉴는 최소 한 번은 보여줘야 하므로 do-while이 적합합니다.</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">3</div>
+            <div class="problem-label">새 메뉴 항목 추가</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">위 프로그램에 "5. 나머지 연산"을 추가하세요. showMenu, processMenu, doMod 함수를 각각 수정/추가합니다.</div>
+            <details class="problem-toggle">
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">doMod() 함수 작성 → showMenu에 "5. 나머지" 추가 → processMenu의 switch에 case 5: doMod(); 추가</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">4</div>
+            <div class="problem-label">잘못된 입력 반복 처리</div>
+            <span class="problem-diff hard">어려움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">1~4나 0 이외의 숫자를 입력하면 "잘못된 선택입니다. 다시 입력하세요." 를 출력하고 메뉴를 다시 보여주도록 수정하세요.</div>
+            <details class="problem-toggle">
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">processMenu에서 default 처리 후 main의 do-while 루프가 메뉴를 자동으로 다시 보여줍니다. 별도 로직 없이 default 메시지만 바꾸면 됩니다.</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:8px;margin:16px 0 6px;padding:8px 14px;background:#f0f9ff;border-radius:6px;border:1px solid #bae6fd;">
+        <img src="/images/learn/c-lang/gear.png" alt="함수 기어 - 재사용 가능한 코드 구조" style="width:28px;height:28px;object-fit:contain;background:#fff;border-radius:8px;">
+        <img src="/images/learn/c-lang/puzzle.png" alt="퍼즐 조각 - 함수 조합으로 완성되는 프로그램" style="width:28px;height:28px;object-fit:contain;background:#fff;border-radius:8px;">
+        <span style="font-size:12px;color:#0369a1;font-weight:600;">핵심 정리</span>
+    </div>
+<div class="summary">
+        <h3>핵심 정리</h3>
+        <ul>
+            <li>리팩토링: 동작은 유지하면서 코드 구조 개선</li>
+            <li>showMenu() — 출력만, processMenu() — 처리만 (단일 책임)</li>
+            <li><code>do { } while(choice != 0)</code> — 최소 한 번 실행 보장</li>
+            <li>함수 분리 후 새 기능 추가가 훨씬 쉬워짐</li>
+        </ul>
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:20px;padding-top:10px;border-top:1px solid #f1f5f9;">
+        <img src="/images/learn/c-lang/flowchart.png" alt="순서도 - 함수 호출 흐름" style="width:22px;height:22px;object-fit:contain;opacity:0.6;background:#fff;border-radius:8px;">
+        <span style="font-size:10px;color:#cbd5e1;">코딩쏙 C언어</span>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

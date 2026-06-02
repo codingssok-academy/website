@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 출석부 시스템</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+.page { width: 210mm; min-height: 297mm; margin: 16px auto; padding: 18mm 20mm 15mm 22mm; background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: relative; page-break-after: always; }
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after { content: counter(pagenum); position: absolute; bottom: 10mm; right: 16mm; font-size: 10px; color: #94a3b8; font-weight: 600; }
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark { position: absolute; top: -10px; right: -15px; font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3); line-height: 1; pointer-events: none; }
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #2563eb; font-weight: 600; }
+.code { background: #0f172a; border-radius: 8px; padding: 16px 20px; font-family: 'JetBrains Mono', monospace; font-size: 14px; color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap; }
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fce7f3; color: #9d174d; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<div class="page cover">
+  <div class="cover-sidebar"></div>
+  <div class="cover-accent"></div>
+  <div class="cover-body">
+    <div class="cover-watermark">P4</div>
+    <div class="cover-label">Project 04 · Level 5</div>
+    <h1 class="cover-title">출석부 시스템</h1>
+    <p class="cover-sub">학생 번호 배열과 출석 배열을 만들어 출석 체크를 하고 출석/결석 목록을 출력하는 시스템을 구현합니다.</p>
+    <div style="margin:24px 0;">
+      <svg viewBox="0 0 460 110" style="max-width:460px;width:100%">
+        <text x="230" y="16" text-anchor="middle" font-size="11" fill="#64748b" font-weight="600">출석부 배열 구조</text>
+        <!-- 학생번호 배열 -->
+        <text x="10" y="36" font-size="10" fill="#374151" font-weight="700">번호:</text>
+        <rect x="50" y="24" width="45" height="24" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+        <text x="72" y="40" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">1</text>
+        <rect x="100" y="24" width="45" height="24" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+        <text x="122" y="40" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">2</text>
+        <rect x="150" y="24" width="45" height="24" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+        <text x="172" y="40" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">3</text>
+        <rect x="200" y="24" width="45" height="24" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+        <text x="222" y="40" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">4</text>
+        <rect x="250" y="24" width="45" height="24" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+        <text x="272" y="40" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">5</text>
+        <!-- 출석 배열 -->
+        <text x="10" y="68" font-size="10" fill="#374151" font-weight="700">출석:</text>
+        <rect x="50" y="56" width="45" height="24" rx="4" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+        <text x="72" y="72" text-anchor="middle" font-size="11" fill="#166534" font-weight="800">O</text>
+        <rect x="100" y="56" width="45" height="24" rx="4" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+        <text x="122" y="72" text-anchor="middle" font-size="11" fill="#dc2626" font-weight="800">X</text>
+        <rect x="150" y="56" width="45" height="24" rx="4" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+        <text x="172" y="72" text-anchor="middle" font-size="11" fill="#166534" font-weight="800">O</text>
+        <rect x="200" y="56" width="45" height="24" rx="4" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+        <text x="222" y="72" text-anchor="middle" font-size="11" fill="#dc2626" font-weight="800">X</text>
+        <rect x="250" y="56" width="45" height="24" rx="4" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+        <text x="272" y="72" text-anchor="middle" font-size="11" fill="#166534" font-weight="800">O</text>
+        <!-- 결과 -->
+        <rect x="10" y="88" width="440" height="18" rx="4" fill="#fffbeb"/>
+        <text x="230" y="101" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">출석: 3명 (1,3,5번) / 결석: 2명 (2,4번)</text>
+      </svg>
+    </div>
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/database.png" alt="데이터베이스" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+      <h3>이 프로젝트에서 배우는 것</h3>
+      <ul>
+        <li>두 배열을 같은 인덱스로 연결(병렬 배열)하는 방법을 익힙니다.</li>
+        <li>0/1 플래그 배열로 상태를 관리하는 기법을 배웁니다.</li>
+        <li>배열을 순회하며 조건별 목록을 출력합니다.</li>
+        <li>출석률을 계산해 백분율로 출력합니다.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+  <h2>출석 배열 설계</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/folder.png" alt="데이터" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+  <p>출석 여부는 0(결석) 또는 1(출석)로 표현합니다. 학생 번호 배열과 출석 배열을 같은 인덱스로 연결합니다.</p>
+  <div style="text-align:center;margin:14px 0;">
+    <svg viewBox="0 0 460 100" style="max-width:460px;width:100%">
+      <text x="230" y="16" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="800">0/1 플래그 배열 — 출석 상태 관리</text>
+      <rect x="10" y="24" width="200" height="30" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+      <text x="110" y="43" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">attend[i] = 1 → 출석</text>
+      <rect x="250" y="24" width="200" height="30" rx="6" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+      <text x="350" y="43" text-anchor="middle" font-size="11" fill="#dc2626" font-weight="700">attend[i] = 0 → 결석</text>
+      <!-- 배열 표 -->
+      <text x="10" y="72" font-size="9" fill="#64748b">attend:</text>
+      <rect x="55" y="62" width="32" height="20" rx="3" fill="#f0fdf4" stroke="#22c55e"/><text x="71" y="76" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">1</text>
+      <rect x="92" y="62" width="32" height="20" rx="3" fill="#fef2f2" stroke="#ef4444"/><text x="108" y="76" text-anchor="middle" font-size="10" fill="#dc2626" font-weight="700">0</text>
+      <rect x="129" y="62" width="32" height="20" rx="3" fill="#f0fdf4" stroke="#22c55e"/><text x="145" y="76" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">1</text>
+      <rect x="166" y="62" width="32" height="20" rx="3" fill="#fef2f2" stroke="#ef4444"/><text x="182" y="76" text-anchor="middle" font-size="10" fill="#dc2626" font-weight="700">0</text>
+      <rect x="203" y="62" width="32" height="20" rx="3" fill="#f0fdf4" stroke="#22c55e"/><text x="219" y="76" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">1</text>
+      <text x="55" y="90" font-size="9" fill="#64748b">[0]=1번</text>
+      <text x="92" y="90" font-size="9" fill="#64748b">[1]=2번</text>
+      <text x="129" y="90" font-size="9" fill="#64748b">[2]=3번</text>
+      <text x="166" y="90" font-size="9" fill="#64748b">[3]=4번</text>
+      <text x="203" y="90" font-size="9" fill="#64748b">[4]=5번</text>
+    </svg>
+  </div>
+  <div class="code"><span class="kw">int</span> n = <span class="num">5</span>;
+<span class="kw">int</span> stuNum[<span class="num">5</span>] = {<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>, <span class="num">5</span>};     <span class="cmt">// 학생 번호</span>
+<span class="kw">int</span> attend[<span class="num">5</span>] = {<span class="num">0</span>};                 <span class="cmt">// 출석 상태 (0=결석)</span>
+
+<span class="cmt">// 출석 체크 — 출석한 학생 번호 입력</span>
+<span class="kw">int</span> num;
+<span class="fn">printf</span>(<span class="str">"출석한 학생 번호 입력 (0=종료): "</span>);
+<span class="kw">while</span> (<span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;num) == <span class="num">1</span> &amp;&amp; num != <span class="num">0</span>) {
+    <span class="kw">if</span> (num &gt;= <span class="num">1</span> &amp;&amp; num &lt;= n)
+        attend[num - <span class="num">1</span>] = <span class="num">1</span>;  <span class="cmt">// 번호→인덱스 변환</span>
+    <span class="fn">printf</span>(<span class="str">"번호 입력: "</span>);
+}</div>
+  <h2>출석/결석 목록 출력</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/hard-drive.png" alt="저장소" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+  <div class="code"><span class="fn">printf</span>(<span class="str">"\n=== 출석부 결과 ===\n"</span>);
+<span class="kw">int</span> presentCount = <span class="num">0</span>;
+
+<span class="fn">printf</span>(<span class="str">"[출석] "</span>);
+<span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; n; i++) {
+    <span class="kw">if</span> (attend[i] == <span class="num">1</span>) {
+        <span class="fn">printf</span>(<span class="str">"%d번 "</span>, stuNum[i]);
+        presentCount++;
+    }
+}
+<span class="fn">printf</span>(<span class="str">"\n[결석] "</span>);
+<span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; n; i++) {
+    <span class="kw">if</span> (attend[i] == <span class="num">0</span>)
+        <span class="fn">printf</span>(<span class="str">"%d번 "</span>, stuNum[i]);
+}
+<span class="fn">printf</span>(<span class="str">"\n출석률: %.1f%%\n"</span>, (<span class="kw">float</span>)presentCount / n * <span class="num">100</span>);</div>
+</div>
+
+<div class="page">
+  <h2>완성 코드</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="처리" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+  <div class="code">#<span class="kw">include</span> <span class="str">&lt;stdio.h&gt;</span>
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="kw">int</span> n = <span class="num">5</span>;
+    <span class="kw">int</span> attend[<span class="num">5</span>] = {<span class="num">0</span>};
+
+    <span class="fn">printf</span>(<span class="str">"=== 출석 체크 ===\n"</span>);
+    <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; n; i++) {
+        <span class="fn">printf</span>(<span class="str">"%d번 학생 (1=출석, 0=결석): "</span>, i + <span class="num">1</span>);
+        <span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;attend[i]);
+    }
+
+    <span class="kw">int</span> cnt = <span class="num">0</span>;
+    <span class="fn">printf</span>(<span class="str">"\n[출석] "</span>);
+    <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; n; i++)
+        <span class="kw">if</span> (attend[i]) { <span class="fn">printf</span>(<span class="str">"%d번 "</span>, i+<span class="num">1</span>); cnt++; }
+
+    <span class="fn">printf</span>(<span class="str">"\n[결석] "</span>);
+    <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; n; i++)
+        <span class="kw">if</span> (!attend[i]) <span class="fn">printf</span>(<span class="str">"%d번 "</span>, i+<span class="num">1</span>);
+
+    <span class="fn">printf</span>(<span class="str">"\n출석: %d명 / 결석: %d명\n"</span>, cnt, n-cnt);
+    <span class="fn">printf</span>(<span class="str">"출석률: %.1f%%\n"</span>, (<span class="kw">float</span>)cnt/n*<span class="num">100</span>);
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+  <div style="text-align:center;margin:14px 0;">
+    <svg viewBox="0 0 460 90" style="max-width:460px;width:100%">
+      <text x="230" y="14" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="800">실행 예시</text>
+      <rect x="10" y="20" width="440" height="64" rx="8" fill="#0f172a"/>
+      <text x="30" y="40" font-size="10" fill="#86efac" font-family="JetBrains Mono">1번 학생: 1   2번 학생: 0   3번 학생: 1</text>
+      <text x="30" y="56" font-size="10" fill="#e2e8f0" font-family="JetBrains Mono">[출석] 1번 3번 4번   [결석] 2번 5번</text>
+      <text x="30" y="72" font-size="10" fill="#67e8f9" font-family="JetBrains Mono">출석률: 60.0%</text>
+    </svg>
+  </div>
+  <div class="practice">
+    <div class="practice-head">따라해보세요</div>
+    <div class="practice-body">
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="완성" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+      <div class="practice-item">
+        <div class="practice-num">1</div>
+        <div class="practice-desc"><code>!attend[i]</code>는 <code>attend[i] == 0</code>과 같습니다. 두 방법을 모두 사용해보세요.</div>
+        <div class="practice-result">!0 = 1(참), !1 = 0(거짓)으로 조건 판단</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+  <h2>연습 문제</h2>
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">1</div>
+      <div class="problem-label">연속 결석 학생 찾기</div>
+      <span class="problem-diff medium">중간</span>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">attend 배열에서 i번과 i+1번 모두 결석인 연속 결석 쌍을 출력하세요.</div>
+      <div class="problem-example">
+        <div class="problem-example-row"><span class="problem-example-label">배열</span><span class="problem-example-value">{1, 0, 0, 1, 0}</span></div>
+        <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">2번-3번 연속 결석</span></div>
+      </div>
+      <details class="problem-toggle">
+        <summary>힌트 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="hint-text">for(i=0; i&lt;n-1; i++) 로 순회하면서 attend[i]==0 && attend[i+1]==0 조건을 확인하세요.</div>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">2</div>
+      <div class="problem-label">출석률 등급 부여</div>
+      <span class="problem-diff easy">쉬움</span>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">출석률에 따라 등급을 출력하세요. 90% 이상 A, 70% 이상 B, 50% 이상 C, 미만 D.</div>
+      <div class="problem-example">
+        <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">출석률: 80.0% → 등급: B</span></div>
+      </div>
+      <details class="problem-toggle">
+        <summary>정답 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="answer-code"><span class="kw">char</span> grade;
+<span class="kw">if</span>(rate&gt;=<span class="num">90</span>) grade=<span class="str">'A'</span>;
+<span class="kw">else if</span>(rate&gt;=<span class="num">70</span>) grade=<span class="str">'B'</span>;
+<span class="kw">else if</span>(rate&gt;=<span class="num">50</span>) grade=<span class="str">'C'</span>;
+<span class="kw">else</span> grade=<span class="str">'D'</span>;
+<span class="fn">printf</span>(<span class="str">"등급: %c\n"</span>,grade);</div>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">3</div>
+      <div class="problem-label">주간 출석 체크 (5일)</div>
+      <span class="problem-diff hard">어려움</span>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">5명 × 5일 출석 데이터를 1차원 배열로 표현하세요. attend[학생인덱스 * 5 + 요일인덱스]로 접근합니다.</div>
+      <div class="problem-example">
+        <div class="problem-example-row"><span class="problem-example-label">크기</span><span class="problem-example-value">int attend[25]</span></div>
+        <div class="problem-example-row"><span class="problem-example-label">접근</span><span class="problem-example-value">attend[i*5+j] = 학생i의 j번째 날</span></div>
+      </div>
+      <details class="problem-toggle">
+        <summary>힌트 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="hint-text">2차원 개념을 1차원으로 표현하는 방법입니다. 다음 프로젝트에서 진짜 2차원 배열을 배웁니다.</div>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+    <h3>핵심 정리</h3>
+    <ul>
+      <li>0/1 플래그 배열로 상태 관리 (0=결석, 1=출석)</li>
+      <li>병렬 배열: 같은 인덱스 두 배열을 연결하여 사용</li>
+      <li><code>if(attend[i])</code> = <code>if(attend[i]==1)</code> (0이 아니면 참)</li>
+      <li><code>!attend[i]</code> = <code>attend[i]==0</code> (부정 연산자)</li>
+      <li>출석률 = (출석수 / 전체) × 100.0 (float 형변환 필요)</li>
+    </ul>
+  </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 교재 — 커서 이동과 범위 선택</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+
+  :root {
+    --navy: #1a2e4a;
+    --navy-mid: #2c4a6e;
+    --navy-light: #3d6590;
+    --orange: #e07830;
+    --orange-light: #f5e6d8;
+    --white: #ffffff;
+    --bg: #f7f8fa;
+    --bg-warm: #faf9f7;
+    --gray-50: #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-300: #d1d5db;
+    --gray-400: #9ca3af;
+    --gray-500: #6b7280;
+    --gray-600: #4b5563;
+    --gray-700: #374151;
+    --gray-800: #1f2937;
+    --text: #2d3748;
+    --green: #16a34a;
+    --green-bg: #dcfce7;
+    --red: #dc2626;
+    --red-bg: #fee2e2;
+    --blue: #2563eb;
+    --blue-bg: #dbeafe;
+    --yellow-bg: #fef9c3;
+    --font: 'Noto Sans KR', sans-serif;
+    --mono: 'JetBrains Mono', 'Consolas', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: var(--font); background: #e8eaed; font-size: 15px; }
+
+  /* ========== PAGE ========== */
+  .page {
+    width: 210mm;
+    min-height: 295mm;
+    margin: 24px auto;
+    background: var(--white);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* ========== PAGE 1: CHAPTER START ========== */
+  .chapter-page {
+    display: flex;
+    min-height: 295mm;
+  }
+
+  .chapter-sidebar {
+    width: 10px;
+    background: var(--navy);
+    flex-shrink: 0;
+  }
+
+  .chapter-accent-bar {
+    width: 7px;
+    background: var(--orange);
+    flex-shrink: 0;
+  }
+
+  .chapter-body {
+    flex: 1;
+    padding: 70px 65px 50px 55px;
+    position: relative;
+  }
+
+  .chapter-watermark {
+    position: absolute;
+    top: -10px;
+    right: -15px;
+    font-size: 280px;
+    font-weight: 900;
+    color: rgba(180,195,212,0.35);
+    line-height: 1;
+    pointer-events: none;
+    letter-spacing: -10px;
+  }
+
+  .chapter-label {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--navy-mid);
+    letter-spacing: 2px;
+    margin-bottom: 4px;
+  }
+
+  .chapter-title {
+    font-size: 40px;
+    font-weight: 900;
+    color: var(--navy);
+    line-height: 1.15;
+    margin-bottom: 12px;
+    position: relative;
+    z-index: 1;
+  
+    word-break: keep-all;
+    overflow-wrap: normal;
+    line-break: strict;
+  }
+
+  .chapter-sub {
+    font-size: 16px;
+    color: var(--gray-500);
+    font-weight: 400;
+    margin-bottom: 20px;
+    padding-bottom: 28px;
+    border-bottom: 1px solid var(--gray-200);
+  }
+
+  /* Learning objectives */
+  .obj-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--navy);
+    margin-bottom: 16px;
+    margin-top: 32px;
+  }
+
+  .obj-list {
+    list-style: none;
+    margin-bottom: 40px;
+  }
+
+  .obj-list li {
+    padding: 5px 0 5px 24px;
+    position: relative;
+    font-size: 15px;
+    color: var(--gray-700);
+    line-height: 1.6;
+  }
+
+  .obj-list li::before {
+    content: '•';
+    position: absolute;
+    left: 8px;
+    color: var(--navy-mid);
+    font-weight: 700;
+  }
+
+  /* Prerequisites flow */
+  .prereq-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--navy);
+    margin-bottom: 18px;
+  }
+
+  .prereq-flow {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 44px;
+  }
+
+  .prereq-item {
+    padding: 9px 22px;
+    border: 1.5px solid var(--gray-300);
+    border-radius: 50px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--gray-600);
+    background: var(--white);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+
+  .prereq-item.current {
+    border-color: var(--navy);
+    color: var(--navy);
+    font-weight: 700;
+    background: #edf2f7;
+    box-shadow: 0 2px 6px rgba(26,46,74,0.12);
+  }
+
+  .prereq-arrow {
+    width: 36px;
+    text-align: center;
+    color: var(--gray-300);
+    font-size: 18px;
+    font-weight: 300;
+  }
+
+  /* Predict box */
+  .predict-box {
+    background: var(--gray-50);
+    border: 1.5px solid var(--gray-200);
+    border-radius: 12px;
+    padding: 24px 28px;
+  }
+
+  .predict-label {
+    display: inline-block;
+    background: var(--orange);
+    color: var(--white);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 3px 12px;
+    border-radius: 4px;
+    margin-bottom: 14px;
+    letter-spacing: 0.5px;
+  }
+
+  .predict-q {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--navy);
+    margin-bottom: 16px;
+  }
+
+  .predict-code {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: 8px;
+    padding: 14px 18px;
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.65;
+    color: var(--gray-700);
+  }
+
+  /* ========== PAGE 2: CORE CONTENT ========== */
+  .content-page {
+    padding: 55px 65px;
+  }
+
+  .unit-header-bar {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+
+  .unit-tag {
+    font-size: 12px;
+    color: var(--orange);
+    font-weight: 600;
+    letter-spacing: 1px;
+  }
+
+  .unit-title-sm {
+    font-size: 14px;
+    color: var(--gray-400);
+    font-weight: 400;
+  }
+
+  .section-title {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--navy);
+    margin-bottom: 24px;
+    margin-top: 8px;
+    padding-left: 16px;
+    border-left: 5px solid var(--orange);
+  }
+
+  p {
+    font-size: 15.5px;
+    line-height: 1.9;
+    color: var(--text);
+    margin-bottom: 18px;
+  }
+
+  p code {
+    font-family: var(--mono);
+    font-size: 13.5px;
+    background: #f1f3f5;
+    padding: 2px 7px;
+    border-radius: 4px;
+    color: var(--navy);
+    font-weight: 500;
+  }
+
+  /* Code block */
+  .code-wrap {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    border: 1px solid var(--gray-200);
+    margin: 22px 0;
+  }
+
+  .code-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 18px;
+    background: var(--navy);
+    font-size: 12px;
+  }
+
+  .code-bar-lang {
+    font-family: var(--mono);
+    font-weight: 600;
+    color: var(--white);
+  }
+
+  .code-bar-file {
+    color: rgba(255,255,255,0.6);
+    font-weight: 400;
+  }
+
+  .code-body {
+    background: #f8f9fb;
+    padding: 20px 0;
+    font-family: var(--mono);
+    font-size: 13.5px;
+    line-height: 1.75;
+    border: 1px solid var(--gray-200);
+    border-top: none;
+    border-radius: 0 0 12px 12px;
+  }
+
+  .code-line {
+    display: flex;
+    padding: 0 20px;
+  }
+
+  .code-line:hover {
+    background: #f0f4f8;
+  }
+
+  .code-line.highlighted {
+    background: #fff8e1;
+  }
+
+  .ln {
+    width: 30px;
+    text-align: right;
+    color: #b8bfc8;
+    font-size: 12px;
+    margin-right: 18px;
+    user-select: none;
+    flex-shrink: 0;
+    padding-top: 1px;
+  }
+
+  .lc { flex: 1; }
+
+  /* syntax */
+  .s-pp { color: #8b5cf6; font-weight: 600; }
+  .s-str { color: #d97706; }
+  .s-type { color: #2563eb; font-weight: 500; }
+  .s-kw { color: #7c3aed; font-weight: 500; }
+  .s-fn { color: #059669; font-weight: 500; }
+  .s-num { color: #dc2626; }
+  .s-cm { color: #9ca3af; font-style: italic; }
+
+  /* Output block */
+  .output-wrap {
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 10px 0 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    border: 1px solid #d1d5db;
+  }
+
+  .output-bar {
+    padding: 9px 18px;
+    background: #374151;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--white);
+    letter-spacing: 0.5px;
+  }
+
+  .output-body {
+    padding: 16px 20px;
+    font-family: var(--mono);
+    font-size: 13.5px;
+    line-height: 1.7;
+    color: var(--gray-800);
+    background: #f1f5f9;
+    border: 1px solid var(--gray-200);
+    border-top: none;
+    border-radius: 0 0 10px 10px;
+  }
+
+  /* Callout */
+  .tip {
+    margin: 28px 0;
+    padding: 18px 24px;
+    background: #dbeafe;
+    border-left: 5px solid #2563eb;
+    border-radius: 0 12px 12px 0;
+    font-size: 14.5px;
+    line-height: 1.8;
+    color: var(--text);
+  }
+
+  .tip-label {
+    font-weight: 700;
+    color: #2563eb;
+    font-size: 13px;
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .warn {
+    margin: 28px 0;
+    padding: 18px 24px;
+    background: #fef3c7;
+    border-left: 5px solid #d97706;
+    border-radius: 0 12px 12px 0;
+    font-size: 14.5px;
+    line-height: 1.8;
+  }
+
+  .warn-label {
+    font-weight: 700;
+    color: #d97706;
+    font-size: 13px;
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .note-box {
+    margin: 28px 0;
+    padding: 18px 24px;
+    background: #e2e8f0;
+    border-left: 5px solid #64748b;
+    border-radius: 0 12px 12px 0;
+    font-size: 14.5px;
+    line-height: 1.8;
+  }
+
+  .note-label {
+    font-weight: 700;
+    color: var(--gray-600);
+    font-size: 13px;
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  /* Trace table */
+  table.trace {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 28px 0;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+    font-size: 14px;
+  }
+
+  table.trace th {
+    background: var(--navy);
+    color: var(--white);
+    padding: 10px 16px;
+    text-align: left;
+    font-weight: 500;
+    font-size: 13px;
+  }
+
+  table.trace td {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--gray-200);
+    color: var(--gray-700);
+  }
+
+  table.trace tr:nth-child(even) td { background: var(--gray-50); }
+  table.trace tr:last-child td { border-bottom: none; }
+
+  table.trace td code {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    background: #eef1f5;
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--navy);
+  }
+
+  /* ========== PAGE 3: PROBLEMS ========== */
+  .problems-header {
+    margin-bottom: 8px;
+  }
+
+  .problems-chapter-ref {
+    font-size: 13px;
+    color: var(--gray-500);
+    margin-bottom: 4px;
+  }
+
+  .problems-title {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--navy);
+    margin-bottom: 24px;
+  }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .prob-card {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 3px 15px rgba(0,0,0,0.06);
+  }
+
+  .prob-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    background: var(--navy);
+  }
+
+  .prob-num {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--white);
+  }
+
+  .diff {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  .diff-basic { background: #22c55e; color: white; }
+  .diff-mid { background: #f59e0b; color: white; }
+  .diff-hard { background: #ef4444; color: white; }
+
+  .prob-desc {
+    font-size: 13.5px;
+    line-height: 1.65;
+    color: var(--gray-600);
+    margin-bottom: 10px;
+    padding: 14px 16px 0;
+  }
+
+  .prob-code {
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin: 0 16px 16px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: var(--gray-600);
+  }
+
+  /* Competition section */
+  .comp-section {
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 2px solid var(--navy);
+  }
+
+  .comp-title {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--navy);
+    margin-bottom: 20px;
+  }
+
+  .comp-card {
+    background: var(--white);
+    border: 1.5px solid var(--gray-200);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.06);
+  }
+
+  .comp-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    background: #0f766e;
+  }
+
+  .comp-header .comp-name {
+    color: var(--white);
+    font-size: 15px;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  .comp-inner {
+    padding: 14px 18px 18px;
+  }
+
+  .comp-badge {
+    display: inline-block;
+    padding: 3px 12px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .badge-bj { background: #93c5fd; color: #1e3a5f; }
+  .badge-cu { background: #c4b5fd; color: #3b1f7e; }
+  .badge-pg { background: #7dd3fc; color: #0c4a6e; }
+
+  .comp-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 6px;
+  }
+
+  .comp-desc {
+    font-size: 14px;
+    color: var(--gray-600);
+    line-height: 1.7;
+    margin-bottom: 14px;
+  }
+
+  .io-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .io-card {
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--gray-200);
+  }
+
+  .io-h {
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--gray-600);
+    background: #e2e8f0;
+  }
+
+  .io-c {
+    padding: 10px 14px;
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.5;
+    background: var(--white);
+  }
+
+  /* ========== DEBUG LAB ========== */
+  .debug-section {
+    margin: 24px 0;
+    border: 2px solid var(--red);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .debug-bar {
+    background: var(--red);
+    color: var(--white);
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+
+  .debug-body {
+    padding: 20px;
+    background: #fef2f2;
+  }
+
+  /* 10축 connection */
+  .connect-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin: 28px 0;
+  }
+
+  .connect-card {
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    border: 1px solid var(--gray-200);
+    box-shadow: 0 3px 14px rgba(0,0,0,0.05);
+  }
+
+  .connect-card h5 {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+
+  .connect-card p {
+    font-size: 13px;
+    margin: 0;
+    color: var(--gray-600);
+    line-height: 1.6;
+  }
+
+  .cc1 { border-top: 3px solid #8b5cf6; }
+  .cc1 h5 { color: #8b5cf6; }
+  .cc2 { border-top: 3px solid var(--green); }
+  .cc2 h5 { color: var(--green); }
+  .cc3 { border-top: 3px solid var(--navy); }
+  .cc3 h5 { color: var(--navy); }
+
+  /* PAGE NUMBER */
+  .page-num {
+    position: absolute;
+    bottom: 20px;
+    right: 30px;
+    font-size: 12px;
+    color: var(--gray-400);
+  }
+
+  /* WARMUP */
+  .warmup-box {
+    background: #e0e7f1;
+    border-radius: 12px;
+    padding: 24px 28px;
+    margin: 28px 0;
+    border: 2px solid #c7d2e0;
+  }
+
+  .warmup-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 14px;
+  }
+
+  .wq {
+    padding: 9px 16px;
+    background: var(--white);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    font-size: 14px;
+    border: 1px solid var(--gray-200);
+    color: var(--gray-700);
+  }
+
+  .wq b { color: var(--navy); margin-right: 6px; }
+  .wq .hint { color: var(--gray-400); font-size: 13px; }
+
+  /* ===== CONTEST PROBLEMS PAGE ===== */
+  .contest-page-wrap .chapter-page {
+    min-height: auto;
+  }
+
+  .contest-page-wrap .chapter-page > div:last-child {
+    min-width: 0;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+
+  .contest-card {
+    background: white;
+    border: 1.5px solid var(--gray-200);
+    border-radius: 12px;
+    margin-bottom: 28px;
+    overflow: hidden;
+    break-inside: avoid;
+  }
+
+  .contest-header {
+    background: var(--navy);
+    color: white;
+    padding: 14px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .contest-num-source {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .contest-num {
+    font-weight: 700;
+    font-size: 16px;
+  }
+
+  .contest-source {
+    background: rgba(255,255,255,0.15);
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .contest-body {
+    padding: 20px 24px 24px;
+  }
+
+  .contest-question {
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--text);
+    margin: 0 0 16px;
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+
+  .contest-expected {
+    background: #1e293b;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+
+  .contest-expected-label {
+    background: #334155;
+    color: #94a3b8;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .contest-expected-body {
+    color: #e2e8f0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    padding: 12px 16px;
+    margin: 0;
+    white-space: pre;
+  }
+
+  .contest-write-area {
+    border: 2px dashed var(--gray-300);
+    border-radius: 10px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+
+  .contest-write-area:focus-within {
+    border-color: var(--orange);
+    border-style: solid;
+  }
+
+  .contest-write-label {
+    background: var(--bg);
+    color: var(--gray-500);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 8px 14px;
+    border-bottom: 1px solid var(--gray-200);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .contest-textarea {
+    width: 100%;
+    min-height: 140px;
+    padding: 16px 18px;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--text);
+    background: #fafbfc;
+    border: none;
+    outline: none;
+    resize: vertical;
+    tab-size: 4;
+    box-sizing: border-box;
+  
+  }
+
+  .contest-textarea::placeholder {
+    color: var(--gray-300);
+  }
+
+  @media print {
+    body { background: white; }
+    .page { box-shadow: none; margin: 0; page-break-after: always; }
+    .contest-textarea { border: 1px solid var(--gray-300); min-height: 180px; }
+  }
+
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <div class="chapter-page">
+    <div class="chapter-sidebar"></div>
+    <div class="chapter-accent-bar"></div>
+    <div class="chapter-body">
+      <div class="chapter-watermark">06</div>
+      <div class="chapter-label">Chapter 06</div>
+      <h1 class="chapter-title">커서 이동과 범위 선택</h1>
+      <p class="chapter-sub">문서를 고치는 힘은 어디를 정확히 선택하느냐에서 시작돼요. 커서와 블록 선택부터 익혀봐요.</p>
+
+      <h3 class="obj-title">이 유닛에서 배우는 것</h3>
+      <ul class="obj-list">
+        <li>커서의 의미를 설명할 수 있어요.</li>
+        <li>글자, 단어, 줄, 문단 단위로 범위를 선택할 수 있어요.</li>
+        <li>마우스와 키보드 선택 방식을 구분해요.</li>
+        <li>수정 전에 먼저 선택하는 습관을 익혀요.</li>
+      </ul>
+
+      <h3 class="prereq-title">선수 학습</h3>
+      <div class="prereq-flow">
+        <div class="prereq-item">기본 입력과 저장을 할 수 있다</div><div class="prereq-arrow">→</div>
+        <div class="prereq-item current">문서 프로그램의 화면 구성을 안다</div>
+      </div>
+
+      
+
+      <span class="page-num">1</span>
+    </div>
+  </div>
+</div>
+<div class="page">
+  <div class="content-page">
+    <div class="unit-header-bar">
+      <span class="unit-tag">UNIT 06</span>
+      <span class="unit-title-sm">커서 이동과 범위 선택</span>
+    </div>
+<h2 class="section-title">편집은 커서 위치에서 시작돼요</h2>
+
+<p>문서에서 깜빡이는 세로줄이 바로 <b>커서</b>예요. 지금 입력하거나 지우는 일이 어디에서 일어날지 알려 주는 표시예요. 커서 위치가 틀리면 글자가 엉뚱한 곳에 들어가고, 삭제도 다른 부분에서 일어나요.</p>
+<p>편집에서 가장 중요한 기본은 두 가지예요. <b>첫째, 커서를 정확한 위치로 이동하기.</b> <b>둘째, 바꿀 범위를 정확히 선택하기.</b> 이 두 개가 되면 복사, 삭제, 서식 적용이 전부 쉬워져요.</p>
+<div class="note-box"><span class="note-label">[핵심] 오늘의 기본 공식</span>
+<b>수정 = 먼저 이동 + 그다음 선택</b><br>문서를 고치기 전에, 어디를 바꿀지 정확히 잡는 게 먼저예요.</div>
+<h2 class="section-title">커서 이동 방법</h2>
+<table class="trace"><thead><tr><th>방법</th><th>언제 쓰나요?</th><th>예시</th></tr></thead><tbody><tr><td>마우스로 클릭</td><td>원하는 위치를 바로 찍고 싶을 때</td><td>문장 중간 클릭</td></tr><tr><td>방향키</td><td>한 글자씩 미세하게 움직일 때</td><td>오타 한 글자 앞으로 이동</td></tr><tr><td>Home</td><td>줄의 맨 앞으로 갈 때</td><td>줄 첫 글자로 이동</td></tr><tr><td>End</td><td>줄의 맨 끝으로 갈 때</td><td>줄 끝에 문장 추가</td></tr><tr><td>Page Up / Page Down</td><td>긴 문서에서 위아래로 크게 이동할 때</td><td>다음 페이지로 이동</td></tr></tbody></table>
+<h2 class="section-title">범위 선택은 여러 크기로 할 수 있어요</h2>
+<div style="margin:22px 0"><div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:8px">
+<div style="width:32px;height:32px;background:#1a2e4a;color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;flex-shrink:0">1</div>
+<div><div style="font-size:15px;font-weight:700;color:#1a2e4a;margin-bottom:2px">글자 선택</div><div style="font-size:14px;color:#6b7280;line-height:1.6">마우스로 짧게 끌거나 Shift와 방향키를 이용해요.</div></div></div><div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:8px">
+<div style="width:32px;height:32px;background:#1a2e4a;color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;flex-shrink:0">2</div>
+<div><div style="font-size:15px;font-weight:700;color:#1a2e4a;margin-bottom:2px">단어 선택</div><div style="font-size:14px;color:#6b7280;line-height:1.6">단어를 빠르게 잡고 싶으면 더블클릭이 편해요.</div></div></div><div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:8px">
+<div style="width:32px;height:32px;background:#1a2e4a;color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;flex-shrink:0">3</div>
+<div><div style="font-size:15px;font-weight:700;color:#1a2e4a;margin-bottom:2px">문장 또는 줄 선택</div><div style="font-size:14px;color:#6b7280;line-height:1.6">문장 일부가 아니라 줄 전체를 수정할 때 유용해요.</div></div></div><div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:8px">
+<div style="width:32px;height:32px;background:#1a2e4a;color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;flex-shrink:0">4</div>
+<div><div style="font-size:15px;font-weight:700;color:#1a2e4a;margin-bottom:2px">문단 선택</div><div style="font-size:14px;color:#6b7280;line-height:1.6">정렬이나 줄 간격은 문단 단위로 잡아야 정확해요.</div></div></div></div>
+<table class="trace"><thead><tr><th>바꾸고 싶은 것</th><th>선택 단위</th><th>이유</th></tr></thead><tbody><tr><td>오타 한 글자</td><td>글자</td><td>딱 필요한 곳만 고쳐요</td></tr><tr><td>잘못된 단어</td><td>단어</td><td>앞뒤 글자를 건드리지 않아요</td></tr><tr><td>제목 한 줄</td><td>줄 또는 문장</td><td>한 번에 정리하기 좋아요</td></tr><tr><td>정렬 바꿀 본문</td><td>문단</td><td>문단 서식은 문단째로 적용돼요</td></tr></tbody></table>
+<div class="warn"><span class="warn-label">[주의] 서식이 이상하게 먹는 이유</span>
+문단 정렬이나 줄 간격을 바꾸려는데 이상한 결과가 나오는 경우가 많아요. 대부분은 <b>문단 전체를 선택하지 않고 일부 글자만 잡았기 때문</b>이에요.</div>
+<h2 class="section-title">선택 전에 확인할 것</h2>
+<table class="trace"><thead><tr><th>확인 항목</th><th>왜 볼까요?</th></tr></thead><tbody><tr><td>커서가 원하는 위치에 있는가?</td><td>엉뚱한 곳에 글자가 들어가는 걸 막아요</td></tr><tr><td>선택 범위가 너무 넓지 않은가?</td><td>필요 없는 부분까지 같이 바뀌는 걸 막아요</td></tr><tr><td>문단 전체가 필요한가, 글자 일부만 필요한가?</td><td>문자 서식과 문단 서식을 구분해요</td></tr></tbody></table>
+<h2 class="section-title">직접 해보기</h2>
+<div class="tip" style="padding:14px 18px"><span class="tip-label" style="font-size:12px">실습 1</span><p style="margin:0;font-size:14px">짧은 문장 세 줄을 입력한 뒤, 둘째 줄 첫 글자 앞에 커서를 놓아 보세요. 마우스 클릭과 방향키 이동을 둘 다 써 보세요.</p></div>
+<div class="tip" style="padding:14px 18px"><span class="tip-label" style="font-size:12px">실습 2</span><p style="margin:0;font-size:14px">문장에서 단어 하나만 선택하고, 다른 줄에서는 문장 전체를 선택해 보세요. 선택 범위가 어떻게 달라지는지 확인해 보세요.</p></div>
+<table class="trace"><thead><tr><th>용어</th><th>설명</th></tr></thead><tbody><tr><td><code>커서</code></td><td>현재 입력이나 수정이 일어날 위치를 보여주는 표시</td></tr><tr><td><code>선택</code></td><td>수정하거나 서식을 적용할 범위를 지정하는 일</td></tr><tr><td><code>문단</code></td><td>Enter로 구분되는 한 덩어리의 글</td></tr><tr><td><code>블록</code></td><td>문서에서 선택된 범위를 가리키는 말</td></tr></tbody></table>
+<div class="warmup-box"><div class="warmup-title">핵심 정리</div><div class="wq"><b>1.</b> 문서를 고치기 전에 커서 위치를 먼저 확인해야 해요.</div><div class="wq"><b>2.</b> 문자 수정과 문단 수정은 선택 단위가 달라요.</div><div class="wq"><b>3.</b> 정확한 선택이 되면 복사, 삭제, 서식 적용이 한결 쉬워져요.</div></div>
+<div class="note-box"><span class="note-label">[실생활] 어디에 쓰일까요?</span>
+과제 제목, 보고서 본문, 신청서 항목처럼 수정할 부분을 정확히 잡는 능력은 모든 문서 작업의 바닥이에요. 선택이 흔들리면 뒤에 오는 기능도 전부 불안해져요.</div>
+<div class="note-box"><span class="note-label">[다음 유닛 미리보기]</span>
+다음 유닛에서는 복사, 잘라내기, 붙여넣기, 되돌리기를 배워요. 선택한 범위를 실제로 움직이는 편집 루틴이 시작돼요.</div>
+
+
+    <span class="page-num">2</span>
+  </div>
+</div>
+<div class="page">
+  <div class="chapter-page">
+    <div class="chapter-sidebar"></div>
+    <div class="chapter-accent-bar"></div>
+    <div style="flex:1; min-width:0; padding:50px 50px 40px 45px; position:relative;">
+      <div class="problems-chapter-ref">Chapter 06: 커서 이동과 범위 선택</div>
+      <h2 class="problems-title">연습 문제 (Practice Problems)</h2>
+
+        <div class="prob-card">
+          <div class="prob-header">
+            <span class="prob-num">3. 커서는 무엇을 알려 주는 표시인지 적어 보세요.</span>
+            <span class="diff diff-basic">하</span>
+          </div>
+          <p class="prob-desc">커서는 무엇을 알려 주는 표시인지 적어 보세요.</p>
+          
+          <div class="contest-write-area" style="margin-top:12px;">
+            <div class="contest-write-label">답안 작성</div>
+            <textarea class="contest-textarea" rows="4" spellcheck="false" style="font-family:'Noto Sans KR',sans-serif;" placeholder=""></textarea>
+          </div>
+        </div>
+        <div class="prob-card">
+          <div class="prob-header">
+            <span class="prob-num">4. 문단 정렬을 바꾸려면 왜 문단 단위 선택이 중요한지 적어 보세요.</span>
+            <span class="diff diff-basic">하</span>
+          </div>
+          <p class="prob-desc">문단 정렬을 바꾸려면 왜 문단 단위 선택이 중요한지 적어 보세요.</p>
+          
+          <div class="contest-write-area" style="margin-top:12px;">
+            <div class="contest-write-label">답안 작성</div>
+            <textarea class="contest-textarea" rows="4" spellcheck="false" style="font-family:'Noto Sans KR',sans-serif;" placeholder=""></textarea>
+          </div>
+        </div>
+        <div class="prob-card">
+          <div class="prob-header">
+            <span class="prob-num">5. 오타 한 글자를 고칠 때와 제목 한 줄을 바꿀 때 선택 단위가 어떻게 다른지 적어 보세요.</span>
+            <span class="diff diff-basic">하</span>
+          </div>
+          <p class="prob-desc">오타 한 글자를 고칠 때와 제목 한 줄을 바꿀 때 선택 단위가 어떻게 다른지 적어 보세요.</p>
+          
+          <div class="contest-write-area" style="margin-top:12px;">
+            <div class="contest-write-label">답안 작성</div>
+            <textarea class="contest-textarea" rows="4" spellcheck="false" style="font-family:'Noto Sans KR',sans-serif;" placeholder=""></textarea>
+          </div>
+        </div>
+      <span class="page-num">3</span>
+    </div>
+  </div>
+</div>
+</body>
+</html>

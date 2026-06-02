@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — JSON: 데이터 교환의 표준</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+/* ── 페이지 ── */
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+/* ── 표지 ── */
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+
+/* ── 본문 ── */
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 16px; font-weight: 700; color: #1e3a5f; margin: 16px 0 8px; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+ul, ol { padding-left: 20px; margin-bottom: 12px; }
+li { font-size: 14px; color: #374151; line-height: 1.8; }
+
+/* ── 코드 블록 ── */
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 14px;
+    color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.code .key { color: #fbbf24; }
+.code .val { color: #86efac; }
+
+/* ── 따라해보세요 ── */
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '->'; color: #94a3b8; font-weight: 700; }
+
+/* ── 문제 ── */
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+
+/* ── 요약 ── */
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+/* ── 비교 표 ── */
+.compare-table { width: 100%; border-collapse: collapse; margin: 14px 0; }
+.compare-table th { background: #1e3a5f; color: #fff; font-size: 13px; font-weight: 700; padding: 8px 12px; text-align: left; }
+.compare-table td { font-size: 13px; color: #334155; padding: 8px 12px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+.compare-table tr:last-child td { border-bottom: none; }
+.compare-table td:first-child { font-family: 'JetBrains Mono', monospace; color: #2563eb; font-weight: 600; }
+.compare-table tr:nth-child(even) td { background: #f8fafc; }
+
+/* ── 정보 박스 ── */
+.info-box { background: #eff6ff; border: 1.5px solid #bfdbfe; border-radius: 8px; padding: 12px 16px; margin: 14px 0; }
+.info-box .info-title { font-size: 13px; font-weight: 700; color: #1d4ed8; margin-bottom: 6px; }
+.info-box p { font-size: 13px; color: #1e40af; margin: 0; }
+
+/* ── 구분선 ── */
+.divider { height: 1px; background: #e5e7eb; margin: 18px 0; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- =========================================================
+     1페이지: 표지
+     ========================================================= -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">35</div>
+        <div class="cover-label">Chapter 35 — L3c</div>
+        <h1 class="cover-title">JSON<br>데이터 교환의 표준</h1>
+        <p class="cover-sub">프로그램과 프로그램, 서버와 클라이언트 사이에서 데이터를 주고받는 표준 형식인 JSON을 파이썬에서 완벽하게 다루는 법을 배웁니다.</p>
+
+        <!-- SVG 1: JSON 데이터 흐름 개요도 -->
+        <div style="margin:24px 0;">
+            <svg viewBox="0 0 520 140" style="max-width:520px;width:100%">
+                <defs>
+                    <marker id="flow-arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#3b82f6"/>
+                    </marker>
+                    <marker id="flow-arr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#10b981"/>
+                    </marker>
+                </defs>
+                <!-- 파이썬 객체 -->
+                <rect x="10" y="40" width="110" height="60" rx="8" fill="#1e3a5f"/>
+                <text x="65" y="62" text-anchor="middle" font-size="11" fill="#94a3b8">파이썬 객체</text>
+                <text x="65" y="80" text-anchor="middle" font-family="monospace" font-size="10" fill="#7dd3fc">dict / list</text>
+                <text x="65" y="93" text-anchor="middle" font-family="monospace" font-size="10" fill="#7dd3fc">str / int</text>
+
+                <!-- dumps 화살표 -->
+                <line x1="122" y1="60" x2="168" y2="60" stroke="#3b82f6" stroke-width="2" marker-end="url(#flow-arr)"/>
+                <text x="145" y="52" text-anchor="middle" font-size="9" fill="#3b82f6" font-weight="700">dumps()</text>
+
+                <!-- JSON 문자열 -->
+                <rect x="172" y="20" width="176" height="100" rx="8" fill="#0f172a"/>
+                <text x="260" y="42" text-anchor="middle" font-size="11" fill="#94a3b8">JSON 문자열</text>
+                <text x="260" y="62" text-anchor="middle" font-family="monospace" font-size="9" fill="#fbbf24">{"name":</text>
+                <text x="260" y="76" text-anchor="middle" font-family="monospace" font-size="9" fill="#86efac">  "홍길동",</text>
+                <text x="260" y="90" text-anchor="middle" font-family="monospace" font-size="9" fill="#fbbf24">"score":</text>
+                <text x="260" y="104" text-anchor="middle" font-family="monospace" font-size="9" fill="#7dd3fc">  95}</text>
+
+                <!-- loads 화살표 -->
+                <line x1="349" y1="60" x2="393" y2="60" stroke="#10b981" stroke-width="2" marker-end="url(#flow-arr2)"/>
+                <text x="371" y="52" text-anchor="middle" font-size="9" fill="#10b981" font-weight="700">loads()</text>
+
+                <!-- 파이썬 객체 (복원) -->
+                <rect x="397" y="40" width="110" height="60" rx="8" fill="#1e3a5f"/>
+                <text x="452" y="62" text-anchor="middle" font-size="11" fill="#94a3b8">파이썬 객체</text>
+                <text x="452" y="80" text-anchor="middle" font-family="monospace" font-size="10" fill="#7dd3fc">dict / list</text>
+                <text x="452" y="93" text-anchor="middle" font-family="monospace" font-size="10" fill="#7dd3fc">str / int</text>
+
+                <!-- 레이블 -->
+                <text x="260" y="136" text-anchor="middle" font-size="10" fill="#64748b">파이썬 객체 --[직렬화]--> JSON --[역직렬화]--> 파이썬 객체</text>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/puzzle.png" alt="모듈" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 유닛에서 배우는 것</h3>
+            <ul>
+                <li>JSON이 무엇인지, 왜 데이터 교환의 표준이 되었는지 이해합니다.</li>
+                <li>import json으로 json 모듈을 불러오는 법을 배웁니다.</li>
+                <li>json.dumps()로 파이썬 객체를 JSON 문자열로 변환합니다.</li>
+                <li>json.loads()로 JSON 문자열을 파이썬 객체로 복원합니다.</li>
+                <li>json.dump() / json.load()로 파일에 JSON을 저장하고 읽습니다.</li>
+                <li>indent 옵션으로 JSON을 보기 좋게 정리합니다.</li>
+                <li>실용 예시: 설정 파일(config.json)을 만들고 활용합니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- =========================================================
+     2페이지: JSON이란?
+     ========================================================= -->
+<div class="page">
+    <h2>JSON이란?</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/folder.png" alt="패키지" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p><strong>JSON</strong>(제이슨, JavaScript Object Notation)은 데이터를 저장하고 교환할 때 사용하는 텍스트 형식입니다. 이름에 JavaScript가 들어 있지만 어떤 프로그래밍 언어와도 함께 쓸 수 있습니다.</p>
+
+    <!-- SVG 2: JSON 사용 사례 -->
+    <div style="text-align:center;margin:18px 0;">
+        <svg viewBox="0 0 500 130" style="max-width:500px;width:100%">
+            <defs>
+                <marker id="use-arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <!-- 중앙: JSON -->
+            <rect x="200" y="45" width="100" height="40" rx="8" fill="#1e3a5f"/>
+            <text x="250" y="62" text-anchor="middle" font-size="14" fill="#fbbf24" font-weight="900">JSON</text>
+            <text x="250" y="78" text-anchor="middle" font-size="9" fill="#94a3b8">텍스트 형식</text>
+
+            <!-- 파이썬 -->
+            <rect x="10" y="10" width="90" height="32" rx="6" fill="#1d4ed8"/>
+            <text x="55" y="31" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">Python</text>
+            <line x1="103" y1="26" x2="198" y2="55" stroke="#94a3b8" stroke-width="1" marker-end="url(#use-arr)"/>
+
+            <!-- 웹 서버 -->
+            <rect x="10" y="55" width="90" height="32" rx="6" fill="#0f766e"/>
+            <text x="55" y="75" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">웹 서버</text>
+            <line x1="103" y1="71" x2="198" y2="65" stroke="#94a3b8" stroke-width="1" marker-end="url(#use-arr)"/>
+
+            <!-- 앱 -->
+            <rect x="10" y="100" width="90" height="32" rx="6" fill="#7c3aed"/>
+            <text x="55" y="120" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">모바일 앱</text>
+            <line x1="103" y1="116" x2="198" y2="77" stroke="#94a3b8" stroke-width="1" marker-end="url(#use-arr)"/>
+
+            <!-- JavaScript -->
+            <rect x="400" y="10" width="90" height="32" rx="6" fill="#b45309"/>
+            <text x="445" y="31" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">JavaScript</text>
+            <line x1="302" y1="55" x2="398" y2="26" stroke="#94a3b8" stroke-width="1" marker-end="url(#use-arr)"/>
+
+            <!-- 설정 파일 -->
+            <rect x="400" y="55" width="90" height="32" rx="6" fill="#166534"/>
+            <text x="445" y="75" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">설정 파일</text>
+            <line x1="302" y1="65" x2="398" y2="71" stroke="#94a3b8" stroke-width="1" marker-end="url(#use-arr)"/>
+
+            <!-- DB -->
+            <rect x="400" y="100" width="90" height="32" rx="6" fill="#be185d"/>
+            <text x="445" y="120" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">데이터베이스</text>
+            <line x1="302" y1="77" x2="398" y2="116" stroke="#94a3b8" stroke-width="1" marker-end="url(#use-arr)"/>
+        </svg>
+    </div>
+
+    <h3>JSON 구조 살펴보기</h3>
+    <p>JSON은 파이썬의 딕셔너리, 리스트와 매우 비슷하게 생겼습니다. 키-값 쌍으로 이루어진 구조를 사용합니다.</p>
+
+    <!-- SVG 3: JSON 구조 분해 -->
+    <div style="text-align:center;margin:18px 0;">
+        <svg viewBox="0 0 500 160" style="max-width:500px;width:100%">
+            <!-- 배경 -->
+            <rect x="10" y="10" width="480" height="140" rx="10" fill="#0f172a"/>
+            <!-- 중괄호 -->
+            <text x="30" y="40" font-family="monospace" font-size="16" fill="#e2e8f0" font-weight="700">{</text>
+            <!-- 키 -->
+            <text x="60" y="65" font-family="monospace" font-size="13" fill="#fbbf24">"name"</text>
+            <text x="130" y="65" font-family="monospace" font-size="13" fill="#e2e8f0">:</text>
+            <text x="150" y="65" font-family="monospace" font-size="13" fill="#86efac">"홍길동"</text>
+            <text x="240" y="65" font-family="monospace" font-size="13" fill="#94a3b8">,</text>
+            <!-- 설명 화살표: 키 -->
+            <line x1="90" y1="70" x2="90" y2="110" stroke="#fbbf24" stroke-width="1" stroke-dasharray="3,2"/>
+            <rect x="55" y="112" width="70" height="20" rx="4" fill="#fbbf24"/>
+            <text x="90" y="126" text-anchor="middle" font-size="9" fill="#000" font-weight="700">키 (문자열)</text>
+            <!-- 설명: 값 -->
+            <line x1="185" y1="70" x2="185" y2="110" stroke="#86efac" stroke-width="1" stroke-dasharray="3,2"/>
+            <rect x="148" y="112" width="74" height="20" rx="4" fill="#86efac"/>
+            <text x="185" y="126" text-anchor="middle" font-size="9" fill="#000" font-weight="700">값 (문자열)</text>
+
+            <!-- 두 번째 키-값 -->
+            <text x="60" y="90" font-family="monospace" font-size="13" fill="#fbbf24">"score"</text>
+            <text x="136" y="90" font-family="monospace" font-size="13" fill="#e2e8f0">:</text>
+            <text x="156" y="90" font-family="monospace" font-size="13" fill="#7dd3fc">95</text>
+            <!-- 설명: 숫자 값 -->
+            <line x1="160" y1="94" x2="340" y2="130" stroke="#7dd3fc" stroke-width="1" stroke-dasharray="3,2"/>
+            <rect x="300" y="132" width="90" height="20" rx="4" fill="#7dd3fc"/>
+            <text x="345" y="146" text-anchor="middle" font-size="9" fill="#000" font-weight="700">값 (숫자, 따옴표 없음)</text>
+
+            <!-- 닫는 괄호 -->
+            <text x="30" y="112" font-family="monospace" font-size="16" fill="#e2e8f0" font-weight="700">}</text>
+        </svg>
+    </div>
+
+    <h3>파이썬 vs JSON 비교</h3>
+    <table class="compare-table">
+        <tr>
+            <th>파이썬</th>
+            <th>JSON</th>
+            <th>설명</th>
+        </tr>
+        <tr>
+            <td>dict {"key": "val"}</td>
+            <td>{"key": "val"}</td>
+            <td>거의 동일한 형태</td>
+        </tr>
+        <tr>
+            <td>list [1, 2, 3]</td>
+            <td>[1, 2, 3]</td>
+            <td>동일</td>
+        </tr>
+        <tr>
+            <td>True / False</td>
+            <td>true / false</td>
+            <td>소문자로 바뀜</td>
+        </tr>
+        <tr>
+            <td>None</td>
+            <td>null</td>
+            <td>다른 이름 사용</td>
+        </tr>
+        <tr>
+            <td>작은따옴표 '...'</td>
+            <td>큰따옴표 "..." 만 허용</td>
+            <td>JSON은 반드시 큰따옴표</td>
+        </tr>
+    </table>
+</div>
+
+<!-- =========================================================
+     3페이지: import json, dumps() / loads()
+     ========================================================= -->
+<div class="page">
+    <h2>import json — 모듈 불러오기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>파이썬은 JSON을 다루는 기능을 기본 모듈로 제공합니다. 별도 설치 없이 <code>import json</code> 한 줄로 바로 사용할 수 있습니다.</p>
+
+    <div class="code">
+<span class="kw">import</span> json          <span class="cmt"># 파이썬 기본 내장 모듈, 설치 불필요</span>
+    </div>
+
+    <div class="divider"></div>
+
+    <h2>json.dumps() — 파이썬 &rarr; JSON</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="도구" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p><code>dumps()</code>는 파이썬 객체를 JSON <strong>문자열</strong>로 변환합니다. dump<strong>s</strong>의 s는 string(문자열)을 뜻합니다.</p>
+
+    <!-- SVG 4: dumps 변환 흐름 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+            <defs>
+                <marker id="ds-arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#3b82f6"/>
+                </marker>
+            </defs>
+            <!-- 입력 -->
+            <rect x="5" y="15" width="160" height="50" rx="8" fill="#1e3a5f"/>
+            <text x="85" y="34" text-anchor="middle" font-size="10" fill="#94a3b8">파이썬 dict</text>
+            <text x="85" y="52" text-anchor="middle" font-family="monospace" font-size="11" fill="#7dd3fc">{"name": "홍길동"}</text>
+            <!-- 화살표 + 함수 -->
+            <line x1="168" y1="40" x2="198" y2="40" stroke="#3b82f6" stroke-width="2" marker-end="url(#ds-arr)"/>
+            <rect x="203" y="22" width="80" height="36" rx="8" fill="#1d4ed8"/>
+            <text x="243" y="39" text-anchor="middle" font-size="12" fill="#fff" font-weight="800">dumps()</text>
+            <text x="243" y="53" text-anchor="middle" font-size="9" fill="#bfdbfe">직렬화</text>
+            <line x1="286" y1="40" x2="316" y2="40" stroke="#3b82f6" stroke-width="2" marker-end="url(#ds-arr)"/>
+            <!-- 출력 -->
+            <rect x="320" y="15" width="135" height="50" rx="8" fill="#0f172a"/>
+            <text x="387" y="34" text-anchor="middle" font-size="10" fill="#94a3b8">JSON 문자열</text>
+            <text x="387" y="52" text-anchor="middle" font-family="monospace" font-size="10" fill="#86efac">'{"name": "홍길동"}'</text>
+        </svg>
+    </div>
+
+    <div class="code">
+<span class="kw">import</span> json
+
+person = {<span class="str">"name"</span>: <span class="str">"홍길동"</span>, <span class="str">"age"</span>: <span class="num">16</span>, <span class="str">"active"</span>: <span class="kw">True</span>}
+
+json_str = json.<span class="fn">dumps</span>(person)
+<span class="fn">print</span>(json_str)
+<span class="cmt"># {"name": "홍길동", "age": 16, "active": true}</span>
+<span class="fn">print</span>(<span class="fn">type</span>(json_str))
+<span class="cmt"># &lt;class 'str'&gt;</span>
+    </div>
+
+    <div class="info-box">
+        <div class="info-title">주목할 점</div>
+        <p>파이썬의 <code>True</code>가 JSON에서는 <code>true</code>(소문자)로, <code>None</code>은 <code>null</code>로 자동 변환됩니다.</p>
+    </div>
+
+    <div class="divider"></div>
+
+    <h2>json.loads() — JSON &rarr; 파이썬</h2>
+    <p><code>loads()</code>는 JSON 문자열을 파이썬 객체로 변환합니다. 네트워크나 파일에서 받아온 JSON 데이터를 파이썬에서 쓸 수 있게 만들 때 사용합니다.</p>
+
+    <div class="code">
+<span class="kw">import</span> json
+
+json_str = <span class="str">'{"name": "이순신", "score": 98, "active": true}'</span>
+
+data = json.<span class="fn">loads</span>(json_str)
+<span class="fn">print</span>(data)
+<span class="cmt"># {'name': '이순신', 'score': 98, 'active': True}</span>
+<span class="fn">print</span>(<span class="fn">type</span>(data))
+<span class="cmt"># &lt;class 'dict'&gt;</span>
+<span class="fn">print</span>(data[<span class="str">"name"</span>])
+<span class="cmt"># 이순신</span>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/lightbulb.png" alt="아이디어" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">실습 1 — dumps() 변환</div>
+                <div class="practice-desc">딕셔너리를 JSON 문자열로 바꿔 출력하세요.</div>
+                <div class="code" style="margin:8px 0;">
+<span class="kw">import</span> json
+book = {<span class="str">"title"</span>: <span class="str">"파이썬 입문"</span>, <span class="str">"pages"</span>: <span class="num">300</span>, <span class="str">"available"</span>: <span class="kw">True</span>}
+result = json.<span class="fn">dumps</span>(book)
+<span class="fn">print</span>(result)
+                </div>
+                <div class="practice-result">{"title": "파이썬 입문", "pages": 300, "available": true}</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">실습 2 — loads() 복원</div>
+                <div class="practice-desc">JSON 문자열에서 "pages" 값만 뽑아 출력하세요.</div>
+                <div class="code" style="margin:8px 0;">
+json_text = <span class="str">'{"title": "파이썬 입문", "pages": 300}'</span>
+data = json.<span class="fn">loads</span>(json_text)
+<span class="fn">print</span>(data[<span class="str">"pages"</span>])
+                </div>
+                <div class="practice-result">300</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">실습 3 — 리스트 변환</div>
+                <div class="practice-desc">리스트도 JSON으로 변환할 수 있습니다.</div>
+                <div class="code" style="margin:8px 0;">
+scores = [<span class="num">90</span>, <span class="num">85</span>, <span class="num">92</span>, <span class="num">78</span>]
+<span class="fn">print</span>(json.<span class="fn">dumps</span>(scores))
+                </div>
+                <div class="practice-result">[90, 85, 92, 78]</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- =========================================================
+     4페이지: indent 옵션 + 파일 읽기/쓰기
+     ========================================================= -->
+<div class="page">
+    <h2>indent 옵션 — 보기 좋은 JSON</h2>
+    <p>기본 <code>dumps()</code>는 모든 내용을 한 줄로 출력합니다. <code>indent</code> 옵션을 주면 들여쓰기가 적용되어 읽기 쉬운 형태로 출력됩니다.</p>
+
+    <!-- SVG 5: indent 비교 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 120" style="max-width:500px;width:100%">
+            <!-- indent 없음 -->
+            <rect x="5" y="5" width="235" height="110" rx="8" fill="#0f172a"/>
+            <text x="120" y="24" text-anchor="middle" font-size="10" fill="#94a3b8">indent 없음 (기본)</text>
+            <text x="20" y="45" font-family="monospace" font-size="9" fill="#e2e8f0">{"name": "홍길동",</text>
+            <text x="20" y="61" font-family="monospace" font-size="9" fill="#e2e8f0">"age": 16, "scores":</text>
+            <text x="20" y="77" font-family="monospace" font-size="9" fill="#e2e8f0">[90, 85], "active":</text>
+            <text x="20" y="93" font-family="monospace" font-size="9" fill="#e2e8f0">true}</text>
+
+            <!-- 화살표 -->
+            <text x="252" y="65" text-anchor="middle" font-size="20" fill="#3b82f6">&#8594;</text>
+            <text x="252" y="82" text-anchor="middle" font-size="9" fill="#3b82f6">indent=2</text>
+
+            <!-- indent 있음 -->
+            <rect x="265" y="5" width="230" height="110" rx="8" fill="#0f172a"/>
+            <text x="380" y="24" text-anchor="middle" font-size="10" fill="#94a3b8">indent=2 적용</text>
+            <text x="280" y="43" font-family="monospace" font-size="9" fill="#e2e8f0">{</text>
+            <text x="280" y="57" font-family="monospace" font-size="9" fill="#fbbf24">  "name": </text>
+            <text x="348" y="57" font-family="monospace" font-size="9" fill="#86efac">"홍길동",</text>
+            <text x="280" y="71" font-family="monospace" font-size="9" fill="#fbbf24">  "age": </text>
+            <text x="340" y="71" font-family="monospace" font-size="9" fill="#7dd3fc">16,</text>
+            <text x="280" y="85" font-family="monospace" font-size="9" fill="#fbbf24">  "scores": </text>
+            <text x="348" y="85" font-family="monospace" font-size="9" fill="#7dd3fc">[90, 85]</text>
+            <text x="280" y="99" font-family="monospace" font-size="9" fill="#e2e8f0">}</text>
+        </svg>
+    </div>
+
+    <div class="code">
+<span class="kw">import</span> json
+
+person = {
+    <span class="str">"name"</span>: <span class="str">"홍길동"</span>,
+    <span class="str">"age"</span>: <span class="num">16</span>,
+    <span class="str">"scores"</span>: [<span class="num">90</span>, <span class="num">85</span>, <span class="num">92</span>]
+}
+
+<span class="cmt"># indent=2 : 들여쓰기 2칸</span>
+pretty = json.<span class="fn">dumps</span>(person, indent=<span class="num">2</span>, ensure_ascii=<span class="kw">False</span>)
+<span class="fn">print</span>(pretty)
+<span class="cmt"># {
+#   "name": "홍길동",
+#   "age": 16,
+#   "scores": [90, 85, 92]
+# }</span>
+    </div>
+
+    <div class="info-box">
+        <div class="info-title">ensure_ascii=False</div>
+        <p>기본값은 True라서 한글이 \uXXXX 형태로 깨져 보입니다. <code>ensure_ascii=False</code>를 지정하면 한글이 그대로 출력됩니다.</p>
+    </div>
+
+    <div class="divider"></div>
+
+    <h2>json.dump() / json.load() — 파일 읽기/쓰기</h2>
+    <p>소문자 <code>dump()</code>, <code>load()</code>는 파일에 직접 JSON을 쓰거나 읽는 함수입니다. <code>dumps()</code>/<code>loads()</code>와 이름이 비슷하지만 <strong>s가 없으면 파일 대상</strong>입니다.</p>
+
+    <!-- SVG 6: dump vs dumps 구분 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 80" style="max-width:500px;width:100%">
+            <!-- dump -->
+            <rect x="20" y="10" width="200" height="60" rx="8" fill="#1e3a5f"/>
+            <text x="120" y="30" text-anchor="middle" font-size="12" fill="#fbbf24" font-weight="700">dump() / load()</text>
+            <text x="120" y="48" text-anchor="middle" font-size="10" fill="#94a3b8">파일 객체 (file)에 읽기/쓰기</text>
+            <text x="120" y="62" text-anchor="middle" font-family="monospace" font-size="9" fill="#7dd3fc">json.dump(data, f)</text>
+            <!-- dumps -->
+            <rect x="280" y="10" width="200" height="60" rx="8" fill="#0f172a"/>
+            <text x="380" y="30" text-anchor="middle" font-size="12" fill="#86efac" font-weight="700">dumps() / loads()</text>
+            <text x="380" y="48" text-anchor="middle" font-size="10" fill="#94a3b8">문자열 (string)로 변환</text>
+            <text x="380" y="62" text-anchor="middle" font-family="monospace" font-size="9" fill="#86efac">json.dumps(data)</text>
+        </svg>
+    </div>
+
+    <div class="code">
+<span class="kw">import</span> json
+
+data = {<span class="str">"setting"</span>: <span class="str">"dark"</span>, <span class="str">"volume"</span>: <span class="num">70</span>}
+
+<span class="cmt"># 파일에 쓰기</span>
+<span class="kw">with</span> <span class="fn">open</span>(<span class="str">"config.json"</span>, <span class="str">"w"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+    json.<span class="fn">dump</span>(data, f, indent=<span class="num">2</span>, ensure_ascii=<span class="kw">False</span>)
+
+<span class="cmt"># 파일에서 읽기</span>
+<span class="kw">with</span> <span class="fn">open</span>(<span class="str">"config.json"</span>, <span class="str">"r"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+    loaded = json.<span class="fn">load</span>(f)
+
+<span class="fn">print</span>(loaded)
+<span class="cmt"># {'setting': 'dark', 'volume': 70}</span>
+    </div>
+</div>
+
+<!-- =========================================================
+     5페이지: 실용 예 — 설정 파일
+     ========================================================= -->
+<div class="page">
+    <h2>실용 예: 설정 파일(config.json) 만들기</h2>
+    <p>JSON은 프로그램의 설정(configuration)을 저장하는 데 많이 쓰입니다. 게임 설정, 앱 환경설정 등이 모두 JSON 파일로 저장됩니다.</p>
+
+    <!-- SVG 7: 설정 파일 생명주기 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 500 100" style="max-width:500px;width:100%">
+            <defs>
+                <marker id="cfg-arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#3b82f6"/>
+                </marker>
+            </defs>
+            <!-- 1. 기본값 설정 -->
+            <rect x="5" y="25" width="95" height="50" rx="8" fill="#1e3a5f"/>
+            <text x="52" y="45" text-anchor="middle" font-size="10" fill="#94a3b8">기본값 설정</text>
+            <text x="52" y="62" text-anchor="middle" font-family="monospace" font-size="9" fill="#7dd3fc">dict 생성</text>
+
+            <line x1="103" y1="50" x2="133" y2="50" stroke="#3b82f6" stroke-width="2" marker-end="url(#cfg-arr)"/>
+
+            <!-- 2. 파일 저장 -->
+            <rect x="137" y="25" width="95" height="50" rx="8" fill="#1d4ed8"/>
+            <text x="184" y="45" text-anchor="middle" font-size="10" fill="#bfdbfe">파일 저장</text>
+            <text x="184" y="62" text-anchor="middle" font-family="monospace" font-size="9" fill="#fff">json.dump()</text>
+
+            <line x1="235" y1="50" x2="265" y2="50" stroke="#3b82f6" stroke-width="2" marker-end="url(#cfg-arr)"/>
+
+            <!-- 3. config.json -->
+            <rect x="269" y="15" width="95" height="70" rx="8" fill="#0f172a"/>
+            <text x="316" y="34" text-anchor="middle" font-size="10" fill="#fbbf24" font-weight="700">config.json</text>
+            <text x="316" y="52" font-family="monospace" font-size="8" fill="#86efac" text-anchor="middle">"theme": "dark"</text>
+            <text x="316" y="66" font-family="monospace" font-size="8" fill="#7dd3fc" text-anchor="middle">"volume": 70</text>
+
+            <line x1="367" y1="50" x2="397" y2="50" stroke="#3b82f6" stroke-width="2" marker-end="url(#cfg-arr)"/>
+
+            <!-- 4. 파일 읽기 -->
+            <rect x="401" y="25" width="95" height="50" rx="8" fill="#0f766e"/>
+            <text x="448" y="45" text-anchor="middle" font-size="10" fill="#99f6e4">프로그램 실행</text>
+            <text x="448" y="62" text-anchor="middle" font-family="monospace" font-size="9" fill="#fff">json.load()</text>
+        </svg>
+    </div>
+
+    <div class="code">
+<span class="kw">import</span> json
+<span class="kw">import</span> os
+
+CONFIG_FILE = <span class="str">"config.json"</span>
+
+<span class="cmt"># 기본 설정값</span>
+DEFAULT_CONFIG = {
+    <span class="str">"theme"</span>: <span class="str">"light"</span>,
+    <span class="str">"volume"</span>: <span class="num">50</span>,
+    <span class="str">"language"</span>: <span class="str">"ko"</span>,
+    <span class="str">"autosave"</span>: <span class="kw">True</span>
+}
+
+<span class="kw">def</span> <span class="fn">load_config</span>():
+    <span class="cmt"># 파일이 있으면 읽고, 없으면 기본값 반환</span>
+    <span class="kw">if</span> os.path.<span class="fn">exists</span>(CONFIG_FILE):
+        <span class="kw">with</span> <span class="fn">open</span>(CONFIG_FILE, <span class="str">"r"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+            <span class="kw">return</span> json.<span class="fn">load</span>(f)
+    <span class="kw">return</span> DEFAULT_CONFIG.copy()
+
+<span class="kw">def</span> <span class="fn">save_config</span>(config):
+    <span class="kw">with</span> <span class="fn">open</span>(CONFIG_FILE, <span class="str">"w"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+        json.<span class="fn">dump</span>(config, f, indent=<span class="num">2</span>, ensure_ascii=<span class="kw">False</span>)
+
+<span class="cmt"># 사용 예</span>
+config = <span class="fn">load_config</span>()
+config[<span class="str">"theme"</span>] = <span class="str">"dark"</span>        <span class="cmt"># 설정 변경</span>
+<span class="fn">save_config</span>(config)              <span class="cmt"># 파일에 저장</span>
+<span class="fn">print</span>(<span class="str">"저장 완료:"</span>, config)
+    </div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">실습 4 — 중첩 JSON</div>
+                <div class="practice-desc">딕셔너리 안에 리스트가 들어있는 구조를 JSON으로 변환하세요.</div>
+                <div class="code" style="margin:8px 0;">
+<span class="kw">import</span> json
+student = {
+    <span class="str">"name"</span>: <span class="str">"김민준"</span>,
+    <span class="str">"grades"</span>: [<span class="num">90</span>, <span class="num">88</span>, <span class="num">95</span>],
+    <span class="str">"info"</span>: {<span class="str">"grade"</span>: <span class="num">2</span>, <span class="str">"class"</span>: <span class="num">3</span>}
+}
+<span class="fn">print</span>(json.<span class="fn">dumps</span>(student, indent=<span class="num">2</span>, ensure_ascii=<span class="kw">False</span>))
+                </div>
+                <div class="practice-result">{"name": "김민준", "grades": [90, 88, 95], "info": {"grade": 2, "class": 3}}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- =========================================================
+     6페이지: 문제 + 요약
+     ========================================================= -->
+<div class="page">
+    <h2>연습 문제</h2>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">1</div>
+            <div class="problem-label">dumps()로 변환하기</div>
+            <div class="problem-diff easy">쉬움</div>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">다음 파이썬 딕셔너리를 JSON 문자열로 변환하여 출력하는 코드를 작성하세요. <code>indent=2</code>와 <code>ensure_ascii=False</code>를 사용하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <div class="problem-example-label">입력</div>
+                    <div class="problem-example-value">{"product": "노트북", "price": 1200000, "stock": True}</div>
+                </div>
+                <div class="problem-example-row">
+                    <div class="problem-example-label">출력</div>
+                    <div class="problem-example-value">{ "product": "노트북", "price": 1200000, "stock": true }</div>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기 / 정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">json.dumps(딕셔너리, indent=2, ensure_ascii=False)를 사용하세요.</div>
+                <div class="answer-code" style="margin-top:8px;">
+import json
+item = {"product": "노트북", "price": 1200000, "stock": True}
+print(json.dumps(item, indent=2, ensure_ascii=False))
+                </div>
+            </div>
+        </details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">2</div>
+            <div class="problem-label">loads()로 데이터 추출하기</div>
+            <div class="problem-diff medium">보통</div>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">아래 JSON 문자열을 파이썬 딕셔너리로 변환한 다음, 이름과 점수를 출력하는 코드를 작성하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <div class="problem-example-label">입력</div>
+                    <div class="problem-example-value">'{"name": "이지은", "score": 97, "passed": true}'</div>
+                </div>
+                <div class="problem-example-row">
+                    <div class="problem-example-label">출력</div>
+                    <div class="problem-example-value">이름: 이지은 / 점수: 97</div>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기 / 정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">json.loads()로 문자열을 딕셔너리로 만든 뒤 키로 접근하세요.</div>
+                <div class="answer-code" style="margin-top:8px;">
+import json
+json_str = '{"name": "이지은", "score": 97, "passed": true}'
+data = json.loads(json_str)
+print(f"이름: {data['name']} / 점수: {data['score']}")
+                </div>
+            </div>
+        </details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">3</div>
+            <div class="problem-label">파일에 저장하고 다시 읽기</div>
+            <div class="problem-diff hard">어려움</div>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">학생 정보 딕셔너리를 "student.json" 파일에 저장하고, 다시 읽어서 평균 점수를 계산하여 출력하는 코드를 작성하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <div class="problem-example-label">입력</div>
+                    <div class="problem-example-value">{"name": "박지현", "scores": [85, 90, 78, 92]}</div>
+                </div>
+                <div class="problem-example-row">
+                    <div class="problem-example-label">출력</div>
+                    <div class="problem-example-value">박지현 평균: 86.25</div>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기 / 정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">json.dump()로 파일에 쓰고 json.load()로 읽어오세요. sum()/len()으로 평균을 계산합니다.</div>
+                <div class="answer-code" style="margin-top:8px;">
+import json
+student = {"name": "박지현", "scores": [85, 90, 78, 92]}
+with open("student.json", "w", encoding="utf-8") as f:
+    json.dump(student, f, indent=2, ensure_ascii=False)
+with open("student.json", "r", encoding="utf-8") as f:
+    data = json.load(f)
+avg = sum(data["scores"]) / len(data["scores"])
+print(f"{data['name']} 평균: {avg}")
+                </div>
+            </div>
+        </details>
+    </div>
+
+    <div class="divider"></div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>핵심 요약</h3>
+        <ul>
+            <li><strong>JSON</strong>은 텍스트 기반 데이터 교환 형식. 어떤 언어와도 호환됨</li>
+            <li><strong>import json</strong> — 별도 설치 없이 바로 사용 가능한 내장 모듈</li>
+            <li><strong>json.dumps(obj)</strong> — 파이썬 객체 &rarr; JSON 문자열 (s = string)</li>
+            <li><strong>json.loads(str)</strong> — JSON 문자열 &rarr; 파이썬 객체 (s = string)</li>
+            <li><strong>json.dump(obj, f)</strong> — 파일에 JSON 쓰기 (s 없음 = file)</li>
+            <li><strong>json.load(f)</strong> — 파일에서 JSON 읽기 (s 없음 = file)</li>
+            <li><strong>indent=2</strong> — 들여쓰기로 보기 좋게 출력</li>
+            <li><strong>ensure_ascii=False</strong> — 한글 깨짐 방지 옵션</li>
+            <li>True/False &rarr; true/false, None &rarr; null 로 자동 변환됨</li>
+        </ul>
+    </div>
+
+    <!-- SVG 8: JSON 함수 4종 요약 다이어그램 -->
+    <div style="text-align:center;margin:18px 0;">
+        <svg viewBox="0 0 500 90" style="max-width:500px;width:100%">
+            <!-- dumps -->
+            <rect x="5" y="10" width="112" height="70" rx="8" fill="#1d4ed8"/>
+            <text x="61" y="30" text-anchor="middle" font-size="12" fill="#fff" font-weight="800">dumps()</text>
+            <text x="61" y="48" text-anchor="middle" font-size="9" fill="#bfdbfe">객체 &rarr; 문자열</text>
+            <text x="61" y="64" text-anchor="middle" font-family="monospace" font-size="8" fill="#93c5fd">in: dict</text>
+            <text x="61" y="76" text-anchor="middle" font-family="monospace" font-size="8" fill="#93c5fd">out: str</text>
+
+            <!-- loads -->
+            <rect x="127" y="10" width="112" height="70" rx="8" fill="#0f766e"/>
+            <text x="183" y="30" text-anchor="middle" font-size="12" fill="#fff" font-weight="800">loads()</text>
+            <text x="183" y="48" text-anchor="middle" font-size="9" fill="#99f6e4">문자열 &rarr; 객체</text>
+            <text x="183" y="64" text-anchor="middle" font-family="monospace" font-size="8" fill="#6ee7b7">in: str</text>
+            <text x="183" y="76" text-anchor="middle" font-family="monospace" font-size="8" fill="#6ee7b7">out: dict</text>
+
+            <!-- dump -->
+            <rect x="249" y="10" width="112" height="70" rx="8" fill="#7c3aed"/>
+            <text x="305" y="30" text-anchor="middle" font-size="12" fill="#fff" font-weight="800">dump()</text>
+            <text x="305" y="48" text-anchor="middle" font-size="9" fill="#ddd6fe">객체 &rarr; 파일</text>
+            <text x="305" y="64" text-anchor="middle" font-family="monospace" font-size="8" fill="#c4b5fd">in: dict, file</text>
+            <text x="305" y="76" text-anchor="middle" font-family="monospace" font-size="8" fill="#c4b5fd">out: (없음)</text>
+
+            <!-- load -->
+            <rect x="371" y="10" width="122" height="70" rx="8" fill="#b45309"/>
+            <text x="432" y="30" text-anchor="middle" font-size="12" fill="#fff" font-weight="800">load()</text>
+            <text x="432" y="48" text-anchor="middle" font-size="9" fill="#fde68a">파일 &rarr; 객체</text>
+            <text x="432" y="64" text-anchor="middle" font-family="monospace" font-size="8" fill="#fcd34d">in: file</text>
+            <text x="432" y="76" text-anchor="middle" font-family="monospace" font-size="8" fill="#fcd34d">out: dict</text>
+        </svg>
+    </div>
+</div>
+
+<!-- =========================================================
+     7페이지: JSON 타입 변환 + 오류 처리 + 심화
+     ========================================================= -->
+<div class="page">
+    <h2>JSON 타입 변환 완전 정리</h2>
+
+    <!-- SVG 9: 타입 대응표 시각화 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 500 120" style="max-width:500px;width:100%">
+            <!-- 헤더 -->
+            <rect x="5" y="5" width="235" height="25" rx="6" fill="#1e3a5f"/>
+            <text x="120" y="22" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">파이썬 타입</text>
+            <rect x="260" y="5" width="235" height="25" rx="6" fill="#1d4ed8"/>
+            <text x="377" y="22" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">JSON 타입</text>
+
+            <!-- 행 1 -->
+            <rect x="5" y="33" width="235" height="18" rx="0" fill="#f8fafc"/>
+            <text x="120" y="46" text-anchor="middle" font-family="monospace" font-size="10" fill="#0f172a">dict</text>
+            <rect x="260" y="33" width="235" height="18" rx="0" fill="#f8fafc"/>
+            <text x="377" y="46" text-anchor="middle" font-family="monospace" font-size="10" fill="#1d4ed8">object {}</text>
+
+            <!-- 행 2 -->
+            <rect x="5" y="51" width="235" height="18" fill="#fff"/>
+            <text x="120" y="64" text-anchor="middle" font-family="monospace" font-size="10" fill="#0f172a">list, tuple</text>
+            <rect x="260" y="51" width="235" height="18" fill="#fff"/>
+            <text x="377" y="64" text-anchor="middle" font-family="monospace" font-size="10" fill="#1d4ed8">array []</text>
+
+            <!-- 행 3 -->
+            <rect x="5" y="69" width="235" height="18" fill="#f8fafc"/>
+            <text x="120" y="82" text-anchor="middle" font-family="monospace" font-size="10" fill="#0f172a">str</text>
+            <rect x="260" y="69" width="235" height="18" fill="#f8fafc"/>
+            <text x="377" y="82" text-anchor="middle" font-family="monospace" font-size="10" fill="#1d4ed8">string ""</text>
+
+            <!-- 행 4 -->
+            <rect x="5" y="87" width="235" height="18" fill="#fff"/>
+            <text x="120" y="100" text-anchor="middle" font-family="monospace" font-size="10" fill="#0f172a">int, float</text>
+            <rect x="260" y="87" width="235" height="18" fill="#fff"/>
+            <text x="377" y="100" text-anchor="middle" font-family="monospace" font-size="10" fill="#1d4ed8">number 123</text>
+
+            <!-- 행 5 -->
+            <rect x="5" y="105" width="235" height="18" fill="#f8fafc"/>
+            <text x="120" y="118" text-anchor="middle" font-family="monospace" font-size="10" fill="#0f172a">True / False / None</text>
+            <rect x="260" y="105" width="235" height="18" fill="#f8fafc"/>
+            <text x="377" y="118" text-anchor="middle" font-family="monospace" font-size="10" fill="#1d4ed8">true / false / null</text>
+        </svg>
+    </div>
+
+    <h3>오류 처리 — JSONDecodeError</h3>
+    <p>JSON 형식이 잘못된 문자열을 <code>loads()</code>에 넘기면 <code>json.JSONDecodeError</code>가 발생합니다. <code>try/except</code>로 안전하게 처리하세요.</p>
+
+    <div class="code">
+<span class="kw">import</span> json
+
+bad_json = <span class="str">"{'name': '홍길동'}"</span>  <span class="cmt"># 작은따옴표 사용 - JSON 형식 위반</span>
+
+<span class="kw">try</span>:
+    data = json.<span class="fn">loads</span>(bad_json)
+<span class="kw">except</span> json.JSONDecodeError <span class="kw">as</span> e:
+    <span class="fn">print</span>(<span class="str">"JSON 오류:"</span>, e)
+    <span class="cmt"># JSON 오류: Expecting property name enclosed in double quotes</span>
+    </div>
+
+    <div class="divider"></div>
+
+    <h3>API 응답 처리 실습 예</h3>
+    <p>실제로 JSON은 웹 API(인터넷 서비스 연결)에서 가장 많이 씁니다. 서버가 보내주는 JSON 문자열을 파이썬으로 받아 처리하는 패턴입니다.</p>
+
+    <div class="code">
+<span class="kw">import</span> json
+
+<span class="cmt"># 서버에서 받아온 JSON 응답 (실제로는 requests.get().text)</span>
+api_response = <span class="str">'''
+{
+  "status": "success",
+  "data": {
+    "students": [
+      {"name": "김민준", "score": 92},
+      {"name": "이지은", "score": 87},
+      {"name": "박지현", "score": 95}
+    ]
+  }
+}
+'''</span>
+
+result = json.<span class="fn">loads</span>(api_response)
+
+<span class="cmt"># 학생 목록 순회</span>
+students = result[<span class="str">"data"</span>][<span class="str">"students"</span>]
+<span class="kw">for</span> s <span class="kw">in</span> students:
+    <span class="fn">print</span>(<span class="str">f"{s['name']}: {s['score']}점"</span>)
+
+<span class="cmt"># 김민준: 92점
+# 이지은: 87점
+# 박지현: 95점</span>
+    </div>
+
+    <!-- SVG 10: 중첩 JSON 구조 탐색 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 500 100" style="max-width:500px;width:100%">
+            <!-- result 박스 -->
+            <rect x="5" y="15" width="80" height="70" rx="8" fill="#1e3a5f"/>
+            <text x="45" y="38" text-anchor="middle" font-size="10" fill="#94a3b8">result</text>
+            <text x="45" y="54" text-anchor="middle" font-family="monospace" font-size="9" fill="#fbbf24">"status"</text>
+            <text x="45" y="68" text-anchor="middle" font-family="monospace" font-size="9" fill="#fbbf24">"data"</text>
+            <line x1="87" y1="65" x2="117" y2="65" stroke="#3b82f6" stroke-width="1.5"/>
+            <!-- data 박스 -->
+            <rect x="120" y="40" width="100" height="50" rx="8" fill="#1d4ed8"/>
+            <text x="170" y="60" text-anchor="middle" font-size="10" fill="#bfdbfe">data</text>
+            <text x="170" y="76" text-anchor="middle" font-family="monospace" font-size="9" fill="#fff">"students"</text>
+            <line x1="222" y1="65" x2="252" y2="65" stroke="#3b82f6" stroke-width="1.5"/>
+            <!-- students 박스 -->
+            <rect x="255" y="15" width="110" height="80" rx="8" fill="#0f766e"/>
+            <text x="310" y="34" text-anchor="middle" font-size="10" fill="#99f6e4">students (리스트)</text>
+            <text x="310" y="52" text-anchor="middle" font-family="monospace" font-size="8" fill="#fff">[0] {name, score}</text>
+            <text x="310" y="66" text-anchor="middle" font-family="monospace" font-size="8" fill="#fff">[1] {name, score}</text>
+            <text x="310" y="80" text-anchor="middle" font-family="monospace" font-size="8" fill="#fff">[2] {name, score}</text>
+            <!-- 접근 경로 -->
+            <text x="400" y="40" font-size="10" fill="#64748b">접근 경로:</text>
+            <text x="400" y="58" font-family="monospace" font-size="9" fill="#3b82f6">result["data"]</text>
+            <text x="400" y="74" font-family="monospace" font-size="9" fill="#3b82f6">        ["students"]</text>
+            <text x="400" y="90" font-family="monospace" font-size="9" fill="#3b82f6">        [0]["name"]</text>
+        </svg>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

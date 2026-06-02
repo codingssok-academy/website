@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 2차원 배열 활용</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 14px;
+    color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- ══ 페이지 1: 표지 ══ -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">10</div>
+        <div class="cover-label">Unit 10 · L5 배열 심화</div>
+        <h1 class="cover-title">2차원 배열 활용 — 구구단·좌석·행렬</h1>
+        <p class="cover-sub">2차원 배열로 구구단 표를 저장하고, 좌석 배치도를 관리하고, 행렬 연산을 구현합니다. 행 합계·열 합계·대각선 패턴까지 실전 활용법을 익힙니다.</p>
+        <div style="margin:24px 0;">
+            <!-- 구구단 표 미니 SVG -->
+            <svg viewBox="0 0 500 155" style="max-width:500px;width:100%">
+                <text x="10" y="16" font-size="11" fill="#1e3a5f" font-weight="800">구구단 표 gugu[9][9]</text>
+                <!-- 행/열 헤더 -->
+                <text x="36" y="32" text-anchor="middle" font-size="9" fill="#94a3b8">×</text>
+                <text x="62" y="32" text-anchor="middle" font-size="9" fill="#3b82f6" font-weight="700">2</text>
+                <text x="88" y="32" text-anchor="middle" font-size="9" fill="#3b82f6" font-weight="700">3</text>
+                <text x="114" y="32" text-anchor="middle" font-size="9" fill="#3b82f6" font-weight="700">4</text>
+                <text x="140" y="32" text-anchor="middle" font-size="9" fill="#3b82f6" font-weight="700">5</text>
+                <text x="166" y="32" text-anchor="middle" font-size="9" fill="#3b82f6" font-weight="700">6</text>
+                <text x="192" y="32" text-anchor="middle" font-size="9" fill="#3b82f6" font-weight="700">7</text>
+                <text x="218" y="32" text-anchor="middle" font-size="9" fill="#3b82f6" font-weight="700">8</text>
+                <text x="244" y="32" text-anchor="middle" font-size="9" fill="#3b82f6" font-weight="700">9</text>
+                <!-- 2단 -->
+                <text x="36" y="50" text-anchor="middle" font-size="9" fill="#22c55e" font-weight="700">2</text>
+                <rect x="48" y="37" width="26" height="18" rx="2" fill="#dbeafe" stroke="#bfdbfe" stroke-width="1"/>
+                <text x="61" y="50" text-anchor="middle" font-size="10" fill="#1d4ed8">4</text>
+                <rect x="75" y="37" width="26" height="18" rx="2" fill="#dbeafe" stroke="#bfdbfe" stroke-width="1"/>
+                <text x="88" y="50" text-anchor="middle" font-size="10" fill="#1d4ed8">6</text>
+                <rect x="102" y="37" width="26" height="18" rx="2" fill="#dbeafe" stroke="#bfdbfe" stroke-width="1"/>
+                <text x="115" y="50" text-anchor="middle" font-size="10" fill="#1d4ed8">8</text>
+                <rect x="129" y="37" width="26" height="18" rx="2" fill="#dbeafe" stroke="#bfdbfe" stroke-width="1"/>
+                <text x="142" y="50" text-anchor="middle" font-size="10" fill="#1d4ed8">10</text>
+                <rect x="156" y="37" width="26" height="18" rx="2" fill="#dbeafe" stroke="#bfdbfe" stroke-width="1"/>
+                <text x="169" y="50" text-anchor="middle" font-size="10" fill="#1d4ed8">12</text>
+                <rect x="183" y="37" width="26" height="18" rx="2" fill="#dbeafe" stroke="#bfdbfe" stroke-width="1"/>
+                <text x="196" y="50" text-anchor="middle" font-size="10" fill="#1d4ed8">14</text>
+                <rect x="210" y="37" width="26" height="18" rx="2" fill="#dbeafe" stroke="#bfdbfe" stroke-width="1"/>
+                <text x="223" y="50" text-anchor="middle" font-size="10" fill="#1d4ed8">16</text>
+                <rect x="237" y="37" width="26" height="18" rx="2" fill="#dbeafe" stroke="#bfdbfe" stroke-width="1"/>
+                <text x="250" y="50" text-anchor="middle" font-size="10" fill="#1d4ed8">18</text>
+                <!-- 3단 -->
+                <text x="36" y="70" text-anchor="middle" font-size="9" fill="#22c55e" font-weight="700">3</text>
+                <rect x="48" y="56" width="26" height="18" rx="2" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
+                <text x="61" y="69" text-anchor="middle" font-size="10" fill="#166534">6</text>
+                <rect x="75" y="56" width="26" height="18" rx="2" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
+                <text x="88" y="69" text-anchor="middle" font-size="10" fill="#166534">9</text>
+                <rect x="102" y="56" width="26" height="18" rx="2" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
+                <text x="115" y="69" text-anchor="middle" font-size="10" fill="#166534">12</text>
+                <rect x="129" y="56" width="26" height="18" rx="2" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
+                <text x="142" y="69" text-anchor="middle" font-size="10" fill="#166534">15</text>
+                <rect x="156" y="56" width="26" height="18" rx="2" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
+                <text x="169" y="69" text-anchor="middle" font-size="10" fill="#166534">18</text>
+                <rect x="183" y="56" width="26" height="18" rx="2" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
+                <text x="196" y="69" text-anchor="middle" font-size="10" fill="#166534">21</text>
+                <rect x="210" y="56" width="26" height="18" rx="2" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
+                <text x="223" y="69" text-anchor="middle" font-size="10" fill="#166534">24</text>
+                <rect x="237" y="56" width="26" height="18" rx="2" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
+                <text x="250" y="69" text-anchor="middle" font-size="10" fill="#166534">27</text>
+                <!-- 생략 -->
+                <text x="148" y="90" text-anchor="middle" font-size="10" fill="#94a3b8">... (9단까지)</text>
+                <!-- 코드 설명 -->
+                <rect x="295" y="28" width="200" height="110" rx="6" fill="#0f172a"/>
+                <text x="315" y="48" font-size="10" fill="#c084fc" font-family="JetBrains Mono">for(i=2; i&lt;=9; i++)</text>
+                <text x="315" y="64" font-size="10" fill="#e2e8f0" font-family="JetBrains Mono">  for(j=1; j&lt;=9; j++)</text>
+                <text x="315" y="80" font-size="10" fill="#86efac" font-family="JetBrains Mono">    gugu[i][j]=i*j;</text>
+                <text x="315" y="100" font-size="9" fill="#64748b" font-family="JetBrains Mono">gugu[2][1] = 2</text>
+                <text x="315" y="114" font-size="9" fill="#64748b" font-family="JetBrains Mono">gugu[9][9] = 81</text>
+            </svg>
+        </div>
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/database.png" alt="데이터" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 유닛에서 배우는 것</h3>
+            <ul>
+                <li>2차원 배열로 구구단 표를 저장하고 출력할 수 있습니다.</li>
+                <li>좌석 배치도(0/1 표현)를 구현할 수 있습니다.</li>
+                <li>행렬 덧셈 알고리즘을 구현할 수 있습니다.</li>
+                <li>행 합계·열 합계·대각선 합을 구할 수 있습니다.</li>
+                <li>2차원 배열의 패턴 접근법을 이해합니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- ══ 페이지 2: 구구단 표 + 좌석 배치 ══ -->
+<div class="page">
+    <h2>실전 예제 1 — 구구단 표 저장</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/folder.png" alt="배열" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>구구단을 2차원 배열 <code>gugu[10][10]</code>에 저장하면, <code>gugu[단][수]</code>로 즉시 접근할 수 있습니다. 인덱스 0은 사용하지 않아 직관적입니다.</p>
+
+    <!-- 구구단 접근 SVG -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 120" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="ga" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#3b82f6"/>
+                </marker>
+            </defs>
+            <!-- 격자 일부 -->
+            <text x="20" y="16" font-size="10" fill="#1e3a5f" font-weight="800">gugu[단][수] 접근</text>
+            <rect x="10" y="22" width="30" height="22" rx="2" fill="#e2e8f0"/><text x="25" y="37" text-anchor="middle" font-size="9" fill="#94a3b8">×</text>
+            <rect x="42" y="22" width="30" height="22" rx="2" fill="#eff6ff"/><text x="57" y="37" text-anchor="middle" font-size="9" fill="#3b82f6" font-weight="700">1</text>
+            <rect x="74" y="22" width="30" height="22" rx="2" fill="#eff6ff"/><text x="89" y="37" text-anchor="middle" font-size="9" fill="#3b82f6" font-weight="700">2</text>
+            <rect x="106" y="22" width="30" height="22" rx="2" fill="#eff6ff"/><text x="121" y="37" text-anchor="middle" font-size="9" fill="#3b82f6" font-weight="700">3</text>
+            <!-- 3단 헤더 -->
+            <rect x="10" y="46" width="30" height="22" rx="2" fill="#f0fdf4"/><text x="25" y="61" text-anchor="middle" font-size="9" fill="#22c55e" font-weight="700">3</text>
+            <rect x="42" y="46" width="30" height="22" rx="2" fill="#f0fdf4" stroke="#86efac" stroke-width="1"/><text x="57" y="61" text-anchor="middle" font-size="10" fill="#166534">3</text>
+            <rect x="74" y="46" width="30" height="22" rx="2" fill="#f0fdf4" stroke="#86efac" stroke-width="1"/><text x="89" y="61" text-anchor="middle" font-size="10" fill="#166534">6</text>
+            <rect x="106" y="46" width="30" height="22" rx="2" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/><text x="121" y="61" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">9</text>
+            <!-- 화살표 -->
+            <path d="M160,57 L108,57" stroke="#3b82f6" stroke-width="2" marker-end="url(#ga)"/>
+            <text x="220" y="52" font-size="11" fill="#1e3a5f" font-weight="700">gugu[3][3] = 9</text>
+            <text x="220" y="67" font-size="10" fill="#64748b">3단의 3번째 수 = 9</text>
+            <!-- 7단 -->
+            <rect x="10" y="70" width="30" height="22" rx="2" fill="#fef2f2"/><text x="25" y="85" text-anchor="middle" font-size="9" fill="#ef4444" font-weight="700">7</text>
+            <rect x="42" y="70" width="30" height="22" rx="2" fill="#fef2f2" stroke="#fecaca" stroke-width="1"/><text x="57" y="85" text-anchor="middle" font-size="10" fill="#dc2626">7</text>
+            <rect x="74" y="70" width="30" height="22" rx="2" fill="#fef2f2" stroke="#fecaca" stroke-width="1"/><text x="89" y="85" text-anchor="middle" font-size="10" fill="#dc2626">14</text>
+            <rect x="106" y="70" width="30" height="22" rx="2" fill="#fef2f2" stroke="#fecaca" stroke-width="1"/><text x="121" y="85" text-anchor="middle" font-size="10" fill="#dc2626">21</text>
+            <text x="220" y="85" font-size="11" fill="#1e3a5f" font-weight="700">gugu[7][8] = 56</text>
+            <text x="220" y="100" font-size="10" fill="#64748b">7단의 8번째 수 = 56</text>
+            <!-- 범례 -->
+            <rect x="10" y="100" width="460" height="16" rx="3" fill="#f8fafc"/>
+            <text x="240" y="112" text-anchor="middle" font-size="9" fill="#64748b">배열 크기: int gugu[10][10] → 인덱스 0~9 사용, 0행/0열은 비워둠</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">int</span> gugu[<span class="num">10</span>][<span class="num">10</span>] = {<span class="num">0</span>};
+<span class="kw">int</span> i, j;
+
+<span class="cmt">// 구구단 채우기</span>
+<span class="kw">for</span>(i = <span class="num">2</span>; i &lt;= <span class="num">9</span>; i++)
+    <span class="kw">for</span>(j = <span class="num">1</span>; j &lt;= <span class="num">9</span>; j++)
+        gugu[i][j] = i * j;
+
+<span class="cmt">// 원하는 단 즉시 출력</span>
+<span class="fn">printf</span>(<span class="str">"3단: "</span>);
+<span class="kw">for</span>(j = <span class="num">1</span>; j &lt;= <span class="num">9</span>; j++)
+    <span class="fn">printf</span>(<span class="str">"%d "</span>, gugu[<span class="num">3</span>][j]);  <span class="cmt">// 3 6 9 12 15 18 21 24 27</span></div>
+
+    <h2>실전 예제 2 — 좌석 배치도</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/hard-drive.png" alt="저장소" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>영화관이나 교실의 좌석을 <code>0</code>(빈 자리)과 <code>1</code>(예약됨)로 2차원 배열에 저장합니다.</p>
+
+    <!-- 좌석 배치도 SVG -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 130" style="max-width:480px;width:100%">
+            <text x="20" y="16" font-size="11" fill="#1e3a5f" font-weight="800">좌석 배치도 seat[4][5]</text>
+            <!-- 스크린 표시 -->
+            <rect x="30" y="24" width="200" height="14" rx="3" fill="#1e3a5f"/>
+            <text x="130" y="35" text-anchor="middle" font-size="9" fill="#fff">스크린</text>
+            <!-- 좌석 격자 -->
+            <!-- 행 0 -->
+            <rect x="30" y="44" width="36" height="28" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="48" y="56" text-anchor="middle" font-size="9" fill="#64748b">A1</text><text x="48" y="67" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">빈</text>
+            <rect x="68" y="44" width="36" height="28" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5"/>
+            <text x="86" y="56" text-anchor="middle" font-size="9" fill="#64748b">A2</text><text x="86" y="67" text-anchor="middle" font-size="9" fill="#94a3b8">예약</text>
+            <rect x="106" y="44" width="36" height="28" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="124" y="56" text-anchor="middle" font-size="9" fill="#64748b">A3</text><text x="124" y="67" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">빈</text>
+            <rect x="144" y="44" width="36" height="28" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5"/>
+            <text x="162" y="56" text-anchor="middle" font-size="9" fill="#64748b">A4</text><text x="162" y="67" text-anchor="middle" font-size="9" fill="#94a3b8">예약</text>
+            <rect x="182" y="44" width="36" height="28" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="200" y="56" text-anchor="middle" font-size="9" fill="#64748b">A5</text><text x="200" y="67" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">빈</text>
+            <!-- 행 1 -->
+            <rect x="30" y="74" width="36" height="28" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5"/>
+            <text x="48" y="86" text-anchor="middle" font-size="9" fill="#64748b">B1</text><text x="48" y="97" text-anchor="middle" font-size="9" fill="#94a3b8">예약</text>
+            <rect x="68" y="74" width="36" height="28" rx="4" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+            <text x="86" y="86" text-anchor="middle" font-size="9" fill="#64748b">B2</text><text x="86" y="97" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">선택</text>
+            <rect x="106" y="74" width="36" height="28" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="124" y="86" text-anchor="middle" font-size="9" fill="#64748b">B3</text><text x="124" y="97" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">빈</text>
+            <rect x="144" y="74" width="36" height="28" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="162" y="86" text-anchor="middle" font-size="9" fill="#64748b">B4</text><text x="162" y="97" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">빈</text>
+            <rect x="182" y="74" width="36" height="28" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5"/>
+            <text x="200" y="86" text-anchor="middle" font-size="9" fill="#64748b">B5</text><text x="200" y="97" text-anchor="middle" font-size="9" fill="#94a3b8">예약</text>
+            <!-- 범례 -->
+            <rect x="260" y="44" width="12" height="12" rx="2" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="278" y="55" font-size="10" fill="#64748b">0 = 빈 자리</text>
+            <rect x="260" y="62" width="12" height="12" rx="2" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5"/>
+            <text x="278" y="73" font-size="10" fill="#64748b">1 = 예약됨</text>
+            <rect x="260" y="80" width="12" height="12" rx="2" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+            <text x="278" y="91" font-size="10" fill="#64748b">선택 중</text>
+            <text x="280" y="115" font-size="10" fill="#64748b">seat[1][1] = 0</text>
+            <text x="280" y="128" font-size="9" fill="#94a3b8">(B2, 빈 자리)</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">int</span> seat[<span class="num">4</span>][<span class="num">5</span>] = {
+    {<span class="num">0</span>,<span class="num">1</span>,<span class="num">0</span>,<span class="num">1</span>,<span class="num">0</span>},  <span class="cmt">// A행</span>
+    {<span class="num">1</span>,<span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>,<span class="num">1</span>},  <span class="cmt">// B행</span>
+    {<span class="num">0</span>,<span class="num">0</span>,<span class="num">1</span>,<span class="num">0</span>,<span class="num">0</span>},  <span class="cmt">// C행</span>
+    {<span class="num">1</span>,<span class="num">1</span>,<span class="num">0</span>,<span class="num">0</span>,<span class="num">1</span>}   <span class="cmt">// D행</span>
+};
+<span class="cmt">// 빈 자리 찾기</span>
+<span class="kw">for</span>(i=<span class="num">0</span>; i&lt;<span class="num">4</span>; i++)
+    <span class="kw">for</span>(j=<span class="num">0</span>; j&lt;<span class="num">5</span>; j++)
+        <span class="kw">if</span>(seat[i][j] == <span class="num">0</span>)
+            <span class="fn">printf</span>(<span class="str">"빈좌석: %d행%d열\n"</span>, i, j);</div>
+</div>
+
+<!-- ══ 페이지 3: 행렬 덧셈 + 합계 패턴 ══ -->
+<div class="page">
+    <h2>실전 예제 3 — 행렬 덧셈</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>두 행렬 A, B를 더해 결과 C를 구합니다. 같은 위치(i, j)의 원소끼리 더하면 됩니다. 행렬 크기가 같아야 합니다.</p>
+
+    <!-- 행렬 덧셈 SVG -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 110" style="max-width:480px;width:100%">
+            <!-- 행렬 A -->
+            <text x="50" y="16" text-anchor="middle" font-size="12" fill="#3b82f6" font-weight="800">A</text>
+            <rect x="10" y="24" width="36" height="26" rx="3" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="28" y="41" text-anchor="middle" font-size="12" fill="#1d4ed8" font-weight="700">1</text>
+            <rect x="48" y="24" width="36" height="26" rx="3" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="66" y="41" text-anchor="middle" font-size="12" fill="#1d4ed8" font-weight="700">2</text>
+            <rect x="10" y="52" width="36" height="26" rx="3" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="28" y="69" text-anchor="middle" font-size="12" fill="#1d4ed8" font-weight="700">3</text>
+            <rect x="48" y="52" width="36" height="26" rx="3" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="66" y="69" text-anchor="middle" font-size="12" fill="#1d4ed8" font-weight="700">4</text>
+            <!-- + -->
+            <text x="104" y="52" text-anchor="middle" font-size="22" fill="#94a3b8" font-weight="700">+</text>
+            <!-- 행렬 B -->
+            <text x="155" y="16" text-anchor="middle" font-size="12" fill="#22c55e" font-weight="800">B</text>
+            <rect x="118" y="24" width="36" height="26" rx="3" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="136" y="41" text-anchor="middle" font-size="12" fill="#166534" font-weight="700">5</text>
+            <rect x="156" y="24" width="36" height="26" rx="3" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="174" y="41" text-anchor="middle" font-size="12" fill="#166534" font-weight="700">6</text>
+            <rect x="118" y="52" width="36" height="26" rx="3" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="136" y="69" text-anchor="middle" font-size="12" fill="#166534" font-weight="700">7</text>
+            <rect x="156" y="52" width="36" height="26" rx="3" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="174" y="69" text-anchor="middle" font-size="12" fill="#166534" font-weight="700">8</text>
+            <!-- = -->
+            <text x="210" y="52" text-anchor="middle" font-size="22" fill="#94a3b8" font-weight="700">=</text>
+            <!-- 행렬 C -->
+            <text x="262" y="16" text-anchor="middle" font-size="12" fill="#f59e0b" font-weight="800">C</text>
+            <rect x="225" y="24" width="36" height="26" rx="3" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="243" y="41" text-anchor="middle" font-size="12" fill="#92400e" font-weight="700">6</text>
+            <rect x="263" y="24" width="36" height="26" rx="3" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="281" y="41" text-anchor="middle" font-size="12" fill="#92400e" font-weight="700">8</text>
+            <rect x="225" y="52" width="36" height="26" rx="3" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="243" y="69" text-anchor="middle" font-size="12" fill="#92400e" font-weight="700">10</text>
+            <rect x="263" y="52" width="36" height="26" rx="3" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="281" y="69" text-anchor="middle" font-size="12" fill="#92400e" font-weight="700">12</text>
+            <!-- 설명 -->
+            <text x="340" y="35" font-size="11" fill="#64748b">c[i][j]</text>
+            <text x="340" y="52" font-size="11" fill="#64748b">= a[i][j]</text>
+            <text x="340" y="69" font-size="11" fill="#64748b">+ b[i][j]</text>
+            <!-- 강조 선 -->
+            <line x1="28" y1="78" x2="28" y2="95" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="3,2"/>
+            <line x1="136" y1="78" x2="136" y2="95" stroke="#22c55e" stroke-width="1.5" stroke-dasharray="3,2"/>
+            <line x1="243" y1="78" x2="243" y2="95" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="3,2"/>
+            <text x="20" y="108" font-size="9" fill="#3b82f6">a[0][0]=1</text>
+            <text x="128" y="108" font-size="9" fill="#22c55e">b[0][0]=5</text>
+            <text x="230" y="108" font-size="9" fill="#92400e">c[0][0]=6</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">int</span> a[<span class="num">2</span>][<span class="num">2</span>] = {{<span class="num">1</span>,<span class="num">2</span>},{<span class="num">3</span>,<span class="num">4</span>}};
+<span class="kw">int</span> b[<span class="num">2</span>][<span class="num">2</span>] = {{<span class="num">5</span>,<span class="num">6</span>},{<span class="num">7</span>,<span class="num">8</span>}};
+<span class="kw">int</span> c[<span class="num">2</span>][<span class="num">2</span>], i, j;
+
+<span class="kw">for</span>(i=<span class="num">0</span>; i&lt;<span class="num">2</span>; i++)
+    <span class="kw">for</span>(j=<span class="num">0</span>; j&lt;<span class="num">2</span>; j++)
+        c[i][j] = a[i][j] + b[i][j];  <span class="cmt">// 같은 위치끼리 덧셈</span></div>
+
+    <h2>행 합계·열 합계·대각선 패턴</h2>
+    <p>2차원 배열에서 행별 합계, 열별 합계, 대각선 원소의 합을 구하는 패턴은 자주 출제됩니다.</p>
+
+    <!-- 합계 패턴 SVG -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 150" style="max-width:480px;width:100%">
+            <!-- 격자 -->
+            <rect x="10" y="10" width="38" height="30" rx="3" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/><text x="29" y="30" text-anchor="middle" font-size="12" fill="#1d4ed8" font-weight="700">1</text>
+            <rect x="50" y="10" width="38" height="30" rx="3" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/><text x="69" y="30" text-anchor="middle" font-size="12" fill="#1d4ed8" font-weight="700">2</text>
+            <rect x="90" y="10" width="38" height="30" rx="3" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/><text x="109" y="30" text-anchor="middle" font-size="12" fill="#1d4ed8" font-weight="700">3</text>
+            <text x="148" y="30" font-size="11" fill="#3b82f6" font-weight="700">→ 행합: 6</text>
+
+            <rect x="10" y="42" width="38" height="30" rx="3" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/><text x="29" y="62" text-anchor="middle" font-size="12" fill="#166534" font-weight="700">4</text>
+            <rect x="50" y="42" width="38" height="30" rx="3" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/><text x="69" y="62" text-anchor="middle" font-size="12" fill="#166534" font-weight="700">5</text>
+            <rect x="90" y="42" width="38" height="30" rx="3" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/><text x="109" y="62" text-anchor="middle" font-size="12" fill="#166534" font-weight="700">6</text>
+            <text x="148" y="62" font-size="11" fill="#22c55e" font-weight="700">→ 행합: 15</text>
+
+            <rect x="10" y="74" width="38" height="30" rx="3" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/><text x="29" y="94" text-anchor="middle" font-size="12" fill="#92400e" font-weight="700">7</text>
+            <rect x="50" y="74" width="38" height="30" rx="3" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/><text x="69" y="94" text-anchor="middle" font-size="12" fill="#92400e" font-weight="700">8</text>
+            <rect x="90" y="74" width="38" height="30" rx="3" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/><text x="109" y="94" text-anchor="middle" font-size="12" fill="#92400e" font-weight="700">9</text>
+            <text x="148" y="94" font-size="11" fill="#f59e0b" font-weight="700">→ 행합: 24</text>
+
+            <!-- 열 합계 -->
+            <text x="29" y="115" text-anchor="middle" font-size="10" fill="#6366f1" font-weight="700">열합:12</text>
+            <text x="69" y="115" text-anchor="middle" font-size="10" fill="#6366f1" font-weight="700">열합:15</text>
+            <text x="109" y="115" text-anchor="middle" font-size="10" fill="#6366f1" font-weight="700">열합:18</text>
+
+            <!-- 대각선 강조 -->
+            <rect x="10" y="10" width="38" height="30" rx="3" fill="none" stroke="#ef4444" stroke-width="3"/>
+            <rect x="50" y="42" width="38" height="30" rx="3" fill="none" stroke="#ef4444" stroke-width="3"/>
+            <rect x="90" y="74" width="38" height="30" rx="3" fill="none" stroke="#ef4444" stroke-width="3"/>
+            <text x="148" y="130" font-size="11" fill="#ef4444" font-weight="700">대각선 합: 1+5+9=15</text>
+
+            <!-- 코드 힌트 -->
+            <rect x="290" y="10" width="185" height="130" rx="6" fill="#0f172a"/>
+            <text x="304" y="30" font-size="10" fill="#64748b" font-family="JetBrains Mono">// 행 합계</text>
+            <text x="304" y="46" font-size="10" fill="#c084fc" font-family="JetBrains Mono">for(i=0;i&lt;3;i++){</text>
+            <text x="304" y="60" font-size="10" fill="#e2e8f0" font-family="JetBrains Mono"> rsum=0;</text>
+            <text x="304" y="74" font-size="10" fill="#e2e8f0" font-family="JetBrains Mono"> for(j=0;j&lt;3;j++)</text>
+            <text x="304" y="88" font-size="10" fill="#86efac" font-family="JetBrains Mono">  rsum+=a[i][j]; }</text>
+            <text x="304" y="105" font-size="10" fill="#64748b" font-family="JetBrains Mono">// 대각선 합</text>
+            <text x="304" y="119" font-size="10" fill="#c084fc" font-family="JetBrains Mono">for(i=0;i&lt;3;i++)</text>
+            <text x="304" y="133" font-size="10" fill="#fbbf24" font-family="JetBrains Mono"> diag+=a[i][i];</text>
+        </svg>
+    </div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="정렬" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">3×3 배열의 각 열 합계를 출력해보세요.</div>
+                <div class="code"><span class="kw">for</span>(j=<span class="num">0</span>; j&lt;<span class="num">3</span>; j++) {
+    csum = <span class="num">0</span>;
+    <span class="kw">for</span>(i=<span class="num">0</span>; i&lt;<span class="num">3</span>; i++) csum += a[i][j];
+    <span class="fn">printf</span>(<span class="str">"%d열 합: %d\n"</span>, j, csum);
+}</div>
+                <div class="practice-result">열 인덱스 j를 바깥, 행 인덱스 i를 안쪽에 씁니다</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══ 페이지 4: 완성 예제 ══ -->
+<div class="page">
+    <h2>종합 예제 — 학급 점수 분석</h2>
+    <p>학생 4명의 과목별(국어·수학·영어) 점수를 2차원 배열에 저장하고, 학생별 평균과 과목별 평균을 구합니다.</p>
+
+    <!-- 점수 테이블 SVG -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 130" style="max-width:480px;width:100%">
+            <!-- 헤더 -->
+            <rect x="10" y="10" width="80" height="26" rx="3" fill="#1e3a5f"/>
+            <text x="50" y="27" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">학생</text>
+            <rect x="92" y="10" width="80" height="26" rx="3" fill="#3b82f6"/>
+            <text x="132" y="27" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">국어</text>
+            <rect x="174" y="10" width="80" height="26" rx="3" fill="#22c55e"/>
+            <text x="214" y="27" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">수학</text>
+            <rect x="256" y="10" width="80" height="26" rx="3" fill="#f59e0b"/>
+            <text x="296" y="27" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">영어</text>
+            <rect x="338" y="10" width="80" height="26" rx="3" fill="#6366f1"/>
+            <text x="378" y="27" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">평균</text>
+            <!-- 데이터 행 -->
+            <rect x="10" y="38" width="80" height="22" rx="2" fill="#f8fafc"/><text x="50" y="53" text-anchor="middle" font-size="10" fill="#374151">학생0</text>
+            <rect x="92" y="38" width="80" height="22" rx="2" fill="#eff6ff"/><text x="132" y="53" text-anchor="middle" font-size="10" fill="#1d4ed8">80</text>
+            <rect x="174" y="38" width="80" height="22" rx="2" fill="#f0fdf4"/><text x="214" y="53" text-anchor="middle" font-size="10" fill="#166534">75</text>
+            <rect x="256" y="38" width="80" height="22" rx="2" fill="#fef3c7"/><text x="296" y="53" text-anchor="middle" font-size="10" fill="#92400e">90</text>
+            <rect x="338" y="38" width="80" height="22" rx="2" fill="#f5f3ff"/><text x="378" y="53" text-anchor="middle" font-size="10" fill="#4338ca">81.7</text>
+            <rect x="10" y="62" width="80" height="22" rx="2" fill="#f8fafc"/><text x="50" y="77" text-anchor="middle" font-size="10" fill="#374151">학생1</text>
+            <rect x="92" y="62" width="80" height="22" rx="2" fill="#eff6ff"/><text x="132" y="77" text-anchor="middle" font-size="10" fill="#1d4ed8">95</text>
+            <rect x="174" y="62" width="80" height="22" rx="2" fill="#f0fdf4"/><text x="214" y="77" text-anchor="middle" font-size="10" fill="#166534">88</text>
+            <rect x="256" y="62" width="80" height="22" rx="2" fill="#fef3c7"/><text x="296" y="77" text-anchor="middle" font-size="10" fill="#92400e">72</text>
+            <rect x="338" y="62" width="80" height="22" rx="2" fill="#f5f3ff"/><text x="378" y="77" text-anchor="middle" font-size="10" fill="#4338ca">85.0</text>
+            <rect x="10" y="86" width="80" height="22" rx="2" fill="#f8fafc"/><text x="50" y="101" text-anchor="middle" font-size="10" fill="#374151">학생2</text>
+            <rect x="92" y="86" width="80" height="22" rx="2" fill="#eff6ff"/><text x="132" y="101" text-anchor="middle" font-size="10" fill="#1d4ed8">70</text>
+            <rect x="174" y="86" width="80" height="22" rx="2" fill="#f0fdf4"/><text x="214" y="101" text-anchor="middle" font-size="10" fill="#166534">92</text>
+            <rect x="256" y="86" width="80" height="22" rx="2" fill="#fef3c7"/><text x="296" y="101" text-anchor="middle" font-size="10" fill="#92400e">85</text>
+            <rect x="338" y="86" width="80" height="22" rx="2" fill="#f5f3ff"/><text x="378" y="101" text-anchor="middle" font-size="10" fill="#4338ca">82.3</text>
+            <!-- 과목 평균 -->
+            <rect x="10" y="112" width="80" height="14" rx="2" fill="#e2e8f0"/><text x="50" y="123" text-anchor="middle" font-size="9" fill="#64748b" font-weight="700">과목평균</text>
+            <rect x="92" y="112" width="80" height="14" rx="2" fill="#dbeafe"/><text x="132" y="123" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">81.7</text>
+            <rect x="174" y="112" width="80" height="14" rx="2" fill="#dcfce7"/><text x="214" y="123" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">85.0</text>
+            <rect x="256" y="112" width="80" height="14" rx="2" fill="#fef9c3"/><text x="296" y="123" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">82.3</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">int</span> score[<span class="num">3</span>][<span class="num">3</span>] = {
+    {<span class="num">80</span>, <span class="num">75</span>, <span class="num">90</span>},
+    {<span class="num">95</span>, <span class="num">88</span>, <span class="num">72</span>},
+    {<span class="num">70</span>, <span class="num">92</span>, <span class="num">85</span>}
+};
+<span class="kw">int</span> i, j, sum;
+
+<span class="cmt">// 학생별 평균 (행 합계)</span>
+<span class="kw">for</span>(i=<span class="num">0</span>; i&lt;<span class="num">3</span>; i++) {
+    sum = <span class="num">0</span>;
+    <span class="kw">for</span>(j=<span class="num">0</span>; j&lt;<span class="num">3</span>; j++) sum += score[i][j];
+    <span class="fn">printf</span>(<span class="str">"학생%d 평균: %.1f\n"</span>, i, (<span class="kw">float</span>)sum/<span class="num">3</span>);
+}
+
+<span class="cmt">// 과목별 평균 (열 합계)</span>
+<span class="kw">char</span> *subj[] = {<span class="str">"국어"</span>,<span class="str">"수학"</span>,<span class="str">"영어"</span>};
+<span class="kw">for</span>(j=<span class="num">0</span>; j&lt;<span class="num">3</span>; j++) {
+    sum = <span class="num">0</span>;
+    <span class="kw">for</span>(i=<span class="num">0</span>; i&lt;<span class="num">3</span>; i++) sum += score[i][j];
+    <span class="fn">printf</span>(<span class="str">"%s 평균: %.1f\n"</span>, subj[j], (<span class="kw">float</span>)sum/<span class="num">3</span>);
+}</div>
+</div>
+
+<!-- ══ 페이지 5: 문제 ══ -->
+<div class="page">
+    <h2>확인 문제</h2>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">1</div>
+            <div class="problem-label">구구단 접근 — gugu[5][7]의 값은?</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text"><code>int gugu[10][10];</code>에 구구단을 저장했을 때, <code>gugu[5][7]</code>의 값은 무엇인가?</div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 / 정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">gugu[단][수] = 단 × 수</div>
+                <div class="answer-code">gugu[5][7] = 5 × 7 = 35</div>
+            </div>
+        </details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">2</div>
+            <div class="problem-label">좌석 예약 처리</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text"><code>int seat[3][4] = {0};</code>에서 2행 3열 좌석을 예약 처리하는 코드를 쓰세요. (예약=1)</div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 / 정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">seat[2][3] = 1;</div>
+            </div>
+        </details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">3</div>
+            <div class="problem-label">행렬 덧셈 결과</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">a={{1,2},{3,4}}, b={{5,6},{7,8}}일 때 행렬 덧셈 결과 c[0][1]과 c[1][0]은?</div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 / 정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">c[0][1] = a[0][1]+b[0][1] = 2+6 = 8
+c[1][0] = a[1][0]+b[1][0] = 3+7 = 10</div>
+            </div>
+        </details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">4</div>
+            <div class="problem-label">대각선 합 구하기</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">3×3 배열 <code>{{2,4,6},{8,10,12},{14,16,18}}</code>의 주 대각선(좌상→우하) 합을 구하는 코드를 완성하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">힌트</span>
+                    <span class="problem-example-value">주 대각선: a[0][0], a[1][1], a[2][2]</span>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 / 정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">int diag = 0;
+for(i=0; i&lt;3; i++) diag += a[i][i];
+// 2 + 10 + 18 = 30</div>
+            </div>
+        </details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">5</div>
+            <div class="problem-label">빈 좌석 카운트 프로그램</div>
+            <span class="problem-diff hard">어려움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">4행 5열 좌석 배열에서 빈 자리(0)의 총 개수를 출력하는 코드를 작성하세요.</div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 / 정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">이중 for문에서 seat[i][j]==0 조건으로 count++</div>
+                <div class="answer-code">int count = 0;
+for(i=0; i&lt;4; i++)
+    for(j=0; j&lt;5; j++)
+        if(seat[i][j] == 0) count++;
+printf("빈 좌석: %d개\n", count);</div>
+            </div>
+        </details>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>핵심 정리</h3>
+        <ul>
+            <li><strong>구구단 저장:</strong> <code>gugu[i][j] = i*j</code> — O(n²) 채우기, 즉시 조회</li>
+            <li><strong>좌석 배치:</strong> 0/1 비트맵 — <code>seat[i][j]=1</code> 예약, <code>==0</code> 빈 자리 확인</li>
+            <li><strong>행렬 덧셈:</strong> <code>c[i][j] = a[i][j] + b[i][j]</code> — 같은 위치끼리</li>
+            <li><strong>행 합계:</strong> 바깥 for=행, 안쪽 for=열 → sum 누적</li>
+            <li><strong>열 합계:</strong> 바깥 for=열, 안쪽 for=행 → 인덱스 순서 바꾸기</li>
+            <li><strong>대각선 합:</strong> <code>for(i=0;i&lt;n;i++) diag+=a[i][i]</code></li>
+        </ul>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+
+
+
+<script>
+(function(){
+  var KEY = 'cs_ans_' + location.pathname.replace(/[^a-zA-Z0-9]/g,'_');
+  var pagePath = location.pathname;
+  var userId = null;
+  try {
+    userId = window.parent?.localStorage?.getItem('codingssok_user_id')
+      || localStorage.getItem('codingssok_user_id');
+  } catch(e) {}
+
+  function save(){
+    var areas = document.querySelectorAll('textarea');
+    var saved = 0;
+    areas.forEach(function(ta, i){
+      if(ta.value.trim()) {
+        localStorage.setItem(KEY + '_' + i, ta.value);
+        saved++;
+      } else {
+        localStorage.removeItem(KEY + '_' + i);
+      }
+    });
+    if(saved > 0) showSaveIndicator();
+  }
+
+  function load(){
+    var areas = document.querySelectorAll('textarea');
+    var restored = 0;
+    areas.forEach(function(ta, i){
+      var val = localStorage.getItem(KEY + '_' + i);
+      if(val && val.trim()) {
+        ta.value = val;
+        ta.style.borderColor = '#10b981';
+        ta.style.boxShadow = '0 0 0 2px rgba(16,185,129,0.15)';
+        setTimeout(function(){ ta.style.borderColor = ''; ta.style.boxShadow = ''; }, 2000);
+        restored++;
+      }
+    });
+    if(restored > 0) showRestoreIndicator(restored);
+  }
+
+  function saveToDb(){
+    if(!userId) return;
+    var areas = document.querySelectorAll('textarea');
+    var answers = [];
+    areas.forEach(function(ta, i){
+      if(ta.value.trim()) answers.push({ field_index: i, answer_text: ta.value });
+    });
+    if(answers.length === 0) return;
+    fetch('/api/answers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId, page_path: pagePath, answers: answers })
+    }).catch(function(){});
+  }
+
+  function loadFromDb(){
+    if(!userId) return;
+    fetch('/api/answers?user_id=' + encodeURIComponent(userId) + '&page_path=' + encodeURIComponent(pagePath))
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(!d.answers || !d.answers.length) return;
+        var areas = document.querySelectorAll('textarea');
+        d.answers.forEach(function(a){
+          if(areas[a.field_index] && a.answer_text) {
+            areas[a.field_index].value = a.answer_text;
+            localStorage.setItem(KEY + '_' + a.field_index, a.answer_text);
+          }
+        });
+      }).catch(function(){});
+  }
+
+  function showSaveIndicator(){
+    var el = document.getElementById('cs-save-ind');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'cs-save-ind';
+      el.style.cssText = 'position:fixed;bottom:16px;right:16px;padding:6px 14px;border-radius:8px;background:#0f172a;color:#22c55e;font-size:11px;font-weight:700;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+      document.body.appendChild(el);
+    }
+    el.textContent = '\u2713 \uB2F5\uC548 \uC800\uC7A5\uB428'; // ✓ 답안 저장됨
+    el.style.opacity = '1';
+    setTimeout(function(){ el.style.opacity = '0'; }, 1500);
+  }
+
+  function showRestoreIndicator(n){
+    var el = document.getElementById('cs-save-ind');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'cs-save-ind';
+      el.style.cssText = 'position:fixed;bottom:16px;right:16px;padding:6px 14px;border-radius:8px;background:#0f172a;color:#3b82f6;font-size:11px;font-weight:700;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+      document.body.appendChild(el);
+    }
+    el.textContent = '\u21BB ' + n + '\uAC1C \uB2F5\uC548 \uBCF5\uC6D0'; // ↻ n개 답안 복원
+    el.style.color = '#3b82f6';
+    el.style.opacity = '1';
+    setTimeout(function(){ el.style.opacity = '0'; }, 2500);
+  }
+
+  var t = null;
+  document.addEventListener('input', function(e){
+    if(e.target.tagName === 'TEXTAREA'){
+      clearTimeout(t);
+      t = setTimeout(function(){ save(); saveToDb(); }, 300);
+    }
+  });
+  document.addEventListener('change', function(e){
+    if(e.target.tagName === 'TEXTAREA'){ save(); saveToDb(); }
+  });
+  document.addEventListener('focusout', function(e){
+    if(e.target.tagName === 'TEXTAREA'){ save(); saveToDb(); }
+  });
+  window.addEventListener('beforeunload', function(){ save(); saveToDb(); });
+
+  // 즉시 로드
+  load();
+  loadFromDb();
+})();
+</script>
+</body>
+</html>

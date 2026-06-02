@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Unit 43. 구조체 — C 언어 코딩 도장</title>
+    <link rel="stylesheet" href="../common.css">
+</head>
+
+<body>
+    <div class="wrap">
+        <div class="hdr">
+            <h1>Unit 43. 구조체 사용하기</h1>
+            <div class="sub">struct · 멤버 접근 · typedef · 배열 · 포인터</div>
+            <span class="unit-badge">Chapter 12 · 구조체</span>
+            <div class="level-bar"><span class="on"></span><span class="on"></span><span class="on"></span></div>
+            <div class="meta"><span class="tag pri">🖥️ C언어</span><span class="tag acc">📝 20문제</span><span
+                    class="tag">⏱ 35~50분</span></div>
+        </div>
+        <div class="stu-bar"><label>👤 이름 <input type="text" id="stu-name" placeholder="이름"></label><label>📅 날짜 <input
+                    type="date" id="stu-date"></label></div>
+        <div class="learn">
+            <h2><span class="ico" style="background:rgba(20,184,166,.15)">🏗️</span> 구조체 = 다양한 자료형을 하나로!</h2>
+            <p>int, char, double 등 서로 다른 자료형을 하나의 묶음으로 관리. 학생, 좌표, 날짜 등!</p>
+        </div>
+        <div id="problems"></div>
+        <div class="submit-section">
+            <p>모든 문제를 풀었나요? 📨</p><button class="btn-submit" id="btn-submit">📄 제출하기</button>
+        </div>
+        <div class="modal-overlay" id="submit-modal">
+            <div class="modal-box">
+                <div class="modal-icon">✅</div>
+                <h3>제출 완료!</h3>
+                <p>학습지가 저장되었습니다.</p>
+                <div style="margin:12px 0"><span class="info-tag" id="modal-name"></span> <span class="info-tag"
+                        id="modal-date"></span> <span class="info-tag" id="modal-count"></span></div>
+                <p style="font-size:.78rem;color:var(--dim)">📁 <strong id="modal-filename"></strong></p><button
+                    class="btn-close-modal" id="btn-close-modal">확인</button>
+            </div>
+        </div>
+        <div class="pg"><a href="../11_함수/Unit42_재귀함수.html">← Unit 42</a><span class="tag active">Unit 43</span><a
+                href="Unit44_구조체활용.html">Unit 44 →</a></div>
+        <div class="ft">🖥️ C 언어 코딩 도장 · Unit 43 · 구조체</div>
+    </div>
+    <script>
+        const P = [
+            {
+                n: 1, t: "구조체 선언", d: 1,
+                q: `학생 정보를 담는 구조체를 선언하세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">struct Student {
+    char name[20];
+    int age;
+    double grade;
+};</pre><div class="trace">struct 키워드 + 이름 + { 멤버들 };  <br><span class="err">마지막 ; 빠뜨리지 말 것!</span></div>`},
+
+            {
+                n: 2, t: "구조체 변수 생성", d: 1,
+                q: `구조체 변수를 만들고 초기화하세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">struct Student s1 = {"Alice", 15, 92.5};
+<span class="cm">// 또는</span>
+struct Student s2;
+strcpy(s2.name, "Bob");
+s2.age = 16;
+s2.grade = 88.3;</pre>`},
+
+            {
+                n: 3, t: "멤버 접근 (.)", d: 1,
+                q: `구조체 멤버 값을 출력하세요.<pre class="code-c">struct Student s = {"Alice", 15, 92.5};
+printf("이름: %s\\n", s.name);
+printf("나이: %d\\n", s.age);
+printf("성적: %.1f\\n", s.grade);</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">이름: Alice<br>나이: 15<br>성적: 92.5</div><div class="trace">점(.) 연산자로 멤버 접근!</div>`
+            },
+
+            {
+                n: 4, t: "typedef로 별명", d: 2,
+                q: `typedef를 사용하여 편리하게 쓰세요.<pre class="code-c">typedef struct {
+    int x, y;
+} Point;
+
+Point p1 = {3, 5};
+printf("(%d, %d)\\n", p1.x, p1.y);</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">(3, 5)</div><div class="trace">typedef: struct 매번 안 써도 됨!<br>Point p1; (struct Point 대신)</div>`
+            },
+
+            {
+                n: 5, t: "구조체 크기", d: 2,
+                q: `다음 구조체의 크기는?<pre class="code-c">struct A {
+    char c;   <span class="cm">// 1바이트</span>
+    int n;    <span class="cm">// 4바이트</span>
+    short s;  <span class="cm">// 2바이트</span>
+};
+printf("%zu\\n", sizeof(struct A));</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">12</div><div class="trace">1+4+2 = 7이 아닌 <span class="val">12</span>!<br><br><span class="val">패딩(padding)</span>: 메모리 정렬을 위해<br>컴파일러가 빈 공간을 추가하기 때문!</div>`
+            },
+
+            {
+                n: 6, t: "구조체 배열", d: 2,
+                q: `학생 3명의 배열을 만드세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">typedef struct { char name[20]; int score; } Student;
+
+Student cls[3] = {
+    {"Alice", 90},
+    {"Bob", 85},
+    {"Charlie", 95}
+};
+for (int i=0;i<3;i++)
+    printf("%s: %d\\n", cls[i].name, cls[i].score);</pre>`},
+
+            {
+                n: 7, t: "구조체 포인터 (→)", d: 2,
+                q: `포인터로 구조체 멤버에 접근하세요.<pre class="code-c">struct Student s = {"Alice", 15, 92.5};
+struct Student *p = &s;
+printf("%s\\n", p->name);
+printf("%d\\n", (*p).age);</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">Alice<br>15</div><div class="trace">p->name ≡ (*p).name<br><span class="val">→ 연산자 = 포인터용 . 연산자!</span></div>`
+            },
+
+            {
+                n: 8, t: "함수에 구조체 전달", d: 2,
+                q: `구조체를 함수에 전달하는 두 가지 방법은?`,
+                a: `<span class="key">정답</span><pre class="code-c"><span class="cm">// 1) 값 전달 (복사)</span>
+void print1(Student s) {
+    printf("%s %d\\n", s.name, s.score);
+}
+<span class="cm">// 2) 포인터 전달 (원본 접근, 더 효율적!)</span>
+void print2(Student *s) {
+    printf("%s %d\\n", s->name, s->score);
+}</pre><div class="trace">큰 구조체는 <span class="val">포인터 전달이 효율적!</span><br>(복사 비용 없음)</div>`},
+
+            {
+                n: 9, t: "구조체 반환", d: 2,
+                q: `함수에서 구조체를 반환하세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">typedef struct { int x, y; } Point;
+
+Point makePoint(int x, int y) {
+    Point p = {x, y};
+    return p;
+}
+Point p = makePoint(3, 5);
+printf("(%d,%d)\\n", p.x, p.y);</pre>`},
+
+            {
+                n: 10, t: "구조체 대입", d: 2,
+                q: `구조체끼리 = 으로 복사가 되나요?`,
+                a: `<span class="key">정답</span><pre class="code-c">Student a = {"Alice", 90};
+Student b = a;  <span class="cm">// ✅ 복사됨!</span>
+strcpy(b.name, "Bob");
+printf("%s %s\\n", a.name, b.name);</pre><div class="output-box">Alice Bob</div><div class="trace"><span class="val">구조체는 = 으로 복사 가능!</span> (배열과 다름!)<br>깊은 복사(각 멤버 복사)됨</div>`},
+
+            {
+                n: 11, t: "중첩 구조체", d: 2,
+                q: `구조체 안에 구조체를 넣으세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">typedef struct { int year, month, day; } Date;
+typedef struct {
+    char name[20];
+    Date birthday;
+} Person;
+
+Person p = {"Alice", {2010, 5, 15}};
+printf("%s: %d-%d-%d\\n",
+    p.name, p.birthday.year,
+    p.birthday.month, p.birthday.day);</pre>`},
+
+            {
+                n: 12, t: "심사: 성적 순 정렬", d: 3,
+                q: `구조체 배열을 점수 내림차순으로 정렬하세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">Student cls[3]={{"Alice",90},{"Bob",95},{"Charlie",85}};
+for (int i=0;i<2;i++)
+    for (int j=0;j<2-i;j++)
+        if (cls[j].score < cls[j+1].score) {
+            Student t = cls[j];
+            cls[j] = cls[j+1];
+            cls[j+1] = t;
+        }
+<span class="cm">// Bob(95) Alice(90) Charlie(85)</span></pre>`},
+
+            {
+                n: 13, t: "심사: 두 점 사이 거리", d: 2,
+                q: `Point 구조체로 두 점 사이 거리를 구하세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">#include &lt;math.h&gt;
+typedef struct { double x, y; } Point;
+
+double distance(Point a, Point b) {
+    double dx = a.x - b.x;
+    double dy = a.y - b.y;
+    return sqrt(dx*dx + dy*dy);
+}
+Point p1={0,0}, p2={3,4};
+printf("%.1f\\n", distance(p1,p2)); <span class="cm">// 5.0</span></pre>`},
+
+            {
+                n: 14, t: "심사: 복소수 연산", d: 2,
+                q: `복소수 구조체로 덧셈, 곱셈을 구현하세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">typedef struct { double real, imag; } Complex;
+
+Complex add(Complex a, Complex b) {
+    return (Complex){a.real+b.real, a.imag+b.imag};
+}
+Complex mul(Complex a, Complex b) {
+    return (Complex){
+        a.real*b.real - a.imag*b.imag,
+        a.real*b.imag + a.imag*b.real
+    };
+}</pre>`},
+
+            {
+                n: 15, t: "심사: 동적 구조체 배열", d: 3,
+                q: `학생 n명의 동적 배열을 만드세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">int n;
+scanf("%d", &n);
+Student *cls = (Student*)malloc(n*sizeof(Student));
+for (int i=0;i<n;i++) {
+    sprintf(cls[i].name, "Student%d", i+1);
+    cls[i].score = 80 + i*5;
+}
+<span class="cm">// 사용 후</span>
+free(cls);</pre>`},
+
+            {
+                n: 16, t: "심사: 연결 리스트 노드", d: 3,
+                q: `연결 리스트의 노드 구조체를 만드세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">typedef struct Node {
+    int data;
+    struct Node *next;  <span class="cm">// 자기참조 포인터!</span>
+} Node;
+
+Node a={10,NULL}, b={20,NULL}, c={30,NULL};
+a.next = &b;
+b.next = &c;
+<span class="cm">// a → b → c → NULL</span></pre>`},
+
+            {
+                n: 17, t: "심사: enum과 struct 조합", d: 2,
+                q: `열거형과 구조체를 함께 사용하세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">typedef enum { RED, GREEN, BLUE } Color;
+typedef struct {
+    char name[20];
+    Color color;
+    int x, y;
+} Shape;
+
+Shape s = {"Circle", RED, 10, 20};
+printf("%s at (%d,%d)\\n", s.name, s.x, s.y);</pre>`},
+
+            {
+                n: 18, t: "심사: 비트필드", d: 3,
+                q: `비트필드로 메모리를 절약하세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">struct Flags {
+    unsigned int bold   : 1;  <span class="cm">// 1비트 (0~1)</span>
+    unsigned int italic : 1;
+    unsigned int size   : 4;  <span class="cm">// 4비트 (0~15)</span>
+};
+struct Flags f = {1, 0, 12};
+printf("bold=%u size=%u\\n", f.bold, f.size);</pre>`},
+
+            {
+                n: 19, t: "심사: 공용체 union", d: 2,
+                q: `union과 struct의 차이는?`,
+                a: `<span class="key">정답</span><pre class="code-c">union Data {
+    int i;
+    float f;
+    char c;
+};
+printf("%zu\\n", sizeof(union Data)); <span class="cm">// 4</span></pre><div class="trace">struct: 모든 멤버 공간 할당 (합계)<br>union: <span class="val">가장 큰 멤버 크기만!</span> 메모리 공유<br>한 번에 하나의 멤버만 사용!</div>`},
+
+            {
+                n: 20, t: "🏆 Unit 43 종합", d: 3,
+                q: `다음 코드의 출력을 쓰세요.<pre class="code-c">typedef struct { int x, y; } Vec;
+
+Vec add(Vec a, Vec b) {
+    return (Vec){a.x+b.x, a.y+b.y};
+}
+int dot(Vec a, Vec b) {
+    return a.x*b.x + a.y*b.y;
+}
+Vec v1={3,4}, v2={1,2};
+Vec v3 = add(v1, v2);
+printf("(%d,%d)\\n", v3.x, v3.y);
+printf("dot=%d\\n", dot(v1, v2));</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">(4,6)<br>dot=11</div><div class="trace">add: (3+1, 4+2) = (4,6)<br>dot: 3×1+4×2 = 3+8 = 11</div>`
+            }
+        ];
+        const c = document.getElementById('problems'); P.forEach(p => { const dc = p.d <= 1 ? 'ez' : p.d <= 2 ? 'md' : 'hd'; const dots = Array.from({ length: 5 }, (_, i) => `<span${i < p.d ? ' class="on"' : ''}>​</span>`).join(''); c.innerHTML += `<div class="prob"><div class="prob-top"><div class="prob-num ${dc}">${p.n}</div><div class="prob-title">${p.t}</div><div class="diff-dots">${dots}</div></div><div class="prob-body"><div class="q">${p.q}</div><textarea class="write" placeholder="✍️ 답을 작성하세요"></textarea><details class="ans"><summary>정답 및 해설 보기</summary><div class="ans-body">${p.a}</div></details></div></div>`; });
+    </script>
+    <script src="../submit.js"></script>
+    <script src="../../platform.js"></script>
+</body>
+
+</html>

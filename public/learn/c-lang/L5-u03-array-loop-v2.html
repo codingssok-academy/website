@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 배열과 반복문</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 14px;
+    color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+.tip-box { background: #eff6ff; border: 1.5px solid #bfdbfe; border-radius: 8px; padding: 12px 16px; margin: 14px 0; }
+.tip-box .tip-title { font-size: 13px; font-weight: 800; color: #1d4ed8; margin-bottom: 6px; }
+.tip-box p { font-size: 13px; color: #1e40af; margin: 0; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════ PAGE 1: 표지 ══════════════════════════════ -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">03</div>
+        <div class="cover-label">Level 5 · Unit 03</div>
+        <h1 class="cover-title">배열과 반복문<br>— for로 배열 전체를 처리하기</h1>
+        <p class="cover-sub">배열이 진짜 강력해지는 순간, 반복문과 만날 때입니다. for 루프 하나로 원소 100개를 입력받고, 합산하고, 출력합니다.</p>
+        <div style="margin:24px 0;">
+            <svg viewBox="0 0 500 60" style="max-width:500px;width:100%">
+                <defs>
+                    <marker id="cov3-arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                    </marker>
+                </defs>
+                <rect x="5" y="12" width="90" height="30" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="50" y="31" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">for + 배열</text>
+                <line x1="100" y1="27" x2="115" y2="27" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#cov3-arr)"/>
+                <rect x="120" y="12" width="90" height="30" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="165" y="31" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">전체 출력</text>
+                <line x1="215" y1="27" x2="230" y2="27" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#cov3-arr)"/>
+                <rect x="235" y="12" width="90" height="30" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="280" y="31" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">입력 받기</text>
+                <line x1="330" y1="27" x2="345" y2="27" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#cov3-arr)"/>
+                <rect x="350" y="12" width="90" height="30" rx="6" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+                <text x="395" y="31" text-anchor="middle" font-size="10" fill="#dc2626" font-weight="700">합계/평균</text>
+            </svg>
+        </div>
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="반복" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 유닛에서 배우는 것</h3>
+            <ul>
+                <li><code>for(i=0; i&lt;5; i++)</code>로 배열 전체를 순회할 수 있습니다.</li>
+                <li>반복문으로 배열에 값을 입력받을 수 있습니다.</li>
+                <li>배열 원소의 합계와 평균을 계산하는 패턴을 익힙니다.</li>
+                <li>역순으로 배열을 출력하는 방법을 알 수 있습니다.</li>
+                <li>배열과 반복문을 결합하면 코드가 얼마나 짧아지는지 이해합니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════ PAGE 2: for로 배열 순회 ══════════════════════════════ -->
+<div class="page">
+    <h2>for 루프로 배열 전체 출력</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/clock.png" alt="반복 시간" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>배열 크기가 5이면 인덱스는 0~4입니다. <code>for(i=0; i&lt;5; i++)</code>를 쓰면 i가 0, 1, 2, 3, 4로 바뀌면서 모든 원소를 순서대로 접근합니다.</p>
+
+    <!-- SVG 1: for 루프 순회 시각화 -->
+    <div style="text-align:center;margin:18px 0;">
+        <svg viewBox="0 0 500 160" style="max-width:500px;width:100%">
+            <defs>
+                <marker id="loop-arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#3b82f6"/>
+                </marker>
+            </defs>
+
+            <!-- 배열 박스 -->
+            <rect x="20" y="20" width="70" height="45" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+            <text x="55" y="47" text-anchor="middle" font-size="18" fill="#1d4ed8" font-weight="800">10</text>
+            <text x="55" y="72" text-anchor="middle" font-size="11" fill="#3b82f6" font-weight="700">arr[0]</text>
+
+            <rect x="100" y="20" width="70" height="45" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="135" y="47" text-anchor="middle" font-size="18" fill="#1d4ed8" font-weight="800">20</text>
+            <text x="135" y="72" text-anchor="middle" font-size="11" fill="#3b82f6" font-weight="700">arr[1]</text>
+
+            <rect x="180" y="20" width="70" height="45" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="215" y="47" text-anchor="middle" font-size="18" fill="#1d4ed8" font-weight="800">30</text>
+            <text x="215" y="72" text-anchor="middle" font-size="11" fill="#3b82f6" font-weight="700">arr[2]</text>
+
+            <rect x="260" y="20" width="70" height="45" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="295" y="47" text-anchor="middle" font-size="18" fill="#1d4ed8" font-weight="800">40</text>
+            <text x="295" y="72" text-anchor="middle" font-size="11" fill="#3b82f6" font-weight="700">arr[3]</text>
+
+            <rect x="340" y="20" width="70" height="45" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="375" y="47" text-anchor="middle" font-size="18" fill="#1d4ed8" font-weight="800">50</text>
+            <text x="375" y="72" text-anchor="middle" font-size="11" fill="#3b82f6" font-weight="700">arr[4]</text>
+
+            <!-- i 포인터 -->
+            <rect x="20" y="88" width="70" height="22" rx="4" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="55" y="103" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">i=0 → [0]</text>
+
+            <rect x="100" y="88" width="70" height="22" rx="4" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="135" y="103" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">i=1 → [1]</text>
+
+            <rect x="180" y="88" width="70" height="22" rx="4" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="215" y="103" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">i=2 → [2]</text>
+
+            <rect x="260" y="88" width="70" height="22" rx="4" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="295" y="103" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">i=3 → [3]</text>
+
+            <rect x="340" y="88" width="70" height="22" rx="4" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="375" y="103" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">i=4 → [4]</text>
+
+            <!-- 화살표 for 루프 방향 -->
+            <path d="M55,117 Q55,135 135,135 Q215,135 295,135 Q375,135 375,117"
+                stroke="#3b82f6" stroke-width="2" fill="none" marker-end="url(#loop-arr)"/>
+            <text x="215" y="150" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">for(i=0; i&lt;5; i++) 순회 방향</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="kw">int</span> arr[<span class="num">5</span>] = {<span class="num">10</span>, <span class="num">20</span>, <span class="num">30</span>, <span class="num">40</span>, <span class="num">50</span>};
+
+    <span class="cmt">// for 루프로 배열 전체 출력</span>
+    <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; <span class="num">5</span>; i++) {
+        <span class="fn">printf</span>(<span class="str">"arr[%d] = %d\n"</span>, i, arr[i]);
+    }
+
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 300 105" style="max-width:300px;width:100%">
+            <rect x="10" y="5" width="280" height="95" rx="8" fill="#0f172a"/>
+            <text x="24" y="28" font-size="12" fill="#86efac" font-family="JetBrains Mono">arr[0] = 10</text>
+            <text x="24" y="46" font-size="12" fill="#86efac" font-family="JetBrains Mono">arr[1] = 20</text>
+            <text x="24" y="64" font-size="12" fill="#86efac" font-family="JetBrains Mono">arr[2] = 30</text>
+            <text x="24" y="82" font-size="12" fill="#86efac" font-family="JetBrains Mono">arr[3] = 40</text>
+            <text x="150" y="82" font-size="12" fill="#86efac" font-family="JetBrains Mono">arr[4] = 50</text>
+        </svg>
+    </div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/database.png" alt="데이터베이스" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/calculator.png" alt="계산" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">크기 3인 배열 <code>{5, 10, 15}</code>를 for 루프로 출력하세요.</div>
+                <div class="code"><span class="kw">int</span> a[<span class="num">3</span>] = {<span class="num">5</span>, <span class="num">10</span>, <span class="num">15</span>};
+<span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; <span class="num">3</span>; i++) {
+    <span class="fn">printf</span>(<span class="str">"%d\n"</span>, a[i]);
+}</div>
+                <div class="practice-result">5, 10, 15 차례로 출력됩니다</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════ PAGE 3: 입력 받기와 합계/평균 ══════════════════════════════ -->
+<div class="page">
+    <h2>반복문으로 배열에 값 입력받기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/flowchart.png" alt="흐름도" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>scanf와 for 루프를 함께 쓰면 사용자로부터 여러 값을 배열에 순서대로 저장할 수 있습니다.</p>
+
+    <!-- SVG 2: 입력 → 배열 저장 흐름 -->
+    <div style="text-align:center;margin:18px 0;">
+        <svg viewBox="0 0 500 120" style="max-width:500px;width:100%">
+            <defs>
+                <marker id="inp-arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#22c55e"/>
+                </marker>
+            </defs>
+            <!-- 키보드 입력 표시 -->
+            <rect x="10" y="40" width="80" height="40" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="2"/>
+            <text x="50" y="56" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">scanf</text>
+            <text x="50" y="71" text-anchor="middle" font-size="10" fill="#22c55e">i=0: 85</text>
+
+            <line x1="95" y1="60" x2="115" y2="60" stroke="#22c55e" stroke-width="2" marker-end="url(#inp-arr)"/>
+
+            <rect x="120" y="28" width="70" height="45" rx="4" fill="#dcfce7" stroke="#22c55e" stroke-width="2"/>
+            <text x="155" y="54" text-anchor="middle" font-size="16" fill="#166534" font-weight="800">85</text>
+            <text x="155" y="78" text-anchor="middle" font-size="10" fill="#22c55e">arr[0]</text>
+
+            <rect x="200" y="28" width="70" height="45" rx="4" fill="#dcfce7" stroke="#22c55e" stroke-width="2"/>
+            <text x="235" y="54" text-anchor="middle" font-size="16" fill="#166534" font-weight="800">92</text>
+            <text x="235" y="78" text-anchor="middle" font-size="10" fill="#22c55e">arr[1]</text>
+
+            <rect x="280" y="28" width="70" height="45" rx="4" fill="#dcfce7" stroke="#22c55e" stroke-width="2"/>
+            <text x="315" y="54" text-anchor="middle" font-size="16" fill="#166534" font-weight="800">78</text>
+            <text x="315" y="78" text-anchor="middle" font-size="10" fill="#22c55e">arr[2]</text>
+
+            <rect x="360" y="28" width="70" height="45" rx="4" fill="#e0f2fe" stroke="#7dd3fc" stroke-width="1.5" stroke-dasharray="3,2"/>
+            <text x="395" y="54" text-anchor="middle" font-size="13" fill="#0284c7">...</text>
+            <text x="395" y="78" text-anchor="middle" font-size="10" fill="#0284c7">arr[N-1]</text>
+
+            <text x="250" y="105" text-anchor="middle" font-size="11" fill="#64748b">for 루프가 i를 0,1,2,...로 바꿔가며 scanf → arr[i]에 저장</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="kw">int</span> score[<span class="num">5</span>];
+
+    <span class="cmt">// 5개 값 입력받기</span>
+    <span class="fn">printf</span>(<span class="str">"점수 5개를 입력하세요:\n"</span>);
+    <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; <span class="num">5</span>; i++) {
+        <span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;score[i]);
+    }
+
+    <span class="cmt">// 입력받은 값 출력</span>
+    <span class="fn">printf</span>(<span class="str">"입력된 점수:\n"</span>);
+    <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; <span class="num">5</span>; i++) {
+        <span class="fn">printf</span>(<span class="str">"%d번: %d점\n"</span>, i + <span class="num">1</span>, score[i]);
+    }
+
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+
+    <h2>합계와 평균 계산 패턴</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>배열의 합계와 평균은 매우 자주 쓰는 패턴입니다. <code>sum += arr[i]</code>로 누적하고, 마지막에 개수로 나눕니다.</p>
+
+    <!-- SVG 3: 합계 누적 시각화 -->
+    <div style="text-align:center;margin:18px 0;">
+        <svg viewBox="0 0 500 100" style="max-width:500px;width:100%">
+            <defs>
+                <marker id="sum-arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#f59e0b"/>
+                </marker>
+            </defs>
+            <!-- 배열 박스 -->
+            <rect x="10" y="10" width="55" height="35" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="37" y="32" text-anchor="middle" font-size="14" fill="#1d4ed8" font-weight="700">10</text>
+            <text x="37" y="52" text-anchor="middle" font-size="9" fill="#3b82f6">[0]</text>
+
+            <rect x="75" y="10" width="55" height="35" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="102" y="32" text-anchor="middle" font-size="14" fill="#1d4ed8" font-weight="700">20</text>
+            <text x="102" y="52" text-anchor="middle" font-size="9" fill="#3b82f6">[1]</text>
+
+            <rect x="140" y="10" width="55" height="35" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="167" y="32" text-anchor="middle" font-size="14" fill="#1d4ed8" font-weight="700">30</text>
+            <text x="167" y="52" text-anchor="middle" font-size="9" fill="#3b82f6">[2]</text>
+
+            <rect x="205" y="10" width="55" height="35" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="232" y="32" text-anchor="middle" font-size="14" fill="#1d4ed8" font-weight="700">40</text>
+            <text x="232" y="52" text-anchor="middle" font-size="9" fill="#3b82f6">[3]</text>
+
+            <rect x="270" y="10" width="55" height="35" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="297" y="32" text-anchor="middle" font-size="14" fill="#1d4ed8" font-weight="700">50</text>
+            <text x="297" y="52" text-anchor="middle" font-size="9" fill="#3b82f6">[4]</text>
+
+            <!-- += 표시 -->
+            <line x1="340" y1="28" x2="370" y2="28" stroke="#f59e0b" stroke-width="2" marker-end="url(#sum-arr)"/>
+            <text x="355" y="20" text-anchor="middle" font-size="9" fill="#f59e0b" font-weight="700">+=</text>
+
+            <!-- sum 박스 -->
+            <rect x="375" y="5" width="90" height="50" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="2"/>
+            <text x="420" y="27" text-anchor="middle" font-size="12" fill="#92400e" font-weight="700">sum</text>
+            <text x="420" y="47" text-anchor="middle" font-size="14" fill="#f59e0b" font-weight="800">150</text>
+
+            <text x="250" y="75" text-anchor="middle" font-size="11" fill="#64748b">sum = 0 → +=10 → +=20 → +=30 → +=40 → +=50 → 150</text>
+            <text x="250" y="92" text-anchor="middle" font-size="11" fill="#64748b">평균 = 150 / 5 = 30.0</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">int</span> arr[<span class="num">5</span>] = {<span class="num">10</span>, <span class="num">20</span>, <span class="num">30</span>, <span class="num">40</span>, <span class="num">50</span>};
+<span class="kw">int</span> sum = <span class="num">0</span>;
+
+<span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; <span class="num">5</span>; i++) {
+    sum += arr[i];   <span class="cmt">// sum = sum + arr[i]</span>
+}
+
+<span class="fn">printf</span>(<span class="str">"합계: %d\n"</span>, sum);
+<span class="fn">printf</span>(<span class="str">"평균: %.1f\n"</span>, (<span class="kw">double</span>)sum / <span class="num">5</span>);</div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">배열 <code>{4, 8, 12}</code>의 합계를 구해 출력하세요.</div>
+                <div class="code"><span class="kw">int</span> a[] = {<span class="num">4</span>, <span class="num">8</span>, <span class="num">12</span>};
+<span class="kw">int</span> sum = <span class="num">0</span>;
+<span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; <span class="num">3</span>; i++) sum += a[i];
+<span class="fn">printf</span>(<span class="str">"합계: %d\n"</span>, sum);</div>
+                <div class="practice-result">합계: 24 가 출력됩니다</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════ PAGE 4: 역순 출력과 응용 ══════════════════════════════ -->
+<div class="page">
+    <h2>역순 출력 — i를 끝에서 시작</h2>
+    <p>역순 출력은 <code>for</code>의 시작값을 마지막 인덱스(<code>N-1</code>)로, 조건을 <code>i&gt;=0</code>으로, 증감을 <code>i--</code>로 바꿉니다.</p>
+
+    <!-- SVG 4: 역순 순회 시각화 -->
+    <div style="text-align:center;margin:18px 0;">
+        <svg viewBox="0 0 500 130" style="max-width:500px;width:100%">
+            <defs>
+                <marker id="rev-arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#ef4444"/>
+                </marker>
+            </defs>
+            <!-- 배열 박스 -->
+            <rect x="20" y="15" width="70" height="45" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="55" y="42" text-anchor="middle" font-size="18" fill="#1d4ed8" font-weight="800">10</text>
+            <text x="55" y="68" text-anchor="middle" font-size="10" fill="#3b82f6">arr[0]</text>
+
+            <rect x="100" y="15" width="70" height="45" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="135" y="42" text-anchor="middle" font-size="18" fill="#1d4ed8" font-weight="800">20</text>
+            <text x="135" y="68" text-anchor="middle" font-size="10" fill="#3b82f6">arr[1]</text>
+
+            <rect x="180" y="15" width="70" height="45" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="215" y="42" text-anchor="middle" font-size="18" fill="#1d4ed8" font-weight="800">30</text>
+            <text x="215" y="68" text-anchor="middle" font-size="10" fill="#3b82f6">arr[2]</text>
+
+            <rect x="260" y="15" width="70" height="45" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="295" y="42" text-anchor="middle" font-size="18" fill="#1d4ed8" font-weight="800">40</text>
+            <text x="295" y="68" text-anchor="middle" font-size="10" fill="#3b82f6">arr[3]</text>
+
+            <rect x="340" y="15" width="70" height="45" rx="4" fill="#fef2f2" stroke="#ef4444" stroke-width="2.5"/>
+            <text x="375" y="42" text-anchor="middle" font-size="18" fill="#dc2626" font-weight="800">50</text>
+            <text x="375" y="68" text-anchor="middle" font-size="10" fill="#ef4444" font-weight="700">arr[4] 시작</text>
+
+            <!-- 역방향 화살표 -->
+            <path d="M375,82 Q375,100 295,100 Q215,100 135,100 Q55,100 55,82"
+                stroke="#ef4444" stroke-width="2" fill="none" marker-end="url(#rev-arr)"/>
+            <text x="215" y="115" text-anchor="middle" font-size="11" fill="#dc2626" font-weight="700">for(i=4; i&gt;=0; i--) 역방향</text>
+            <text x="215" y="128" text-anchor="middle" font-size="10" fill="#64748b">출력: 50, 40, 30, 20, 10</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">int</span> arr[<span class="num">5</span>] = {<span class="num">10</span>, <span class="num">20</span>, <span class="num">30</span>, <span class="num">40</span>, <span class="num">50</span>};
+
+<span class="cmt">// 정순 출력</span>
+<span class="fn">printf</span>(<span class="str">"정순: "</span>);
+<span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; <span class="num">5</span>; i++) {
+    <span class="fn">printf</span>(<span class="str">"%d "</span>, arr[i]);
+}
+<span class="fn">printf</span>(<span class="str">"\n"</span>);
+
+<span class="cmt">// 역순 출력</span>
+<span class="fn">printf</span>(<span class="str">"역순: "</span>);
+<span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">4</span>; i &gt;= <span class="num">0</span>; i--) {
+    <span class="fn">printf</span>(<span class="str">"%d "</span>, arr[i]);
+}
+<span class="fn">printf</span>(<span class="str">"\n"</span>);</div>
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 300 60" style="max-width:300px;width:100%">
+            <rect x="10" y="5" width="280" height="50" rx="8" fill="#0f172a"/>
+            <text x="24" y="28" font-size="12" fill="#86efac" font-family="JetBrains Mono">정순: 10 20 30 40 50</text>
+            <text x="24" y="46" font-size="12" fill="#86efac" font-family="JetBrains Mono">역순: 50 40 30 20 10</text>
+        </svg>
+    </div>
+
+    <h2>전체 패턴 종합 — 입력, 합계, 평균, 최대값</h2>
+    <div class="code"><span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="kw">int</span> score[<span class="num">5</span>];
+    <span class="kw">int</span> sum = <span class="num">0</span>, max;
+
+    <span class="cmt">// 입력</span>
+    <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; <span class="num">5</span>; i++) {
+        <span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;score[i]);
+    }
+
+    max = score[<span class="num">0</span>];  <span class="cmt">// 최대값 초기화</span>
+
+    <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; <span class="num">5</span>; i++) {
+        sum += score[i];
+        <span class="kw">if</span> (score[i] &gt; max) max = score[i];
+    }
+
+    <span class="fn">printf</span>(<span class="str">"합계: %d\n"</span>, sum);
+    <span class="fn">printf</span>(<span class="str">"평균: %.1f\n"</span>, (<span class="kw">double</span>)sum / <span class="num">5</span>);
+    <span class="fn">printf</span>(<span class="str">"최대: %d\n"</span>, max);
+
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">배열 <code>{3, 1, 4, 1, 5}</code>를 역순으로 출력하세요.</div>
+                <div class="code"><span class="kw">int</span> a[] = {<span class="num">3</span>, <span class="num">1</span>, <span class="num">4</span>, <span class="num">1</span>, <span class="num">5</span>};
+<span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">4</span>; i &gt;= <span class="num">0</span>; i--)
+    <span class="fn">printf</span>(<span class="str">"%d "</span>, a[i]);</div>
+                <div class="practice-result">5 1 4 1 3 이 출력됩니다</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">배열 <code>{2, 4, 6, 8}</code>의 평균을 구하세요.</div>
+                <div class="code"><span class="kw">int</span> a[] = {<span class="num">2</span>, <span class="num">4</span>, <span class="num">6</span>, <span class="num">8</span>};
+<span class="kw">int</span> sum = <span class="num">0</span>;
+<span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; <span class="num">4</span>; i++) sum += a[i];
+<span class="fn">printf</span>(<span class="str">"평균: %.1f\n"</span>, (<span class="kw">double</span>)sum / <span class="num">4</span>);</div>
+                <div class="practice-result">평균: 5.0 이 출력됩니다</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════ PAGE 5: 확인 문제 ══════════════════════════════ -->
+<div class="page">
+    <h2>확인 문제</h2>
+
+    <!-- SVG 5: 배열+반복문 요약 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 65" style="max-width:460px;width:100%">
+            <rect x="10" y="10" width="130" height="45" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="75" y="30" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="800">정순 순회</text>
+            <text x="75" y="46" text-anchor="middle" font-size="9" fill="#3b82f6" font-family="JetBrains Mono">i=0; i&lt;N; i++</text>
+            <rect x="155" y="10" width="130" height="45" rx="6" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="220" y="30" text-anchor="middle" font-size="11" fill="#dc2626" font-weight="800">역순 순회</text>
+            <text x="220" y="46" text-anchor="middle" font-size="9" fill="#ef4444" font-family="JetBrains Mono">i=N-1; i&gt;=0; i--</text>
+            <rect x="300" y="10" width="150" height="45" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="375" y="30" text-anchor="middle" font-size="11" fill="#92400e" font-weight="800">합계 누적</text>
+            <text x="375" y="46" text-anchor="middle" font-size="9" fill="#f59e0b" font-family="JetBrains Mono">sum += arr[i]</text>
+        </svg>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head"><div class="problem-badge">Q1</div><div class="problem-label">출력 결과 예측</div><span class="problem-diff easy">쉬움</span></div>
+        <div class="problem-body">
+            <div class="problem-text">아래 코드의 출력 결과를 쓰세요.</div>
+            <div class="code" style="font-size:13px;padding:10px 16px;"><span class="kw">int</span> a[<span class="num">4</span>] = {<span class="num">5</span>, <span class="num">10</span>, <span class="num">15</span>, <span class="num">20</span>};
+<span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">3</span>; i &gt;= <span class="num">0</span>; i--)
+    <span class="fn">printf</span>(<span class="str">"%d\n"</span>, a[i]);</div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle"><summary>힌트 보기</summary><div class="problem-toggle-content"><div class="hint-text">i가 3, 2, 1, 0 순서로 줄어듭니다. 역순 출력입니다.</div></div></details>
+        <details class="problem-toggle"><summary>정답 보기</summary><div class="problem-toggle-content"><div class="answer-code">20
+15
+10
+5</div></div></details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head"><div class="problem-badge">Q2</div><div class="problem-label">빈칸 채우기 — 합계</div><span class="problem-diff easy">쉬움</span></div>
+        <div class="problem-body">
+            <div class="problem-text">아래 코드의 빈칸을 채워 합계를 구하세요.</div>
+            <div class="code" style="font-size:13px;padding:10px 16px;"><span class="kw">int</span> arr[<span class="num">3</span>] = {<span class="num">10</span>, <span class="num">20</span>, <span class="num">30</span>};
+<span class="kw">int</span> sum = <span class="num">0</span>;
+<span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; ____; i++) {
+    ____ += arr[i];
+}
+<span class="fn">printf</span>(<span class="str">"합계: %d\n"</span>, sum);</div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle"><summary>힌트 보기</summary><div class="problem-toggle-content"><div class="hint-text">배열 크기는 3, 누적은 sum += arr[i]입니다.</div></div></details>
+        <details class="problem-toggle"><summary>정답 보기</summary><div class="problem-toggle-content"><div class="answer-code">i &lt; 3;  /  sum += arr[i];
+결과: 합계: 60</div></div></details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head"><div class="problem-badge">Q3</div><div class="problem-label">오류 찾기</div><span class="problem-diff medium">보통</span></div>
+        <div class="problem-body">
+            <div class="problem-text">아래 코드에서 잘못된 부분을 찾아 설명하세요.</div>
+            <div class="code" style="font-size:13px;padding:10px 16px;"><span class="kw">int</span> arr[<span class="num">5</span>] = {<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>, <span class="num">5</span>};
+<span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt;= <span class="num">5</span>; i++) {
+    <span class="fn">printf</span>(<span class="str">"%d\n"</span>, arr[i]);
+}</div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle"><summary>힌트 보기</summary><div class="problem-toggle-content"><div class="hint-text">크기 5인 배열의 마지막 인덱스는 4입니다. i<=5이면 i=5일 때도 실행됩니다.</div></div></details>
+        <details class="problem-toggle"><summary>정답 보기</summary><div class="problem-toggle-content"><div class="answer-code">i &lt;= 5 → i=5일 때 arr[5] 접근 = 인덱스 범위 초과
+올바른 조건: i &lt; 5</div></div></details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head"><div class="problem-badge">Q4</div><div class="problem-label">코드 작성 — 평균</div><span class="problem-diff medium">보통</span></div>
+        <div class="problem-body">
+            <div class="problem-text">사용자로부터 정수 4개를 입력받아 배열에 저장하고, 평균을 소수점 한 자리로 출력하는 프로그램을 작성하세요.</div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle"><summary>힌트 보기</summary><div class="problem-toggle-content"><div class="hint-text">입력 루프와 합계 루프를 별도로 쓰거나 한 루프에서 같이 처리해도 됩니다. 평균은 (double)sum / 4입니다.</div></div></details>
+        <details class="problem-toggle"><summary>정답 보기</summary><div class="problem-toggle-content"><div class="answer-code">#include &lt;stdio.h&gt;
+int main() {
+    int a[4], sum = 0;
+    for (int i = 0; i &lt; 4; i++) scanf("%d", &a[i]);
+    for (int i = 0; i &lt; 4; i++) sum += a[i];
+    printf("평균: %.1f\n", (double)sum / 4);
+    return 0;
+}</div></div></details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head"><div class="problem-badge">Q5</div><div class="problem-label">최소값 찾기</div><span class="problem-diff medium">보통</span></div>
+        <div class="problem-body">
+            <div class="problem-text">배열 <code>{42, 7, 99, 13, 55}</code>에서 가장 작은 값을 찾아 출력하는 프로그램을 작성하세요.</div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle"><summary>힌트 보기</summary><div class="problem-toggle-content"><div class="hint-text">min을 arr[0]으로 초기화하고, 루프를 돌며 arr[i] &lt; min이면 min을 갱신합니다.</div></div></details>
+        <details class="problem-toggle"><summary>정답 보기</summary><div class="problem-toggle-content"><div class="answer-code">#include &lt;stdio.h&gt;
+int main() {
+    int arr[] = {42, 7, 99, 13, 55};
+    int min = arr[0];
+    for (int i = 1; i &lt; 5; i++) {
+        if (arr[i] &lt; min) min = arr[i];
+    }
+    printf("최솟값: %d\n", min);  // 7
+    return 0;
+}</div></div></details>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>핵심 정리</h3>
+        <ul>
+            <li>정순 순회: <code>for(i=0; i&lt;N; i++)</code> — i가 0부터 N-1까지</li>
+            <li>역순 순회: <code>for(i=N-1; i&gt;=0; i--)</code> — i가 N-1부터 0까지</li>
+            <li>입력: <code>scanf("%d", &amp;arr[i]);</code> — 반복문 안에서 사용</li>
+            <li>합계 누적: <code>sum = 0; sum += arr[i];</code></li>
+            <li>평균: <code>(double)sum / N</code> — 정수 나눗셈 방지를 위해 형변환</li>
+        </ul>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+
+
+
+<script>
+(function(){
+  var KEY = 'cs_ans_' + location.pathname.replace(/[^a-zA-Z0-9]/g,'_');
+  var pagePath = location.pathname;
+  var userId = null;
+  try {
+    userId = window.parent?.localStorage?.getItem('codingssok_user_id')
+      || localStorage.getItem('codingssok_user_id');
+  } catch(e) {}
+
+  function save(){
+    var areas = document.querySelectorAll('textarea');
+    var saved = 0;
+    areas.forEach(function(ta, i){
+      if(ta.value.trim()) {
+        localStorage.setItem(KEY + '_' + i, ta.value);
+        saved++;
+      } else {
+        localStorage.removeItem(KEY + '_' + i);
+      }
+    });
+    if(saved > 0) showSaveIndicator();
+  }
+
+  function load(){
+    var areas = document.querySelectorAll('textarea');
+    var restored = 0;
+    areas.forEach(function(ta, i){
+      var val = localStorage.getItem(KEY + '_' + i);
+      if(val && val.trim()) {
+        ta.value = val;
+        ta.style.borderColor = '#10b981';
+        ta.style.boxShadow = '0 0 0 2px rgba(16,185,129,0.15)';
+        setTimeout(function(){ ta.style.borderColor = ''; ta.style.boxShadow = ''; }, 2000);
+        restored++;
+      }
+    });
+    if(restored > 0) showRestoreIndicator(restored);
+  }
+
+  function saveToDb(){
+    if(!userId) return;
+    var areas = document.querySelectorAll('textarea');
+    var answers = [];
+    areas.forEach(function(ta, i){
+      if(ta.value.trim()) answers.push({ field_index: i, answer_text: ta.value });
+    });
+    if(answers.length === 0) return;
+    fetch('/api/answers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId, page_path: pagePath, answers: answers })
+    }).catch(function(){});
+  }
+
+  function loadFromDb(){
+    if(!userId) return;
+    fetch('/api/answers?user_id=' + encodeURIComponent(userId) + '&page_path=' + encodeURIComponent(pagePath))
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(!d.answers || !d.answers.length) return;
+        var areas = document.querySelectorAll('textarea');
+        d.answers.forEach(function(a){
+          if(areas[a.field_index] && a.answer_text) {
+            areas[a.field_index].value = a.answer_text;
+            localStorage.setItem(KEY + '_' + a.field_index, a.answer_text);
+          }
+        });
+      }).catch(function(){});
+  }
+
+  function showSaveIndicator(){
+    var el = document.getElementById('cs-save-ind');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'cs-save-ind';
+      el.style.cssText = 'position:fixed;bottom:16px;right:16px;padding:6px 14px;border-radius:8px;background:#0f172a;color:#22c55e;font-size:11px;font-weight:700;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+      document.body.appendChild(el);
+    }
+    el.textContent = '\u2713 \uB2F5\uC548 \uC800\uC7A5\uB428'; // ✓ 답안 저장됨
+    el.style.opacity = '1';
+    setTimeout(function(){ el.style.opacity = '0'; }, 1500);
+  }
+
+  function showRestoreIndicator(n){
+    var el = document.getElementById('cs-save-ind');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'cs-save-ind';
+      el.style.cssText = 'position:fixed;bottom:16px;right:16px;padding:6px 14px;border-radius:8px;background:#0f172a;color:#3b82f6;font-size:11px;font-weight:700;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+      document.body.appendChild(el);
+    }
+    el.textContent = '\u21BB ' + n + '\uAC1C \uB2F5\uC548 \uBCF5\uC6D0'; // ↻ n개 답안 복원
+    el.style.color = '#3b82f6';
+    el.style.opacity = '1';
+    setTimeout(function(){ el.style.opacity = '0'; }, 2500);
+  }
+
+  var t = null;
+  document.addEventListener('input', function(e){
+    if(e.target.tagName === 'TEXTAREA'){
+      clearTimeout(t);
+      t = setTimeout(function(){ save(); saveToDb(); }, 300);
+    }
+  });
+  document.addEventListener('change', function(e){
+    if(e.target.tagName === 'TEXTAREA'){ save(); saveToDb(); }
+  });
+  document.addEventListener('focusout', function(e){
+    if(e.target.tagName === 'TEXTAREA'){ save(); saveToDb(); }
+  });
+  window.addEventListener('beforeunload', function(){ save(); saveToDb(); });
+
+  // 즉시 로드
+  load();
+  loadFromDb();
+})();
+</script>
+</body>
+</html>

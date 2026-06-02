@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 형변환: 자동 vs 강제</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+/* ── 페이지 ── */
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+/* ── 챕터 표지 ── */
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+
+/* ── 본문 ── */
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+
+/* ── 코드 블록 ── */
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 14px;
+    color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+
+/* ── 따라해보세요 ── */
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+
+/* ── 문제 ── */
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+
+/* ── 요약 ── */
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- ═══ 1페이지: 표지 ═══ -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">08</div>
+        <div class="cover-label">Chapter 08</div>
+        <h1 class="cover-title">형변환: 자동 vs 강제</h1>
+        <p class="cover-sub">서로 다른 자료형 사이의 변환 규칙, 데이터 손실, 캐스팅 문법을 배웁니다.</p>
+        <!-- SVG: 학습 로드맵 -->
+        <div style="margin:20px 0;">
+            <svg viewBox="0 0 500 50" style="max-width:500px;width:100%">
+                <rect x="5" y="10" width="85" height="30" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="47" y="30" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">자동 변환</text>
+                <line x1="95" y1="25" x2="108" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="113" y="10" width="85" height="30" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="155" y="30" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">데이터 손실</text>
+                <line x1="203" y1="25" x2="216" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="221" y="10" width="85" height="30" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="263" y="30" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">강제 캐스팅</text>
+                <line x1="311" y1="25" x2="324" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="329" y="10" width="75" height="30" rx="6" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+                <text x="366" y="30" text-anchor="middle" font-size="10" fill="#dc2626" font-weight="700">나눗셈 함정</text>
+                <line x1="409" y1="25" x2="422" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="427" y="10" width="65" height="30" rx="6" fill="#eff6ff" stroke="#6366f1" stroke-width="1.5"/>
+                <text x="459" y="30" text-anchor="middle" font-size="10" fill="#4338ca" font-weight="700">승격</text>
+            </svg>
+        </div>
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/cpu.png" alt="CPU" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 유닛에서 배우는 것</h3>
+            <ul>
+                <li>자동 형변환(묵시적 변환)이 언제 일어나는지 안다.</li>
+                <li>큰 자료형에서 작은 자료형으로 변환할 때 데이터 손실을 이해한다.</li>
+                <li>(int)3.14처럼 강제 형변환(캐스팅)을 사용할 수 있다.</li>
+                <li>정수 나눗셈의 함정(5/2=2)과 해결 방법을 안다.</li>
+                <li>자료형 승격 규칙(char->int->float->double)을 설명할 수 있다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ 2페이지: 자동 형변환 ═══ -->
+<div class="page">
+    <h2>자동 형변환(묵시적 변환)</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/ram.png" alt="메모리" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>서로 다른 자료형을 섞어서 사용하면, C 컴파일러가 <strong>자동으로</strong> 작은 자료형을 큰 자료형으로 변환합니다. 이것을 <strong>자동 형변환</strong> 또는 <strong>묵시적 변환</strong>이라고 합니다.</p>
+
+    <!-- SVG 1: 작은 상자 → 큰 상자 -->
+    <div style="text-align:center;margin:20px 0;">
+        <svg viewBox="0 0 460 100" style="max-width:460px;width:100%">
+            <rect x="30" y="30" width="80" height="55" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+            <text x="70" y="55" text-anchor="middle" font-size="14" fill="#1d4ed8" font-weight="800">int</text>
+            <text x="70" y="73" text-anchor="middle" font-size="11" fill="#3b82f6">4바이트</text>
+            <text x="70" y="25" text-anchor="middle" font-size="11" fill="#3b82f6" font-weight="600">작은 상자</text>
+            <line x1="115" y1="55" x2="165" y2="55" stroke="#22c55e" stroke-width="2" marker-end="url(#arr8)"/>
+            <text x="140" y="48" text-anchor="middle" font-size="10" fill="#22c55e" font-weight="700">자동!</text>
+            <rect x="170" y="20" width="120" height="70" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="2"/>
+            <text x="230" y="52" text-anchor="middle" font-size="14" fill="#92400e" font-weight="800">double</text>
+            <text x="230" y="70" text-anchor="middle" font-size="11" fill="#f59e0b">8바이트</text>
+            <text x="230" y="15" text-anchor="middle" font-size="11" fill="#f59e0b" font-weight="600">큰 상자</text>
+            <text x="370" y="45" font-size="12" fill="#64748b">작은 자료형이</text>
+            <text x="370" y="63" font-size="12" fill="#64748b">큰 자료형으로</text>
+            <text x="370" y="81" font-size="12" fill="#22c55e" font-weight="700">안전하게 변환</text>
+            <defs><marker id="arr8" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#22c55e"/></marker></defs>
+        </svg>
+    </div>
+
+    <!-- 코드 블록 1: 자동 형변환 예시 -->
+    <div class="code"><span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+
+<span class="kw">int</span> <span class="fn">main</span>(<span class="kw">void</span>) {
+    <span class="kw">int</span> a = <span class="num">10</span>;
+    <span class="kw">double</span> b = <span class="num">3.5</span>;
+    <span class="kw">double</span> result = a + b;  <span class="cmt">// a가 자동으로 10.0으로 변환</span>
+
+    <span class="fn">printf</span>(<span class="str">"결과: %f\n"</span>, result);  <span class="cmt">// 13.500000</span>
+
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+
+    <p><code>int</code> 10과 <code>double</code> 3.5를 더하면, int가 자동으로 double(10.0)로 변환된 뒤 계산됩니다. 결과도 double입니다.</p>
+
+    <h2>데이터 손실: 큰 것을 작은 곳에 넣으면</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/database.png" alt="데이터" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>반대로, 큰 자료형의 값을 작은 자료형 변수에 넣으면 <strong>데이터가 잘립니다</strong>. 이것을 데이터 손실이라고 합니다.</p>
+
+    <!-- SVG 2: 넘치는 데이터 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 110" style="max-width:460px;width:100%">
+            <rect x="30" y="15" width="120" height="70" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="2"/>
+            <text x="90" y="42" text-anchor="middle" font-size="13" fill="#92400e" font-weight="800">double</text>
+            <text x="90" y="62" text-anchor="middle" font-size="14" font-family="JetBrains Mono" fill="#f59e0b" font-weight="700">3.14</text>
+            <line x1="155" y1="50" x2="195" y2="50" stroke="#ef4444" stroke-width="2" marker-end="url(#arr8b)"/>
+            <text x="175" y="42" text-anchor="middle" font-size="10" fill="#ef4444" font-weight="700">손실!</text>
+            <rect x="200" y="25" width="80" height="55" rx="8" fill="#fef2f2" stroke="#ef4444" stroke-width="2"/>
+            <text x="240" y="48" text-anchor="middle" font-size="13" fill="#dc2626" font-weight="800">int</text>
+            <text x="240" y="66" text-anchor="middle" font-size="14" font-family="JetBrains Mono" fill="#ef4444" font-weight="700">3</text>
+            <!-- 잘린 부분 -->
+            <text x="295" y="40" font-size="12" fill="#ef4444" font-weight="700">.14 사라짐!</text>
+            <text x="295" y="60" font-size="11" fill="#64748b">소수점 아래가</text>
+            <text x="295" y="78" font-size="11" fill="#64748b">통째로 버려진다</text>
+            <defs><marker id="arr8b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#ef4444"/></marker></defs>
+        </svg>
+    </div>
+
+    <!-- 코드 블록 2: 데이터 손실 -->
+    <div class="code"><span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+
+<span class="kw">int</span> <span class="fn">main</span>(<span class="kw">void</span>) {
+    <span class="kw">double</span> pi = <span class="num">3.14159</span>;
+    <span class="kw">int</span> n = pi;  <span class="cmt">// 소수점 아래 버려짐! n = 3</span>
+
+    <span class="fn">printf</span>(<span class="str">"pi = %f\n"</span>, pi);  <span class="cmt">// 3.141590</span>
+    <span class="fn">printf</span>(<span class="str">"n  = %d\n"</span>, n);   <span class="cmt">// 3</span>
+
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">int 변수에 double 값 9.99를 넣고 출력해서 손실을 확인해 보세요.</div>
+                <div class="code"><span class="kw">int</span> x = <span class="num">9.99</span>;
+<span class="fn">printf</span>(<span class="str">"x = %d\n"</span>, x);</div>
+                <div class="practice-result">x = 9 (소수점 아래 .99가 사라짐)</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">int 5와 double 2.0을 더한 결과를 출력해 보세요.</div>
+                <div class="code"><span class="kw">int</span> a = <span class="num">5</span>;
+<span class="kw">double</span> b = <span class="num">2.0</span>;
+<span class="fn">printf</span>(<span class="str">"결과: %f\n"</span>, a + b);</div>
+                <div class="practice-result">결과: 7.000000 (int가 자동으로 double로 변환)</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">char에 300을 넣어보세요. 어떤 일이 생기나요?</div>
+                <div class="code"><span class="kw">char</span> ch = <span class="num">300</span>;  <span class="cmt">// char 범위: -128~127</span>
+<span class="fn">printf</span>(<span class="str">"ch = %d\n"</span>, ch);</div>
+                <div class="practice-result">오버플로우 발생! 예상과 다른 값이 나온다</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ 3페이지: 강제 형변환과 정수 나눗셈 함정 ═══ -->
+<div class="page">
+    <h2>강제 형변환 (캐스팅)</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/folder.png" alt="저장" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>프로그래머가 직접 자료형을 변환하는 것을 <strong>강제 형변환</strong> 또는 <strong>캐스팅(casting)</strong>이라고 합니다. 변수 앞에 <code>(자료형)</code>을 붙입니다.</p>
+
+    <!-- SVG 3: 캐스팅 문법 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+            <rect x="20" y="15" width="180" height="50" rx="10" fill="#f0fdf4" stroke="#22c55e" stroke-width="2"/>
+            <text x="110" y="37" text-anchor="middle" font-size="15" font-family="JetBrains Mono" fill="#166534" font-weight="800">(int)3.14</text>
+            <text x="110" y="55" text-anchor="middle" font-size="11" fill="#22c55e">결과: 3</text>
+            <text x="240" y="45" font-size="18" fill="#94a3b8" font-weight="900">=</text>
+            <rect x="270" y="15" width="170" height="50" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+            <text x="355" y="37" text-anchor="middle" font-size="13" fill="#1d4ed8" font-weight="700">"3.14를 int로 바꿔!"</text>
+            <text x="355" y="55" text-anchor="middle" font-size="11" fill="#3b82f6">소수점 아래 제거</text>
+        </svg>
+    </div>
+
+    <!-- 코드 블록 3: 캐스팅 예시 -->
+    <div class="code"><span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+
+<span class="kw">int</span> <span class="fn">main</span>(<span class="kw">void</span>) {
+    <span class="kw">double</span> score = <span class="num">95.7</span>;
+    <span class="kw">int</span> rounded = (<span class="kw">int</span>)score;  <span class="cmt">// 강제로 int로 변환</span>
+
+    <span class="fn">printf</span>(<span class="str">"원래: %f\n"</span>, score);    <span class="cmt">// 95.700000</span>
+    <span class="fn">printf</span>(<span class="str">"변환: %d\n"</span>, rounded);  <span class="cmt">// 95</span>
+
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+
+    <h2>정수 나눗셈의 함정</h2>
+    <p>정수끼리 나누면 결과도 정수입니다. <code>5 / 2</code>는 2.5가 아니라 <strong>2</strong>입니다! 이것은 초보자가 가장 많이 실수하는 부분입니다.</p>
+
+    <!-- SVG 4: 정수 나눗셈 vs 실수 나눗셈 비교 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 100" style="max-width:460px;width:100%">
+            <rect x="10" y="10" width="200" height="80" rx="10" fill="#fef2f2" stroke="#ef4444" stroke-width="2"/>
+            <text x="110" y="35" text-anchor="middle" font-size="14" fill="#dc2626" font-weight="800">5 / 2</text>
+            <text x="110" y="58" text-anchor="middle" font-size="18" font-family="JetBrains Mono" fill="#dc2626" font-weight="900">= 2</text>
+            <text x="110" y="78" text-anchor="middle" font-size="11" fill="#ef4444">int / int = int (소수점 버림)</text>
+            <rect x="250" y="10" width="200" height="80" rx="10" fill="#f0fdf4" stroke="#22c55e" stroke-width="2"/>
+            <text x="350" y="35" text-anchor="middle" font-size="14" fill="#166534" font-weight="800">5.0 / 2</text>
+            <text x="350" y="58" text-anchor="middle" font-size="18" font-family="JetBrains Mono" fill="#166534" font-weight="900">= 2.5</text>
+            <text x="350" y="78" text-anchor="middle" font-size="11" fill="#22c55e">double / int = double (정확)</text>
+        </svg>
+    </div>
+
+    <p>해결 방법은 둘 중 하나를 실수로 만드는 것입니다. <code>5.0 / 2</code>, <code>(double)5 / 2</code>, <code>5 / 2.0</code> 모두 2.5가 됩니다.</p>
+
+    <!-- SVG 5: 해결 방법 3가지 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 70" style="max-width:460px;width:100%">
+            <rect x="10" y="10" width="130" height="50" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="75" y="32" text-anchor="middle" font-size="12" font-family="JetBrains Mono" fill="#1d4ed8" font-weight="700">5.0 / 2</text>
+            <text x="75" y="50" text-anchor="middle" font-size="10" fill="#3b82f6">리터럴에 .0 붙이기</text>
+            <rect x="165" y="10" width="130" height="50" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="230" y="32" text-anchor="middle" font-size="12" font-family="JetBrains Mono" fill="#92400e" font-weight="700">(double)5 / 2</text>
+            <text x="230" y="50" text-anchor="middle" font-size="10" fill="#f59e0b">캐스팅 사용</text>
+            <rect x="320" y="10" width="130" height="50" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="385" y="32" text-anchor="middle" font-size="12" font-family="JetBrains Mono" fill="#166534" font-weight="700">5 / 2.0</text>
+            <text x="385" y="50" text-anchor="middle" font-size="10" fill="#22c55e">다른 쪽에 .0 붙이기</text>
+        </svg>
+    </div>
+
+    <h2>승격 규칙</h2>
+    <p>서로 다른 자료형이 만나면, 항상 <strong>더 큰 자료형</strong> 쪽으로 변환됩니다. 이 순서를 <strong>승격(promotion) 규칙</strong>이라고 합니다.</p>
+
+    <!-- SVG 6: 승격 규칙 계단 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 130" style="max-width:460px;width:100%">
+            <!-- 계단 -->
+            <rect x="30" y="95" width="80" height="30" rx="6" fill="#22c55e" stroke="#166534" stroke-width="1.5"/>
+            <text x="70" y="115" text-anchor="middle" font-size="12" fill="#fff" font-weight="800">char</text>
+            <rect x="120" y="70" width="80" height="30" rx="6" fill="#3b82f6" stroke="#1d4ed8" stroke-width="1.5"/>
+            <text x="160" y="90" text-anchor="middle" font-size="12" fill="#fff" font-weight="800">int</text>
+            <rect x="210" y="45" width="80" height="30" rx="6" fill="#f59e0b" stroke="#92400e" stroke-width="1.5"/>
+            <text x="250" y="65" text-anchor="middle" font-size="12" fill="#fff" font-weight="800">float</text>
+            <rect x="300" y="20" width="80" height="30" rx="6" fill="#ef4444" stroke="#dc2626" stroke-width="1.5"/>
+            <text x="340" y="40" text-anchor="middle" font-size="12" fill="#fff" font-weight="800">double</text>
+            <!-- 화살표 -->
+            <line x1="110" y1="105" x2="120" y2="90" stroke="#64748b" stroke-width="1.5" marker-end="url(#arr8c)"/>
+            <line x1="200" y1="80" x2="210" y2="65" stroke="#64748b" stroke-width="1.5" marker-end="url(#arr8c)"/>
+            <line x1="290" y1="55" x2="300" y2="40" stroke="#64748b" stroke-width="1.5" marker-end="url(#arr8c)"/>
+            <!-- 설명 -->
+            <text x="400" y="40" font-size="11" fill="#ef4444" font-weight="700">가장 큰</text>
+            <text x="400" y="115" font-size="11" fill="#22c55e" font-weight="700">가장 작은</text>
+            <text x="400" y="75" font-size="10" fill="#64748b">작은 쪽이</text>
+            <text x="400" y="90" font-size="10" fill="#64748b">큰 쪽으로 승격</text>
+            <defs><marker id="arr8c" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#64748b"/></marker></defs>
+        </svg>
+    </div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">7 / 2와 7.0 / 2의 결과를 비교해 보세요.</div>
+                <div class="code"><span class="fn">printf</span>(<span class="str">"7/2   = %d\n"</span>, <span class="num">7</span> / <span class="num">2</span>);
+<span class="fn">printf</span>(<span class="str">"7.0/2 = %f\n"</span>, <span class="num">7.0</span> / <span class="num">2</span>);</div>
+                <div class="practice-result">7/2 = 3, 7.0/2 = 3.500000</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">(double)7 / 2의 결과를 출력해 보세요.</div>
+                <div class="code"><span class="fn">printf</span>(<span class="str">"결과: %f\n"</span>, (<span class="kw">double</span>)<span class="num">7</span> / <span class="num">2</span>);</div>
+                <div class="practice-result">결과: 3.500000</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">(int)8.9의 결과를 출력해 보세요.</div>
+                <div class="code"><span class="fn">printf</span>(<span class="str">"결과: %d\n"</span>, (<span class="kw">int</span>)<span class="num">8.9</span>);</div>
+                <div class="practice-result">결과: 8 (반올림이 아니라 버림!)</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ 4페이지: 실전 코드 ═══ -->
+<div class="page">
+    <h2>실전: 평균 계산 시 형변환</h2>
+    <p>시험 3과목의 점수 합계를 과목 수로 나눠 평균을 구합니다. 정수끼리 나누면 소수점이 사라지므로, 형변환이 필수입니다.</p>
+
+    <!-- SVG 7: 평균 계산 흐름 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+            <rect x="10" y="15" width="90" height="50" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="55" y="36" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">국어: 85</text>
+            <text x="55" y="52" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">수학: 92</text>
+            <rect x="110" y="25" width="60" height="35" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="140" y="48" text-anchor="middle" font-size="11" fill="#92400e" font-weight="700">영어: 78</text>
+            <text x="195" y="45" font-size="14" fill="#94a3b8" font-weight="900">=</text>
+            <rect x="215" y="20" width="70" height="40" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="250" y="36" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">합계</text>
+            <text x="250" y="52" text-anchor="middle" font-size="12" font-family="JetBrains Mono" fill="#22c55e" font-weight="700">255</text>
+            <text x="305" y="45" font-size="14" fill="#94a3b8" font-weight="900">/3</text>
+            <rect x="330" y="15" width="120" height="50" rx="8" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="390" y="36" text-anchor="middle" font-size="11" fill="#dc2626" font-weight="700">int: 255/3 = 85</text>
+            <text x="390" y="52" text-anchor="middle" font-size="11" fill="#22c55e" font-weight="700">double: 85.00</text>
+        </svg>
+    </div>
+
+    <!-- 코드 블록 4: 평균 계산 (잘못된 방법 vs 올바른 방법) -->
+    <div class="code"><span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+
+<span class="kw">int</span> <span class="fn">main</span>(<span class="kw">void</span>) {
+    <span class="kw">int</span> kor = <span class="num">85</span>, math = <span class="num">92</span>, eng = <span class="num">78</span>;
+    <span class="kw">int</span> total = kor + math + eng;
+
+    <span class="cmt">// 잘못된 방법: 정수 / 정수 = 정수</span>
+    <span class="kw">int</span> wrong = total / <span class="num">3</span>;
+    <span class="fn">printf</span>(<span class="str">"잘못된 평균: %d\n"</span>, wrong);     <span class="cmt">// 85</span>
+
+    <span class="cmt">// 올바른 방법: 형변환 사용</span>
+    <span class="kw">double</span> avg = (<span class="kw">double</span>)total / <span class="num">3</span>;
+    <span class="fn">printf</span>(<span class="str">"올바른 평균: %.2f\n"</span>, avg);     <span class="cmt">// 85.00</span>
+
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+
+    <!-- SVG 8: 형변환 전후 비교 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 70" style="max-width:460px;width:100%">
+            <rect x="10" y="10" width="200" height="50" rx="8" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="110" y="30" text-anchor="middle" font-size="12" font-family="JetBrains Mono" fill="#dc2626" font-weight="700">total / 3</text>
+            <text x="110" y="48" text-anchor="middle" font-size="11" fill="#ef4444">255 / 3 = 85 (소수점 없음)</text>
+            <rect x="250" y="10" width="200" height="50" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="350" y="30" text-anchor="middle" font-size="12" font-family="JetBrains Mono" fill="#166534" font-weight="700">(double)total / 3</text>
+            <text x="350" y="48" text-anchor="middle" font-size="11" fill="#22c55e">255.0 / 3 = 85.00 (정확)</text>
+        </svg>
+    </div>
+
+    <h2>실전: BMI 계산</h2>
+    <p>BMI(체질량지수) = 몸무게(kg) / (키(m) x 키(m)). 키를 cm로 입력받아 m로 변환하는 과정에서 형변환이 필요합니다.</p>
+
+    <!-- 코드 블록 5: BMI 계산 -->
+    <div class="code"><span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+
+<span class="kw">int</span> <span class="fn">main</span>(<span class="kw">void</span>) {
+    <span class="kw">int</span> weight = <span class="num">55</span>;       <span class="cmt">// kg</span>
+    <span class="kw">int</span> height_cm = <span class="num">165</span>;   <span class="cmt">// cm</span>
+
+    <span class="cmt">// cm를 m로 변환: 165 / 100 = 1 (정수 나눗셈!)</span>
+    <span class="cmt">// 올바른 방법: 형변환 사용</span>
+    <span class="kw">double</span> height_m = (<span class="kw">double</span>)height_cm / <span class="num">100</span>;
+    <span class="kw">double</span> bmi = (<span class="kw">double</span>)weight / (height_m * height_m);
+
+    <span class="fn">printf</span>(<span class="str">"키: %d cm (%.2f m)\n"</span>, height_cm, height_m);
+    <span class="fn">printf</span>(<span class="str">"BMI: %.1f\n"</span>, bmi);
+
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">국어 90, 수학 87, 영어 93의 평균을 소수점 1자리까지 출력해 보세요.</div>
+                <div class="code"><span class="kw">int</span> sum = <span class="num">90</span> + <span class="num">87</span> + <span class="num">93</span>;
+<span class="kw">double</span> avg = (<span class="kw">double</span>)sum / <span class="num">3</span>;
+<span class="fn">printf</span>(<span class="str">"평균: %.1f\n"</span>, avg);</div>
+                <div class="practice-result">평균: 90.0</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ 5페이지: 문제 + 요약 ═══ -->
+<div class="page">
+    <h2>확인 문제</h2>
+
+    <!-- SVG 9: 형변환 핵심 키워드 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 50" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="85" height="40" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="52" y="30" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">자동 변환</text>
+            <rect x="110" y="5" width="85" height="40" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="152" y="30" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">데이터 손실</text>
+            <rect x="210" y="5" width="85" height="40" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="252" y="30" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">(int) 캐스팅</text>
+            <rect x="310" y="5" width="70" height="40" rx="8" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="345" y="30" text-anchor="middle" font-size="10" fill="#dc2626" font-weight="700">5/2=2</text>
+            <rect x="395" y="5" width="55" height="40" rx="8" fill="#eff6ff" stroke="#6366f1" stroke-width="1.5"/>
+            <text x="422" y="30" text-anchor="middle" font-size="10" fill="#4338ca" font-weight="700">승격</text>
+        </svg>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q1</div>
+            <div class="problem-label">정수 나눗셈 -- 출력 결과 예측</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">다음 코드의 출력 결과를 적으세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">코드</span><span class="problem-example-value">printf("%d", 10 / 3);</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">____</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content"><div class="hint-text">정수끼리 나누면 소수점 아래가 버려집니다.</div></div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content"><div class="answer-code">3  (10 / 3 = 3.333... 에서 소수점 버림)</div></div>
+        </details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q2</div>
+            <div class="problem-label">캐스팅 결과 -- 빈칸 채우기</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">(int)7.8 = (가), (double)5 / 2 = (나)</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">(가)</span><span class="problem-example-value">____</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">(나)</span><span class="problem-example-value">____</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content"><div class="hint-text">(int)는 소수점을 버리고, (double)5는 5.0이 됩니다.</div></div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content"><div class="answer-code">(가) 7  (나) 2.5</div></div>
+        </details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q3</div>
+            <div class="problem-label">형변환 응용 -- 코드 수정</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">다음 코드는 평균을 잘못 구하고 있습니다. 올바르게 고치세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">코드</span><span class="problem-example-value">int sum = 256; double avg = sum / 3;</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">현재</span><span class="problem-example-value">avg = 85.000000</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">원하는</span><span class="problem-example-value">avg = 85.333333</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content"><div class="hint-text">sum / 3에서 sum을 (double)로 캐스팅하거나, 3을 3.0으로 바꿔 보세요.</div></div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content"><div class="answer-code">double avg = (double)sum / 3;
+또는
+double avg = sum / 3.0;</div></div>
+        </details>
+    </div>
+
+    <!-- SVG 10: 승격 규칙 한 줄 정리 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 50" style="max-width:460px;width:100%">
+            <rect x="20" y="10" width="60" height="30" rx="6" fill="#22c55e"/>
+            <text x="50" y="30" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">char</text>
+            <line x1="85" y1="25" x2="105" y2="25" stroke="#64748b" stroke-width="1.5" marker-end="url(#arr8d)"/>
+            <rect x="110" y="10" width="60" height="30" rx="6" fill="#3b82f6"/>
+            <text x="140" y="30" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">int</text>
+            <line x1="175" y1="25" x2="195" y2="25" stroke="#64748b" stroke-width="1.5" marker-end="url(#arr8d)"/>
+            <rect x="200" y="10" width="60" height="30" rx="6" fill="#f59e0b"/>
+            <text x="230" y="30" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">float</text>
+            <line x1="265" y1="25" x2="285" y2="25" stroke="#64748b" stroke-width="1.5" marker-end="url(#arr8d)"/>
+            <rect x="290" y="10" width="70" height="30" rx="6" fill="#ef4444"/>
+            <text x="325" y="30" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">double</text>
+            <text x="400" y="30" font-size="11" fill="#64748b" font-weight="600">승격 방향</text>
+            <defs><marker id="arr8d" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#64748b"/></marker></defs>
+        </svg>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/calculator.png" alt="계산기" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>핵심 요약</h3>
+        <ul>
+            <li><strong>자동 형변환</strong>: 작은 자료형이 큰 자료형으로 자동 변환된다 (int + double = double).</li>
+            <li><strong>데이터 손실</strong>: double을 int에 넣으면 소수점 아래가 사라진다.</li>
+            <li><strong>강제 형변환</strong>: <code>(int)3.14</code>처럼 괄호 안에 자료형을 써서 직접 변환한다.</li>
+            <li><strong>정수 나눗셈 함정</strong>: <code>5/2=2</code>이다. <code>5.0/2</code> 또는 <code>(double)5/2</code>로 해결한다.</li>
+            <li><strong>승격 규칙</strong>: char -> int -> float -> double 순서로 큰 쪽으로 승격된다.</li>
+        </ul>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+
+
+
+<script>
+(function(){
+  var KEY = 'cs_ans_' + location.pathname.replace(/[^a-zA-Z0-9]/g,'_');
+  var pagePath = location.pathname;
+  var userId = null;
+  try {
+    userId = window.parent?.localStorage?.getItem('codingssok_user_id')
+      || localStorage.getItem('codingssok_user_id');
+  } catch(e) {}
+
+  function save(){
+    var areas = document.querySelectorAll('textarea');
+    var saved = 0;
+    areas.forEach(function(ta, i){
+      if(ta.value.trim()) {
+        localStorage.setItem(KEY + '_' + i, ta.value);
+        saved++;
+      } else {
+        localStorage.removeItem(KEY + '_' + i);
+      }
+    });
+    if(saved > 0) showSaveIndicator();
+  }
+
+  function load(){
+    var areas = document.querySelectorAll('textarea');
+    var restored = 0;
+    areas.forEach(function(ta, i){
+      var val = localStorage.getItem(KEY + '_' + i);
+      if(val && val.trim()) {
+        ta.value = val;
+        ta.style.borderColor = '#10b981';
+        ta.style.boxShadow = '0 0 0 2px rgba(16,185,129,0.15)';
+        setTimeout(function(){ ta.style.borderColor = ''; ta.style.boxShadow = ''; }, 2000);
+        restored++;
+      }
+    });
+    if(restored > 0) showRestoreIndicator(restored);
+  }
+
+  function saveToDb(){
+    if(!userId) return;
+    var areas = document.querySelectorAll('textarea');
+    var answers = [];
+    areas.forEach(function(ta, i){
+      if(ta.value.trim()) answers.push({ field_index: i, answer_text: ta.value });
+    });
+    if(answers.length === 0) return;
+    fetch('/api/answers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId, page_path: pagePath, answers: answers })
+    }).catch(function(){});
+  }
+
+  function loadFromDb(){
+    if(!userId) return;
+    fetch('/api/answers?user_id=' + encodeURIComponent(userId) + '&page_path=' + encodeURIComponent(pagePath))
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(!d.answers || !d.answers.length) return;
+        var areas = document.querySelectorAll('textarea');
+        d.answers.forEach(function(a){
+          if(areas[a.field_index] && a.answer_text) {
+            areas[a.field_index].value = a.answer_text;
+            localStorage.setItem(KEY + '_' + a.field_index, a.answer_text);
+          }
+        });
+      }).catch(function(){});
+  }
+
+  function showSaveIndicator(){
+    var el = document.getElementById('cs-save-ind');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'cs-save-ind';
+      el.style.cssText = 'position:fixed;bottom:16px;right:16px;padding:6px 14px;border-radius:8px;background:#0f172a;color:#22c55e;font-size:11px;font-weight:700;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+      document.body.appendChild(el);
+    }
+    el.textContent = '\u2713 \uB2F5\uC548 \uC800\uC7A5\uB428'; // ✓ 답안 저장됨
+    el.style.opacity = '1';
+    setTimeout(function(){ el.style.opacity = '0'; }, 1500);
+  }
+
+  function showRestoreIndicator(n){
+    var el = document.getElementById('cs-save-ind');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'cs-save-ind';
+      el.style.cssText = 'position:fixed;bottom:16px;right:16px;padding:6px 14px;border-radius:8px;background:#0f172a;color:#3b82f6;font-size:11px;font-weight:700;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+      document.body.appendChild(el);
+    }
+    el.textContent = '\u21BB ' + n + '\uAC1C \uB2F5\uC548 \uBCF5\uC6D0'; // ↻ n개 답안 복원
+    el.style.color = '#3b82f6';
+    el.style.opacity = '1';
+    setTimeout(function(){ el.style.opacity = '0'; }, 2500);
+  }
+
+  var t = null;
+  document.addEventListener('input', function(e){
+    if(e.target.tagName === 'TEXTAREA'){
+      clearTimeout(t);
+      t = setTimeout(function(){ save(); saveToDb(); }, 300);
+    }
+  });
+  document.addEventListener('change', function(e){
+    if(e.target.tagName === 'TEXTAREA'){ save(); saveToDb(); }
+  });
+  document.addEventListener('focusout', function(e){
+    if(e.target.tagName === 'TEXTAREA'){ save(); saveToDb(); }
+  });
+  window.addEventListener('beforeunload', function(){ save(); saveToDb(); });
+
+  // 즉시 로드
+  load();
+  loadFromDb();
+})();
+</script>
+</body>
+</html>

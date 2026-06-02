@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 중첩 자료구조: 리스트 안의 딕셔너리</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+/* ── 페이지 ── */
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+/* ── 챕터 표지 ── */
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+
+/* ── 본문 ── */
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 16px; font-weight: 700; color: #1e3a5f; margin: 18px 0 10px; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+ul, ol { margin: 0 0 12px 20px; }
+li { font-size: 14px; color: #374151; line-height: 1.8; }
+
+/* ── 코드 블록 ── */
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13.5px;
+    color: #e2e8f0; line-height: 1.85; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.code .dec { color: #f9a8d4; }
+
+/* ── 따라해보세요 ── */
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+
+/* ── 문제 ── */
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+
+/* ── 요약 ── */
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+/* ── 출력 박스 ── */
+.output-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #334155; line-height: 1.7; margin: 10px 0; }
+
+/* ── 인포 박스 ── */
+.info-box { border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 14px 18px; margin: 14px 0; background: #fff; }
+.info-label { font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+.info-title { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 8px; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- ═══ 1페이지: 표지 ═══ -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">33</div>
+        <div class="cover-label">L3 — Unit 33 · L3c 딕셔너리 &amp; 자료구조 활용</div>
+        <h1 class="cover-title">중첩 자료구조:<br>리스트 안의 딕셔너리</h1>
+        <p class="cover-sub">리스트와 딕셔너리를 합쳐 현실 데이터를 표현합니다. 학급 명단, 메뉴판처럼 실제로 쓰이는 구조를 만들고 탐색합니다.</p>
+
+        <!-- SVG: 중첩 구조 개요도 -->
+        <div style="margin:24px 0;">
+            <svg viewBox="0 0 480 140" style="max-width:480px;width:100%">
+                <!-- 바깥 리스트 -->
+                <rect x="10" y="10" width="460" height="120" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+                <text x="26" y="30" font-size="10" fill="#64748b" font-weight="700">students  [ ]  리스트</text>
+                <!-- 첫 번째 딕셔너리 -->
+                <rect x="26" y="38" width="130" height="80" rx="8" fill="#fff" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="91" y="56" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">{ } 딕셔너리 [0]</text>
+                <text x="91" y="72" text-anchor="middle" font-size="9" fill="#374151">"name": "철수"</text>
+                <text x="91" y="87" text-anchor="middle" font-size="9" fill="#374151">"age": 14</text>
+                <text x="91" y="102" text-anchor="middle" font-size="9" fill="#374151">"score": 88</text>
+                <!-- 두 번째 딕셔너리 -->
+                <rect x="175" y="38" width="130" height="80" rx="8" fill="#fff" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="240" y="56" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">{ } 딕셔너리 [1]</text>
+                <text x="240" y="72" text-anchor="middle" font-size="9" fill="#374151">"name": "영희"</text>
+                <text x="240" y="87" text-anchor="middle" font-size="9" fill="#374151">"age": 15</text>
+                <text x="240" y="102" text-anchor="middle" font-size="9" fill="#374151">"score": 95</text>
+                <!-- 세 번째 딕셔너리 -->
+                <rect x="324" y="38" width="130" height="80" rx="8" fill="#fff" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="389" y="56" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">{ } 딕셔너리 [2]</text>
+                <text x="389" y="72" text-anchor="middle" font-size="9" fill="#374151">"name": "민준"</text>
+                <text x="389" y="87" text-anchor="middle" font-size="9" fill="#374151">"age": 14</text>
+                <text x="389" y="102" text-anchor="middle" font-size="9" fill="#374151">"score": 72</text>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/database.png" alt="데이터" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 유닛에서 배우는 것</h3>
+            <ul>
+                <li>리스트 안에 딕셔너리를 넣어 표 구조 데이터를 표현할 수 있습니다.</li>
+                <li>딕셔너리 안에 리스트를 넣어 1:다 관계 데이터를 표현할 수 있습니다.</li>
+                <li><code>data[0]["name"]</code> 형식으로 중첩 데이터에 접근할 수 있습니다.</li>
+                <li><code>for</code> 반복문으로 중첩 구조 전체를 순회할 수 있습니다.</li>
+                <li>학급 명단, 메뉴판 같은 실용 예제를 직접 만들 수 있습니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ 2페이지: 리스트 안의 딕셔너리 ═══ -->
+<div class="page">
+    <h2>1. 리스트 안에 딕셔너리 넣기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/folder.png" alt="구조" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>딕셔너리 하나는 한 명의 정보를 담습니다. 여러 명의 정보가 필요하면 딕셔너리를 리스트에 넣으면 됩니다.</p>
+
+    <!-- SVG: 개념 비교 — 따로 vs 합쳐서 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 100" style="max-width:480px;width:100%">
+            <!-- 왼쪽: 따로 -->
+            <rect x="5" y="5" width="210" height="90" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="110" y="22" text-anchor="middle" font-size="10" fill="#64748b" font-weight="700">따로 만들면 불편</text>
+            <rect x="15" y="30" width="90" height="26" rx="5" fill="#fff" stroke="#94a3b8" stroke-width="1"/>
+            <text x="60" y="47" text-anchor="middle" font-size="9" fill="#374151">chulsu = {...}</text>
+            <rect x="115" y="30" width="90" height="26" rx="5" fill="#fff" stroke="#94a3b8" stroke-width="1"/>
+            <text x="160" y="47" text-anchor="middle" font-size="9" fill="#374151">yeonghee = {...}</text>
+            <text x="110" y="82" text-anchor="middle" font-size="8" fill="#ef4444">변수가 계속 늘어남</text>
+            <!-- 화살표 -->
+            <text x="240" y="55" text-anchor="middle" font-size="18" fill="#3b82f6" font-weight="700">→</text>
+            <!-- 오른쪽: 합쳐서 -->
+            <rect x="265" y="5" width="210" height="90" rx="8" fill="#f8fafc" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="370" y="22" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">리스트로 묶으면 편리</text>
+            <rect x="275" y="30" width="190" height="26" rx="5" fill="#fff" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="370" y="44" text-anchor="middle" font-size="9" fill="#1d4ed8">students = [{...}, {...}, {...}]</text>
+            <text x="370" y="82" text-anchor="middle" font-size="8" fill="#166534">변수 하나로 모두 관리</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># 리스트 안에 딕셔너리 — 학급 명단</span>
+students = [
+    {<span class="str">"name"</span>: <span class="str">"철수"</span>, <span class="str">"age"</span>: <span class="num">14</span>, <span class="str">"score"</span>: <span class="num">88</span>},
+    {<span class="str">"name"</span>: <span class="str">"영희"</span>, <span class="str">"age"</span>: <span class="num">15</span>, <span class="str">"score"</span>: <span class="num">95</span>},
+    {<span class="str">"name"</span>: <span class="str">"민준"</span>, <span class="str">"age"</span>: <span class="num">14</span>, <span class="str">"score"</span>: <span class="num">72</span>},
+]
+
+<span class="cmt"># 첫 번째 학생 정보 전체 출력</span>
+<span class="fn">print</span>(students[<span class="num">0</span>])   <span class="cmt"># {'name': '철수', 'age': 14, 'score': 88}</span></div>
+
+    <h3>인덱스와 키를 함께 사용해 접근</h3>
+    <p>리스트 인덱스로 딕셔너리를 고르고, 그 뒤에 키를 붙여 값을 꺼냅니다.</p>
+
+    <!-- SVG: 접근 방법 분해도 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 480 70" style="max-width:480px;width:100%">
+            <!-- 표현식 박스들 -->
+            <rect x="30" y="20" width="80" height="30" rx="6" fill="#1e3a5f"/>
+            <text x="70" y="38" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">students</text>
+            <rect x="118" y="20" width="46" height="30" rx="6" fill="#2563eb"/>
+            <text x="141" y="38" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">[0]</text>
+            <rect x="172" y="20" width="90" height="30" rx="6" fill="#059669"/>
+            <text x="217" y="38" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">["name"]</text>
+            <text x="278" y="38" font-size="12" fill="#64748b" font-weight="700">= "철수"</text>
+            <!-- 라벨 -->
+            <text x="70" y="12" text-anchor="middle" font-size="8" fill="#64748b">변수명</text>
+            <text x="141" y="12" text-anchor="middle" font-size="8" fill="#2563eb">리스트 인덱스</text>
+            <text x="217" y="12" text-anchor="middle" font-size="8" fill="#059669">딕셔너리 키</text>
+            <text x="317" y="12" text-anchor="middle" font-size="8" fill="#64748b">결과값</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># 접근 방법: data[인덱스]["키"]</span>
+<span class="fn">print</span>(students[<span class="num">0</span>][<span class="str">"name"</span>])    <span class="cmt"># 철수</span>
+<span class="fn">print</span>(students[<span class="num">1</span>][<span class="str">"score"</span>])   <span class="cmt"># 95</span>
+<span class="fn">print</span>(students[<span class="num">2</span>][<span class="str">"age"</span>])     <span class="cmt"># 14</span></div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="처리" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">STEP 1</div>
+                <div class="practice-desc">위의 <code>students</code> 리스트를 그대로 입력하고 <code>print(students[0])</code>를 실행합니다.</div>
+                <div class="practice-result">{'name': '철수', 'age': 14, 'score': 88}</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">STEP 2</div>
+                <div class="practice-desc"><code>print(students[1]["name"])</code>를 실행해 두 번째 학생의 이름을 꺼냅니다.</div>
+                <div class="practice-result">영희</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">STEP 3</div>
+                <div class="practice-desc"><code>print(students[-1]["score"])</code>로 마지막 학생의 점수를 확인합니다.</div>
+                <div class="practice-result">72</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ 3페이지: for 반복으로 탐색 ═══ -->
+<div class="page">
+    <h2>2. for 반복으로 중첩 구조 탐색</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/hard-drive.png" alt="저장소" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p><code>for</code>문으로 리스트를 순회하면 매번 딕셔너리 하나씩 꺼낼 수 있습니다. 반복 변수에 키를 붙여 바로 값에 접근합니다.</p>
+
+    <!-- SVG: for 반복 순서 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 110" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="arwFor" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#3b82f6"/>
+                </marker>
+            </defs>
+            <!-- 순회 단계 -->
+            <rect x="5" y="10" width="100" height="50" rx="7" fill="#fff" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="55" y="30" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">1회차</text>
+            <text x="55" y="44" text-anchor="middle" font-size="9" fill="#374151">student =</text>
+            <text x="55" y="56" text-anchor="middle" font-size="8" fill="#374151">{"name":"철수"...}</text>
+
+            <line x1="108" y1="35" x2="130" y2="35" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#arwFor)"/>
+
+            <rect x="133" y="10" width="100" height="50" rx="7" fill="#fff" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="183" y="30" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">2회차</text>
+            <text x="183" y="44" text-anchor="middle" font-size="9" fill="#374151">student =</text>
+            <text x="183" y="56" text-anchor="middle" font-size="8" fill="#374151">{"name":"영희"...}</text>
+
+            <line x1="236" y1="35" x2="258" y2="35" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#arwFor)"/>
+
+            <rect x="261" y="10" width="100" height="50" rx="7" fill="#fff" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="311" y="30" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">3회차</text>
+            <text x="311" y="44" text-anchor="middle" font-size="9" fill="#374151">student =</text>
+            <text x="311" y="56" text-anchor="middle" font-size="8" fill="#374151">{"name":"민준"...}</text>
+
+            <!-- 출력 화살표 -->
+            <line x1="55" y1="62" x2="55" y2="80" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3"/>
+            <line x1="183" y1="62" x2="183" y2="80" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3"/>
+            <line x1="311" y1="62" x2="311" y2="80" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3"/>
+            <text x="55" y="95" text-anchor="middle" font-size="9" fill="#374151">철수: 88점</text>
+            <text x="183" y="95" text-anchor="middle" font-size="9" fill="#374151">영희: 95점</text>
+            <text x="311" y="95" text-anchor="middle" font-size="9" fill="#374151">민준: 72점</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># for 반복으로 모든 학생 출력</span>
+<span class="kw">for</span> student <span class="kw">in</span> students:
+    <span class="fn">print</span>(student[<span class="str">"name"</span>], <span class="str">"점수:"</span>, student[<span class="str">"score"</span>])
+
+<span class="cmt"># 출력:</span>
+<span class="cmt"># 철수 점수: 88</span>
+<span class="cmt"># 영희 점수: 95</span>
+<span class="cmt"># 민준 점수: 72</span></div>
+
+    <h3>조건 필터링 — 특정 조건 학생만 뽑기</h3>
+    <p>반복 중에 <code>if</code>를 써서 조건에 맞는 딕셔너리만 처리할 수 있습니다.</p>
+
+    <div class="code"><span class="cmt"># 점수 90점 이상인 학생만 출력</span>
+<span class="kw">for</span> student <span class="kw">in</span> students:
+    <span class="kw">if</span> student[<span class="str">"score"</span>] &gt;= <span class="num">90</span>:
+        <span class="fn">print</span>(student[<span class="str">"name"</span>], <span class="str">"- 우수"</span>)
+
+<span class="cmt"># 출력: 영희 - 우수</span></div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">STEP 1</div>
+                <div class="practice-desc"><code>for student in students:</code>로 반복하며 <code>student["name"]</code>만 출력합니다.</div>
+                <div class="practice-result">철수 / 영희 / 민준 (줄바꿈)</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">STEP 2</div>
+                <div class="practice-desc">반복 중 <code>if student["age"] == 14:</code>로 14살 학생만 출력합니다.</div>
+                <div class="practice-result">철수, 민준</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">STEP 3</div>
+                <div class="practice-desc"><code>f"{student['name']}: {student['score']}점"</code>으로 f-string 출력합니다.</div>
+                <div class="practice-result">철수: 88점 / 영희: 95점 / 민준: 72점</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ 4페이지: 딕셔너리 안의 리스트 ═══ -->
+<div class="page">
+    <h2>3. 딕셔너리 안에 리스트 넣기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>한 항목에 여러 값이 필요할 때 딕셔너리의 값을 리스트로 만듭니다. 예: 학생 한 명이 여러 과목 점수를 가질 때, 메뉴 카테고리에 여러 음식이 있을 때.</p>
+
+    <!-- SVG: 딕셔너리 안 리스트 구조도 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 120" style="max-width:480px;width:100%">
+            <!-- 바깥 딕셔너리 -->
+            <rect x="10" y="10" width="460" height="100" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+            <text x="26" y="28" font-size="10" fill="#64748b" font-weight="700">classroom  { }  딕셔너리</text>
+            <!-- "name" 키 -->
+            <rect x="20" y="35" width="80" height="26" rx="5" fill="#fff" stroke="#94a3b8" stroke-width="1"/>
+            <text x="60" y="52" text-anchor="middle" font-size="9" fill="#374151">"name"</text>
+            <text x="60" y="65" text-anchor="middle" font-size="8" fill="#64748b">→ "3학년 2반"</text>
+            <!-- "students" 키 -->
+            <rect x="115" y="35" width="100" height="60" rx="5" fill="#fff" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="165" y="52" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">"students"</text>
+            <text x="165" y="65" text-anchor="middle" font-size="8" fill="#374151">→ [ ]  리스트</text>
+            <text x="165" y="78" text-anchor="middle" font-size="8" fill="#374151">"철수","영희","민준"</text>
+            <!-- "scores" 키 -->
+            <rect x="228" y="35" width="100" height="60" rx="5" fill="#fff" stroke="#059669" stroke-width="1.5"/>
+            <text x="278" y="52" text-anchor="middle" font-size="9" fill="#059669" font-weight="700">"scores"</text>
+            <text x="278" y="65" text-anchor="middle" font-size="8" fill="#374151">→ [ ]  리스트</text>
+            <text x="278" y="78" text-anchor="middle" font-size="8" fill="#374151">88, 95, 72</text>
+            <!-- "teacher" 키 -->
+            <rect x="342" y="35" width="100" height="26" rx="5" fill="#fff" stroke="#94a3b8" stroke-width="1"/>
+            <text x="392" y="52" text-anchor="middle" font-size="9" fill="#374151">"teacher"</text>
+            <text x="392" y="65" text-anchor="middle" font-size="8" fill="#64748b">→ "김선생님"</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># 딕셔너리 안에 리스트</span>
+classroom = {
+    <span class="str">"name"</span>: <span class="str">"3학년 2반"</span>,
+    <span class="str">"teacher"</span>: <span class="str">"김선생님"</span>,
+    <span class="str">"students"</span>: [<span class="str">"철수"</span>, <span class="str">"영희"</span>, <span class="str">"민준"</span>],
+    <span class="str">"scores"</span>: [<span class="num">88</span>, <span class="num">95</span>, <span class="num">72</span>],
+}
+
+<span class="cmt"># 리스트 값 접근</span>
+<span class="fn">print</span>(classroom[<span class="str">"students"</span>][<span class="num">0</span>])   <span class="cmt"># 철수</span>
+<span class="fn">print</span>(classroom[<span class="str">"scores"</span>][<span class="num">1</span>])     <span class="cmt"># 95</span></div>
+
+    <h3>반복으로 딕셔너리 내부 리스트 탐색</h3>
+
+    <div class="code"><span class="cmt"># 학생 이름과 점수를 함께 출력</span>
+names = classroom[<span class="str">"students"</span>]
+scores = classroom[<span class="str">"scores"</span>]
+
+<span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="fn">len</span>(names)):
+    <span class="fn">print</span>(<span class="str">f"</span>{names[i]}<span class="str">: </span>{scores[i]}<span class="str">점"</span>)
+
+<span class="cmt"># 출력:</span>
+<span class="cmt"># 철수: 88점</span>
+<span class="cmt"># 영희: 95점</span>
+<span class="cmt"># 민준: 72점</span></div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">STEP 1</div>
+                <div class="practice-desc"><code>classroom["students"]</code>를 출력해 리스트 전체를 확인합니다.</div>
+                <div class="practice-result">['철수', '영희', '민준']</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">STEP 2</div>
+                <div class="practice-desc"><code>classroom["students"][2]</code>로 세 번째 학생 이름을 꺼냅니다.</div>
+                <div class="practice-result">민준</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">STEP 3</div>
+                <div class="practice-desc"><code>for</code>와 <code>range(len(...))</code>로 이름과 점수를 나란히 출력합니다.</div>
+                <div class="practice-result">철수: 88점 / 영희: 95점 / 민준: 72점</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ 5페이지: 실용 예제 1 — 학급 명단 ═══ -->
+<div class="page">
+    <h2>4. 실용 예제 1 — 학급 명단 시스템</h2>
+    <p>리스트 안의 딕셔너리 구조로 학급 명단을 만들고, 평균 점수 계산과 석차 출력까지 구현합니다.</p>
+
+    <!-- SVG: 학급 명단 처리 흐름 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 80" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="arwCls" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="5" y="20" width="100" height="40" rx="7" fill="#fff" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="55" y="42" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">students 리스트</text>
+            <line x1="108" y1="40" x2="128" y2="40" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCls)"/>
+            <rect x="131" y="20" width="100" height="40" rx="7" fill="#fff" stroke="#94a3b8" stroke-width="1.5"/>
+            <text x="181" y="42" text-anchor="middle" font-size="9" fill="#374151">for 반복 탐색</text>
+            <line x1="234" y1="40" x2="254" y2="40" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCls)"/>
+            <rect x="257" y="20" width="100" height="40" rx="7" fill="#fff" stroke="#94a3b8" stroke-width="1.5"/>
+            <text x="307" y="42" text-anchor="middle" font-size="9" fill="#374151">점수 합산</text>
+            <line x1="360" y1="40" x2="380" y2="40" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCls)"/>
+            <rect x="383" y="20" width="92" height="40" rx="7" fill="#1e3a5f"/>
+            <text x="429" y="42" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">평균/석차 출력</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># 학급 명단 + 평균 계산</span>
+students = [
+    {<span class="str">"name"</span>: <span class="str">"철수"</span>, <span class="str">"age"</span>: <span class="num">14</span>, <span class="str">"score"</span>: <span class="num">88</span>},
+    {<span class="str">"name"</span>: <span class="str">"영희"</span>, <span class="str">"age"</span>: <span class="num">15</span>, <span class="str">"score"</span>: <span class="num">95</span>},
+    {<span class="str">"name"</span>: <span class="str">"민준"</span>, <span class="str">"age"</span>: <span class="num">14</span>, <span class="str">"score"</span>: <span class="num">72</span>},
+    {<span class="str">"name"</span>: <span class="str">"수진"</span>, <span class="str">"age"</span>: <span class="num">15</span>, <span class="str">"score"</span>: <span class="num">81</span>},
+]
+
+<span class="cmt"># 전체 평균 계산</span>
+total = <span class="num">0</span>
+<span class="kw">for</span> s <span class="kw">in</span> students:
+    total += s[<span class="str">"score"</span>]
+average = total / <span class="fn">len</span>(students)
+<span class="fn">print</span>(<span class="str">f"반 평균: </span>{average}<span class="str">점"</span>)    <span class="cmt"># 반 평균: 84.0점</span>
+
+<span class="cmt"># 평균 이상 학생 출력</span>
+<span class="fn">print</span>(<span class="str">"--- 평균 이상 ---"</span>)
+<span class="kw">for</span> s <span class="kw">in</span> students:
+    <span class="kw">if</span> s[<span class="str">"score"</span>] &gt;= average:
+        <span class="fn">print</span>(s[<span class="str">"name"</span>], s[<span class="str">"score"</span>])</div>
+
+    <div class="output-box">반 평균: 84.0점
+--- 평균 이상 ---
+철수 88
+영희 95</div>
+
+    <h3>sorted()로 점수 순위 정렬</h3>
+    <p><code>sorted()</code>의 <code>key</code> 인자에 람다를 써서 딕셔너리 리스트를 특정 키 기준으로 정렬합니다.</p>
+
+    <div class="code"><span class="cmt"># 점수 높은 순으로 정렬</span>
+ranked = <span class="fn">sorted</span>(students, key=<span class="kw">lambda</span> s: s[<span class="str">"score"</span>], reverse=<span class="dec">True</span>)
+
+<span class="kw">for</span> rank, s <span class="kw">in</span> <span class="fn">enumerate</span>(ranked, <span class="num">1</span>):
+    <span class="fn">print</span>(<span class="str">f"</span>{rank}<span class="str">등 </span>{s['name']}<span class="str">: </span>{s['score']}<span class="str">점"</span>)</div>
+
+    <div class="output-box">1등 영희: 95점
+2등 철수: 88점
+3등 수진: 81점
+4등 민준: 72점</div>
+</div>
+
+<!-- ═══ 6페이지: 실용 예제 2 — 메뉴판 ═══ -->
+<div class="page">
+    <h2>5. 실용 예제 2 — 음식점 메뉴판</h2>
+    <p>카테고리별 메뉴와 가격을 중첩 자료구조로 표현합니다. 딕셔너리 안에 딕셔너리 리스트를 넣는 패턴입니다.</p>
+
+    <!-- SVG: 메뉴판 구조도 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 130" style="max-width:480px;width:100%">
+            <!-- 메뉴 딕셔너리 -->
+            <rect x="5" y="5" width="470" height="120" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+            <text x="22" y="24" font-size="10" fill="#64748b" font-weight="700">menu  { }  딕셔너리</text>
+            <!-- 밥류 -->
+            <rect x="15" y="30" width="140" height="85" rx="8" fill="#fff" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="85" y="48" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">"밥류"  [ ]</text>
+            <text x="85" y="62" text-anchor="middle" font-size="8" fill="#374151">{"item":"비빔밥","price":9000}</text>
+            <text x="85" y="76" text-anchor="middle" font-size="8" fill="#374151">{"item":"볶음밥","price":8000}</text>
+            <text x="85" y="90" text-anchor="middle" font-size="8" fill="#374151">{"item":"김밥","price":5000}</text>
+            <!-- 면류 -->
+            <rect x="170" y="30" width="140" height="85" rx="8" fill="#fff" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="240" y="48" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">"면류"  [ ]</text>
+            <text x="240" y="62" text-anchor="middle" font-size="8" fill="#374151">{"item":"라면","price":6000}</text>
+            <text x="240" y="76" text-anchor="middle" font-size="8" fill="#374151">{"item":"냉면","price":10000}</text>
+            <!-- 음료 -->
+            <rect x="325" y="30" width="140" height="85" rx="8" fill="#fff" stroke="#059669" stroke-width="1.5"/>
+            <text x="395" y="48" text-anchor="middle" font-size="9" fill="#065f46" font-weight="700">"음료"  [ ]</text>
+            <text x="395" y="62" text-anchor="middle" font-size="8" fill="#374151">{"item":"아이스티","price":3000}</text>
+            <text x="395" y="76" text-anchor="middle" font-size="8" fill="#374151">{"item":"식혜","price":2500}</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># 메뉴판 — 딕셔너리 안에 딕셔너리 리스트</span>
+menu = {
+    <span class="str">"밥류"</span>: [
+        {<span class="str">"item"</span>: <span class="str">"비빔밥"</span>, <span class="str">"price"</span>: <span class="num">9000</span>},
+        {<span class="str">"item"</span>: <span class="str">"볶음밥"</span>, <span class="str">"price"</span>: <span class="num">8000</span>},
+        {<span class="str">"item"</span>: <span class="str">"김밥"</span>,  <span class="str">"price"</span>: <span class="num">5000</span>},
+    ],
+    <span class="str">"면류"</span>: [
+        {<span class="str">"item"</span>: <span class="str">"라면"</span>,  <span class="str">"price"</span>: <span class="num">6000</span>},
+        {<span class="str">"item"</span>: <span class="str">"냉면"</span>,  <span class="str">"price"</span>: <span class="num">10000</span>},
+    ],
+    <span class="str">"음료"</span>: [
+        {<span class="str">"item"</span>: <span class="str">"아이스티"</span>, <span class="str">"price"</span>: <span class="num">3000</span>},
+        {<span class="str">"item"</span>: <span class="str">"식혜"</span>,    <span class="str">"price"</span>: <span class="num">2500</span>},
+    ],
+}
+
+<span class="cmt"># 전체 메뉴 출력</span>
+<span class="kw">for</span> category, items <span class="kw">in</span> menu.items():
+    <span class="fn">print</span>(<span class="str">f"=== </span>{category}<span class="str"> ==="</span>)
+    <span class="kw">for</span> dish <span class="kw">in</span> items:
+        <span class="fn">print</span>(<span class="str">f"  </span>{dish['item']}<span class="str">: </span>{dish['price']}<span class="str">원"</span>)</div>
+
+    <div class="output-box">=== 밥류 ===
+  비빔밥: 9000원
+  볶음밥: 8000원
+  김밥: 5000원
+=== 면류 ===
+  라면: 6000원
+  냉면: 10000원
+=== 음료 ===
+  아이스티: 3000원
+  식혜: 2500원</div>
+
+    <div class="info-box">
+        <div class="info-label">POINT</div>
+        <div class="info-title">menu.items()로 키와 값 동시에</div>
+        <p style="font-size:13px;color:#374151;margin:0;"><code>for category, items in menu.items():</code> — 딕셔너리를 반복할 때 키와 값을 동시에 받습니다. <code>category</code>에는 "밥류" 같은 키가, <code>items</code>에는 딕셔너리 리스트가 들어옵니다.</p>
+    </div>
+</div>
+
+<!-- ═══ 7페이지: 데이터 수정 및 추가 ═══ -->
+<div class="page">
+    <h2>6. 중첩 구조 데이터 수정과 추가</h2>
+    <p>중첩 구조에서도 인덱스와 키를 조합해 값을 수정하거나, <code>append()</code>로 새 항목을 추가할 수 있습니다.</p>
+
+    <!-- SVG: 수정 전후 비교 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 90" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="arwMod" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#3b82f6"/>
+                </marker>
+            </defs>
+            <!-- 수정 전 -->
+            <rect x="5" y="10" width="190" height="70" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="100" y="28" text-anchor="middle" font-size="9" fill="#64748b" font-weight="700">수정 전</text>
+            <rect x="20" y="35" width="160" height="34" rx="5" fill="#fff" stroke="#94a3b8" stroke-width="1"/>
+            <text x="100" y="49" text-anchor="middle" font-size="9" fill="#374151">students[0]["score"] = 88</text>
+            <text x="100" y="63" text-anchor="middle" font-size="8" fill="#64748b">"name": "철수"</text>
+            <!-- 화살표 + 코드 -->
+            <text x="208" y="48" text-anchor="middle" font-size="9" fill="#64748b">students[0]</text>
+            <text x="208" y="60" text-anchor="middle" font-size="9" fill="#1d4ed8">["score"] = 92</text>
+            <line x1="248" y1="48" x2="268" y2="48" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#arwMod)"/>
+            <!-- 수정 후 -->
+            <rect x="272" y="10" width="200" height="70" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="372" y="28" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">수정 후</text>
+            <rect x="287" y="35" width="170" height="34" rx="5" fill="#fff" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="372" y="49" text-anchor="middle" font-size="9" fill="#166534">students[0]["score"] = 92</text>
+            <text x="372" y="63" text-anchor="middle" font-size="8" fill="#64748b">"name": "철수"</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># 특정 학생의 점수 수정</span>
+students[<span class="num">0</span>][<span class="str">"score"</span>] = <span class="num">92</span>
+<span class="fn">print</span>(students[<span class="num">0</span>])   <span class="cmt"># {'name': '철수', 'age': 14, 'score': 92}</span>
+
+<span class="cmt"># 새 학생 추가</span>
+students.append({<span class="str">"name"</span>: <span class="str">"지우"</span>, <span class="str">"age"</span>: <span class="num">14</span>, <span class="str">"score"</span>: <span class="num">79</span>})
+<span class="fn">print</span>(<span class="str">"학생 수:"</span>, <span class="fn">len</span>(students))   <span class="cmt"># 학생 수: 5</span>
+
+<span class="cmt"># 특정 조건으로 삭제 (리스트 컴프리헨션)</span>
+students = [s <span class="kw">for</span> s <span class="kw">in</span> students <span class="kw">if</span> s[<span class="str">"score"</span>] &gt;= <span class="num">80</span>]
+<span class="fn">print</span>(<span class="str">"80점 이상:"</span>, <span class="fn">len</span>(students), <span class="str">"명"</span>)  <span class="cmt"># 80점 이상: 3 명</span></div>
+
+    <h3>딕셔너리에 새 키 추가</h3>
+
+    <div class="code"><span class="cmt"># 모든 학생에게 "grade" 키 추가</span>
+<span class="kw">for</span> s <span class="kw">in</span> students:
+    <span class="kw">if</span> s[<span class="str">"score"</span>] &gt;= <span class="num">90</span>:
+        s[<span class="str">"grade"</span>] = <span class="str">"A"</span>
+    <span class="kw">elif</span> s[<span class="str">"score"</span>] &gt;= <span class="num">80</span>:
+        s[<span class="str">"grade"</span>] = <span class="str">"B"</span>
+    <span class="kw">else</span>:
+        s[<span class="str">"grade"</span>] = <span class="str">"C"</span>
+
+<span class="kw">for</span> s <span class="kw">in</span> students:
+    <span class="fn">print</span>(<span class="str">f"</span>{s['name']}<span class="str">: </span>{s['grade']}<span class="str">등급"</span>)</div>
+
+    <!-- SVG: 데이터 수정 패턴 요약 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 60" style="max-width:480px;width:100%">
+            <rect x="5" y="5" width="140" height="50" rx="7" fill="#fff" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="75" y="22" text-anchor="middle" font-size="9" fill="#64748b" font-weight="700">값 수정</text>
+            <text x="75" y="38" text-anchor="middle" font-size="8" fill="#374151">data[i]["key"] = 새값</text>
+
+            <rect x="170" y="5" width="140" height="50" rx="7" fill="#fff" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="240" y="22" text-anchor="middle" font-size="9" fill="#64748b" font-weight="700">항목 추가</text>
+            <text x="240" y="38" text-anchor="middle" font-size="8" fill="#374151">data.append({...})</text>
+
+            <rect x="335" y="5" width="140" height="50" rx="7" fill="#fff" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="405" y="22" text-anchor="middle" font-size="9" fill="#64748b" font-weight="700">조건 삭제</text>
+            <text x="405" y="38" text-anchor="middle" font-size="8" fill="#374151">[s for s in d if 조건]</text>
+        </svg>
+    </div>
+</div>
+
+<!-- ═══ 8페이지: 문제 ═══ -->
+<div class="page">
+    <h2>확인 문제</h2>
+    <p>앞에서 배운 리스트 안의 딕셔너리 패턴을 활용합니다. <code>products</code>처럼 상품 목록도 같은 방식으로 만들 수 있습니다.</p>
+
+    <!-- 문제 1 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">1</div>
+            <div class="problem-label">리스트 안의 딕셔너리 접근</div>
+            <div class="problem-diff easy">쉬움</div>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">다음 코드를 실행했을 때 출력 결과를 쓰세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <div class="problem-example-label">코드</div>
+                    <div class="problem-example-value">books = [<br>&nbsp;&nbsp;{"title": "파이썬 기초", "pages": 320},<br>&nbsp;&nbsp;{"title": "알고리즘", "pages": 480},<br>]<br>print(books[1]["title"])</div>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">books[1]은 두 번째 딕셔너리, ["title"]은 그 안의 "title" 키 값입니다.</div>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">알고리즘</div>
+            </div>
+        </details>
+    </div>
+
+    <!-- 문제 2 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">2</div>
+            <div class="problem-label">for 반복으로 합계 구하기</div>
+            <div class="problem-diff medium">보통</div>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">아래 <code>products</code> 리스트에서 모든 상품의 <code>price</code> 합계를 구하는 코드를 작성하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <div class="problem-example-label">데이터</div>
+                    <div class="problem-example-value">products = [<br>&nbsp;&nbsp;{"name": "연필", "price": 500},<br>&nbsp;&nbsp;{"name": "노트", "price": 1500},<br>&nbsp;&nbsp;{"name": "지우개", "price": 300},<br>]</div>
+                </div>
+                <div class="problem-example-row">
+                    <div class="problem-example-label">출력</div>
+                    <div class="problem-example-value">합계: 2300원</div>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">total = 0으로 시작하고, for p in products: total += p["price"] 로 누적합니다.</div>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">total = 0
+for p in products:
+    total += p["price"]
+print(f"합계: {total}원")</div>
+            </div>
+        </details>
+    </div>
+
+    <!-- 문제 3 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">3</div>
+            <div class="problem-label">딕셔너리 안의 리스트 탐색</div>
+            <div class="problem-diff hard">어려움</div>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">아래 <code>school</code> 딕셔너리에서 반 이름과 모든 학생 이름을 출력하는 코드를 작성하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <div class="problem-example-label">데이터</div>
+                    <div class="problem-example-value">school = {<br>&nbsp;&nbsp;"class": "2반",<br>&nbsp;&nbsp;"students": ["철수", "영희", "민준"],<br>}</div>
+                </div>
+                <div class="problem-example-row">
+                    <div class="problem-example-label">출력</div>
+                    <div class="problem-example-value">2반 학생 명단:<br>- 철수<br>- 영희<br>- 민준</div>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">school["class"]로 반 이름, school["students"]로 리스트를 꺼낸 뒤 for로 순회합니다.</div>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">print(school["class"], "학생 명단:")
+for name in school["students"]:
+    print("-", name)</div>
+            </div>
+        </details>
+    </div>
+</div>
+
+<!-- ═══ 9페이지: 핵심 요약 ═══ -->
+<div class="page">
+    <h2>핵심 요약</h2>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>중첩 자료구조 패턴</h3>
+        <ul>
+            <li><strong>리스트 안의 딕셔너리</strong>: 같은 구조의 여러 항목을 관리할 때 — 학생 명단, 상품 목록, 게시글 목록</li>
+            <li><strong>딕셔너리 안의 리스트</strong>: 하나의 항목에 여러 값이 필요할 때 — 학급(학생 목록), 메뉴 카테고리</li>
+            <li><strong>접근법</strong>: <code>data[인덱스]["키"]</code> 또는 <code>data["키"][인덱스]</code></li>
+            <li><strong>for 탐색</strong>: <code>for item in list:</code>로 딕셔너리 하나씩 꺼내 키로 접근</li>
+            <li><strong>수정</strong>: <code>data[i]["key"] = 새값</code> — 인덱스 + 키로 바로 수정</li>
+            <li><strong>추가</strong>: <code>data.append({...})</code> — 새 딕셔너리를 리스트 끝에 추가</li>
+            <li><strong>삭제</strong>: 리스트 컴프리헨션으로 조건 불만족 항목 제거</li>
+        </ul>
+    </div>
+
+    <!-- SVG: 두 패턴 비교 -->
+    <div style="text-align:center;margin:18px 0;">
+        <svg viewBox="0 0 480 130" style="max-width:480px;width:100%">
+            <!-- 패턴 A -->
+            <rect x="10" y="10" width="210" height="110" rx="10" fill="#f1f5f9" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="115" y="30" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">패턴 A: 리스트 안의 딕셔너리</text>
+            <text x="115" y="47" text-anchor="middle" font-size="9" fill="#374151">data = [ {...}, {...}, {...} ]</text>
+            <rect x="25" y="55" width="80" height="30" rx="5" fill="#fff" stroke="#3b82f6" stroke-width="1"/>
+            <text x="65" y="74" text-anchor="middle" font-size="8" fill="#374151">data[0]["key"]</text>
+            <rect x="120" y="55" width="80" height="30" rx="5" fill="#fff" stroke="#3b82f6" stroke-width="1"/>
+            <text x="160" y="74" text-anchor="middle" font-size="8" fill="#374151">for d in data</text>
+            <text x="115" y="105" text-anchor="middle" font-size="8" fill="#64748b">여러 개의 동일 구조 항목</text>
+
+            <!-- 패턴 B -->
+            <rect x="260" y="10" width="210" height="110" rx="10" fill="#f1f5f9" stroke="#059669" stroke-width="1.5"/>
+            <text x="365" y="30" text-anchor="middle" font-size="10" fill="#065f46" font-weight="700">패턴 B: 딕셔너리 안의 리스트</text>
+            <text x="365" y="47" text-anchor="middle" font-size="9" fill="#374151">data = {"key": [..., ...] }</text>
+            <rect x="275" y="55" width="80" height="30" rx="5" fill="#fff" stroke="#059669" stroke-width="1"/>
+            <text x="315" y="74" text-anchor="middle" font-size="8" fill="#374151">data["key"][0]</text>
+            <rect x="370" y="55" width="80" height="30" rx="5" fill="#fff" stroke="#059669" stroke-width="1"/>
+            <text x="410" y="74" text-anchor="middle" font-size="8" fill="#374151">for x in data["key"]</text>
+            <text x="365" y="105" text-anchor="middle" font-size="8" fill="#64748b">하나의 항목이 여러 값 보유</text>
+        </svg>
+    </div>
+
+    <!-- SVG: 자주 쓰는 코드 패턴 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 80" style="max-width:480px;width:100%">
+            <rect x="5" y="5" width="220" height="70" rx="8" fill="#fff" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="115" y="22" text-anchor="middle" font-size="9" fill="#64748b" font-weight="700">합계/평균</text>
+            <text x="115" y="36" text-anchor="middle" font-size="8" fill="#374151">total = sum(s["score"] for s in data)</text>
+            <text x="115" y="50" text-anchor="middle" font-size="8" fill="#374151">avg = total / len(data)</text>
+            <text x="115" y="64" text-anchor="middle" font-size="8" fill="#64748b">제너레이터식으로 간결하게</text>
+
+            <rect x="255" y="5" width="220" height="70" rx="8" fill="#fff" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="365" y="22" text-anchor="middle" font-size="9" fill="#64748b" font-weight="700">정렬</text>
+            <text x="365" y="36" text-anchor="middle" font-size="8" fill="#374151">sorted(data, key=lambda d: d["key"])</text>
+            <text x="365" y="50" text-anchor="middle" font-size="8" fill="#374151">reverse=True 로 내림차순</text>
+            <text x="365" y="64" text-anchor="middle" font-size="8" fill="#64748b">lambda로 정렬 기준 지정</text>
+        </svg>
+    </div>
+
+    <!-- SVG: 실용 예제 연결 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 60" style="max-width:480px;width:100%">
+            <rect x="5" y="10" width="100" height="40" rx="7" fill="#1e3a5f"/>
+            <text x="55" y="34" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">중첩 자료구조</text>
+            <line x1="108" y1="30" x2="128" y2="30" stroke="#3b82f6" stroke-width="1.5"/>
+            <rect x="131" y="10" width="90" height="40" rx="7" fill="#fff" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="176" y="34" text-anchor="middle" font-size="9" fill="#1d4ed8">학급 명단</text>
+            <line x1="224" y1="30" x2="244" y2="30" stroke="#3b82f6" stroke-width="1.5"/>
+            <rect x="247" y="10" width="90" height="40" rx="7" fill="#fff" stroke="#059669" stroke-width="1.5"/>
+            <text x="292" y="34" text-anchor="middle" font-size="9" fill="#065f46">메뉴판</text>
+            <line x1="340" y1="30" x2="360" y2="30" stroke="#3b82f6" stroke-width="1.5"/>
+            <rect x="363" y="10" width="112" height="40" rx="7" fill="#fff" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="419" y="34" text-anchor="middle" font-size="9" fill="#92400e">JSON / API 데이터</text>
+        </svg>
+    </div>
+
+    <div class="summary">
+        <h3>다음 유닛 미리보기</h3>
+        <ul>
+            <li>U34: 딕셔너리 심화 — <code>get()</code>, <code>setdefault()</code>, <code>update()</code> 활용</li>
+            <li>U35: 딕셔너리 컴프리헨션 — <code>{k: v for k, v in data}</code></li>
+            <li>U36: 자료구조 선택 — 상황에 맞는 자료구조 고르기</li>
+        </ul>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

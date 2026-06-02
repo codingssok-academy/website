@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 안전한 입력</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+.cover { display: flex; min-height: 297mm; padding: 0; }
+.cover-sidebar { width: 10px; background: #1e3a5f; flex-shrink: 0; }
+.cover-accent { width: 7px; background: #e6a817; flex-shrink: 0; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 160px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 14px;
+    color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; white-space: pre-wrap; }
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- 1페이지: 표지 -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">TRY</div>
+        <div class="cover-label">L2 Project 06</div>
+        <h1 class="cover-title">안전한 입력</h1>
+        <p class="cover-sub">try/except로 잘못된 입력을 처리하고, while 루프로 올바른 값이 입력될 때까지 재시도하는 프로그램을 만듭니다.</p>
+        <!-- SVG 1: 학습 로드맵 -->
+        <div style="margin:20px 0;">
+            <svg viewBox="0 0 460 55" style="max-width:460px;width:100%">
+                <rect x="5" y="10" width="90" height="30" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="50" y="30" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">try 블록</text>
+                <line x1="100" y1="25" x2="120" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="125" y="10" width="90" height="30" rx="6" fill="#fff4f4" stroke="#ef4444" stroke-width="1.5"/>
+                <text x="170" y="30" text-anchor="middle" font-size="10" fill="#dc2626" font-weight="700">except</text>
+                <line x1="220" y1="25" x2="240" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="245" y="10" width="90" height="30" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="290" y="30" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">오류 메시지</text>
+                <line x1="340" y1="25" x2="360" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="365" y="10" width="90" height="30" rx="6" fill="#eff6ff" stroke="#6366f1" stroke-width="1.5"/>
+                <text x="410" y="30" text-anchor="middle" font-size="10" fill="#4338ca" font-weight="700">재시도 루프</text>
+            </svg>
+        </div>
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/keyboard.png" alt="키보드" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 프로젝트에서 배우는 것</h3>
+            <ul>
+                <li>try/except로 오류가 발생해도 프로그램이 멈추지 않도록 할 수 있습니다.</li>
+                <li>ValueError를 잡아 숫자가 아닌 입력을 처리할 수 있습니다.</li>
+                <li>while True와 break로 올바른 입력까지 계속 재시도하는 루프를 만듭니다.</li>
+                <li>범위 조건 검사로 유효한 값만 받을 수 있습니다.</li>
+                <li>finally 블록으로 항상 실행되는 코드를 작성할 수 있습니다.</li>
+            </ul>
+        </div>
+        <!-- SVG 2: try/except 구조 -->
+        <div style="margin:20px 0;">
+            <svg viewBox="0 0 460 70" style="max-width:460px;width:100%">
+                <rect x="10" y="5" width="440" height="60" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+                <text x="230" y="24" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="800">try/except 흐름</text>
+                <rect x="20" y="30" width="100" height="26" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+                <text x="70" y="47" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">try: 위험한 코드</text>
+                <line x1="125" y1="43" x2="145" y2="43" stroke="#94a3b8" stroke-width="1.5"/>
+                <text x="165" y="37" text-anchor="middle" font-size="8" fill="#166534">성공</text>
+                <line x1="145" y1="37" x2="185" y2="37" stroke="#22c55e" stroke-width="1.5"/>
+                <rect x="190" y="28" width="80" height="26" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1"/>
+                <text x="230" y="45" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">다음 코드</text>
+                <text x="165" y="52" text-anchor="middle" font-size="8" fill="#dc2626">오류</text>
+                <line x1="145" y1="52" x2="285" y2="52" stroke="#ef4444" stroke-width="1.5"/>
+                <rect x="290" y="28" width="140" height="26" rx="6" fill="#fff4f4" stroke="#ef4444" stroke-width="1"/>
+                <text x="360" y="45" text-anchor="middle" font-size="9" fill="#dc2626" font-weight="700">except: 오류 처리</text>
+            </svg>
+        </div>
+    </div>
+</div>
+
+<!-- 2페이지: try/except 기초 -->
+<div class="page">
+    <h2>try/except로 오류 잡기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/monitor.png" alt="모니터" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>숫자가 아닌 값을 <code>int()</code>로 변환하면 <code>ValueError</code>가 발생합니다. <code>try/except</code>로 이 오류를 잡아 친절한 메시지를 출력할 수 있습니다.</p>
+
+    <!-- SVG 3: ValueError 발생 상황 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 75" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="210" height="65" rx="8" fill="#fff4f4" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="115" y="24" text-anchor="middle" font-size="11" fill="#dc2626" font-weight="700">try 없이 (위험)</text>
+            <text x="115" y="44" font-family="monospace" text-anchor="middle" font-size="9" fill="#475569">int("abc")</text>
+            <text x="115" y="60" text-anchor="middle" font-size="9" fill="#dc2626">ValueError! 프로그램 종료</text>
+            <rect x="240" y="5" width="210" height="65" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="345" y="24" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">try/except (안전)</text>
+            <text x="345" y="44" font-family="monospace" text-anchor="middle" font-size="9" fill="#475569">int("abc")</text>
+            <text x="345" y="60" text-anchor="middle" font-size="9" fill="#166534">오류 처리 후 계속 실행</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># try/except 기본 구조</span>
+<span class="kw">try</span>:
+    num = <span class="fn">int</span>(<span class="fn">input</span>(<span class="str">"숫자를 입력하세요: "</span>))
+    <span class="fn">print</span>(<span class="str">f"입력한 숫자: {num}"</span>)
+<span class="kw">except</span> ValueError:
+    <span class="fn">print</span>(<span class="str">"숫자만 입력할 수 있습니다!"</span>)</div>
+
+    <!-- SVG 4: ValueError vs 다른 오류들 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 70" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="60" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="24" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="800">자주 만나는 오류 종류</text>
+            <rect x="20" y="30" width="120" height="26" rx="6" fill="#fff4f4" stroke="#ef4444" stroke-width="1"/>
+            <text x="80" y="47" text-anchor="middle" font-size="9" fill="#dc2626" font-weight="700">ValueError</text>
+            <text x="80" y="58" text-anchor="middle" font-size="7" fill="#64748b">잘못된 값 변환</text>
+            <rect x="150" y="30" width="120" height="26" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+            <text x="210" y="47" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">ZeroDivisionError</text>
+            <text x="210" y="58" text-anchor="middle" font-size="7" fill="#64748b">0으로 나누기</text>
+            <rect x="280" y="30" width="160" height="26" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="360" y="47" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">IndexError</text>
+            <text x="360" y="58" text-anchor="middle" font-size="7" fill="#64748b">인덱스 범위 초과</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># 여러 오류 동시에 처리</span>
+<span class="kw">try</span>:
+    a = <span class="fn">int</span>(<span class="fn">input</span>(<span class="str">"분자: "</span>))
+    b = <span class="fn">int</span>(<span class="fn">input</span>(<span class="str">"분모: "</span>))
+    <span class="fn">print</span>(<span class="str">f"결과: {a / b}"</span>)
+<span class="kw">except</span> ValueError:
+    <span class="fn">print</span>(<span class="str">"숫자를 입력하세요!"</span>)
+<span class="kw">except</span> ZeroDivisionError:
+    <span class="fn">print</span>(<span class="str">"0으로 나눌 수 없습니다!"</span>)</div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/printer.png" alt="출력" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">try/except로 숫자 입력을 받고, "abc"를 입력해 오류 메시지가 출력되는지 확인하세요.</div>
+                <div class="code"><span class="kw">try</span>:
+    n = <span class="fn">int</span>(<span class="fn">input</span>(<span class="str">"숫자: "</span>))
+    <span class="fn">print</span>(<span class="str">f"입력: {n}"</span>)
+<span class="kw">except</span> ValueError:
+    <span class="fn">print</span>(<span class="str">"숫자가 아닙니다!"</span>)</div>
+                <div class="practice-result">"abc" 입력 시 오류 메시지 출력</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">0으로 나누기 오류도 함께 처리하는 코드를 만드세요.</div>
+                <div class="code"><span class="kw">try</span>:
+    x = <span class="fn">int</span>(<span class="fn">input</span>(<span class="str">"x: "</span>))
+    <span class="fn">print</span>(<span class="num">100</span> / x)
+<span class="kw">except</span> ValueError:
+    <span class="fn">print</span>(<span class="str">"숫자 입력!"</span>)
+<span class="kw">except</span> ZeroDivisionError:
+    <span class="fn">print</span>(<span class="str">"0 불가!"</span>)</div>
+                <div class="practice-result">각각 다른 오류 메시지</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">finally 블록은 오류 여부와 상관없이 항상 실행됩니다. 확인해보세요.</div>
+                <div class="code"><span class="kw">try</span>:
+    n = <span class="fn">int</span>(<span class="str">"abc"</span>)
+<span class="kw">except</span> ValueError:
+    <span class="fn">print</span>(<span class="str">"오류 발생"</span>)
+<span class="kw">finally</span>:
+    <span class="fn">print</span>(<span class="str">"항상 실행됨"</span>)</div>
+                <div class="practice-result">오류 발생 + 항상 실행됨 둘 다 출력</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3페이지: 재시도 루프 -->
+<div class="page">
+    <h2>올바른 입력까지 재시도하기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p><code>while True</code> + <code>try/except</code>를 조합하면 올바른 값이 입력될 때까지 계속 물어보는 견고한 입력 함수를 만들 수 있습니다.</p>
+
+    <!-- SVG 5: 재시도 루프 흐름도 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 130" style="max-width:460px;width:100%">
+            <rect x="175" y="5" width="110" height="26" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="230" y="22" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">while True 시작</text>
+            <line x1="230" y1="31" x2="230" y2="45" stroke="#94a3b8" stroke-width="1.5"/>
+            <rect x="175" y="45" width="110" height="26" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="230" y="62" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">입력 받기</text>
+            <line x1="230" y1="71" x2="230" y2="85" stroke="#94a3b8" stroke-width="1.5"/>
+            <polygon points="230,92 215,82 245,82" fill="#64748b"/>
+            <line x1="215" y1="87" x2="60" y2="110" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="100" y="107" text-anchor="middle" font-size="8" fill="#dc2626">오류 발생</text>
+            <line x1="245" y1="87" x2="370" y2="110" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="335" y="107" text-anchor="middle" font-size="8" fill="#166534">성공</text>
+            <rect x="15" y="110" width="85" height="16" rx="4" fill="#fff4f4" stroke="#ef4444" stroke-width="1"/>
+            <text x="57" y="122" text-anchor="middle" font-size="8" fill="#dc2626">오류 메시지 출력</text>
+            <rect x="345" y="110" width="90" height="16" rx="4" fill="#f0fdf4" stroke="#22c55e" stroke-width="1"/>
+            <text x="390" y="122" text-anchor="middle" font-size="8" fill="#166534">break 탈출</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">def</span> <span class="fn">get_int</span>(prompt):
+    <span class="str">"""올바른 정수를 입력받을 때까지 반복"""</span>
+    <span class="kw">while</span> <span class="kw">True</span>:
+        <span class="kw">try</span>:
+            value = <span class="fn">int</span>(<span class="fn">input</span>(prompt))
+            <span class="kw">return</span> value  <span class="cmt"># 성공 시 반환</span>
+        <span class="kw">except</span> ValueError:
+            <span class="fn">print</span>(<span class="str">"숫자만 입력할 수 있습니다. 다시 시도하세요."</span>)
+
+<span class="cmt"># 사용 예시</span>
+age = <span class="fn">get_int</span>(<span class="str">"나이를 입력하세요: "</span>)
+<span class="fn">print</span>(<span class="str">f"나이: {age}살"</span>)</div>
+
+    <!-- SVG 6: 실행 화면 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 380 110" style="max-width:380px;width:100%">
+            <rect x="10" y="5" width="360" height="100" rx="8" fill="#0f172a"/>
+            <text x="20" y="26" font-family="monospace" font-size="11" fill="#94a3b8">나이를 입력하세요: <tspan fill="#f87171">abc</tspan></text>
+            <text x="20" y="44" font-family="monospace" font-size="11" fill="#fcd34d">숫자만 입력할 수 있습니다. 다시 시도하세요.</text>
+            <text x="20" y="62" font-family="monospace" font-size="11" fill="#94a3b8">나이를 입력하세요: <tspan fill="#f87171">열다섯</tspan></text>
+            <text x="20" y="80" font-family="monospace" font-size="11" fill="#fcd34d">숫자만 입력할 수 있습니다. 다시 시도하세요.</text>
+            <text x="20" y="96" font-family="monospace" font-size="11" fill="#94a3b8">나이를 입력하세요: <tspan fill="#86efac">15</tspan></text>
+        </svg>
+    </div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">get_int() 함수를 만들고 "abc"를 입력해 재시도 루프가 동작하는지 확인하세요.</div>
+                <div class="practice-result">잘못된 입력 시 재시도 요청</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">범위도 검사하는 get_range() 함수를 만드세요. 1~100 사이만 허용합니다.</div>
+                <div class="code"><span class="kw">def</span> <span class="fn">get_range</span>(prompt, low, high):
+    <span class="kw">while</span> <span class="kw">True</span>:
+        <span class="kw">try</span>:
+            n = <span class="fn">int</span>(<span class="fn">input</span>(prompt))
+            <span class="kw">if</span> low &lt;= n &lt;= high:
+                <span class="kw">return</span> n
+            <span class="fn">print</span>(<span class="str">f"{low}~{high} 사이로 입력하세요."</span>)
+        <span class="kw">except</span> ValueError:
+            <span class="fn">print</span>(<span class="str">"숫자를 입력하세요!"</span>)</div>
+                <div class="practice-result">1~100 범위만 허용</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">float 입력을 받는 get_float() 함수도 만들어보세요.</div>
+                <div class="code"><span class="kw">def</span> <span class="fn">get_float</span>(prompt):
+    <span class="kw">while</span> <span class="kw">True</span>:
+        <span class="kw">try</span>:
+            <span class="kw">return</span> <span class="fn">float</span>(<span class="fn">input</span>(prompt))
+        <span class="kw">except</span> ValueError:
+            <span class="fn">print</span>(<span class="str">"소수점 숫자를 입력하세요!"</span>)</div>
+                <div class="practice-result">소수점 포함 숫자만 허용</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 4페이지: 완성 코드 -->
+<div class="page">
+    <h2>완성: 안전한 계산기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>안전한 입력 함수를 활용해 오류가 없는 계산기를 만듭니다.</p>
+
+    <!-- SVG 7: 완성 구조 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 50" style="max-width:460px;width:100%">
+            <rect x="5" y="8" width="440" height="35" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <rect x="15" y="15" width="110" height="20" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="70" y="28" text-anchor="middle" font-size="8" fill="#1d4ed8" font-weight="600">get_int() 함수</text>
+            <rect x="135" y="15" width="110" height="20" rx="4" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+            <text x="190" y="28" text-anchor="middle" font-size="8" fill="#92400e" font-weight="600">안전한 입력</text>
+            <rect x="255" y="15" width="110" height="20" rx="4" fill="#f0fdf4" stroke="#22c55e" stroke-width="1"/>
+            <text x="310" y="28" text-anchor="middle" font-size="8" fill="#166534" font-weight="600">연산 수행</text>
+            <rect x="375" y="15" width="70" height="20" rx="4" fill="#eff6ff" stroke="#6366f1" stroke-width="1"/>
+            <text x="410" y="28" text-anchor="middle" font-size="8" fill="#4338ca" font-weight="600">결과 출력</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">def</span> <span class="fn">get_number</span>(prompt):
+    <span class="kw">while</span> <span class="kw">True</span>:
+        <span class="kw">try</span>:
+            <span class="kw">return</span> <span class="fn">float</span>(<span class="fn">input</span>(prompt))
+        <span class="kw">except</span> ValueError:
+            <span class="fn">print</span>(<span class="str">"숫자를 입력해주세요!"</span>)
+
+<span class="fn">print</span>(<span class="str">"=== 안전한 계산기 ==="</span>)
+a = <span class="fn">get_number</span>(<span class="str">"첫 번째 숫자: "</span>)
+b = <span class="fn">get_number</span>(<span class="str">"두 번째 숫자: "</span>)
+op = <span class="fn">input</span>(<span class="str">"연산 (+,-,*,/): "</span>)
+
+<span class="kw">try</span>:
+    <span class="kw">if</span> op == <span class="str">"+"</span>: result = a + b
+    <span class="kw">elif</span> op == <span class="str">"-"</span>: result = a - b
+    <span class="kw">elif</span> op == <span class="str">"*"</span>: result = a * b
+    <span class="kw">elif</span> op == <span class="str">"/"</span>: result = a / b
+    <span class="kw">else</span>:
+        <span class="fn">print</span>(<span class="str">"알 수 없는 연산자!"</span>)
+        result = <span class="kw">None</span>
+    <span class="kw">if</span> result <span class="kw">is not</span> <span class="kw">None</span>:
+        <span class="fn">print</span>(<span class="str">f"결과: {a} {op} {b} = {result}"</span>)
+<span class="kw">except</span> ZeroDivisionError:
+    <span class="fn">print</span>(<span class="str">"0으로 나눌 수 없습니다!"</span>)</div>
+
+    <!-- SVG 8: ZeroDivisionError 설명 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 380 55" style="max-width:380px;width:100%">
+            <rect x="10" y="5" width="360" height="45" rx="8" fill="#0f172a"/>
+            <text x="20" y="26" font-family="monospace" font-size="10" fill="#94a3b8">첫 번째 숫자: <tspan fill="#86efac">10</tspan></text>
+            <text x="20" y="44" font-family="monospace" font-size="10" fill="#94a3b8">두 번째 숫자: <tspan fill="#f87171">abc</tspan> → 숫자를 입력해주세요!</text>
+        </svg>
+    </div>
+</div>
+
+<!-- 5페이지: 문제 -->
+<div class="page">
+    <h2>직접 풀어보세요</h2>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q1</div>
+            <div class="problem-label">나이 검증 입력</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">try/except + while True로 나이를 입력받되, 1~120 범위가 아니면 "유효하지 않은 나이"를 출력하고 다시 입력받는 함수를 만드세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">입력</span><span class="problem-example-value">abc → ValueError, 200 → 범위 오류, 15 → 성공</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle"><summary>힌트 보기</summary><div class="problem-toggle-content"><div class="hint-text">while True: try: age = int(input()), if 1 <= age <= 120: return age, else: print("범위 오류")</div></div></details>
+        <details class="problem-toggle"><summary>정답 확인</summary><div class="problem-toggle-content"><div class="answer-code">def get_age():
+    while True:
+        try:
+            age = int(input("나이: "))
+            if 1 <= age <= 120:
+                return age
+            else:
+                print("유효하지 않은 나이입니다 (1~120)")
+        except ValueError:
+            print("숫자를 입력하세요!")
+
+print(f"입력한 나이: {get_age()}")</div></div></details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q2</div>
+            <div class="problem-label">0으로 나누기 안전 처리</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">두 숫자를 입력받아 나누는 함수를 만드세요. 0으로 나누면 None을 반환하고 "0으로 나눌 수 없습니다" 메시지를 출력하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">10 / 0</span><span class="problem-example-value">0으로 나눌 수 없습니다</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">10 / 2</span><span class="problem-example-value">5.0</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle"><summary>힌트 보기</summary><div class="problem-toggle-content"><div class="hint-text">def safe_divide(a, b): try: return a / b, except ZeroDivisionError: print("0 불가"); return None</div></div></details>
+        <details class="problem-toggle"><summary>정답 확인</summary><div class="problem-toggle-content"><div class="answer-code">def safe_divide(a, b):
+    try:
+        return a / b
+    except ZeroDivisionError:
+        print("0으로 나눌 수 없습니다")
+        return None
+
+print(safe_divide(10, 2))  # 5.0
+print(safe_divide(10, 0))  # None</div></div></details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q3</div>
+            <div class="problem-label">점수 입력 검증기</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">0~100 사이 정수만 받는 함수를 만드세요. 숫자가 아닌 입력, 범위 초과, 소수점 입력 모두 처리하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">입력</span><span class="problem-example-value">"A" → 오류, 150 → 범위 오류, 85 → 성공</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle"><summary>힌트 보기</summary><div class="problem-toggle-content"><div class="hint-text">int()로 변환 후 0 <= score <= 100 검사. 소수점은 int()가 TypeError 대신 ValueError 발생</div></div></details>
+        <details class="problem-toggle"><summary>정답 확인</summary><div class="problem-toggle-content"><div class="answer-code">def get_score():
+    while True:
+        try:
+            score = int(input("점수 (0-100): "))
+            if 0 <= score <= 100:
+                return score
+            print("0~100 사이 숫자를 입력하세요.")
+        except ValueError:
+            print("정수만 입력하세요!")
+
+s = get_score()
+print(f"입력 점수: {s}점")</div></div></details>
+    </div>
+</div>
+
+<!-- 6페이지: 핵심 요약 -->
+<div class="page">
+    <h2>핵심 요약</h2>
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/lightbulb.png" alt="아이디어" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>이 유닛에서 배운 것</h3>
+        <ul>
+            <li><code>try:</code> 블록에 오류가 생길 수 있는 코드를 넣는다</li>
+            <li><code>except ValueError:</code>로 잘못된 값 변환 오류를 잡는다</li>
+            <li><code>except ZeroDivisionError:</code>로 0으로 나누기 오류를 잡는다</li>
+            <li><code>finally:</code>는 오류 여부와 상관없이 항상 실행된다</li>
+            <li><code>while True + try/except + break</code>로 견고한 입력 함수를 만든다</li>
+            <li>범위 검사 <code>if low &lt;= n &lt;= high:</code>로 유효한 값만 허용한다</li>
+        </ul>
+    </div>
+
+    <!-- SVG 9: try/except/finally 구조 -->
+    <div style="text-align:center;margin:20px 0;">
+        <svg viewBox="0 0 460 70" style="max-width:460px;width:100%">
+            <rect x="5" y="5" width="440" height="60" rx="8" fill="#0f172a" stroke="#334155" stroke-width="1.5"/>
+            <text x="30" y="24" font-family="monospace" font-size="10" fill="#c084fc">try</text>
+            <text x="55" y="24" font-family="monospace" font-size="10" fill="#e2e8f0">:  </text>
+            <text x="72" y="24" font-family="monospace" font-size="10" fill="#64748b">위험한 코드</text>
+            <text x="30" y="42" font-family="monospace" font-size="10" fill="#c084fc">except</text>
+            <text x="80" y="42" font-family="monospace" font-size="10" fill="#67e8f9"> ValueError</text>
+            <text x="148" y="42" font-family="monospace" font-size="10" fill="#e2e8f0">:  </text>
+            <text x="162" y="42" font-family="monospace" font-size="10" fill="#64748b">오류 처리</text>
+            <text x="30" y="60" font-family="monospace" font-size="10" fill="#c084fc">finally</text>
+            <text x="80" y="60" font-family="monospace" font-size="10" fill="#e2e8f0">:  </text>
+            <text x="97" y="60" font-family="monospace" font-size="10" fill="#64748b">항상 실행</text>
+        </svg>
+    </div>
+
+    <!-- SVG 10: 재시도 패턴 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 65" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="55" rx="8" fill="#0f172a" stroke="#334155" stroke-width="1.5"/>
+            <text x="30" y="24" font-family="monospace" font-size="9" fill="#64748b"># 안전한 입력 패턴</text>
+            <text x="30" y="40" font-family="monospace" font-size="9" fill="#c084fc">while</text>
+            <text x="60" y="40" font-family="monospace" font-size="9" fill="#7dd3fc"> True</text>
+            <text x="88" y="40" font-family="monospace" font-size="9" fill="#e2e8f0">:</text>
+            <text x="120" y="40" font-family="monospace" font-size="9" fill="#64748b">  # 반복</text>
+            <text x="30" y="55" font-family="monospace" font-size="9" fill="#e2e8f0">    try: ... </text>
+            <text x="130" y="55" font-family="monospace" font-size="9" fill="#c084fc">return</text>
+            <text x="165" y="55" font-family="monospace" font-size="9" fill="#64748b">   # 성공 시 탈출</text>
+            <text x="300" y="55" font-family="monospace" font-size="9" fill="#c084fc">except</text>
+            <text x="345" y="55" font-family="monospace" font-size="9" fill="#e2e8f0">: ...</text>
+            <text x="375" y="55" font-family="monospace" font-size="9" fill="#64748b"> # 재시도</text>
+        </svg>
+    </div>
+
+    <!-- SVG 11: 자주 쓰는 예외 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 50" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="40" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <rect x="20" y="12" width="120" height="26" rx="5" fill="#fff4f4" stroke="#ef4444" stroke-width="1"/>
+            <text x="80" y="29" text-anchor="middle" font-size="9" fill="#dc2626" font-weight="700">ValueError</text>
+            <rect x="150" y="12" width="150" height="26" rx="5" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+            <text x="225" y="29" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">ZeroDivisionError</text>
+            <rect x="310" y="12" width="130" height="26" rx="5" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="375" y="29" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">IndexError</text>
+        </svg>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 프로젝트: 온도 변환기</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '\2022'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 14px;
+    color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '\2192'; color: #94a3b8; font-weight: 700; }
+
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+.pj-badge { display: inline-block; background: #1e3a5f; color: #e6a817; font-size: 12px; font-weight: 800; padding: 3px 12px; border-radius: 99px; margin-bottom: 12px; }
+.output-box { background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 14px 18px; margin: 14px 0; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #1e3a5f; line-height: 2; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- 1페이지: 표지 -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">P4</div>
+        <div class="cover-label">Level 2a - Project 04</div>
+        <h1 class="cover-title">온도 변환기</h1>
+        <p class="cover-sub">섭씨 온도를 입력받아 화씨 온도로 변환하는 프로그램을 만듭니다. 수학 공식을 코드로 옮기는 방법을 배웁니다.</p>
+
+        <!-- SVG 1: 온도계 비교 (섭씨 vs 화씨) -->
+        <div style="margin:20px 0;">
+            <svg viewBox="0 0 460 180" style="max-width:460px;width:100%">
+                <rect x="10" y="5" width="440" height="170" rx="12" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+                <text x="230" y="25" text-anchor="middle" font-size="13" fill="#1e3a5f" font-weight="800">섭씨 vs 화씨 온도 비교</text>
+                <!-- 섭씨 온도계 -->
+                <rect x="60" y="40" width="30" height="120" rx="15" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <rect x="60" y="100" width="30" height="60" rx="15" fill="#3b82f6"/>
+                <text x="75" y="55" text-anchor="middle" font-size="9" fill="#1d4ed8">100</text>
+                <text x="75" y="95" text-anchor="middle" font-size="9" fill="#1d4ed8">37</text>
+                <text x="75" y="130" text-anchor="middle" font-size="9" fill="#fff">0</text>
+                <text x="75" y="170" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="800">섭씨</text>
+                <!-- 화씨 온도계 -->
+                <rect x="140" y="40" width="30" height="120" rx="15" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+                <rect x="140" y="100" width="30" height="60" rx="15" fill="#ef4444"/>
+                <text x="155" y="55" text-anchor="middle" font-size="9" fill="#dc2626">212</text>
+                <text x="155" y="95" text-anchor="middle" font-size="9" fill="#dc2626">98.6</text>
+                <text x="155" y="130" text-anchor="middle" font-size="9" fill="#fff">32</text>
+                <text x="155" y="170" text-anchor="middle" font-size="11" fill="#dc2626" font-weight="800">화씨</text>
+                <!-- 변환 공식 -->
+                <rect x="220" y="60" width="220" height="80" rx="10" fill="#0f172a"/>
+                <text x="330" y="85" text-anchor="middle" font-size="11" fill="#e6a817" font-weight="800">변환 공식</text>
+                <text x="330" y="110" text-anchor="middle" font-family="monospace" font-size="14" fill="#86efac">F = C x 9 / 5 + 32</text>
+                <text x="330" y="130" text-anchor="middle" font-family="monospace" font-size="10" fill="#64748b">0도 -> 32도 / 100도 -> 212도</text>
+            </svg>
+        </div>
+
+        <!-- SVG 2: 입력-변환-출력 흐름 -->
+        <div style="margin:16px 0;">
+            <svg viewBox="0 0 460 60" style="max-width:460px;width:100%">
+                <rect x="5" y="10" width="110" height="40" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="60" y="35" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">섭씨 입력</text>
+                <line x1="120" y1="30" x2="150" y2="30" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="155" y="10" width="150" height="40" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="230" y="35" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">C x 9 / 5 + 32</text>
+                <line x1="310" y1="30" x2="340" y2="30" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="345" y="10" width="110" height="40" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="400" y="35" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">화씨 출력</text>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/calculator.png" alt="계산기" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>프로젝트 목표</h3>
+            <ul>
+                <li>수학 공식을 C 코드로 변환할 수 있습니다.</li>
+                <li>곱셈, 나눗셈, 덧셈을 조합한 수식을 작성합니다.</li>
+                <li>정수 나눗셈의 순서가 결과에 영향을 주는 것을 이해합니다.</li>
+                <li>역변환(화씨->섭씨)도 응용할 수 있습니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- 2페이지: 공식 이해 + 따라하기 -->
+<div class="page">
+    <div class="pj-badge">PROJECT 04</div>
+    <h2>Step 1. 공식을 코드로 옮기기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/keyboard.png" alt="키보드" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>섭씨를 화씨로 바꾸는 공식은 <code>F = C x 9 / 5 + 32</code>입니다. 이 공식을 C 코드로 작성합니다.</p>
+
+    <!-- SVG 3: 공식 분해 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 120" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="110" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="25" text-anchor="middle" font-size="13" fill="#1e3a5f" font-weight="800">공식 분해: F = C x 9 / 5 + 32</text>
+            <rect x="30" y="40" width="90" height="30" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="75" y="60" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">1. C x 9</text>
+            <line x1="125" y1="55" x2="145" y2="55" stroke="#94a3b8" stroke-width="1"/>
+            <rect x="150" y="40" width="90" height="30" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1"/>
+            <text x="195" y="60" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">2. / 5</text>
+            <line x1="245" y1="55" x2="265" y2="55" stroke="#94a3b8" stroke-width="1"/>
+            <rect x="270" y="40" width="90" height="30" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1"/>
+            <text x="315" y="60" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">3. + 32</text>
+            <line x1="365" y1="55" x2="385" y2="55" stroke="#94a3b8" stroke-width="1"/>
+            <rect x="390" y="40" width="50" height="30" rx="6" fill="#eff6ff" stroke="#6366f1" stroke-width="1"/>
+            <text x="415" y="60" text-anchor="middle" font-size="10" fill="#4338ca" font-weight="700">= F</text>
+            <text x="230" y="95" text-anchor="middle" font-size="11" fill="#dc2626" font-weight="700">순서가 중요하다! 9를 먼저 곱하고 5로 나눠야 정확하다</text>
+            <text x="230" y="110" text-anchor="middle" font-size="10" fill="#64748b">잘못된 순서: C / 5 * 9 -> 정수 나눗셈 때문에 값이 달라진다</text>
+        </svg>
+    </div>
+
+    <!-- SVG 4: 계산 순서 비교 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="210" height="70" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="115" y="22" text-anchor="middle" font-size="10" fill="#166534" font-weight="800">올바른 순서 (C=25)</text>
+            <text x="115" y="40" text-anchor="middle" font-family="monospace" font-size="10" fill="#1e3a5f">25 * 9 = 225</text>
+            <text x="115" y="55" text-anchor="middle" font-family="monospace" font-size="10" fill="#1e3a5f">225 / 5 = 45</text>
+            <text x="115" y="70" text-anchor="middle" font-family="monospace" font-size="10" fill="#166534" font-weight="700">45 + 32 = 77</text>
+            <rect x="240" y="5" width="210" height="70" rx="8" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="345" y="22" text-anchor="middle" font-size="10" fill="#dc2626" font-weight="800">잘못된 순서 (C=25)</text>
+            <text x="345" y="40" text-anchor="middle" font-family="monospace" font-size="10" fill="#1e3a5f">25 / 5 = 5</text>
+            <text x="345" y="55" text-anchor="middle" font-family="monospace" font-size="10" fill="#1e3a5f">5 * 9 = 45</text>
+            <text x="345" y="70" text-anchor="middle" font-family="monospace" font-size="10" fill="#dc2626" font-weight="700">같지만... 27도는?</text>
+        </svg>
+    </div>
+
+    <p>정수 나눗셈은 소수점을 버립니다. <code>27 / 5 = 5</code> (5.4가 아님). 그래서 <code>9를 먼저 곱한 후 5로 나누는 순서</code>가 더 정확합니다.</p>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/cpu.png" alt="CPU" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="완성" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">섭씨 0도를 화씨로 변환해보세요.</div>
+                <div class="code"><span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="kw">int</span> celsius = <span class="num">0</span>;
+    <span class="kw">int</span> fahr = celsius * <span class="num">9</span> / <span class="num">5</span> + <span class="num">32</span>;
+    <span class="fn">printf</span>(<span class="str">"섭씨 %d도 = 화씨 %d도\n"</span>, celsius, fahr);
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+                <div class="practice-result">섭씨 0도 = 화씨 32도</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">scanf로 섭씨를 입력받도록 바꿔보세요.</div>
+                <div class="code"><span class="kw">int</span> celsius;
+<span class="fn">printf</span>(<span class="str">"섭씨 온도: "</span>);
+<span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;celsius);
+<span class="kw">int</span> fahr = celsius * <span class="num">9</span> / <span class="num">5</span> + <span class="num">32</span>;
+<span class="fn">printf</span>(<span class="str">"화씨: %d도\n"</span>, fahr);</div>
+                <div class="practice-result">100 입력 시 "화씨: 212도"</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">체온 36도를 변환해서 확인해보세요.</div>
+                <div class="code"><span class="cmt">// 36 * 9 / 5 + 32 = 324 / 5 + 32 = 64 + 32 = 96</span>
+<span class="cmt">// 실제 체온 화씨는 96.8이지만 int라 96 (소수점 버림)</span></div>
+                <div class="practice-result">섭씨 36도 = 화씨 96도 (정수 한계)</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SVG 5: 정수 한계 설명 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 460 50" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="40" rx="8" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="30" y="30" font-size="11" fill="#dc2626" font-weight="800">알아두기:</text>
+            <text x="110" y="30" font-size="11" fill="#7f1d1d">int는 소수점을 저장할 수 없다. 정밀한 계산은 나중에 배울 float/double을 사용한다.</text>
+        </svg>
+    </div>
+</div>
+
+<!-- 3페이지: 완성 코드 + 문제 -->
+<div class="page">
+    <div class="pj-badge">PROJECT 04</div>
+    <h2>Step 2. 완성 코드</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="계산 로직" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>섭씨를 입력받아 화씨로 변환하고, 간단한 날씨 설명도 출력하는 프로그램입니다.</p>
+
+    <!-- SVG 6: 온도 범위 안내 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 460 50" style="max-width:460px;width:100%">
+            <rect x="10" y="10" width="85" height="30" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="52" y="30" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">0도 = 어는점</text>
+            <rect x="120" y="10" width="85" height="30" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1"/>
+            <text x="162" y="30" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">25도 = 쾌적</text>
+            <rect x="230" y="10" width="85" height="30" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1"/>
+            <text x="272" y="30" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">36도 = 체온</text>
+            <rect x="340" y="10" width="110" height="30" rx="6" fill="#fef2f2" stroke="#ef4444" stroke-width="1"/>
+            <text x="395" y="30" text-anchor="middle" font-size="9" fill="#dc2626" font-weight="700">100도 = 끓는점</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="cmt">/* 온도 변환기 */</span>
+    <span class="kw">int</span> celsius;
+    <span class="kw">int</span> fahr;
+
+    <span class="fn">printf</span>(<span class="str">"========================\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"     온도 변환기\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"========================\n"</span>);
+
+    <span class="fn">printf</span>(<span class="str">"섭씨 온도를 입력하세요: "</span>);
+    <span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;celsius);
+
+    fahr = celsius * <span class="num">9</span> / <span class="num">5</span> + <span class="num">32</span>;
+
+    <span class="fn">printf</span>(<span class="str">"------------------------\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"섭씨:\t%d도\n"</span>, celsius);
+    <span class="fn">printf</span>(<span class="str">"화씨:\t%d도\n"</span>, fahr);
+    <span class="fn">printf</span>(<span class="str">"========================\n"</span>);
+
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+
+    <div class="output-box">
+========================<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;온도 변환기<br>
+========================<br>
+섭씨 온도를 입력하세요: 25<br>
+------------------------<br>
+섭씨:&nbsp;&nbsp;&nbsp;&nbsp;25도<br>
+화씨:&nbsp;&nbsp;&nbsp;&nbsp;77도<br>
+========================
+    </div>
+
+    <!-- SVG 7: 대표 온도 변환 표 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 90" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="80" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="22" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="800">주요 온도 변환 결과</text>
+            <text x="60" y="45" text-anchor="middle" font-size="10" fill="#94a3b8" font-weight="600">섭씨</text>
+            <text x="60" y="65" text-anchor="middle" font-size="10" fill="#94a3b8" font-weight="600">화씨</text>
+            <text x="140" y="45" text-anchor="middle" font-size="11" fill="#3b82f6" font-weight="700">0</text>
+            <text x="140" y="65" text-anchor="middle" font-size="11" fill="#ef4444" font-weight="700">32</text>
+            <text x="220" y="45" text-anchor="middle" font-size="11" fill="#3b82f6" font-weight="700">25</text>
+            <text x="220" y="65" text-anchor="middle" font-size="11" fill="#ef4444" font-weight="700">77</text>
+            <text x="300" y="45" text-anchor="middle" font-size="11" fill="#3b82f6" font-weight="700">36</text>
+            <text x="300" y="65" text-anchor="middle" font-size="11" fill="#ef4444" font-weight="700">96</text>
+            <text x="380" y="45" text-anchor="middle" font-size="11" fill="#3b82f6" font-weight="700">100</text>
+            <text x="380" y="65" text-anchor="middle" font-size="11" fill="#ef4444" font-weight="700">212</text>
+            <line x1="100" y1="32" x2="420" y2="32" stroke="#e2e8f0" stroke-width="1"/>
+            <line x1="100" y1="52" x2="420" y2="52" stroke="#e2e8f0" stroke-width="1"/>
+        </svg>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q1</div>
+            <div class="problem-label">손계산 vs 코드 비교</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">섭씨 30도를 공식에 대입하세요. <code>30 * 9 / 5 + 32</code>의 결과는?</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">계산</span><span class="problem-example-value">30 * 9 = ____ / 5 = ____ + 32 = ____</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">30 * 9 = 270, 270 / 5 = 54, 54 + 32 = ?</div>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">30 * 9 = 270
+270 / 5 = 54
+54 + 32 = 86
+화씨 86도</div>
+            </div>
+        </details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q2</div>
+            <div class="problem-label">역변환: 화씨 -> 섭씨</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">화씨를 섭씨로 바꾸는 공식은 <code>C = (F - 32) * 5 / 9</code>입니다. 화씨 212도를 섭씨로 변환하는 코드를 작성하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">입력</span><span class="problem-example-value">212</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">섭씨: 100도</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">괄호를 사용해서 F - 32를 먼저 계산합니다. (fahr - 32) * 5 / 9</div>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">int fahr = 212;
+int celsius = (fahr - 32) * 5 / 9;
+printf("섭씨: %d도\n", celsius);
+// (212 - 32) * 5 / 9 = 180 * 5 / 9 = 900 / 9 = 100</div>
+            </div>
+        </details>
+    </div>
+</div>
+
+<!-- 4페이지: 응용 + 요약 -->
+<div class="page">
+    <div class="pj-badge">PROJECT 04</div>
+    <h2>Step 3. 응용하기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/monitor.png" alt="모니터" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>섭씨-화씨 외에 켈빈(Kelvin) 변환도 추가하고, 양방향 변환기를 만들어봅니다.</p>
+
+    <!-- SVG 8: 세 가지 온도 단위 비교 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 90" style="max-width:460px;width:100%">
+            <rect x="10" y="10" width="130" height="70" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="75" y="35" text-anchor="middle" font-size="12" fill="#1d4ed8" font-weight="800">섭씨 (C)</text>
+            <text x="75" y="55" text-anchor="middle" font-size="11" fill="#1e3a5f">물 끓는점: 100</text>
+            <text x="75" y="70" text-anchor="middle" font-size="11" fill="#1e3a5f">물 어는점: 0</text>
+            <rect x="165" y="10" width="130" height="70" rx="8" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="230" y="35" text-anchor="middle" font-size="12" fill="#dc2626" font-weight="800">화씨 (F)</text>
+            <text x="230" y="55" text-anchor="middle" font-size="11" fill="#1e3a5f">물 끓는점: 212</text>
+            <text x="230" y="70" text-anchor="middle" font-size="11" fill="#1e3a5f">물 어는점: 32</text>
+            <rect x="320" y="10" width="130" height="70" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="385" y="35" text-anchor="middle" font-size="12" fill="#92400e" font-weight="800">켈빈 (K)</text>
+            <text x="385" y="55" text-anchor="middle" font-size="11" fill="#1e3a5f">물 끓는점: 373</text>
+            <text x="385" y="70" text-anchor="middle" font-size="11" fill="#1e3a5f">물 어는점: 273</text>
+        </svg>
+    </div>
+
+    <div class="practice">
+        <div class="practice-head">응용 따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">4</div>
+                <div class="practice-desc">켈빈 변환도 추가해보세요. 켈빈 = 섭씨 + 273</div>
+                <div class="code"><span class="kw">int</span> kelvin = celsius + <span class="num">273</span>;
+<span class="fn">printf</span>(<span class="str">"켈빈:\t%d K\n"</span>, kelvin);</div>
+                <div class="practice-result">섭씨 25도 -> 켈빈 298 K</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SVG 9: 변환 관계도 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+            <rect x="50" y="20" width="100" height="40" rx="20" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="100" y="45" text-anchor="middle" font-size="12" fill="#1d4ed8" font-weight="800">섭씨</text>
+            <rect x="180" y="20" width="100" height="40" rx="20" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="230" y="45" text-anchor="middle" font-size="12" fill="#dc2626" font-weight="800">화씨</text>
+            <rect x="310" y="20" width="100" height="40" rx="20" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="360" y="45" text-anchor="middle" font-size="12" fill="#92400e" font-weight="800">켈빈</text>
+            <line x1="150" y1="35" x2="180" y2="35" stroke="#94a3b8" stroke-width="1.5"/>
+            <text x="165" y="18" text-anchor="middle" font-size="8" fill="#94a3b8">x9/5+32</text>
+            <line x1="150" y1="45" x2="180" y2="45" stroke="#94a3b8" stroke-width="1.5"/>
+            <line x1="280" y1="40" x2="310" y2="40" stroke="#94a3b8" stroke-width="1.5"/>
+            <text x="165" y="62" text-anchor="middle" font-size="8" fill="#94a3b8">(F-32)x5/9</text>
+            <text x="295" y="18" text-anchor="middle" font-size="8" fill="#94a3b8">+273</text>
+        </svg>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q3</div>
+            <div class="problem-label">도전: 3단위 동시 변환</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">섭씨를 입력받아 화씨와 켈빈을 동시에 출력하는 코드를 작성하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">입력</span><span class="problem-example-value">섭씨: 100</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">화씨: 212도 / 켈빈: 373 K</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">화씨: celsius * 9 / 5 + 32, 켈빈: celsius + 273</div>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">int celsius, fahr, kelvin;
+printf("섭씨: ");
+scanf("%d", &amp;celsius);
+fahr = celsius * 9 / 5 + 32;
+kelvin = celsius + 273;
+printf("화씨: %d도\n", fahr);
+printf("켈빈: %d K\n", kelvin);</div>
+            </div>
+        </details>
+    </div>
+
+    <!-- SVG 10: 핵심 개념 정리 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 50" style="max-width:460px;width:100%">
+            <rect x="5" y="10" width="140" height="30" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="75" y="30" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">공식 -> 코드</text>
+            <line x1="150" y1="25" x2="170" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+            <rect x="175" y="10" width="140" height="30" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="245" y="30" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">연산 순서 주의</text>
+            <line x1="320" y1="25" x2="340" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+            <rect x="345" y="10" width="110" height="30" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="400" y="30" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">int 한계 인식</text>
+        </svg>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>핵심 요약</h3>
+        <ul>
+            <li>섭씨 -> 화씨: <code>fahr = celsius * 9 / 5 + 32;</code></li>
+            <li>화씨 -> 섭씨: <code>celsius = (fahr - 32) * 5 / 9;</code></li>
+            <li>켈빈 = 섭씨 + 273</li>
+            <li>정수 나눗셈은 소수점을 버리므로 곱셈을 먼저 하는 것이 정확하다</li>
+            <li>괄호 ()를 사용해 계산 순서를 명확하게 지정한다</li>
+        </ul>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+
+
+
+<script>
+(function(){
+  var KEY = 'cs_ans_' + location.pathname.replace(/[^a-zA-Z0-9]/g,'_');
+  var pagePath = location.pathname;
+  var userId = null;
+  try {
+    userId = window.parent?.localStorage?.getItem('codingssok_user_id')
+      || localStorage.getItem('codingssok_user_id');
+  } catch(e) {}
+
+  function save(){
+    var areas = document.querySelectorAll('textarea');
+    var saved = 0;
+    areas.forEach(function(ta, i){
+      if(ta.value.trim()) {
+        localStorage.setItem(KEY + '_' + i, ta.value);
+        saved++;
+      } else {
+        localStorage.removeItem(KEY + '_' + i);
+      }
+    });
+    if(saved > 0) showSaveIndicator();
+  }
+
+  function load(){
+    var areas = document.querySelectorAll('textarea');
+    var restored = 0;
+    areas.forEach(function(ta, i){
+      var val = localStorage.getItem(KEY + '_' + i);
+      if(val && val.trim()) {
+        ta.value = val;
+        ta.style.borderColor = '#10b981';
+        ta.style.boxShadow = '0 0 0 2px rgba(16,185,129,0.15)';
+        setTimeout(function(){ ta.style.borderColor = ''; ta.style.boxShadow = ''; }, 2000);
+        restored++;
+      }
+    });
+    if(restored > 0) showRestoreIndicator(restored);
+  }
+
+  function saveToDb(){
+    if(!userId) return;
+    var areas = document.querySelectorAll('textarea');
+    var answers = [];
+    areas.forEach(function(ta, i){
+      if(ta.value.trim()) answers.push({ field_index: i, answer_text: ta.value });
+    });
+    if(answers.length === 0) return;
+    fetch('/api/answers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId, page_path: pagePath, answers: answers })
+    }).catch(function(){});
+  }
+
+  function loadFromDb(){
+    if(!userId) return;
+    fetch('/api/answers?user_id=' + encodeURIComponent(userId) + '&page_path=' + encodeURIComponent(pagePath))
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(!d.answers || !d.answers.length) return;
+        var areas = document.querySelectorAll('textarea');
+        d.answers.forEach(function(a){
+          if(areas[a.field_index] && a.answer_text) {
+            areas[a.field_index].value = a.answer_text;
+            localStorage.setItem(KEY + '_' + a.field_index, a.answer_text);
+          }
+        });
+      }).catch(function(){});
+  }
+
+  function showSaveIndicator(){
+    var el = document.getElementById('cs-save-ind');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'cs-save-ind';
+      el.style.cssText = 'position:fixed;bottom:16px;right:16px;padding:6px 14px;border-radius:8px;background:#0f172a;color:#22c55e;font-size:11px;font-weight:700;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+      document.body.appendChild(el);
+    }
+    el.textContent = '\u2713 \uB2F5\uC548 \uC800\uC7A5\uB428'; // ✓ 답안 저장됨
+    el.style.opacity = '1';
+    setTimeout(function(){ el.style.opacity = '0'; }, 1500);
+  }
+
+  function showRestoreIndicator(n){
+    var el = document.getElementById('cs-save-ind');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'cs-save-ind';
+      el.style.cssText = 'position:fixed;bottom:16px;right:16px;padding:6px 14px;border-radius:8px;background:#0f172a;color:#3b82f6;font-size:11px;font-weight:700;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+      document.body.appendChild(el);
+    }
+    el.textContent = '\u21BB ' + n + '\uAC1C \uB2F5\uC548 \uBCF5\uC6D0'; // ↻ n개 답안 복원
+    el.style.color = '#3b82f6';
+    el.style.opacity = '1';
+    setTimeout(function(){ el.style.opacity = '0'; }, 2500);
+  }
+
+  var t = null;
+  document.addEventListener('input', function(e){
+    if(e.target.tagName === 'TEXTAREA'){
+      clearTimeout(t);
+      t = setTimeout(function(){ save(); saveToDb(); }, 300);
+    }
+  });
+  document.addEventListener('change', function(e){
+    if(e.target.tagName === 'TEXTAREA'){ save(); saveToDb(); }
+  });
+  document.addEventListener('focusout', function(e){
+    if(e.target.tagName === 'TEXTAREA'){ save(); saveToDb(); }
+  });
+  window.addEventListener('beforeunload', function(){ save(); saveToDb(); });
+
+  // 즉시 로드
+  load();
+  loadFromDb();
+})();
+</script>
+</body>
+</html>

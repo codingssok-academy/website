@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 프로젝트: 미로 찾기</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+/* -- 페이지 -- */
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+/* -- 챕터 표지 -- */
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+
+/* -- 본문 -- */
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 16px; font-weight: 700; color: #1e3a5f; margin: 18px 0 10px; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+ul, ol { margin: 0 0 12px 20px; }
+li { font-size: 14px; color: #374151; line-height: 1.8; }
+
+/* -- 코드 블록 -- */
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13.5px;
+    color: #e2e8f0; line-height: 1.85; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.code .dec { color: #f9a8d4; }
+
+/* -- 따라해보세요 -- */
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+
+/* -- 문제 -- */
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+
+/* -- 요약 -- */
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+/* -- 단계 박스 -- */
+.step-box { border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 14px 18px; margin: 14px 0; background: #fff; }
+.step-label { font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+.step-title { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 8px; }
+
+/* -- 출력 박스 -- */
+.output-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #334155; line-height: 1.7; margin: 10px 0; }
+
+/* -- 비교 테이블 -- */
+.compare-table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13px; }
+.compare-table th { background: #1e3a5f; color: #fff; padding: 8px 12px; text-align: left; font-weight: 700; }
+.compare-table td { padding: 7px 12px; border-bottom: 1px solid #e2e8f0; color: #374151; }
+.compare-table tr:nth-child(even) td { background: #f8fafc; }
+.compare-table code { background: #e0e7ff; padding: 1px 5px; border-radius: 3px; font-family: 'JetBrains Mono', monospace; color: #3730a3; font-size: 12px; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- 1페이지: 표지 -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">54</div>
+        <div class="cover-label">L3 — Unit 54 Project</div>
+        <h1 class="cover-title">프로젝트:<br>미로 찾기</h1>
+        <p class="cover-sub">2차원 리스트로 미로를 표현하고, 재귀 DFS 알고리즘으로 출구까지의 경로를 자동 탐색해 화면에 출력합니다.</p>
+
+        <!-- SVG: 미로 전체 구조 -->
+        <div style="margin:24px 0;">
+            <svg viewBox="0 0 520 200" style="max-width:520px;width:100%">
+                <!-- 미로 그리드 (5x5) -->
+                <text x="20" y="15" font-size="9" fill="#64748b" font-weight="700">미로 배열 (0=길, 1=벽)</text>
+                <!-- 그리드 -->
+                <rect x="20" y="20" width="32" height="32" rx="2" fill="#1e3a5f"/>
+                <rect x="54" y="20" width="32" height="32" rx="2" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+                <rect x="88" y="20" width="32" height="32" rx="2" fill="#1e3a5f"/>
+                <rect x="122" y="20" width="32" height="32" rx="2" fill="#1e3a5f"/>
+                <rect x="156" y="20" width="32" height="32" rx="2" fill="#1e3a5f"/>
+
+                <rect x="20" y="54" width="32" height="32" rx="2" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+                <rect x="54" y="54" width="32" height="32" rx="2" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+                <rect x="88" y="54" width="32" height="32" rx="2" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+                <rect x="122" y="54" width="32" height="32" rx="2" fill="#1e3a5f"/>
+                <rect x="156" y="54" width="32" height="32" rx="2" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+
+                <rect x="20" y="88" width="32" height="32" rx="2" fill="#1e3a5f"/>
+                <rect x="54" y="88" width="32" height="32" rx="2" fill="#1e3a5f"/>
+                <rect x="88" y="88" width="32" height="32" rx="2" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+                <rect x="122" y="88" width="32" height="32" rx="2" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+                <rect x="156" y="88" width="32" height="32" rx="2" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+
+                <rect x="20" y="122" width="32" height="32" rx="2" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+                <rect x="54" y="122" width="32" height="32" rx="2" fill="#1e3a5f"/>
+                <rect x="88" y="122" width="32" height="32" rx="2" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+                <rect x="122" y="122" width="32" height="32" rx="2" fill="#1e3a5f"/>
+                <rect x="156" y="122" width="32" height="32" rx="2" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+
+                <rect x="20" y="156" width="32" height="32" rx="2" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+                <rect x="54" y="156" width="32" height="32" rx="2" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+                <rect x="88" y="156" width="32" height="32" rx="2" fill="#1e3a5f"/>
+                <rect x="122" y="156" width="32" height="32" rx="2" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+                <rect x="156" y="156" width="32" height="32" rx="2" fill="#f0fdf4" stroke="#22c55e" stroke-width="2"/>
+
+                <!-- 시작점 -->
+                <text x="36" y="44" text-anchor="middle" font-size="8" fill="#fff" font-weight="700">S</text>
+                <!-- 끝점 -->
+                <text x="172" y="177" text-anchor="middle" font-size="8" fill="#166534" font-weight="700">E</text>
+
+                <!-- 경로 표시 -->
+                <circle cx="70" cy="36" r="5" fill="#3b82f6" opacity="0.7"/>
+                <circle cx="70" cy="70" r="5" fill="#3b82f6" opacity="0.7"/>
+                <circle cx="104" cy="70" r="5" fill="#3b82f6" opacity="0.7"/>
+                <circle cx="104" cy="104" r="5" fill="#3b82f6" opacity="0.7"/>
+                <circle cx="138" cy="104" r="5" fill="#3b82f6" opacity="0.7"/>
+                <circle cx="172" cy="104" r="5" fill="#3b82f6" opacity="0.7"/>
+                <circle cx="172" cy="138" r="5" fill="#3b82f6" opacity="0.7"/>
+                <circle cx="172" cy="172" r="5" fill="#22c55e"/>
+
+                <!-- 범례 -->
+                <rect x="220" y="20" width="16" height="16" rx="3" fill="#1e3a5f"/>
+                <text x="242" y="32" font-size="9" fill="#374151">벽 (1)</text>
+                <rect x="220" y="44" width="16" height="16" rx="3" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+                <text x="242" y="56" font-size="9" fill="#374151">길 (0)</text>
+                <circle cx="228" cy="76" r="5" fill="#3b82f6"/>
+                <text x="242" y="80" font-size="9" fill="#374151">탐색 경로</text>
+                <circle cx="228" cy="96" r="5" fill="#22c55e"/>
+                <text x="242" y="100" font-size="9" fill="#374151">목적지 도착</text>
+
+                <!-- 설명 -->
+                <text x="220" y="130" font-size="9" fill="#1e3a5f" font-weight="700">DFS 재귀 탐색</text>
+                <text x="220" y="148" font-size="8" fill="#64748b">상하좌우 방향으로</text>
+                <text x="220" y="163" font-size="8" fill="#64748b">길이면 재귀 호출</text>
+                <text x="220" y="178" font-size="8" fill="#64748b">방문 표시로 무한루프 방지</text>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/puzzle.png" alt="고급 기능" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 유닛에서 만드는 것</h3>
+            <ul>
+                <li>2차원 리스트로 미로 지도를 표현하고 <code>maze[row][col]</code>로 접근할 수 있습니다.</li>
+                <li>재귀 DFS(깊이 우선 탐색)로 출구까지 경로를 자동 탐색할 수 있습니다.</li>
+                <li>방문 표시(<code>visited</code>)로 이미 방문한 곳을 제외해 무한 루프를 방지할 수 있습니다.</li>
+                <li>탐색 성공/실패 경로를 구분해 경로 리스트를 출력할 수 있습니다.</li>
+                <li>미로를 텍스트 기호로 시각화해 출력할 수 있습니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- 2페이지: 미로 표현과 기본 구조 -->
+<div class="page">
+    <h2>Step 1 — 2차원 리스트로 미로 표현</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="처리" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>미로는 2차원 리스트로 표현합니다. <code>0</code>은 이동 가능한 길, <code>1</code>은 벽입니다. 각 칸은 <code>maze[행][열]</code>로 접근합니다.</p>
+
+    <!-- SVG: 2차원 리스트 인덱싱 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 130" style="max-width:500px;width:100%">
+            <!-- 열 인덱스 -->
+            <text x="100" y="14" text-anchor="middle" font-size="9" fill="#94a3b8">col 0</text>
+            <text x="142" y="14" text-anchor="middle" font-size="9" fill="#94a3b8">col 1</text>
+            <text x="184" y="14" text-anchor="middle" font-size="9" fill="#94a3b8">col 2</text>
+            <text x="226" y="14" text-anchor="middle" font-size="9" fill="#94a3b8">col 3</text>
+            <text x="268" y="14" text-anchor="middle" font-size="9" fill="#94a3b8">col 4</text>
+            <!-- 행 인덱스 -->
+            <text x="50" y="38" text-anchor="middle" font-size="9" fill="#94a3b8">row 0</text>
+            <text x="50" y="72" text-anchor="middle" font-size="9" fill="#94a3b8">row 1</text>
+            <text x="50" y="106" text-anchor="middle" font-size="9" fill="#94a3b8">row 2</text>
+            <!-- 행 0 -->
+            <rect x="78" y="20" width="42" height="30" rx="4" fill="#1e3a5f"/>
+            <text x="99" y="39" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">1</text>
+            <rect x="122" y="20" width="42" height="30" rx="4" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="143" y="39" text-anchor="middle" font-size="11" fill="#374151" font-weight="700">0</text>
+            <rect x="166" y="20" width="42" height="30" rx="4" fill="#1e3a5f"/>
+            <text x="187" y="39" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">1</text>
+            <rect x="210" y="20" width="42" height="30" rx="4" fill="#1e3a5f"/>
+            <text x="231" y="39" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">1</text>
+            <rect x="254" y="20" width="42" height="30" rx="4" fill="#1e3a5f"/>
+            <text x="275" y="39" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">1</text>
+            <!-- 행 1 -->
+            <rect x="78" y="54" width="42" height="30" rx="4" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="99" y="73" text-anchor="middle" font-size="11" fill="#374151" font-weight="700">0</text>
+            <rect x="122" y="54" width="42" height="30" rx="4" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="143" y="73" text-anchor="middle" font-size="11" fill="#374151" font-weight="700">0</text>
+            <rect x="166" y="54" width="42" height="30" rx="4" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="187" y="73" text-anchor="middle" font-size="11" fill="#374151" font-weight="700">0</text>
+            <rect x="210" y="54" width="42" height="30" rx="4" fill="#1e3a5f"/>
+            <text x="231" y="73" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">1</text>
+            <rect x="254" y="54" width="42" height="30" rx="4" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="275" y="73" text-anchor="middle" font-size="11" fill="#374151" font-weight="700">0</text>
+            <!-- 행 2 -->
+            <rect x="78" y="88" width="42" height="30" rx="4" fill="#1e3a5f"/>
+            <text x="99" y="107" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">1</text>
+            <rect x="122" y="88" width="42" height="30" rx="4" fill="#1e3a5f"/>
+            <text x="143" y="107" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">1</text>
+            <rect x="166" y="88" width="42" height="30" rx="4" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="187" y="107" text-anchor="middle" font-size="11" fill="#374151" font-weight="700">0</text>
+            <rect x="210" y="88" width="42" height="30" rx="4" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="231" y="107" text-anchor="middle" font-size="11" fill="#374151" font-weight="700">0</text>
+            <rect x="254" y="88" width="42" height="30" rx="4" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="275" y="107" text-anchor="middle" font-size="11" fill="#374151" font-weight="700">0</text>
+            <!-- 표시 -->
+            <text x="360" y="39" font-size="9" fill="#374151" font-family="monospace">maze[0][1] = 0  (길)</text>
+            <text x="360" y="73" font-size="9" fill="#374151" font-family="monospace">maze[1][2] = 0  (길)</text>
+            <text x="360" y="107" font-size="9" fill="#374151" font-family="monospace">maze[2][0] = 1  (벽)</text>
+        </svg>
+    </div>
+
+    <div class="code">MAZE = [
+    [<span class="num">1</span>, <span class="num">0</span>, <span class="num">1</span>, <span class="num">1</span>, <span class="num">1</span>],   <span class="cmt"># row 0  — S=(0,1)</span>
+    [<span class="num">0</span>, <span class="num">0</span>, <span class="num">0</span>, <span class="num">1</span>, <span class="num">0</span>],   <span class="cmt"># row 1</span>
+    [<span class="num">1</span>, <span class="num">1</span>, <span class="num">0</span>, <span class="num">0</span>, <span class="num">0</span>],   <span class="cmt"># row 2</span>
+    [<span class="num">0</span>, <span class="num">1</span>, <span class="num">0</span>, <span class="num">1</span>, <span class="num">0</span>],   <span class="cmt"># row 3</span>
+    [<span class="num">0</span>, <span class="num">0</span>, <span class="num">1</span>, <span class="num">0</span>, <span class="num">0</span>],   <span class="cmt"># row 4  — E=(4,4)</span>
+]
+
+ROWS = <span class="fn">len</span>(MAZE)
+COLS = <span class="fn">len</span>(MAZE[<span class="num">0</span>])
+START = (<span class="num">0</span>, <span class="num">1</span>)    <span class="cmt"># (행, 열)</span>
+END   = (<span class="num">4</span>, <span class="num">4</span>)</div>
+
+    <!-- SVG: 범위 체크 & 이동 방향 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 90" style="max-width:500px;width:100%">
+            <defs>
+                <marker id="arwDir" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#3b82f6"/>
+                </marker>
+            </defs>
+            <!-- 중앙 칸 -->
+            <rect x="220" y="28" width="50" height="34" rx="6" fill="#1e3a5f"/>
+            <text x="245" y="50" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">(r, c)</text>
+            <!-- 상 -->
+            <line x1="245" y1="26" x2="245" y2="12" stroke="#3b82f6" stroke-width="2" marker-end="url(#arwDir)"/>
+            <text x="245" y="10" text-anchor="middle" font-size="8" fill="#3b82f6" font-weight="700">위 (r-1, c)</text>
+            <!-- 하 -->
+            <line x1="245" y1="64" x2="245" y2="78" stroke="#3b82f6" stroke-width="2" marker-end="url(#arwDir)"/>
+            <text x="245" y="88" text-anchor="middle" font-size="8" fill="#3b82f6" font-weight="700">아래 (r+1, c)</text>
+            <!-- 좌 -->
+            <line x1="218" y1="45" x2="155" y2="45" stroke="#3b82f6" stroke-width="2" marker-end="url(#arwDir)"/>
+            <text x="120" y="49" text-anchor="middle" font-size="8" fill="#3b82f6" font-weight="700">왼쪽 (r, c-1)</text>
+            <!-- 우 -->
+            <line x1="272" y1="45" x2="335" y2="45" stroke="#3b82f6" stroke-width="2" marker-end="url(#arwDir)"/>
+            <text x="375" y="49" text-anchor="middle" font-size="8" fill="#3b82f6" font-weight="700">오른쪽 (r, c+1)</text>
+        </svg>
+    </div>
+
+    <p>이동 방향은 4가지입니다. 각 방향을 리스트로 정의하면 반복문으로 처리할 수 있습니다.</p>
+
+    <div class="code">DIRECTIONS = [(-<span class="num">1</span>, <span class="num">0</span>), (<span class="num">1</span>, <span class="num">0</span>), (<span class="num">0</span>, -<span class="num">1</span>), (<span class="num">0</span>, <span class="num">1</span>)]
+<span class="cmt"># 상, 하, 좌, 우</span>
+
+<span class="kw">def</span> <span class="fn">in_bounds</span>(r: <span class="fn">int</span>, c: <span class="fn">int</span>) -> <span class="fn">bool</span>:
+    <span class="str">"""좌표가 미로 범위 안인지 확인"""</span>
+    <span class="kw">return</span> <span class="num">0</span> <= r < ROWS <span class="kw">and</span> <span class="num">0</span> <= c < COLS
+
+<span class="kw">def</span> <span class="fn">is_passable</span>(r: <span class="fn">int</span>, c: <span class="fn">int</span>) -> <span class="fn">bool</span>:
+    <span class="str">"""벽이 아니고 범위 안인지 확인"""</span>
+    <span class="kw">return</span> <span class="fn">in_bounds</span>(r, c) <span class="kw">and</span> MAZE[r][c] == <span class="num">0</span></div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="완성" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+        <div class="practice-head">따라해보세요 — Step 1</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc"><code>MAZE</code>를 정의하고 여러 좌표에 대해 <code>is_passable()</code>을 확인하세요.</div>
+                <div class="code"><span class="fn">print</span>(<span class="fn">is_passable</span>(<span class="num">0</span>, <span class="num">1</span>))  <span class="cmt"># True (START)</span>
+<span class="fn">print</span>(<span class="fn">is_passable</span>(<span class="num">0</span>, <span class="num">0</span>))  <span class="cmt"># False (벽)</span>
+<span class="fn">print</span>(<span class="fn">is_passable</span>(<span class="num">5</span>, <span class="num">5</span>))  <span class="cmt"># False (범위 밖)</span></div>
+                <div class="practice-result">True, False, False 가 출력되면 성공</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc"><code>DIRECTIONS</code>와 반복문으로 (1,1)에서 이동 가능한 모든 칸을 출력하세요.</div>
+                <div class="code"><span class="kw">for</span> dr, dc <span class="kw">in</span> DIRECTIONS:
+    nr, nc = <span class="num">1</span>+dr, <span class="num">1</span>+dc
+    <span class="kw">if</span> <span class="fn">is_passable</span>(nr, nc):
+        <span class="fn">print</span>(<span class="str">f"  이동 가능: ({nr}, {nc})"</span>)</div>
+                <div class="practice-result">이동 가능한 칸이 출력되면 성공</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">2중 반복문으로 전체 미로를 출력해 보세요. 벽은 "#", 길은 "."으로 표시합니다.</div>
+                <div class="code"><span class="kw">for</span> row <span class="kw">in</span> MAZE:
+    <span class="fn">print</span>(<span class="str">""</span>.<span class="fn">join</span>([<span class="str">"#"</span> <span class="kw">if</span> c == <span class="num">1</span> <span class="kw">else</span> <span class="str">"."</span> <span class="kw">for</span> c <span class="kw">in</span> row]))</div>
+                <div class="practice-result">5행 5열의 미로가 텍스트로 출력되면 성공</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3페이지: 재귀 DFS 탐색 -->
+<div class="page">
+    <h2>Step 2 — 재귀 DFS로 경로 탐색</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/database.png" alt="데이터" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>DFS(깊이 우선 탐색)는 한 방향으로 갈 수 있는 데까지 깊이 파고든 다음, 막히면 돌아와서 다른 방향을 시도합니다. 재귀로 자연스럽게 표현됩니다.</p>
+
+    <!-- SVG: DFS 기저 사례 vs 재귀 사례 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 130" style="max-width:500px;width:100%">
+            <!-- 기저 사례 1: 목적지 -->
+            <rect x="5" y="10" width="150" height="50" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="2"/>
+            <text x="80" y="30" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">기저 사례 1: 도착</text>
+            <text x="80" y="48" text-anchor="middle" font-size="9" fill="#374151" font-family="monospace">(r,c) == END → True</text>
+            <!-- 기저 사례 2: 막힘 -->
+            <rect x="5" y="72" width="150" height="50" rx="8" fill="#fee2e2" stroke="#ef4444" stroke-width="2"/>
+            <text x="80" y="92" text-anchor="middle" font-size="10" fill="#991b1b" font-weight="700">기저 사례 2: 막힘</text>
+            <text x="80" y="110" text-anchor="middle" font-size="9" fill="#374151" font-family="monospace">벽/방문 → False</text>
+            <!-- 재귀 사례 -->
+            <rect x="185" y="10" width="305" height="112" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+            <text x="337" y="30" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">재귀 사례</text>
+            <text x="337" y="50" text-anchor="middle" font-size="9" fill="#374151">현재 위치 방문 표시</text>
+            <text x="337" y="66" text-anchor="middle" font-size="9" fill="#374151">4방향으로 dfs() 재귀 호출</text>
+            <text x="337" y="82" text-anchor="middle" font-size="9" fill="#374151">한 방향이라도 True 이면 True 반환</text>
+            <text x="337" y="98" text-anchor="middle" font-size="9" fill="#374151">모두 실패시 방문 표시 해제 후 False</text>
+            <text x="337" y="113" text-anchor="middle" font-size="8" fill="#64748b">(백트래킹)</text>
+        </svg>
+    </div>
+
+    <h3>DFS 재귀 탐색 함수</h3>
+    <div class="code">visited = [[<span class="num">False</span>] * COLS <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(ROWS)]
+
+<span class="kw">def</span> <span class="fn">dfs</span>(r: <span class="fn">int</span>, c: <span class="fn">int</span>, path: <span class="fn">list</span>) -> <span class="fn">bool</span>:
+    <span class="str">"""(r,c)에서 END까지 경로 탐색. 성공이면 True, path에 경로 저장"""</span>
+    <span class="kw">if</span> (r, c) == END:                  <span class="cmt"># 기저 사례: 목적지 도착</span>
+        path.<span class="fn">append</span>((r, c))
+        <span class="kw">return</span> <span class="num">True</span>
+    <span class="kw">if</span> <span class="kw">not</span> <span class="fn">is_passable</span>(r, c):          <span class="cmt"># 기저 사례: 이동 불가</span>
+        <span class="kw">return</span> <span class="num">False</span>
+    <span class="kw">if</span> visited[r][c]:                  <span class="cmt"># 기저 사례: 이미 방문</span>
+        <span class="kw">return</span> <span class="num">False</span>
+
+    visited[r][c] = <span class="num">True</span>             <span class="cmt"># 방문 표시</span>
+    path.<span class="fn">append</span>((r, c))
+
+    <span class="kw">for</span> dr, dc <span class="kw">in</span> DIRECTIONS:         <span class="cmt"># 4방향 탐색</span>
+        <span class="kw">if</span> <span class="fn">dfs</span>(r + dr, c + dc, path):
+            <span class="kw">return</span> <span class="num">True</span>
+
+    path.<span class="fn">pop</span>()                         <span class="cmt"># 백트래킹: 실패한 칸 제거</span>
+    visited[r][c] = <span class="num">False</span>
+    <span class="kw">return</span> <span class="num">False</span></div>
+
+    <!-- SVG: 백트래킹 개념 설명 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 80" style="max-width:500px;width:100%">
+            <defs>
+                <marker id="arwBt" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+                <marker id="arwBtR" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#ef4444"/>
+                </marker>
+            </defs>
+            <rect x="5" y="25" width="60" height="30" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="35" y="45" text-anchor="middle" font-size="9" fill="#1d4ed8">A</text>
+            <line x1="68" y1="40" x2="88" y2="40" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#arwBt)"/>
+            <rect x="90" y="25" width="60" height="30" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="120" y="45" text-anchor="middle" font-size="9" fill="#1d4ed8">B</text>
+            <line x1="153" y1="40" x2="173" y2="40" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#arwBt)"/>
+            <rect x="175" y="25" width="60" height="30" rx="6" fill="#fee2e2" stroke="#ef4444" stroke-width="2"/>
+            <text x="205" y="45" text-anchor="middle" font-size="9" fill="#991b1b">막힘!</text>
+            <!-- 백트래킹 -->
+            <path d="M175,55 Q120,72 90,55" stroke="#ef4444" stroke-width="1.5" fill="none" marker-end="url(#arwBtR)"/>
+            <text x="132" y="73" text-anchor="middle" font-size="8" fill="#ef4444">백트래킹: path.pop()</text>
+            <!-- 다른 방향 -->
+            <line x1="120" y1="23" x2="120" y2="8" stroke="#22c55e" stroke-width="1.5" marker-end="url(#arwBt)"/>
+            <rect x="90" y="0" width="60" height="8" rx="3" fill="#f0fdf4" stroke="#22c55e" stroke-width="1"/>
+            <text x="120" y="7" text-anchor="middle" font-size="7" fill="#166534">다른 방향 시도</text>
+            <!-- 설명 -->
+            <text x="310" y="30" font-size="9" fill="#374151">path.pop(): 경로에서 제거</text>
+            <text x="310" y="47" font-size="9" fill="#374151">visited[r][c] = False: 재방문 허용</text>
+            <text x="310" y="64" font-size="9" fill="#374151">돌아가서 다른 방향으로 진행</text>
+        </svg>
+    </div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요 — Step 2</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc"><code>dfs()</code>를 실행해 탐색 경로를 출력하세요.</div>
+                <div class="code">path = []
+visited = [[<span class="num">False</span>] * COLS <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(ROWS)]
+found = <span class="fn">dfs</span>(<span class="num">0</span>, <span class="num">1</span>, path)
+<span class="fn">print</span>(<span class="str">f"탐색 성공: {found}"</span>)
+<span class="fn">print</span>(<span class="str">f"경로: {path}"</span>)</div>
+                <div class="practice-result">True와 (행,열) 좌표 목록이 출력되면 성공</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">백트래킹이 일어나는지 확인하기 위해 <code>dfs()</code> 내부에 <code>print()</code>를 추가하세요.</div>
+                <div class="code"><span class="cmt"># dfs() 시작 부분에 추가</span>
+<span class="fn">print</span>(<span class="str">f"방문: ({r},{c})"</span>)</div>
+                <div class="practice-result">되돌아가는 흔적이 출력에 보이면 성공</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">탐색 불가능한 미로를 만들어 <code>dfs()</code>가 False를 반환하는지 확인하세요.</div>
+                <div class="code">MAZE_BLOCKED = [
+    [<span class="num">1</span>, <span class="num">0</span>, <span class="num">1</span>],
+    [<span class="num">1</span>, <span class="num">1</span>, <span class="num">1</span>],   <span class="cmt"># 완전히 막힘</span>
+    [<span class="num">1</span>, <span class="num">1</span>, <span class="num">0</span>],
+]</div>
+                <div class="practice-result">found = False 가 출력되면 성공</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 4페이지: 경로 출력과 시각화 -->
+<div class="page">
+    <h2>Step 3 — 경로 출력과 미로 시각화</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>탐색된 경로를 미로 위에 표시해 출력하면 결과를 직관적으로 확인할 수 있습니다. <code>path</code>에 담긴 좌표 집합을 활용합니다.</p>
+
+    <!-- SVG: 경로 표시 방법 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 120" style="max-width:500px;width:100%">
+            <text x="60" y="15" text-anchor="middle" font-size="9" fill="#64748b" font-weight="700">경로 없이 출력</text>
+            <!-- 기본 출력 -->
+            <rect x="5" y="20" width="110" height="90" rx="6" fill="#0f172a"/>
+            <text x="20" y="38" font-size="9" fill="#e2e8f0" font-family="monospace">#.###</text>
+            <text x="20" y="54" font-size="9" fill="#e2e8f0" font-family="monospace">..0.0</text>
+            <text x="20" y="70" font-size="9" fill="#e2e8f0" font-family="monospace">##.00</text>
+            <text x="20" y="86" font-size="9" fill="#e2e8f0" font-family="monospace">.#.#.</text>
+            <text x="20" y="102" font-size="9" fill="#e2e8f0" font-family="monospace">.0#..</text>
+            <!-- 화살표 -->
+            <text x="140" y="65" text-anchor="middle" font-size="14" fill="#3b82f6">→</text>
+            <text x="140" y="80" text-anchor="middle" font-size="8" fill="#64748b">경로 표시 추가</text>
+            <!-- 경로 포함 출력 -->
+            <text x="320" y="15" text-anchor="middle" font-size="9" fill="#64748b" font-weight="700">경로 포함 출력</text>
+            <rect x="175" y="20" width="110" height="90" rx="6" fill="#0f172a"/>
+            <text x="190" y="38" font-size="9" fill="#e2e8f0" font-family="monospace">#<tspan fill="#86efac">*</tspan>###</text>
+            <text x="190" y="54" font-size="9" fill="#e2e8f0" font-family="monospace"><tspan fill="#86efac">*</tspan>.<tspan fill="#86efac">*</tspan>..</text>
+            <text x="190" y="70" font-size="9" fill="#e2e8f0" font-family="monospace">##<tspan fill="#86efac">*</tspan><tspan fill="#86efac">*</tspan><tspan fill="#86efac">*</tspan></text>
+            <text x="190" y="86" font-size="9" fill="#e2e8f0" font-family="monospace">.#.<tspan fill="#86efac">*</tspan>.</text>
+            <text x="190" y="102" font-size="9" fill="#e2e8f0" font-family="monospace">..#.<tspan fill="#86efac">E</tspan></text>
+            <!-- 범례 -->
+            <text x="310" y="38" font-size="9" fill="#374151"><tspan fill="#86efac">*</tspan> = 경로</text>
+            <text x="310" y="55" font-size="9" fill="#374151"># = 벽</text>
+            <text x="310" y="72" font-size="9" fill="#374151">. = 빈 길</text>
+            <text x="310" y="89" font-size="9" fill="#374151"><tspan fill="#86efac">E</tspan> = 출구</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">def</span> <span class="fn">print_maze</span>(path: <span class="fn">list</span>):
+    <span class="str">"""미로를 경로와 함께 출력"""</span>
+    path_set = <span class="fn">set</span>(path)       <span class="cmt"># 빠른 포함 여부 확인</span>
+    <span class="kw">for</span> r <span class="kw">in</span> <span class="fn">range</span>(ROWS):
+        row_str = <span class="str">""</span>
+        <span class="kw">for</span> c <span class="kw">in</span> <span class="fn">range</span>(COLS):
+            <span class="kw">if</span> (r, c) == START:
+                row_str += <span class="str">"S"</span>
+            <span class="kw">elif</span> (r, c) == END:
+                row_str += <span class="str">"E"</span>
+            <span class="kw">elif</span> (r, c) <span class="kw">in</span> path_set:
+                row_str += <span class="str">"*"</span>
+            <span class="kw">elif</span> MAZE[r][c] == <span class="num">1</span>:
+                row_str += <span class="str">"#"</span>
+            <span class="kw">else</span>:
+                row_str += <span class="str">"."</span>
+        <span class="fn">print</span>(row_str)</div>
+
+    <h3>전체 실행 함수</h3>
+    <div class="code"><span class="kw">def</span> <span class="fn">solve_maze</span>():
+    <span class="str">"""미로 탐색 전체 실행"""</span>
+    path = []
+    visited = [[<span class="num">False</span>] * COLS <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(ROWS)]
+    sr, sc = START
+
+    <span class="fn">print</span>(<span class="str">"=== 미로 탐색 시작 ==="</span>)
+    <span class="fn">print_maze</span>([])
+    <span class="fn">print</span>()
+
+    found = <span class="fn">dfs</span>(sr, sc, path)
+    <span class="kw">if</span> found:
+        <span class="fn">print</span>(<span class="str">f"경로 발견! 길이: {len(path)}칸"</span>)
+        <span class="fn">print_maze</span>(path)
+        <span class="fn">print</span>(<span class="str">f"좌표 순서: {path}"</span>)
+    <span class="kw">else</span>:
+        <span class="fn">print</span>(<span class="str">"경로 없음"</span>)
+
+<span class="fn">solve_maze</span>()</div>
+
+    <!-- SVG: 전체 모듈 구조 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 70" style="max-width:500px;width:100%">
+            <rect x="5" y="5" width="490" height="60" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="250" y="20" text-anchor="middle" font-size="9" fill="#1e3a5f" font-weight="700">maze_solver.py 구조</text>
+            <rect x="15" y="27" width="80" height="30" rx="5" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="55" y="46" text-anchor="middle" font-size="7" fill="#1d4ed8" font-weight="700">MAZE / 상수</text>
+            <rect x="107" y="27" width="80" height="30" rx="5" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="147" y="46" text-anchor="middle" font-size="7" fill="#166534" font-weight="700">in_bounds / is_passable</text>
+            <rect x="199" y="27" width="80" height="30" rx="5" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="239" y="46" text-anchor="middle" font-size="7" fill="#92400e" font-weight="700">visited 배열</text>
+            <rect x="291" y="27" width="80" height="30" rx="5" fill="#fdf4ff" stroke="#a855f7" stroke-width="1.5"/>
+            <text x="331" y="46" text-anchor="middle" font-size="7" fill="#7e22ce" font-weight="700">dfs() 재귀</text>
+            <rect x="383" y="27" width="106" height="30" rx="5" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="436" y="46" text-anchor="middle" font-size="7" fill="#991b1b" font-weight="700">print_maze / solve_maze</text>
+        </svg>
+    </div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요 — Step 3</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc"><code>solve_maze()</code>를 실행하고 경로가 올바르게 표시되는지 확인하세요.</div>
+                <div class="code"><span class="fn">solve_maze</span>()</div>
+                <div class="practice-result">미로와 * 경로가 출력되면 성공</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">START를 <code>(0, 1)</code>에서 다른 길 위치로 바꿔 탐색 결과가 달라지는지 보세요.</div>
+                <div class="code">START = (<span class="num">1</span>, <span class="num">0</span>)   <span class="cmt"># 다른 시작점</span>
+path2 = []
+visited2 = [[<span class="num">False</span>]*COLS <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(ROWS)]
+<span class="fn">dfs</span>(<span class="num">1</span>, <span class="num">0</span>, path2)
+<span class="fn">print_maze</span>(path2)</div>
+                <div class="practice-result">다른 경로가 출력되면 성공</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">경로 길이와 최단 경로 개념을 확인하세요. DFS는 최단 경로를 보장하지 않습니다.</div>
+                <div class="code">path3 = []
+visited3 = [[<span class="num">False</span>]*COLS <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(ROWS)]
+<span class="fn">dfs</span>(<span class="num">0</span>, <span class="num">1</span>, path3)
+<span class="fn">print</span>(<span class="str">f"DFS 경로 길이: {len(path3)}"</span>)
+<span class="cmt"># BFS를 쓰면 최단 경로 보장</span></div>
+                <div class="practice-result">경로 칸 수가 출력되면 성공</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 5페이지: 문제 + 핵심 요약 -->
+<div class="page">
+    <h2>Step 4 — 확장: 이동 횟수 카운터와 다중 경로</h2>
+    <p>탐색 중 방문한 칸의 총 횟수를 세거나, 여러 경로 중 가장 짧은 것을 찾는 방식으로 확장할 수 있습니다.</p>
+
+    <!-- SVG: DFS vs BFS 비교 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 500 90" style="max-width:500px;width:100%">
+            <rect x="5" y="5" width="240" height="80" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="125" y="24" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">DFS (재귀)</text>
+            <text x="125" y="42" text-anchor="middle" font-size="9" fill="#374151">한 방향으로 깊이 탐색</text>
+            <text x="125" y="58" text-anchor="middle" font-size="9" fill="#374151">경로 존재 여부 확인에 적합</text>
+            <text x="125" y="74" text-anchor="middle" font-size="8" fill="#94a3b8">최단 경로 보장 X</text>
+            <rect x="255" y="5" width="240" height="80" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="375" y="24" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">BFS (큐)</text>
+            <text x="375" y="42" text-anchor="middle" font-size="9" fill="#374151">같은 거리부터 넓게 탐색</text>
+            <text x="375" y="58" text-anchor="middle" font-size="9" fill="#374151">최단 경로 찾기에 적합</text>
+            <text x="375" y="74" text-anchor="middle" font-size="8" fill="#94a3b8">collections.deque 사용</text>
+        </svg>
+    </div>
+
+    <!-- 문제 1 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">1</div>
+            <div class="problem-label">방문 횟수 카운터 추가</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <p class="problem-text"><code>dfs()</code>에 <code>count</code> 매개변수(가변 컨테이너 리스트)를 추가해 탐색 중 방문한 총 칸 수를 기록하세요. 경로 찾기 성공/실패와 무관하게 방문할 때마다 <code>count[0] += 1</code>을 실행합니다.</p>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">예)</span>
+                    <span class="problem-example-value">count = [0]; dfs(..., count) → count[0]에 방문 수</span>
+                </div>
+            </div>
+        </div>
+        <div class="problem-toggle">
+            <details>
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">Python에서 int는 재귀 중 변경이 어렵습니다. count = [0] 처럼 리스트로 감싸면 재귀 깊이에 관계없이 공유됩니다.</div>
+                </div>
+            </details>
+            <details>
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code"><span style="color:#c084fc">def</span> <span style="color:#67e8f9">dfs</span>(r, c, path, count):
+    <span style="color:#c084fc">if not</span> <span style="color:#67e8f9">is_passable</span>(r, c) <span style="color:#c084fc">or</span> visited[r][c]:
+        <span style="color:#c084fc">return</span> <span style="color:#7dd3fc">False</span>
+    count[<span style="color:#7dd3fc">0</span>] += <span style="color:#7dd3fc">1</span>   <span style="color:#64748b"># 방문 카운트</span>
+    visited[r][c] = <span style="color:#7dd3fc">True</span>
+    path.<span style="color:#67e8f9">append</span>((r, c))
+    <span style="color:#c084fc">if</span> (r, c) == END: <span style="color:#c084fc">return</span> <span style="color:#7dd3fc">True</span>
+    <span style="color:#c084fc">for</span> dr, dc <span style="color:#c084fc">in</span> DIRECTIONS:
+        <span style="color:#c084fc">if</span> <span style="color:#67e8f9">dfs</span>(r+dr, c+dc, path, count):
+            <span style="color:#c084fc">return</span> <span style="color:#7dd3fc">True</span>
+    path.<span style="color:#67e8f9">pop</span>()
+    <span style="color:#c084fc">return</span> <span style="color:#7dd3fc">False</span></div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <!-- 문제 2 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">2</div>
+            <div class="problem-label">경로를 방향 문자열로 출력</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <p class="problem-text"><code>path</code> 좌표 리스트를 받아 각 이동이 상/하/좌/우 중 어느 방향인지 문자열로 반환하는 <code>path_to_directions(path)</code> 함수를 작성하세요.</p>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">예)</span>
+                    <span class="problem-example-value">[(0,1),(1,1)] → ["하"]</span>
+                </div>
+            </div>
+        </div>
+        <div class="problem-toggle">
+            <details>
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">연속된 두 좌표의 차이(dr=next_r - r, dc=next_c - c)를 딕셔너리에서 매핑합니다. {(-1,0):"상",(1,0):"하",(0,-1):"좌",(0,1):"우"}</div>
+                </div>
+            </details>
+            <details>
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code">DIR_MAP = {(-1,0):<span style="color:#86efac">"상"</span>,(1,0):<span style="color:#86efac">"하"</span>,(0,-1):<span style="color:#86efac">"좌"</span>,(0,1):<span style="color:#86efac">"우"</span>}
+<span style="color:#c084fc">def</span> <span style="color:#67e8f9">path_to_directions</span>(path):
+    result = []
+    <span style="color:#c084fc">for</span> i <span style="color:#c084fc">in</span> <span style="color:#67e8f9">range</span>(<span style="color:#7dd3fc">1</span>, <span style="color:#67e8f9">len</span>(path)):
+        dr = path[i][<span style="color:#7dd3fc">0</span>] - path[i-<span style="color:#7dd3fc">1</span>][<span style="color:#7dd3fc">0</span>]
+        dc = path[i][<span style="color:#7dd3fc">1</span>] - path[i-<span style="color:#7dd3fc">1</span>][<span style="color:#7dd3fc">1</span>]
+        result.<span style="color:#67e8f9">append</span>(DIR_MAP[(dr, dc)])
+    <span style="color:#c084fc">return</span> result</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <!-- 문제 3 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">3</div>
+            <div class="problem-label">랜덤 미로 생성기</div>
+            <span class="problem-diff hard">어려움</span>
+        </div>
+        <div class="problem-body">
+            <p class="problem-text"><code>random.random()</code>을 사용해 n×n 크기의 미로를 무작위로 생성하는 <code>generate_maze(n, prob=0.3)</code>를 작성하세요. 각 칸이 prob 확률로 벽이 됩니다. START와 END는 항상 <code>0</code>으로 설정합니다.</p>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">예)</span>
+                    <span class="problem-example-value">generate_maze(5, 0.3) → 5x5 미로 리스트</span>
+                </div>
+            </div>
+        </div>
+        <div class="problem-toggle">
+            <details>
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">2중 리스트 컴프리헨션으로 생성합니다. [[1 if random.random() &lt; prob else 0 for _ in range(n)] for _ in range(n)] 후 [0][0]과 [n-1][n-1]을 0으로 강제 설정합니다.</div>
+                </div>
+            </details>
+            <details>
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code"><span style="color:#c084fc">import</span> random
+<span style="color:#c084fc">def</span> <span style="color:#67e8f9">generate_maze</span>(n, prob=<span style="color:#7dd3fc">0.3</span>):
+    maze = [[<span style="color:#7dd3fc">1</span> <span style="color:#c084fc">if</span> random.<span style="color:#67e8f9">random</span>() &lt; prob
+             <span style="color:#c084fc">else</span> <span style="color:#7dd3fc">0</span> <span style="color:#c084fc">for</span> _ <span style="color:#c084fc">in</span> <span style="color:#67e8f9">range</span>(n)]
+            <span style="color:#c084fc">for</span> _ <span style="color:#c084fc">in</span> <span style="color:#67e8f9">range</span>(n)]
+    maze[<span style="color:#7dd3fc">0</span>][<span style="color:#7dd3fc">0</span>] = <span style="color:#7dd3fc">0</span>
+    maze[n-<span style="color:#7dd3fc">1</span>][n-<span style="color:#7dd3fc">1</span>] = <span style="color:#7dd3fc">0</span>
+    <span style="color:#c084fc">return</span> maze</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <!-- 추가 SVG: 미로 탐색 전략 비교 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 480 80" style="max-width:480px;width:100%">
+            <rect x="10" y="10" width="140" height="60" rx="8" fill="#f8fafc" stroke="#1e3a5f" stroke-width="1.5"/>
+            <text x="80" y="35" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="700">DFS (깊이 우선)</text>
+            <text x="80" y="52" text-anchor="middle" font-size="9" fill="#64748b">재귀 / 스택</text>
+            <rect x="170" y="10" width="140" height="60" rx="8" fill="#f8fafc" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="240" y="35" text-anchor="middle" font-size="11" fill="#3b82f6" font-weight="700">BFS (너비 우선)</text>
+            <text x="240" y="52" text-anchor="middle" font-size="9" fill="#64748b">큐 / 최단경로</text>
+            <rect x="330" y="10" width="140" height="60" rx="8" fill="#f8fafc" stroke="#059669" stroke-width="1.5"/>
+            <text x="400" y="35" text-anchor="middle" font-size="11" fill="#059669" font-weight="700">백트래킹</text>
+            <text x="400" y="52" text-anchor="middle" font-size="9" fill="#64748b">막다른길 → 되돌아가기</text>
+        </svg>
+    </div>
+    <!-- 추가 SVG: 미로 좌표계 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 200 200" style="max-width:200px;width:100%">
+            <rect x="5" y="5" width="190" height="190" rx="4" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+            <line x1="5" y1="68" x2="195" y2="68" stroke="#e2e8f0" stroke-width="0.5"/>
+            <line x1="5" y1="131" x2="195" y2="131" stroke="#e2e8f0" stroke-width="0.5"/>
+            <line x1="68" y1="5" x2="68" y2="195" stroke="#e2e8f0" stroke-width="0.5"/>
+            <line x1="131" y1="5" x2="131" y2="195" stroke="#e2e8f0" stroke-width="0.5"/>
+            <text x="36" y="42" text-anchor="middle" font-size="9" fill="#1e3a5f" font-weight="600">[0][0]</text>
+            <text x="100" y="42" text-anchor="middle" font-size="9" fill="#64748b">[0][1]</text>
+            <text x="163" y="42" text-anchor="middle" font-size="9" fill="#64748b">[0][2]</text>
+            <text x="36" y="105" text-anchor="middle" font-size="9" fill="#64748b">[1][0]</text>
+            <text x="100" y="105" text-anchor="middle" font-size="9" fill="#94a3b8">[1][1]</text>
+            <text x="163" y="105" text-anchor="middle" font-size="9" fill="#64748b">[1][2]</text>
+            <text x="36" y="168" text-anchor="middle" font-size="9" fill="#64748b">[2][0]</text>
+            <text x="100" y="168" text-anchor="middle" font-size="9" fill="#64748b">[2][1]</text>
+            <text x="163" y="168" text-anchor="middle" font-size="9" fill="#059669" font-weight="600">[2][2]</text>
+            <rect x="10" y="10" width="53" height="53" rx="3" fill="rgba(59,130,246,0.1)" stroke="#3b82f6" stroke-width="1"/>
+            <rect x="136" y="136" width="53" height="53" rx="3" fill="rgba(5,150,105,0.1)" stroke="#059669" stroke-width="1"/>
+        </svg>
+    </div>
+
+    <!-- 핵심 요약 -->
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>핵심 요약</h3>
+        <ul>
+            <li>2차원 리스트: <code>maze[r][c]</code>로 행/열 접근 — <code>0</code> 길, <code>1</code> 벽으로 미로 표현</li>
+            <li>DFS 기저 사례 2가지: 목적지 도착(<code>return True</code>), 벽/방문(<code>return False</code>)</li>
+            <li><code>visited[r][c] = True</code>: 방문 표시로 무한 루프 방지 — 반드시 탐색 전 설정</li>
+            <li>백트래킹: <code>path.pop()</code> + <code>visited[r][c] = False</code> — 실패한 경로를 되돌림</li>
+            <li><code>set(path)</code>: 리스트를 집합으로 변환 — <code>in</code> 연산이 O(1)로 빨라짐</li>
+            <li>DFS vs BFS: DFS는 경로 존재 확인, BFS는 최단 경로 탐색에 적합</li>
+        </ul>
+    </div>
+</div>
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

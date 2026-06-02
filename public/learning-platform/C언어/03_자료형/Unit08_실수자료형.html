@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Unit 8. 실수 자료형 사용하기 — C 언어 코딩 도장</title>
+    <link rel="stylesheet" href="../common.css">
+</head>
+
+<body>
+    <div class="wrap">
+        <div class="hdr">
+            <h1>Unit 8. 실수 자료형 사용하기</h1>
+            <div class="sub">float · double · 정밀도 · 오버플로우 · 언더플로우</div>
+            <span class="unit-badge">Chapter 03 · 자료형</span>
+            <div class="level-bar"><span class="on"></span><span class="on"></span><span></span></div>
+            <div class="meta">
+                <span class="tag pri">🖥️ C언어</span>
+                <span class="tag acc">📝 20문제</span>
+                <span class="tag">⏱ 30~50분</span>
+            </div>
+        </div>
+        <div class="stu-bar">
+            <label>👤 이름 <input type="text" id="stu-name" placeholder="이름"></label>
+            <label>📅 날짜 <input type="date" id="stu-date"></label>
+        </div>
+        <div class="learn">
+            <h2><span class="ico" style="background:rgba(245,158,11,.15)">🔬</span> 실수 자료형</h2>
+            <p>소수점이 있는 수를 저장합니다. <strong>float</strong>(4바이트, 소수점 이하 6자리), <strong>double</strong>(8바이트, 소수점 이하 15자리)이
+                있습니다.</p>
+            <div class="tip">💡 정밀도가 중요하면 double을 쓰세요! C에서 실수 리터럴은 기본이 double입니다.</div>
+        </div>
+        <div id="problems"></div>
+        <div class="submit-section">
+            <p>모든 문제를 풀었나요? 📨</p><button class="btn-submit" id="btn-submit">📄 제출하기</button>
+        </div>
+        <div class="modal-overlay" id="submit-modal">
+            <div class="modal-box">
+                <div class="modal-icon">✅</div>
+                <h3>제출 완료!</h3>
+                <p>학습지가 저장되었습니다.</p>
+                <div style="margin:12px 0"><span class="info-tag" id="modal-name"></span> <span class="info-tag"
+                        id="modal-date"></span> <span class="info-tag" id="modal-count"></span></div>
+                <p style="font-size:.78rem;color:var(--dim)">📁 <strong id="modal-filename"></strong></p><button
+                    class="btn-close-modal" id="btn-close-modal">확인</button>
+            </div>
+        </div>
+        <div class="pg"><a href="Unit07_정수자료형.html">← Unit 7</a><span class="tag active">Unit 8</span><a
+                href="Unit09_문자자료형.html">Unit 9 →</a></div>
+        <div class="ft">🖥️ C 언어 코딩 도장 · Unit 8 · 실수 자료형</div>
+    </div>
+    <script>
+        const P = [
+            {
+                n: 1, t: "float 변수 선언", d: 1,
+                q: `실수형 변수 <code>pi</code>를 선언하고 3.14를 저장하세요.<div class="concept"><h4>📖 실수형 선언</h4><pre class="code-c"><span class="kw">float</span> 변수이름 = 값<span class="val">f</span>;   <span class="cm">// f 접미사 필요!</span>
+<span class="kw">double</span> 변수이름 = 값;</pre></div>`,
+                a: `<span class="key">정답</span><pre class="code-c"><span class="kw">float</span> pi = <span class="nm">3.14f</span>;
+<span class="cm">// 또는</span>
+<span class="kw">double</span> pi = <span class="nm">3.14</span>;</pre><div class="explain">💡 float 리터럴에는 f 접미사 필수! 안 붙이면 double로 처리됩니다.</div>` },
+
+            {
+                n: 2, t: "float vs double 크기", d: 1,
+                q: `다음 코드의 출력을 쓰세요.<pre class="code-c">printf("float: %d바이트\\n", sizeof(float));
+printf("double: %d바이트\\n", sizeof(double));</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">float: 4바이트<br>double: 8바이트</div>`
+            },
+
+            {
+                n: 3, t: "실수 출력 서식", d: 1,
+                q: `다음 코드의 출력을 쓰세요.<pre class="code-c">double d = 3.14;
+printf("%f\\n", d);
+printf("%.2f\\n", d);
+printf("%e\\n", d);</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">3.140000<br>3.14<br>3.140000e+00</div><div class="trace">%f: 소수점 6자리(기본)<br>%.2f: 소수점 2자리<br>%e: 지수 표기법</div>`
+            },
+
+            {
+                n: 4, t: "정밀도 차이", d: 2,
+                q: `float와 double의 유효 자릿수 차이를 쓰세요.`,
+                a: `<span class="key">정답</span><div class="trace"><span class="val">float</span>: 유효 약 <span class="val">6~7</span>자리<br><span class="val">double</span>: 유효 약 <span class="val">15~16</span>자리</div><div class="explain">💡 float는 정밀도가 낮아 큰 수나 정밀 계산에서 오차 발생!</div>`
+            },
+
+            {
+                n: 5, t: "정밀도 오차 확인", d: 2,
+                q: `다음 코드의 출력을 보고 why를 설명하세요.<pre class="code-c">float f = 0.1f + 0.2f;
+printf("%.20f\\n", f);</pre><div class="output-box">0.30000001192092895508</div>`,
+                a: `<span class="key">정답</span><div class="trace">컴퓨터는 2진수로 실수를 저장하므로<br>0.1, 0.2 같은 10진 소수를 <span class="err">정확히 표현할 수 없습니다</span>.<br>→ 부동소수점 오차(floating-point error) 발생!</div><div class="explain">💡 금융 계산에서는 실수형 대신 정수(원 단위)로 계산하는 이유!</div>`
+            },
+
+            {
+                n: 6, t: "실수 비교의 위험", d: 2,
+                q: `다음 코드의 출력은? (주의!)<pre class="code-c">double a = 0.1 + 0.2;
+if (a == 0.3)
+    printf("같다\\n");
+else
+    printf("다르다\\n");</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">다르다</div><div class="trace">0.1 + 0.2 ≠ 0.3 (부동소수점 오차!)<br>실수는 == 로 직접 비교하면 위험합니다.</div><div class="explain">💡 올바른 비교: fabs(a - 0.3) < 0.000001 (오차 허용 범위 사용)</div>`
+            },
+
+            {
+                n: 7, t: "실수 나눗셈", d: 1,
+                q: `다음 코드의 출력을 쓰세요.<pre class="code-c">printf("%d\\n", 10 / 3);
+printf("%f\\n", 10.0 / 3);
+printf("%.2f\\n", 10.0 / 3.0);</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">3<br>3.333333<br>3.33</div><div class="trace">정수/정수 = 정수 (소수점 버림!)<br>실수/정수 or 실수/실수 = 실수</div>`
+            },
+
+            {
+                n: 8, t: "형변환과 실수", d: 2,
+                q: `다음 코드의 출력을 쓰세요.<pre class="code-c">int a = 7, b = 2;
+printf("정수나눗셈: %d\\n", a / b);
+printf("실수나눗셈: %f\\n", (double)a / b);</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">정수나눗셈: 3<br>실수나눗셈: 3.500000</div><div class="trace">(double)a = 7.0으로 변환 후 나눗셈 → 실수 결과</div>`
+            },
+
+            {
+                n: 9, t: "float.h 상수", d: 2,
+                q: `float.h의 주요 상수 이름을 쓰세요.<div class="example-box">① float 최댓값 → ?<br>② double 최솟값(양수) → ?<br>③ float 유효 자릿수 → ?</div>`,
+                a: `<span class="key">정답</span><div class="trace">① <span class="val">FLT_MAX</span> (약 3.4×10³⁸)<br>② <span class="val">DBL_MIN</span> (약 2.2×10⁻³⁰⁸)<br>③ <span class="val">FLT_DIG</span> (6)</div>`
+            },
+
+            {
+                n: 10, t: "실수 오버플로우", d: 2,
+                q: `다음 코드의 출력은?<pre class="code-c">float f = 3.4e38f;  <span class="cm">// FLT_MAX 근처</span>
+f = f * 2.0f;
+printf("%f\\n", f);</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">inf</div><div class="trace">float 범위 초과 → <span class="err">inf</span> (무한대)<br>정수와 달리 wrap-around 안 됨!</div>`
+            },
+
+            {
+                n: 11, t: "실수 언더플로우", d: 2,
+                q: `다음 코드의 출력은?<pre class="code-c">float f = 1.0e-45f;
+f = f / 10.0f;
+printf("%e\\n", f);</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">0.000000e+00</div><div class="trace">너무 작은 수 → <span class="val">0</span> (언더플로우)<br>실수 언더플로우 = 0에 가까워지는 것</div>`
+            },
+
+            {
+                n: 12, t: "소수점 자릿수 제어", d: 1,
+                q: `%.nf에서 n을 바꿔가며 출력하세요. 값: 3.141592<div class="example-box">① %.0f → ?<br>② %.1f → ?<br>③ %.3f → ?<br>④ %.5f → ?</div>`,
+                a: `<span class="key">정답</span><div class="trace">① <span class="val">3</span><br>② <span class="val">3.1</span><br>③ <span class="val">3.142</span> (반올림!)<br>④ <span class="val">3.14159</span></div>`
+            },
+
+            {
+                n: 13, t: "연습문제: 원의 넓이", d: 2,
+                q: `반지름 5.0인 원의 넓이를 구하세요. (π = 3.14159)<div class="output-box">넓이: 78.54</div>`,
+                a: `<span class="key">정답</span><pre class="code-c">double r = 5.0;
+double pi = 3.14159;
+double area = pi * r * r;
+printf("넓이: %.2f\\n", area);</pre>` },
+
+            {
+                n: 14, t: "연습문제: 화씨 변환", d: 2,
+                q: `섭씨를 화씨로 변환하세요. 공식: F = C × 9/5 + 32<div class="output-box">섭씨 36.5 = 화씨 97.70</div>`,
+                a: `<span class="key">정답</span><pre class="code-c">double c = 36.5;
+double f = c * 9.0 / 5.0 + 32.0;
+printf("섭씨 %.1f = 화씨 %.2f\\n", c, f);</pre><div class="explain">💡 9/5 대신 9.0/5.0을 써야 실수 나눗셈!</div>` },
+
+            {
+                n: 15, t: "long double", d: 2,
+                q: `long double의 크기와 서식 지정자를 쓰세요.`,
+                a: `<span class="key">정답</span><div class="trace">크기: 보통 <span class="val">8~16</span>바이트 (플랫폼 의존)<br>서식: <span class="val">%Lf</span> (대문자 L!)</div><pre class="code-c">long double ld = 3.14159265358979323846L;
+printf("%Lf\\n", ld);</pre>` },
+
+            {
+                n: 16, t: "연습문제: 자료형 크기 구하기", d: 2,
+                q: `float, double, long double의 크기를 출력하는 코드를 작성하세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">printf("float: %d\\n", sizeof(float));
+printf("double: %d\\n", sizeof(double));
+printf("long double: %d\\n", sizeof(long double));</pre>` },
+
+            {
+                n: 17, t: "심사문제: 실수형 변수 선언과 크기", d: 2,
+                q: `float, double 변수를 선언하고 sizeof로 크기를 출력하세요.<div class="output-box">float: 3.14, 크기: 4<br>double: 3.14, 크기: 8</div>`,
+                a: `<span class="key">정답</span><pre class="code-c">float f = 3.14f;
+double d = 3.14;
+printf("float: %.2f, 크기: %d\\n", f, sizeof(f));
+printf("double: %.2f, 크기: %d\\n", d, sizeof(d));</pre>` },
+
+            {
+                n: 18, t: "심사문제: 최솟값과 최댓값", d: 2,
+                q: `float.h를 사용하여 float의 최댓값과 최솟값(양수)을 출력하세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">#include &lt;float.h&gt;
+printf("float 최댓값: %e\\n", FLT_MAX);
+printf("float 최솟값: %e\\n", FLT_MIN);</pre><div class="output-box">float 최댓값: 3.402823e+38<br>float 최솟값: 1.175494e-38</div>` },
+
+            {
+                n: 19, t: "심사문제: 오버플로우", d: 3,
+                q: `다음 코드의 출력을 쓰세요.<pre class="code-c">float f = 1e38f;
+f = f * 1000.0f;
+printf("%f\\n", f);
+printf("%e\\n", 1.0 / f);</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">inf<br>0.000000e+00</div><div class="trace">f = inf (오버플로우)<br>1.0 / inf = 0</div>`
+            },
+
+            {
+                n: 20, t: "🏆 Unit 8 종합", d: 3,
+                q: `다음 코드의 출력 결과를 쓰세요.<pre class="code-c">#include &lt;stdio.h&gt;
+int main()
+{
+    int a = 10, b = 3;
+    printf("정수: %d\\n", a / b);
+    printf("실수: %.4f\\n", (double)a / b);
+    printf("반올림: %.1f\\n", (double)a / b);
+
+    float f = 0.1f;
+    double d = 0.1;
+    printf("float: %.20f\\n", f);
+    printf("double: %.20f\\n", d);
+    return 0;
+}</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">정수: 3<br>실수: 3.3333<br>반올림: 3.3<br>float: 0.10000000149011611938<br>double: 0.10000000000000000555</div><div class="trace">double이 float보다 더 정밀! (오차가 적음)</div>`
+            }
+        ];
+        const c = document.getElementById('problems'); P.forEach(p => { const dc = p.d <= 1 ? 'ez' : p.d <= 2 ? 'md' : 'hd'; const dots = Array.from({ length: 5 }, (_, i) => `<span${i < p.d ? ' class="on"' : ''}>​</span>`).join(''); c.innerHTML += `<div class="prob"><div class="prob-top"><div class="prob-num ${dc}">${p.n}</div><div class="prob-title">${p.t}</div><div class="diff-dots">${dots}</div></div><div class="prob-body"><div class="q">${p.q}</div><textarea class="write" placeholder="✍️ 답을 작성하세요"></textarea><details class="ans"><summary>정답 및 해설 보기</summary><div class="ans-body">${p.a}</div></details></div></div>`; });
+    </script>
+    <script src="../submit.js"></script>
+    <script src="../../platform.js"></script>
+</body>
+
+</html>

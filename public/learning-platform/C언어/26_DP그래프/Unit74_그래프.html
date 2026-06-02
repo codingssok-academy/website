@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Unit 74. 그래프 알고리즘 — C 언어</title>
+    <link rel="stylesheet" href="../common.css">
+</head>
+
+<body>
+    <div class="wrap">
+        <div class="hdr">
+            <h1>Unit 74. 그래프 알고리즘</h1>
+            <div class="sub">BFS · DFS · 다익스트라 · 위상정렬 · 유니온파인드</div>
+            <span class="unit-badge">Chapter 26 · DP·그래프</span>
+            <div class="level-bar"><span class="on"></span><span class="on"></span><span class="on"></span><span
+                    class="on"></span><span class="on"></span></div>
+            <div class="meta"><span class="tag pri">🌐 그래프</span><span class="tag acc">📝 15문제</span><span class="tag">⏱
+                    60분</span></div>
+        </div>
+        <div class="stu-bar"><label>👤 이름 <input type="text" id="stu-name" placeholder="이름"></label><label>📅 날짜 <input
+                    type="date" id="stu-date"></label></div>
+        <div id="problems"></div>
+        <div class="submit-section">
+            <p>모든 문제를 풀었나요? 📨</p><button class="btn-submit" id="btn-submit">📄 제출하기</button>
+        </div>
+        <div class="modal-overlay" id="submit-modal">
+            <div class="modal-box">
+                <div class="modal-icon">✅</div>
+                <h3>제출 완료!</h3>
+                <p>학습지가 저장되었습니다.</p>
+                <div style="margin:12px 0"><span class="info-tag" id="modal-name"></span> <span class="info-tag"
+                        id="modal-date"></span> <span class="info-tag" id="modal-count"></span></div>
+                <p style="font-size:.78rem;color:var(--dim)">📁 <strong id="modal-filename"></strong></p><button
+                    class="btn-close-modal" id="btn-close-modal">확인</button>
+            </div>
+        </div>
+        <div class="pg"><a href="Unit73_DP.html">← Unit 73</a><span class="tag active">Unit 74</span><a
+                href="../27_C함정실전/Unit75_C함정.html">Unit 75 →</a></div>
+        <div class="ft">🌐 그래프 알고리즘 · Unit 74</div>
+    </div>
+    <script>
+        const P = [
+            {
+                n: 1, t: "그래프 표현: 인접 행렬", d: 2,
+                q: `인접 행렬로 무방향 그래프를 표현하세요.
+<pre class="code-c"><span class="cm">// 5개 정점, 간선: 0-1, 0-4, 1-2, 1-3, 3-4</span>
+int adj[5][5] = {0};
+<span class="cm">// 간선 추가 코드 작성</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">void addEdge(int adj[][5], int u, int v) {
+    adj[u][v] = 1;
+    adj[v][u] = 1; <span class="cm">// 무방향!</span>
+}
+addEdge(adj,0,1); addEdge(adj,0,4);
+addEdge(adj,1,2); addEdge(adj,1,3);
+addEdge(adj,3,4);</pre><div class="trace">인접 행렬: 공간 O(V²), 간선 확인 O(1)<br>밀집 그래프에 적합<br>무방향: adj[u][v] = adj[v][u]</div>`},
+
+            {
+                n: 2, t: "그래프 표현: 인접 리스트", d: 2,
+                q: `인접 리스트로 같은 그래프를 표현하세요.
+<pre class="code-c"><span class="cm">// 연결 리스트 또는 배열 기반</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c"><span class="cm">// 간단한 배열 기반 인접 리스트</span>
+int adjList[5][10]; <span class="cm">// [정점][이웃목록]</span>
+int degree[5] = {0}; <span class="cm">// 각 정점의 이웃 수</span>
+
+void addEdgeList(int u, int v) {
+    adjList[u][degree[u]++] = v;
+    adjList[v][degree[v]++] = u;
+}
+<span class="cm">// 0: {1,4}, 1: {0,2,3}, 2: {1}, 3: {1,4}, 4: {0,3}</span></pre><div class="trace">인접 리스트: 공간 O(V+E), 이웃 순회 빠름<br>희소 그래프에 적합 (대부분의 실전!)</div>`},
+
+            {
+                n: 3, t: "BFS (너비 우선 탐색)", d: 2,
+                q: `BFS로 그래프를 탐색하세요.
+<pre class="code-c">void bfs(int adj[][100], int n, int start) {
+    <span class="cm">// 큐 사용, 방문 순서 출력</span>
+}</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">void bfs(int adj[][100], int n, int start) {
+    int visited[100]={0}, queue[100], front=0,rear=0;
+    visited[start]=1;
+    queue[rear++]=start;
+    while (front<rear) {
+        int v=queue[front++];
+        printf("%d ", v);
+        for (int i=0;i<n;i++)
+            if (adj[v][i] && !visited[i]) {
+                visited[i]=1;
+                queue[rear++]=i;
+            }
+    }
+}</pre><div class="trace">BFS: 가까운 것부터 (레벨 순서)<br>→ <span class="val">최단 경로</span> 보장! (가중치 없을 때)<br>시간: O(V+E)</div>`},
+
+            {
+                n: 4, t: "DFS (깊이 우선 탐색)", d: 2,
+                q: `DFS를 재귀와 스택 두 버전으로 구현하세요.
+<pre class="code-c">void dfsRec(int adj[][100], int n, int v, int vis[]) {
+    <span class="cm">// 재귀 DFS</span>
+}</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c"><span class="cm">// 재귀</span>
+void dfsRec(int adj[][100], int n, int v, int vis[]) {
+    vis[v]=1; printf("%d ",v);
+    for (int i=0;i<n;i++)
+        if (adj[v][i] && !vis[i]) dfsRec(adj,n,i,vis);
+}
+<span class="cm">// 스택</span>
+void dfsStack(int adj[][100], int n, int start) {
+    int vis[100]={0}, stack[100], top=-1;
+    stack[++top]=start;
+    while (top>=0) {
+        int v=stack[top--];
+        if (vis[v]) continue;
+        vis[v]=1; printf("%d ",v);
+        for (int i=n-1;i>=0;i--)
+            if (adj[v][i] && !vis[i]) stack[++top]=i;
+    }
+}</pre>`},
+
+            {
+                n: 5, t: "연결 요소 개수", d: 2,
+                q: `무방향 그래프의 연결 요소(connected component) 수를 구하세요.
+<pre class="code-c">int countComponents(int adj[][100], int n) {
+    <span class="cm">// DFS로 각 연결 요소 탐색</span>
+}</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">void dfs(int adj[][100], int n, int v, int vis[]) {
+    vis[v]=1;
+    for (int i=0;i<n;i++)
+        if (adj[v][i] && !vis[i]) dfs(adj,n,i,vis);
+}
+int countComponents(int adj[][100], int n) {
+    int vis[100]={0}, count=0;
+    for (int i=0;i<n;i++)
+        if (!vis[i]) { dfs(adj,n,i,vis); count++; }
+    return count;
+}</pre>`},
+
+            {
+                n: 6, t: "최단 경로: 다익스트라", d: 3,
+                q: `다익스트라 알고리즘으로 최단 거리를 구하세요.
+<pre class="code-c"><span class="cm">// 가중치 그래프에서 출발점→모든 정점 최단 거리</span>
+void dijkstra(int graph[][100], int n, int src, int dist[]) {
+    <span class="cm">// dist[v] = src에서 v까지 최단 거리</span>
+}</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">void dijkstra(int graph[][100], int n, int src, int dist[]) {
+    int vis[100]={0};
+    for (int i=0;i<n;i++) dist[i]=999999;
+    dist[src]=0;
+    for (int cnt=0;cnt<n;cnt++) {
+        int u=-1, minD=999999;
+        for (int i=0;i<n;i++)
+            if (!vis[i] && dist[i]<minD) {minD=dist[i]; u=i;}
+        if (u==-1) break;
+        vis[u]=1;
+        for (int v=0;v<n;v++)
+            if (graph[u][v] && !vis[v] &&
+                dist[u]+graph[u][v]<dist[v])
+                dist[v] = dist[u] + graph[u][v];
+    }
+}</pre><div class="trace">탐욕법: 매번 최단 거리 정점 선택<br>O(V²) — 힙 사용 시 O(E log V)<br>⚠️ 음수 가중치 불가!</div>`},
+
+            {
+                n: 7, t: "위상 정렬 (Topological Sort)", d: 3,
+                q: `DAG를 위상 정렬하세요. (Kahn's Algorithm)
+<pre class="code-c">#define V 6
+<span class="cm">// 선수 과목 순서 같은 문제!</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">void topSort(int adj[][V], int n) {
+    int indeg[V]={0}, queue[V], front=0,rear=0;
+    for (int u=0;u<n;u++)
+        for (int v=0;v<n;v++)
+            if (adj[u][v]) indeg[v]++;
+    for (int i=0;i<n;i++)
+        if (indeg[i]==0) queue[rear++]=i;
+    while (front<rear) {
+        int u=queue[front++];
+        printf("%d ",u);
+        for (int v=0;v<n;v++)
+            if (adj[u][v] && --indeg[v]==0)
+                queue[rear++]=v;
+    }
+}</pre><div class="trace">진입차수 0인 정점부터 제거!<br>DAG(비순환 방향 그래프)에서만 가능<br>선수과목, 빌드 순서, 의존성 해결</div>`},
+
+            {
+                n: 8, t: "유니온-파인드 (Disjoint Set)", d: 3,
+                q: `Union-Find 자료구조를 구현하세요.
+<pre class="code-c">int parent[100], rank_[100];
+void init(int n) { <span class="cm">/* ? */</span> }
+int find(int x)  { <span class="cm">/* 경로 압축 */</span> }
+void unite(int a, int b) { <span class="cm">/* 랭크 기반 */</span> }</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">void init(int n) {
+    for (int i=0;i<n;i++) { parent[i]=i; rank_[i]=0; }
+}
+int find(int x) {
+    if (parent[x]!=x) parent[x]=find(parent[x]);
+    return parent[x];
+}
+void unite(int a, int b) {
+    a=find(a); b=find(b);
+    if (a==b) return;
+    if (rank_[a]<rank_[b]) { int t=a; a=b; b=t; }
+    parent[b]=a;
+    if (rank_[a]==rank_[b]) rank_[a]++;
+}</pre><div class="trace">find: 경로 압축 → 거의 O(1)<br>unite: 랭크 기반 합치기<br>연결 요소, MST(크루스칼)에 핵심!</div>`},
+
+            {
+                n: 9, t: "사이클 탐지 (방향 그래프)", d: 3,
+                q: `방향 그래프에서 사이클이 있는지 DFS로 검출하세요.
+<pre class="code-c"><span class="cm">// vis[v]: 0=미방문, 1=방문중(재귀스택), 2=완료</span>
+int hasCycle(int adj[][100], int n) { <span class="cm">/* ? */</span> }</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">int vis[100];
+int dfs_cycle(int adj[][100], int n, int v) {
+    vis[v] = 1; <span class="cm">// 방문 중</span>
+    for (int i=0;i<n;i++) {
+        if (!adj[v][i]) continue;
+        if (vis[i]==1) return 1; <span class="cm">// 사이클!</span>
+        if (vis[i]==0 && dfs_cycle(adj,n,i)) return 1;
+    }
+    vis[v] = 2; <span class="cm">// 완료</span>
+    return 0;
+}
+int hasCycle(int adj[][100], int n) {
+    for (int i=0;i<n;i++) vis[i]=0;
+    for (int i=0;i<n;i++)
+        if (!vis[i] && dfs_cycle(adj,n,i)) return 1;
+    return 0;
+}</pre>`},
+
+            {
+                n: 10, t: "플러드 필 (Flood Fill)", d: 2,
+                q: `2D 격자에서 같은 색 영역을 다른 색으로 채우세요.
+<pre class="code-c"><span class="cm">// 그림판의 "채우기" 도구!</span>
+void floodFill(int grid[][100], int r, int c,
+               int n, int m, int oldC, int newC) {
+    <span class="cm">// DFS/BFS로 채우기</span>
+}</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">void floodFill(int grid[][100], int r, int c,
+               int n, int m, int oldC, int newC) {
+    if (r<0||r>=n||c<0||c>=m) return;
+    if (grid[r][c]!=oldC || oldC==newC) return;
+    grid[r][c] = newC;
+    floodFill(grid,r+1,c,n,m,oldC,newC);
+    floodFill(grid,r-1,c,n,m,oldC,newC);
+    floodFill(grid,r,c+1,n,m,oldC,newC);
+    floodFill(grid,r,c-1,n,m,oldC,newC);
+}</pre>`},
+
+            {
+                n: 11, t: "최소 신장 트리 (크루스칼)", d: 3,
+                q: `크루스칼 알고리즘으로 MST를 구하세요.
+<pre class="code-c">typedef struct { int u,v,w; } Edge;
+<span class="cm">// 간선을 가중치 오름차순 정렬 → 유니온파인드로 사이클 체크</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">int cmp(const void*a,const void*b){
+    return ((Edge*)a)->w - ((Edge*)b)->w;
+}
+int kruskal(Edge edges[], int E, int V) {
+    qsort(edges, E, sizeof(Edge), cmp);
+    init(V);
+    int total=0, cnt=0;
+    for (int i=0;i<E && cnt<V-1;i++) {
+        int u=edges[i].u, v=edges[i].v;
+        if (find(u)!=find(v)) {
+            unite(u,v);
+            total += edges[i].w;
+            cnt++;
+        }
+    }
+    return total;
+}</pre><div class="trace">간선 정렬 → 사이클 안 생기면 추가<br>V-1개 간선이면 완성!<br>O(E log E)</div>`},
+
+            {
+                n: 12, t: "이분 그래프 판별", d: 3,
+                q: `그래프가 이분 그래프인지 BFS로 판별하세요.
+<pre class="code-c">int isBipartite(int adj[][100], int n) {
+    <span class="cm">// 2색으로 칠할 수 있으면 이분 그래프!</span>
+}</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">int isBipartite(int adj[][100], int n) {
+    int color[100]; memset(color,-1,sizeof(color));
+    for (int s=0;s<n;s++) {
+        if (color[s]!=-1) continue;
+        int q[100], f=0,r=0;
+        color[s]=0; q[r++]=s;
+        while (f<r) {
+            int u=q[f++];
+            for (int v=0;v<n;v++) {
+                if (!adj[u][v]) continue;
+                if (color[v]==-1) {
+                    color[v]=1-color[u]; q[r++]=v;
+                } else if (color[v]==color[u]) return 0;
+            }
+        }
+    }
+    return 1;
+}</pre>`},
+
+            {
+                n: 13, t: "BFS 최단 경로 역추적", d: 3,
+                q: `BFS로 최단 경로를 찾고 경로를 출력하세요.
+<pre class="code-c"><span class="cm">// 시작→끝까지의 실제 경로 출력</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">void bfsPath(int adj[][100], int n, int src, int dst) {
+    int vis[100]={0}, prev[100], q[100], f=0,r=0;
+    memset(prev,-1,sizeof(prev));
+    vis[src]=1; q[r++]=src;
+    while (f<r) {
+        int u=q[f++];
+        if (u==dst) break;
+        for (int v=0;v<n;v++)
+            if (adj[u][v] && !vis[v]) {
+                vis[v]=1; prev[v]=u; q[r++]=v;
+            }
+    }
+    <span class="cm">// 역추적</span>
+    int path[100], plen=0;
+    for (int v=dst;v!=-1;v=prev[v]) path[plen++]=v;
+    for (int i=plen-1;i>=0;i--) printf("%d ",path[i]);
+}</pre>`},
+
+            {
+                n: 14, t: "플로이드-워셜 (모든 쌍 최단 경로)", d: 3,
+                q: `모든 정점 쌍의 최단 거리를 구하세요.
+<pre class="code-c">void floyd(int dist[][100], int n) {
+    <span class="cm">// 3중 루프!</span>
+}</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">void floyd(int dist[][100], int n) {
+    for (int k=0;k<n;k++)
+        for (int i=0;i<n;i++)
+            for (int j=0;j<n;j++)
+                if (dist[i][k]+dist[k][j]<dist[i][j])
+                    dist[i][j] = dist[i][k]+dist[k][j];
+}</pre><div class="trace">k를 경유지로 사용!<br>O(V³) — 정점 적을 때 간단하고 강력<br>음수 가중치 OK (음수 사이클은 ✕)</div>`},
+
+            {
+                n: 15, t: "🏆 그래프 알고리즘 선택", d: 2,
+                q: `각 상황에 적합한 알고리즘을 고르세요.
+<pre class="code-c"><span class="cm">(A) 미로 최단 경로 (가중치 없음) → ?</span>
+<span class="cm">(B) 네비게이션 최단 경로 (가중치) → ?</span>
+<span class="cm">(C) 모든 도시 간 거리 → ?</span>
+<span class="cm">(D) 최소 비용 네트워크 연결 → ?</span>
+<span class="cm">(E) 작업 순서 결정 → ?</span>
+<span class="cm">(F) 친구 관계 그룹 분류 → ?</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">(A) BFS — 가중치 없으면 BFS가 최단!
+(B) 다익스트라 — 양수 가중치 최단 경로
+(C) 플로이드-워셜 — 모든 쌍 O(V³)
+(D) 크루스칼/프림 — 최소 신장 트리(MST)
+(E) 위상 정렬 — DAG에서 순서 결정
+(F) 유니온-파인드 또는 BFS/DFS — 연결 요소</pre>`}
+        ];
+        const c = document.getElementById('problems'); P.forEach(p => { const dc = p.d <= 1 ? 'ez' : p.d <= 2 ? 'md' : 'hd'; const dots = Array.from({ length: 5 }, (_, i) => `<span${i < p.d ? ' class="on"' : ''}>​</span>`).join(''); c.innerHTML += `<div class="prob"><div class="prob-top"><div class="prob-num ${dc}">${p.n}</div><div class="prob-title">${p.t}</div><div class="diff-dots">${dots}</div></div><div class="prob-body"><div class="q">${p.q}</div><textarea class="write" placeholder="✍️ 답을 작성하세요" rows="8"></textarea><details class="ans"><summary>정답 및 해설 보기</summary><div class="ans-body">${p.a}</div></details></div></div>`; });
+    </script>
+    <script src="../submit.js"></script>
+    <script src="../../platform.js"></script>
+</body>
+
+</html>

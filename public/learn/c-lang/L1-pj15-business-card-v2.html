@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 프로젝트: 나만의 명함</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #0f4c81; }
+.cover-accent { width: 7px; background: #38bdf8; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 220px; font-weight: 900; color: rgba(56,189,248,0.1);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #0369a1; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 34px; font-weight: 900; color: #0c4a6e; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #0c4a6e; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #38bdf8; font-weight: 900; }
+
+h2 { font-size: 20px; font-weight: 800; color: #0c4a6e; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e0f2fe; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f0f9ff; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #0369a1; font-weight: 600;
+}
+
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 14px;
+    color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+
+.practice { margin: 20px 0; border-left: 4px solid #38bdf8; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #0369a1; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #38bdf8; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #38bdf8; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+
+.problem { margin: 20px 0; border: 1.5px solid #e0f2fe; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #f0f9ff; border-bottom: 1.5px solid #e0f2fe; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#38bdf8,#0369a1); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #0c4a6e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f0f9ff; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #f0f9ff; padding: 8px 12px; border-radius: 6px; color: #0369a1; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+
+.summary { background: #ffffff; border: 1.5px solid #e0f2fe; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #0c4a6e; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+.project-tag { display: inline-block; background: #e0f2fe; color: #0369a1; font-size: 11px; font-weight: 800; padding: 3px 10px; border-radius: 99px; margin-bottom: 12px; letter-spacing: 1px; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- 1페이지: 표지 -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">PJ</div>
+        <div class="cover-label">Project 15</div>
+        <div class="project-tag">PROJECT</div>
+        <h1 class="cover-title">나만의 명함</h1>
+        <p class="cover-sub">테두리와 정렬을 이용해 텍스트 명함을 만들고, 변수로 정보를 관리합니다.</p>
+        <div style="margin:20px 0;">
+            <svg viewBox="0 0 460 110" style="max-width:460px;width:100%">
+                <rect x="30" y="5" width="400" height="100" rx="10" fill="#0f172a"/>
+                <rect x="30" y="5" width="8" height="100" rx="4" fill="#38bdf8"/>
+                <text x="230" y="30" text-anchor="middle" font-family="monospace" font-size="11" fill="#94a3b8">+============================+</text>
+                <text x="230" y="48" text-anchor="middle" font-family="monospace" font-size="13" fill="#fbbf24" font-weight="700">  김철수</text>
+                <text x="230" y="62" text-anchor="middle" font-family="monospace" font-size="10" fill="#86efac">  코딩쏙 중학교 1학년 2반</text>
+                <text x="230" y="76" text-anchor="middle" font-family="monospace" font-size="10" fill="#94a3b8">  Tel: 010-0000-0000</text>
+                <text x="230" y="92" text-anchor="middle" font-family="monospace" font-size="11" fill="#94a3b8">+============================+</text>
+            </svg>
+        </div>
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/database.png" alt="데이터베이스" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 프로젝트에서 만들 것</h3>
+            <ul>
+                <li>테두리로 명함 카드 틀을 만듭니다.</li>
+                <li>이름, 학교, 반, 연락처를 정렬해 출력합니다.</li>
+                <li>변수로 명함 정보를 관리합니다.</li>
+                <li>앞면과 뒷면이 있는 두 장짜리 명함을 만듭니다.</li>
+                <li>사용자 입력으로 동적 명함을 생성합니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- 2페이지: 명함 기초 -->
+<div class="page">
+    <h2>명함 틀 만들기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/folder.png" alt="데이터" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>명함은 테두리, 이름, 정보 줄로 구성됩니다. <code>+</code> <code>=</code> <code>|</code> 기호로 깔끔한 테두리를 만듭니다.</p>
+
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 120" style="max-width:460px;width:100%">
+            <text x="230" y="16" text-anchor="middle" font-size="12" fill="#0c4a6e" font-weight="800">명함 구조</text>
+            <rect x="10" y="22" width="440" height="90" rx="8" fill="#f0f9ff" stroke="#38bdf8" stroke-width="1.5"/>
+            <line x1="10" y1="44" x2="450" y2="44" stroke="#bae6fd" stroke-width="1" stroke-dasharray="4,4"/>
+            <line x1="10" y1="88" x2="450" y2="88" stroke="#bae6fd" stroke-width="1" stroke-dasharray="4,4"/>
+            <text x="230" y="38" text-anchor="middle" font-size="11" fill="#0369a1" font-weight="600">위 테두리 줄</text>
+            <text x="230" y="68" text-anchor="middle" font-size="11" fill="#0c4a6e" font-weight="700">이름 / 정보 (여러 줄)</text>
+            <text x="230" y="104" text-anchor="middle" font-size="11" fill="#0369a1" font-weight="600">아래 테두리 줄</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt">// 기본 명함</span>
+<span class="fn">printf</span>(<span class="str">"+==============================+\n"</span>);
+<span class="fn">printf</span>(<span class="str">"|                              |\n"</span>);
+<span class="fn">printf</span>(<span class="str">"|  이름:  김철수               |\n"</span>);
+<span class="fn">printf</span>(<span class="str">"|  학교:  코딩쏙 중학교        |\n"</span>);
+<span class="fn">printf</span>(<span class="str">"|  학년:  1학년 2반            |\n"</span>);
+<span class="fn">printf</span>(<span class="str">"|                              |\n"</span>);
+<span class="fn">printf</span>(<span class="str">"+==============================+\n"</span>);</div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/desktop-pc.png" alt="데스크탑" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="완성" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">위 명함 코드를 입력하고 실행해보세요.</div>
+                <div class="code"><span class="fn">printf</span>(<span class="str">"+==============================+\n"</span>);
+<span class="fn">printf</span>(<span class="str">"|  이름:  나의 이름            |\n"</span>);
+<span class="fn">printf</span>(<span class="str">"+==============================+\n"</span>);</div>
+                <div class="practice-result">간단한 명함 틀이 출력됩니다</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">별표 테두리 명함도 만들어보세요.</div>
+                <div class="code"><span class="fn">printf</span>(<span class="str">"********************************\n"</span>);
+<span class="fn">printf</span>(<span class="str">"*  이름:  박지현              *\n"</span>);
+<span class="fn">printf</span>(<span class="str">"*  특기:  코딩, 축구         *\n"</span>);
+<span class="fn">printf</span>(<span class="str">"********************************\n"</span>);</div>
+                <div class="practice-result">별표 테두리 명함이 출력됩니다</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3페이지: 변수로 명함 만들기 -->
+<div class="page">
+    <h2>변수로 명함 만들기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/hard-drive.png" alt="저장소" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>정보를 변수에 저장하면 쉽게 수정할 수 있는 명함 프로그램을 만들 수 있습니다.</p>
+
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 90" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="200" height="80" rx="8" fill="#f0f9ff" stroke="#38bdf8" stroke-width="1.5"/>
+            <text x="110" y="24" text-anchor="middle" font-size="11" fill="#0369a1" font-weight="700">변수 선언</text>
+            <text x="24" y="42" font-family="monospace" font-size="10" fill="#0c4a6e">char name[] = "김철수";</text>
+            <text x="24" y="56" font-family="monospace" font-size="10" fill="#0c4a6e">int grade = 1, cls = 2;</text>
+            <text x="24" y="70" font-family="monospace" font-size="10" fill="#0c4a6e">char hobby[] = "코딩";</text>
+            <line x1="218" y1="45" x2="248" y2="45" stroke="#38bdf8" stroke-width="2" marker-end="url(#barr)"/>
+            <rect x="256" y="5" width="194" height="80" rx="8" fill="#0f172a"/>
+            <text x="353" y="24" text-anchor="middle" font-family="monospace" font-size="10" fill="#fbbf24">이름: 김철수</text>
+            <text x="353" y="40" text-anchor="middle" font-family="monospace" font-size="10" fill="#86efac">학년/반: 1학년 2반</text>
+            <text x="353" y="56" text-anchor="middle" font-family="monospace" font-size="10" fill="#67e8f9">특기: 코딩</text>
+            <defs><marker id="barr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#38bdf8"/></marker></defs>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">char</span> name[] = <span class="str">"김철수"</span>;
+<span class="kw">char</span> school[] = <span class="str">"코딩쏙 중학교"</span>;
+<span class="kw">int</span> grade = <span class="num">1</span>;
+<span class="kw">int</span> cls = <span class="num">2</span>;
+<span class="kw">char</span> hobby[] = <span class="str">"코딩, 게임"</span>;
+
+<span class="fn">printf</span>(<span class="str">"+================================+\n"</span>);
+<span class="fn">printf</span>(<span class="str">"|  이름:  %-20s|\n"</span>, name);
+<span class="fn">printf</span>(<span class="str">"|  학교:  %-20s|\n"</span>, school);
+<span class="fn">printf</span>(<span class="str">"|  학년/반: %d학년 %d반           |\n"</span>, grade, cls);
+<span class="fn">printf</span>(<span class="str">"|  특기:  %-20s|\n"</span>, hobby);
+<span class="fn">printf</span>(<span class="str">"+================================+\n"</span>);</div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">변수를 사용해 내 정보로 명함을 만드세요.</div>
+                <div class="code"><span class="kw">char</span> myname[] = <span class="str">"이지은"</span>;
+<span class="kw">int</span> mygrade = <span class="num">2</span>;
+<span class="fn">printf</span>(<span class="str">"+------ 명함 ------+\n"</span>);
+<span class="fn">printf</span>(<span class="str">"|  이름: %s\n"</span>, myname);
+<span class="fn">printf</span>(<span class="str">"|  학년: %d학년\n"</span>, mygrade);
+<span class="fn">printf</span>(<span class="str">"+------------------+\n"</span>);</div>
+                <div class="practice-result">변수로 만든 명함이 출력됩니다</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">앞면+뒷면으로 이루어진 두 장짜리 명함을 만드세요.</div>
+                <div class="code"><span class="fn">printf</span>(<span class="str">"[앞면]\n"</span>);
+<span class="fn">printf</span>(<span class="str">"+------------------+\n"</span>);
+<span class="fn">printf</span>(<span class="str">"|  이름: 최준혁    |\n"</span>);
+<span class="fn">printf</span>(<span class="str">"+------------------+\n\n"</span>);
+<span class="fn">printf</span>(<span class="str">"[뒷면]\n"</span>);
+<span class="fn">printf</span>(<span class="str">"+------------------+\n"</span>);
+<span class="fn">printf</span>(<span class="str">"|  특기: 축구      |\n"</span>);
+<span class="fn">printf</span>(<span class="str">"+------------------+\n"</span>);</div>
+                <div class="practice-result">앞면과 뒷면 명함이 출력됩니다</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">scanf로 직접 입력해서 명함을 만드세요.</div>
+                <div class="code"><span class="kw">char</span> name[<span class="num">50</span>];
+<span class="fn">printf</span>(<span class="str">"이름 입력: "</span>);
+<span class="fn">scanf</span>(<span class="str">"%s"</span>, name);
+<span class="fn">printf</span>(<span class="str">"+---- %s님의 명함 ----+\n"</span>, name);
+<span class="fn">printf</span>(<span class="str">"|  반갑습니다!           |\n"</span>);
+<span class="fn">printf</span>(<span class="str">"+----------------------+\n"</span>);</div>
+                <div class="practice-result">입력한 이름으로 명함이 만들어집니다</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 4페이지: 문제 + 핵심 요약 -->
+<div class="page">
+    <h2>도전 과제</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="처리" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q1</div>
+            <div class="problem-label">3줄 명함</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">테두리 포함 이름, 학교, 연락처가 있는 기본 명함을 출력하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">조건</span><span class="problem-example-value">테두리 + 이름 + 학교 + 연락처 3줄</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle"><summary>힌트 보기</summary><div class="problem-toggle-content"><div class="hint-text">위아래 테두리 줄과 사이에 정보 3줄을 넣으세요.</div></div></details>
+        <details class="problem-toggle"><summary>정답 확인</summary><div class="problem-toggle-content"><div class="answer-code">printf("+============================+\n");
+printf("|  이름:  홍길동             |\n");
+printf("|  학교:  서울 중학교        |\n");
+printf("|  연락:  010-1234-5678     |\n");
+printf("+============================+\n");</div></div></details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q2</div>
+            <div class="problem-label">변수 명함</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">이름, 학년, 반을 변수에 저장하고 명함을 출력하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">조건</span><span class="problem-example-value">char, int 변수 사용 + 테두리 명함</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle"><summary>힌트 보기</summary><div class="problem-toggle-content"><div class="hint-text"><code>char name[] = "..."; int grade = ..., cls = ...;</code> 후 printf에서 <code>%s</code>, <code>%d</code>로 사용하세요.</div></div></details>
+        <details class="problem-toggle"><summary>정답 확인</summary><div class="problem-toggle-content"><div class="answer-code">char name[] = "김민준";
+int grade = 1, cls = 3;
+printf("+------ 명함 ------+\n");
+printf("|  이름: %s\n", name);
+printf("|  %d학년 %d반\n", grade, cls);
+printf("+------------------+\n");</div></div></details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q3</div>
+            <div class="problem-label">동적 명함 생성기</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">이름, 학교, 특기를 scanf로 입력받아 완성된 명함을 출력하는 프로그램을 만드세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">조건</span><span class="problem-example-value">scanf 3번 + 테두리 명함 출력</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle"><summary>힌트 보기</summary><div class="problem-toggle-content"><div class="hint-text">char 배열 3개를 선언하고 scanf로 차례대로 입력받은 뒤 printf로 명함을 출력하세요.</div></div></details>
+        <details class="problem-toggle"><summary>정답 확인</summary><div class="problem-toggle-content"><div class="answer-code">char name[50], school[100], hobby[100];
+printf("이름: "); scanf("%s", name);
+printf("학교: "); scanf("%s", school);
+printf("특기: "); scanf("%s", hobby);
+printf("+================================+\n");
+printf("|  이름:  %s\n", name);
+printf("|  학교:  %s\n", school);
+printf("|  특기:  %s\n", hobby);
+printf("+================================+\n");</div></div></details>
+    </div>
+
+    <!-- SVG 4: 명함 구조 도해 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+            <text x="230" y="14" text-anchor="middle" font-size="11" fill="#0c4a6e" font-weight="700">명함 레이아웃 구조</text>
+            <rect x="5" y="20" width="450" height="12" rx="3" fill="#38bdf8" opacity="0.4"/>
+            <text x="230" y="30" text-anchor="middle" font-size="9" fill="#0369a1" font-weight="700">위 테두리 (+=====+)</text>
+            <rect x="5" y="36" width="450" height="12" rx="3" fill="#dbeafe" opacity="0.6"/>
+            <text x="230" y="46" text-anchor="middle" font-size="9" fill="#1d4ed8">이름 정보 줄</text>
+            <rect x="5" y="52" width="450" height="12" rx="3" fill="#dbeafe" opacity="0.4"/>
+            <text x="230" y="62" text-anchor="middle" font-size="9" fill="#1d4ed8">학교/연락처 줄</text>
+            <rect x="5" y="68" width="450" height="10" rx="3" fill="#38bdf8" opacity="0.4"/>
+            <text x="230" y="76" text-anchor="middle" font-size="9" fill="#0369a1" font-weight="700">아래 테두리 (+=====+)</text>
+        </svg>
+    </div>
+
+    <!-- SVG 5: 테두리 문자 비교 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 60" style="max-width:460px;width:100%">
+            <text x="230" y="14" text-anchor="middle" font-size="11" fill="#0c4a6e" font-weight="700">테두리 스타일 모음</text>
+            <rect x="5" y="20" width="80" height="35" rx="4" fill="#0f172a"/>
+            <text x="45" y="33" text-anchor="middle" font-family="monospace" font-size="9" fill="#94a3b8">+======+</text>
+            <text x="45" y="48" text-anchor="middle" font-family="monospace" font-size="9" fill="#38bdf8">| 이름 |</text>
+            <rect x="95" y="20" width="80" height="35" rx="4" fill="#0f172a"/>
+            <text x="135" y="33" text-anchor="middle" font-family="monospace" font-size="9" fill="#fbbf24">########</text>
+            <text x="135" y="48" text-anchor="middle" font-family="monospace" font-size="9" fill="#fbbf24"># 이름 #</text>
+            <rect x="185" y="20" width="80" height="35" rx="4" fill="#0f172a"/>
+            <text x="225" y="33" text-anchor="middle" font-family="monospace" font-size="9" fill="#86efac">--------</text>
+            <text x="225" y="48" text-anchor="middle" font-family="monospace" font-size="9" fill="#86efac">| 이름 |</text>
+            <rect x="275" y="20" width="80" height="35" rx="4" fill="#0f172a"/>
+            <text x="315" y="33" text-anchor="middle" font-family="monospace" font-size="9" fill="#c084fc">********</text>
+            <text x="315" y="48" text-anchor="middle" font-family="monospace" font-size="9" fill="#c084fc">* 이름 *</text>
+            <rect x="365" y="20" width="90" height="35" rx="4" fill="#0f172a"/>
+            <text x="410" y="33" text-anchor="middle" font-family="monospace" font-size="9" fill="#67e8f9">~~~~~~~~</text>
+            <text x="410" y="48" text-anchor="middle" font-family="monospace" font-size="9" fill="#67e8f9">~ 이름 ~</text>
+        </svg>
+    </div>
+
+    <!-- SVG 6: char 배열 변수 선언 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 60" style="max-width:460px;width:100%">
+            <rect x="5" y="5" width="450" height="50" rx="8" fill="#0f172a"/>
+            <text x="24" y="25" font-family="monospace" font-size="11" fill="#c084fc">char name[50] = "홍길동";</text>
+            <text x="24" y="45" font-family="monospace" font-size="11" fill="#86efac">printf("이름: %s\n", name); → 이름: 홍길동</text>
+        </svg>
+    </div>
+
+    <!-- SVG 7: 앞면/뒷면 명함 구성 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 65" style="max-width:460px;width:100%">
+            <text x="115" y="14" text-anchor="middle" font-size="11" fill="#0c4a6e" font-weight="700">앞면 (Front)</text>
+            <rect x="5" y="20" width="210" height="40" rx="6" fill="#f0f9ff" stroke="#38bdf8" stroke-width="1.5"/>
+            <text x="110" y="38" text-anchor="middle" font-family="monospace" font-size="10" fill="#0c4a6e">이름 / 학교 / 학년</text>
+            <text x="345" y="14" text-anchor="middle" font-size="11" fill="#0c4a6e" font-weight="700">뒷면 (Back)</text>
+            <rect x="245" y="20" width="210" height="40" rx="6" fill="#f0f9ff" stroke="#38bdf8" stroke-width="1.5"/>
+            <text x="350" y="38" text-anchor="middle" font-family="monospace" font-size="10" fill="#0c4a6e">특기 / 취미 / 연락처</text>
+        </svg>
+    </div>
+
+    <!-- SVG 8: scanf 명함 생성기 흐름 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 55" style="max-width:460px;width:100%">
+            <text x="230" y="14" text-anchor="middle" font-size="11" fill="#0c4a6e" font-weight="700">동적 명함 생성기 흐름</text>
+            <rect x="5" y="20" width="90" height="30" rx="4" fill="#e0f2fe" stroke="#38bdf8" stroke-width="1"/>
+            <text x="50" y="39" text-anchor="middle" font-size="9" fill="#0369a1">이름 입력</text>
+            <text x="108" y="38" font-size="11" fill="#94a3b8">→</text>
+            <rect x="120" y="20" width="90" height="30" rx="4" fill="#e0f2fe" stroke="#38bdf8" stroke-width="1"/>
+            <text x="165" y="39" text-anchor="middle" font-size="9" fill="#0369a1">학교 입력</text>
+            <text x="223" y="38" font-size="11" fill="#94a3b8">→</text>
+            <rect x="235" y="20" width="90" height="30" rx="4" fill="#e0f2fe" stroke="#38bdf8" stroke-width="1"/>
+            <text x="280" y="39" text-anchor="middle" font-size="9" fill="#0369a1">특기 입력</text>
+            <text x="338" y="38" font-size="11" fill="#94a3b8">→</text>
+            <rect x="350" y="20" width="105" height="30" rx="4" fill="#f0fdf4" stroke="#22c55e" stroke-width="1"/>
+            <text x="402" y="39" text-anchor="middle" font-size="9" fill="#166534">명함 출력</text>
+        </svg>
+    </div>
+
+    <!-- SVG 9: 명함 활용 예시 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 55" style="max-width:460px;width:100%">
+            <rect x="5" y="5" width="450" height="45" rx="8" fill="#0f172a"/>
+            <text x="24" y="24" font-family="monospace" font-size="10" fill="#fbbf24">+============================+</text>
+            <text x="24" y="40" font-family="monospace" font-size="11" fill="#38bdf8">|  홍길동  |  1학년 2반  |  코딩 특기  |</text>
+        </svg>
+    </div>
+
+    <!-- SVG 10: 명함 응용 아이디어 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 50" style="max-width:460px;width:100%">
+            <rect x="5" y="5" width="450" height="40" rx="8" fill="#e0f2fe" stroke="#38bdf8" stroke-width="1.5"/>
+            <text x="20" y="22" font-size="10" fill="#0c4a6e" font-weight="700">명함 응용 아이디어:</text>
+            <text x="20" y="38" font-size="10" fill="#0369a1">학생증 | 동아리 소개 | 좌석 배치표 | 팀원 소개 | 자기소개 카드</text>
+        </svg>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>핵심 요약</h3>
+        <ul>
+            <li>명함은 테두리 줄 + 정보 줄 + 테두리 줄 구조로 만든다</li>
+            <li><code>+</code> <code>=</code> <code>|</code> <code>*</code> <code>#</code> <code>-</code>로 다양한 테두리를 만든다</li>
+            <li>변수에 정보를 저장하면 한 곳에서 수정할 수 있어 편리하다</li>
+            <li><code>scanf</code>로 입력받으면 실행할 때마다 다른 명함을 만들 수 있다</li>
+            <li><code>%s</code>는 문자열, <code>%d</code>는 정수를 출력할 때 사용한다</li>
+        </ul>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+
+
+
+<script>
+(function(){
+  var KEY = 'cs_ans_' + location.pathname.replace(/[^a-zA-Z0-9]/g,'_');
+  var pagePath = location.pathname;
+  var userId = null;
+  try {
+    userId = window.parent?.localStorage?.getItem('codingssok_user_id')
+      || localStorage.getItem('codingssok_user_id');
+  } catch(e) {}
+
+  function save(){
+    var areas = document.querySelectorAll('textarea');
+    var saved = 0;
+    areas.forEach(function(ta, i){
+      if(ta.value.trim()) {
+        localStorage.setItem(KEY + '_' + i, ta.value);
+        saved++;
+      } else {
+        localStorage.removeItem(KEY + '_' + i);
+      }
+    });
+    if(saved > 0) showSaveIndicator();
+  }
+
+  function load(){
+    var areas = document.querySelectorAll('textarea');
+    var restored = 0;
+    areas.forEach(function(ta, i){
+      var val = localStorage.getItem(KEY + '_' + i);
+      if(val && val.trim()) {
+        ta.value = val;
+        ta.style.borderColor = '#10b981';
+        ta.style.boxShadow = '0 0 0 2px rgba(16,185,129,0.15)';
+        setTimeout(function(){ ta.style.borderColor = ''; ta.style.boxShadow = ''; }, 2000);
+        restored++;
+      }
+    });
+    if(restored > 0) showRestoreIndicator(restored);
+  }
+
+  function saveToDb(){
+    if(!userId) return;
+    var areas = document.querySelectorAll('textarea');
+    var answers = [];
+    areas.forEach(function(ta, i){
+      if(ta.value.trim()) answers.push({ field_index: i, answer_text: ta.value });
+    });
+    if(answers.length === 0) return;
+    fetch('/api/answers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId, page_path: pagePath, answers: answers })
+    }).catch(function(){});
+  }
+
+  function loadFromDb(){
+    if(!userId) return;
+    fetch('/api/answers?user_id=' + encodeURIComponent(userId) + '&page_path=' + encodeURIComponent(pagePath))
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(!d.answers || !d.answers.length) return;
+        var areas = document.querySelectorAll('textarea');
+        d.answers.forEach(function(a){
+          if(areas[a.field_index] && a.answer_text) {
+            areas[a.field_index].value = a.answer_text;
+            localStorage.setItem(KEY + '_' + a.field_index, a.answer_text);
+          }
+        });
+      }).catch(function(){});
+  }
+
+  function showSaveIndicator(){
+    var el = document.getElementById('cs-save-ind');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'cs-save-ind';
+      el.style.cssText = 'position:fixed;bottom:16px;right:16px;padding:6px 14px;border-radius:8px;background:#0f172a;color:#22c55e;font-size:11px;font-weight:700;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+      document.body.appendChild(el);
+    }
+    el.textContent = '\u2713 \uB2F5\uC548 \uC800\uC7A5\uB428'; // ✓ 답안 저장됨
+    el.style.opacity = '1';
+    setTimeout(function(){ el.style.opacity = '0'; }, 1500);
+  }
+
+  function showRestoreIndicator(n){
+    var el = document.getElementById('cs-save-ind');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'cs-save-ind';
+      el.style.cssText = 'position:fixed;bottom:16px;right:16px;padding:6px 14px;border-radius:8px;background:#0f172a;color:#3b82f6;font-size:11px;font-weight:700;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+      document.body.appendChild(el);
+    }
+    el.textContent = '\u21BB ' + n + '\uAC1C \uB2F5\uC548 \uBCF5\uC6D0'; // ↻ n개 답안 복원
+    el.style.color = '#3b82f6';
+    el.style.opacity = '1';
+    setTimeout(function(){ el.style.opacity = '0'; }, 2500);
+  }
+
+  var t = null;
+  document.addEventListener('input', function(e){
+    if(e.target.tagName === 'TEXTAREA'){
+      clearTimeout(t);
+      t = setTimeout(function(){ save(); saveToDb(); }, 300);
+    }
+  });
+  document.addEventListener('change', function(e){
+    if(e.target.tagName === 'TEXTAREA'){ save(); saveToDb(); }
+  });
+  document.addEventListener('focusout', function(e){
+    if(e.target.tagName === 'TEXTAREA'){ save(); saveToDb(); }
+  });
+  window.addEventListener('beforeunload', function(){ save(); saveToDb(); });
+
+  // 즉시 로드
+  load();
+  loadFromDb();
+})();
+</script>
+</body>
+</html>

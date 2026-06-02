@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 최대값 최소값 찾기</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+.page { width: 210mm; min-height: 297mm; margin: 16px auto; padding: 18mm 20mm 15mm 22mm; background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: relative; page-break-after: always; }
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after { content: counter(pagenum); position: absolute; bottom: 10mm; right: 16mm; font-size: 10px; color: #94a3b8; font-weight: 600; }
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark { position: absolute; top: -10px; right: -15px; font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3); line-height: 1; pointer-events: none; }
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #2563eb; font-weight: 600; }
+.code { background: #0f172a; border-radius: 8px; padding: 16px 20px; font-family: 'JetBrains Mono', monospace; font-size: 14px; color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap; }
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fce7f3; color: #9d174d; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<div class="page cover">
+  <div class="cover-sidebar"></div>
+  <div class="cover-accent"></div>
+  <div class="cover-body">
+    <div class="cover-watermark">P2</div>
+    <div class="cover-label">Project 02 · Level 5</div>
+    <h1 class="cover-title">최대값 최소값 찾기</h1>
+    <p class="cover-sub">N개의 숫자를 입력받아 최대값과 최소값, 그리고 그 위치(인덱스)를 출력하는 프로그램을 만들어봅니다.</p>
+    <div style="margin:24px 0;">
+      <svg viewBox="0 0 460 120" style="max-width:460px;width:100%">
+        <!-- 막대 그래프 시각화 -->
+        <text x="230" y="16" text-anchor="middle" font-size="11" fill="#64748b" font-weight="600">입력값 시각화 — 최대/최소 강조</text>
+        <rect x="30" y="60" width="40" height="40" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+        <text x="50" y="55" text-anchor="middle" font-size="10" fill="#64748b">34</text>
+        <rect x="90" y="30" width="40" height="70" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+        <text x="110" y="25" text-anchor="middle" font-size="10" fill="#64748b">67</text>
+        <rect x="150" y="50" width="40" height="50" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+        <text x="170" y="45" text-anchor="middle" font-size="10" fill="#64748b">51</text>
+        <rect x="210" y="10" width="40" height="90" rx="4" fill="#fefce8" stroke="#f59e0b" stroke-width="2"/>
+        <text x="230" y="6" text-anchor="middle" font-size="10" fill="#92400e" font-weight="800">92 MAX</text>
+        <rect x="270" y="70" width="40" height="30" rx="4" fill="#fef2f2" stroke="#ef4444" stroke-width="2"/>
+        <text x="290" y="65" text-anchor="middle" font-size="10" fill="#dc2626" font-weight="800">MIN 21</text>
+        <rect x="330" y="45" width="40" height="55" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+        <text x="350" y="40" text-anchor="middle" font-size="10" fill="#64748b">56</text>
+        <line x1="20" y1="100" x2="390" y2="100" stroke="#e2e8f0" stroke-width="1"/>
+        <text x="50" y="112" text-anchor="middle" font-size="9" fill="#64748b">[0]</text>
+        <text x="110" y="112" text-anchor="middle" font-size="9" fill="#64748b">[1]</text>
+        <text x="170" y="112" text-anchor="middle" font-size="9" fill="#64748b">[2]</text>
+        <text x="230" y="112" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">[3]</text>
+        <text x="290" y="112" text-anchor="middle" font-size="9" fill="#dc2626" font-weight="700">[4]</text>
+        <text x="350" y="112" text-anchor="middle" font-size="9" fill="#64748b">[5]</text>
+      </svg>
+    </div>
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/database.png" alt="데이터베이스" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+      <h3>이 프로젝트에서 배우는 것</h3>
+      <ul>
+        <li>N개의 값을 배열에 입력받는 방법을 익힙니다.</li>
+        <li>최대값과 그 위치를 동시에 추적하는 알고리즘을 만듭니다.</li>
+        <li>최소값 탐색 알고리즘도 함께 구현합니다.</li>
+        <li>인덱스와 실제 위치(1번~N번)의 차이를 이해합니다.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+  <h2>N개 입력받기 — 동적 크기 배열</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/folder.png" alt="데이터" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+  <p>이번에는 개수 N을 사용자가 직접 입력합니다. N을 먼저 받고, N개의 값을 배열에 저장합니다. 배열 크기는 충분히 크게 잡아야 합니다.</p>
+  <div style="text-align:center;margin:16px 0;">
+    <svg viewBox="0 0 460 100" style="max-width:460px;width:100%">
+      <text x="230" y="16" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="800">실행 흐름</text>
+      <rect x="10" y="24" width="90" height="36" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+      <text x="55" y="38" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">N 입력</text>
+      <text x="55" y="52" text-anchor="middle" font-size="9" fill="#64748b">몇 개?</text>
+      <line x1="104" y1="42" x2="122" y2="42" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#ar2)"/>
+      <rect x="126" y="24" width="100" height="36" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+      <text x="176" y="38" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">N개 값 입력</text>
+      <text x="176" y="52" text-anchor="middle" font-size="9" fill="#64748b">for(i=0;i&lt;N;i++)</text>
+      <line x1="230" y1="42" x2="248" y2="42" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#ar2)"/>
+      <rect x="252" y="24" width="100" height="36" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+      <text x="302" y="38" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">max/min 탐색</text>
+      <text x="302" y="52" text-anchor="middle" font-size="9" fill="#64748b">for + if 비교</text>
+      <line x1="356" y1="42" x2="374" y2="42" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#ar2)"/>
+      <rect x="378" y="24" width="72" height="36" rx="6" fill="#eff6ff" stroke="#6366f1" stroke-width="1.5"/>
+      <text x="414" y="38" text-anchor="middle" font-size="10" fill="#4338ca" font-weight="700">결과 출력</text>
+      <text x="414" y="52" text-anchor="middle" font-size="9" fill="#64748b">printf</text>
+      <rect x="10" y="72" width="440" height="22" rx="5" fill="#fffbeb"/>
+      <text x="230" y="87" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">배열 크기는 최대 입력 개수(예: 100)로 넉넉하게 선언합니다</text>
+      <defs><marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker></defs>
+    </svg>
+  </div>
+  <div class="code"><span class="kw">int</span> n;
+<span class="fn">printf</span>(<span class="str">"개수 입력: "</span>);
+<span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;n);
+
+<span class="kw">int</span> arr[<span class="num">100</span>];   <span class="cmt">// 최대 100개까지 입력 가능</span>
+<span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; n; i++) {
+    <span class="fn">printf</span>(<span class="str">"%d번째 숫자: "</span>, i + <span class="num">1</span>);
+    <span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;arr[i]);
+}</div>
+  <h2>최대/최소 동시 탐색</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/hard-drive.png" alt="저장소" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+  <p>하나의 for문에서 최대값과 최소값을 동시에 찾을 수 있습니다. 각각의 비교 조건을 if로 구분합니다.</p>
+  <div style="text-align:center;margin:14px 0;">
+    <svg viewBox="0 0 460 150" style="max-width:460px;width:100%">
+      <text x="230" y="16" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="800">for문 내부 — 한 번에 max/min 갱신</text>
+      <!-- 순서도 -->
+      <rect x="165" y="24" width="130" height="28" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+      <text x="230" y="42" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">arr[i] 읽기</text>
+      <line x1="230" y1="52" x2="230" y2="65" stroke="#94a3b8" stroke-width="1.5"/>
+      <line x1="110" y1="65" x2="350" y2="65" stroke="#94a3b8" stroke-width="1.5"/>
+      <line x1="110" y1="65" x2="110" y2="80" stroke="#94a3b8" stroke-width="1.5"/>
+      <line x1="350" y1="65" x2="350" y2="80" stroke="#94a3b8" stroke-width="1.5"/>
+      <text x="130" y="63" font-size="9" fill="#f59e0b" font-weight="700">arr[i]&gt;max?</text>
+      <text x="355" y="63" font-size="9" fill="#ef4444" font-weight="700">arr[i]&lt;min?</text>
+      <rect x="50" y="80" width="120" height="28" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+      <text x="110" y="98" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">max=arr[i], maxIdx=i</text>
+      <rect x="295" y="80" width="120" height="28" rx="6" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+      <text x="355" y="98" text-anchor="middle" font-size="10" fill="#dc2626" font-weight="700">min=arr[i], minIdx=i</text>
+      <line x1="110" y1="108" x2="110" y2="125" stroke="#94a3b8" stroke-width="1.5"/>
+      <line x1="355" y1="108" x2="355" y2="125" stroke="#94a3b8" stroke-width="1.5"/>
+      <line x1="110" y1="125" x2="355" y2="125" stroke="#94a3b8" stroke-width="1.5"/>
+      <line x1="230" y1="125" x2="230" y2="140" stroke="#94a3b8" stroke-width="1.5"/>
+      <text x="230" y="148" text-anchor="middle" font-size="10" fill="#64748b">다음 i로</text>
+    </svg>
+  </div>
+  <div class="code"><span class="kw">int</span> max = arr[<span class="num">0</span>], maxIdx = <span class="num">0</span>;
+<span class="kw">int</span> min = arr[<span class="num">0</span>], minIdx = <span class="num">0</span>;
+
+<span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">1</span>; i &lt; n; i++) {
+    <span class="kw">if</span> (arr[i] &gt; max) { max = arr[i]; maxIdx = i; }
+    <span class="kw">if</span> (arr[i] &lt; min) { min = arr[i]; minIdx = i; }
+}
+
+<span class="fn">printf</span>(<span class="str">"최대값: %d (위치: %d번째)\n"</span>, max, maxIdx + <span class="num">1</span>);
+<span class="fn">printf</span>(<span class="str">"최소값: %d (위치: %d번째)\n"</span>, min, minIdx + <span class="num">1</span>);</div>
+</div>
+
+<div class="page">
+  <h2>완성 코드</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="처리" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+  <div class="code"><span class="cmt">// 최대값 최소값 찾기 — 완성 코드</span>
+#<span class="kw">include</span> <span class="str">&lt;stdio.h&gt;</span>
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="kw">int</span> n, arr[<span class="num">100</span>];
+    <span class="fn">printf</span>(<span class="str">"개수 입력 (최대 100): "</span>);
+    <span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;n);
+
+    <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; n; i++) {
+        <span class="fn">printf</span>(<span class="str">"%d번째: "</span>, i + <span class="num">1</span>);
+        <span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;arr[i]);
+    }
+
+    <span class="kw">int</span> max = arr[<span class="num">0</span>], maxIdx = <span class="num">0</span>;
+    <span class="kw">int</span> min = arr[<span class="num">0</span>], minIdx = <span class="num">0</span>;
+    <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">1</span>; i &lt; n; i++) {
+        <span class="kw">if</span> (arr[i] &gt; max) { max = arr[i]; maxIdx = i; }
+        <span class="kw">if</span> (arr[i] &lt; min) { min = arr[i]; minIdx = i; }
+    }
+
+    <span class="fn">printf</span>(<span class="str">"\n최대값: %d → %d번째\n"</span>, max, maxIdx + <span class="num">1</span>);
+    <span class="fn">printf</span>(<span class="str">"최소값: %d → %d번째\n"</span>, min, minIdx + <span class="num">1</span>);
+    <span class="fn">printf</span>(<span class="str">"범위(max-min): %d\n"</span>, max - min);
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+  <div style="text-align:center;margin:14px 0;">
+    <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+      <text x="230" y="16" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="800">실행 예시</text>
+      <rect x="10" y="24" width="440" height="48" rx="8" fill="#0f172a"/>
+      <text x="30" y="44" font-size="11" fill="#86efac" font-family="JetBrains Mono">개수 입력: 5</text>
+      <text x="30" y="60" font-size="11" fill="#e2e8f0" font-family="JetBrains Mono">최대값: 92 → 4번째   최소값: 21 → 5번째</text>
+    </svg>
+  </div>
+  <div class="practice">
+    <div class="practice-head">따라해보세요</div>
+    <div class="practice-body">
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="완성" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+      <div class="practice-item">
+        <div class="practice-num">1</div>
+        <div class="practice-desc">입력값 {34, 67, 51, 92, 21, 56}으로 최대/최소 탐색 과정을 손으로 추적해보세요.</div>
+        <div class="practice-result">최대: 92 (4번째), 최소: 21 (5번째), 범위: 71</div>
+      </div>
+    </div>
+  </div>
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">1</div>
+      <div class="problem-label">두 번째로 큰 값 찾기</div>
+      <span class="problem-diff hard">어려움</span>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">최대값에 이어 두 번째로 큰 값(second max)을 찾는 코드를 작성하세요. max2 변수를 하나 더 사용합니다.</div>
+      <div class="problem-example">
+        <div class="problem-example-row"><span class="problem-example-label">입력</span><span class="problem-example-value">34 67 51 92 21</span></div>
+        <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">2번째 최대: 67</span></div>
+      </div>
+      <details class="problem-toggle">
+        <summary>힌트 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="hint-text">arr[i] &gt; max이면 max2=max, max=arr[i]. arr[i] &gt; max2이면 max2=arr[i] 조건을 사용하세요.</div>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">2</div>
+      <div class="problem-label">양수/음수 개수 세기</div>
+      <span class="problem-diff easy">쉬움</span>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">입력받은 N개의 숫자 중 양수(0보다 큰)와 음수의 개수를 각각 출력하세요.</div>
+      <div class="problem-example">
+        <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">양수: 4개  음수: 2개</span></div>
+      </div>
+      <details class="problem-toggle">
+        <summary>정답 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="answer-code"><span class="kw">int</span> pos=<span class="num">0</span>, neg=<span class="num">0</span>;
+<span class="kw">for</span>(<span class="kw">int</span> i=<span class="num">0</span>;i&lt;n;i++){
+  <span class="kw">if</span>(arr[i]&gt;<span class="num">0</span>) pos++;
+  <span class="kw">else if</span>(arr[i]&lt;<span class="num">0</span>) neg++;
+}
+<span class="fn">printf</span>(<span class="str">"양수:%d 음수:%d\n"</span>,pos,neg);</div>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+    <h3>핵심 정리</h3>
+    <ul>
+      <li>N을 먼저 입력받고 arr[100] 크기로 넉넉하게 선언</li>
+      <li>max/min 초기값은 항상 arr[0]으로 설정</li>
+      <li>i=1부터 시작하는 이유: arr[0]은 이미 초기값으로 사용</li>
+      <li>위치 출력 시 maxIdx+1 (인덱스는 0부터이므로)</li>
+      <li>범위 = max - min으로 데이터의 분포를 파악</li>
+    </ul>
+  </div>
+</div>
+
+<div class="page">
+  <h2>심화 — 인덱스 배열 활용</h2>
+  <p>같은 최대값이 여러 개 있을 때 모든 위치를 출력하는 방법도 있습니다. 별도 인덱스 배열을 만들어 저장합니다.</p>
+  <div style="text-align:center;margin:14px 0;">
+    <svg viewBox="0 0 460 110" style="max-width:460px;width:100%">
+      <text x="230" y="16" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="800">중복 최대값 탐색 — {92, 51, 92, 34, 92}</text>
+      <rect x="20" y="28" width="60" height="36" rx="5" fill="#fefce8" stroke="#f59e0b" stroke-width="2"/>
+      <text x="50" y="50" text-anchor="middle" font-size="16" fill="#92400e" font-weight="900">92</text>
+      <text x="50" y="62" text-anchor="middle" font-size="9" fill="#64748b">[0]</text>
+      <rect x="95" y="28" width="60" height="36" rx="5" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/>
+      <text x="125" y="50" text-anchor="middle" font-size="16" fill="#64748b" font-weight="700">51</text>
+      <text x="125" y="62" text-anchor="middle" font-size="9" fill="#64748b">[1]</text>
+      <rect x="170" y="28" width="60" height="36" rx="5" fill="#fefce8" stroke="#f59e0b" stroke-width="2"/>
+      <text x="200" y="50" text-anchor="middle" font-size="16" fill="#92400e" font-weight="900">92</text>
+      <text x="200" y="62" text-anchor="middle" font-size="9" fill="#64748b">[2]</text>
+      <rect x="245" y="28" width="60" height="36" rx="5" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/>
+      <text x="275" y="50" text-anchor="middle" font-size="16" fill="#64748b" font-weight="700">34</text>
+      <text x="275" y="62" text-anchor="middle" font-size="9" fill="#64748b">[3]</text>
+      <rect x="320" y="28" width="60" height="36" rx="5" fill="#fefce8" stroke="#f59e0b" stroke-width="2"/>
+      <text x="350" y="50" text-anchor="middle" font-size="16" fill="#92400e" font-weight="900">92</text>
+      <text x="350" y="62" text-anchor="middle" font-size="9" fill="#64748b">[4]</text>
+      <rect x="10" y="80" width="440" height="24" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1"/>
+      <text x="230" y="96" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">최대값 92가 1번째, 3번째, 5번째 위치에 존재</text>
+    </svg>
+  </div>
+  <div class="code"><span class="cmt">// 중복 최대값 위치 모두 찾기</span>
+<span class="kw">int</span> maxPositions[<span class="num">100</span>];
+<span class="kw">int</span> cnt = <span class="num">0</span>;
+
+<span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; n; i++) {
+    <span class="kw">if</span> (arr[i] == max) {
+        maxPositions[cnt++] = i + <span class="num">1</span>;  <span class="cmt">// 1번부터 세는 위치</span>
+    }
+}
+
+<span class="fn">printf</span>(<span class="str">"최대값 %d의 위치: "</span>, max);
+<span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; cnt; i++) {
+    <span class="fn">printf</span>(<span class="str">"%d번째 "</span>, maxPositions[i]);
+}
+<span class="fn">printf</span>(<span class="str">"\n"</span>);</div>
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">3</div>
+      <div class="problem-label">평균값에 가장 가까운 수 찾기</div>
+      <span class="problem-diff medium">중간</span>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">N개의 숫자 중 평균값에 가장 가까운 숫자를 찾아 출력하세요. 절댓값 계산에는 직접 if문을 사용하세요.</div>
+      <div class="problem-example">
+        <div class="problem-example-row"><span class="problem-example-label">입력</span><span class="problem-example-value">34 67 51 92 21</span></div>
+        <div class="problem-example-row"><span class="problem-example-label">평균</span><span class="problem-example-value">53.0</span></div>
+        <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">평균에 가장 가까운 수: 51</span></div>
+      </div>
+      <details class="problem-toggle">
+        <summary>힌트 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="hint-text">각 arr[i]와 평균의 차이(절댓값)를 계산하고, 가장 차이가 작은 값을 기억합니다. 절댓값: diff = arr[i]-avg 가 음수면 -diff</div>
+        </div>
+      </details>
+    </div>
+  </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

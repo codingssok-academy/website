@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 프로젝트 15: 나만의 라이브러리</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+.page { width: 210mm; min-height: 297mm; margin: 16px auto; padding: 18mm 20mm 15mm 22mm; background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: relative; page-break-after: always; }
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after { content: counter(pagenum); position: absolute; bottom: 10mm; right: 16mm; font-size: 10px; color: #94a3b8; font-weight: 600; }
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark { position: absolute; top: -10px; right: -15px; font-size: 200px; font-weight: 900; color: rgba(180,195,212,0.3); line-height: 1; pointer-events: none; }
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 34px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 15px; font-weight: 700; color: #1e3a5f; margin: 14px 0 8px; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #2563eb; font-weight: 600; }
+.code { background: #0f172a; border-radius: 8px; padding: 16px 20px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.8; margin: 14px 0; white-space: pre-wrap; }
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.practice { margin: 18px 0; border-left: 4px solid #3b82f6; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 14px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+.problem { margin: 14px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+.summary { border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+.pj-banner { background: linear-gradient(135deg, #1e3a5f 0%, #2d5a8e 100%); border-radius: 10px; padding: 16px 20px; margin: 0 0 20px; color: #fff; }
+.pj-banner-label { font-size: 11px; font-weight: 700; color: #93c5fd; letter-spacing: 2px; margin-bottom: 4px; }
+.pj-banner-title { font-size: 18px; font-weight: 900; }
+.pj-banner-desc { font-size: 13px; color: #bfdbfe; margin-top: 4px; }
+.lib-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 14px 0; }
+.lib-card { background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 7px; padding: 10px 12px; }
+.lib-card-num { font-size: 10px; font-weight: 700; color: #3b82f6; margin-bottom: 2px; }
+.lib-card-sig { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #2563eb; font-weight: 600; margin-bottom: 3px; }
+.lib-card-desc { font-size: 11px; color: #64748b; }
+.callout { border-radius: 8px; padding: 12px 16px; margin: 14px 0; font-size: 14px; line-height: 1.7; }
+.callout.blue { background: #eff6ff; border-left: 4px solid #3b82f6; color: #1e40af; }
+.callout.gold { background: #fffbeb; border-left: 4px solid #f59e0b; color: #92400e; }
+.file-card { background: #1e3a5f; border-radius: 8px; padding: 12px 16px; margin: 12px 0; }
+.file-card-title { font-size: 12px; font-weight: 700; color: #93c5fd; margin-bottom: 6px; font-family: 'JetBrains Mono', monospace; }
+.file-card-desc { font-size: 12px; color: #bfdbfe; }
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">P15</div>
+        <div class="cover-label">Level 6 · Project 15 (Final)</div>
+        <h1 class="cover-title">나만의 라이브러리<br>— 유틸 함수 10개 + .h 파일</h1>
+        <p class="cover-sub">Level 6에서 배운 모든 것을 모아 유용한 유틸리티 함수 10개를 myutil.h 헤더 파일로 만드는 최종 프로젝트입니다.</p>
+
+        <div style="text-align:center;margin:20px 0;">
+            <svg viewBox="0 0 480 130" style="max-width:480px;width:100%">
+                <defs><marker id="lib1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#6366f1"/></marker></defs>
+                <!-- myutil.h 파일 -->
+                <rect x="10" y="15" width="130" height="100" rx="8" fill="#1e3a5f"/>
+                <text x="75" y="35" text-anchor="middle" font-size="11" fill="#93c5fd" font-weight="700">myutil.h</text>
+                <text x="75" y="52" text-anchor="middle" font-size="10" fill="#bfdbfe" font-family="JetBrains Mono">int max2(a,b)</text>
+                <text x="75" y="66" text-anchor="middle" font-size="10" fill="#bfdbfe" font-family="JetBrains Mono">int min2(a,b)</text>
+                <text x="75" y="80" text-anchor="middle" font-size="10" fill="#bfdbfe" font-family="JetBrains Mono">int clamp(...)</text>
+                <text x="75" y="94" text-anchor="middle" font-size="10" fill="#bfdbfe" font-family="JetBrains Mono">... 7개 더</text>
+                <text x="75" y="108" text-anchor="middle" font-size="10" fill="#64748b">= 10개 함수</text>
+                <!-- 화살표 -->
+                <line x1="145" y1="65" x2="185" y2="45" stroke="#6366f1" stroke-width="1.5" marker-end="url(#lib1)"/>
+                <line x1="145" y1="65" x2="185" y2="85" stroke="#6366f1" stroke-width="1.5" marker-end="url(#lib1)"/>
+                <!-- 사용하는 파일들 -->
+                <rect x="190" y="20" width="130" height="46" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="255" y="40" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">calc.c</text>
+                <text x="255" y="56" text-anchor="middle" font-size="10" fill="#2563eb">#include "myutil.h"</text>
+                <rect x="190" y="74" width="130" height="46" rx="6" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="255" y="94" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">game.c</text>
+                <text x="255" y="110" text-anchor="middle" font-size="10" fill="#22c55e">#include "myutil.h"</text>
+                <!-- 결과 -->
+                <defs><marker id="lib2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker></defs>
+                <line x1="320" y1="65" x2="355" y2="65" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#lib2)"/>
+                <rect x="360" y="45" width="110" height="40" rx="6" fill="#fef9c3" stroke="#eab308" stroke-width="1.5"/>
+                <text x="415" y="62" text-anchor="middle" font-size="11" fill="#854d0e" font-weight="700">코드 재사용</text>
+                <text x="415" y="77" text-anchor="middle" font-size="10" fill="#92400e">여러 프로그램에서</text>
+            </svg>
+        </div>
+
+        <div class="cover-goals">
+            <h3>이 프로젝트에서 배우는 것</h3>
+            <ul>
+                <li>.h 헤더 파일의 구조와 역할을 이해합니다.</li>
+                <li>#ifndef 가드로 중복 include를 방지합니다.</li>
+                <li>유틸리티 함수 10개를 하나의 헤더에 모읍니다.</li>
+                <li>#include "myutil.h"로 다른 파일에서 사용합니다.</li>
+                <li>Level 6 전체를 복습하고 마무리합니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="page">
+    <div class="pj-banner">
+        <div class="pj-banner-label">PROJECT 15 — FINAL</div>
+        <div class="pj-banner-title">나만의 라이브러리 myutil.h</div>
+        <div class="pj-banner-desc">헤더 파일 구조 + 유틸 함수 10개</div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/c-lang/gear.png" alt="함수 기어 - 재사용 가능한 코드 구조" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>헤더 파일(.h)이란?</h2>
+    <p>여러 .c 파일에서 공통으로 쓸 함수를 묶어둔 파일입니다. <code>#include "myutil.h"</code> 한 줄로 모든 함수를 불러옵니다.</p>
+
+    <div class="code"><span class="cmt">/* myutil.h — 나만의 유틸리티 라이브러리 */</span>
+<span class="cmt">/* #ifndef 가드: 중복 include 방지 */</span>
+#ifndef MYUTIL_H
+#define MYUTIL_H
+
+#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+#include &lt;stdlib.h&gt;
+
+<span class="cmt">/* 함수 선언 + 구현 모두 헤더에 */</span>
+<span class="kw">int</span> <span class="fn">max2</span>(<span class="kw">int</span> a, <span class="kw">int</span> b)  { <span class="kw">return</span> a &gt; b ? a : b; }
+<span class="kw">int</span> <span class="fn">min2</span>(<span class="kw">int</span> a, <span class="kw">int</span> b)  { <span class="kw">return</span> a &lt; b ? a : b; }
+<span class="kw">int</span> <span class="fn">clamp</span>(<span class="kw">int</span> v, <span class="kw">int</span> lo, <span class="kw">int</span> hi) {
+    <span class="kw">if</span>(v &lt; lo) <span class="kw">return</span> lo;
+    <span class="kw">if</span>(v &gt; hi) <span class="kw">return</span> hi;
+    <span class="kw">return</span> v;
+}
+<span class="cmt">/* ... 나머지 함수들 ... */</span>
+
+#endif <span class="cmt">/* MYUTIL_H */</span></div>
+
+    <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/c-lang/puzzle.png" alt="퍼즐 조각 - 함수 조합으로 완성되는 프로그램" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>유틸리티 함수 10개 목록</h2>
+
+    <div class="lib-grid">
+        <div class="lib-card">
+            <div class="lib-card-num">01</div>
+            <div class="lib-card-sig">int max2(int a, int b)</div>
+            <div class="lib-card-desc">두 수 중 큰 값 반환</div>
+        </div>
+        <div class="lib-card">
+            <div class="lib-card-num">02</div>
+            <div class="lib-card-sig">int min2(int a, int b)</div>
+            <div class="lib-card-desc">두 수 중 작은 값 반환</div>
+        </div>
+        <div class="lib-card">
+            <div class="lib-card-num">03</div>
+            <div class="lib-card-sig">int clamp(v, lo, hi)</div>
+            <div class="lib-card-desc">lo~hi 범위로 값 제한</div>
+        </div>
+        <div class="lib-card">
+            <div class="lib-card-num">04</div>
+            <div class="lib-card-sig">int abs2(int n)</div>
+            <div class="lib-card-desc">절대값 반환</div>
+        </div>
+        <div class="lib-card">
+            <div class="lib-card-num">05</div>
+            <div class="lib-card-sig">int isPrime(int n)</div>
+            <div class="lib-card-desc">소수이면 1 반환</div>
+        </div>
+        <div class="lib-card">
+            <div class="lib-card-num">06</div>
+            <div class="lib-card-sig">int factorial(int n)</div>
+            <div class="lib-card-desc">n! 재귀 계산</div>
+        </div>
+        <div class="lib-card">
+            <div class="lib-card-num">07</div>
+            <div class="lib-card-sig">int sum(arr[], n)</div>
+            <div class="lib-card-desc">배열 합계</div>
+        </div>
+        <div class="lib-card">
+            <div class="lib-card-num">08</div>
+            <div class="lib-card-sig">double avg(arr[], n)</div>
+            <div class="lib-card-desc">배열 평균</div>
+        </div>
+        <div class="lib-card">
+            <div class="lib-card-num">09</div>
+            <div class="lib-card-sig">void printLine(n)</div>
+            <div class="lib-card-desc">n개의 '-' 출력</div>
+        </div>
+        <div class="lib-card">
+            <div class="lib-card-num">10</div>
+            <div class="lib-card-sig">int randRange(lo, hi)</div>
+            <div class="lib-card-desc">lo~hi 범위 난수</div>
+        </div>
+    </div>
+</div>
+
+<div class="page">
+    <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/c-lang/book.png" alt="교재 - 함수 개념 학습" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>myutil.h — 완전한 구현</h2>
+
+    <div class="code"><span class="cmt">/* ====== myutil.h — 나만의 유틸 라이브러리 ====== */</span>
+#ifndef MYUTIL_H
+#define MYUTIL_H
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;time.h&gt;
+
+<span class="cmt">/* 1. 두 수 중 큰 값 */</span>
+<span class="kw">int</span> <span class="fn">max2</span>(<span class="kw">int</span> a, <span class="kw">int</span> b)  { <span class="kw">return</span> a>b?a:b; }
+<span class="cmt">/* 2. 두 수 중 작은 값 */</span>
+<span class="kw">int</span> <span class="fn">min2</span>(<span class="kw">int</span> a, <span class="kw">int</span> b)  { <span class="kw">return</span> a&lt;b?a:b; }
+<span class="cmt">/* 3. 범위 제한 */</span>
+<span class="kw">int</span> <span class="fn">clamp</span>(<span class="kw">int</span> v, <span class="kw">int</span> lo, <span class="kw">int</span> hi) {
+    <span class="kw">if</span>(v&lt;lo)<span class="kw">return</span> lo; <span class="kw">if</span>(v>hi)<span class="kw">return</span> hi; <span class="kw">return</span> v; }
+<span class="cmt">/* 4. 절대값 */</span>
+<span class="kw">int</span> <span class="fn">abs2</span>(<span class="kw">int</span> n)  { <span class="kw">return</span> n>=<span class="num">0</span>?n:-n; }
+<span class="cmt">/* 5. 소수 판별 */</span>
+<span class="kw">int</span> <span class="fn">isPrime</span>(<span class="kw">int</span> n) {
+    <span class="kw">if</span>(n&lt;<span class="num">2</span>) <span class="kw">return</span> <span class="num">0</span>;
+    <span class="kw">int</span> i; <span class="kw">for</span>(i=<span class="num">2</span>;i*i&lt;=n;i++) <span class="kw">if</span>(n%i==<span class="num">0</span>) <span class="kw">return</span> <span class="num">0</span>;
+    <span class="kw">return</span> <span class="num">1</span>;
+}
+<span class="cmt">/* 6. 팩토리얼 (재귀) */</span>
+<span class="kw">int</span> <span class="fn">factorial</span>(<span class="kw">int</span> n) { <span class="kw">return</span> n&lt;=<span class="num">1</span>?<span class="num">1</span>:n*<span class="fn">factorial</span>(n-<span class="num">1</span>); }
+<span class="cmt">/* 7. 배열 합계 */</span>
+<span class="kw">int</span> <span class="fn">arrSum</span>(<span class="kw">int</span> a[], <span class="kw">int</span> n) {
+    <span class="kw">int</span> s=<span class="num">0</span>,i; <span class="kw">for</span>(i=<span class="num">0</span>;i&lt;n;i++) s+=a[i]; <span class="kw">return</span> s; }
+<span class="cmt">/* 8. 배열 평균 */</span>
+<span class="kw">double</span> <span class="fn">arrAvg</span>(<span class="kw">int</span> a[], <span class="kw">int</span> n) { <span class="kw">return</span> (<span class="kw">double</span>)<span class="fn">arrSum</span>(a,n)/n; }
+<span class="cmt">/* 9. 구분선 출력 */</span>
+<span class="kw">void</span> <span class="fn">printLine</span>(<span class="kw">int</span> n) {
+    <span class="kw">int</span> i; <span class="kw">for</span>(i=<span class="num">0</span>;i&lt;n;i++) <span class="fn">printf</span>(<span class="str">"-"</span>); <span class="fn">printf</span>(<span class="str">"\n"</span>); }
+<span class="cmt">/* 10. 범위 난수 */</span>
+<span class="kw">int</span> <span class="fn">randRange</span>(<span class="kw">int</span> lo, <span class="kw">int</span> hi) { <span class="kw">return</span> <span class="fn">rand</span>()%(hi-lo+<span class="num">1</span>)+lo; }
+
+#endif</div>
+
+    <div class="code"><span class="cmt">/* main.c — myutil.h 사용 예시 */</span>
+#include &lt;stdio.h&gt;
+#include <span class="str">"myutil.h"</span>   <span class="cmt">// 나만의 라이브러리!</span>
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="fn">srand</span>(<span class="fn">time</span>(<span class="num">0</span>));
+    <span class="fn">printf</span>(<span class="str">"max(10,20)=%d\n"</span>, <span class="fn">max2</span>(<span class="num">10</span>,<span class="num">20</span>));
+    <span class="fn">printf</span>(<span class="str">"clamp(150,0,100)=%d\n"</span>, <span class="fn">clamp</span>(<span class="num">150</span>,<span class="num">0</span>,<span class="num">100</span>));
+    <span class="fn">printf</span>(<span class="str">"isPrime(17)=%d\n"</span>, <span class="fn">isPrime</span>(<span class="num">17</span>));
+    <span class="fn">printf</span>(<span class="str">"5!=%d\n"</span>, <span class="fn">factorial</span>(<span class="num">5</span>));
+    <span class="fn">printf</span>(<span class="str">"rand(1~6)=%d\n"</span>, <span class="fn">randRange</span>(<span class="num">1</span>,<span class="num">6</span>));
+    <span class="fn">printLine</span>(<span class="num">30</span>);
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+</div>
+
+<div class="page">
+    <h2>연습 문제 + Level 6 마무리</h2>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">1</div>
+            <div class="problem-label">#ifndef 가드 역할</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">#ifndef MYUTIL_H / #define MYUTIL_H / ... / #endif 구조의 역할은?</div>
+            <details class="problem-toggle">
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">같은 헤더를 여러 번 include해도 내용이 중복 처리되지 않도록 막는 "포함 가드"입니다. 처음 include 때만 실행됩니다.</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">2</div>
+            <div class="problem-label">clamp 함수 활용</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">다음 결과를 예측하세요.<br>
+            ① <code>clamp(50, 0, 100)</code><br>
+            ② <code>clamp(-5, 0, 100)</code><br>
+            ③ <code>clamp(150, 0, 100)</code></div>
+            <details class="problem-toggle">
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">① 50 (범위 내) ② 0 (하한으로 고정) ③ 100 (상한으로 고정)</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">3</div>
+            <div class="problem-label">나만의 함수 추가</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">myutil.h에 11번째 함수 <code>int isEven(int n)</code>을 추가하세요. n이 짝수이면 1, 홀수이면 0을 반환합니다.</div>
+            <details class="problem-toggle">
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code"><span style="color:#c084fc">int</span> <span style="color:#67e8f9">isEven</span>(<span style="color:#c084fc">int</span> n) {
+    <span style="color:#c084fc">return</span> n % 2 == 0;
+}</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">4</div>
+            <div class="problem-label">라이브러리 활용 프로그램</div>
+            <span class="problem-diff hard">어려움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">myutil.h를 include해서 다음 기능을 모두 가진 프로그램을 만드세요.<br>
+            · 1~50 사이의 소수를 모두 출력 (isPrime 활용)<br>
+            · 사용자 입력 5개 점수의 평균과 최고점 출력 (arrAvg, max2 활용)<br>
+            · 1~6 주사위 3번 굴리기 (randRange 활용)</div>
+            <details class="problem-toggle">
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">for 루프에서 isPrime(i)가 참이면 출력. 배열 입력은 for + scanf. randRange(1,6)을 3번 호출.</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <div class="callout gold">
+        <strong>Level 6 완료!</strong> void 함수, 값 반환 함수, 재귀 함수, 함수 분리(리팩토링), 헤더 파일까지 — 이제 함수를 마음대로 만들고 조합할 수 있습니다. Level 7에서는 포인터와 구조체를 본격적으로 배웁니다!
+    </div>
+
+    <div style="display:flex;align-items:center;gap:8px;margin:16px 0 6px;padding:8px 14px;background:#f0f9ff;border-radius:6px;border:1px solid #bae6fd;">
+        <img src="/images/learn/c-lang/gear.png" alt="함수 기어 - 재사용 가능한 코드 구조" style="width:28px;height:28px;object-fit:contain;background:#fff;border-radius:8px;">
+        <img src="/images/learn/c-lang/puzzle.png" alt="퍼즐 조각 - 함수 조합으로 완성되는 프로그램" style="width:28px;height:28px;object-fit:contain;background:#fff;border-radius:8px;">
+        <span style="font-size:12px;color:#0369a1;font-weight:600;">핵심 정리</span>
+    </div>
+<div class="summary">
+        <h3>Level 6 전체 핵심 정리</h3>
+        <ul>
+            <li><code>void 함수</code> — 반환값 없이 출력/처리만 (pj01, pj06, pj08)</li>
+            <li><code>int/double/char 반환</code> — 계산 결과 돌려주기 (pj02~05)</li>
+            <li>함수 분리 — 입력/처리/출력 역할 나누기 (pj06, pj08, pj13)</li>
+            <li>배열 매개변수 — <code>int arr[], int n</code> 쌍 (pj07, pj13)</li>
+            <li>재귀 함수 — 자기 자신 호출 + 기저 조건 (pj11, pj12)</li>
+            <li>헤더 파일 — <code>#ifndef / #define / #endif</code> 가드 (pj15)</li>
+        </ul>
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:20px;padding-top:10px;border-top:1px solid #f1f5f9;">
+        <img src="/images/learn/c-lang/flowchart.png" alt="순서도 - 함수 호출 흐름" style="width:22px;height:22px;object-fit:contain;opacity:0.6;background:#fff;border-radius:8px;">
+        <span style="font-size:10px;color:#cbd5e1;">코딩쏙 C언어</span>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

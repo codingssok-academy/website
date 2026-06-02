@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Unit 42. 재귀 함수 — C 언어 코딩 도장</title>
+    <link rel="stylesheet" href="../common.css">
+</head>
+
+<body>
+    <div class="wrap">
+        <div class="hdr">
+            <h1>Unit 42. 재귀 함수</h1>
+            <div class="sub">자기 호출 · 기저 조건 · 팩토리얼 · 피보나치 · 하노이</div>
+            <span class="unit-badge">Chapter 11 · 함수</span>
+            <div class="level-bar"><span class="on"></span><span class="on"></span><span class="on"></span></div>
+            <div class="meta"><span class="tag pri">🖥️ C언어</span><span class="tag acc">📝 15문제</span><span
+                    class="tag">⏱ 30~45분</span></div>
+        </div>
+        <div class="stu-bar"><label>👤 이름 <input type="text" id="stu-name" placeholder="이름"></label><label>📅 날짜 <input
+                    type="date" id="stu-date"></label></div>
+        <div class="learn">
+            <h2><span class="ico" style="background:rgba(245,158,11,.15)">🔄</span> 재귀 = 함수가 자기 자신을 호출</h2>
+            <p>반드시 <strong>기저 조건(Base Case)</strong>이 있어야 무한 호출 방지!</p>
+        </div>
+        <div id="problems"></div>
+        <div class="submit-section">
+            <p>모든 문제를 풀었나요? 📨</p><button class="btn-submit" id="btn-submit">📄 제출하기</button>
+        </div>
+        <div class="modal-overlay" id="submit-modal">
+            <div class="modal-box">
+                <div class="modal-icon">✅</div>
+                <h3>제출 완료!</h3>
+                <p>학습지가 저장되었습니다.</p>
+                <div style="margin:12px 0"><span class="info-tag" id="modal-name"></span> <span class="info-tag"
+                        id="modal-date"></span> <span class="info-tag" id="modal-count"></span></div>
+                <p style="font-size:.78rem;color:var(--dim)">📁 <strong id="modal-filename"></strong></p><button
+                    class="btn-close-modal" id="btn-close-modal">확인</button>
+            </div>
+        </div>
+        <div class="pg"><a href="Unit41_함수기초.html">← Unit 41</a><span class="tag active">Unit 42</span><a
+                href="Unit43_가변인자.html">Unit 43 →</a></div>
+        <div class="ft">🖥️ C 언어 코딩 도장 · Unit 42 · 재귀 함수</div>
+    </div>
+    <script>
+        const P = [
+            {
+                n: 1, t: "재귀의 기본 구조", d: 2,
+                q: `카운트다운 재귀 함수의 흐름을 추적하세요.<pre class="code-c">void countdown(int n) {
+    if (n <= 0) { printf("GO!\\n"); return; }
+    printf("%d\\n", n);
+    countdown(n - 1);
+}
+countdown(3);</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">3<br>2<br>1<br>GO!</div><div class="trace">countdown(3): 3출력 → countdown(2)<br>countdown(2): 2출력 → countdown(1)<br>countdown(1): 1출력 → countdown(0)<br>countdown(0): GO! → return</div>`
+            },
+
+            {
+                n: 2, t: "팩토리얼 (재귀)", d: 2,
+                q: `팩토리얼을 재귀로 구현하고 f(4)를 추적하세요.<pre class="code-c">int fact(int n) {
+    if (n <= 1) return 1;
+    return n * fact(n - 1);
+}</pre>`,
+                a: `<span class="key">정답</span><div class="trace">fact(4) = 4 × fact(3)<br>= 4 × 3 × fact(2)<br>= 4 × 3 × 2 × fact(1)<br>= 4 × 3 × 2 × 1 = <span class="val">24</span></div>`
+            },
+
+            {
+                n: 3, t: "피보나치 (재귀)", d: 2,
+                q: `피보나치 재귀 함수를 쓰고 fib(5)를 구하세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">int fib(int n) {
+    if (n <= 0) return 0;
+    if (n == 1) return 1;
+    return fib(n-1) + fib(n-2);
+}
+<span class="cm">// fib(5) = 5</span></pre><div class="trace">fib(5)=fib(4)+fib(3)=3+2=5<br>0, 1, 1, 2, 3, <span class="val">5</span>, 8, 13, ...<br><br><span class="err">주의: 재귀 피보나치는 매우 느림! O(2ⁿ)</span></div>`},
+
+            {
+                n: 4, t: "합계 (재귀)", d: 2,
+                q: `1~n 합을 재귀로 구하세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">int sumTo(int n) {
+    if (n <= 0) return 0;
+    return n + sumTo(n - 1);
+}
+printf("%d\\n", sumTo(10)); <span class="cm">// 55</span></pre>`},
+
+            {
+                n: 5, t: "거듭제곱 (재귀)", d: 2,
+                q: `xⁿ을 재귀로 구하세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">double power(double x, int n) {
+    if (n == 0) return 1;
+    return x * power(x, n-1);
+}
+printf("%.0f\\n", power(2, 10)); <span class="cm">// 1024</span></pre>`},
+
+            {
+                n: 6, t: "GCD (재귀)", d: 2,
+                q: `유클리드 호제법을 재귀로 쓰세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">int gcd(int a, int b) {
+    if (b == 0) return a;
+    return gcd(b, a % b);
+}
+printf("%d\\n", gcd(12, 8)); <span class="cm">// 4</span></pre><div class="trace">gcd(12,8)→gcd(8,4)→gcd(4,0)→4</div>`},
+
+            {
+                n: 7, t: "배열 합 (재귀)", d: 2,
+                q: `배열의 합을 재귀로 구하세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">int sumArr(int arr[], int n) {
+    if (n <= 0) return 0;
+    return arr[n-1] + sumArr(arr, n-1);
+}
+int a[]={1,2,3,4,5};
+printf("%d\\n", sumArr(a,5)); <span class="cm">// 15</span></pre>`},
+
+            {
+                n: 8, t: "문자열 뒤집기 (재귀)", d: 3,
+                q: `문자열을 재귀로 뒤집어 출력하세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">void printReverse(char *s) {
+    if (*s == '\\0') return;
+    printReverse(s + 1);
+    putchar(*s);
+}
+printReverse("Hello"); <span class="cm">// olleH</span></pre><div class="trace">먼저 재귀로 끝까지 간 다음, 돌아오면서 출력!</div>`},
+
+            {
+                n: 9, t: "이진수 출력 (재귀)", d: 2,
+                q: `정수를 이진수로 출력하세요.<pre class="code-c">void printBin(int n) {
+    if (n <= 0) return;
+    printBin(n / 2);
+    printf("%d", n % 2);
+}
+printBin(42);</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">101010</div>`
+            },
+
+            {
+                n: 10, t: "기저 조건 누락", d: 2,
+                q: `다음 코드의 문제점은?<pre class="code-c">int bad(int n) {
+    return n + bad(n - 1);
+}</pre>`,
+                a: `<span class="key">정답</span><div class="trace"><span class="err">기저 조건(Base Case)이 없음!</span><br>n이 0이 되어도 계속 호출 → -1, -2, -3...<br>→ Stack Overflow! (스택 메모리 고갈)</div>`
+            },
+
+            {
+                n: 11, t: "심사: 자릿수 합 (재귀)", d: 2,
+                q: `각 자릿수의 합을 재귀로 구하세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">int digitSum(int n) {
+    if (n == 0) return 0;
+    return (n%10) + digitSum(n/10);
+}
+printf("%d\\n", digitSum(1234)); <span class="cm">// 10</span></pre>`},
+
+            {
+                n: 12, t: "심사: 하노이의 탑", d: 3,
+                q: `하노이의 탑을 재귀로 풀어보세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">void hanoi(int n, char from, char to, char via) {
+    if (n == 1) {
+        printf("%c → %c\\n", from, to);
+        return;
+    }
+    hanoi(n-1, from, via, to);
+    printf("%c → %c\\n", from, to);
+    hanoi(n-1, via, to, from);
+}
+hanoi(3, 'A', 'C', 'B');</pre><div class="trace">n개 이동 횟수 = 2ⁿ - 1<br>3개: 7회, 4개: 15회</div>`},
+
+            {
+                n: 13, t: "심사: 꼬리 재귀", d: 3,
+                q: `팩토리얼을 꼬리 재귀로 최적화하세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">int factTail(int n, int acc) {
+    if (n <= 1) return acc;
+    return factTail(n-1, n * acc);
+}
+printf("%d\\n", factTail(5, 1)); <span class="cm">// 120</span></pre><div class="trace">꼬리 재귀: return문에서 재귀 호출만<br>컴파일러가 반복문으로 최적화 가능!</div>`},
+
+            {
+                n: 14, t: "심사: 조합 nCr (재귀)", d: 3,
+                q: `조합 C(n,r)을 재귀로 구하세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">int comb(int n, int r) {
+    if (r==0 || r==n) return 1;
+    return comb(n-1, r-1) + comb(n-1, r);
+}
+printf("%d\\n", comb(5, 2)); <span class="cm">// 10</span></pre><div class="trace">파스칼의 삼각형 원리!</div>`},
+
+            {
+                n: 15, t: "🏆 Unit 42 종합", d: 3,
+                q: `다음 재귀 함수의 출력을 쓰세요.<pre class="code-c">void mystery(int n) {
+    if (n <= 0) return;
+    printf("%d ", n);
+    mystery(n - 2);
+    printf("%d ", n);
+}
+mystery(5);</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">5 3 1 1 3 5 </div><div class="trace">mystery(5): 5출력 → mystery(3)<br>mystery(3): 3출력 → mystery(1)<br>mystery(1): 1출력 → mystery(-1) → 1출력<br>→ 3출력 → 5출력<br><br>재귀 전 출력 + 재귀 후 출력 = 미러 패턴!</div>`
+            }
+        ];
+        const c = document.getElementById('problems'); P.forEach(p => { const dc = p.d <= 1 ? 'ez' : p.d <= 2 ? 'md' : 'hd'; const dots = Array.from({ length: 5 }, (_, i) => `<span${i < p.d ? ' class="on"' : ''}>​</span>`).join(''); c.innerHTML += `<div class="prob"><div class="prob-top"><div class="prob-num ${dc}">${p.n}</div><div class="prob-title">${p.t}</div><div class="diff-dots">${dots}</div></div><div class="prob-body"><div class="q">${p.q}</div><textarea class="write" placeholder="✍️ 답을 작성하세요"></textarea><details class="ans"><summary>정답 및 해설 보기</summary><div class="ans-body">${p.a}</div></details></div></div>`; });
+    </script>
+    <script src="../submit.js"></script>
+    <script src="../../platform.js"></script>
+</body>
+
+</html>

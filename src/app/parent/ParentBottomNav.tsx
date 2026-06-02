@@ -1,0 +1,94 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { motion } from "framer-motion";
+
+interface Tab {
+    href: string;
+    label: string;
+    icon: string;
+    matchExact?: boolean;
+}
+
+const TABS: Tab[] = [
+    { href: "/parent", label: "홈", icon: "home", matchExact: true },
+    { href: "/parent/growth", label: "성장", icon: "trending_up" },
+    { href: "/parent/feedback", label: "피드백", icon: "rate_review" },
+    { href: "/parent/parents-day", label: "어버이날", icon: "favorite" },
+    { href: "/parent/settings", label: "설정", icon: "settings" },
+];
+
+interface Props {
+    studentName: string;
+    hwBadge?: number;
+}
+
+export default function ParentBottomNav({ studentName, hwBadge = 0 }: Props) {
+    const pathname = usePathname();
+
+    const isActive = (tab: Tab) =>
+        tab.matchExact ? pathname === tab.href : pathname.startsWith(tab.href);
+
+    return (
+        <nav
+            aria-label="하단 탭 메뉴"
+            className="fixed bottom-0 left-0 right-0 z-[500] flex items-stretch backdrop-blur-[24px] border-t border-slate-200/70"
+            style={{
+                height: "calc(60px + env(safe-area-inset-bottom, 0px))",
+                paddingBottom: "env(safe-area-inset-bottom, 0px)",
+                background: "rgba(255,255,255,0.97)",
+            }}
+        >
+            {TABS.map(tab => {
+                const active = isActive(tab);
+                return (
+                    <Link
+                        key={tab.href}
+                        href={tab.href}
+                        aria-label={tab.label}
+                        aria-current={active ? "page" : undefined}
+                        className={`flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 no-underline relative min-h-[48px] transition-colors duration-150 ${active ? "text-blue-600" : "text-slate-400"}`}
+                        style={{ WebkitTapHighlightColor: "transparent" }}
+                    >
+                        {active && (
+                            <motion.div
+                                layoutId="parent-nav-indicator"
+                                className="absolute top-0 left-1/2 -translate-x-1/2 w-7 h-[3px] rounded-b bg-blue-600"
+                                transition={{ type: "spring", stiffness: 420, damping: 36 }}
+                            />
+                        )}
+
+                        <span className="relative inline-flex">
+                            <motion.span
+                                className="material-symbols-outlined text-[22px] leading-none"
+                                animate={{
+                                    scale: active ? 1.1 : 1,
+                                    fontVariationSettings: active ? "'FILL' 1" : "'FILL' 0",
+                                }}
+                                transition={{ type: "spring", stiffness: 300, damping: 22 }}
+                                style={{ fontVariationSettings: active ? "'FILL' 1" : "'FILL' 0" }}
+                            >
+                                {tab.icon}
+                            </motion.span>
+                            {false && hwBadge > 0 && (
+                                <motion.span
+                                    initial={{ scale: 0 }}
+                                    animate={{ scale: 1 }}
+                                    transition={{ type: "spring", stiffness: 500, damping: 25 }}
+                                    className="absolute -top-1 -right-2 min-w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-extrabold flex items-center justify-center px-1 shadow-[0_1px_4px_rgba(239,68,68,0.4)]"
+                                >
+                                    {hwBadge > 9 ? "9+" : hwBadge}
+                                </motion.span>
+                            )}
+                        </span>
+
+                        <span className={`text-[10px] leading-none font-[Pretendard,sans-serif] ${active ? "font-bold" : "font-medium"}`}>
+                            {tab.label}
+                        </span>
+                    </Link>
+                );
+            })}
+        </nav>
+    );
+}

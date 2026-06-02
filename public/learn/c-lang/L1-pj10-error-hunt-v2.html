@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 프로젝트: 에러 사냥 챌린지</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #dc2626; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 220px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #dc2626; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 36px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #dc2626; font-weight: 900; }
+
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #fef2f2; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #dc2626; font-weight: 600;
+}
+
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 14px;
+    color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.code .bug { color: #fca5a5; text-decoration: underline wavy #ef4444; }
+
+.practice { margin: 20px 0; border-left: 4px solid #dc2626; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #dc2626; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #dc2626; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #dc2626; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fef2f2; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#ef4444,#dc2626); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #dc2626; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #fef2f2; color: #dc2626; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fef2f2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fef2f2; padding: 8px 12px; border-radius: 6px; color: #dc2626; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+.project-badge { display: inline-block; background: linear-gradient(135deg,#ef4444,#dc2626); color: #fff; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 99px; margin-bottom: 8px; }
+
+.error-count { display: inline-block; background: #fef2f2; border: 1.5px solid #ef4444; border-radius: 6px; padding: 2px 10px; font-size: 12px; font-weight: 700; color: #dc2626; margin-left: 8px; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- ═══ 1페이지: 표지 ═══ -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">PJ</div>
+        <div class="cover-label">Project 10</div>
+        <div class="project-badge">실전 프로젝트</div>
+        <h1 class="cover-title">에러 사냥 챌린지</h1>
+        <p class="cover-sub">일부러 심어놓은 에러들을 찾아 고치는 디버깅 챌린지입니다.</p>
+
+        <!-- SVG: 에러 코드 미리보기 -->
+        <div style="margin:24px 0;">
+            <svg viewBox="0 0 460 130" style="max-width:460px;width:100%">
+                <rect x="10" y="10" width="440" height="110" rx="10" fill="#1a0a0a" stroke="#ef4444" stroke-width="1.5"/>
+                <text x="230" y="30" text-anchor="middle" font-size="11" fill="#ef4444" font-weight="700">에러가 숨어있는 코드 — 찾아보세요!</text>
+                <text x="30" y="52" font-family="monospace" font-size="12" fill="#c084fc">int</text>
+                <text x="55" y="52" font-family="monospace" font-size="12" fill="#67e8f9"> main</text>
+                <text x="91" y="52" font-family="monospace" font-size="12" fill="#e2e8f0">() {</text>
+                <text x="30" y="70" font-family="monospace" font-size="12" fill="#67e8f9">    printf</text>
+                <text x="101" y="70" font-family="monospace" font-size="12" fill="#e2e8f0">(</text>
+                <text x="109" y="70" font-family="monospace" font-size="12" fill="#86efac">"안녕!\n"</text>
+                <text x="162" y="70" font-family="monospace" font-size="12" fill="#fca5a5" font-weight="700">)   </text>
+                <rect x="186" y="58" width="14" height="18" rx="2" fill="rgba(239,68,68,0.3)" stroke="#ef4444" stroke-width="1"/>
+                <text x="193" y="70" text-anchor="middle" font-size="12" fill="#ef4444" font-weight="900">?</text>
+                <text x="30" y="88" font-family="monospace" font-size="12" fill="#c084fc">    return</text>
+                <text x="97" y="88" font-family="monospace" font-size="12" fill="#7dd3fc"> 0</text>
+                <text x="109" y="88" font-family="monospace" font-size="12" fill="#e2e8f0">;</text>
+                <text x="30" y="106" font-family="monospace" font-size="12" fill="#fca5a5">  </text>
+                <rect x="37" y="94" width="14" height="18" rx="2" fill="rgba(239,68,68,0.3)" stroke="#ef4444" stroke-width="1"/>
+                <text x="44" y="106" text-anchor="middle" font-size="12" fill="#ef4444" font-weight="900">?</text>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/magnifying-glass.png" alt="디버깅" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 프로젝트에서 하는 것</h3>
+            <ul>
+                <li>에러가 심어진 코드를 보고 문제를 찾습니다.</li>
+                <li>에러 메시지 없이 코드만으로 버그를 발견합니다.</li>
+                <li>총 3개의 챌린지를 클리어합니다 (난이도 상승).</li>
+                <li>고친 코드를 컴파일해서 정상 작동을 확인합니다.</li>
+            </ul>
+        </div>
+
+        <!-- SVG: 에러 사냥 레벨 -->
+        <div style="margin:24px 0 0;">
+            <svg viewBox="0 0 440 80" style="max-width:440px;width:100%">
+                <rect x="10" y="10" width="130" height="60" rx="8" fill="#0a3d1a" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="75" y="35" text-anchor="middle" font-size="12" fill="#86efac" font-weight="700">Level 1</text>
+                <text x="75" y="55" text-anchor="middle" font-size="11" fill="#64748b">에러 2개</text>
+                <rect x="155" y="10" width="130" height="60" rx="8" fill="#2d1d00" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="220" y="35" text-anchor="middle" font-size="12" fill="#fcd34d" font-weight="700">Level 2</text>
+                <text x="220" y="55" text-anchor="middle" font-size="11" fill="#64748b">에러 3개</text>
+                <rect x="300" y="10" width="130" height="60" rx="8" fill="#3d0a0a" stroke="#ef4444" stroke-width="1.5"/>
+                <text x="365" y="35" text-anchor="middle" font-size="12" fill="#fca5a5" font-weight="700">Level 3</text>
+                <text x="365" y="55" text-anchor="middle" font-size="11" fill="#64748b">에러 4개</text>
+            </svg>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ 2페이지: Level 1 챌린지 ═══ -->
+<div class="page">
+    <h2>Level 1 챌린지 <span class="error-count">에러 2개</span></h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/lightbulb.png" alt="해결" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>아래 코드에는 에러가 <strong>2개</strong> 숨어 있습니다. 컴파일하기 전에 눈으로만 찾아보세요. 그런 다음 고쳐서 컴파일하세요.</p>
+
+    <!-- SVG 1: 에러 탐정 힌트 -->
+    <div style="text-align:center;margin:20px 0;">
+        <svg viewBox="0 0 460 60" style="max-width:460px;width:100%">
+            <rect x="10" y="10" width="440" height="40" rx="8" fill="#1a0a0a" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="25" y="35" font-size="12" fill="#fca5a5" font-weight="700">탐정 힌트:</text>
+            <text x="110" y="35" font-size="12" fill="#94a3b8"> 세미콜론과 중괄호를 집중적으로 살펴보세요.</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="fn">printf</span>(<span class="str">"Level 1 시작!\n"</span>)
+    <span class="fn">printf</span>(<span class="str">"에러를 찾아라!\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"집중 집중!\n"</span>);
+    <span class="kw">return</span> <span class="num">0</span>;
+<span class="cmt">// 닫는 괄호 어디 있지?</span></div>
+
+    <!-- SVG 2: 에러 위치 표시 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+            <text x="230" y="14" text-anchor="middle" font-size="11" fill="#64748b" font-weight="700">에러가 있는 줄 (가리고 먼저 찾아보세요)</text>
+            <rect x="10" y="20" width="440" height="55" rx="8" fill="#0f172a"/>
+            <text x="25" y="42" font-family="monospace" font-size="12" fill="#67e8f9">printf</text>
+            <text x="77" y="42" font-family="monospace" font-size="12" fill="#e2e8f0">(</text>
+            <text x="85" y="42" font-family="monospace" font-size="12" fill="#86efac">"Level 1 시작!\n"</text>
+            <text x="215" y="42" font-family="monospace" font-size="12" fill="#e2e8f0">)</text>
+            <rect x="225" y="30" width="16" height="20" rx="3" fill="rgba(239,68,68,0.3)" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="233" y="44" text-anchor="middle" font-size="12" fill="#ef4444" font-weight="900">?</text>
+            <text x="245" y="42" font-family="monospace" font-size="12" fill="#64748b">  ← ; 없음!</text>
+            <text x="25" y="65" font-family="monospace" font-size="12" fill="#e2e8f0">} </text>
+            <rect x="44" y="53" width="16" height="20" rx="3" fill="rgba(239,68,68,0.3)" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="52" y="67" text-anchor="middle" font-size="12" fill="#ef4444" font-weight="900">?</text>
+            <text x="68" y="65" font-family="monospace" font-size="12" fill="#64748b">← } 없음!</text>
+        </svg>
+    </div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/desktop-pc.png" alt="데스크탑" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="분석" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+            <div class="practice-item">
+                <div class="practice-num">1단계</div>
+                <div class="practice-desc">위 코드를 눈으로 읽고 에러 위치를 종이에 표시해보세요.</div>
+                <div class="practice-result">에러 2개 위치 파악</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2단계</div>
+                <div class="practice-desc">에러가 있는 코드를 그대로 컴파일해서 에러 메시지를 읽어보세요.</div>
+                <div class="practice-result">에러 메시지 확인</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3단계</div>
+                <div class="practice-desc">에러를 고치고 다시 컴파일해서 성공하면 Level 1 클리어!</div>
+                <div class="practice-result">컴파일 성공 → Level 1 클리어</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SVG 3: 정답 코드 (흐리게) -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 60" style="max-width:460px;width:100%">
+            <rect x="10" y="10" width="440" height="40" rx="8" fill="#0a200a" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="25" y="30" font-size="12" fill="#86efac" font-weight="700">Level 1 정답:</text>
+            <text x="130" y="30" font-family="monospace" font-size="12" fill="#64748b">printf("Level 1 시작!\n")</text>
+            <text x="318" y="30" font-family="monospace" font-size="14" fill="#22c55e" font-weight="900">;</text>
+            <text x="25" y="48" font-size="11" fill="#64748b">그리고 마지막에 } 추가</text>
+        </svg>
+    </div>
+</div>
+
+<!-- ═══ 3페이지: Level 2 & Level 3 ═══ -->
+<div class="page">
+    <h2>Level 2 챌린지 <span class="error-count">에러 3개</span></h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드 화면" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>에러가 3개 숨어 있습니다. 직접 찾아서 고쳐보세요.</p>
+
+    <div class="code"><span class="cmt">// Level 2: 에러 3개 찾기</span>
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="fn">printf</span>(<span class="str">"나는 코더다!\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"에러 없이 코딩!\n"</span>)
+    <span class="fn">printf</span>(<span class="str">"Level 2 도전!\n"</span>)
+    <span class="kw">return</span> <span class="num">0</span>;</div>
+
+    <!-- SVG 4: Level 2 에러 힌트 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 50" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="40" rx="8" fill="#1a0a0a" stroke="#ef4444" stroke-width="1"/>
+            <text x="25" y="25" font-size="11" fill="#fca5a5" font-weight="700">힌트:</text>
+            <text x="65" y="25" font-size="11" fill="#94a3b8"> 세미콜론 2개 누락, 중괄호 1개 누락</text>
+        </svg>
+    </div>
+
+    <details class="problem-toggle" style="border: 1.5px solid #e2e8f0; border-radius: 10px; margin: 10px 0;">
+        <summary style="padding: 10px 16px; font-size: 13px; font-weight: 700; color: #94a3b8; cursor: pointer; list-style: none;">Level 2 정답 보기</summary>
+        <div style="padding: 10px 16px;">
+            <div class="answer-code"><span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="fn">printf</span>(<span class="str">"나는 코더다!\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"에러 없이 코딩!\n"</span>)<span style="color:#22c55e;font-weight:900;">;</span>  <span class="cmt">// ; 추가</span>
+    <span class="fn">printf</span>(<span class="str">"Level 2 도전!\n"</span>)<span style="color:#22c55e;font-weight:900;">;</span>   <span class="cmt">// ; 추가</span>
+    <span class="kw">return</span> <span class="num">0</span>;
+<span style="color:#f59e0b;font-weight:900;">}</span>  <span class="cmt">// } 추가</span></div>
+        </div>
+    </details>
+
+    <h2 style="margin-top:20px;">Level 3 챌린지 <span class="error-count">에러 4개</span></h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/monitor.png" alt="모니터" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>가장 어렵습니다. 에러 4개를 모두 찾아 고치세요!</p>
+
+    <div class="code"><span class="cmt">// Level 3: 에러 4개 찾기</span>
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="fn">printf</span>(<span class="str">"챌린지 시작\n"</span>)
+    <span class="fn">printf</span>(<span class="str">"에러 사냥꾼!\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"거의 다 왔다\n"</span>)
+    <span class="fn">printf</span>(<span class="str">"클리어!\n"</span>)
+    <span class="kw">return</span> <span class="num">0</span>;</div>
+
+    <!-- SVG 5: Level 3 에러 표시 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 50" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="40" rx="8" fill="#1a0a0a" stroke="#ef4444" stroke-width="1"/>
+            <text x="25" y="25" font-size="11" fill="#fca5a5" font-weight="700">힌트:</text>
+            <text x="65" y="25" font-size="11" fill="#94a3b8"> 세미콜론 3개 누락, 중괄호 1개 누락</text>
+        </svg>
+    </div>
+
+    <details class="problem-toggle" style="border: 1.5px solid #e2e8f0; border-radius: 10px; margin: 10px 0;">
+        <summary style="padding: 10px 16px; font-size: 13px; font-weight: 700; color: #94a3b8; cursor: pointer; list-style: none;">Level 3 정답 보기</summary>
+        <div style="padding: 10px 16px;">
+            <div class="answer-code"><span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="fn">printf</span>(<span class="str">"챌린지 시작\n"</span>)<span style="color:#22c55e;font-weight:900;">;</span>
+    <span class="fn">printf</span>(<span class="str">"에러 사냥꾼!\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"거의 다 왔다\n"</span>)<span style="color:#22c55e;font-weight:900;">;</span>
+    <span class="fn">printf</span>(<span class="str">"클리어!\n"</span>)<span style="color:#22c55e;font-weight:900;">;</span>
+    <span class="kw">return</span> <span class="num">0</span>;
+<span style="color:#f59e0b;font-weight:900;">}</span></div>
+        </div>
+    </details>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">Level 1, 2, 3 모두 자력으로 클리어해보세요 (힌트 없이!).</div>
+                <div class="practice-result">3개 챌린지 모두 클리어</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">에러 코드를 그대로 컴파일하고 에러 메시지와 에러 위치를 비교해보세요.</div>
+                <div class="practice-result">에러 메시지 해석 능력 향상</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ 4페이지: 최종 도전 + 요약 ═══ -->
+<div class="page">
+    <h2>최종 보스 챌린지</h2>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q1</div>
+            <div class="problem-label">나만의 에러 코드 만들기</div>
+            <span class="problem-diff easy">창의</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">에러가 3개 이상 포함된 코드를 직접 만들어 친구에게 퀴즈로 내보세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">조건 1</span><span class="problem-example-value">printf 4줄 이상</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">조건 2</span><span class="problem-example-value">에러 3개 이상 (세미콜론, 중괄호 혼합)</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">조건 3</span><span class="problem-example-value">정답 코드도 별도로 작성</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>예시 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">정상 코드에서 ; 3개를 지우고 } 1개를 지우면 에러 4개짜리 챌린지가 됩니다.</div>
+            </div>
+        </details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q2</div>
+            <div class="problem-label">에러 메시지 → 위치 찾기</div>
+            <span class="problem-diff medium">심화</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">아래 에러 메시지 3개를 읽고 각각 어느 줄, 어떤 에러인지 찾아보세요.</div>
+            <div class="code" style="font-size:12px;"><span style="color:#fca5a5;">main.c:3:20: error: expected ';' before '}'
+main.c:5:5: error: expected ';' before 'return'
+main.c:8:1: error: expected '}' at end of input</span></div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">3번째 줄: ; 누락
+5번째 줄: ; 누락
+8번째 줄: } 누락 (파일 끝까지 찾음)</div>
+            </div>
+        </details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q3</div>
+            <div class="problem-label">완벽한 코드 작성</div>
+            <span class="problem-diff easy">기본</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">에러 0개인 완벽한 코드를 처음부터 끝까지 작성하세요. printf 5줄, 주석 2개 포함.</div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>예시 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code"><span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="cmt">// 자기소개</span>
+    <span class="fn">printf</span>(<span class="str">"이름: 홍길동\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"나이: 14\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"학교: 코딩중\n"</span>);
+    <span class="cmt">// 마무리</span>
+    <span class="fn">printf</span>(<span class="str">"취미: 코딩\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"끝!\n"</span>);
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+            </div>
+        </details>
+    </div>
+
+    <div class="summary" style="background:#ffffff;">
+        <h3>핵심 요약</h3>
+        <ul>
+            <li>에러 메시지에서 줄 번호를 읽으면 빠르게 에러 위치 파악 가능</li>
+            <li>가장 흔한 에러: 세미콜론 누락(<code>;</code>), 중괄호 누락(<code>}</code>)</li>
+            <li>에러를 직접 만들고 고쳐보면 실수를 줄이는 습관이 생김</li>
+            <li>여러 에러가 있을 때는 첫 번째 에러부터 순서대로 해결</li>
+            <li>컴파일 성공 = 에러 0 = 진짜 코더의 자격 획득!</li>
+        </ul>
+    </div>
+
+    <!-- SVG: 에러 사냥 완료 배지 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 70" style="max-width:460px;width:100%">
+            <rect x="80" y="10" width="300" height="50" rx="12" fill="#0a3d1a" stroke="#22c55e" stroke-width="2"/>
+            <text x="230" y="33" text-anchor="middle" font-size="14" fill="#86efac" font-weight="900">에러 사냥 챌린지 완료!</text>
+            <text x="230" y="52" text-anchor="middle" font-size="12" fill="#64748b">Level 1 + 2 + 3 = ALL CLEAR</text>
+        </svg>
+    </div>
+</div>
+
+
+    <!-- Extra SVG -->
+    <div style="text-align:center;margin:8px 0;">
+        <svg viewBox="0 0 460 50" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="200" height="40" rx="8" fill="#0f172a" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="110" y="22" text-anchor="middle" font-size="10" fill="#ef4444" font-weight="700">에러 사냥</text>
+            <text x="110" y="38" text-anchor="middle" font-family="monospace" font-size="12" fill="#e2e8f0">Level 1,2,3</text>
+            <rect x="250" y="5" width="200" height="40" rx="8" fill="#0f172a" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="350" y="22" text-anchor="middle" font-size="10" fill="#ef4444" font-weight="700">예시</text>
+            <text x="350" y="38" text-anchor="middle" font-family="monospace" font-size="12" fill="#94a3b8">에러 찾기</text>
+        </svg>
+    </div>
+    <!-- Extra SVG -->
+    <div style="text-align:center;margin:6px 0;">
+        <svg viewBox="0 0 460 40" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="30" rx="6" fill="#0f172a"/>
+            <text x="230" y="24" text-anchor="middle" font-size="11" fill="#ef4444" font-weight="700">에러 사냥 2</text>
+        </svg>
+    </div>
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+
+
+
+<script>
+(function(){
+  var KEY = 'cs_ans_' + location.pathname.replace(/[^a-zA-Z0-9]/g,'_');
+  var pagePath = location.pathname;
+  var userId = null;
+  try {
+    userId = window.parent?.localStorage?.getItem('codingssok_user_id')
+      || localStorage.getItem('codingssok_user_id');
+  } catch(e) {}
+
+  function save(){
+    var areas = document.querySelectorAll('textarea');
+    var saved = 0;
+    areas.forEach(function(ta, i){
+      if(ta.value.trim()) {
+        localStorage.setItem(KEY + '_' + i, ta.value);
+        saved++;
+      } else {
+        localStorage.removeItem(KEY + '_' + i);
+      }
+    });
+    if(saved > 0) showSaveIndicator();
+  }
+
+  function load(){
+    var areas = document.querySelectorAll('textarea');
+    var restored = 0;
+    areas.forEach(function(ta, i){
+      var val = localStorage.getItem(KEY + '_' + i);
+      if(val && val.trim()) {
+        ta.value = val;
+        ta.style.borderColor = '#10b981';
+        ta.style.boxShadow = '0 0 0 2px rgba(16,185,129,0.15)';
+        setTimeout(function(){ ta.style.borderColor = ''; ta.style.boxShadow = ''; }, 2000);
+        restored++;
+      }
+    });
+    if(restored > 0) showRestoreIndicator(restored);
+  }
+
+  function saveToDb(){
+    if(!userId) return;
+    var areas = document.querySelectorAll('textarea');
+    var answers = [];
+    areas.forEach(function(ta, i){
+      if(ta.value.trim()) answers.push({ field_index: i, answer_text: ta.value });
+    });
+    if(answers.length === 0) return;
+    fetch('/api/answers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId, page_path: pagePath, answers: answers })
+    }).catch(function(){});
+  }
+
+  function loadFromDb(){
+    if(!userId) return;
+    fetch('/api/answers?user_id=' + encodeURIComponent(userId) + '&page_path=' + encodeURIComponent(pagePath))
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(!d.answers || !d.answers.length) return;
+        var areas = document.querySelectorAll('textarea');
+        d.answers.forEach(function(a){
+          if(areas[a.field_index] && a.answer_text) {
+            areas[a.field_index].value = a.answer_text;
+            localStorage.setItem(KEY + '_' + a.field_index, a.answer_text);
+          }
+        });
+      }).catch(function(){});
+  }
+
+  function showSaveIndicator(){
+    var el = document.getElementById('cs-save-ind');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'cs-save-ind';
+      el.style.cssText = 'position:fixed;bottom:16px;right:16px;padding:6px 14px;border-radius:8px;background:#0f172a;color:#22c55e;font-size:11px;font-weight:700;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+      document.body.appendChild(el);
+    }
+    el.textContent = '\u2713 \uB2F5\uC548 \uC800\uC7A5\uB428'; // ✓ 답안 저장됨
+    el.style.opacity = '1';
+    setTimeout(function(){ el.style.opacity = '0'; }, 1500);
+  }
+
+  function showRestoreIndicator(n){
+    var el = document.getElementById('cs-save-ind');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'cs-save-ind';
+      el.style.cssText = 'position:fixed;bottom:16px;right:16px;padding:6px 14px;border-radius:8px;background:#0f172a;color:#3b82f6;font-size:11px;font-weight:700;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+      document.body.appendChild(el);
+    }
+    el.textContent = '\u21BB ' + n + '\uAC1C \uB2F5\uC548 \uBCF5\uC6D0'; // ↻ n개 답안 복원
+    el.style.color = '#3b82f6';
+    el.style.opacity = '1';
+    setTimeout(function(){ el.style.opacity = '0'; }, 2500);
+  }
+
+  var t = null;
+  document.addEventListener('input', function(e){
+    if(e.target.tagName === 'TEXTAREA'){
+      clearTimeout(t);
+      t = setTimeout(function(){ save(); saveToDb(); }, 300);
+    }
+  });
+  document.addEventListener('change', function(e){
+    if(e.target.tagName === 'TEXTAREA'){ save(); saveToDb(); }
+  });
+  document.addEventListener('focusout', function(e){
+    if(e.target.tagName === 'TEXTAREA'){ save(); saveToDb(); }
+  });
+  window.addEventListener('beforeunload', function(){ save(); saveToDb(); });
+
+  // 즉시 로드
+  load();
+  loadFromDb();
+})();
+</script>
+</body>
+</html>

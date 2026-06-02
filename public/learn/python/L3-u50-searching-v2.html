@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 탐색 알고리즘: 선형 탐색과 이진 탐색</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+/* -- 페이지 -- */
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+/* -- 챕터 표지 -- */
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+
+/* -- 본문 -- */
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 16px; font-weight: 700; color: #1e3a5f; margin: 18px 0 10px; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+ul, ol { margin: 0 0 12px 20px; }
+li { font-size: 14px; color: #374151; line-height: 1.8; }
+
+/* -- 코드 블록 -- */
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13.5px;
+    color: #e2e8f0; line-height: 1.85; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.code .dec { color: #f9a8d4; }
+
+/* -- 따라해보세요 -- */
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '->'; color: #94a3b8; font-weight: 700; }
+
+/* -- 문제 -- */
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+
+/* -- 요약 -- */
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+/* -- 출력 박스 -- */
+.output-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #334155; line-height: 1.7; margin: 10px 0; }
+
+/* -- 비교 테이블 -- */
+.compare-table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13px; }
+.compare-table th { background: #1e3a5f; color: #fff; padding: 8px 12px; text-align: left; font-weight: 700; }
+.compare-table td { padding: 7px 12px; border-bottom: 1px solid #e2e8f0; color: #374151; }
+.compare-table tr:nth-child(even) td { background: #f8fafc; }
+.compare-table code { background: #e0e7ff; padding: 1px 5px; border-radius: 3px; font-family: 'JetBrains Mono', monospace; color: #3730a3; font-size: 12px; }
+
+/* -- 박스 -- */
+.box-key { background: #eff6ff; border-left: 4px solid #3b82f6; border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 14px 0; }
+.box-key-title { font-size: 12px; font-weight: 800; color: #1d4ed8; margin-bottom: 6px; }
+.box-key-content { font-size: 14px; color: #1e3a5f; line-height: 1.7; }
+.box-warn { background: #fff7ed; border-left: 4px solid #f97316; border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 14px 0; }
+.box-warn-title { font-size: 12px; font-weight: 800; color: #c2410c; margin-bottom: 6px; }
+.box-warn-content { font-size: 14px; color: #7c2d12; line-height: 1.7; }
+.box-tip { background: #f0fdf4; border-left: 4px solid #22c55e; border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 14px 0; }
+.box-tip-title { font-size: 12px; font-weight: 800; color: #166534; margin-bottom: 6px; }
+.box-tip-content { font-size: 14px; color: #14532d; line-height: 1.7; }
+
+/* -- 단계 박스 -- */
+.step-box { border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 14px 18px; margin: 14px 0; background: #fff; }
+.step-label { font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+.step-title { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 8px; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- 1페이지: 표지 -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">50</div>
+        <div class="cover-label">L3 — Unit 50 · 탐색 알고리즘</div>
+        <h1 class="cover-title">탐색 알고리즘:<br>선형 탐색과 이진 탐색</h1>
+        <p class="cover-sub">리스트에서 원하는 값을 찾는 두 가지 방법 — 처음부터 하나씩 확인하는 선형 탐색과, 정렬된 데이터를 반으로 줄여나가는 이진 탐색을 비교하며 배웁니다.</p>
+
+        <!-- SVG: 탐색 방법 비교 개요 -->
+        <div style="margin:24px 0;">
+            <svg viewBox="0 0 520 180" style="max-width:520px;width:100%">
+                <defs>
+                    <marker id="arwCov" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                    </marker>
+                </defs>
+                <!-- 선형 탐색 레이블 -->
+                <text x="10" y="22" font-size="11" fill="#1e3a5f" font-weight="700">선형 탐색 (Linear Search)</text>
+                <!-- 배열 칸 8개 -->
+                <rect x="10" y="30" width="44" height="32" rx="4" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+                <text x="32" y="51" text-anchor="middle" font-size="12" fill="#991b1b" font-weight="700">3</text>
+                <rect x="57" y="30" width="44" height="32" rx="4" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+                <text x="79" y="51" text-anchor="middle" font-size="12" fill="#991b1b" font-weight="700">7</text>
+                <rect x="104" y="30" width="44" height="32" rx="4" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+                <text x="126" y="51" text-anchor="middle" font-size="12" fill="#991b1b" font-weight="700">1</text>
+                <rect x="151" y="30" width="44" height="32" rx="4" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+                <text x="173" y="51" text-anchor="middle" font-size="12" fill="#991b1b" font-weight="700">9</text>
+                <rect x="198" y="30" width="44" height="32" rx="4" fill="#1e3a5f" stroke="#1e3a5f" stroke-width="1.5"/>
+                <text x="220" y="51" text-anchor="middle" font-size="12" fill="#fff" font-weight="700">5</text>
+                <rect x="245" y="30" width="44" height="32" rx="4" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1"/>
+                <text x="267" y="51" text-anchor="middle" font-size="12" fill="#94a3b8">2</text>
+                <rect x="292" y="30" width="44" height="32" rx="4" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1"/>
+                <text x="314" y="51" text-anchor="middle" font-size="12" fill="#94a3b8">8</text>
+                <rect x="339" y="30" width="44" height="32" rx="4" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1"/>
+                <text x="361" y="51" text-anchor="middle" font-size="12" fill="#94a3b8">6</text>
+                <!-- 화살표 탐색 방향 -->
+                <line x1="32" y1="68" x2="215" y2="68" stroke="#ef4444" stroke-width="1.5" marker-end="url(#arwCov)"/>
+                <text x="124" y="82" text-anchor="middle" font-size="9" fill="#ef4444">앞에서부터 순서대로 확인 — 5번째에서 발견</text>
+
+                <!-- 이진 탐색 레이블 -->
+                <text x="10" y="115" font-size="11" fill="#1e3a5f" font-weight="700">이진 탐색 (Binary Search) — 정렬된 데이터 필수</text>
+                <!-- 정렬된 배열 칸 8개 -->
+                <rect x="10" y="123" width="44" height="32" rx="4" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1"/>
+                <text x="32" y="144" text-anchor="middle" font-size="12" fill="#64748b">1</text>
+                <rect x="57" y="123" width="44" height="32" rx="4" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1"/>
+                <text x="79" y="144" text-anchor="middle" font-size="12" fill="#64748b">2</text>
+                <rect x="104" y="123" width="44" height="32" rx="4" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1"/>
+                <text x="126" y="144" text-anchor="middle" font-size="12" fill="#64748b">3</text>
+                <rect x="151" y="123" width="44" height="32" rx="4" fill="#fef9c3" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="173" y="144" text-anchor="middle" font-size="11" fill="#92400e" font-weight="700">mid</text>
+                <rect x="198" y="123" width="44" height="32" rx="4" fill="#1e3a5f" stroke="#1e3a5f" stroke-width="1.5"/>
+                <text x="220" y="144" text-anchor="middle" font-size="12" fill="#fff" font-weight="700">5</text>
+                <rect x="245" y="123" width="44" height="32" rx="4" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1"/>
+                <text x="267" y="144" text-anchor="middle" font-size="12" fill="#64748b">6</text>
+                <rect x="292" y="123" width="44" height="32" rx="4" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1"/>
+                <text x="314" y="144" text-anchor="middle" font-size="12" fill="#64748b">7</text>
+                <rect x="339" y="123" width="44" height="32" rx="4" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1"/>
+                <text x="361" y="144" text-anchor="middle" font-size="12" fill="#64748b">9</text>
+                <!-- 범위 표시 -->
+                <line x1="173" y1="161" x2="220" y2="161" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#arwCov)"/>
+                <text x="124" y="174" text-anchor="middle" font-size="9" fill="#3b82f6">mid=4(값3) &lt; 5 이므로 오른쪽 절반 탐색 — 2번째 시도에서 발견</text>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/flowchart.png" alt="알고리즘" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 유닛에서 배우는 것</h3>
+            <ul>
+                <li><code>for</code>문으로 리스트를 처음부터 끝까지 확인하는 선형 탐색을 구현할 수 있습니다.</li>
+                <li>정렬된 리스트에서 탐색 범위를 반씩 줄이는 이진 탐색 알고리즘을 구현할 수 있습니다.</li>
+                <li>선형 탐색과 이진 탐색의 시간 복잡도 차이(O(n) vs O(log n))를 설명할 수 있습니다.</li>
+                <li>Python <code>in</code> 연산자가 내부적으로 선형 탐색임을 이해하고 적절히 활용할 수 있습니다.</li>
+                <li>학생 성적 검색, 단어 사전 조회 등 실제 상황에 탐색 알고리즘을 적용할 수 있습니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- 2페이지: 선형 탐색 -->
+<div class="page">
+    <h2>선형 탐색 (Linear Search)</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/magnifying-glass.png" alt="탐색" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+    <p>선형 탐색은 리스트의 <strong>첫 번째 원소부터 마지막 원소까지 순서대로 하나씩 비교</strong>하여 원하는 값을 찾는 방법입니다. 가장 단순하지만, 모든 유형의 리스트에 사용할 수 있습니다.</p>
+
+    <!-- SVG: 선형 탐색 단계별 흐름 -->
+    <div style="margin:16px 0;">
+        <svg viewBox="0 0 520 130" style="max-width:520px;width:100%">
+            <defs>
+                <marker id="arwDown" viewBox="0 0 10 10" refX="5" refY="9" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L5,10 L10,0 z" fill="#64748b"/>
+                </marker>
+                <marker id="arwRight" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+                </marker>
+            </defs>
+            <!-- 배열 10개 -->
+            <text x="5" y="16" font-size="10" fill="#64748b">리스트: [14, 22, 5, 38, 17, 9, 42, 7, 31, 19]</text>
+            <text x="5" y="30" font-size="10" fill="#64748b">목표: 9를 찾아라</text>
+            <!-- 10개 칸 -->
+            <rect x="5" y="38" width="46" height="30" rx="4" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="28" y="58" text-anchor="middle" font-size="12" fill="#991b1b" font-weight="600">14</text>
+            <rect x="54" y="38" width="46" height="30" rx="4" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="77" y="58" text-anchor="middle" font-size="12" fill="#991b1b" font-weight="600">22</text>
+            <rect x="103" y="38" width="46" height="30" rx="4" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="126" y="58" text-anchor="middle" font-size="12" fill="#991b1b" font-weight="600">5</text>
+            <rect x="152" y="38" width="46" height="30" rx="4" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="175" y="58" text-anchor="middle" font-size="12" fill="#991b1b" font-weight="600">38</text>
+            <rect x="201" y="38" width="46" height="30" rx="4" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="224" y="58" text-anchor="middle" font-size="12" fill="#991b1b" font-weight="600">17</text>
+            <rect x="250" y="38" width="46" height="30" rx="4" fill="#1e3a5f" stroke="#1e3a5f" stroke-width="1.5"/>
+            <text x="273" y="58" text-anchor="middle" font-size="12" fill="#fff" font-weight="700">9</text>
+            <rect x="299" y="38" width="46" height="30" rx="4" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1"/>
+            <text x="322" y="58" text-anchor="middle" font-size="12" fill="#94a3b8">42</text>
+            <rect x="348" y="38" width="46" height="30" rx="4" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1"/>
+            <text x="371" y="58" text-anchor="middle" font-size="12" fill="#94a3b8">7</text>
+            <rect x="397" y="38" width="46" height="30" rx="4" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1"/>
+            <text x="420" y="58" text-anchor="middle" font-size="12" fill="#94a3b8">31</text>
+            <rect x="446" y="38" width="46" height="30" rx="4" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1"/>
+            <text x="469" y="58" text-anchor="middle" font-size="12" fill="#94a3b8">19</text>
+            <!-- 인덱스 표시 -->
+            <text x="28" y="80" text-anchor="middle" font-size="9" fill="#94a3b8">0</text>
+            <text x="77" y="80" text-anchor="middle" font-size="9" fill="#94a3b8">1</text>
+            <text x="126" y="80" text-anchor="middle" font-size="9" fill="#94a3b8">2</text>
+            <text x="175" y="80" text-anchor="middle" font-size="9" fill="#94a3b8">3</text>
+            <text x="224" y="80" text-anchor="middle" font-size="9" fill="#94a3b8">4</text>
+            <text x="273" y="80" text-anchor="middle" font-size="9" fill="#1e3a5f" font-weight="700">5</text>
+            <!-- 화살표 탐색 진행 -->
+            <line x1="5" y1="100" x2="268" y2="100" stroke="#ef4444" stroke-width="1.5" marker-end="url(#arwRight)"/>
+            <text x="134" y="115" text-anchor="middle" font-size="9" fill="#ef4444">비교 횟수: 6번 (인덱스 5에서 발견)</text>
+            <text x="400" y="115" text-anchor="middle" font-size="9" fill="#94a3b8">최악: 10번 비교</text>
+        </svg>
+    </div>
+
+    <h3>선형 탐색 구현</h3>
+
+    <div class="code"><span class="kw">def</span> <span class="fn">linear_search</span>(arr, target):
+    <span class="str">"""리스트에서 target을 찾아 인덱스를 반환. 없으면 -1."""</span>
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="fn">len</span>(arr)):
+        <span class="kw">if</span> arr[i] == target:
+            <span class="kw">return</span> i          <span class="cmt"># 찾으면 즉시 인덱스 반환</span>
+    <span class="kw">return</span> <span class="num">-1</span>              <span class="cmt"># 끝까지 못 찾으면 -1</span>
+
+numbers = [<span class="num">14</span>, <span class="num">22</span>, <span class="num">5</span>, <span class="num">38</span>, <span class="num">17</span>, <span class="num">9</span>, <span class="num">42</span>, <span class="num">7</span>, <span class="num">31</span>, <span class="num">19</span>]
+result = <span class="fn">linear_search</span>(numbers, <span class="num">9</span>)
+<span class="fn">print</span>(result)    <span class="cmt"># 5</span></div>
+
+    <div class="output-box">5</div>
+
+    <div class="box-key">
+        <div class="box-key-title">핵심 동작 원리</div>
+        <div class="box-key-content"><code>for i in range(len(arr))</code>로 인덱스를 0부터 끝까지 순회합니다. 각 인덱스에서 <code>arr[i] == target</code>이면 즉시 <code>return i</code>로 종료합니다. 리스트 끝까지 도달해도 못 찾으면 <code>-1</code>을 반환합니다.</div>
+    </div>
+
+    <h3>선형 탐색 — 비교 횟수 추적 버전</h3>
+    <p>실제로 몇 번 비교했는지 확인하는 버전도 만들어볼 수 있습니다.</p>
+
+    <div class="code"><span class="kw">def</span> <span class="fn">linear_search_verbose</span>(arr, target):
+    count = <span class="num">0</span>
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="fn">len</span>(arr)):
+        count += <span class="num">1</span>
+        <span class="fn">print</span>(<span class="str">f"비교 {count}회: arr[{i}] = {arr[i]}"</span>)
+        <span class="kw">if</span> arr[i] == target:
+            <span class="fn">print</span>(<span class="str">f"→ 발견! 인덱스 {i}, 총 {count}번 비교"</span>)
+            <span class="kw">return</span> i
+    <span class="fn">print</span>(<span class="str">f"→ 없음. 총 {count}번 비교"</span>)
+    <span class="kw">return</span> <span class="num">-1</span></div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/calculator.png" alt="계산" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">연습 1</div>
+                <div class="practice-desc"><code>linear_search([10, 3, 7, 5, 8], 7)</code>를 실행하고 결과를 확인합니다.</div>
+                <div class="code"><span class="kw">def</span> <span class="fn">linear_search</span>(arr, target):
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="fn">len</span>(arr)):
+        <span class="kw">if</span> arr[i] == target:
+            <span class="kw">return</span> i
+    <span class="kw">return</span> <span class="num">-1</span>
+
+<span class="fn">print</span>(<span class="fn">linear_search</span>([<span class="num">10</span>, <span class="num">3</span>, <span class="num">7</span>, <span class="num">5</span>, <span class="num">8</span>], <span class="num">7</span>))</div>
+                <div class="practice-result">출력: 2</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">연습 2</div>
+                <div class="practice-desc">없는 값 <code>99</code>를 탐색했을 때 <code>-1</code>이 반환되는지 확인합니다.</div>
+                <div class="code"><span class="fn">print</span>(<span class="fn">linear_search</span>([<span class="num">10</span>, <span class="num">3</span>, <span class="num">7</span>, <span class="num">5</span>, <span class="num">8</span>], <span class="num">99</span>))</div>
+                <div class="practice-result">출력: -1</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3페이지: 이진 탐색 -->
+<div class="page">
+    <h2>이진 탐색 (Binary Search)</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/clock.png" alt="복잡도" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+    <p>이진 탐색은 <strong>정렬된 리스트</strong>에서만 사용할 수 있습니다. 탐색 범위의 중간 값을 보고, 목표 값이 더 크면 오른쪽 절반만, 더 작으면 왼쪽 절반만 다시 탐색합니다. 한 번 비교할 때마다 탐색 범위가 절반으로 줄어듭니다.</p>
+
+    <!-- SVG: 이진 탐색 단계별 시각화 -->
+    <div style="margin:16px 0;">
+        <svg viewBox="0 0 520 200" style="max-width:520px;width:100%">
+            <defs>
+                <marker id="arwBin" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#3b82f6"/>
+                </marker>
+            </defs>
+
+            <!-- 1단계: 전체 배열 -->
+            <text x="5" y="14" font-size="10" fill="#1e3a5f" font-weight="700">정렬된 리스트: [2, 5, 8, 12, 16, 23, 38, 45, 56, 72]</text>
+            <text x="5" y="26" font-size="10" fill="#64748b">목표: 23을 찾아라</text>
+            <text x="430" y="26" font-size="10" fill="#3b82f6" font-weight="700">1단계</text>
+
+            <!-- 10개 칸 -->
+            <rect x="5" y="32" width="46" height="28" rx="3" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1"/>
+            <text x="28" y="51" text-anchor="middle" font-size="11" fill="#64748b">2</text>
+            <rect x="54" y="32" width="46" height="28" rx="3" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1"/>
+            <text x="77" y="51" text-anchor="middle" font-size="11" fill="#64748b">5</text>
+            <rect x="103" y="32" width="46" height="28" rx="3" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1"/>
+            <text x="126" y="51" text-anchor="middle" font-size="11" fill="#64748b">8</text>
+            <rect x="152" y="32" width="46" height="28" rx="3" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1"/>
+            <text x="175" y="51" text-anchor="middle" font-size="11" fill="#64748b">12</text>
+            <rect x="201" y="32" width="46" height="28" rx="3" fill="#fef9c3" stroke="#f59e0b" stroke-width="2"/>
+            <text x="224" y="47" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">16</text>
+            <text x="224" y="57" text-anchor="middle" font-size="8" fill="#92400e">mid</text>
+            <rect x="250" y="32" width="46" height="28" rx="3" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1"/>
+            <text x="273" y="51" text-anchor="middle" font-size="11" fill="#64748b">23</text>
+            <rect x="299" y="32" width="46" height="28" rx="3" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1"/>
+            <text x="322" y="51" text-anchor="middle" font-size="11" fill="#64748b">38</text>
+            <rect x="348" y="32" width="46" height="28" rx="3" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1"/>
+            <text x="371" y="51" text-anchor="middle" font-size="11" fill="#64748b">45</text>
+            <rect x="397" y="32" width="46" height="28" rx="3" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1"/>
+            <text x="420" y="51" text-anchor="middle" font-size="11" fill="#64748b">56</text>
+            <rect x="446" y="32" width="46" height="28" rx="3" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1"/>
+            <text x="469" y="51" text-anchor="middle" font-size="11" fill="#64748b">72</text>
+            <text x="5" y="73" font-size="9" fill="#92400e">mid(인덱스 4)=16 &lt; 23 → 오른쪽(인덱스 5~9) 탐색</text>
+
+            <!-- 2단계: 오른쪽 절반 -->
+            <text x="430" y="90" font-size="10" fill="#3b82f6" font-weight="700">2단계</text>
+            <rect x="250" y="82" width="46" height="28" rx="3" fill="#fef9c3" stroke="#f59e0b" stroke-width="2"/>
+            <text x="273" y="97" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">23</text>
+            <text x="273" y="107" text-anchor="middle" font-size="8" fill="#92400e">mid</text>
+            <rect x="299" y="82" width="46" height="28" rx="3" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1"/>
+            <text x="322" y="101" text-anchor="middle" font-size="11" fill="#64748b">38</text>
+            <rect x="348" y="82" width="46" height="28" rx="3" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1"/>
+            <text x="371" y="101" text-anchor="middle" font-size="11" fill="#64748b">45</text>
+            <rect x="397" y="82" width="46" height="28" rx="3" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1"/>
+            <text x="420" y="101" text-anchor="middle" font-size="11" fill="#64748b">56</text>
+            <rect x="446" y="82" width="46" height="28" rx="3" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1"/>
+            <text x="469" y="101" text-anchor="middle" font-size="11" fill="#64748b">72</text>
+            <text x="250" y="123" font-size="9" fill="#1e3a5f" font-weight="700">mid(인덱스 7)=23 == 23 → 발견! (2번 비교)</text>
+
+            <!-- 결과 박스 -->
+            <rect x="5" y="140" width="510" height="52" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="260" y="160" text-anchor="middle" font-size="11" fill="#166534" font-weight="800">이진 탐색 결과</text>
+            <text x="260" y="177" text-anchor="middle" font-size="10" fill="#166534">10개 원소 리스트에서 선형 탐색은 최대 10번, 이진 탐색은 최대 4번 비교</text>
+            <text x="260" y="187" text-anchor="middle" font-size="9" fill="#64748b">100만 개: 선형 최대 1,000,000번 vs 이진 최대 20번</text>
+        </svg>
+    </div>
+
+    <h3>이진 탐색 구현</h3>
+    <p>이진 탐색은 <code>left</code>와 <code>right</code> 두 포인터로 탐색 범위를 추적합니다. <code>mid = (left + right) // 2</code>로 중간 인덱스를 구합니다.</p>
+
+    <div class="code"><span class="kw">def</span> <span class="fn">binary_search</span>(arr, target):
+    <span class="str">"""정렬된 리스트에서 target을 찾아 인덱스 반환. 없으면 -1."""</span>
+    left = <span class="num">0</span>
+    right = <span class="fn">len</span>(arr) - <span class="num">1</span>
+
+    <span class="kw">while</span> left &lt;= right:
+        mid = (left + right) // <span class="num">2</span>   <span class="cmt"># 중간 인덱스</span>
+
+        <span class="kw">if</span> arr[mid] == target:
+            <span class="kw">return</span> mid              <span class="cmt"># 발견</span>
+        <span class="kw">elif</span> arr[mid] &lt; target:
+            left = mid + <span class="num">1</span>          <span class="cmt"># 오른쪽 절반으로</span>
+        <span class="kw">else</span>:
+            right = mid - <span class="num">1</span>         <span class="cmt"># 왼쪽 절반으로</span>
+
+    <span class="kw">return</span> <span class="num">-1</span>                       <span class="cmt"># 못 찾음</span>
+
+sorted_nums = [<span class="num">2</span>, <span class="num">5</span>, <span class="num">8</span>, <span class="num">12</span>, <span class="num">16</span>, <span class="num">23</span>, <span class="num">38</span>, <span class="num">45</span>, <span class="num">56</span>, <span class="num">72</span>]
+<span class="fn">print</span>(<span class="fn">binary_search</span>(sorted_nums, <span class="num">23</span>))   <span class="cmt"># 5</span>
+<span class="fn">print</span>(<span class="fn">binary_search</span>(sorted_nums, <span class="num">99</span>))   <span class="cmt"># -1</span></div>
+
+    <div class="output-box">5
+-1</div>
+
+    <div class="box-warn">
+        <div class="box-warn-title">주의: 이진 탐색은 정렬된 리스트에서만 동작</div>
+        <div class="box-warn-content">정렬되지 않은 리스트에 이진 탐색을 적용하면 잘못된 결과가 나옵니다. 반드시 <code>sorted()</code>로 정렬하거나, 처음부터 정렬 상태를 유지해야 합니다.</div>
+    </div>
+</div>
+
+<!-- 4페이지: 비교 및 in 연산자 -->
+<div class="page">
+    <h2>선형 vs 이진 탐색 비교</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="처리" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+    <!-- SVG: 시간 복잡도 시각적 비교 그래프 -->
+    <div style="margin:12px 0 18px;">
+        <svg viewBox="0 0 520 170" style="max-width:520px;width:100%">
+            <!-- 축 -->
+            <line x1="50" y1="20" x2="50" y2="150" stroke="#94a3b8" stroke-width="1.5"/>
+            <line x1="50" y1="150" x2="510" y2="150" stroke="#94a3b8" stroke-width="1.5"/>
+            <text x="280" y="168" text-anchor="middle" font-size="10" fill="#64748b">데이터 크기 (n)</text>
+            <text x="12" y="90" text-anchor="middle" font-size="10" fill="#64748b" transform="rotate(-90,12,90)">비교 횟수</text>
+
+            <!-- O(n) 선형 탐색 — 직선 -->
+            <polyline points="50,150 100,130 150,110 200,90 250,70 300,50 350,30" fill="none" stroke="#ef4444" stroke-width="2"/>
+            <text x="355" y="28" font-size="10" fill="#ef4444" font-weight="700">O(n)</text>
+            <text x="355" y="40" font-size="9" fill="#ef4444">선형 탐색</text>
+
+            <!-- O(log n) 이진 탐색 — 완만한 곡선 -->
+            <polyline points="50,150 100,144 150,139 200,135 250,132 300,130 350,128 400,126 450,125 500,124" fill="none" stroke="#3b82f6" stroke-width="2"/>
+            <text x="505" y="122" font-size="10" fill="#3b82f6" font-weight="700">O(log n)</text>
+            <text x="505" y="134" font-size="9" fill="#3b82f6">이진 탐색</text>
+
+            <!-- 격자선 -->
+            <line x1="50" y1="150" x2="510" y2="150" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="4,4"/>
+            <line x1="50" y1="110" x2="510" y2="110" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="4,4"/>
+            <line x1="50" y1="70" x2="510" y2="70" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="4,4"/>
+            <line x1="50" y1="30" x2="510" y2="30" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="4,4"/>
+        </svg>
+    </div>
+
+    <table class="compare-table">
+        <thead>
+            <tr>
+                <th>항목</th>
+                <th>선형 탐색</th>
+                <th>이진 탐색</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>정렬 필요 여부</td>
+                <td>불필요 (어떤 리스트도 OK)</td>
+                <td>반드시 정렬 필요</td>
+            </tr>
+            <tr>
+                <td>시간 복잡도</td>
+                <td>O(n) — 원소 수에 비례</td>
+                <td>O(log n) — 매우 빠름</td>
+            </tr>
+            <tr>
+                <td>구현 난이도</td>
+                <td>단순 (for문 1개)</td>
+                <td>중간 (while + 포인터 2개)</td>
+            </tr>
+            <tr>
+                <td>적합한 경우</td>
+                <td>소량 데이터, 비정렬 데이터</td>
+                <td>대량 정렬 데이터</td>
+            </tr>
+            <tr>
+                <td>100만 개 데이터 최악</td>
+                <td>1,000,000번 비교</td>
+                <td>약 20번 비교</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3><code>in</code> 연산자와의 관계</h3>
+    <p>Python의 <code>in</code> 연산자는 리스트에서 <strong>내부적으로 선형 탐색</strong>을 수행합니다. 편리하지만 대량 데이터에서는 느릴 수 있습니다.</p>
+
+    <!-- SVG: in 연산자 내부 동작 -->
+    <div style="margin:12px 0;">
+        <svg viewBox="0 0 520 90" style="max-width:520px;width:100%">
+            <defs>
+                <marker id="arwIn" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#6366f1"/>
+                </marker>
+            </defs>
+            <!-- 코드 박스 -->
+            <rect x="5" y="10" width="200" height="36" rx="6" fill="#1e3a5f"/>
+            <text x="105" y="30" text-anchor="middle" font-size="11" fill="#c084fc" font-weight="600">5 in [14, 22, 5, 38, 9]</text>
+            <text x="105" y="44" text-anchor="middle" font-size="9" fill="#93c5fd">→ True</text>
+            <!-- 화살표 -->
+            <line x1="208" y1="28" x2="240" y2="28" stroke="#6366f1" stroke-width="1.5" marker-end="url(#arwIn)"/>
+            <!-- 설명 박스 -->
+            <rect x="243" y="10" width="270" height="36" rx="6" fill="#eff6ff" stroke="#6366f1" stroke-width="1.5"/>
+            <text x="378" y="28" text-anchor="middle" font-size="10" fill="#4338ca" font-weight="700">내부적으로 선형 탐색 실행</text>
+            <text x="378" y="42" text-anchor="middle" font-size="9" fill="#4338ca">14 == 5? No → 22 == 5? No → 5 == 5? Yes</text>
+            <!-- 하단 -->
+            <text x="5" y="76" font-size="10" fill="#64748b">리스트 in: O(n) 선형 탐색 | 딕셔너리/집합 in: O(1) 해시 탐색 (훨씬 빠름)</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># in 연산자 — 내부적으로 선형 탐색</span>
+numbers = [<span class="num">14</span>, <span class="num">22</span>, <span class="num">5</span>, <span class="num">38</span>, <span class="num">9</span>]
+<span class="fn">print</span>(<span class="num">5</span> <span class="kw">in</span> numbers)     <span class="cmt"># True  (선형 탐색)</span>
+<span class="fn">print</span>(<span class="num">99</span> <span class="kw">in</span> numbers)    <span class="cmt"># False (끝까지 탐색)</span>
+
+<span class="cmt"># 직접 구현 vs in 연산자 — 결과 동일</span>
+<span class="fn">print</span>(<span class="fn">linear_search</span>(numbers, <span class="num">5</span>) != <span class="num">-1</span>)   <span class="cmt"># True</span></div>
+
+    <div class="box-tip">
+        <div class="box-tip-title">팁: 대량 데이터에서 빠른 탐색이 필요하다면</div>
+        <div class="box-tip-content">단순히 "존재 여부"만 확인할 때는 리스트 대신 <code>set</code>(집합)을 쓰면 O(1) 해시 탐색이 적용됩니다. 인덱스나 순서가 필요하면 <code>binary_search</code>를 직접 구현하거나, Python 표준 라이브러리 <code>bisect</code> 모듈을 활용하세요.</div>
+    </div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">연습 3</div>
+                <div class="practice-desc">이진 탐색으로 <code>[1, 3, 5, 7, 9, 11, 13, 15]</code>에서 <code>7</code>을 찾습니다.</div>
+                <div class="code"><span class="kw">def</span> <span class="fn">binary_search</span>(arr, target):
+    left, right = <span class="num">0</span>, <span class="fn">len</span>(arr) - <span class="num">1</span>
+    <span class="kw">while</span> left &lt;= right:
+        mid = (left + right) // <span class="num">2</span>
+        <span class="kw">if</span> arr[mid] == target:
+            <span class="kw">return</span> mid
+        <span class="kw">elif</span> arr[mid] &lt; target:
+            left = mid + <span class="num">1</span>
+        <span class="kw">else</span>:
+            right = mid - <span class="num">1</span>
+    <span class="kw">return</span> <span class="num">-1</span>
+
+<span class="fn">print</span>(<span class="fn">binary_search</span>([<span class="num">1</span>,<span class="num">3</span>,<span class="num">5</span>,<span class="num">7</span>,<span class="num">9</span>,<span class="num">11</span>,<span class="num">13</span>,<span class="num">15</span>], <span class="num">7</span>))</div>
+                <div class="practice-result">출력: 3</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 5페이지: 실용 예제 -->
+<div class="page">
+    <h2>실용 예제</h2>
+
+    <h3>예제 1 — 학생 성적 검색 (선형 탐색)</h3>
+    <p>딕셔너리 리스트에서 이름으로 학생을 찾는 실용적인 예입니다. 데이터가 정렬되어 있지 않으므로 선형 탐색이 적합합니다.</p>
+
+    <div class="code"><span class="cmt"># 학생 성적 검색 — 선형 탐색 활용</span>
+students = [
+    {<span class="str">"name"</span>: <span class="str">"김민준"</span>, <span class="str">"score"</span>: <span class="num">88</span>},
+    {<span class="str">"name"</span>: <span class="str">"이서연"</span>, <span class="str">"score"</span>: <span class="num">95</span>},
+    {<span class="str">"name"</span>: <span class="str">"박지훈"</span>, <span class="str">"score"</span>: <span class="num">72</span>},
+    {<span class="str">"name"</span>: <span class="str">"최유나"</span>, <span class="str">"score"</span>: <span class="num">81</span>},
+]
+
+<span class="kw">def</span> <span class="fn">find_student</span>(students, name):
+    <span class="kw">for</span> i, student <span class="kw">in</span> <span class="fn">enumerate</span>(students):
+        <span class="kw">if</span> student[<span class="str">"name"</span>] == name:
+            <span class="kw">return</span> student
+    <span class="kw">return</span> <span class="kw">None</span>
+
+result = <span class="fn">find_student</span>(students, <span class="str">"이서연"</span>)
+<span class="kw">if</span> result:
+    <span class="fn">print</span>(<span class="str">f"{result['name']}: {result['score']}점"</span>)
+<span class="kw">else</span>:
+    <span class="fn">print</span>(<span class="str">"학생을 찾을 수 없습니다."</span>)</div>
+
+    <div class="output-box">이서연: 95점</div>
+
+    <h3>예제 2 — 단어 사전 조회 (이진 탐색)</h3>
+    <p>알파벳순으로 정렬된 단어 목록에서 특정 단어를 빠르게 찾는 예입니다. 실제 종이 사전을 찾는 방법과 동일합니다.</p>
+
+    <div class="code"><span class="cmt"># 정렬된 단어 목록에서 이진 탐색</span>
+words = [<span class="str">"apple"</span>, <span class="str">"banana"</span>, <span class="str">"cherry"</span>, <span class="str">"date"</span>,
+         <span class="str">"grape"</span>, <span class="str">"kiwi"</span>, <span class="str">"mango"</span>, <span class="str">"orange"</span>]
+
+<span class="kw">def</span> <span class="fn">find_word</span>(words, target):
+    left, right = <span class="num">0</span>, <span class="fn">len</span>(words) - <span class="num">1</span>
+    <span class="kw">while</span> left &lt;= right:
+        mid = (left + right) // <span class="num">2</span>
+        <span class="kw">if</span> words[mid] == target:
+            <span class="kw">return</span> mid
+        <span class="kw">elif</span> words[mid] &lt; target:
+            left = mid + <span class="num">1</span>
+        <span class="kw">else</span>:
+            right = mid - <span class="num">1</span>
+    <span class="kw">return</span> <span class="num">-1</span>
+
+idx = <span class="fn">find_word</span>(words, <span class="str">"mango"</span>)
+<span class="fn">print</span>(<span class="str">f"'mango' 위치: {idx}"</span>)       <span class="cmt"># 6</span>
+<span class="fn">print</span>(<span class="str">f"'peach' 위치: {find_word(words, 'peach')}"</span>)  <span class="cmt"># -1</span></div>
+
+    <div class="output-box">'mango' 위치: 6
+'peach' 위치: -1</div>
+
+    <!-- SVG: 단어 사전 이진 탐색 시각화 -->
+    <div style="margin:12px 0;">
+        <svg viewBox="0 0 520 80" style="max-width:520px;width:100%">
+            <defs>
+                <marker id="arwDict" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#6366f1"/>
+                </marker>
+            </defs>
+            <!-- 8개 단어 칸 -->
+            <rect x="5" y="15" width="58" height="28" rx="3" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1"/>
+            <text x="34" y="33" text-anchor="middle" font-size="9" fill="#64748b">apple</text>
+            <rect x="66" y="15" width="58" height="28" rx="3" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1"/>
+            <text x="95" y="33" text-anchor="middle" font-size="9" fill="#64748b">banana</text>
+            <rect x="127" y="15" width="58" height="28" rx="3" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1"/>
+            <text x="156" y="33" text-anchor="middle" font-size="9" fill="#64748b">cherry</text>
+            <rect x="188" y="15" width="58" height="28" rx="3" fill="#fef9c3" stroke="#f59e0b" stroke-width="2"/>
+            <text x="217" y="29" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">date</text>
+            <text x="217" y="41" text-anchor="middle" font-size="7" fill="#92400e">mid</text>
+            <rect x="249" y="15" width="58" height="28" rx="3" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1"/>
+            <text x="278" y="33" text-anchor="middle" font-size="9" fill="#64748b">grape</text>
+            <rect x="310" y="15" width="58" height="28" rx="3" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1"/>
+            <text x="339" y="33" text-anchor="middle" font-size="9" fill="#64748b">kiwi</text>
+            <rect x="371" y="15" width="58" height="28" rx="3" fill="#1e3a5f" stroke="#1e3a5f" stroke-width="1.5"/>
+            <text x="400" y="33" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">mango</text>
+            <rect x="432" y="15" width="58" height="28" rx="3" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1"/>
+            <text x="461" y="33" text-anchor="middle" font-size="9" fill="#64748b">orange</text>
+            <!-- 설명 -->
+            <text x="5" y="60" font-size="9" fill="#92400e">1단계: mid='date' &lt; 'mango' → 오른쪽</text>
+            <text x="250" y="60" font-size="9" fill="#3b82f6">2단계: mid='kiwi' &lt; 'mango' → 오른쪽</text>
+            <text x="5" y="74" font-size="9" fill="#166534">3단계: mid='mango' == 'mango' → 발견! (인덱스 6)</text>
+        </svg>
+    </div>
+
+    <h3>예제 3 — 정렬 후 이진 탐색</h3>
+    <p>정렬되지 않은 리스트를 <code>sorted()</code>로 정렬한 뒤 이진 탐색을 적용하는 패턴입니다.</p>
+
+    <div class="code"><span class="cmt"># 정렬 후 이진 탐색 패턴</span>
+raw = [<span class="num">45</span>, <span class="num">12</span>, <span class="num">78</span>, <span class="num">3</span>, <span class="num">56</span>, <span class="num">23</span>, <span class="num">90</span>]
+sorted_data = <span class="fn">sorted</span>(raw)          <span class="cmt"># [3, 12, 23, 45, 56, 78, 90]</span>
+<span class="fn">print</span>(<span class="fn">binary_search</span>(sorted_data, <span class="num">23</span>))  <span class="cmt"># 2</span></div>
+
+    <div class="output-box">2</div>
+</div>
+
+<!-- 6페이지: 연습 문제 -->
+<div class="page">
+    <h2>연습 문제</h2>
+
+    <!-- 문제 1 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">1</div>
+            <div class="problem-label">선형 탐색 — 최솟값 인덱스 찾기</div>
+            <div class="problem-diff easy">쉬움</div>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">선형 탐색 방식을 이용하여 리스트에서 <strong>최솟값의 인덱스</strong>를 반환하는 함수 <code>find_min_index(arr)</code>를 작성하세요. 리스트가 비어 있으면 <code>-1</code>을 반환합니다.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">입력</span>
+                    <span class="problem-example-value">arr = [42, 13, 7, 28, 5, 19]</span>
+                </div>
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력</span>
+                    <span class="problem-example-value">4  (arr[4] = 5 가 최솟값)</span>
+                </div>
+            </div>
+        </div>
+        <div class="problem-toggle">
+            <details>
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text"><code>min_val = arr[0]</code>, <code>min_idx = 0</code> 으로 시작합니다. 순회하면서 현재 원소가 <code>min_val</code>보다 작으면 두 값을 모두 갱신합니다.</div>
+                </div>
+            </details>
+            <details>
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code"><span class="kw">def</span> <span class="fn">find_min_index</span>(arr):
+    <span class="kw">if not</span> arr:
+        <span class="kw">return</span> <span class="num">-1</span>
+    min_idx = <span class="num">0</span>
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">1</span>, <span class="fn">len</span>(arr)):
+        <span class="kw">if</span> arr[i] &lt; arr[min_idx]:
+            min_idx = i
+    <span class="kw">return</span> min_idx
+
+<span class="fn">print</span>(<span class="fn">find_min_index</span>([<span class="num">42</span>, <span class="num">13</span>, <span class="num">7</span>, <span class="num">28</span>, <span class="num">5</span>, <span class="num">19</span>]))  <span class="cmt"># 4</span></div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <!-- 문제 2 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">2</div>
+            <div class="problem-label">이진 탐색 — 삽입 위치 찾기</div>
+            <div class="problem-diff medium">보통</div>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">정렬된 리스트에 새 값을 삽입할 때 <strong>정렬 순서가 유지되는 위치(인덱스)</strong>를 반환하는 함수 <code>find_insert_pos(arr, target)</code>를 이진 탐색으로 작성하세요. 이미 존재하면 해당 인덱스를 반환합니다.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">입력</span>
+                    <span class="problem-example-value">arr = [1, 3, 5, 7, 9], target = 6</span>
+                </div>
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력</span>
+                    <span class="problem-example-value">3  (인덱스 3에 삽입하면 [1,3,5,6,7,9])</span>
+                </div>
+            </div>
+        </div>
+        <div class="problem-toggle">
+            <details>
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text"><code>while left &lt;= right</code> 루프가 끝났을 때 <code>left</code>가 삽입 위치입니다. <code>arr[mid] &lt; target</code>이면 <code>left = mid + 1</code>, 그렇지 않으면 <code>right = mid - 1</code>을 적용합니다.</div>
+                </div>
+            </details>
+            <details>
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code"><span class="kw">def</span> <span class="fn">find_insert_pos</span>(arr, target):
+    left, right = <span class="num">0</span>, <span class="fn">len</span>(arr) - <span class="num">1</span>
+    <span class="kw">while</span> left &lt;= right:
+        mid = (left + right) // <span class="num">2</span>
+        <span class="kw">if</span> arr[mid] == target:
+            <span class="kw">return</span> mid
+        <span class="kw">elif</span> arr[mid] &lt; target:
+            left = mid + <span class="num">1</span>
+        <span class="kw">else</span>:
+            right = mid - <span class="num">1</span>
+    <span class="kw">return</span> left  <span class="cmt"># 삽입 위치</span>
+
+<span class="fn">print</span>(<span class="fn">find_insert_pos</span>([<span class="num">1</span>,<span class="num">3</span>,<span class="num">5</span>,<span class="num">7</span>,<span class="num">9</span>], <span class="num">6</span>))  <span class="cmt"># 3</span></div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <!-- 문제 3 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">3</div>
+            <div class="problem-label">두 탐색 비교 — 비교 횟수 측정</div>
+            <div class="problem-diff hard">어려움</div>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">선형 탐색과 이진 탐색의 비교 횟수를 각각 반환하는 함수를 작성하세요. 두 함수를 이용하여 <code>[1, 2, ..., 100]</code> 리스트에서 <code>73</code>을 찾을 때 각각 몇 번 비교하는지 출력합니다.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력</span>
+                    <span class="problem-example-value">선형: 73번 | 이진: 7번</span>
+                </div>
+            </div>
+        </div>
+        <div class="problem-toggle">
+            <details>
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">각 함수 내부에 <code>count</code> 변수를 두고, 비교할 때마다 <code>count += 1</code>을 합니다. 마지막에 <code>(인덱스, count)</code>를 반환합니다.</div>
+                </div>
+            </details>
+            <details>
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code"><span class="kw">def</span> <span class="fn">linear_count</span>(arr, target):
+    count = <span class="num">0</span>
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="fn">len</span>(arr)):
+        count += <span class="num">1</span>
+        <span class="kw">if</span> arr[i] == target:
+            <span class="kw">return</span> i, count
+    <span class="kw">return</span> <span class="num">-1</span>, count
+
+<span class="kw">def</span> <span class="fn">binary_count</span>(arr, target):
+    left, right, count = <span class="num">0</span>, <span class="fn">len</span>(arr)-<span class="num">1</span>, <span class="num">0</span>
+    <span class="kw">while</span> left &lt;= right:
+        mid = (left + right) // <span class="num">2</span>
+        count += <span class="num">1</span>
+        <span class="kw">if</span> arr[mid] == target: <span class="kw">return</span> mid, count
+        <span class="kw">elif</span> arr[mid] &lt; target: left = mid + <span class="num">1</span>
+        <span class="kw">else</span>: right = mid - <span class="num">1</span>
+    <span class="kw">return</span> <span class="num">-1</span>, count
+
+data = <span class="fn">list</span>(<span class="fn">range</span>(<span class="num">1</span>, <span class="num">101</span>))
+_, lc = <span class="fn">linear_count</span>(data, <span class="num">73</span>)
+_, bc = <span class="fn">binary_count</span>(data, <span class="num">73</span>)
+<span class="fn">print</span>(<span class="str">f"선형: {lc}번 | 이진: {bc}번"</span>)</div>
+                </div>
+            </details>
+        </div>
+    </div>
+</div>
+
+<!-- 7페이지: 핵심 요약 -->
+<div class="page">
+    <h2>핵심 요약</h2>
+
+    <!-- SVG: 전체 개념 구조도 -->
+    <div style="margin:12px 0 20px;">
+        <svg viewBox="0 0 520 160" style="max-width:520px;width:100%">
+            <defs>
+                <marker id="arwSum" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <!-- 중앙: 탐색 알고리즘 -->
+            <rect x="180" y="55" width="160" height="50" rx="10" fill="#1e3a5f"/>
+            <text x="260" y="75" text-anchor="middle" font-size="12" fill="#fff" font-weight="800">탐색 알고리즘</text>
+            <text x="260" y="93" text-anchor="middle" font-size="9" fill="#93c5fd">리스트에서 원하는 값 찾기</text>
+            <!-- 왼쪽: 선형 탐색 -->
+            <rect x="5" y="20" width="145" height="56" rx="8" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="77" y="40" text-anchor="middle" font-size="11" fill="#991b1b" font-weight="700">선형 탐색</text>
+            <text x="77" y="54" text-anchor="middle" font-size="9" fill="#7f1d1d">for문 순서대로</text>
+            <text x="77" y="67" text-anchor="middle" font-size="9" fill="#7f1d1d">O(n) | 비정렬 가능</text>
+            <line x1="153" y1="48" x2="177" y2="70" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwSum)"/>
+            <!-- 오른쪽: 이진 탐색 -->
+            <rect x="370" y="20" width="145" height="56" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="442" y="40" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">이진 탐색</text>
+            <text x="442" y="54" text-anchor="middle" font-size="9" fill="#1e40af">while + 포인터 2개</text>
+            <text x="442" y="67" text-anchor="middle" font-size="9" fill="#1e40af">O(log n) | 정렬 필수</text>
+            <line x1="367" y1="48" x2="343" y2="70" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwSum)"/>
+            <!-- 하단: in 연산자 -->
+            <rect x="100" y="120" width="140" height="34" rx="8" fill="#f1f5f9" stroke="#64748b" stroke-width="1.5"/>
+            <text x="170" y="137" text-anchor="middle" font-size="10" fill="#334155" font-weight="700">in 연산자</text>
+            <text x="170" y="149" text-anchor="middle" font-size="8" fill="#64748b">내부는 선형 탐색</text>
+            <line x1="218" y1="108" x2="200" y2="118" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwSum)"/>
+            <!-- 하단: 실용 -->
+            <rect x="280" y="120" width="140" height="34" rx="8" fill="#f1f5f9" stroke="#64748b" stroke-width="1.5"/>
+            <text x="350" y="137" text-anchor="middle" font-size="10" fill="#334155" font-weight="700">실용 선택 기준</text>
+            <text x="350" y="149" text-anchor="middle" font-size="8" fill="#64748b">소량/비정렬: 선형 | 대량/정렬: 이진</text>
+            <line x1="302" y1="108" x2="320" y2="118" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwSum)"/>
+        </svg>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>핵심 요약</h3>
+        <ul>
+            <li><strong>선형 탐색</strong>: <code>for</code>문으로 앞에서부터 하나씩 비교. 정렬 불필요. 시간 복잡도 O(n).</li>
+            <li><strong>이진 탐색</strong>: <code>left</code>/<code>right</code> 포인터와 <code>mid = (left + right) // 2</code>. 반드시 정렬된 리스트에만 사용. 시간 복잡도 O(log n).</li>
+            <li>이진 탐색의 조건: <code>arr[mid] == target</code>이면 반환, <code>&lt; target</code>이면 <code>left = mid + 1</code>, <code>&gt; target</code>이면 <code>right = mid - 1</code>.</li>
+            <li>Python <code>in</code> 연산자는 리스트에서 내부적으로 선형 탐색(O(n))을 수행한다.</li>
+            <li>존재 여부만 확인할 때: 리스트 대신 <code>set</code>을 사용하면 O(1) 해시 탐색이 적용된다.</li>
+            <li>탐색 전에 정렬 비용(O(n log n))이 발생하더라도, 대량 데이터에서 반복 탐색 시 이진 탐색이 유리하다.</li>
+        </ul>
+    </div>
+
+    <!-- SVG: 비교 횟수 실제 수치 비교 -->
+    <div style="margin:16px 0;">
+        <svg viewBox="0 0 520 100" style="max-width:520px;width:100%">
+            <text x="260" y="14" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="800">데이터 크기별 최대 비교 횟수 비교</text>
+            <!-- 헤더 -->
+            <rect x="5" y="22" width="120" height="22" rx="4" fill="#1e3a5f"/>
+            <text x="65" y="37" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">데이터 크기</text>
+            <rect x="130" y="22" width="180" height="22" rx="4" fill="#ef4444"/>
+            <text x="220" y="37" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">선형 탐색 O(n)</text>
+            <rect x="315" y="22" width="200" height="22" rx="4" fill="#3b82f6"/>
+            <text x="415" y="37" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">이진 탐색 O(log n)</text>
+            <!-- 행 1 -->
+            <rect x="5" y="44" width="120" height="18" rx="0" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+            <text x="65" y="57" text-anchor="middle" font-size="10" fill="#334155">10개</text>
+            <rect x="130" y="44" width="180" height="18" rx="0" fill="#fff" stroke="#e2e8f0" stroke-width="1"/>
+            <text x="220" y="57" text-anchor="middle" font-size="10" fill="#374151">10번</text>
+            <rect x="315" y="44" width="200" height="18" rx="0" fill="#fff" stroke="#e2e8f0" stroke-width="1"/>
+            <text x="415" y="57" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">4번</text>
+            <!-- 행 2 -->
+            <rect x="5" y="62" width="120" height="18" rx="0" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+            <text x="65" y="75" text-anchor="middle" font-size="10" fill="#334155">1,000개</text>
+            <rect x="130" y="62" width="180" height="18" rx="0" fill="#fff" stroke="#e2e8f0" stroke-width="1"/>
+            <text x="220" y="75" text-anchor="middle" font-size="10" fill="#374151">1,000번</text>
+            <rect x="315" y="62" width="200" height="18" rx="0" fill="#fff" stroke="#e2e8f0" stroke-width="1"/>
+            <text x="415" y="75" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">10번</text>
+            <!-- 행 3 -->
+            <rect x="5" y="80" width="120" height="18" rx="0" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+            <text x="65" y="93" text-anchor="middle" font-size="10" fill="#334155">1,000,000개</text>
+            <rect x="130" y="80" width="180" height="18" rx="0" fill="#fff" stroke="#e2e8f0" stroke-width="1"/>
+            <text x="220" y="93" text-anchor="middle" font-size="10" fill="#ef4444" font-weight="700">1,000,000번</text>
+            <rect x="315" y="80" width="200" height="18" rx="0" fill="#fff" stroke="#e2e8f0" stroke-width="1"/>
+            <text x="415" y="93" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">20번</text>
+        </svg>
+    </div>
+
+    <div class="box-tip">
+        <div class="box-tip-title">알고리즘 선택 가이드</div>
+        <div class="box-tip-content">
+            데이터가 <strong>비정렬이거나 소량(100개 미만)</strong>이면 구현이 단순한 선형 탐색을 사용합니다.
+            <strong>대량 데이터(1,000개 이상)이고 정렬 가능</strong>하면 이진 탐색을 사용합니다.
+            Python 내장 <code>bisect</code> 모듈은 이진 탐색을 이미 구현해 두고 있어 바로 가져다 쓸 수 있습니다.
+        </div>
+    </div>
+
+    <!-- SVG: bisect 모듈 예시 -->
+    <div style="margin:14px 0 0;">
+        <svg viewBox="0 0 520 64" style="max-width:520px;width:100%">
+            <rect x="5" y="5" width="510" height="54" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="260" y="22" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="800">Python 표준 라이브러리: bisect 모듈</text>
+            <text x="16" y="38" font-size="10" fill="#334155" font-family="monospace">import bisect</text>
+            <text x="16" y="52" font-size="10" fill="#334155" font-family="monospace">idx = bisect.bisect_left([1,3,5,7,9], 5)  # 2 반환 (이진 탐색)</text>
+        </svg>
+    </div>
+
+    <!-- SVG: 탐색 알고리즘 선택 흐름도 -->
+    <div style="margin:14px 0 0;">
+        <svg viewBox="0 0 520 80" style="max-width:520px;width:100%">
+            <defs>
+                <marker id="arwFlow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+                </marker>
+            </defs>
+            <!-- 시작 -->
+            <rect x="5" y="25" width="90" height="30" rx="8" fill="#1e3a5f"/>
+            <text x="50" y="44" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">탐색 필요</text>
+            <line x1="98" y1="40" x2="118" y2="40" stroke="#64748b" stroke-width="1.5" marker-end="url(#arwFlow)"/>
+            <!-- 정렬 판단 마름모 -->
+            <polygon points="170,15 230,40 170,65 110,40" fill="#fef9c3" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="170" y="37" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">정렬</text>
+            <text x="170" y="50" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">가능?</text>
+            <!-- Yes 화살표 -->
+            <line x1="233" y1="40" x2="268" y2="40" stroke="#22c55e" stroke-width="1.5" marker-end="url(#arwFlow)"/>
+            <text x="250" y="34" text-anchor="middle" font-size="9" fill="#22c55e" font-weight="700">Yes</text>
+            <!-- No 화살표 -->
+            <line x1="170" y1="67" x2="170" y2="75" stroke="#ef4444" stroke-width="1.5" marker-end="url(#arwFlow)"/>
+            <!-- 이진 탐색 박스 -->
+            <rect x="271" y="20" width="120" height="40" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="331" y="38" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">이진 탐색</text>
+            <text x="331" y="52" text-anchor="middle" font-size="8" fill="#1e40af">O(log n)</text>
+            <line x1="394" y1="40" x2="414" y2="40" stroke="#64748b" stroke-width="1.5" marker-end="url(#arwFlow)"/>
+            <!-- 결과 박스 -->
+            <rect x="417" y="20" width="98" height="40" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="466" y="38" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">빠른 탐색</text>
+            <text x="466" y="52" text-anchor="middle" font-size="8" fill="#166534">대용량 적합</text>
+            <!-- No 결과 -->
+            <rect x="100" y="72" width="140" height="8" rx="4" fill="#fee2e2" stroke="#ef4444" stroke-width="1"/>
+            <text x="170" y="79" text-anchor="middle" font-size="8" fill="#991b1b" font-weight="700">선형 탐색 O(n)</text>
+        </svg>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

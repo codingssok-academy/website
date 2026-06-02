@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Unit 40. 포인터와 배열 — C 언어 코딩 도장</title>
+    <link rel="stylesheet" href="../common.css">
+</head>
+
+<body>
+    <div class="wrap">
+        <div class="hdr">
+            <h1>Unit 40. 포인터와 배열의 관계</h1>
+            <div class="sub">배열 포인터 · 포인터 배열 · 이중 포인터 · 동적 할당</div>
+            <span class="unit-badge">Chapter 10 · 포인터</span>
+            <div class="level-bar"><span class="on"></span><span class="on"></span><span class="on"></span></div>
+            <div class="meta"><span class="tag pri">🖥️ C언어</span><span class="tag acc">📝 15문제</span><span
+                    class="tag">⏱ 30~45분</span></div>
+        </div>
+        <div class="stu-bar"><label>👤 이름 <input type="text" id="stu-name" placeholder="이름"></label><label>📅 날짜 <input
+                    type="date" id="stu-date"></label></div>
+        <div class="learn">
+            <h2><span class="ico" style="background:rgba(236,72,153,.15)">🔗</span> 포인터와 배열 심화</h2>
+            <p>배열과 포인터의 깊은 관계, 이중 포인터, 그리고 malloc/free까지!</p>
+        </div>
+        <div id="problems"></div>
+        <div class="submit-section">
+            <p>모든 문제를 풀었나요? 📨</p><button class="btn-submit" id="btn-submit">📄 제출하기</button>
+        </div>
+        <div class="modal-overlay" id="submit-modal">
+            <div class="modal-box">
+                <div class="modal-icon">✅</div>
+                <h3>제출 완료!</h3>
+                <p>학습지가 저장되었습니다.</p>
+                <div style="margin:12px 0"><span class="info-tag" id="modal-name"></span> <span class="info-tag"
+                        id="modal-date"></span> <span class="info-tag" id="modal-count"></span></div>
+                <p style="font-size:.78rem;color:var(--dim)">📁 <strong id="modal-filename"></strong></p><button
+                    class="btn-close-modal" id="btn-close-modal">확인</button>
+            </div>
+        </div>
+        <div class="pg"><a href="Unit39_포인터기초.html">← Unit 39</a><span class="tag active">Unit 40</span><a
+                href="../11_함수/Unit41_함수기초.html">Unit 41 →</a></div>
+        <div class="ft">🖥️ C 언어 코딩 도장 · Unit 40 · 포인터와 배열</div>
+    </div>
+    <script>
+        const P = [
+            {
+                n: 1, t: "배열 = 포인터?", d: 2,
+                q: `arr[i]와 *(arr+i)가 같다는 것을 확인하세요.<pre class="code-c">int arr[] = {10,20,30,40,50};
+printf("%d == %d\\n", arr[2], *(arr+2));
+printf("%p == %p\\n", &arr[2], arr+2);</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">30 == 30<br>0x... == 0x... (동일)</div><div class="trace">arr[i] ≡ *(arr+i)<br>&arr[i] ≡ arr+i<br><br>컴파일러가 arr[i]를 *(arr+i)로 변환!</div>`
+            },
+
+            {
+                n: 2, t: "함수에 배열 전달", d: 2,
+                q: `배열을 함수에 전달하면 무엇이 전달될까?`,
+                a: `<span class="key">정답</span><pre class="code-c">void printArr(int *arr, int n) {
+    for (int i=0;i<n;i++) printf("%d ", arr[i]);
+}
+<span class="cm">// 또는: void printArr(int arr[], int n)</span>
+
+int data[] = {1,2,3,4,5};
+printArr(data, 5);</pre><div class="trace">배열의 <span class="val">주소(포인터)</span>가 전달됨!<br>크기 정보는 없으므로 n도 함께 전달!</div>`},
+
+            {
+                n: 3, t: "배열 수정 via 포인터", d: 2,
+                q: `함수에서 배열 요소를 수정하세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">void doubleAll(int *arr, int n) {
+    for (int i=0;i<n;i++) arr[i] *= 2;
+}
+int data[] = {1,2,3,4,5};
+doubleAll(data, 5);
+<span class="cm">// data: 2,4,6,8,10</span></pre><div class="trace">포인터로 전달 → 함수에서 원본 수정!</div>`},
+
+            {
+                n: 4, t: "이중 포인터", d: 3,
+                q: `이중 포인터를 설명하세요.<pre class="code-c">int a = 42;
+int *p = &a;
+int **pp = &p;
+printf("%d\\n", **pp);</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">42</div><div class="trace">pp → p → a<br>**pp = *(*pp) = *(p) = a = 42<br><br>int **pp = "포인터의 주소를 저장하는 포인터"</div>`
+            },
+
+            {
+                n: 5, t: "이중 포인터 활용", d: 3,
+                q: `함수에서 포인터 자체를 변경하려면?<pre class="code-c">void allocate(int **pp) {
+    *pp = (int*)malloc(sizeof(int));
+    **pp = 42;
+}
+int *p = NULL;
+allocate(&p);
+printf("%d\\n", *p);
+free(p);</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">42</div><div class="trace">&p를 전달 → *pp로 p 자체를 수정<br><span class="val">포인터를 함수에서 바꾸려면 이중 포인터!</span></div>`
+            },
+
+            {
+                n: 6, t: "malloc — 동적 할당", d: 2,
+                q: `동적 메모리 할당으로 배열을 만드세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">#include &lt;stdlib.h&gt;
+int n = 5;
+int *arr = (int*)malloc(n * sizeof(int));
+if (arr == NULL) { printf("할당 실패!\\n"); return 1; }
+for (int i=0;i<n;i++) arr[i] = (i+1)*10;
+<span class="cm">// arr: 10 20 30 40 50</span>
+free(arr); <span class="cm">// 반드시 해제!</span></pre>`},
+
+            {
+                n: 7, t: "calloc — 0으로 초기화", d: 2,
+                q: `calloc과 malloc의 차이는?`,
+                a: `<span class="key">정답</span><pre class="code-c"><span class="cm">// malloc: 쓰레기값</span>
+int *a = (int*)malloc(5 * sizeof(int));
+<span class="cm">// calloc: 0으로 초기화!</span>
+int *b = (int*)calloc(5, sizeof(int));</pre><div class="trace">calloc(개수, 크기) → 모든 바이트를 0으로!<br>malloc 후 memset(arr,0,n*sizeof(int))과 동일</div>`},
+
+            {
+                n: 8, t: "realloc — 크기 변경", d: 2,
+                q: `동적 배열의 크기를 늘리세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">int *arr = (int*)malloc(3*sizeof(int));
+arr[0]=1; arr[1]=2; arr[2]=3;
+arr = (int*)realloc(arr, 5*sizeof(int));
+arr[3]=4; arr[4]=5;
+<span class="cm">// arr: 1 2 3 4 5 (기존 데이터 유지!)</span>
+free(arr);</pre>`},
+
+            {
+                n: 9, t: "메모리 누수", d: 2,
+                q: `다음 코드의 문제점은?<pre class="code-c">void leak() {
+    int *p = (int*)malloc(100);
+    printf("작업 완료\\n");
+    <span class="cm">// free(p); 빠져있음!</span>
+}</pre>`,
+                a: `<span class="key">정답</span><div class="trace"><span class="err">메모리 누수(Memory Leak)!</span><br>malloc으로 할당한 메모리를 free하지 않음<br>함수가 끝나면 p는 사라지지만 메모리는 남아있음!<br><br><span class="val">규칙: malloc ↔ free 는 항상 짝!</span></div>`
+            },
+
+            {
+                n: 10, t: "2차원 동적 배열", d: 3,
+                q: `3x4 동적 2차원 배열을 만드세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">int rows=3, cols=4;
+int **arr = (int**)malloc(rows*sizeof(int*));
+for (int i=0;i<rows;i++)
+    arr[i] = (int*)calloc(cols, sizeof(int));
+
+arr[1][2] = 42; <span class="cm">// 사용</span>
+
+<span class="cm">// 해제 (역순!)</span>
+for (int i=0;i<rows;i++) free(arr[i]);
+free(arr);</pre>`},
+
+            {
+                n: 11, t: "심사: 포인터 배열 vs 배열 포인터", d: 3,
+                q: `두 선언의 차이를 설명하세요.<pre class="code-c">int *a[3];     <span class="cm">// ?</span>
+int (*b)[3];   <span class="cm">// ?</span></pre>`,
+                a: `<span class="key">정답</span><div class="trace">int *a[3] → <span class="val">포인터 배열</span><br>= int 포인터 3개짜리 배열<br><br>int (*b)[3] → <span class="val">배열 포인터</span><br>= int[3] 배열을 가리키는 포인터</div>`
+            },
+
+            {
+                n: 12, t: "심사: 포인터로 문자열 배열", d: 2,
+                q: `동적 문자열 배열을 만드세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">char **names = (char**)malloc(3*sizeof(char*));
+names[0] = (char*)malloc(20);
+strcpy(names[0], "Alice");
+names[1] = (char*)malloc(20);
+strcpy(names[1], "Bob");
+names[2] = (char*)malloc(20);
+strcpy(names[2], "Charlie");
+for (int i=0;i<3;i++) free(names[i]);
+free(names);</pre>`},
+
+            {
+                n: 13, t: "심사: sizeof 주의", d: 2,
+                q: `다음 코드의 출력을 쓰세요.<pre class="code-c">int arr[5] = {1,2,3,4,5};
+int *p = arr;
+printf("%zu\\n", sizeof(arr));
+printf("%zu\\n", sizeof(p));</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">20<br>8</div><div class="trace">sizeof(arr) = 배열 전체 크기 = 4×5 = 20<br>sizeof(p) = 포인터 크기 = 8 (64비트)<br><br><span class="err">함수에서 sizeof(arr)는 포인터 크기!</span></div>`
+            },
+
+            {
+                n: 14, t: "심사: 함수 포인터", d: 3,
+                q: `함수 포인터를 선언하고 사용하세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">int add(int a, int b) { return a+b; }
+int sub(int a, int b) { return a-b; }
+
+int (*op)(int, int);  <span class="cm">// 함수 포인터 선언</span>
+op = add;
+printf("%d\\n", op(3,2)); <span class="cm">// 5</span>
+op = sub;
+printf("%d\\n", op(3,2)); <span class="cm">// 1</span></pre>`},
+
+            {
+                n: 15, t: "🏆 Unit 40 종합", d: 3,
+                q: `다음 코드의 출력을 쓰세요.<pre class="code-c">int a = 10, b = 20, c = 30;
+int *arr[] = {&a, &b, &c};
+int **pp = arr;
+printf("%d\\n", **pp);
+pp++;
+printf("%d\\n", **pp);
+**(pp+1) = 99;
+printf("%d\\n", c);</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">10<br>20<br>99</div><div class="trace">arr = {&a, &b, &c}<br>**pp = *arr[0] = a = 10<br>pp++ → arr[1], **pp = b = 20<br>**(pp+1) = *arr[2] = c → c = 99</div>`
+            }
+        ];
+        const c = document.getElementById('problems'); P.forEach(p => { const dc = p.d <= 1 ? 'ez' : p.d <= 2 ? 'md' : 'hd'; const dots = Array.from({ length: 5 }, (_, i) => `<span${i < p.d ? ' class="on"' : ''}>​</span>`).join(''); c.innerHTML += `<div class="prob"><div class="prob-top"><div class="prob-num ${dc}">${p.n}</div><div class="prob-title">${p.t}</div><div class="diff-dots">${dots}</div></div><div class="prob-body"><div class="q">${p.q}</div><textarea class="write" placeholder="✍️ 답을 작성하세요"></textarea><details class="ans"><summary>정답 및 해설 보기</summary><div class="ans-body">${p.a}</div></details></div></div>`; });
+    </script>
+    <script src="../submit.js"></script>
+    <script src="../../platform.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 프로젝트: 나만의 챗봇 만들기</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute; bottom: 10mm; right: 16mm;
+    font-size: 10px; color: #94a3b8; font-weight: 600;
+}
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 200px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 36px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 16px; font-weight: 700; color: #1e3a5f; margin: 18px 0 10px; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+ul, ol { margin: 0 0 12px 20px; }
+li { font-size: 14px; color: #374151; line-height: 1.8; }
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #e2e8f0; line-height: 1.85; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.code .dec { color: #f9a8d4; }
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; display: inline-block; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; white-space: pre-wrap; }
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+.output-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #334155; line-height: 1.7; margin: 10px 0; white-space: pre-wrap; }
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- 1페이지: 표지 -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">BOT</div>
+        <div class="cover-label">L3 — Project</div>
+        <h1 class="cover-title">프로젝트:<br>나만의 챗봇<br>만들기</h1>
+        <p class="cover-sub">if/elif 대화 흐름, 키워드 감지, 감정 분석, 대화 기록 저장까지 — 진짜 챗봇을 처음부터 직접 만든다.</p>
+
+        <div style="margin:24px 0;">
+            <svg viewBox="0 0 500 150" style="max-width:500px;width:100%">
+                <defs>
+                    <marker id="arwBot" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                    </marker>
+                </defs>
+                <rect x="5" y="45" width="100" height="50" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="55" y="65" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">사용자 입력</text>
+                <text x="55" y="80" text-anchor="middle" font-size="9" fill="#374151">input()</text>
+                <text x="55" y="93" text-anchor="middle" font-size="9" fill="#64748b">lower()</text>
+                <line x1="108" y1="70" x2="128" y2="70" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwBot)"/>
+                <rect x="130" y="30" width="110" height="80" rx="8" fill="#1e3a5f"/>
+                <text x="185" y="52" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">키워드 감지</text>
+                <text x="185" y="68" text-anchor="middle" font-size="9" fill="#93c5fd">if '안녕' in msg</text>
+                <text x="185" y="82" text-anchor="middle" font-size="9" fill="#93c5fd">elif '날씨' in msg</text>
+                <text x="185" y="96" text-anchor="middle" font-size="9" fill="#93c5fd">elif '게임' in msg</text>
+                <line x1="243" y1="70" x2="263" y2="70" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwBot)"/>
+                <rect x="265" y="30" width="110" height="80" rx="8" fill="#fef9c3" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="320" y="52" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">감정 분석</text>
+                <text x="320" y="68" text-anchor="middle" font-size="9" fill="#374151">긍정 단어 카운트</text>
+                <text x="320" y="82" text-anchor="middle" font-size="9" fill="#374151">부정 단어 카운트</text>
+                <text x="320" y="96" text-anchor="middle" font-size="9" fill="#64748b">감정 점수 계산</text>
+                <line x1="378" y1="70" x2="398" y2="70" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwBot)"/>
+                <rect x="400" y="45" width="95" height="50" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="447" y="65" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">기록 저장</text>
+                <text x="447" y="80" text-anchor="middle" font-size="9" fill="#374151">리스트 append</text>
+                <text x="447" y="93" text-anchor="middle" font-size="9" fill="#64748b">파일 저장</text>
+                <text x="250" y="138" text-anchor="middle" font-size="9" fill="#94a3b8">챗봇 처리 파이프라인</text>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/laptop.png" alt="노트북" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 프로젝트에서 만드는 것</h3>
+            <ul>
+                <li><code>if/elif/else</code>로 키워드에 따라 다른 대답을 하는 챗봇을 만들 수 있습니다.</li>
+                <li>긍정/부정 단어 목록으로 감정 점수를 계산할 수 있습니다.</li>
+                <li>대화 내역을 리스트에 저장하고 파일로 내보낼 수 있습니다.</li>
+                <li><code>random.choice()</code>로 챗봇 응답을 더 자연스럽게 만들 수 있습니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- 2페이지: Step 1 기본 구조 -->
+<div class="page">
+    <h2>Step 1 — if/elif로 키워드 감지하기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>챗봇의 핵심은 사용자가 입력한 문장에서 <code>키워드</code>를 찾아 알맞은 대답을 내놓는 것입니다. <code>in</code> 연산자로 키워드 존재를 확인하고 <code>if/elif/else</code>로 응답을 분기합니다.</p>
+
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 70" style="max-width:480px;width:100%">
+            <rect x="5" y="8" width="470" height="54" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="20" y="28" font-size="11" fill="#1e3a5f" font-weight="700">키워드 감지 원리</text>
+            <rect x="20" y="36" width="130" height="18" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="85" y="49" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="600">msg = "안녕 챗봇아"</text>
+            <text x="162" y="49" text-anchor="middle" font-size="12" fill="#94a3b8">→</text>
+            <rect x="175" y="36" width="120" height="18" rx="4" fill="#1e3a5f"/>
+            <text x="235" y="49" text-anchor="middle" font-size="9" fill="#67e8f9" font-weight="600">'안녕' in msg</text>
+            <text x="308" y="49" text-anchor="middle" font-size="12" fill="#94a3b8">→</text>
+            <rect x="320" y="36" width="140" height="18" rx="4" fill="#f0fdf4" stroke="#22c55e" stroke-width="1"/>
+            <text x="390" y="49" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">True → 인사 응답 실행</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># Step 1: 기본 챗봇</span>
+<span class="kw">import</span> random
+
+responses = {
+    <span class="str">"greeting"</span>: [<span class="str">"안녕! 나는 파이봇이야."</span>, <span class="str">"반가워! 뭐 도와줄까?"</span>],
+    <span class="str">"weather"</span>:  [<span class="str">"날씨? 나는 AI라 모르지만 맑으면 좋겠다!"</span>],
+    <span class="str">"game"</span>:     [<span class="str">"게임 좋아! 숫자 맞추기 같이 하자."</span>],
+    <span class="str">"bye"</span>:      [<span class="str">"잘 가! 또 얘기하자."</span>, <span class="str">"바이바이~"</span>],
+    <span class="str">"default"</span>:  [<span class="str">"흠... 잘 모르겠어!"</span>, <span class="str">"좀 더 쉽게 말해줘."</span>],
+}
+
+<span class="kw">def</span> <span class="fn">get_response</span>(msg):
+    msg = msg.<span class="fn">lower</span>()
+    <span class="kw">if</span> <span class="str">"안녕"</span> <span class="kw">in</span> msg <span class="kw">or</span> <span class="str">"hi"</span> <span class="kw">in</span> msg:
+        key = <span class="str">"greeting"</span>
+    <span class="kw">elif</span> <span class="str">"날씨"</span> <span class="kw">in</span> msg <span class="kw">or</span> <span class="str">"비"</span> <span class="kw">in</span> msg:
+        key = <span class="str">"weather"</span>
+    <span class="kw">elif</span> <span class="str">"게임"</span> <span class="kw">in</span> msg <span class="kw">or</span> <span class="str">"놀자"</span> <span class="kw">in</span> msg:
+        key = <span class="str">"game"</span>
+    <span class="kw">elif</span> <span class="str">"잘가"</span> <span class="kw">in</span> msg <span class="kw">or</span> <span class="str">"bye"</span> <span class="kw">in</span> msg:
+        key = <span class="str">"bye"</span>
+    <span class="kw">else</span>:
+        key = <span class="str">"default"</span>
+    <span class="kw">return</span> random.<span class="fn">choice</span>(responses[key])
+
+<span class="cmt"># 테스트</span>
+<span class="fn">print</span>(<span class="fn">get_response</span>(<span class="str">"안녕하세요"</span>))   <span class="cmt"># greeting</span>
+<span class="fn">print</span>(<span class="fn">get_response</span>(<span class="str">"오늘 날씨 어때"</span>))  <span class="cmt"># weather</span></div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/lightbulb.png" alt="아이디어" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">STEP 01</div>
+                <div class="practice-desc">responses 딕셔너리에 <code>"food"</code> 키를 추가하고 음식 관련 대답 2개를 넣어보세요.</div>
+                <div class="practice-result">음식 키워드 입력 시 새 응답이 출력됩니다.</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">STEP 02</div>
+                <div class="practice-desc"><code>get_response()</code>에 <code>"먹고싶어"</code>, <code>"맛있어"</code> 키워드가 있으면 food 응답을 반환하는 elif를 추가하세요.</div>
+                <div class="practice-result">elif "먹고싶어" in msg 조건이 작동합니다.</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">STEP 03</div>
+                <div class="practice-desc"><code>while True</code> 루프로 사용자가 <code>"quit"</code>을 입력할 때까지 계속 대화하는 메인 루프를 만드세요.</div>
+                <div class="practice-result">quit 입력 전까지 챗봇이 계속 응답합니다.</div>
+            </div>
+        </div>
+    </div>
+
+    <h3>대화 기록 저장</h3>
+    <p>모든 대화를 리스트에 저장해두면 나중에 다시 볼 수 있습니다. 튜플 <code>(사용자, 봇)</code> 형태로 저장합니다.</p>
+
+    <div style="text-align:center;margin:10px 0;">
+        <svg viewBox="0 0 480 50" style="max-width:480px;width:100%">
+            <rect x="5" y="5" width="470" height="40" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="20" y="22" font-size="10" fill="#1e3a5f" font-weight="700">리스트에 튜플 저장 예시</text>
+            <text x="20" y="37" font-size="9" fill="#64748b" font-family="JetBrains Mono, monospace">history = [("안녕", "반가워!"), ("날씨 어때", "맑으면 좋겠다!")]  len: 2</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># 대화 기록 저장</span>
+history = []   <span class="cmt"># (user_msg, bot_reply) 튜플 저장</span>
+
+<span class="kw">def</span> <span class="fn">chat</span>(user_msg):
+    reply = <span class="fn">get_response</span>(user_msg)
+    history.<span class="fn">append</span>((user_msg, reply))   <span class="cmt"># 기록 추가</span>
+    <span class="kw">return</span> reply
+
+<span class="cmt"># 기록 출력</span>
+<span class="kw">def</span> <span class="fn">show_history</span>():
+    <span class="fn">print</span>(<span class="str">"=== 대화 기록 ==="</span>)
+    <span class="kw">for</span> i, (u, b) <span class="kw">in</span> <span class="fn">enumerate</span>(history, <span class="num">1</span>):
+        <span class="fn">print</span>(<span class="str">f"{i}. 나: {u}"</span>)
+        <span class="fn">print</span>(<span class="str">f"   봇: {b}"</span>)</div>
+
+</div>
+
+<!-- 3페이지: 감정 분석 -->
+<div class="page">
+    <h2>Step 2 — 감정 분석: 긍정/부정 단어 카운트</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/flowchart.png" alt="흐름" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>사용자의 메시지에서 <code>긍정 단어</code>와 <code>부정 단어</code>의 개수를 세어 감정 점수를 계산합니다. 이를 바탕으로 챗봇이 공감하는 대답을 할 수 있습니다.</p>
+
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 100" style="max-width:480px;width:100%">
+            <rect x="5" y="8" width="220" height="84" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="115" y="28" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">긍정 단어 목록</text>
+            <text x="115" y="46" text-anchor="middle" font-size="9" fill="#374151">좋아, 행복, 신나, 최고, 사랑,</text>
+            <text x="115" y="60" text-anchor="middle" font-size="9" fill="#374151">재미있어, 감사, 즐거워, 완벽</text>
+            <text x="115" y="78" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">+1점 each</text>
+            <rect x="255" y="8" width="220" height="84" rx="8" fill="#fff1f2" stroke="#f43f5e" stroke-width="1.5"/>
+            <text x="365" y="28" text-anchor="middle" font-size="11" fill="#be123c" font-weight="700">부정 단어 목록</text>
+            <text x="365" y="46" text-anchor="middle" font-size="9" fill="#374151">싫어, 힘들어, 짜증, 슬퍼,</text>
+            <text x="365" y="60" text-anchor="middle" font-size="9" fill="#374151">무서워, 걱정, 지쳐, 최악</text>
+            <text x="365" y="78" text-anchor="middle" font-size="10" fill="#be123c" font-weight="700">-1점 each</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># Step 2: 감정 분석 함수</span>
+POSITIVE = [<span class="str">"좋아"</span>, <span class="str">"행복"</span>, <span class="str">"신나"</span>, <span class="str">"최고"</span>, <span class="str">"사랑"</span>, <span class="str">"재미"</span>, <span class="str">"감사"</span>, <span class="str">"즐거"</span>]
+NEGATIVE = [<span class="str">"싫어"</span>, <span class="str">"힘들"</span>, <span class="str">"짜증"</span>, <span class="str">"슬퍼"</span>, <span class="str">"무서"</span>, <span class="str">"걱정"</span>, <span class="str">"지쳐"</span>, <span class="str">"최악"</span>]
+
+<span class="kw">def</span> <span class="fn">analyze_emotion</span>(msg):
+    score = <span class="num">0</span>
+    <span class="kw">for</span> word <span class="kw">in</span> POSITIVE:
+        <span class="kw">if</span> word <span class="kw">in</span> msg:
+            score += <span class="num">1</span>
+    <span class="kw">for</span> word <span class="kw">in</span> NEGATIVE:
+        <span class="kw">if</span> word <span class="kw">in</span> msg:
+            score -= <span class="num">1</span>
+
+    <span class="kw">if</span> score >= <span class="num">2</span>:
+        <span class="kw">return</span> <span class="str">"매우 긍정"</span>, score
+    <span class="kw">elif</span> score == <span class="num">1</span>:
+        <span class="kw">return</span> <span class="str">"긍정"</span>, score
+    <span class="kw">elif</span> score == <span class="num">0</span>:
+        <span class="kw">return</span> <span class="str">"중립"</span>, score
+    <span class="kw">elif</span> score == -<span class="num">1</span>:
+        <span class="kw">return</span> <span class="str">"부정"</span>, score
+    <span class="kw">else</span>:
+        <span class="kw">return</span> <span class="str">"매우 부정"</span>, score
+
+<span class="cmt"># 감정에 따른 공감 응답</span>
+<span class="kw">def</span> <span class="fn">empathy_response</span>(emotion):
+    <span class="kw">if</span> <span class="str">"긍정"</span> <span class="kw">in</span> emotion:
+        <span class="kw">return</span> <span class="str">"오, 기분 좋아 보여! 나도 덩달아 기쁘다."</span>
+    <span class="kw">elif</span> <span class="str">"부정"</span> <span class="kw">in</span> emotion:
+        <span class="kw">return</span> <span class="str">"많이 힘들구나. 내가 들어줄게."</span>
+    <span class="kw">return</span> <span class="str">"그렇구나. 계속 얘기해봐."</span></div>
+
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 480 60" style="max-width:480px;width:100%">
+            <rect x="5" y="5" width="470" height="50" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="20" y="22" font-size="10" fill="#1e3a5f" font-weight="700">감정 점수 분류</text>
+            <rect x="20" y="30" width="60" height="16" rx="3" fill="#dcfce7"/>
+            <text x="50" y="42" text-anchor="middle" font-size="8" fill="#166534" font-weight="700">+2 이상: 매우 긍정</text>
+            <rect x="90" y="30" width="60" height="16" rx="3" fill="#f0fdf4"/>
+            <text x="120" y="42" text-anchor="middle" font-size="8" fill="#166534">+1: 긍정</text>
+            <rect x="160" y="30" width="60" height="16" rx="3" fill="#f8fafc"/>
+            <text x="190" y="42" text-anchor="middle" font-size="8" fill="#374151">0: 중립</text>
+            <rect x="230" y="30" width="60" height="16" rx="3" fill="#fff1f2"/>
+            <text x="260" y="42" text-anchor="middle" font-size="8" fill="#be123c">-1: 부정</text>
+            <rect x="300" y="30" width="80" height="16" rx="3" fill="#ffe4e6"/>
+            <text x="340" y="42" text-anchor="middle" font-size="8" fill="#be123c" font-weight="700">-2 이하: 매우 부정</text>
+        </svg>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q1</div>
+            <div class="problem-label">감정 분석 함수 작성</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <p class="problem-text"><code>analyze_emotion("오늘 정말 행복하고 즐거워")</code>를 실행했을 때 반환값을 예측하고, 실제로 확인하세요. 긍정 단어가 몇 개 포함되어 있나요?</p>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <p class="hint-text">"행복"과 "즐거"가 각각 POSITIVE 목록에 있습니다. score는 +2가 됩니다.</p>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">emotion, score = analyze_emotion("오늘 정말 행복하고 즐러워")
+print(emotion, score)  # 매우 긍정 2</div>
+            </div>
+        </details>
+    </div>
+
+</div>
+
+<!-- 4페이지: 대화 기록 파일 저장 -->
+<div class="page">
+    <h2>Step 3 — 대화 기록 파일에 저장하기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/keyboard.png" alt="키보드" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>챗봇과 나눈 대화를 <code>텍스트 파일</code>로 저장해두면 나중에 다시 읽을 수 있습니다. <code>open(filename, "w")</code>의 쓰기 모드로 파일에 기록합니다.</p>
+
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 90" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="arwFile" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="5" y="15" width="130" height="60" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="70" y="38" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">history 리스트</text>
+            <text x="70" y="54" text-anchor="middle" font-size="9" fill="#374151">[("안녕", "반가워"),</text>
+            <text x="70" y="66" text-anchor="middle" font-size="9" fill="#374151"> ("날씨", "몰라")]</text>
+            <line x1="138" y1="45" x2="178" y2="45" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwFile)"/>
+            <text x="158" y="38" font-size="8" fill="#94a3b8" text-anchor="middle">write</text>
+            <rect x="180" y="15" width="140" height="60" rx="8" fill="#1e3a5f"/>
+            <text x="250" y="38" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">open("chat.txt", "w")</text>
+            <text x="250" y="54" text-anchor="middle" font-size="9" fill="#93c5fd">f.write() 반복</text>
+            <text x="250" y="66" text-anchor="middle" font-size="9" fill="#93c5fd">with 문으로 자동 닫기</text>
+            <line x1="323" y1="45" x2="363" y2="45" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwFile)"/>
+            <rect x="365" y="15" width="110" height="60" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="420" y="38" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">chat.txt 파일</text>
+            <text x="420" y="54" text-anchor="middle" font-size="9" fill="#374151">나: 안녕</text>
+            <text x="420" y="66" text-anchor="middle" font-size="9" fill="#374151">봇: 반가워</text>
+        </svg>
+    </div>
+
+    <p><code>open()</code>에 <code>"w"</code>(쓰기 모드)를 지정하면 파일을 새로 만들거나 덮어씁니다. <code>with</code> 문을 사용하면 파일이 자동으로 닫혀 안전합니다.</p>
+
+    <div style="text-align:center;margin:10px 0;">
+        <svg viewBox="0 0 480 55" style="max-width:480px;width:100%">
+            <rect x="5" y="5" width="470" height="45" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="20" y="22" font-size="10" fill="#1e3a5f" font-weight="700">파일 모드 정리</text>
+            <rect x="20" y="30" width="60" height="14" rx="3" fill="#dbeafe"/>
+            <text x="50" y="41" text-anchor="middle" font-size="8" fill="#1d4ed8" font-weight="700">"r": 읽기</text>
+            <rect x="90" y="30" width="60" height="14" rx="3" fill="#f0fdf4"/>
+            <text x="120" y="41" text-anchor="middle" font-size="8" fill="#166534" font-weight="700">"w": 쓰기</text>
+            <rect x="160" y="30" width="60" height="14" rx="3" fill="#fef9c3"/>
+            <text x="190" y="41" text-anchor="middle" font-size="8" fill="#92400e" font-weight="700">"a": 추가</text>
+            <text x="300" y="41" font-size="8" fill="#64748b">encoding="utf-8" 항상 명시 권장</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># Step 3: 파일 저장</span>
+<span class="kw">def</span> <span class="fn">save_history</span>(filename=<span class="str">"chat_log.txt"</span>):
+    <span class="kw">with</span> <span class="fn">open</span>(filename, <span class="str">"w"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+        f.<span class="fn">write</span>(<span class="str">"=== 대화 기록 ===\n"</span>)
+        <span class="kw">for</span> i, (user_msg, bot_reply) <span class="kw">in</span> <span class="fn">enumerate</span>(history, <span class="num">1</span>):
+            f.<span class="fn">write</span>(<span class="str">f"[{i}] 나: {user_msg}\n"</span>)
+            f.<span class="fn">write</span>(<span class="str">f"    봇: {bot_reply}\n"</span>)
+    <span class="fn">print</span>(<span class="str">f"저장 완료! ({len(history)}개 대화)"</span>)
+
+<span class="cmt"># 파일 불러오기</span>
+<span class="kw">def</span> <span class="fn">load_history</span>(filename=<span class="str">"chat_log.txt"</span>):
+    <span class="kw">try</span>:
+        <span class="kw">with</span> <span class="fn">open</span>(filename, <span class="str">"r"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+            content = f.<span class="fn">read</span>()
+        <span class="fn">print</span>(content)
+    <span class="kw">except</span> FileNotFoundError:
+        <span class="fn">print</span>(<span class="str">"저장된 기록이 없습니다."</span>)</div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">STEP 01</div>
+                <div class="practice-desc">챗봇과 3번 대화한 뒤 <code>save_history()</code>를 호출해서 파일로 저장해보세요.</div>
+                <div class="practice-result">chat_log.txt 파일이 생성됩니다.</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">STEP 02</div>
+                <div class="practice-desc"><code>save_history()</code>를 수정해서 각 대화 라인에 감정 분석 결과도 함께 저장하도록 만드세요.</div>
+                <div class="practice-result">[1] 나: 오늘 행복해 (감정: 긍정) 봇: ...</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">STEP 03</div>
+                <div class="practice-desc">저장 시 현재 날짜/시간을 파일 이름에 포함시켜 <code>chat_2026-03-21.txt</code> 형태로 저장하세요. (<code>from datetime import datetime</code> 사용)</div>
+                <div class="practice-result">날짜별로 대화 파일이 생성됩니다.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q2</div>
+            <div class="problem-label">대화 통계 출력</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <p class="problem-text">history 리스트를 분석해서 "총 대화 수", "가장 많이 쓴 키워드", "긍정 대화 비율(%)"을 출력하는 <code>show_stats()</code> 함수를 작성하세요.</p>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <p class="hint-text">모든 user_msg를 하나로 합친 뒤 split()으로 단어 분리 후 Counter를 사용하거나 for 반복으로 집계하세요.</p>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">def show_stats():
+    total = len(history)
+    pos_count = sum(1 for u, _ in history if analyze_emotion(u)[0] in ["긍정","매우 긍정"])
+    pos_rate = pos_count / total * 100 if total > 0 else 0
+    print(f"총 대화: {total}회")
+    print(f"긍정 비율: {pos_rate:.1f}%")</div>
+            </div>
+        </details>
+    </div>
+
+</div>
+
+<!-- 5페이지: 완성 챗봇 + 연습문제 -->
+<div class="page">
+    <h2>Step 4 — 완성: 전체 챗봇 합치기</h2>
+    <p>지금까지 만든 기능들을 하나의 챗봇으로 합칩니다. 메인 루프에서 입력을 받고, 감정을 분석하고, 응답하고, 기록까지 저장합니다.</p>
+
+    <div class="code"><span class="cmt"># 완성 챗봇 — 전체 통합</span>
+<span class="kw">def</span> <span class="fn">run_chatbot</span>():
+    <span class="fn">print</span>(<span class="str">"파이봇에 오신 걸 환영합니다! (quit 입력시 종료)"</span>)
+    history.clear()
+
+    <span class="kw">while True</span>:
+        user_msg = <span class="fn">input</span>(<span class="str">"나: "</span>).<span class="fn">strip</span>()
+        <span class="kw">if not</span> user_msg:
+            <span class="kw">continue</span>
+        <span class="kw">if</span> user_msg.<span class="fn">lower</span>() == <span class="str">"quit"</span>:
+            <span class="fn">print</span>(<span class="str">"봇: 대화 저장 중..."</span>)
+            <span class="fn">save_history</span>()
+            <span class="kw">break</span>
+
+        emotion, score = <span class="fn">analyze_emotion</span>(user_msg)
+        reply = <span class="fn">get_response</span>(user_msg)
+
+        <span class="cmt"># 감정이 강하면 공감 응답 추가</span>
+        <span class="kw">if</span> <span class="fn">abs</span>(score) >= <span class="num">2</span>:
+            empathy = <span class="fn">empathy_response</span>(emotion)
+            reply = empathy + <span class="str">" "</span> + reply
+
+        history.<span class="fn">append</span>((user_msg, reply))
+        <span class="fn">print</span>(<span class="str">f"봇: {reply}"</span>)
+
+<span class="fn">run_chatbot</span>()</div>
+
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 480 55" style="max-width:480px;width:100%">
+            <rect x="5" y="5" width="470" height="45" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="20" y="22" font-size="10" fill="#1e3a5f" font-weight="700">실행 예시</text>
+            <text x="20" y="37" font-size="9" fill="#64748b" font-family="JetBrains Mono, monospace">나: 오늘 너무 행복해!  → 봇: 오, 기분 좋아 보여! 반가워!</text>
+        </svg>
+    </div>
+
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 480 70" style="max-width:480px;width:100%">
+            <rect x="5" y="5" width="470" height="60" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="20" y="24" font-size="10" fill="#1e3a5f" font-weight="700">챗봇 전체 흐름 요약</text>
+            <rect x="20" y="32" width="80" height="22" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="60" y="47" text-anchor="middle" font-size="8" fill="#1d4ed8" font-weight="700">입력 받기</text>
+            <text x="108" y="47" text-anchor="middle" font-size="10" fill="#94a3b8">→</text>
+            <rect x="118" y="32" width="80" height="22" rx="4" fill="#1e3a5f"/>
+            <text x="158" y="47" text-anchor="middle" font-size="8" fill="#fff" font-weight="700">감정 분석</text>
+            <text x="206" y="47" text-anchor="middle" font-size="10" fill="#94a3b8">→</text>
+            <rect x="216" y="32" width="80" height="22" rx="4" fill="#fef9c3" stroke="#f59e0b" stroke-width="1"/>
+            <text x="256" y="47" text-anchor="middle" font-size="8" fill="#92400e" font-weight="700">응답 생성</text>
+            <text x="304" y="47" text-anchor="middle" font-size="10" fill="#94a3b8">→</text>
+            <rect x="314" y="32" width="80" height="22" rx="4" fill="#f0fdf4" stroke="#22c55e" stroke-width="1"/>
+            <text x="354" y="47" text-anchor="middle" font-size="8" fill="#166534" font-weight="700">기록 저장</text>
+            <text x="402" y="47" text-anchor="middle" font-size="10" fill="#94a3b8">→</text>
+            <rect x="412" y="32" width="50" height="22" rx="4" fill="#e0e7ff" stroke="#6366f1" stroke-width="1"/>
+            <text x="437" y="47" text-anchor="middle" font-size="8" fill="#3730a3" font-weight="700">반복</text>
+        </svg>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q3</div>
+            <div class="problem-label">챗봇 키워드 확장</div>
+            <span class="problem-diff hard">어려움</span>
+        </div>
+        <div class="problem-body">
+            <p class="problem-text">챗봇에 <strong>수학 계산 기능</strong>을 추가하세요. 사용자가 <code>"1 + 2"</code>처럼 입력하면 챗봇이 계산 결과를 반환합니다. <code>split()</code>으로 피연산자와 연산자를 분리하고 <code>if/elif</code>로 처리하세요.</p>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <p class="hint-text">msg.split() 결과가 길이 3이고 가운데 원소가 +/-/* 중 하나인지 확인하세요. int() 변환에 try/except를 사용하세요.</p>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">def calc_response(msg):
+    parts = msg.split()
+    if len(parts) == 3 and parts[1] in ["+", "-", "*", "/"]:
+        try:
+            a, op, b = int(parts[0]), parts[1], int(parts[2])
+            if op == "+": return f"계산 결과: {a + b}"
+            if op == "-": return f"계산 결과: {a - b}"
+            if op == "*": return f"계산 결과: {a * b}"
+            if op == "/" and b != 0: return f"계산 결과: {a / b}"
+        except ValueError:
+            pass
+    return None</div>
+            </div>
+        </details>
+    </div>
+
+    <div style="text-align:center;margin:10px 0;">
+        <svg viewBox="0 0 480 50" style="max-width:480px;width:100%">
+            <rect x="5" y="5" width="470" height="40" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="20" y="22" font-size="10" fill="#1e3a5f" font-weight="700">수학 계산 기능 추가 흐름</text>
+            <text x="20" y="36" font-size="9" fill="#64748b">msg.split() → len==3 확인 → 연산자 확인 → int() 변환 → 계산 → 결과 반환</text>
+        </svg>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="완성" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>핵심 요약</h3>
+        <ul>
+            <li><code>if/elif/else</code> + <code>in</code> 연산자로 키워드 기반 대화 분기를 구현합니다.</li>
+            <li>긍정/부정 단어 리스트를 순회하며 감정 점수를 누적해 감정을 분류합니다.</li>
+            <li>대화 내용은 <code>list.append(tuple)</code>로 기록하고 <code>open()/write()</code>로 파일에 저장합니다.</li>
+            <li><code>random.choice()</code>로 응답 목록에서 무작위 선택해 자연스러운 대화를 만듭니다.</li>
+            <li><code>while True</code> 메인 루프와 <code>break</code> 조건으로 챗봇의 대화 흐름을 제어합니다.</li>
+        </ul>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

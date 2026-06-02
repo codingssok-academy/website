@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 프로젝트: 주사위 시뮬레이터</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 16px; font-weight: 700; color: #1e3a5f; margin: 18px 0 10px; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+ul, ol { margin: 0 0 12px 20px; }
+li { font-size: 14px; color: #374151; line-height: 1.8; }
+
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13.5px;
+    color: #e2e8f0; line-height: 1.85; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.code .dec { color: #f9a8d4; }
+
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+.output-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #334155; line-height: 1.7; margin: 10px 0; }
+
+.compare-table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13px; }
+.compare-table th { background: #1e3a5f; color: #fff; padding: 8px 12px; text-align: left; font-weight: 700; }
+.compare-table td { padding: 7px 12px; border-bottom: 1px solid #e2e8f0; color: #374151; }
+.compare-table tr:nth-child(even) td { background: #f8fafc; }
+.compare-table code { background: #e0e7ff; padding: 1px 5px; border-radius: 3px; font-family: 'JetBrains Mono', monospace; color: #3730a3; font-size: 12px; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- 1페이지: 표지 -->
+<div class="page cover">
+  <div class="cover-sidebar"></div>
+  <div class="cover-accent"></div>
+  <div class="cover-body">
+    <div class="cover-watermark">60</div>
+    <div class="cover-label">L3 — Unit 60 Project · R2</div>
+    <h1 class="cover-title">프로젝트:<br>주사위 시뮬레이터</h1>
+    <p class="cover-sub">random 모듈로 주사위를 던지고 결과를 수집합니다. math 모듈로 평균과 표준편차를 계산하고, 텍스트 히스토그램으로 분포를 시각화하는 통계 시뮬레이터를 만듭니다.</p>
+    <div style="margin:24px 0;">
+      <svg viewBox="0 0 480 160" style="max-width:480px;width:100%">
+        <defs><marker id="cv1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker></defs>
+        <rect x="5" y="10" width="130" height="140" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+        <text x="70" y="28" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">random / math</text>
+        <line x1="15" y1="34" x2="125" y2="34" stroke="#93c5fd" stroke-width="0.8"/>
+        <text x="70" y="50" text-anchor="middle" font-size="8" fill="#1d4ed8">random.randint(1,6)</text>
+        <line x1="15" y1="56" x2="125" y2="56" stroke="#93c5fd" stroke-width="0.8"/>
+        <text x="70" y="72" text-anchor="middle" font-size="8" fill="#1d4ed8">random.seed(n)</text>
+        <line x1="15" y1="78" x2="125" y2="78" stroke="#93c5fd" stroke-width="0.8"/>
+        <text x="70" y="94" text-anchor="middle" font-size="8" fill="#1d4ed8">math.sqrt(x)</text>
+        <line x1="15" y1="100" x2="125" y2="100" stroke="#93c5fd" stroke-width="0.8"/>
+        <text x="70" y="116" text-anchor="middle" font-size="8" fill="#1d4ed8">Counter(list)</text>
+        <line x1="15" y1="122" x2="125" y2="122" stroke="#93c5fd" stroke-width="0.8"/>
+        <text x="70" y="138" text-anchor="middle" font-size="8" fill="#1d4ed8">.most_common(n)</text>
+        <path d="M138,80 L178,80" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#cv1)"/>
+        <rect x="181" y="10" width="120" height="140" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+        <text x="241" y="28" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">시뮬레이터 기능</text>
+        <line x1="191" y1="34" x2="291" y2="34" stroke="#86efac" stroke-width="0.8"/>
+        <text x="241" y="50" text-anchor="middle" font-size="9" fill="#166534">roll(n)</text>
+        <line x1="191" y1="56" x2="291" y2="56" stroke="#86efac" stroke-width="0.8"/>
+        <text x="241" y="72" text-anchor="middle" font-size="9" fill="#166534">stats(results)</text>
+        <line x1="191" y1="78" x2="291" y2="78" stroke="#86efac" stroke-width="0.8"/>
+        <text x="241" y="94" text-anchor="middle" font-size="9" fill="#166534">histogram(results)</text>
+        <line x1="191" y1="100" x2="291" y2="100" stroke="#86efac" stroke-width="0.8"/>
+        <text x="241" y="116" text-anchor="middle" font-size="9" fill="#166534">multi_roll(dice, n)</text>
+        <line x1="191" y1="122" x2="291" y2="122" stroke="#86efac" stroke-width="0.8"/>
+        <text x="241" y="138" text-anchor="middle" font-size="9" fill="#166534">streak(n)</text>
+        <path d="M304,80 L344,80" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#cv1)"/>
+        <rect x="347" y="10" width="128" height="140" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+        <text x="411" y="28" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">히스토그램 출력</text>
+        <text x="411" y="46" text-anchor="middle" font-size="8" fill="#92400e">1: ******** 24</text>
+        <text x="411" y="62" text-anchor="middle" font-size="8" fill="#92400e">2: ******* 22</text>
+        <text x="411" y="78" text-anchor="middle" font-size="8" fill="#92400e">3: ******* 21</text>
+        <text x="411" y="94" text-anchor="middle" font-size="8" fill="#92400e">4: ******** 25</text>
+        <text x="411" y="110" text-anchor="middle" font-size="8" fill="#92400e">5: ******* 23</text>
+        <text x="411" y="126" text-anchor="middle" font-size="8" fill="#92400e">6: ******* 22</text>
+        <text x="411" y="144" text-anchor="middle" font-size="7" fill="#64748b">평균 3.51, 표준편차 1.69</text>
+      </svg>
+    </div>
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/puzzle.png" alt="고급 기능" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+      <h3>이 프로젝트에서 만드는 것</h3>
+      <ul>
+        <li>random.randint(1,6)으로 주사위 던지기 시뮬레이션</li>
+        <li>math.sqrt()와 분산 공식으로 표준편차 계산</li>
+        <li>collections.Counter로 빈도 분석과 최빈값 추출</li>
+        <li>텍스트 히스토그램으로 분포 시각화</li>
+        <li>연속 같은 수 기록(streak) 통계 집계</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- 2페이지: 핵심 개념 -->
+<div class="page">
+  <h2>핵심 개념 — random, math, Counter</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="처리" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+  <p>random 모듈은 무작위 수를 생성하고, <code>random.seed()</code>로 재현 가능한 결과를 만들 수 있습니다. math 모듈의 <code>sqrt()</code>로 제곱근을 계산해 표준편차를 구합니다. collections.Counter는 리스트의 각 요소 빈도를 자동으로 집계하는 딕셔너리 서브클래스입니다.</p>
+  <div style="text-align:center;margin:14px 0;">
+    <svg viewBox="0 0 460 76" style="max-width:460px;width:100%">
+      <defs><marker id="rnd1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker></defs>
+      <text x="230" y="14" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">Counter 동작 원리</text>
+      <rect x="5" y="22" width="120" height="46" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+      <text x="65" y="40" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">[1,3,2,1,3,3,6]</text>
+      <text x="65" y="58" text-anchor="middle" font-size="8" fill="#64748b">주사위 결과 리스트</text>
+      <path d="M128,45 L168,45" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#rnd1)"/>
+      <text x="148" y="38" text-anchor="middle" font-size="7" fill="#64748b">Counter()</text>
+      <rect x="171" y="22" width="140" height="46" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+      <text x="241" y="40" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">Counter({3:3, 1:2, 2:1, 6:1})</text>
+      <text x="241" y="58" text-anchor="middle" font-size="8" fill="#64748b">자동 빈도 집계</text>
+      <path d="M314,45 L354,45" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#rnd1)"/>
+      <text x="334" y="38" text-anchor="middle" font-size="7" fill="#64748b">.most_common(1)</text>
+      <rect x="357" y="22" width="98" height="46" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+      <text x="406" y="40" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">[(3, 3)]</text>
+      <text x="406" y="58" text-anchor="middle" font-size="8" fill="#92400e">최빈값 3</text>
+    </svg>
+  </div>
+  <div style="text-align:center;margin:14px 0;">
+    <svg viewBox="0 0 460 70" style="max-width:460px;width:100%">
+      <defs><marker id="std1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker></defs>
+      <text x="230" y="14" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">표준편차 계산 단계</text>
+      <rect x="5" y="22" width="90" height="40" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+      <text x="50" y="38" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">평균 계산</text>
+      <text x="50" y="54" text-anchor="middle" font-size="8" fill="#64748b">sum/len</text>
+      <path d="M98,42 L118,42" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#std1)"/>
+      <rect x="121" y="22" width="90" height="40" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+      <text x="166" y="38" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">분산 계산</text>
+      <text x="166" y="54" text-anchor="middle" font-size="8" fill="#64748b">sum((x-m)**2)/n</text>
+      <path d="M214,42 L234,42" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#std1)"/>
+      <rect x="237" y="22" width="90" height="40" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+      <text x="282" y="38" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">표준편차</text>
+      <text x="282" y="54" text-anchor="middle" font-size="8" fill="#92400e">math.sqrt(var)</text>
+      <path d="M330,42 L360,42" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#std1)"/>
+      <rect x="363" y="22" width="92" height="40" rx="6" fill="#ede9fe" stroke="#8b5cf6" stroke-width="1.5"/>
+      <text x="409" y="38" text-anchor="middle" font-size="9" fill="#5b21b6" font-weight="700">결과 출력</text>
+      <text x="409" y="54" text-anchor="middle" font-size="8" fill="#5b21b6">round(std, 2)</text>
+    </svg>
+  </div>
+  <div class="code"><span class="cmt"># random / math / Counter 기본 사용</span>
+<span class="kw">import</span> random, math
+<span class="kw">from</span> collections <span class="kw">import</span> Counter
+
+random.<span class="fn">seed</span>(<span class="num">42</span>)    <span class="cmt"># 재현 가능한 난수</span>
+results = [random.<span class="fn">randint</span>(<span class="num">1</span>, <span class="num">6</span>) <span class="kw">for</span> _ <span class="kw">in</span> range(<span class="num">100</span>)]
+
+counter = <span class="fn">Counter</span>(results)
+mean = <span class="fn">sum</span>(results) / <span class="fn">len</span>(results)
+variance = <span class="fn">sum</span>((x - mean) ** <span class="num">2</span> <span class="kw">for</span> x <span class="kw">in</span> results) / <span class="fn">len</span>(results)
+std = math.<span class="fn">sqrt</span>(variance)
+
+<span class="fn">print</span>(<span class="str">f"평균: {mean:.2f}, 표준편차: {std:.2f}"</span>)
+<span class="fn">print</span>(<span class="str">f"최빈값: {counter.most_common(1)[0][0]}"</span>)</div>
+  <div style="text-align:center;margin:12px 0;">
+    <svg viewBox="0 0 460 60" style="max-width:460px;width:100%">
+      <defs><marker id="hs1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker></defs>
+      <text x="230" y="13" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">텍스트 히스토그램 원리 — "*" 반복</text>
+      <rect x="5" y="22" width="80" height="30" rx="5" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+      <text x="45" y="40" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">count = 17</text>
+      <path d="M88,37 L108,37" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#hs1)"/>
+      <rect x="111" y="22" width="120" height="30" rx="5" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+      <text x="171" y="40" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">"*" * 17</text>
+      <path d="M234,37 L254,37" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#hs1)"/>
+      <rect x="257" y="22" width="196" height="30" rx="5" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+      <text x="355" y="40" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">3: ***************** 17</text>
+    </svg>
+  </div>
+  <h3>Step 1 — 주사위 던지기와 히스토그램</h3>
+  <p>roll(n) 함수는 주사위를 n번 던진 결과를 리스트로 반환합니다. histogram()은 Counter로 빈도를 집계한 뒤 <code>"*" * count</code>로 막대 길이를 표현합니다. scale 파라미터로 막대 너비를 조정합니다.</p>
+  <div class="code"><span class="cmt"># Step 1: 기본 주사위와 히스토그램</span>
+<span class="kw">import</span> random, math
+<span class="kw">from</span> collections <span class="kw">import</span> Counter
+
+<span class="kw">def</span> <span class="fn">roll</span>(n=<span class="num">1</span>, sides=<span class="num">6</span>):
+    <span class="kw">return</span> [random.<span class="fn">randint</span>(<span class="num">1</span>, sides) <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(n)]
+
+<span class="kw">def</span> <span class="fn">histogram</span>(results, scale=<span class="num">1</span>):
+    counter = <span class="fn">Counter</span>(results)
+    <span class="fn">print</span>(<span class="str">f"=== 히스토그램 (총 {len(results)}회) ==="</span>)
+    <span class="kw">for</span> face <span class="kw">in</span> <span class="fn">sorted</span>(counter):
+        cnt = counter[face]
+        bar = <span class="str">"*"</span> * (cnt // scale)
+        <span class="fn">print</span>(<span class="str">f"{face}: {bar} {cnt}"</span>)
+
+<span class="kw">def</span> <span class="fn">stats</span>(results):
+    mean = <span class="fn">sum</span>(results) / <span class="fn">len</span>(results)
+    var = <span class="fn">sum</span>((x - mean) ** <span class="num">2</span> <span class="kw">for</span> x <span class="kw">in</span> results) / <span class="fn">len</span>(results)
+    std = math.<span class="fn">sqrt</span>(var)
+    <span class="fn">print</span>(<span class="str">f"평균: {mean:.2f}  표준편차: {std:.2f}"</span>)</div>
+  <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="완성" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+    <div class="practice-head">따라해보세요 — Step 1</div>
+    <div class="practice-body">
+      <div class="practice-item">
+        <div class="practice-num">1</div>
+        <div class="practice-desc"><code>results = roll(100)</code>로 100번 굴린 뒤 <code>histogram(results)</code>을 호출하세요.</div>
+        <div class="practice-result">6개 면의 빈도가 비슷하게 분포합니다</div>
+      </div>
+      <div class="practice-item">
+        <div class="practice-num">2</div>
+        <div class="practice-desc"><code>random.seed(42)</code>를 설정하고 같은 코드를 두 번 실행해 같은 결과가 나오는지 확인하세요.</div>
+        <div class="practice-result">seed를 고정하면 난수가 재현됩니다</div>
+      </div>
+      <div class="practice-item">
+        <div class="practice-num">3</div>
+        <div class="practice-desc"><code>stats(roll(1000))</code>로 1000번 던진 통계를 확인하고 이론값(평균 3.5)에 가까워지는지 보세요.</div>
+        <div class="practice-result">샘플이 많을수록 평균 3.5에 수렴합니다</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 3페이지: Step 2 -->
+<div class="page">
+  <h2>Step 2 — 다중 주사위 + 연속 기록</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/database.png" alt="데이터" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+  <div style="text-align:center;margin:10px 0;">
+    <svg viewBox="0 0 460 62" style="max-width:460px;width:100%">
+      <defs><marker id="s2b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" marketHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker></defs>
+      <text x="230" y="13" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">Step 2 구현 목표</text>
+      <rect x="5" y="20" width="110" height="32" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+      <text x="60" y="39" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">multi_roll(dice, n)</text>
+      <path d="M118,36 L138,36" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#s2b)"/>
+      <rect x="141" y="20" width="100" height="32" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+      <text x="191" y="39" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">streak(n, target)</text>
+      <path d="M244,36 L264,36" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#s2b)"/>
+      <rect x="267" y="20" width="100" height="32" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+      <text x="317" y="39" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">compare_dice()</text>
+      <path d="M370,36 L390,36" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#s2b)"/>
+      <rect x="393" y="20" width="62" height="32" rx="6" fill="#ede9fe" stroke="#8b5cf6" stroke-width="1.5"/>
+      <text x="424" y="39" text-anchor="middle" font-size="9" fill="#5b21b6" font-weight="700">simulate()</text>
+    </svg>
+  </div>
+  <p>multi_roll(dice, n)은 여러 개의 주사위를 n번 굴려 합계 분포를 분석합니다. streak(n, target)은 target 숫자가 연속으로 나오는 최장 기록을 찾습니다. compare_dice()는 두 플레이어의 주사위 결과를 비교합니다.</p>
+  <div style="text-align:center;margin:12px 0;">
+    <svg viewBox="0 0 460 62" style="max-width:460px;width:100%">
+      <defs><marker id="md1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker></defs>
+      <text x="230" y="13" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">multi_roll 합계 분포 — 주사위 2개</text>
+      <rect x="5" y="20" width="80" height="34" rx="5" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+      <text x="45" y="34" text-anchor="middle" font-size="8" fill="#1d4ed8" font-weight="700">dice=2</text>
+      <text x="45" y="48" text-anchor="middle" font-size="8" fill="#64748b">각 1~6 두 번</text>
+      <path d="M88,37 L108,37" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#md1)"/>
+      <rect x="111" y="20" width="120" height="34" rx="5" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+      <text x="171" y="34" text-anchor="middle" font-size="8" fill="#166534" font-weight="700">합계 2~12</text>
+      <text x="171" y="48" text-anchor="middle" font-size="8" fill="#64748b">7이 가장 많이 등장</text>
+      <path d="M234,37 L254,37" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#md1)"/>
+      <rect x="257" y="20" width="198" height="34" rx="5" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+      <text x="356" y="34" text-anchor="middle" font-size="8" fill="#92400e" font-weight="700">정규분포 형태 히스토그램</text>
+      <text x="356" y="48" text-anchor="middle" font-size="8" fill="#92400e">중간값 확률 가장 높음</text>
+    </svg>
+  </div>
+  <div class="code"><span class="cmt"># Step 2: 다중 주사위 + 연속 기록</span>
+<span class="kw">def</span> <span class="fn">multi_roll</span>(dice=<span class="num">2</span>, n=<span class="num">100</span>):
+    <span class="str">"""dice개 주사위를 n번 굴려 합계 히스토그램"""</span>
+    sums = []
+    <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(n):
+        total = <span class="fn">sum</span>(<span class="fn">roll</span>(<span class="num">1</span>)[<span class="num">0</span>] <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(dice))
+        sums.<span class="fn">append</span>(total)
+    <span class="fn">histogram</span>(sums, scale=<span class="fn">max</span>(<span class="num">1</span>, n // <span class="num">50</span>))
+    <span class="kw">return</span> sums
+
+<span class="kw">def</span> <span class="fn">streak</span>(n=<span class="num">100</span>, target=<span class="num">6</span>):
+    <span class="str">"""target이 연속으로 나온 최장 횟수"""</span>
+    results = <span class="fn">roll</span>(n)
+    max_s = cur = <span class="num">0</span>
+    <span class="kw">for</span> r <span class="kw">in</span> results:
+        <span class="kw">if</span> r == target:
+            cur += <span class="num">1</span>
+            max_s = <span class="fn">max</span>(max_s, cur)
+        <span class="kw">else</span>:
+            cur = <span class="num">0</span>
+    <span class="fn">print</span>(<span class="str">f"{target} 최장 연속: {max_s}회"</span>)
+    <span class="kw">return</span> max_s
+
+<span class="kw">def</span> <span class="fn">compare_dice</span>(rounds=<span class="num">10</span>):
+    <span class="str">"""두 플레이어 주사위 승부"""</span>
+    p1 = <span class="fn">roll</span>(rounds); p2 = <span class="fn">roll</span>(rounds)
+    w1 = <span class="fn">sum</span>(a > b <span class="kw">for</span> a, b <span class="kw">in</span> <span class="fn">zip</span>(p1, p2))
+    w2 = <span class="fn">sum</span>(a &lt; b <span class="kw">for</span> a, b <span class="kw">in</span> <span class="fn">zip</span>(p1, p2))
+    <span class="fn">print</span>(<span class="str">f"P1승: {w1}  P2승: {w2}  무: {rounds-w1-w2}"</span>)</div>
+  <div class="practice">
+    <div class="practice-head">따라해보세요 — Step 2</div>
+    <div class="practice-body">
+      <div class="practice-item">
+        <div class="practice-num">1</div>
+        <div class="practice-desc"><code>multi_roll(dice=2, n=500)</code>를 실행해 주사위 2개 합의 분포가 종 모양인지 확인하세요.</div>
+        <div class="practice-result">7이 가장 빈번하게 등장하는 정규분포 형태가 됩니다</div>
+      </div>
+      <div class="practice-item">
+        <div class="practice-num">2</div>
+        <div class="practice-desc"><code>streak(1000, 6)</code>으로 6이 연속으로 등장한 최장 기록을 확인하세요.</div>
+        <div class="practice-result">1/6 확률이라 평균 6번에 1번 나오므로 연속은 드뭅니다</div>
+      </div>
+      <div class="practice-item">
+        <div class="practice-num">3</div>
+        <div class="practice-desc"><code>compare_dice(100)</code>로 100라운드 승부 결과를 확인하세요. 기대 승률은 각각 얼마일까요?</div>
+        <div class="practice-result">비길 경우를 제외하면 각 약 41.7% 승률입니다</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 4페이지: 연습 문제 + 요약 -->
+<div class="page">
+  <h2>연습 문제</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+  <div style="text-align:center;margin:10px 0 12px;">
+    <svg viewBox="0 0 460 52" style="max-width:460px;width:100%">
+      <defs><marker id="qv1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker></defs>
+      <text x="230" y="13" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">문제 구성</text>
+      <rect x="5" y="20" width="140" height="28" rx="6" fill="#d1fae5" stroke="#22c55e" stroke-width="1.5"/>
+      <text x="75" y="38" text-anchor="middle" font-size="9" fill="#065f46" font-weight="700">Q1: 목표 달성 확률</text>
+      <path d="M148,34 L168,34" stroke="#94a3b8" stroke-width="1" marker-end="url(#qv1)"/>
+      <rect x="171" y="20" width="130" height="28" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+      <text x="236" y="38" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">Q2: 퍼센타일 계산</text>
+      <path d="M304" stroke="#94a3b8" stroke-width="1" marker-end="url(#qv1)"/>
+      <path d="M304,34 L324,34" stroke="#94a3b8" stroke-width="1" marker-end="url(#qv1)"/>
+      <rect x="327" y="20" width="128" height="28" rx="6" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+      <text x="391" y="38" text-anchor="middle" font-size="9" fill="#991b1b" font-weight="700">Q3: 몬테카를로 pi</text>
+    </svg>
+  </div>
+  <div class="problem">
+    <div style="text-align:center;margin:6px 0;">
+      <svg viewBox="0 0 460 52" style="max-width:420px;width:100%">
+        <defs><marker id="q1b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker></defs>
+        <text x="230" y="13" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">확률 계산 흐름</text>
+        <rect x="5" y="20" width="80" height="26" rx="5" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+        <text x="45" y="36" text-anchor="middle" font-size="8" fill="#1d4ed8" font-weight="700">multi_roll(2,n)</text>
+        <path d="M88,33 L108,33" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#q1b)"/>
+        <rect x="111" y="20" width="110" height="26" rx="5" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+        <text x="166" y="36" text-anchor="middle" font-size="8" fill="#166534" font-weight="700">sum(s &gt;= target)</text>
+        <path d="M224,33 L244,33" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#q1b)"/>
+        <rect x="247" y="20" width="100" height="26" rx="5" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+        <text x="297" y="36" text-anchor="middle" font-size="8" fill="#92400e" font-weight="700">count / n * 100 %</text>
+      </svg>
+    </div>
+    <div class="problem-head">
+      <div class="problem-badge">Q1</div>
+      <div class="problem-label">목표 합계 달성 확률</div>
+      <div class="problem-diff easy">Easy</div>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">주사위 2개를 n번 굴려 합이 target 이상인 비율을 계산하는 <code>prob_reach(target, n=1000)</code>을 작성하세요. <code>Counter</code>와 누적 합산으로 확률을 계산합니다.</div>
+      <div class="problem-example">
+        <div class="problem-example-row"><div class="problem-example-label">호출</div><div class="problem-example-value">prob_reach(10, 1000)</div></div>
+        <div class="problem-example-row"><div class="problem-example-label">출력</div><div class="problem-example-value">합계 10이상: 16.8% (168/1000)</div></div>
+      </div>
+      <details class="problem-toggle">
+        <summary>힌트 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="hint-text"><code>sum(1 for s in sums if s >= target)</code>로 조건을 만족하는 횟수를 세고 n으로 나눕니다.</div>
+        </div>
+      </details>
+      <details class="problem-toggle">
+        <summary>정답 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="answer-code">def prob_reach(target, n=1000):
+    sums = multi_roll(2, n)
+    count = sum(1 for s in sums if s >= target)
+    print(f"합계 {target}이상: {count/n*100:.1f}% ({count}/{n})")</div>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div class="problem">
+    <div style="text-align:center;margin:6px 0;">
+      <svg viewBox="0 0 460 52" style="max-width:420px;width:100%">
+        <defs><marker id="q2b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker></defs>
+        <text x="230" y="13" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">퍼센타일 계산 — sorted 활용</text>
+        <rect x="5" y="20" width="80" height="26" rx="5" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+        <text x="45" y="36" text-anchor="middle" font-size="8" fill="#1d4ed8" font-weight="700">sorted(results)</text>
+        <path d="M88,33 L108,33" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#q2b)"/>
+        <rect x="111" y="20" width="130" height="26" rx="5" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+        <text x="176" y="36" text-anchor="middle" font-size="8" fill="#166534" font-weight="700">idx = ceil(p/100 * n) - 1</text>
+        <path d="M244,33 L264,33" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#q2b)"/>
+        <rect x="267" y="20" width="90" height="26" rx="5" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+        <text x="312" y="36" text-anchor="middle" font-size="8" fill="#92400e" font-weight="700">sorted_r[idx]</text>
+      </svg>
+    </div>
+    <div class="problem-head">
+      <div class="problem-badge">Q2</div>
+      <div class="problem-label">퍼센타일 계산</div>
+      <div class="problem-diff medium">Medium</div>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">결과 리스트를 정렬해 p 퍼센타일 값을 반환하는 <code>percentile(results, p)</code>를 작성하세요. p=50이면 중앙값, p=75면 상위 25% 임계값입니다. 인덱스 계산에 <code>math.ceil()</code>을 활용합니다.</div>
+      <div class="problem-example">
+        <div class="problem-example-row"><div class="problem-example-label">호출</div><div class="problem-example-value">percentile(roll(100), 75)</div></div>
+        <div class="problem-example-row"><div class="problem-example-label">출력</div><div class="problem-example-value">75퍼센타일: 5</div></div>
+      </div>
+      <details class="problem-toggle">
+        <summary>힌트 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="hint-text">정렬된 리스트에서 인덱스 = <code>math.ceil(p/100 * len(results)) - 1</code>로 퍼센타일 위치를 찾습니다.</div>
+        </div>
+      </details>
+      <details class="problem-toggle">
+        <summary>정답 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="answer-code">def percentile(results, p):
+    sorted_r = sorted(results)
+    idx = math.ceil(p / 100 * len(sorted_r)) - 1
+    value = sorted_r[idx]
+    print(f"{p}퍼센타일: {value}")
+    return value</div>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">Q3</div>
+      <div class="problem-label">몬테카를로 방법으로 pi 추정</div>
+      <div class="problem-diff hard">Hard</div>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">random.random()으로 단위 원 안에 점이 떨어지는 비율로 pi를 추정하는 <code>estimate_pi(n)</code>을 작성하세요. x,y를 0~1 사이 난수로 생성해 <code>x**2 + y**2 &lt; 1</code>인 점의 비율 * 4가 pi입니다.</div>
+      <div class="problem-example">
+        <div class="problem-example-row"><div class="problem-example-label">호출</div><div class="problem-example-value">estimate_pi(100000)</div></div>
+        <div class="problem-example-row"><div class="problem-example-label">출력</div><div class="problem-example-value">pi 추정값: 3.1416 (오차: 0.02%)</div></div>
+      </div>
+      <details class="problem-toggle">
+        <summary>힌트 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="hint-text"><code>inside = sum(1 for _ in range(n) if random.random()**2 + random.random()**2 &lt; 1)</code>로 원 내부 점을 세고 <code>4 * inside / n</code>이 pi 추정값입니다.</div>
+        </div>
+      </details>
+      <details class="problem-toggle">
+        <summary>정답 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="answer-code">def estimate_pi(n=10000):
+    inside = sum(1 for _ in range(n)
+                 if random.random()**2 + random.random()**2 < 1)
+    pi_est = 4 * inside / n
+    error = abs(pi_est - math.pi) / math.pi * 100
+    print(f"pi 추정값: {pi_est:.4f} (오차: {error:.2f}%)")</div>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div style="text-align:center;margin:10px 0;">
+    <svg viewBox="0 0 460 50" style="max-width:460px;width:100%">
+      <defs><marker id="sy2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker></defs>
+      <text x="230" y="13" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">전체 시스템 흐름</text>
+      <rect x="5" y="20" width="72" height="24" rx="5" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+      <text x="41" y="35" text-anchor="middle" font-size="8" fill="#1d4ed8" font-weight="700">roll(n)</text>
+      <path d="M80,32 L100,32" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#sy2)"/>
+      <rect x="103" y="20" width="72" height="24" rx="5" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+      <text x="139" y="35" text-anchor="middle" font-size="8" fill="#166534" font-weight="700">Counter</text>
+      <path d="M178,32 L198,32" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#sy2)"/>
+      <rect x="201" y="20" width="72" height="24" rx="5" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+      <text x="237" y="35" text-anchor="middle" font-size="8" fill="#92400e" font-weight="700">stats()</text>
+      <path d="M276,32 L296,32" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#sy2)"/>
+      <rect x="299" y="20" width="80" height="24" rx="5" fill="#ede9fe" stroke="#8b5cf6" stroke-width="1.5"/>
+      <text x="339" y="35" text-anchor="middle" font-size="8" fill="#5b21b6" font-weight="700">histogram()</text>
+      <path d="M382,32 L402,32" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#sy2)"/>
+      <rect x="405" y="20" width="50" height="24" rx="5" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+      <text x="430" y="35" text-anchor="middle" font-size="8" fill="#991b1b" font-weight="700">streak()</text>
+    </svg>
+  </div>
+  <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+    <h3>핵심 요약</h3>
+    <ul>
+      <li><strong>random.randint(a, b)</strong> — a이상 b이하 정수 난수, <code>seed()</code>로 재현 가능</li>
+      <li><strong>Counter(list)</strong> — 빈도 자동 집계, <code>.most_common(n)</code>으로 최빈값 추출</li>
+      <li><strong>표준편차</strong> — <code>math.sqrt(sum((x-mean)**2 for x in data) / len(data))</code></li>
+      <li><strong>텍스트 히스토그램</strong> — <code>"*" * count</code>로 막대 길이 표현</li>
+      <li><strong>몬테카를로</strong> — 무작위 시뮬레이션으로 수학적 상수 근사</li>
+    </ul>
+  </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — OpenCV 소개: 컴퓨터 비전의 시작</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #10b981; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 200px; font-weight: 900; color: rgba(16,185,129,0.12);
+    line-height: 1; pointer-events: none; letter-spacing: -10px;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #059669; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #10b981; font-weight: 900; }
+
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 16px; font-weight: 700; color: #1e3a5f; margin: 16px 0 8px; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+ul, ol { padding-left: 20px; margin-bottom: 12px; }
+li { font-size: 14px; color: #374151; line-height: 1.8; }
+
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 14px;
+    color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.code .key { color: #fbbf24; }
+.code .val { color: #86efac; }
+
+.practice { margin: 20px 0; border-left: 4px solid #10b981; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #065f46; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #10b981; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #10b981; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '->'; color: #94a3b8; font-weight: 700; }
+
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; white-space: pre-wrap; }
+
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+.compare-table { width: 100%; border-collapse: collapse; margin: 14px 0; }
+.compare-table th { background: #1e3a5f; color: #fff; font-size: 13px; font-weight: 700; padding: 8px 12px; text-align: left; }
+.compare-table td { font-size: 13px; color: #334155; padding: 8px 12px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+.compare-table tr:last-child td { border-bottom: none; }
+.compare-table td:first-child { font-family: 'JetBrains Mono', monospace; color: #2563eb; font-weight: 600; }
+.compare-table tr:nth-child(even) td { background: #f8fafc; }
+
+.info-box { background: #f0fdf4; border: 1.5px solid #bbf7d0; border-radius: 8px; padding: 12px 16px; margin: 14px 0; }
+.info-box .info-title { font-size: 13px; font-weight: 700; color: #065f46; margin-bottom: 6px; }
+.info-box p { font-size: 13px; color: #14532d; margin: 0; }
+
+.divider { height: 1px; background: #e5e7eb; margin: 18px 0; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- =========================================================
+     1페이지: 표지
+     ========================================================= -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">CV</div>
+        <div class="cover-label">Chapter L3-CV-1 — 컴퓨터 비전</div>
+        <h1 class="cover-title">OpenCV 소개<br>컴퓨터 비전의 시작</h1>
+        <p class="cover-sub">사진 한 장에서 얼굴을 찾고, 색을 바꾸고, 물체를 인식하는 기술 — 컴퓨터 비전. OpenCV로 파이썬에서 이미지를 다루는 첫걸음을 시작합니다.</p>
+
+        <!-- SVG 1: 컴퓨터 비전 개념도 -->
+        <div style="margin:24px 0;">
+            <svg viewBox="0 0 520 150" style="max-width:520px;width:100%">
+                <defs>
+                    <marker id="cov-arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#10b981"/>
+                    </marker>
+                </defs>
+                <!-- 카메라/이미지 -->
+                <rect x="10" y="40" width="110" height="70" rx="8" fill="#1e3a5f"/>
+                <rect x="28" y="52" width="74" height="46" rx="4" fill="#0f172a"/>
+                <circle cx="65" cy="75" r="16" fill="#1d4ed8" stroke="#7dd3fc" stroke-width="2"/>
+                <circle cx="65" cy="75" r="8" fill="#0f172a"/>
+                <circle cx="65" cy="75" r="3" fill="#60a5fa"/>
+                <text x="65" y="108" text-anchor="middle" font-size="10" fill="#94a3b8">이미지 입력</text>
+                <!-- 화살표 -->
+                <line x1="122" y1="75" x2="162" y2="75" stroke="#10b981" stroke-width="2" marker-end="url(#cov-arr)"/>
+                <!-- OpenCV 박스 -->
+                <rect x="165" y="30" width="140" height="90" rx="10" fill="#065f46"/>
+                <text x="235" y="58" text-anchor="middle" font-size="13" fill="#fff" font-weight="900">OpenCV</text>
+                <text x="235" y="76" text-anchor="middle" font-size="10" fill="#a7f3d0">cv2.imread()</text>
+                <text x="235" y="92" text-anchor="middle" font-size="10" fill="#a7f3d0">cv2.imshow()</text>
+                <text x="235" y="108" text-anchor="middle" font-size="10" fill="#a7f3d0">cv2.imwrite()</text>
+                <!-- 화살표 -->
+                <line x1="307" y1="75" x2="347" y2="75" stroke="#10b981" stroke-width="2" marker-end="url(#cov-arr)"/>
+                <!-- 결과 박스 -->
+                <rect x="350" y="40" width="160" height="70" rx="8" fill="#1e3a5f"/>
+                <text x="430" y="62" text-anchor="middle" font-size="11" fill="#94a3b8">처리 결과</text>
+                <text x="430" y="78" text-anchor="middle" font-size="10" fill="#86efac">얼굴 인식 / 필터 / 객체 검출</text>
+                <text x="430" y="94" text-anchor="middle" font-size="10" fill="#7dd3fc">저장 / 출력 / 분석</text>
+                <text x="260" y="140" text-anchor="middle" font-size="10" fill="#64748b">카메라 -> OpenCV 처리 -> 결과 활용</text>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/monitor.png" alt="모니터" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 유닛에서 배우는 것</h3>
+            <ul>
+                <li>컴퓨터 비전이 무엇인지, 어디에 쓰이는지 이해합니다.</li>
+                <li>pip install opencv-python으로 OpenCV를 설치하는 방법을 배웁니다.</li>
+                <li>cv2.imread()로 이미지를 읽고, cv2.imshow()로 화면에 보여주고, cv2.imwrite()로 저장합니다.</li>
+                <li>BGR과 RGB의 차이와 왜 중요한지 알게 됩니다.</li>
+                <li>이미지의 크기(shape)와 픽셀 값을 확인하는 방법을 배웁니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- =========================================================
+     2페이지: 컴퓨터 비전이란? + OpenCV 소개
+     ========================================================= -->
+<div class="page">
+    <h2>컴퓨터 비전이란?</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/laptop.png" alt="노트북" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p><strong>컴퓨터 비전(Computer Vision)</strong>은 컴퓨터가 사람의 눈처럼 이미지나 영상을 이해하는 기술입니다. 사진에서 얼굴을 찾고, 자동차를 인식하고, 손글씨를 읽는 모든 것이 컴퓨터 비전입니다.</p>
+
+    <!-- SVG 2: 컴퓨터 비전 활용 분야 -->
+    <div style="text-align:center;margin:18px 0;">
+        <svg viewBox="0 0 520 130" style="max-width:520px;width:100%">
+            <!-- 가운데 라벨 -->
+            <circle cx="260" cy="65" r="36" fill="#1e3a5f"/>
+            <text x="260" y="60" text-anchor="middle" font-size="11" fill="#fff" font-weight="800">컴퓨터</text>
+            <text x="260" y="76" text-anchor="middle" font-size="11" fill="#10b981" font-weight="800">비전</text>
+            <!-- 분야 1: 얼굴 인식 -->
+            <rect x="10" y="10" width="100" height="48" rx="8" fill="#1d4ed8"/>
+            <text x="60" y="32" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">얼굴 인식</text>
+            <text x="60" y="48" text-anchor="middle" font-size="9" fill="#bfdbfe">스마트폰 잠금 해제</text>
+            <line x1="112" y1="34" x2="222" y2="52" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="4,3"/>
+            <!-- 분야 2: 자율주행 -->
+            <rect x="10" y="72" width="100" height="48" rx="8" fill="#7c3aed"/>
+            <text x="60" y="94" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">자율주행</text>
+            <text x="60" y="110" text-anchor="middle" font-size="9" fill="#ddd6fe">차선/신호 인식</text>
+            <line x1="112" y1="96" x2="222" y2="78" stroke="#7c3aed" stroke-width="1.5" stroke-dasharray="4,3"/>
+            <!-- 분야 3: 의료 영상 -->
+            <rect x="410" y="10" width="100" height="48" rx="8" fill="#dc2626"/>
+            <text x="460" y="32" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">의료 영상</text>
+            <text x="460" y="48" text-anchor="middle" font-size="9" fill="#fecaca">X-ray 분석</text>
+            <line x1="408" y1="34" x2="298" y2="52" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="4,3"/>
+            <!-- 분야 4: 품질 검사 -->
+            <rect x="410" y="72" width="100" height="48" rx="8" fill="#d97706"/>
+            <text x="460" y="94" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">품질 검사</text>
+            <text x="460" y="110" text-anchor="middle" font-size="9" fill="#fde68a">공장 불량 감지</text>
+            <line x1="408" y1="96" x2="298" y2="78" stroke="#d97706" stroke-width="1.5" stroke-dasharray="4,3"/>
+        </svg>
+    </div>
+
+    <h3>OpenCV란?</h3>
+    <p><strong>OpenCV</strong>(Open Source Computer Vision Library)는 1999년 Intel이 개발한 오픈소스 컴퓨터 비전 라이브러리입니다. 파이썬에서 <code>import cv2</code>로 사용하며, 이미지 처리부터 딥러닝까지 지원합니다.</p>
+
+    <!-- SVG 3: OpenCV 역사 타임라인 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 520 80" style="max-width:520px;width:100%">
+            <line x1="20" y1="40" x2="500" y2="40" stroke="#e2e8f0" stroke-width="2"/>
+            <!-- 1999 -->
+            <circle cx="60" cy="40" r="6" fill="#1e3a5f"/>
+            <text x="60" y="28" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">1999</text>
+            <text x="60" y="58" text-anchor="middle" font-size="9" fill="#64748b">Intel 개발</text>
+            <!-- 2006 -->
+            <circle cx="160" cy="40" r="6" fill="#3b82f6"/>
+            <text x="160" y="28" text-anchor="middle" font-size="10" fill="#3b82f6" font-weight="700">2006</text>
+            <text x="160" y="58" text-anchor="middle" font-size="9" fill="#64748b">v1.0 출시</text>
+            <!-- 2010 -->
+            <circle cx="270" cy="40" r="6" fill="#10b981"/>
+            <text x="270" y="28" text-anchor="middle" font-size="10" fill="#10b981" font-weight="700">2010</text>
+            <text x="270" y="58" text-anchor="middle" font-size="9" fill="#64748b">Python 지원</text>
+            <!-- 2015 -->
+            <circle cx="380" cy="40" r="6" fill="#7c3aed"/>
+            <text x="380" y="28" text-anchor="middle" font-size="10" fill="#7c3aed" font-weight="700">2015</text>
+            <text x="380" y="58" text-anchor="middle" font-size="9" fill="#64748b">딥러닝 모듈</text>
+            <!-- 현재 -->
+            <circle cx="480" cy="40" r="6" fill="#f59e0b"/>
+            <text x="480" y="28" text-anchor="middle" font-size="10" fill="#f59e0b" font-weight="700">현재</text>
+            <text x="480" y="58" text-anchor="middle" font-size="9" fill="#64748b">v4.x 최신</text>
+        </svg>
+    </div>
+
+    <h3>OpenCV 설치</h3>
+    <p>터미널(명령 프롬프트)에서 다음 명령어를 실행하면 설치됩니다.</p>
+
+    <div class="code">
+<span class="cmt"># 터미널에서 실행 (파이썬 패키지 설치)</span>
+pip install opencv-python
+
+<span class="cmt"># 설치 확인</span>
+<span class="kw">import</span> cv2
+<span class="fn">print</span>(cv2.__version__)   <span class="cmt"># 예: 4.8.0</span>
+    </div>
+
+    <div class="info-box">
+        <div class="info-title">왜 import cv2인가?</div>
+        <p>패키지 이름은 <code>opencv-python</code>이지만, 실제 모듈 이름은 <code>cv2</code>입니다. OpenCV 2.x 버전 때 이름이 cv2로 고정되어 지금도 그대로 사용합니다.</p>
+    </div>
+</div>
+
+<!-- =========================================================
+     3페이지: 이미지 읽기/보여주기/저장
+     ========================================================= -->
+<div class="page">
+    <h2>이미지 읽기 — cv2.imread()</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p><code>cv2.imread()</code>는 이미지 파일을 읽어 NumPy 배열로 반환합니다. 배열의 각 원소는 픽셀(pixel) 값을 나타냅니다.</p>
+
+    <!-- SVG 4: imread 동작 원리 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 520 110" style="max-width:520px;width:100%">
+            <defs>
+                <marker id="im-arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#10b981"/>
+                </marker>
+            </defs>
+            <!-- 파일 -->
+            <rect x="10" y="20" width="110" height="70" rx="8" fill="#0f172a"/>
+            <rect x="24" y="30" width="82" height="50" rx="4" fill="#1e3a5f"/>
+            <text x="65" y="52" text-anchor="middle" font-size="10" fill="#94a3b8">photo.jpg</text>
+            <text x="65" y="68" text-anchor="middle" font-size="9" fill="#64748b">이미지 파일</text>
+            <!-- 화살표 + 함수 -->
+            <line x1="122" y1="55" x2="175" y2="55" stroke="#10b981" stroke-width="2" marker-end="url(#im-arr)"/>
+            <text x="148" y="46" text-anchor="middle" font-size="9" fill="#10b981" font-weight="700">imread()</text>
+            <!-- NumPy 배열 표현 -->
+            <rect x="178" y="10" width="160" height="90" rx="8" fill="#1e3a5f"/>
+            <text x="258" y="30" text-anchor="middle" font-size="10" fill="#94a3b8">NumPy 배열 (3D)</text>
+            <text x="258" y="48" text-anchor="middle" font-family="monospace" font-size="9" fill="#fbbf24">[[[120, 80, 200],</text>
+            <text x="258" y="63" text-anchor="middle" font-family="monospace" font-size="9" fill="#fbbf24">  [100, 60, 180]],</text>
+            <text x="258" y="78" text-anchor="middle" font-family="monospace" font-size="9" fill="#fbbf24"> [[130, 90, 210], ...]]</text>
+            <text x="258" y="93" text-anchor="middle" font-size="9" fill="#64748b">높이 x 너비 x 채널</text>
+            <!-- 화살표 -->
+            <line x1="340" y1="55" x2="385" y2="55" stroke="#10b981" stroke-width="2" marker-end="url(#im-arr)"/>
+            <!-- 출력 -->
+            <rect x="388" y="20" width="122" height="70" rx="8" fill="#065f46"/>
+            <text x="449" y="42" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">img.shape</text>
+            <text x="449" y="60" text-anchor="middle" font-family="monospace" font-size="10" fill="#a7f3d0">(480, 640, 3)</text>
+            <text x="449" y="76" text-anchor="middle" font-size="9" fill="#6ee7b7">높이, 너비, 채널</text>
+        </svg>
+    </div>
+
+    <div class="code">
+<span class="kw">import</span> cv2
+
+<span class="cmt"># 이미지 읽기</span>
+img = cv2.<span class="fn">imread</span>(<span class="str">"photo.jpg"</span>)
+
+<span class="cmt"># 이미지 정보 확인</span>
+<span class="fn">print</span>(img.shape)    <span class="cmt"># (480, 640, 3) — 높이, 너비, 채널수</span>
+<span class="fn">print</span>(img.dtype)    <span class="cmt"># uint8 — 픽셀 값은 0~255</span>
+<span class="fn">print</span>(img.size)     <span class="cmt"># 921600 — 전체 픽셀 수 (480*640*3)</span>
+    </div>
+
+    <!-- SVG 5: 픽셀 구조 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 520 90" style="max-width:520px;width:100%">
+            <text x="260" y="16" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="700">이미지 = 픽셀의 집합 (BGR 3채널)</text>
+            <!-- 픽셀 그리드 -->
+            <rect x="30" y="24" width="30" height="30" fill="#3b82f6" stroke="#fff" stroke-width="1"/>
+            <text x="45" y="44" text-anchor="middle" font-size="8" fill="#fff">120</text>
+            <rect x="60" y="24" width="30" height="30" fill="#10b981" stroke="#fff" stroke-width="1"/>
+            <text x="75" y="44" text-anchor="middle" font-size="8" fill="#fff">80</text>
+            <rect x="90" y="24" width="30" height="30" fill="#ef4444" stroke="#fff" stroke-width="1"/>
+            <text x="105" y="44" text-anchor="middle" font-size="8" fill="#fff">200</text>
+            <rect x="30" y="54" width="30" height="30" fill="#1d4ed8" stroke="#fff" stroke-width="1"/>
+            <text x="45" y="74" text-anchor="middle" font-size="8" fill="#fff">100</text>
+            <rect x="60" y="54" width="30" height="30" fill="#059669" stroke="#fff" stroke-width="1"/>
+            <text x="75" y="74" text-anchor="middle" font-size="8" fill="#fff">60</text>
+            <rect x="90" y="54" width="30" height="30" fill="#dc2626" stroke="#fff" stroke-width="1"/>
+            <text x="105" y="74" text-anchor="middle" font-size="8" fill="#fff">180</text>
+            <!-- 설명 -->
+            <text x="150" y="40" font-size="10" fill="#374151">각 픽셀 = [B, G, R] 3개의 숫자</text>
+            <text x="150" y="56" font-size="10" fill="#374151">숫자 범위: 0 (어두움) ~ 255 (밝음)</text>
+            <text x="150" y="72" font-size="10" fill="#64748b">예: [0, 0, 255] = 순수 빨간색</text>
+            <!-- 픽셀 라벨 -->
+            <line x1="45" y1="86" x2="105" y2="86" stroke="#94a3b8" stroke-width="1"/>
+            <text x="75" y="88" text-anchor="middle" font-size="8" fill="#94a3b8">3x2 픽셀 이미지</text>
+        </svg>
+    </div>
+
+    <h3>이미지 보여주기 — cv2.imshow()</h3>
+    <div class="code">
+<span class="cmt"># 창을 열어 이미지 표시</span>
+cv2.<span class="fn">imshow</span>(<span class="str">"My Photo"</span>, img)    <span class="cmt"># 창 이름, 이미지 배열</span>
+cv2.<span class="fn">waitKey</span>(<span class="num">0</span>)                 <span class="cmt"># 키 입력 대기 (0 = 무한 대기)</span>
+cv2.<span class="fn">destroyAllWindows</span>()         <span class="cmt"># 모든 창 닫기</span>
+    </div>
+
+    <h3>이미지 저장 — cv2.imwrite()</h3>
+    <div class="code">
+<span class="cmt"># 이미지를 파일로 저장</span>
+cv2.<span class="fn">imwrite</span>(<span class="str">"output.jpg"</span>, img)    <span class="cmt"># 파일명, 이미지 배열</span>
+cv2.<span class="fn">imwrite</span>(<span class="str">"output.png"</span>, img)    <span class="cmt"># PNG 형식으로도 저장 가능</span>
+    </div>
+
+    <!-- SVG 5: imread/imshow/imwrite 흐름 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 520 70" style="max-width:520px;width:100%">
+            <defs>
+                <marker id="flow-arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#3b82f6"/>
+                </marker>
+            </defs>
+            <rect x="10" y="15" width="110" height="40" rx="8" fill="#1e3a5f"/>
+            <text x="65" y="33" text-anchor="middle" font-size="11" fill="#94a3b8">파일 (photo.jpg)</text>
+            <text x="65" y="47" text-anchor="middle" font-size="9" fill="#64748b">디스크에 저장됨</text>
+            <line x1="122" y1="35" x2="162" y2="35" stroke="#3b82f6" stroke-width="2" marker-end="url(#flow-arr)"/>
+            <text x="142" y="26" text-anchor="middle" font-size="8" fill="#3b82f6">imread</text>
+            <rect x="165" y="15" width="110" height="40" rx="8" fill="#065f46"/>
+            <text x="220" y="33" text-anchor="middle" font-size="11" fill="#fff">img 배열</text>
+            <text x="220" y="47" text-anchor="middle" font-size="9" fill="#a7f3d0">메모리 (NumPy)</text>
+            <line x1="277" y1="35" x2="317" y2="35" stroke="#3b82f6" stroke-width="2" marker-end="url(#flow-arr)"/>
+            <text x="297" y="26" text-anchor="middle" font-size="8" fill="#3b82f6">imshow</text>
+            <rect x="320" y="15" width="90" height="40" rx="8" fill="#1d4ed8"/>
+            <text x="365" y="33" text-anchor="middle" font-size="11" fill="#fff">화면 출력</text>
+            <text x="365" y="47" text-anchor="middle" font-size="9" fill="#bfdbfe">창에 표시</text>
+            <line x1="290" y1="55" x2="290" y2="62" stroke="#f59e0b" stroke-width="1.5"/>
+            <line x1="290" y1="62" x2="430" y2="62" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#flow-arr)"/>
+            <rect x="420" y="15" width="90" height="40" rx="8" fill="#92400e"/>
+            <text x="465" y="33" text-anchor="middle" font-size="11" fill="#fff">파일 저장</text>
+            <text x="465" y="47" text-anchor="middle" font-size="9" fill="#fde68a">imwrite</text>
+        </svg>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/puzzle.png" alt="알고리즘" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">실습 1 — 이미지 읽고 정보 출력</div>
+                <div class="practice-desc">임의의 이미지 파일을 읽어 shape, dtype, size를 출력하세요.</div>
+                <div class="code" style="margin:8px 0;">
+<span class="kw">import</span> cv2
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="cmt"># 테스트용 이미지 만들기 (빨간색 100x100)</span>
+img = np.<span class="fn">zeros</span>((<span class="num">100</span>, <span class="num">100</span>, <span class="num">3</span>), dtype=np.uint8)
+img[:] = [<span class="num">0</span>, <span class="num">0</span>, <span class="num">255</span>]   <span class="cmt"># BGR: 빨간색</span>
+
+<span class="fn">print</span>(<span class="str">"shape:"</span>, img.shape)   <span class="cmt"># (100, 100, 3)</span>
+<span class="fn">print</span>(<span class="str">"dtype:"</span>, img.dtype)   <span class="cmt"># uint8</span>
+                </div>
+                <div class="practice-result">shape: (100, 100, 3) / dtype: uint8</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">실습 2 — 이미지 저장하고 다시 읽기</div>
+                <div class="practice-desc">이미지를 파일로 저장한 뒤 다시 읽어보세요.</div>
+                <div class="code" style="margin:8px 0;">
+cv2.<span class="fn">imwrite</span>(<span class="str">"test.png"</span>, img)
+img2 = cv2.<span class="fn">imread</span>(<span class="str">"test.png"</span>)
+<span class="fn">print</span>(<span class="str">"저장 후 읽기:"</span>, img2.shape)
+                </div>
+                <div class="practice-result">저장 후 읽기: (100, 100, 3)</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">실습 3 — 픽셀 값 확인</div>
+                <div class="practice-desc">특정 위치의 픽셀 값(BGR)을 출력하세요.</div>
+                <div class="code" style="margin:8px 0;">
+<span class="cmt"># [y, x] 순서로 접근</span>
+pixel = img[<span class="num">50</span>, <span class="num">50</span>]   <span class="cmt"># y=50, x=50 픽셀</span>
+<span class="fn">print</span>(<span class="str">"픽셀 BGR:"</span>, pixel)  <span class="cmt"># [0, 0, 255]</span>
+                </div>
+                <div class="practice-result">픽셀 BGR: [0 0 255]</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- =========================================================
+     4페이지: BGR vs RGB
+     ========================================================= -->
+<div class="page">
+    <h2>BGR vs RGB — 색상 순서의 비밀</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/magnifying-glass.png" alt="탐지" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>사람은 보통 <strong>RGB</strong>(Red, Green, Blue) 순서로 색을 표현합니다. 그런데 OpenCV는 <strong>BGR</strong>(Blue, Green, Red) 순서를 사용합니다. 이 차이를 모르면 색이 엉뚱하게 나옵니다!</p>
+
+    <!-- SVG 6: BGR vs RGB 비교 -->
+    <div style="text-align:center;margin:18px 0;">
+        <svg viewBox="0 0 520 120" style="max-width:520px;width:100%">
+            <!-- RGB 박스 -->
+            <rect x="10" y="10" width="220" height="100" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="120" y="32" text-anchor="middle" font-size="13" fill="#1e3a5f" font-weight="800">RGB (일반적인 방식)</text>
+            <rect x="28" y="44" width="52" height="52" rx="6" fill="#ef4444"/>
+            <text x="54" y="76" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">R</text>
+            <text x="54" y="90" text-anchor="middle" font-size="9" fill="#fca5a5">Red</text>
+            <rect x="90" y="44" width="52" height="52" rx="6" fill="#22c55e"/>
+            <text x="116" y="76" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">G</text>
+            <text x="116" y="90" text-anchor="middle" font-size="9" fill="#bbf7d0">Green</text>
+            <rect x="152" y="44" width="52" height="52" rx="6" fill="#3b82f6"/>
+            <text x="178" y="76" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">B</text>
+            <text x="178" y="90" text-anchor="middle" font-size="9" fill="#bfdbfe">Blue</text>
+            <!-- vs -->
+            <text x="260" y="68" text-anchor="middle" font-size="22" fill="#94a3b8" font-weight="900">vs</text>
+            <!-- BGR 박스 -->
+            <rect x="290" y="10" width="220" height="100" rx="10" fill="#f8fafc" stroke="#10b981" stroke-width="1.5"/>
+            <text x="400" y="32" text-anchor="middle" font-size="13" fill="#065f46" font-weight="800">BGR (OpenCV 방식)</text>
+            <rect x="308" y="44" width="52" height="52" rx="6" fill="#3b82f6"/>
+            <text x="334" y="76" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">B</text>
+            <text x="334" y="90" text-anchor="middle" font-size="9" fill="#bfdbfe">Blue</text>
+            <rect x="370" y="44" width="52" height="52" rx="6" fill="#22c55e"/>
+            <text x="396" y="76" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">G</text>
+            <text x="396" y="90" text-anchor="middle" font-size="9" fill="#bbf7d0">Green</text>
+            <rect x="432" y="44" width="52" height="52" rx="6" fill="#ef4444"/>
+            <text x="458" y="76" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">R</text>
+            <text x="458" y="90" text-anchor="middle" font-size="9" fill="#fca5a5">Red</text>
+        </svg>
+    </div>
+
+    <p>Matplotlib 같은 라이브러리는 RGB를 기대합니다. OpenCV 이미지를 그대로 Matplotlib에 넘기면 파란색과 빨간색이 뒤바뀝니다. 이때 <code>cv2.cvtColor()</code>로 변환해야 합니다.</p>
+
+    <!-- SVG 7: BGR to RGB 변환 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 80" style="max-width:500px;width:100%">
+            <defs>
+                <marker id="cvt-arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#f59e0b"/>
+                </marker>
+            </defs>
+            <rect x="10" y="15" width="140" height="50" rx="8" fill="#1e3a5f"/>
+            <text x="80" y="38" text-anchor="middle" font-size="11" fill="#94a3b8">OpenCV 이미지</text>
+            <text x="80" y="54" text-anchor="middle" font-family="monospace" font-size="9" fill="#7dd3fc">BGR 순서</text>
+            <line x1="152" y1="40" x2="200" y2="40" stroke="#f59e0b" stroke-width="2" marker-end="url(#cvt-arr)"/>
+            <text x="176" y="30" text-anchor="middle" font-size="8" fill="#f59e0b" font-weight="700">cvtColor</text>
+            <text x="176" y="54" text-anchor="middle" font-size="8" fill="#f59e0b">BGR2RGB</text>
+            <rect x="204" y="15" width="140" height="50" rx="8" fill="#065f46"/>
+            <text x="274" y="38" text-anchor="middle" font-size="11" fill="#fff">변환된 이미지</text>
+            <text x="274" y="54" text-anchor="middle" font-family="monospace" font-size="9" fill="#a7f3d0">RGB 순서</text>
+            <line x1="346" y1="40" x2="394" y2="40" stroke="#3b82f6" stroke-width="2" marker-end="url(#cvt-arr)"/>
+            <rect x="398" y="15" width="100" height="50" rx="8" fill="#1d4ed8"/>
+            <text x="448" y="38" text-anchor="middle" font-size="11" fill="#fff">Matplotlib</text>
+            <text x="448" y="54" text-anchor="middle" font-size="9" fill="#bfdbfe">정상 색상 출력</text>
+        </svg>
+    </div>
+
+    <div class="code">
+<span class="kw">import</span> cv2
+
+img_bgr = cv2.<span class="fn">imread</span>(<span class="str">"photo.jpg"</span>)
+
+<span class="cmt"># BGR -> RGB 변환 (Matplotlib 사용 시)</span>
+img_rgb = cv2.<span class="fn">cvtColor</span>(img_bgr, cv2.COLOR_BGR2RGB)
+
+<span class="cmt"># BGR -> GRAY 변환 (흑백)</span>
+img_gray = cv2.<span class="fn">cvtColor</span>(img_bgr, cv2.COLOR_BGR2GRAY)
+
+<span class="fn">print</span>(<span class="str">"BGR shape:"</span>, img_bgr.shape)   <span class="cmt"># (h, w, 3)</span>
+<span class="fn">print</span>(<span class="str">"GRAY shape:"</span>, img_gray.shape) <span class="cmt"># (h, w) — 채널 없음</span>
+    </div>
+
+    <!-- SVG 8: 채널 시각화 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 520 90" style="max-width:520px;width:100%">
+            <text x="260" y="14" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="700">컬러 이미지 = B채널 + G채널 + R채널</text>
+            <!-- B 채널 -->
+            <rect x="20" y="22" width="100" height="56" rx="6" fill="#1d4ed8"/>
+            <text x="70" y="48" text-anchor="middle" font-size="24" fill="#bfdbfe" font-weight="900">B</text>
+            <text x="70" y="68" text-anchor="middle" font-size="10" fill="#93c5fd">Blue 채널</text>
+            <!-- + -->
+            <text x="140" y="55" text-anchor="middle" font-size="20" fill="#94a3b8">+</text>
+            <!-- G 채널 -->
+            <rect x="160" y="22" width="100" height="56" rx="6" fill="#15803d"/>
+            <text x="210" y="48" text-anchor="middle" font-size="24" fill="#bbf7d0" font-weight="900">G</text>
+            <text x="210" y="68" text-anchor="middle" font-size="10" fill="#86efac">Green 채널</text>
+            <!-- + -->
+            <text x="280" y="55" text-anchor="middle" font-size="20" fill="#94a3b8">+</text>
+            <!-- R 채널 -->
+            <rect x="300" y="22" width="100" height="56" rx="6" fill="#b91c1c"/>
+            <text x="350" y="48" text-anchor="middle" font-size="24" fill="#fecaca" font-weight="900">R</text>
+            <text x="350" y="68" text-anchor="middle" font-size="10" fill="#fca5a5">Red 채널</text>
+            <!-- = -->
+            <text x="420" y="55" text-anchor="middle" font-size="20" fill="#94a3b8">=</text>
+            <!-- 결과 -->
+            <defs>
+                <linearGradient id="rgb-grad" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0" stop-color="#3b82f6"/>
+                    <stop offset="0.5" stop-color="#22c55e"/>
+                    <stop offset="1" stop-color="#ef4444"/>
+                </linearGradient>
+            </defs>
+            <rect x="440" y="22" width="70" height="56" rx="6" fill="url(#rgb-grad)"/>
+            <text x="475" y="55" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">컬러</text>
+        </svg>
+    </div>
+
+    <h3>imread() 플래그 옵션</h3>
+    <table class="compare-table">
+        <tr>
+            <th>플래그</th>
+            <th>의미</th>
+            <th>shape 예시</th>
+        </tr>
+        <tr>
+            <td>cv2.IMREAD_COLOR</td>
+            <td>컬러 이미지 (기본값)</td>
+            <td>(h, w, 3)</td>
+        </tr>
+        <tr>
+            <td>cv2.IMREAD_GRAYSCALE</td>
+            <td>흑백으로 읽기</td>
+            <td>(h, w)</td>
+        </tr>
+        <tr>
+            <td>cv2.IMREAD_UNCHANGED</td>
+            <td>알파 채널 포함</td>
+            <td>(h, w, 4)</td>
+        </tr>
+    </table>
+</div>
+
+<!-- =========================================================
+     5페이지: 문제 + 핵심 요약
+     ========================================================= -->
+<div class="page">
+    <!-- SVG 9: OpenCV 주요 함수 맵 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 520 80" style="max-width:520px;width:100%">
+            <text x="260" y="14" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="700">OpenCV 핵심 함수 한눈에 보기</text>
+            <rect x="10" y="22" width="110" height="46" rx="6" fill="#0f172a"/>
+            <text x="65" y="42" text-anchor="middle" font-family="monospace" font-size="10" fill="#67e8f9">imread()</text>
+            <text x="65" y="58" text-anchor="middle" font-size="9" fill="#94a3b8">이미지 읽기</text>
+            <rect x="130" y="22" width="110" height="46" rx="6" fill="#0f172a"/>
+            <text x="185" y="42" text-anchor="middle" font-family="monospace" font-size="10" fill="#67e8f9">imshow()</text>
+            <text x="185" y="58" text-anchor="middle" font-size="9" fill="#94a3b8">화면 출력</text>
+            <rect x="250" y="22" width="110" height="46" rx="6" fill="#0f172a"/>
+            <text x="305" y="42" text-anchor="middle" font-family="monospace" font-size="10" fill="#67e8f9">imwrite()</text>
+            <text x="305" y="58" text-anchor="middle" font-size="9" fill="#94a3b8">파일 저장</text>
+            <rect x="370" y="22" width="140" height="46" rx="6" fill="#0f172a"/>
+            <text x="440" y="42" text-anchor="middle" font-family="monospace" font-size="10" fill="#67e8f9">cvtColor()</text>
+            <text x="440" y="58" text-anchor="middle" font-size="9" fill="#94a3b8">색상 공간 변환</text>
+        </svg>
+    </div>
+
+    <h2>실력 확인 문제</h2>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q1</div>
+            <div class="problem-label">OpenCV 이미지 배열 이해</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">다음 코드의 출력 결과로 올바른 것을 고르세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">코드</span>
+                    <span class="problem-example-value">import cv2, numpy as np<br>img = np.zeros((200, 300, 3), dtype=np.uint8)<br>print(img.shape)</span>
+                </div>
+                <div class="problem-example-row">
+                    <span class="problem-example-label">보기</span>
+                    <span class="problem-example-value">(1) (3, 200, 300)  (2) (200, 300, 3)  (3) (300, 200, 3)</span>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">NumPy 배열 shape는 (높이, 너비, 채널) 순서입니다. zeros((200, 300, 3))은 높이 200, 너비 300, 3채널을 의미합니다.</div>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">(2) (200, 300, 3)
+# 높이 200, 너비 300, 채널 3 (BGR)</div>
+            </div>
+        </details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q2</div>
+            <div class="problem-label">BGR to RGB 변환 코드 작성</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">OpenCV로 읽은 이미지 <code>img_bgr</code>을 RGB로 변환하여 <code>img_rgb</code>에 저장하는 코드를 완성하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">빈칸</span>
+                    <span class="problem-example-value">img_rgb = cv2.cvtColor(img_bgr, cv2.___________)</span>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">cvtColor의 두 번째 인자는 변환 코드입니다. BGR에서 RGB로 변환하는 상수는 COLOR_BGR2RGB 형식입니다.</div>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)</div>
+            </div>
+        </details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q3</div>
+            <div class="problem-label">이미지 저장 프로그램 작성</div>
+            <span class="problem-diff hard">어려움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">100x100 크기의 파란색 이미지(BGR: [255, 0, 0])를 만들어 "blue.png"로 저장하고, 다시 읽어서 shape를 출력하는 프로그램을 작성하세요.</div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">np.zeros()로 배열을 만들고, img[:] = [255, 0, 0]으로 파란색을 채운 뒤 cv2.imwrite()로 저장합니다.</div>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">import cv2
+import numpy as np
+
+img = np.zeros((100, 100, 3), dtype=np.uint8)
+img[:] = [255, 0, 0]   # BGR: 파란색
+cv2.imwrite("blue.png", img)
+
+img2 = cv2.imread("blue.png")
+print(img2.shape)   # (100, 100, 3)</div>
+            </div>
+        </details>
+    </div>
+
+    <div class="divider"></div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="처리" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>핵심 요약</h3>
+        <ul>
+            <li>컴퓨터 비전 — 컴퓨터가 이미지/영상을 이해하는 기술 (얼굴인식, 자율주행 등)</li>
+            <li><code>pip install opencv-python</code> — OpenCV 설치, <code>import cv2</code>로 사용</li>
+            <li><code>cv2.imread("file.jpg")</code> — 이미지 읽기, NumPy 배열 반환</li>
+            <li><code>img.shape</code> — (높이, 너비, 채널수) 반환</li>
+            <li><code>cv2.imshow("창이름", img)</code> — 이미지 화면 출력</li>
+            <li><code>cv2.imwrite("파일명", img)</code> — 이미지 저장</li>
+            <li>OpenCV는 BGR 순서 — Matplotlib 사용 시 <code>COLOR_BGR2RGB</code>로 변환 필요</li>
+        </ul>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

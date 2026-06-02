@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 프로젝트: 짝홀 판별기</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+/* ── 페이지 ── */
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+/* ── 프로젝트 표지 ── */
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 52px 50px; position: relative; overflow: hidden; }
+.cover-watermark {
+    position: absolute; top: -20px; right: -20px;
+    font-size: 220px; font-weight: 900; color: rgba(180,195,212,0.25);
+    line-height: 1; pointer-events: none; letter-spacing: -10px;
+}
+.cover-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: linear-gradient(135deg,#7c3aed,#5b21b6);
+    color: #fff; border-radius: 99px;
+    font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
+    padding: 5px 14px; margin-bottom: 10px;
+}
+.cover-label { font-size: 14px; font-weight: 600; color: #7c3aed; letter-spacing: 1px; margin-bottom: 4px; }
+.cover-title { font-size: 36px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 8px; }
+.cover-sub { font-size: 14px; color: #6b7280; margin-bottom: 20px; padding-bottom: 18px; border-bottom: 1px solid #e5e7eb; line-height: 1.7; }
+.cover-goals { margin-top: 18px; }
+.cover-goals h3 { font-size: 16px; font-weight: 800; color: #1e3a5f; margin-bottom: 12px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: ''; position: absolute; left: 4px; top: 12px; width: 6px; height: 6px; background: #7c3aed; border-radius: 50%; }
+.cover-skills {
+    margin-top: 18px; display: flex; gap: 8px; flex-wrap: wrap;
+}
+.skill-tag {
+    background: #ede9fe; color: #5b21b6;
+    font-size: 11px; font-weight: 700; padding: 4px 12px;
+    border-radius: 99px; border: 1px solid #c4b5fd;
+}
+
+/* ── 본문 ── */
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 16px; font-weight: 800; color: #1e3a5f; margin: 18px 0 10px; }
+p { font-size: 14px; color: #374151; line-height: 1.75; margin: 0 0 10px; }
+p code, li code, td code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 12px;
+    color: #7c3aed; font-weight: 600;
+}
+
+/* ── 코드 블록 ── */
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #e2e8f0; line-height: 1.9; margin: 12px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw  { color: #c084fc; }
+.code .fn  { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; font-style: italic; }
+.code .op  { color: #fbbf24; }
+
+/* ── 스텝 카드 ── */
+.step {
+    margin: 14px 0; border-radius: 12px; overflow: hidden;
+    border: 1.5px solid #e2e8f0;
+}
+.step-head {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 18px;
+    background: linear-gradient(135deg, #1e3a5f 0%, #2d5a8e 100%);
+}
+.step-num {
+    width: 32px; height: 32px; background: #e6a817;
+    border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; font-size: 15px; font-weight: 900; color: #fff;
+    flex-shrink: 0;
+}
+.step-title { font-size: 15px; font-weight: 800; color: #fff; }
+.step-desc  { font-size: 12px; color: #93c5fd; margin-top: 1px; }
+.step-body  { padding: 14px 18px; background: #fff; }
+.step-body p { font-size: 13px; }
+
+/* ── 포인트 박스 ── */
+.point {
+    background: #ede9fe; border-left: 4px solid #7c3aed;
+    border-radius: 0 8px 8px 0; padding: 10px 16px; margin: 12px 0;
+}
+.point-title { font-size: 12px; font-weight: 800; color: #5b21b6; margin-bottom: 4px; }
+.point p { font-size: 13px; color: #4c1d95; margin: 0; }
+
+/* ── 경고 박스 ── */
+.warn {
+    background: #fffbeb; border-left: 4px solid #f59e0b;
+    border-radius: 0 8px 8px 0; padding: 10px 16px; margin: 12px 0;
+}
+.warn p { font-size: 13px; color: #92400e; margin: 0; }
+
+/* ── 확장 카드 ── */
+.ext-card {
+    margin: 14px 0; border-radius: 12px; overflow: hidden;
+    border: 1.5px solid #e2e8f0;
+}
+.ext-head {
+    display: flex; align-items: center; gap: 10px;
+    padding: 11px 18px;
+}
+.ext-head.lv1 { background: #eff6ff; border-bottom: 1.5px solid #dbeafe; }
+.ext-head.lv2 { background: #fef3c7; border-bottom: 1.5px solid #fde68a; }
+.ext-head.lv3 { background: #fdf2f8; border-bottom: 1.5px solid #fbcfe8; }
+.ext-badge {
+    font-size: 10px; font-weight: 800; padding: 3px 10px; border-radius: 99px;
+}
+.ext-badge.lv1 { background: #3b82f6; color: #fff; }
+.ext-badge.lv2 { background: #f59e0b; color: #fff; }
+.ext-badge.lv3 { background: #ec4899; color: #fff; }
+.ext-title { font-size: 14px; font-weight: 800; color: #1e3a5f; }
+.ext-body { padding: 14px 18px; background: #fff; }
+.ext-body p { font-size: 13px; }
+
+/* ── 전체 코드 ── */
+.final-code-wrap {
+    background: #0f172a; border-radius: 12px; overflow: hidden; margin: 14px 0;
+}
+.final-code-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 18px; background: #1e293b; border-bottom: 1px solid #334155;
+}
+.final-code-head span { font-size: 12px; color: #94a3b8; font-family: 'JetBrains Mono', monospace; }
+.final-code-dots { display: flex; gap: 6px; }
+.final-code-dots i { width: 10px; height: 10px; border-radius: 50%; }
+.final-code-dots i:nth-child(1) { background: #ef4444; }
+.final-code-dots i:nth-child(2) { background: #f59e0b; }
+.final-code-dots i:nth-child(3) { background: #22c55e; }
+.final-code-body {
+    padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #e2e8f0; line-height: 2; white-space: pre-wrap;
+}
+
+/* ── 도전 과제 ── */
+.challenge {
+    border: 2px solid #7c3aed; border-radius: 12px; overflow: hidden; margin: 14px 0;
+}
+.challenge-head {
+    background: linear-gradient(135deg, #7c3aed, #5b21b6);
+    padding: 12px 18px; display: flex; align-items: center; gap: 10px;
+}
+.challenge-head-title { font-size: 15px; font-weight: 800; color: #fff; }
+.challenge-head-sub { font-size: 11px; color: #c4b5fd; }
+.challenge-body { padding: 16px 18px; background: #faf5ff; }
+.challenge-item { margin-bottom: 12px; padding-left: 18px; position: relative; }
+.challenge-item::before {
+    content: ''; position: absolute; left: 0; top: 8px;
+    width: 8px; height: 8px; background: #7c3aed; border-radius: 50%;
+}
+.challenge-item-title { font-size: 13px; font-weight: 800; color: #5b21b6; margin-bottom: 3px; }
+.challenge-item-desc  { font-size: 13px; color: #374151; line-height: 1.6; }
+
+/* ── 요약 ── */
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 14px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 13px; color: #334155; line-height: 1.9; padding: 2px 0 2px 16px; position: relative; }
+.summary li::before { content: '•'; position: absolute; left: 2px; color: #7c3aed; font-weight: 900; }
+
+/* ── 출력 결과 ── */
+.output {
+    background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;
+    padding: 12px 16px; margin: 10px 0;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #1e293b;
+    line-height: 1.8;
+}
+.output-label { font-size: 11px; font-weight: 700; color: #94a3b8; margin-bottom: 6px; letter-spacing: 0.5px; }
+
+/* ── 흐름도 공통 ── */
+.flowchart-wrap { text-align: center; margin: 14px 0; }
+
+/* ── 진행률 바 ── */
+.progress-bar {
+    display: flex; gap: 4px; margin: 16px 0 20px;
+}
+.progress-seg {
+    height: 5px; border-radius: 99px; flex: 1;
+    background: #e5e7eb;
+}
+.progress-seg.done { background: #7c3aed; }
+.progress-seg.current { background: #e6a817; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- ============================= PAGE 1 — 커버 ============================= -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">PJ</div>
+        <div class="cover-badge">PROJECT 02</div>
+        <div class="cover-label">Level 3 · 나머지 연산 응용</div>
+        <h1 class="cover-title">짝홀 판별기<br>만들기</h1>
+        <p class="cover-sub">
+            숫자를 입력받아 짝수인지 홀수인지 자동으로 판별하는 프로그램을 만들어봅니다.<br>
+            L2에서 배운 나머지 연산(<code>%</code>)과 조건문(<code>if-else</code>)을 실제 프로젝트에 적용합니다.
+        </p>
+
+        <!-- 짝수/홀수 개념 SVG -->
+        <div class="flowchart-wrap">
+            <svg viewBox="0 0 500 130" style="max-width:500px;width:100%">
+                <defs>
+                    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5"
+                        markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                    </marker>
+                </defs>
+                <!-- 짝수들 -->
+                <text x="12" y="16" font-size="10" fill="#6b7280" font-weight="700" font-family="Noto Sans KR">짝수</text>
+                <rect x="10" y="22" width="36" height="36" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="28" y="45" text-anchor="middle" font-size="18" fill="#1d4ed8" font-weight="900">2</text>
+                <rect x="54" y="22" width="36" height="36" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="72" y="45" text-anchor="middle" font-size="18" fill="#1d4ed8" font-weight="900">4</text>
+                <rect x="98" y="22" width="36" height="36" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="116" y="45" text-anchor="middle" font-size="18" fill="#1d4ed8" font-weight="900">6</text>
+                <rect x="142" y="22" width="36" height="36" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="160" y="45" text-anchor="middle" font-size="18" fill="#1d4ed8" font-weight="900">8</text>
+                <text x="28" y="70" text-anchor="middle" font-size="9" fill="#3b82f6" font-weight="600">÷2 나머지 0</text>
+                <text x="72" y="70" text-anchor="middle" font-size="9" fill="#3b82f6" font-weight="600">÷2 나머지 0</text>
+                <text x="116" y="70" text-anchor="middle" font-size="9" fill="#3b82f6" font-weight="600">÷2 나머지 0</text>
+                <text x="160" y="70" text-anchor="middle" font-size="9" fill="#3b82f6" font-weight="600">÷2 나머지 0</text>
+                <!-- 구분선 -->
+                <line x1="200" y1="15" x2="200" y2="85" stroke="#e2e8f0" stroke-width="1.5" stroke-dasharray="4,3"/>
+                <!-- 홀수들 -->
+                <text x="212" y="16" font-size="10" fill="#6b7280" font-weight="700" font-family="Noto Sans KR">홀수</text>
+                <rect x="210" y="22" width="36" height="36" rx="8" fill="#fce7f3" stroke="#ec4899" stroke-width="1.5"/>
+                <text x="228" y="45" text-anchor="middle" font-size="18" fill="#be185d" font-weight="900">1</text>
+                <rect x="254" y="22" width="36" height="36" rx="8" fill="#fce7f3" stroke="#ec4899" stroke-width="1.5"/>
+                <text x="272" y="45" text-anchor="middle" font-size="18" fill="#be185d" font-weight="900">3</text>
+                <rect x="298" y="22" width="36" height="36" rx="8" fill="#fce7f3" stroke="#ec4899" stroke-width="1.5"/>
+                <text x="316" y="45" text-anchor="middle" font-size="18" fill="#be185d" font-weight="900">5</text>
+                <rect x="342" y="22" width="36" height="36" rx="8" fill="#fce7f3" stroke="#ec4899" stroke-width="1.5"/>
+                <text x="360" y="45" text-anchor="middle" font-size="18" fill="#be185d" font-weight="900">7</text>
+                <text x="228" y="70" text-anchor="middle" font-size="9" fill="#ec4899" font-weight="600">÷2 나머지 1</text>
+                <text x="272" y="70" text-anchor="middle" font-size="9" fill="#ec4899" font-weight="600">÷2 나머지 1</text>
+                <text x="316" y="70" text-anchor="middle" font-size="9" fill="#ec4899" font-weight="600">÷2 나머지 1</text>
+                <text x="360" y="70" text-anchor="middle" font-size="9" fill="#ec4899" font-weight="600">÷2 나머지 1</text>
+                <!-- 핵심 공식 -->
+                <rect x="400" y="10" width="92" height="68" rx="10" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+                <text x="446" y="30" text-anchor="middle" font-size="10" fill="#5b21b6" font-weight="800">핵심 공식</text>
+                <text x="446" y="48" text-anchor="middle" font-size="12" fill="#7c3aed" font-weight="900" font-family="JetBrains Mono">n % 2</text>
+                <text x="446" y="63" text-anchor="middle" font-size="10" fill="#5b21b6" font-weight="700">== 0 이면 짝수</text>
+                <!-- 하단 설명 -->
+                <text x="250" y="100" text-anchor="middle" font-size="11" fill="#374151" font-weight="600">
+                    2로 나눈 나머지가 0이면 짝수,  1이면 홀수
+                </text>
+                <text x="250" y="118" text-anchor="middle" font-size="10" fill="#94a3b8">
+                    나머지 연산 %(모듈로)만 알면 누구나 만들 수 있는 판별기!
+                </text>
+            </svg>
+        </div>
+
+        <!-- 전체 흐름도 -->
+        <div class="flowchart-wrap" style="margin-top:16px;">
+            <svg viewBox="0 0 500 90" style="max-width:500px;width:100%">
+                <defs>
+                    <marker id="arr2" viewBox="0 0 10 10" refX="9" refY="5"
+                        markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                    </marker>
+                </defs>
+                <rect x="10" y="25" width="90" height="38" rx="8" fill="#e0e7ff" stroke="#6366f1" stroke-width="1.5"/>
+                <text x="55" y="42" text-anchor="middle" font-size="11" fill="#3730a3" font-weight="700">숫자 입력</text>
+                <text x="55" y="56" text-anchor="middle" font-size="10" fill="#6366f1">scanf("%d")</text>
+                <line x1="100" y1="44" x2="115" y2="44" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arr2)"/>
+                <!-- 마름모 판단 -->
+                <polygon points="185,22 240,44 185,66 130,44" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+                <text x="185" y="41" text-anchor="middle" font-size="10" fill="#5b21b6" font-weight="800">n % 2</text>
+                <text x="185" y="55" text-anchor="middle" font-size="10" fill="#5b21b6" font-weight="700">== 0?</text>
+                <!-- 짝수 분기 -->
+                <line x1="185" y1="22" x2="185" y2="8" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#arr2)"/>
+                <text x="185" y="6" text-anchor="middle" font-size="9" fill="#3b82f6" font-weight="700">YES</text>
+                <!-- 홀수 분기 -->
+                <line x1="240" y1="44" x2="256" y2="44" stroke="#ec4899" stroke-width="1.5" marker-end="url(#arr2)"/>
+                <text x="250" y="40" text-anchor="middle" font-size="9" fill="#ec4899" font-weight="700">NO</text>
+                <!-- 짝수 결과 -->
+                <rect x="130" y="0" width="108" height="0" rx="6" fill="none"/>
+                <!-- 화살표 개선: 위쪽으로 짝수 -->
+                <rect x="260" y="25" width="100" height="38" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="310" y="42" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">짝수 출력</text>
+                <text x="310" y="56" text-anchor="middle" font-size="10" fill="#3b82f6">"%d는 짝수"</text>
+                <!-- NO 화살표 실선 -->
+                <line x1="260" y1="44" x2="258" y2="44" stroke="#94a3b8" stroke-width="0"/>
+                <!-- 홀수 아래 -->
+                <rect x="370" y="25" width="120" height="38" rx="8" fill="#fce7f3" stroke="#ec4899" stroke-width="1.5"/>
+                <text x="430" y="42" text-anchor="middle" font-size="11" fill="#be185d" font-weight="700">홀수 출력</text>
+                <text x="430" y="56" text-anchor="middle" font-size="10" fill="#ec4899">"%d는 홀수"</text>
+                <line x1="360" y1="44" x2="368" y2="44" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arr2)"/>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/lightbulb.png" alt="아이디어" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 프로젝트에서 만드는 것</h3>
+            <ul>
+                <li>숫자를 입력받아 짝수/홀수를 자동으로 판별하는 프로그램</li>
+                <li>나머지 연산(<code>%</code>)과 조건문(<code>if-else</code>)을 실전 코드에 적용</li>
+                <li>0과 음수 입력도 올바르게 처리하는 확장 버전</li>
+            </ul>
+        </div>
+        <div class="cover-skills">
+            <span class="skill-tag">scanf / printf</span>
+            <span class="skill-tag">int 변수</span>
+            <span class="skill-tag">% 나머지 연산</span>
+            <span class="skill-tag">if-else 조건문</span>
+            <span class="skill-tag">== 비교 연산자</span>
+        </div>
+    </div>
+</div>
+
+
+<!-- ============================= PAGE 2 — 단계별 구현 ============================= -->
+<div class="page">
+    <div class="progress-bar">
+        <div class="progress-seg done"></div>
+        <div class="progress-seg current"></div>
+        <div class="progress-seg"></div>
+        <div class="progress-seg"></div>
+    </div>
+    <h2>단계별 구현</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+    <!-- Step 1 -->
+    <div class="step">
+        <div class="step-head">
+            <div class="step-num">1</div>
+            <div>
+                <div class="step-title">숫자 입력 받기</div>
+                <div class="step-desc">사용자로부터 정수 하나를 받아 변수에 저장합니다</div>
+            </div>
+        </div>
+        <div class="step-body">
+            <p>프로그램이 시작되면 먼저 사용자에게 숫자를 입력하라고 알려줍니다. 그 다음 <code>scanf</code>로 입력값을 받아 변수 <code>n</code>에 저장합니다.</p>
+            <div class="code"><span class="cmt">// Step 1: 숫자 입력</span>
+<span class="kw">int</span> n;
+<span class="fn">printf</span>(<span class="str">"숫자를 입력하세요: "</span>);
+<span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;n);</div>
+            <div class="flowchart-wrap">
+                <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+                    <defs>
+                        <marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                            <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                        </marker>
+                    </defs>
+                    <!-- 프로그램 시작 -->
+                    <rect x="10" y="20" width="90" height="34" rx="17" fill="#e0e7ff" stroke="#6366f1" stroke-width="1.5"/>
+                    <text x="55" y="41" text-anchor="middle" font-size="11" fill="#3730a3" font-weight="700">프로그램 시작</text>
+                    <line x1="100" y1="37" x2="115" y2="37" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#a3)"/>
+                    <!-- printf -->
+                    <rect x="118" y="20" width="110" height="34" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+                    <text x="173" y="35" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">printf("입력하세요")</text>
+                    <text x="173" y="48" text-anchor="middle" font-size="9" fill="#b45309">화면에 메시지 출력</text>
+                    <line x1="228" y1="37" x2="243" y2="37" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#a3)"/>
+                    <!-- scanf -->
+                    <rect x="246" y="20" width="110" height="34" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                    <text x="301" y="35" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">scanf("%d", &amp;n)</text>
+                    <text x="301" y="48" text-anchor="middle" font-size="9" fill="#15803d">키보드 입력 → n 저장</text>
+                    <line x1="356" y1="37" x2="371" y2="37" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#a3)"/>
+                    <!-- 메모리 -->
+                    <rect x="374" y="14" width="76" height="46" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                    <text x="412" y="32" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">n (변수)</text>
+                    <text x="412" y="50" text-anchor="middle" font-size="17" fill="#1e3a5f" font-weight="900">7</text>
+                    <text x="412" y="68" text-anchor="middle" font-size="8" fill="#94a3b8">예시 입력값</text>
+                </svg>
+            </div>
+            <div class="warn">
+                <p><strong>주의:</strong> <code>scanf</code>에서 변수 앞에 <code>&amp;</code>를 반드시 붙여야 합니다. <code>&amp;n</code>은 변수 n의 주소를 뜻합니다. 빠뜨리면 프로그램이 오작동합니다.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step">
+        <div class="step-head">
+            <div class="step-num">2</div>
+            <div>
+                <div class="step-title">나머지 연산으로 판별 (핵심!)</div>
+                <div class="step-desc">L2-u10에서 배운 % 연산자를 드디어 실전에 씁니다</div>
+            </div>
+        </div>
+        <div class="step-body">
+            <p><code>n % 2</code>는 n을 2로 나눈 나머지를 구합니다. 짝수는 나머지가 항상 0, 홀수는 나머지가 항상 1이 됩니다.</p>
+            <div class="flowchart-wrap">
+                <svg viewBox="0 0 460 100" style="max-width:460px;width:100%">
+                    <defs>
+                        <marker id="a4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                            <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                        </marker>
+                        <marker id="a4b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                            <path d="M0,0 L10,5 L0,10 z" fill="#3b82f6"/>
+                        </marker>
+                        <marker id="a4c" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                            <path d="M0,0 L10,5 L0,10 z" fill="#ec4899"/>
+                        </marker>
+                    </defs>
+                    <!-- n % 2 계산 -->
+                    <rect x="10" y="33" width="90" height="34" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+                    <text x="55" y="48" text-anchor="middle" font-size="12" fill="#5b21b6" font-weight="800">n % 2 계산</text>
+                    <text x="55" y="62" text-anchor="middle" font-size="9" fill="#7c3aed">나머지 구하기</text>
+                    <line x1="100" y1="50" x2="115" y2="50" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#a4)"/>
+                    <!-- 마름모 판단 -->
+                    <polygon points="185,22 238,50 185,78 132,50" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+                    <text x="185" y="47" text-anchor="middle" font-size="11" fill="#5b21b6" font-weight="800">== 0</text>
+                    <text x="185" y="61" text-anchor="middle" font-size="9" fill="#5b21b6">인가?</text>
+                    <!-- YES 위로 -->
+                    <line x1="185" y1="22" x2="185" y2="10" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#a4b)"/>
+                    <line x1="185" y1="10" x2="310" y2="10" stroke="#3b82f6" stroke-width="1.5"/>
+                    <line x1="310" y1="10" x2="310" y2="26" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#a4b)"/>
+                    <text x="247" y="8" text-anchor="middle" font-size="9" fill="#3b82f6" font-weight="700">YES (나머지 = 0)</text>
+                    <!-- NO 오른쪽 -->
+                    <line x1="238" y1="50" x2="253" y2="50" stroke="#ec4899" stroke-width="1.5"/>
+                    <line x1="253" y1="50" x2="253" y2="74" stroke="#ec4899" stroke-width="1.5"/>
+                    <line x1="253" y1="74" x2="300" y2="74" stroke="#ec4899" stroke-width="1.5" marker-end="url(#a4c)"/>
+                    <text x="246" y="65" text-anchor="middle" font-size="9" fill="#ec4899" font-weight="700">NO (나머지 = 1)</text>
+                    <!-- 짝수 박스 -->
+                    <rect x="300" y="14" width="150" height="28" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                    <text x="375" y="25" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">짝수 처리</text>
+                    <text x="375" y="37" text-anchor="middle" font-size="9" fill="#3b82f6">n % 2 == 0 이면 짝수</text>
+                    <!-- 홀수 박스 -->
+                    <rect x="300" y="60" width="150" height="28" rx="6" fill="#fce7f3" stroke="#ec4899" stroke-width="1.5"/>
+                    <text x="375" y="71" text-anchor="middle" font-size="10" fill="#be185d" font-weight="700">홀수 처리</text>
+                    <text x="375" y="83" text-anchor="middle" font-size="9" fill="#ec4899">n % 2 != 0 이면 홀수</text>
+                </svg>
+            </div>
+            <div class="point">
+                <div class="point-title">왜 n % 2 == 0 이 짝수일까?</div>
+                <p>짝수는 2의 배수이므로 2로 나누면 나머지가 0입니다. 예: 6 ÷ 2 = 3 나머지 <strong>0</strong>. 홀수는 딱 떨어지지 않아 나머지가 1입니다. 예: 7 ÷ 2 = 3 나머지 <strong>1</strong>.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step">
+        <div class="step-head">
+            <div class="step-num">3</div>
+            <div>
+                <div class="step-title">if-else로 결과 출력</div>
+                <div class="step-desc">조건에 따라 다른 메시지를 출력합니다</div>
+            </div>
+        </div>
+        <div class="step-body">
+            <p>판별 결과에 따라 "짝수입니다" 또는 "홀수입니다"를 출력합니다. <code>if-else</code> 구조를 사용합니다.</p>
+            <div class="code"><span class="cmt">// Step 3: if-else로 결과 출력</span>
+<span class="kw">if</span> (n <span class="op">%</span> <span class="num">2</span> <span class="op">==</span> <span class="num">0</span>) {
+    <span class="fn">printf</span>(<span class="str">"%d는 짝수입니다.\n"</span>, n);
+} <span class="kw">else</span> {
+    <span class="fn">printf</span>(<span class="str">"%d는 홀수입니다.\n"</span>, n);
+}</div>
+            <div class="output">
+                <div class="output-label">실행 결과 예시</div>
+숫자를 입력하세요: 7
+7는 홀수입니다.
+
+숫자를 입력하세요: 12
+12는 짝수입니다.
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ============================= PAGE 3 — 확장 과제 ============================= -->
+<div class="page">
+    <div class="progress-bar">
+        <div class="progress-seg done"></div>
+        <div class="progress-seg done"></div>
+        <div class="progress-seg current"></div>
+        <div class="progress-seg"></div>
+    </div>
+    <h2>확장 과제</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/monitor.png" alt="모니터" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>기본 판별기가 완성됐습니다. 이제 세 가지 기능을 추가해 더 똑똑한 프로그램으로 만들어봅니다.</p>
+
+    <!-- 확장 1 -->
+    <div class="ext-card">
+        <div class="ext-head lv1">
+            <span class="ext-badge lv1">확장 1</span>
+            <span class="ext-title">3의 배수도 함께 판별하기</span>
+        </div>
+        <div class="ext-body">
+            <p>짝홀 판별에 더해, 입력한 숫자가 3의 배수인지도 확인합니다. <code>n % 3 == 0</code>을 추가하면 됩니다.</p>
+            <div class="code"><span class="kw">if</span> (n <span class="op">%</span> <span class="num">2</span> <span class="op">==</span> <span class="num">0</span>) {
+    <span class="fn">printf</span>(<span class="str">"%d는 짝수입니다.\n"</span>, n);
+} <span class="kw">else</span> {
+    <span class="fn">printf</span>(<span class="str">"%d는 홀수입니다.\n"</span>, n);
+}
+
+<span class="cmt">// 추가: 3의 배수 여부도 출력</span>
+<span class="kw">if</span> (n <span class="op">%</span> <span class="num">3</span> <span class="op">==</span> <span class="num">0</span>) {
+    <span class="fn">printf</span>(<span class="str">"%d는 3의 배수이기도 합니다.\n"</span>, n);
+}</div>
+            <div class="flowchart-wrap">
+                <svg viewBox="0 0 460 78" style="max-width:460px;width:100%">
+                    <defs>
+                        <marker id="a5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                            <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                        </marker>
+                        <marker id="a5b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                            <path d="M0,0 L10,5 L0,10 z" fill="#22c55e"/>
+                        </marker>
+                        <marker id="a5c" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                            <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                        </marker>
+                    </defs>
+                    <!-- n 입력 -->
+                    <rect x="8" y="22" width="72" height="32" rx="6" fill="#e0e7ff" stroke="#6366f1" stroke-width="1.5"/>
+                    <text x="44" y="38" text-anchor="middle" font-size="10" fill="#3730a3" font-weight="700">숫자 n 입력</text>
+                    <text x="44" y="50" text-anchor="middle" font-size="9" fill="#6366f1">scanf</text>
+                    <line x1="80" y1="38" x2="94" y2="38" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#a5)"/>
+                    <!-- 짝홀 판단 -->
+                    <polygon points="148,18 196,38 148,58 100,38" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                    <text x="148" y="35" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="800">n%2==0?</text>
+                    <text x="148" y="50" text-anchor="middle" font-size="9" fill="#1d4ed8">짝홀 판별</text>
+                    <line x1="196" y1="38" x2="210" y2="38" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#a5)"/>
+                    <!-- 짝홀 결과 -->
+                    <rect x="212" y="22" width="88" height="32" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+                    <text x="256" y="36" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">짝수/홀수 출력</text>
+                    <text x="256" y="49" text-anchor="middle" font-size="9" fill="#b45309">printf</text>
+                    <line x1="300" y1="38" x2="314" y2="38" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#a5)"/>
+                    <!-- 3의 배수 판단 -->
+                    <polygon points="368,18 416,38 368,58 320,38" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                    <text x="368" y="35" text-anchor="middle" font-size="10" fill="#166534" font-weight="800">n%3==0?</text>
+                    <text x="368" y="50" text-anchor="middle" font-size="9" fill="#15803d">3의 배수?</text>
+                    <!-- YES 위 -->
+                    <line x1="368" y1="18" x2="368" y2="6" stroke="#22c55e" stroke-width="1.5"/>
+                    <line x1="368" y1="6" x2="450" y2="6" stroke="#22c55e" stroke-width="1.5" marker-end="url(#a5b)"/>
+                    <text x="410" y="5" text-anchor="middle" font-size="8" fill="#22c55e" font-weight="700">YES → 추가 출력</text>
+                    <text x="450" y="16" font-size="8" fill="#22c55e" font-weight="600">3의 배수!</text>
+                    <!-- NO 아래 -->
+                    <line x1="368" y1="58" x2="368" y2="70" stroke="#94a3b8" stroke-width="1.5"/>
+                    <line x1="368" y1="70" x2="450" y2="70" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#a5c)"/>
+                    <text x="410" y="68" text-anchor="middle" font-size="8" fill="#94a3b8" font-weight="600">NO → 종료</text>
+                </svg>
+            </div>
+            <div class="output">
+                <div class="output-label">실행 결과 예시</div>
+숫자를 입력하세요: 12
+12는 짝수입니다.
+12는 3의 배수이기도 합니다.
+            </div>
+        </div>
+    </div>
+
+    <!-- 확장 2 -->
+    <div class="ext-card">
+        <div class="ext-head lv2">
+            <span class="ext-badge lv2">확장 2</span>
+            <span class="ext-title">0 입력 시 특별 메시지 출력</span>
+        </div>
+        <div class="ext-body">
+            <p>수학적으로 0은 짝수입니다 (2×0=0). 하지만 0을 입력했을 때 특별한 메시지를 따로 보여줘도 좋습니다. <code>if-else if-else</code> 구조를 사용합니다.</p>
+            <div class="code"><span class="kw">if</span> (n <span class="op">==</span> <span class="num">0</span>) {
+    <span class="fn">printf</span>(<span class="str">"0은 특별한 짝수입니다.\n"</span>);
+} <span class="kw">else if</span> (n <span class="op">%</span> <span class="num">2</span> <span class="op">==</span> <span class="num">0</span>) {
+    <span class="fn">printf</span>(<span class="str">"%d는 짝수입니다.\n"</span>, n);
+} <span class="kw">else</span> {
+    <span class="fn">printf</span>(<span class="str">"%d는 홀수입니다.\n"</span>, n);
+}</div>
+            <div class="flowchart-wrap">
+                <svg viewBox="0 0 460 85" style="max-width:460px;width:100%">
+                    <defs>
+                        <marker id="a6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                            <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                        </marker>
+                        <marker id="a6y" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                            <path d="M0,0 L10,5 L0,10 z" fill="#6366f1"/>
+                        </marker>
+                        <marker id="a6n" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                            <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                        </marker>
+                    </defs>
+                    <!-- n 입력 -->
+                    <rect x="8" y="26" width="68" height="30" rx="6" fill="#e0e7ff" stroke="#6366f1" stroke-width="1.5"/>
+                    <text x="42" y="44" text-anchor="middle" font-size="10" fill="#3730a3" font-weight="700">n 입력</text>
+                    <line x1="76" y1="41" x2="90" y2="41" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#a6)"/>
+                    <!-- n==0 판단 -->
+                    <polygon points="140,20 184,41 140,62 96,41" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+                    <text x="140" y="38" text-anchor="middle" font-size="10" fill="#5b21b6" font-weight="800">n == 0</text>
+                    <text x="140" y="52" text-anchor="middle" font-size="9" fill="#7c3aed">?</text>
+                    <!-- YES 위로 -->
+                    <line x1="140" y1="20" x2="140" y2="8" stroke="#6366f1" stroke-width="1.5"/>
+                    <line x1="140" y1="8" x2="230" y2="8" stroke="#6366f1" stroke-width="1.5" marker-end="url(#a6y)"/>
+                    <text x="185" y="7" text-anchor="middle" font-size="8" fill="#6366f1" font-weight="700">YES</text>
+                    <rect x="230" y="1" width="100" height="18" rx="4" fill="#e0e7ff" stroke="#6366f1" stroke-width="1"/>
+                    <text x="280" y="14" text-anchor="middle" font-size="9" fill="#3730a3" font-weight="700">0은 특별한 짝수</text>
+                    <!-- NO 오른쪽 -->
+                    <line x1="184" y1="41" x2="198" y2="41" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#a6)"/>
+                    <text x="192" y="38" text-anchor="middle" font-size="8" fill="#94a3b8" font-weight="700">NO</text>
+                    <!-- n%2==0 판단 -->
+                    <polygon points="258,20 302,41 258,62 214,41" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                    <text x="258" y="38" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="800">n%2==0</text>
+                    <text x="258" y="52" text-anchor="middle" font-size="9" fill="#1d4ed8">?</text>
+                    <!-- YES 위 -->
+                    <line x1="258" y1="20" x2="258" y2="8" stroke="#3b82f6" stroke-width="1.5"/>
+                    <line x1="258" y1="8" x2="340" y2="8" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#a6y)"/>
+                    <rect x="340" y="1" width="72" height="18" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+                    <text x="376" y="14" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">짝수 출력</text>
+                    <!-- NO 아래 -->
+                    <line x1="258" y1="62" x2="258" y2="76" stroke="#ec4899" stroke-width="1.5"/>
+                    <line x1="258" y1="76" x2="340" y2="76" stroke="#ec4899" stroke-width="1.5" marker-end="url(#a6)"/>
+                    <rect x="340" y="68" width="72" height="18" rx="4" fill="#fce7f3" stroke="#ec4899" stroke-width="1"/>
+                    <text x="376" y="81" text-anchor="middle" font-size="9" fill="#be185d" font-weight="700">홀수 출력</text>
+                    <text x="258" y="84" text-anchor="middle" font-size="8" fill="#ec4899" font-weight="700">NO</text>
+                </svg>
+            </div>
+            <div class="output">
+                <div class="output-label">실행 결과 예시</div>
+숫자를 입력하세요: 0
+0은 특별한 짝수입니다.
+            </div>
+        </div>
+    </div>
+
+    <!-- 확장 3 -->
+    <div class="ext-card">
+        <div class="ext-head lv3">
+            <span class="ext-badge lv3">확장 3</span>
+            <span class="ext-title">음수도 올바르게 처리하기</span>
+        </div>
+        <div class="ext-body">
+            <p>C언어에서 음수에 <code>%</code>를 쓰면 결과가 음수(-1)로 나올 수 있습니다. 그래도 <code>n % 2 == 0</code>으로 짝수를 판별하는 것은 여전히 정확합니다. 홀수 조건만 <code>!= 0</code>으로 작성하면 음수도 완벽히 처리됩니다.</p>
+            <div class="code"><span class="cmt">// C언어: -7 % 2 는 -1 (음수 가능)</span>
+<span class="cmt">// n % 2 == 0 은 짝수, != 0 은 홀수로 처리</span>
+<span class="kw">if</span> (n <span class="op">%</span> <span class="num">2</span> <span class="op">==</span> <span class="num">0</span>) {
+    <span class="fn">printf</span>(<span class="str">"%d는 짝수입니다.\n"</span>, n);
+} <span class="kw">else</span> {
+    <span class="cmt">// 나머지가 1이든 -1이든 모두 홀수</span>
+    <span class="fn">printf</span>(<span class="str">"%d는 홀수입니다.\n"</span>, n);
+}</div>
+            <div class="output">
+                <div class="output-label">음수 입력 결과</div>
+숫자를 입력하세요: -7
+-7는 홀수입니다.
+
+숫자를 입력하세요: -8
+-8는 짝수입니다.
+            </div>
+            <div class="point">
+                <div class="point-title">C언어 음수 나머지 규칙</div>
+                <p>C 표준에서 <code>-7 % 2</code>의 결과는 <code>-1</code>입니다. 따라서 홀수 조건을 <code>== 1</code>이 아닌 <code>!= 0</code>으로 쓰거나, <code>else</code>로 처리해야 음수에서도 틀리지 않습니다.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ============================= PAGE 4 — 전체 코드 + 도전 과제 ============================= -->
+<div class="page">
+    <div class="progress-bar">
+        <div class="progress-seg done"></div>
+        <div class="progress-seg done"></div>
+        <div class="progress-seg done"></div>
+        <div class="progress-seg current"></div>
+    </div>
+    <h2>완성 코드 &amp; 도전 과제</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/keyboard.png" alt="키보드" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+    <!-- 전체 코드 -->
+    <div class="final-code-wrap">
+        <div class="final-code-head">
+            <div class="final-code-dots">
+                <i></i><i></i><i></i>
+            </div>
+            <span>even_odd.c — 짝홀 판별기 완성본</span>
+        </div>
+        <div class="final-code-body"><span style="color:#c084fc;">#include</span> <span style="color:#86efac;">&lt;stdio.h&gt;</span>
+
+<span style="color:#c084fc;">int</span> <span style="color:#67e8f9;">main</span>() {
+    <span style="color:#c084fc;">int</span> n;
+
+    <span style="color:#64748b;font-style:italic;">/* ① 입력 */</span>
+    <span style="color:#67e8f9;">printf</span>(<span style="color:#86efac;">"숫자를 입력하세요: "</span>);
+    <span style="color:#67e8f9;">scanf</span>(<span style="color:#86efac;">"%d"</span>, &amp;n);
+
+    <span style="color:#64748b;font-style:italic;">/* ② 0 특별 처리 → 짝수 → 홀수 순서로 판별 */</span>
+    <span style="color:#c084fc;">if</span> (n == <span style="color:#7dd3fc;">0</span>) {
+        <span style="color:#67e8f9;">printf</span>(<span style="color:#86efac;">"0은 특별한 짝수입니다.\n"</span>);
+    } <span style="color:#c084fc;">else if</span> (n <span style="color:#fbbf24;">%</span> <span style="color:#7dd3fc;">2</span> == <span style="color:#7dd3fc;">0</span>) {
+        <span style="color:#67e8f9;">printf</span>(<span style="color:#86efac;">"%d는 짝수입니다.\n"</span>, n);
+    } <span style="color:#c084fc;">else</span> {
+        <span style="color:#67e8f9;">printf</span>(<span style="color:#86efac;">"%d는 홀수입니다.\n"</span>, n);
+    }
+
+    <span style="color:#64748b;font-style:italic;">/* ③ 3의 배수 여부 추가 출력 */</span>
+    <span style="color:#c084fc;">if</span> (n <span style="color:#fbbf24;">%</span> <span style="color:#7dd3fc;">3</span> == <span style="color:#7dd3fc;">0</span>) {
+        <span style="color:#67e8f9;">printf</span>(<span style="color:#86efac;">"%d는 3의 배수이기도 합니다.\n"</span>, n);
+    }
+
+    <span style="color:#c084fc;">return</span> <span style="color:#7dd3fc;">0</span>;
+}</div>
+    </div>
+
+    <!-- 실행 결과 표 -->
+    <div style="margin:14px 0;">
+        <svg viewBox="0 0 500 100" style="max-width:500px;width:100%">
+            <!-- 표 배경 -->
+            <rect x="8" y="8" width="484" height="88" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <!-- 헤더 -->
+            <rect x="8" y="8" width="484" height="26" rx="8" fill="#1e3a5f"/>
+            <rect x="8" y="28" width="484" height="6" fill="#1e3a5f"/>
+            <text x="85" y="25" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">입력 n</text>
+            <text x="220" y="25" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">n % 2 결과</text>
+            <text x="390" y="25" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">출력</text>
+            <!-- 구분선 -->
+            <line x1="160" y1="8" x2="160" y2="96" stroke="#e2e8f0" stroke-width="1"/>
+            <line x1="296" y1="8" x2="296" y2="96" stroke="#e2e8f0" stroke-width="1"/>
+            <!-- 행 1 -->
+            <rect x="8" y="34" width="484" height="18" fill="#fff"/>
+            <text x="85" y="47" text-anchor="middle" font-size="11" fill="#1e3a5f" font-family="JetBrains Mono" font-weight="600">0</text>
+            <text x="220" y="47" text-anchor="middle" font-size="11" fill="#1e3a5f" font-family="JetBrains Mono">0 % 2 = 0</text>
+            <text x="390" y="47" text-anchor="middle" font-size="11" fill="#6366f1" font-weight="700">0은 특별한 짝수입니다</text>
+            <!-- 행 2 -->
+            <rect x="8" y="52" width="484" height="18" fill="#f8fafc"/>
+            <text x="85" y="65" text-anchor="middle" font-size="11" fill="#1e3a5f" font-family="JetBrains Mono" font-weight="600">6</text>
+            <text x="220" y="65" text-anchor="middle" font-size="11" fill="#1e3a5f" font-family="JetBrains Mono">6 % 2 = 0</text>
+            <text x="390" y="65" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">6는 짝수입니다 + 3의 배수</text>
+            <!-- 행 3 -->
+            <rect x="8" y="70" width="484" height="18" fill="#fff"/>
+            <text x="85" y="83" text-anchor="middle" font-size="11" fill="#1e3a5f" font-family="JetBrains Mono" font-weight="600">7</text>
+            <text x="220" y="83" text-anchor="middle" font-size="11" fill="#1e3a5f" font-family="JetBrains Mono">7 % 2 = 1</text>
+            <text x="390" y="83" text-anchor="middle" font-size="11" fill="#be185d" font-weight="700">7는 홀수입니다</text>
+            <!-- 행 구분선 -->
+            <line x1="8" y1="52" x2="492" y2="52" stroke="#e2e8f0" stroke-width="1"/>
+            <line x1="8" y1="70" x2="492" y2="70" stroke="#e2e8f0" stroke-width="1"/>
+        </svg>
+    </div>
+
+    <!-- 도전 과제 -->
+    <div class="challenge">
+        <div class="challenge-head">
+            <div>
+                <div class="challenge-head-title">도전 과제 — FizzBuzz 맛보기</div>
+                <div class="challenge-head-sub">짝홀 판별기를 업그레이드해 FizzBuzz 문제를 풀어봅니다</div>
+            </div>
+        </div>
+        <div class="challenge-body">
+            <div class="challenge-item">
+                <div class="challenge-item-title">FizzBuzz 규칙</div>
+                <div class="challenge-item-desc">
+                    3의 배수이면 "Fizz" 출력<br>
+                    5의 배수이면 "Buzz" 출력<br>
+                    3과 5의 공배수(15의 배수)이면 "FizzBuzz" 출력<br>
+                    그 외에는 숫자 그대로 출력
+                </div>
+            </div>
+            <div class="challenge-item">
+                <div class="challenge-item-title">힌트: 조건 순서가 중요합니다</div>
+                <div class="challenge-item-desc">
+                    15의 배수 조건을 맨 먼저 확인해야 합니다. 그렇지 않으면 15는 3의 배수로만 잡혀 "Fizz"만 출력됩니다.<br>
+                    <code>if (n % 15 == 0)</code> → <code>else if (n % 3 == 0)</code> → <code>else if (n % 5 == 0)</code> 순서로 작성해보세요.
+                </div>
+            </div>
+            <div class="challenge-item">
+                <div class="challenge-item-title">예상 출력 (n = 15 입력 시)</div>
+                <div class="challenge-item-desc">
+                    <code>FizzBuzz</code> — 15는 3의 배수이면서 5의 배수이므로
+                </div>
+            </div>
+            <div class="code" style="font-size:12px;margin-top:10px;"><span class="cmt">// 직접 채워보세요!</span>
+<span class="kw">int</span> n;
+<span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;n);
+
+<span class="kw">if</span> (n <span class="op">%</span> <span class="num">15</span> <span class="op">==</span> <span class="num">0</span>) {
+    <span class="fn">printf</span>(<span class="str">"FizzBuzz\n"</span>);
+} <span class="kw">else if</span> (n <span class="op">%</span> <span class="num">3</span> <span class="op">==</span> <span class="num">0</span>) {
+    <span class="fn">printf</span>(<span class="str">"Fizz\n"</span>);
+} <span class="kw">else if</span> (n <span class="op">%</span> <span class="num">5</span> <span class="op">==</span> <span class="num">0</span>) {
+    <span class="fn">printf</span>(<span class="str">"Buzz\n"</span>);
+} <span class="kw">else</span> {
+    <span class="fn">printf</span>(<span class="str">"%d\n"</span>, n);
+}</div>
+        </div>
+    </div>
+
+    <!-- 요약 -->
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>이 프로젝트에서 배운 것</h3>
+        <ul>
+            <li><code>n % 2 == 0</code> 이면 짝수, 아니면(<code>else</code>) 홀수</li>
+            <li><code>scanf</code>로 사용자 입력을 받을 때 변수 앞에 <code>&amp;</code> 필수</li>
+            <li><code>if-else if-else</code> 체인으로 여러 조건을 순서대로 처리</li>
+            <li>음수 나머지는 음수가 될 수 있으므로 <code>else</code>로 처리하는 것이 안전</li>
+            <li>0은 수학적으로 짝수이며, 특별 분기로 따로 처리 가능</li>
+            <li>나머지 연산(<code>%</code>)은 배수 판별에 핵심 도구 — FizzBuzz도 같은 원리</li>
+        </ul>
+    </div>
+</div>
+
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="완성" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/flowchart.png" alt="흐름도" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

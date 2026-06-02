@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 프로젝트: 가계부 프로그램</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+/* -- 페이지 -- */
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+/* -- 챕터 표지 -- */
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+
+/* -- 본문 -- */
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 16px; font-weight: 700; color: #1e3a5f; margin: 18px 0 10px; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+ul, ol { margin: 0 0 12px 20px; }
+li { font-size: 14px; color: #374151; line-height: 1.8; }
+
+/* -- 코드 블록 -- */
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13.5px;
+    color: #e2e8f0; line-height: 1.85; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.code .dec { color: #f9a8d4; }
+
+/* -- 따라해보세요 -- */
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+
+/* -- 문제 -- */
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+
+/* -- 요약 -- */
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+/* -- 단계 박스 -- */
+.step-box { border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 14px 18px; margin: 14px 0; background: #fff; }
+.step-label { font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+.step-title { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 8px; }
+
+/* -- 출력 박스 -- */
+.output-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #334155; line-height: 1.7; margin: 10px 0; }
+
+/* -- 비교 테이블 -- */
+.compare-table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13px; }
+.compare-table th { background: #1e3a5f; color: #fff; padding: 8px 12px; text-align: left; font-weight: 700; }
+.compare-table td { padding: 7px 12px; border-bottom: 1px solid #e2e8f0; color: #374151; }
+.compare-table tr:nth-child(even) td { background: #f8fafc; }
+.compare-table code { background: #e0e7ff; padding: 1px 5px; border-radius: 3px; font-family: 'JetBrains Mono', monospace; color: #3730a3; font-size: 12px; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- 1페이지: 표지 -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">47</div>
+        <div class="cover-label">L3e — Unit 47 Project</div>
+        <h1 class="cover-title">프로젝트:<br>가계부 프로그램</h1>
+        <p class="cover-sub">파일 I/O, CSV, 예외처리를 모두 합쳐 실제로 동작하는 가계부를 만듭니다. 수입·지출을 입력하고 CSV로 저장하며, 월별 합계를 계산합니다.</p>
+
+        <!-- SVG: 가계부 전체 흐름 구조도 -->
+        <div style="margin:24px 0;">
+            <svg viewBox="0 0 500 160" style="max-width:500px;width:100%">
+                <defs>
+                    <marker id="arwCov" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                    </marker>
+                </defs>
+                <!-- 입력 -->
+                <rect x="5" y="20" width="110" height="54" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="60" y="41" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">사용자 입력</text>
+                <text x="60" y="55" text-anchor="middle" font-size="9" fill="#374151">날짜/분류/금액</text>
+                <text x="60" y="68" text-anchor="middle" font-size="9" fill="#64748b">try/except 보호</text>
+                <line x1="118" y1="47" x2="138" y2="47" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+                <!-- CSV -->
+                <rect x="141" y="10" width="130" height="74" rx="8" fill="#1e3a5f"/>
+                <text x="206" y="32" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">CSV 파일</text>
+                <text x="206" y="48" text-anchor="middle" font-size="9" fill="#93c5fd">with open() 저장</text>
+                <text x="206" y="62" text-anchor="middle" font-size="9" fill="#93c5fd">csv.writer 쓰기</text>
+                <text x="206" y="76" text-anchor="middle" font-size="9" fill="#93c5fd">csv.reader 읽기</text>
+                <line x1="274" y1="47" x2="294" y2="47" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+                <!-- 분석 -->
+                <rect x="297" y="20" width="110" height="54" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="352" y="41" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">월별 분석</text>
+                <text x="352" y="55" text-anchor="middle" font-size="9" fill="#374151">딕셔너리 집계</text>
+                <text x="352" y="68" text-anchor="middle" font-size="9" fill="#64748b">수입/지출 합계</text>
+                <!-- 흐름 아래 -->
+                <rect x="80" y="102" width="310" height="48" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+                <text x="235" y="120" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">가계부 전체 흐름</text>
+                <text x="235" y="136" text-anchor="middle" font-size="9" fill="#64748b">입력 → CSV 저장 → 불러오기 → 월별 합계 출력</text>
+                <line x1="235" y1="77" x2="235" y2="100" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/puzzle.png" alt="고급 기능" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 유닛에서 만드는 것</h3>
+            <ul>
+                <li><code>try/except</code>로 잘못된 금액 입력을 안전하게 처리할 수 있습니다.</li>
+                <li><code>with open()</code>과 <code>csv.writer</code>로 거래 내역을 CSV 파일에 저장할 수 있습니다.</li>
+                <li><code>csv.reader</code>로 저장된 CSV를 불러와 리스트로 변환할 수 있습니다.</li>
+                <li>딕셔너리로 월별 수입·지출 합계를 계산할 수 있습니다.</li>
+                <li>수입/지출 구분과 잔액(수입 - 지출)을 계산해 출력할 수 있습니다.</li>
+                <li>L3e에서 배운 파일 I/O, CSV, 예외처리를 하나의 프로그램으로 합칠 수 있습니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- 2페이지: try/except 안전한 입력 -->
+<div class="page">
+    <h2>Step 1 — try/except로 안전한 입력 받기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="처리" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>가계부에서 금액을 입력받을 때, 사용자가 숫자 대신 문자를 입력하면 프로그램이 멈춥니다. <code>try/except</code>로 이를 막아야 합니다.</p>
+
+    <!-- SVG: try/except 흐름 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 100" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="arwTE" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <!-- try -->
+            <rect x="5" y="20" width="130" height="60" rx="8" fill="#f8fafc" stroke="#3b82f6" stroke-width="1.5"/>
+            <rect x="5" y="20" width="130" height="24" rx="8" fill="#3b82f6"/>
+            <text x="70" y="37" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">try 블록</text>
+            <text x="70" y="58" text-anchor="middle" font-size="9" fill="#374151">int(input(...))</text>
+            <text x="70" y="72" text-anchor="middle" font-size="9" fill="#64748b">정상 실행</text>
+            <!-- 화살표 정상 -->
+            <line x1="138" y1="38" x2="158" y2="38" stroke="#22c55e" stroke-width="1.5" marker-end="url(#arwTE)"/>
+            <text x="148" y="33" font-size="8" fill="#22c55e" text-anchor="middle">정상</text>
+            <!-- 결과 반환 -->
+            <rect x="161" y="20" width="130" height="60" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="226" y="42" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">정수 반환</text>
+            <text x="226" y="58" text-anchor="middle" font-size="9" fill="#374151">amount = 정수값</text>
+            <text x="226" y="72" text-anchor="middle" font-size="9" fill="#64748b">프로그램 계속</text>
+            <!-- 화살표 오류 -->
+            <line x1="70" y1="82" x2="70" y2="95" stroke="#ef4444" stroke-width="1.5" marker-end="url(#arwTE)"/>
+            <text x="75" y="92" font-size="8" fill="#ef4444">오류</text>
+            <!-- except -->
+            <rect x="320" y="20" width="155" height="60" rx="8" fill="#fff1f2" stroke="#ef4444" stroke-width="1.5"/>
+            <rect x="320" y="20" width="155" height="24" rx="8" fill="#ef4444"/>
+            <text x="397" y="37" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">except ValueError</text>
+            <text x="397" y="58" text-anchor="middle" font-size="9" fill="#374151">"숫자만 입력" 출력</text>
+            <text x="397" y="72" text-anchor="middle" font-size="9" fill="#64748b">None 반환 후 재시도</text>
+            <!-- 화살표 except -->
+            <line x1="295" y1="50" x2="318" y2="50" stroke="#ef4444" stroke-width="1.5" marker-end="url(#arwTE)"/>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># Step 1: 안전한 금액 입력 함수</span>
+
+<span class="kw">def</span> <span class="fn">get_amount</span>():
+    <span class="str">"""금액을 정수로 입력받는다. 실패하면 None 반환."""</span>
+    <span class="kw">try</span>:
+        text = <span class="fn">input</span>(<span class="str">"금액(원): "</span>)
+        amount = <span class="fn">int</span>(text)          <span class="cmt"># 문자면 ValueError 발생</span>
+        <span class="kw">if</span> amount &lt;= <span class="num">0</span>:
+            <span class="fn">print</span>(<span class="str">"0보다 큰 금액을 입력하세요."</span>)
+            <span class="kw">return</span> <span class="kw">None</span>
+        <span class="kw">return</span> amount
+    <span class="kw">except</span> <span class="fn">ValueError</span>:
+        <span class="fn">print</span>(<span class="str">"숫자만 입력할 수 있습니다."</span>)
+        <span class="kw">return</span> <span class="kw">None</span>
+
+<span class="cmt"># 안전한 분류 입력 (수입/지출)</span>
+<span class="kw">def</span> <span class="fn">get_category</span>():
+    <span class="str">"""'수입' 또는 '지출'만 허용."""</span>
+    valid = [<span class="str">"수입"</span>, <span class="str">"지출"</span>]
+    text = <span class="fn">input</span>(<span class="str">"분류 (수입/지출): "</span>).strip()
+    <span class="kw">if</span> text <span class="kw">not in</span> valid:
+        <span class="fn">print</span>(<span class="str">f"'{text}'은 올바른 분류가 아닙니다. 수입 또는 지출을 입력하세요."</span>)
+        <span class="kw">return</span> <span class="kw">None</span>
+    <span class="kw">return</span> text</div>
+
+    <p><code>try</code> 블록 안에서 오류가 생기면 즉시 <code>except</code>로 이동합니다. <code>ValueError</code>는 "숫자여야 하는데 문자가 왔을 때" 발생하는 오류입니다.</p>
+
+    <!-- SVG: ValueError 발생 예시 -->
+    <div style="text-align:center;margin:10px 0;">
+        <svg viewBox="0 0 480 60" style="max-width:480px;width:100%">
+            <rect x="5" y="5" width="470" height="50" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="20" y="24" font-size="9" fill="#ef4444" font-weight="700">ValueError 예시:</text>
+            <text x="20" y="40" font-size="9" fill="#64748b">int("abc") → ValueError: invalid literal for int() with base 10: 'abc'</text>
+            <text x="280" y="24" font-size="9" fill="#22c55e" font-weight="700">정상 예시:</text>
+            <text x="280" y="40" font-size="9" fill="#64748b">int("5000") → 5000 (정상 변환)</text>
+        </svg>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="완성" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+        <div class="practice-head">따라해보세요 — Step 1</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc"><code>get_amount()</code> 함수를 입력하고 "abc"를 입력해 오류 메시지를 확인하세요.</div>
+                <div class="code">amount = <span class="fn">get_amount</span>()
+<span class="fn">print</span>(<span class="str">f"결과: {amount}"</span>)</div>
+                <div class="practice-result">"숫자만 입력할 수 있습니다." 출력 후 None 반환</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc"><code>get_category()</code>에 "식비"를 입력했을 때 어떤 메시지가 나오는지 확인하세요.</div>
+                <div class="code">cat = <span class="fn">get_category</span>()
+<span class="fn">print</span>(<span class="str">f"분류: {cat}"</span>)</div>
+                <div class="practice-result">'식비'은 올바른 분류가 아닙니다... 출력</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">두 함수를 반복문으로 감싸 None이면 다시 묻도록 수정하세요.</div>
+                <div class="code"><span class="kw">while</span> <span class="kw">True</span>:
+    amt = <span class="fn">get_amount</span>()
+    <span class="kw">if</span> amt <span class="kw">is not</span> <span class="kw">None</span>:
+        <span class="kw">break</span>
+<span class="fn">print</span>(<span class="str">f"입력된 금액: {amt}원"</span>)</div>
+                <div class="practice-result">올바른 숫자가 입력될 때까지 반복</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3페이지: with문 + csv.writer -->
+<div class="page">
+    <h2>Step 2 — with문으로 CSV 파일에 저장하기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/database.png" alt="데이터" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p><code>with open()</code>은 파일을 열고 작업이 끝나면 자동으로 닫습니다. <code>csv.writer</code>를 함께 사용하면 쉼표로 구분된 파일을 쉽게 만들 수 있습니다.</p>
+
+    <!-- SVG: with문 동작 원리 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 90" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="arwWith" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="5" y="10" width="105" height="60" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="57" y="30" text-anchor="middle" font-size="9" fill="#1e3a5f" font-weight="700">with open()</text>
+            <text x="57" y="46" text-anchor="middle" font-size="8" fill="#64748b">파일 열기</text>
+            <text x="57" y="60" text-anchor="middle" font-size="8" fill="#64748b">__enter__</text>
+            <line x1="113" y1="40" x2="133" y2="40" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwWith)"/>
+            <rect x="136" y="10" width="105" height="60" rx="8" fill="#1e3a5f"/>
+            <text x="188" y="30" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">블록 실행</text>
+            <text x="188" y="46" text-anchor="middle" font-size="8" fill="#93c5fd">csv.writer.writerow()</text>
+            <text x="188" y="60" text-anchor="middle" font-size="8" fill="#93c5fd">데이터 쓰기</text>
+            <line x1="244" y1="40" x2="264" y2="40" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwWith)"/>
+            <rect x="267" y="10" width="105" height="60" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="319" y="30" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">자동 닫기</text>
+            <text x="319" y="46" text-anchor="middle" font-size="8" fill="#374151">__exit__</text>
+            <text x="319" y="60" text-anchor="middle" font-size="8" fill="#64748b">오류 발생해도 OK</text>
+            <line x1="375" y1="40" x2="395" y2="40" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwWith)"/>
+            <rect x="398" y="15" width="77" height="50" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="436" y="34" text-anchor="middle" font-size="9" fill="#374151" font-weight="700">CSV 저장</text>
+            <text x="436" y="50" text-anchor="middle" font-size="8" fill="#64748b">완료</text>
+        </svg>
+    </div>
+
+    <!-- SVG: CSV 파일 구조 -->
+    <div style="text-align:center;margin:10px 0;">
+        <svg viewBox="0 0 480 72" style="max-width:480px;width:100%">
+            <rect x="5" y="5" width="470" height="62" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="20" y="22" font-size="9" fill="#1e3a5f" font-weight="700">budget.csv 내용 예시</text>
+            <text x="20" y="38" font-size="9" fill="#64748b" font-family="monospace">날짜,분류,설명,금액</text>
+            <text x="20" y="52" font-size="9" fill="#64748b" font-family="monospace">2024-03,수입,용돈,50000</text>
+            <text x="20" y="65" font-size="9" fill="#64748b" font-family="monospace">2024-03,지출,점심식비,8000</text>
+            <text x="280" y="22" font-size="9" fill="#1e3a5f" font-weight="700">열 구조</text>
+            <text x="280" y="38" font-size="9" fill="#64748b">col 0: 날짜 (YYYY-MM 형식)</text>
+            <text x="280" y="52" font-size="9" fill="#64748b">col 1: 분류 (수입/지출)</text>
+            <text x="280" y="65" font-size="9" fill="#64748b">col 2: 설명   col 3: 금액</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">import</span> csv
+
+<span class="cmt"># Step 2: CSV에 거래 저장</span>
+<span class="kw">def</span> <span class="fn">save_record</span>(filename, record):
+    <span class="str">"""record = [날짜, 분류, 설명, 금액] 리스트."""</span>
+    <span class="cmt"># mode='a' → 이어쓰기, newline='' → 빈 줄 방지</span>
+    <span class="kw">with</span> <span class="fn">open</span>(filename, mode=<span class="str">'a'</span>, newline=<span class="str">''</span>, encoding=<span class="str">'utf-8'</span>) <span class="kw">as</span> f:
+        writer = csv.<span class="fn">writer</span>(f)
+        writer.<span class="fn">writerow</span>(record)    <span class="cmt"># 한 줄 쓰기</span>
+
+<span class="cmt"># 헤더 생성 (처음 한 번만)</span>
+<span class="kw">def</span> <span class="fn">init_file</span>(filename):
+    <span class="str">"""CSV 헤더 행 생성."""</span>
+    <span class="kw">with</span> <span class="fn">open</span>(filename, mode=<span class="str">'w'</span>, newline=<span class="str">''</span>, encoding=<span class="str">'utf-8'</span>) <span class="kw">as</span> f:
+        writer = csv.<span class="fn">writer</span>(f)
+        writer.<span class="fn">writerow</span>([<span class="str">"날짜"</span>, <span class="str">"분류"</span>, <span class="str">"설명"</span>, <span class="str">"금액"</span>])
+
+<span class="cmt"># 사용 예시</span>
+<span class="fn">init_file</span>(<span class="str">"budget.csv"</span>)
+<span class="fn">save_record</span>(<span class="str">"budget.csv"</span>, [<span class="str">"2024-03"</span>, <span class="str">"수입"</span>, <span class="str">"용돈"</span>, <span class="num">50000</span>])
+<span class="fn">save_record</span>(<span class="str">"budget.csv"</span>, [<span class="str">"2024-03"</span>, <span class="str">"지출"</span>, <span class="str">"점심식비"</span>, <span class="num">8000</span>])</div>
+
+    <p><code>mode='a'</code>는 파일 끝에 이어서 씁니다(append). 파일이 없으면 자동으로 만들어집니다. <code>newline=''</code>은 Windows에서 빈 줄이 생기는 현상을 막습니다.</p>
+
+    <table class="compare-table">
+        <tr>
+            <th>모드</th><th>의미</th><th>파일 없을 때</th><th>기존 내용</th>
+        </tr>
+        <tr><td><code>'w'</code></td><td>쓰기(덮어쓰기)</td><td>새로 생성</td><td>삭제</td></tr>
+        <tr><td><code>'a'</code></td><td>이어쓰기(append)</td><td>새로 생성</td><td>유지</td></tr>
+        <tr><td><code>'r'</code></td><td>읽기</td><td>오류 발생</td><td>유지</td></tr>
+    </table>
+</div>
+
+<!-- 4페이지: csv.reader로 불러오기 + 월별 합계 -->
+<div class="page">
+    <h2>Step 3 — CSV 불러오기와 월별 합계</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p><code>csv.reader</code>로 저장된 파일을 읽고, 딕셔너리를 이용해 월별 수입·지출 합계를 계산합니다.</p>
+
+    <!-- SVG: csv.reader 처리 흐름 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 78" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="arwRead" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="5" y="14" width="100" height="50" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="55" y="34" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">budget.csv</text>
+            <text x="55" y="50" text-anchor="middle" font-size="8" fill="#64748b">텍스트 파일</text>
+            <line x1="108" y1="39" x2="128" y2="39" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwRead)"/>
+            <rect x="131" y="14" width="110" height="50" rx="8" fill="#1e3a5f"/>
+            <text x="186" y="34" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">csv.reader</text>
+            <text x="186" y="50" text-anchor="middle" font-size="8" fill="#93c5fd">행 → 리스트 변환</text>
+            <line x1="244" y1="39" x2="264" y2="39" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwRead)"/>
+            <rect x="267" y="14" width="110" height="50" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="322" y="30" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">딕셔너리 집계</text>
+            <text x="322" y="46" text-anchor="middle" font-size="8" fill="#374151">월별 수입/지출</text>
+            <line x1="380" y1="39" x2="400" y2="39" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwRead)"/>
+            <rect x="403" y="14" width="72" height="50" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="439" y="30" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">합계 출력</text>
+            <text x="439" y="46" text-anchor="middle" font-size="8" fill="#374151">잔액 계산</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">import</span> csv
+
+<span class="cmt"># Step 3: CSV 읽어서 월별 합계 계산</span>
+<span class="kw">def</span> <span class="fn">load_records</span>(filename):
+    <span class="str">"""CSV에서 모든 거래 내역 읽기."""</span>
+    records = []
+    <span class="kw">try</span>:
+        <span class="kw">with</span> <span class="fn">open</span>(filename, encoding=<span class="str">'utf-8'</span>) <span class="kw">as</span> f:
+            reader = csv.<span class="fn">reader</span>(f)
+            <span class="fn">next</span>(reader)              <span class="cmt"># 헤더 행 건너뛰기</span>
+            <span class="kw">for</span> row <span class="kw">in</span> reader:
+                <span class="kw">if</span> <span class="fn">len</span>(row) == <span class="num">4</span>:      <span class="cmt"># 열이 4개인 행만</span>
+                    records.<span class="fn">append</span>(row)
+    <span class="kw">except</span> <span class="fn">FileNotFoundError</span>:
+        <span class="fn">print</span>(<span class="str">"저장된 가계부가 없습니다."</span>)
+    <span class="kw">return</span> records
+
+<span class="kw">def</span> <span class="fn">monthly_summary</span>(records):
+    <span class="str">"""월별 수입/지출 합계를 딕셔너리로 반환."""</span>
+    summary = {}      <span class="cmt"># {"2024-03": {"수입": 0, "지출": 0}}</span>
+    <span class="kw">for</span> row <span class="kw">in</span> records:
+        month, category, _, amount_str = row
+        amount = <span class="fn">int</span>(amount_str)
+        <span class="kw">if</span> month <span class="kw">not in</span> summary:
+            summary[month] = {<span class="str">"수입"</span>: <span class="num">0</span>, <span class="str">"지출"</span>: <span class="num">0</span>}
+        summary[month][category] += amount
+    <span class="kw">return</span> summary
+
+<span class="cmt"># 결과 출력</span>
+records = <span class="fn">load_records</span>(<span class="str">"budget.csv"</span>)
+summary = <span class="fn">monthly_summary</span>(records)
+<span class="kw">for</span> month, data <span class="kw">in</span> <span class="fn">sorted</span>(summary.<span class="fn">items</span>()):
+    income  = data[<span class="str">"수입"</span>]
+    expense = data[<span class="str">"지출"</span>]
+    balance = income - expense
+    <span class="fn">print</span>(<span class="str">f"{month}  수입:{income:,}  지출:{expense:,}  잔액:{balance:,}"</span>)</div>
+
+    <div class="output-box">2024-03  수입:50,000  지출:8,000  잔액:42,000
+2024-04  수입:50,000  지출:32,000  잔액:18,000</div>
+
+    <!-- SVG: monthly_summary 딕셔너리 구조 -->
+    <div style="text-align:center;margin:10px 0;">
+        <svg viewBox="0 0 480 70" style="max-width:480px;width:100%">
+            <rect x="5" y="5" width="470" height="60" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="20" y="22" font-size="9" fill="#1e3a5f" font-weight="700">summary 딕셔너리 구조</text>
+            <text x="20" y="38" font-size="9" fill="#64748b" font-family="monospace">summary = {"2024-03": {"수입": 50000, "지출": 8000},</text>
+            <text x="20" y="54" font-size="9" fill="#64748b" font-family="monospace">           "2024-04": {"수입": 50000, "지출": 32000}}</text>
+        </svg>
+    </div>
+
+    <p><code>next(reader)</code>는 헤더 행을 한 번 읽어서 건너뜁니다. <code>FileNotFoundError</code>는 파일이 없을 때 발생하는 예외입니다.</p>
+</div>
+
+<!-- 5페이지: 완성 프로그램 + 메인 루프 -->
+<div class="page">
+    <h2>Step 4 — 완성 가계부 프로그램</h2>
+    <p>Step 1~3의 함수를 합쳐 메뉴 기반 가계부 프로그램을 완성합니다.</p>
+
+    <!-- SVG: 메뉴 흐름도 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 110" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="arwMenu" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <!-- 시작 -->
+            <rect x="190" y="5" width="100" height="30" rx="15" fill="#1e3a5f"/>
+            <text x="240" y="25" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">프로그램 시작</text>
+            <line x1="240" y1="35" x2="240" y2="48" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwMenu)"/>
+            <!-- 메뉴 -->
+            <rect x="155" y="50" width="170" height="30" rx="8" fill="#f8fafc" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="240" y="70" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">메뉴: 1.입력 2.조회 3.종료</text>
+            <!-- 분기 -->
+            <line x1="175" y1="80" x2="95" y2="92" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwMenu)"/>
+            <line x1="240" y1="82" x2="240" y2="92" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwMenu)"/>
+            <line x1="305" y1="80" x2="385" y2="92" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwMenu)"/>
+            <!-- 1.입력 -->
+            <rect x="20" y="93" width="130" height="14" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="85" y="104" text-anchor="middle" font-size="8" fill="#1d4ed8">날짜/분류/설명/금액 → CSV 저장</text>
+            <!-- 2.조회 -->
+            <rect x="175" y="93" width="130" height="14" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1"/>
+            <text x="240" y="104" text-anchor="middle" font-size="8" fill="#92400e">월별 합계 계산 후 출력</text>
+            <!-- 3.종료 -->
+            <rect x="340" y="93" width="130" height="14" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1"/>
+            <text x="405" y="104" text-anchor="middle" font-size="8" fill="#166534">프로그램 종료</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">import</span> csv
+
+<span class="cmt"># ── 유틸리티 함수 (Step 1~3에서 정의) ──</span>
+<span class="cmt"># get_amount(), get_category(), save_record(), load_records(), monthly_summary()</span>
+
+<span class="cmt"># ── 메인 루프 ──</span>
+FILENAME = <span class="str">"budget.csv"</span>
+
+<span class="kw">def</span> <span class="fn">add_record</span>():
+    <span class="str">"""거래 내역 입력."""</span>
+    month = <span class="fn">input</span>(<span class="str">"날짜 (YYYY-MM): "</span>).strip()
+    category = <span class="fn">get_category</span>()
+    <span class="kw">if</span> category <span class="kw">is</span> <span class="kw">None</span>: <span class="kw">return</span>
+    desc = <span class="fn">input</span>(<span class="str">"설명: "</span>).strip()
+    amount = <span class="fn">get_amount</span>()
+    <span class="kw">if</span> amount <span class="kw">is</span> <span class="kw">None</span>: <span class="kw">return</span>
+    <span class="fn">save_record</span>(FILENAME, [month, category, desc, amount])
+    <span class="fn">print</span>(<span class="str">f"저장 완료: {month} {category} {desc} {amount:,}원"</span>)
+
+<span class="kw">def</span> <span class="fn">show_summary</span>():
+    <span class="str">"""월별 합계 출력."""</span>
+    records = <span class="fn">load_records</span>(FILENAME)
+    <span class="kw">if</span> <span class="kw">not</span> records:
+        <span class="fn">print</span>(<span class="str">"데이터가 없습니다."</span>)
+        <span class="kw">return</span>
+    summary = <span class="fn">monthly_summary</span>(records)
+    <span class="fn">print</span>(<span class="str">"\n--- 월별 요약 ---"</span>)
+    <span class="kw">for</span> month, data <span class="kw">in</span> <span class="fn">sorted</span>(summary.<span class="fn">items</span>()):
+        income  = data.get(<span class="str">"수입"</span>, <span class="num">0</span>)
+        expense = data.get(<span class="str">"지출"</span>, <span class="num">0</span>)
+        <span class="fn">print</span>(<span class="str">f"  {month}: 수입 {income:,}  지출 {expense:,}  잔액 {income-expense:,}"</span>)
+
+<span class="cmt"># 프로그램 실행</span>
+<span class="fn">init_file</span>(FILENAME)
+<span class="kw">while</span> <span class="kw">True</span>:
+    choice = <span class="fn">input</span>(<span class="str">"\n1.입력  2.조회  3.종료: "</span>).strip()
+    <span class="kw">if</span>   choice == <span class="str">"1"</span>: <span class="fn">add_record</span>()
+    <span class="kw">elif</span> choice == <span class="str">"2"</span>: <span class="fn">show_summary</span>()
+    <span class="kw">elif</span> choice == <span class="str">"3"</span>: <span class="fn">print</span>(<span class="str">"종료합니다."</span>); <span class="kw">break</span>
+    <span class="kw">else</span>: <span class="fn">print</span>(<span class="str">"1, 2, 3 중 하나를 입력하세요."</span>)</div>
+
+    <div class="output-box">1.입력  2.조회  3.종료: 1
+날짜 (YYYY-MM): 2024-03
+분류 (수입/지출): 수입
+설명: 용돈
+금액(원): 50000
+저장 완료: 2024-03 수입 용돈 50,000원</div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요 — Step 4</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">완성 프로그램을 실행하고 거래 2건(수입 1, 지출 1)을 입력하세요.</div>
+                <div class="practice-result">budget.csv 파일이 생성되고 2행이 저장됨</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">메뉴 2(조회)를 선택해 월별 잔액이 맞게 출력되는지 확인하세요.</div>
+                <div class="practice-result">수입 - 지출 = 잔액이 올바르게 계산됨</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">금액 입력 시 "abc"를 넣어 예외처리가 동작하는지 확인하세요.</div>
+                <div class="practice-result">"숫자만 입력할 수 있습니다." 메시지 후 돌아감</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 6페이지: 문제 -->
+<div class="page">
+    <h2>연습 문제</h2>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">1</div>
+            <div class="problem-label">try/except 빈칸 채우기</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <p class="problem-text">아래 코드의 빈칸을 채워 사용자가 문자를 입력했을 때 "숫자를 입력하세요"를 출력하고 <code>None</code>을 반환하도록 완성하세요.</p>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">입력</span>
+                    <span class="problem-example-value">abc</span>
+                </div>
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력</span>
+                    <span class="problem-example-value">숫자를 입력하세요</span>
+                </div>
+            </div>
+            <div class="code"><span class="kw">def</span> <span class="fn">safe_int</span>(prompt):
+    <span class="kw">try</span>:
+        <span class="kw">return</span> ___(<span class="fn">input</span>(prompt))
+    <span class="kw">except</span> ___:
+        <span class="fn">print</span>(<span class="str">"숫자를 입력하세요"</span>)
+        <span class="kw">return</span> ___</div>
+            <details class="problem-toggle">
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <p class="hint-text">빈칸 1: 문자열을 정수로 바꾸는 내장 함수 / 빈칸 2: 잘못된 형식 입력 시 발생하는 예외 / 빈칸 3: 아무것도 없음을 나타내는 값</p>
+                </div>
+            </details>
+            <details class="problem-toggle">
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code"><span class="kw">def</span> <span class="fn">safe_int</span>(prompt):
+    <span class="kw">try</span>:
+        <span class="kw">return</span> <span class="fn">int</span>(<span class="fn">input</span>(prompt))
+    <span class="kw">except</span> <span class="fn">ValueError</span>:
+        <span class="fn">print</span>(<span class="str">"숫자를 입력하세요"</span>)
+        <span class="kw">return</span> <span class="kw">None</span></div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">2</div>
+            <div class="problem-label">CSV 저장 함수 완성</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <p class="problem-text"><code>with open()</code>과 <code>csv.writer</code>를 사용해 거래 기록을 CSV 파일에 이어쓰는 함수를 완성하세요. 파일 이름은 <code>my_budget.csv</code>이고, 열은 날짜·분류·금액 세 개입니다.</p>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">호출</span>
+                    <span class="problem-example-value">append_row("my_budget.csv", ["2024-04", "지출", 3000])</span>
+                </div>
+                <div class="problem-example-row">
+                    <span class="problem-example-label">결과</span>
+                    <span class="problem-example-value">my_budget.csv 마지막 줄에 2024-04,지출,3000 추가</span>
+                </div>
+            </div>
+            <details class="problem-toggle">
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <p class="hint-text">open() mode 인자: 이어쓰기는 'a' / csv.writer(f).writerow(row) / newline='' 필수</p>
+                </div>
+            </details>
+            <details class="problem-toggle">
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code"><span class="kw">import</span> csv
+
+<span class="kw">def</span> <span class="fn">append_row</span>(filename, row):
+    <span class="kw">with</span> <span class="fn">open</span>(filename, mode=<span class="str">'a'</span>, newline=<span class="str">''</span>, encoding=<span class="str">'utf-8'</span>) <span class="kw">as</span> f:
+        writer = csv.<span class="fn">writer</span>(f)
+        writer.<span class="fn">writerow</span>(row)</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">3</div>
+            <div class="problem-label">월별 지출 TOP 찾기</div>
+            <span class="problem-diff hard">어려움</span>
+        </div>
+        <div class="problem-body">
+            <p class="problem-text"><code>load_records()</code>가 반환한 리스트에서 지출만 골라 월별로 합산한 뒤, 지출이 가장 많은 달과 금액을 출력하는 함수 <code>top_expense_month()</code>를 작성하세요.</p>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">예시 출력</span>
+                    <span class="problem-example-value">지출 최다: 2024-04 (32,000원)</span>
+                </div>
+            </div>
+            <details class="problem-toggle">
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <p class="hint-text">row[1] == "지출" 조건으로 필터 → 딕셔너리 합산 → max(d, key=d.get)으로 최댓값 키 찾기</p>
+                </div>
+            </details>
+            <details class="problem-toggle">
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code"><span class="kw">def</span> <span class="fn">top_expense_month</span>(records):
+    expense_by_month = {}
+    <span class="kw">for</span> row <span class="kw">in</span> records:
+        month, category, _, amount_str = row
+        <span class="kw">if</span> category == <span class="str">"지출"</span>:
+            expense_by_month[month] = expense_by_month.<span class="fn">get</span>(month, <span class="num">0</span>) + <span class="fn">int</span>(amount_str)
+    <span class="kw">if not</span> expense_by_month:
+        <span class="fn">print</span>(<span class="str">"지출 데이터 없음"</span>)
+        <span class="kw">return</span>
+    top = <span class="fn">max</span>(expense_by_month, key=expense_by_month.<span class="fn">get</span>)
+    <span class="fn">print</span>(<span class="str">f"지출 최다: {top} ({expense_by_month[top]:,}원)"</span>)</div>
+                </div>
+            </details>
+        </div>
+    </div>
+</div>
+
+<!-- 7페이지: 핵심 요약 -->
+<div class="page">
+    <h2>핵심 요약</h2>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>try/except 예외처리</h3>
+        <ul>
+            <li><code>try</code> 블록 안에서 오류가 발생하면 즉시 <code>except</code>로 이동한다.</li>
+            <li><code>ValueError</code>: 잘못된 형식(문자 → 정수 변환 실패 등).</li>
+            <li><code>FileNotFoundError</code>: 존재하지 않는 파일을 열려 할 때 발생.</li>
+            <li>오류가 없으면 <code>except</code> 블록은 실행되지 않는다.</li>
+        </ul>
+    </div>
+
+    <div class="summary">
+        <h3>with문으로 파일 관리</h3>
+        <ul>
+            <li><code>with open(filename, mode, newline, encoding) as f:</code> — 블록이 끝나면 자동으로 파일 닫힘.</li>
+            <li><code>mode='w'</code>: 덮어쓰기 / <code>'a'</code>: 이어쓰기 / <code>'r'</code>: 읽기.</li>
+            <li>Windows에서 CSV 저장 시 <code>newline=''</code> 필수 (빈 줄 방지).</li>
+        </ul>
+    </div>
+
+    <div class="summary">
+        <h3>csv 모듈</h3>
+        <ul>
+            <li><code>csv.writer(f).writerow(list)</code>: 리스트를 쉼표 구분 한 줄로 저장.</li>
+            <li><code>csv.reader(f)</code>: 각 행을 리스트로 읽음.</li>
+            <li><code>next(reader)</code>: 헤더 행 건너뛰기.</li>
+        </ul>
+    </div>
+
+    <div class="summary">
+        <h3>월별 집계 패턴</h3>
+        <ul>
+            <li>딕셔너리 키에 월을 저장하고 값에 금액을 누적한다.</li>
+            <li><code>d.get(key, 0)</code>: 키가 없을 때 0을 기본값으로 사용.</li>
+            <li><code>max(d, key=d.get)</code>: 딕셔너리에서 최댓값을 가진 키 반환.</li>
+        </ul>
+    </div>
+
+    <!-- SVG: L3e 전체 흐름 요약 -->
+    <div style="text-align:center;margin:20px 0 14px;">
+        <svg viewBox="0 0 480 80" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="arwSum" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="5" y="15" width="80" height="50" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="45" y="36" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">u44</text>
+            <text x="45" y="50" text-anchor="middle" font-size="8" fill="#374151">파일 읽기</text>
+            <text x="45" y="62" text-anchor="middle" font-size="8" fill="#64748b">open/read</text>
+            <line x1="88" y1="40" x2="105" y2="40" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwSum)"/>
+            <rect x="108" y="15" width="80" height="50" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="148" y="36" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">u45</text>
+            <text x="148" y="50" text-anchor="middle" font-size="8" fill="#374151">파일 쓰기</text>
+            <text x="148" y="62" text-anchor="middle" font-size="8" fill="#64748b">write/with</text>
+            <line x1="191" y1="40" x2="208" y2="40" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwSum)"/>
+            <rect x="211" y="15" width="80" height="50" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="251" y="36" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">u46</text>
+            <text x="251" y="50" text-anchor="middle" font-size="8" fill="#374151">예외처리</text>
+            <text x="251" y="62" text-anchor="middle" font-size="8" fill="#64748b">try/except</text>
+            <line x1="294" y1="40" x2="311" y2="40" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwSum)"/>
+            <rect x="314" y="10" width="80" height="60" rx="8" fill="#1e3a5f"/>
+            <text x="354" y="32" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">u47</text>
+            <text x="354" y="46" text-anchor="middle" font-size="8" fill="#93c5fd">종합 프로젝트</text>
+            <text x="354" y="60" text-anchor="middle" font-size="8" fill="#93c5fd">가계부 완성</text>
+            <line x1="397" y1="40" x2="414" y2="40" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwSum)"/>
+            <rect x="417" y="15" width="58" height="50" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="446" y="36" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">u48</text>
+            <text x="446" y="50" text-anchor="middle" font-size="8" fill="#374151">CSV 심화</text>
+            <text x="446" y="62" text-anchor="middle" font-size="8" fill="#64748b">다음 →</text>
+        </svg>
+    </div>
+
+    <!-- SVG: 이 유닛에서 배운 세 기둥 -->
+    <div style="text-align:center;margin:10px 0;">
+        <svg viewBox="0 0 480 70" style="max-width:480px;width:100%">
+            <rect x="10" y="10" width="140" height="50" rx="8" fill="#f8fafc" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="80" y="30" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">try/except</text>
+            <text x="80" y="46" text-anchor="middle" font-size="8" fill="#64748b">ValueError, FileNotFoundError</text>
+            <text x="80" y="56" text-anchor="middle" font-size="8" fill="#64748b">안전한 입력 보호</text>
+            <rect x="170" y="10" width="140" height="50" rx="8" fill="#f8fafc" stroke="#1e3a5f" stroke-width="1.5"/>
+            <text x="240" y="30" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">with open + csv</text>
+            <text x="240" y="46" text-anchor="middle" font-size="8" fill="#64748b">mode a/w/r, newline=''</text>
+            <text x="240" y="56" text-anchor="middle" font-size="8" fill="#64748b">파일 자동 닫기</text>
+            <rect x="330" y="10" width="140" height="50" rx="8" fill="#f8fafc" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="400" y="30" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">딕셔너리 집계</text>
+            <text x="400" y="46" text-anchor="middle" font-size="8" fill="#64748b">d.get(key, 0) 누적</text>
+            <text x="400" y="56" text-anchor="middle" font-size="8" fill="#64748b">월별 합계 계산</text>
+        </svg>
+    </div>
+
+    <p style="margin-top:14px;font-size:13px;color:#64748b;text-align:center;">L3e 챕터 완료 — 파일 I/O, CSV, 예외처리를 실전 프로젝트로 마무리했습니다.</p>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

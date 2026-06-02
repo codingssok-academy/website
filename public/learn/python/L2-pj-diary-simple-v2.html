@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 프로젝트: 한줄 일기</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #7c3aed; }
+.cover-accent { width: 7px; background: #f59e0b; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 200px; font-weight: 900; color: rgba(124,58,237,0.08);
+    line-height: 1; pointer-events: none; font-family: 'JetBrains Mono', monospace;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #7c3aed; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 36px; font-weight: 900; color: #3b0764; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #3b0764; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #7c3aed; font-weight: 900; }
+h2 { font-size: 20px; font-weight: 800; color: #3b0764; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 16px; font-weight: 700; color: #3b0764; margin: 18px 0 10px; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f5f3ff; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #7c3aed; font-weight: 600;
+}
+ul, ol { margin: 0 0 12px 20px; }
+li { font-size: 14px; color: #374151; line-height: 1.8; }
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13.5px;
+    color: #e2e8f0; line-height: 1.85; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.code .dec { color: #f9a8d4; }
+.practice { margin: 20px 0; border-left: 4px solid #7c3aed; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #5b21b6; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #7c3aed; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #7c3aed; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#7c3aed,#a855f7); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #3b0764; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; white-space: pre-wrap; }
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #3b0764; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+.output-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #334155; line-height: 1.7; margin: 10px 0; white-space: pre-wrap; }
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- ===== 1페이지: 표지 ===== -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">L2</div>
+        <div class="cover-label">L2 — Project</div>
+        <h1 class="cover-title">프로젝트:<br>한줄 일기</h1>
+        <p class="cover-sub">매일 한 줄씩 일기를 입력하고 리스트에 모은 뒤 전체를 출력하는 프로그램을 만듭니다. input, 리스트, for 문의 기초를 실전에서 익힙니다.</p>
+
+        <!-- SVG: 일기 흐름 시각화 -->
+        <div style="margin:20px 0;">
+            <svg viewBox="0 0 480 120" style="max-width:480px;width:100%">
+                <!-- input 박스 -->
+                <rect x="5" y="30" width="100" height="60" rx="8" fill="#f5f3ff" stroke="#7c3aed" stroke-width="1.5"/>
+                <text x="55" y="55" text-anchor="middle" font-size="10" fill="#5b21b6" font-weight="700">input()</text>
+                <text x="55" y="72" text-anchor="middle" font-size="8" fill="#64748b">오늘 일기를</text>
+                <text x="55" y="84" text-anchor="middle" font-size="8" fill="#64748b">입력하세요</text>
+                <!-- 화살표 -->
+                <line x1="110" y1="60" x2="148" y2="60" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arr1)"/>
+                <defs>
+                    <marker id="arr1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                    </marker>
+                </defs>
+                <!-- append -->
+                <rect x="150" y="30" width="110" height="60" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="205" y="52" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">list.append()</text>
+                <text x="205" y="68" text-anchor="middle" font-size="8" fill="#64748b">리스트 끝에</text>
+                <text x="205" y="80" text-anchor="middle" font-size="8" fill="#64748b">추가</text>
+                <!-- 화살표 2 -->
+                <line x1="265" y1="60" x2="303" y2="60" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arr1)"/>
+                <!-- 리스트 시각화 -->
+                <rect x="305" y="10" width="165" height="100" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="387" y="28" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">diary 리스트</text>
+                <rect x="315" y="36" width="145" height="18" rx="3" fill="#dcfce7"/>
+                <text x="387" y="49" text-anchor="middle" font-size="8" fill="#134e4a">"오늘 학교 갔다"</text>
+                <rect x="315" y="58" width="145" height="18" rx="3" fill="#dcfce7"/>
+                <text x="387" y="71" text-anchor="middle" font-size="8" fill="#134e4a">"공부가 재밌었다"</text>
+                <rect x="315" y="80" width="145" height="18" rx="3" fill="#d1fae5"/>
+                <text x="387" y="93" text-anchor="middle" font-size="8" fill="#166534">"새 항목 추가됨..."</text>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/database.png" alt="데이터베이스" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 프로젝트에서 배우는 것</h3>
+            <ul>
+                <li><code>input()</code>으로 사용자에게 텍스트를 입력받을 수 있습니다.</li>
+                <li><code>list.append()</code>로 리스트에 항목을 추가할 수 있습니다.</li>
+                <li><code>while True</code> 루프로 반복 입력을 처리할 수 있습니다.</li>
+                <li><code>for</code> 문으로 리스트 전체를 순서대로 출력할 수 있습니다.</li>
+                <li><code>len()</code>으로 리스트 항목 수를 셀 수 있습니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- ===== 2페이지: 기초 개념 ===== -->
+<div class="page">
+    <h2>Step 1 — 리스트에 항목 추가하기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/folder.png" alt="데이터" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>리스트는 여러 개의 값을 순서대로 저장하는 자료구조입니다. <code>append()</code>를 쓰면 리스트 맨 뒤에 새 항목을 추가할 수 있습니다.</p>
+
+    <!-- SVG: append 동작 원리 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 70" style="max-width:460px;width:100%">
+            <defs>
+                <marker id="arrA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#7c3aed"/>
+                </marker>
+            </defs>
+            <!-- 전 -->
+            <rect x="5" y="8" width="190" height="54" rx="8" fill="#f5f3ff" stroke="#7c3aed" stroke-width="1.5"/>
+            <text x="100" y="24" text-anchor="middle" font-size="9" fill="#5b21b6" font-weight="700">before: append() 전</text>
+            <rect x="18" y="32" width="50" height="18" rx="4" fill="#ede9fe"/>
+            <text x="43" y="44" text-anchor="middle" font-size="8" fill="#5b21b6">"월요일"</text>
+            <rect x="74" y="32" width="50" height="18" rx="4" fill="#ede9fe"/>
+            <text x="99" y="44" text-anchor="middle" font-size="8" fill="#5b21b6">"화요일"</text>
+            <rect x="130" y="32" width="54" height="18" rx="4" fill="#e5e7eb" stroke="#9ca3af" stroke-width="1" stroke-dasharray="3,2"/>
+            <text x="157" y="44" text-anchor="middle" font-size="8" fill="#9ca3af">비어있음</text>
+            <!-- 화살표 -->
+            <line x1="200" y1="35" x2="238" y2="35" stroke="#7c3aed" stroke-width="2" marker-end="url(#arrA)"/>
+            <text x="219" y="30" text-anchor="middle" font-size="8" fill="#7c3aed" font-weight="700">.append</text>
+            <text x="219" y="48" text-anchor="middle" font-size="8" fill="#7c3aed">("수요일")</text>
+            <!-- 후 -->
+            <rect x="243" y="8" width="212" height="54" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="349" y="24" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">after: append() 후</text>
+            <rect x="256" y="32" width="50" height="18" rx="4" fill="#dcfce7"/>
+            <text x="281" y="44" text-anchor="middle" font-size="8" fill="#166534">"월요일"</text>
+            <rect x="312" y="32" width="50" height="18" rx="4" fill="#dcfce7"/>
+            <text x="337" y="44" text-anchor="middle" font-size="8" fill="#166534">"화요일"</text>
+            <rect x="368" y="32" width="54" height="18" rx="4" fill="#86efac"/>
+            <text x="395" y="44" text-anchor="middle" font-size="8" fill="#14532d">"수요일"</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># 빈 리스트 만들기</span>
+diary = []
+
+<span class="cmt"># 항목 추가</span>
+diary.<span class="fn">append</span>(<span class="str">"오늘 학교 다녀왔다"</span>)
+diary.<span class="fn">append</span>(<span class="str">"점심에 라면 먹었다"</span>)
+diary.<span class="fn">append</span>(<span class="str">"수학 시험 봤다"</span>)
+
+<span class="fn">print</span>(diary)
+<span class="fn">print</span>(<span class="str">"총"</span>, <span class="fn">len</span>(diary), <span class="str">"개의 일기"</span>)</div>
+
+    <div class="output-box">['오늘 학교 다녀왔다', '점심에 라면 먹었다', '수학 시험 봤다']
+총 3 개의 일기</div>
+
+    <!-- SVG: 리스트 인덱스 구조 -->
+    <div style="text-align:center;margin:10px 0;">
+        <svg viewBox="0 0 460 56" style="max-width:460px;width:100%">
+            <rect x="5" y="8" width="450" height="40" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="23" text-anchor="middle" font-size="9" fill="#374151" font-weight="700">diary 리스트 인덱스</text>
+            <rect x="18" y="28" width="120" height="14" rx="3" fill="#ede9fe"/>
+            <text x="78" y="38" text-anchor="middle" font-size="7.5" fill="#5b21b6">diary[0] = "오늘 학교..."</text>
+            <rect x="148" y="28" width="120" height="14" rx="3" fill="#ede9fe"/>
+            <text x="208" y="38" text-anchor="middle" font-size="7.5" fill="#5b21b6">diary[1] = "점심에..."</text>
+            <rect x="278" y="28" width="120" height="14" rx="3" fill="#ede9fe"/>
+            <text x="338" y="38" text-anchor="middle" font-size="7.5" fill="#5b21b6">diary[2] = "수학 시험..."</text>
+            <text x="415" y="37" text-anchor="middle" font-size="8" fill="#94a3b8">[-1]: 마지막</text>
+        </svg>
+    </div>
+
+    <h3>for 문으로 리스트 출력하기</h3>
+    <p><code>for item in list</code> 패턴을 쓰면 리스트의 모든 항목을 하나씩 꺼낼 수 있습니다. <code>enumerate()</code>를 쓰면 번호와 함께 출력할 수 있습니다.</p>
+
+    <!-- SVG: for + enumerate 원리 -->
+    <div style="text-align:center;margin:10px 0;">
+        <svg viewBox="0 0 460 56" style="max-width:460px;width:100%">
+            <rect x="5" y="8" width="215" height="40" rx="8" fill="#f5f3ff" stroke="#7c3aed" stroke-width="1.5"/>
+            <text x="113" y="24" text-anchor="middle" font-size="9" fill="#5b21b6" font-weight="700">for entry in diary:</text>
+            <text x="113" y="40" text-anchor="middle" font-size="8" fill="#64748b">entry = 각 일기 문자열</text>
+            <rect x="230" y="8" width="225" height="40" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="342" y="24" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">for i, entry in enumerate(diary, 1):</text>
+            <text x="342" y="40" text-anchor="middle" font-size="8" fill="#64748b">i = 1,2,3...  entry = 각 일기</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># enumerate로 번호 붙여 출력</span>
+<span class="kw">for</span> i, entry <span class="kw">in</span> <span class="fn">enumerate</span>(diary, <span class="num">1</span>):
+    <span class="fn">print</span>(<span class="str">f"Day </span>{i}<span class="str">: </span>{entry}<span class="str">"</span>)</div>
+
+    <div class="output-box">Day 1: 오늘 학교 다녀왔다
+Day 2: 점심에 라면 먹었다
+Day 3: 수학 시험 봤다</div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="완성" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+        <div class="practice-head">따라해보세요 — Step 1</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">빈 리스트 <code>diary</code>를 만들고 <code>append()</code>로 오늘 한 일 3가지를 추가하세요.</div>
+                <div class="code">diary = []
+diary.<span class="fn">append</span>(<span class="str">"밥 먹었다"</span>)
+diary.<span class="fn">append</span>(<span class="str">"운동했다"</span>)
+diary.<span class="fn">append</span>(<span class="str">"책 읽었다"</span>)</div>
+                <div class="practice-result">diary 리스트에 3개 항목이 들어있는지 print(diary)로 확인</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">for 문으로 diary의 모든 항목을 출력하세요.</div>
+                <div class="code"><span class="kw">for</span> entry <span class="kw">in</span> diary:
+    <span class="fn">print</span>(entry)</div>
+                <div class="practice-result">각 항목이 한 줄씩 출력됨</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc"><code>enumerate(diary, 1)</code>을 써서 번호를 붙여 출력하세요.</div>
+                <div class="code"><span class="kw">for</span> i, entry <span class="kw">in</span> <span class="fn">enumerate</span>(diary, <span class="num">1</span>):
+    <span class="fn">print</span>(<span class="str">f"</span>{i}<span class="str">번: </span>{entry}<span class="str">"</span>)</div>
+                <div class="practice-result">1번, 2번, 3번... 순서대로 출력</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== 3페이지: while 루프로 반복 입력 ===== -->
+<div class="page">
+    <h2>Step 2 — while 루프로 반복 입력받기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/hard-drive.png" alt="저장소" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p><code>while True</code>는 무한 반복 루프입니다. 사용자가 특정 단어를 입력할 때까지 계속 일기를 받을 수 있습니다. <code>break</code>로 루프를 종료합니다.</p>
+
+    <!-- SVG: while 루프 흐름도 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 130" style="max-width:460px;width:100%">
+            <defs>
+                <marker id="arrW" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="165" y="5" width="130" height="28" rx="6" fill="#7c3aed"/>
+            <text x="230" y="22" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">while True: 시작</text>
+            <line x1="230" y1="33" x2="230" y2="48" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrW)"/>
+            <rect x="130" y="50" width="200" height="28" rx="6" fill="#f5f3ff" stroke="#7c3aed" stroke-width="1.5"/>
+            <text x="230" y="67" text-anchor="middle" font-size="10" fill="#5b21b6">entry = input("오늘 일기: ")</text>
+            <line x1="230" y1="78" x2="230" y2="93" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrW)"/>
+            <rect x="130" y="95" width="200" height="28" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="230" y="112" text-anchor="middle" font-size="10" fill="#92400e">entry == "quit" ?</text>
+            <!-- yes -->
+            <line x1="335" y1="109" x2="400" y2="109" stroke="#22c55e" stroke-width="1.5" marker-end="url(#arrW)"/>
+            <text x="365" y="104" text-anchor="middle" font-size="8" fill="#166534">Yes</text>
+            <rect x="400" y="95" width="55" height="28" rx="6" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="427" y="112" text-anchor="middle" font-size="9" fill="#166534">break</text>
+            <!-- no -->
+            <line x1="130" y1="109" x2="70" y2="109" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="97" y="104" text-anchor="middle" font-size="8" fill="#dc2626">No</text>
+            <line x1="70" y1="109" x2="70" y2="60" stroke="#ef4444" stroke-width="1.5"/>
+            <line x1="70" y1="60" x2="128" y2="60" stroke="#ef4444" stroke-width="1.5" marker-end="url(#arrW)"/>
+            <text x="40" y="80" text-anchor="middle" font-size="8" fill="#dc2626">append</text>
+            <text x="40" y="92" text-anchor="middle" font-size="8" fill="#dc2626">반복</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># while 루프로 일기 입력받기</span>
+diary = []
+
+<span class="fn">print</span>(<span class="str">"한줄 일기 앱에 오신 걸 환영합니다!"</span>)
+<span class="fn">print</span>(<span class="str">"종료하려면 'quit'을 입력하세요."</span>)
+<span class="fn">print</span>()
+
+<span class="kw">while</span> <span class="kw">True</span>:
+    entry = <span class="fn">input</span>(<span class="str">f"Day {len(diary)+1} 일기: "</span>)
+    <span class="kw">if</span> entry == <span class="str">"quit"</span>:
+        <span class="kw">break</span>
+    <span class="kw">if</span> entry == <span class="str">""</span>:
+        <span class="fn">print</span>(<span class="str">"빈 내용입니다. 다시 입력해주세요."</span>)
+        <span class="kw">continue</span>
+    diary.<span class="fn">append</span>(entry)
+    <span class="fn">print</span>(<span class="str">"저장되었습니다."</span>)</div>
+
+    <!-- SVG: break vs continue 비교 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 460 52" style="max-width:460px;width:100%">
+            <rect x="5" y="8" width="215" height="36" rx="8" fill="#fff1f2" stroke="#f43f5e" stroke-width="1.5"/>
+            <text x="113" y="24" text-anchor="middle" font-size="9" fill="#be123c" font-weight="700">break — 루프 완전 종료</text>
+            <text x="113" y="38" text-anchor="middle" font-size="8" fill="#64748b">while True 루프에서 탈출</text>
+            <rect x="235" y="8" width="220" height="36" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="345" y="24" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">continue — 이번 반복 건너뜀</text>
+            <text x="345" y="38" text-anchor="middle" font-size="8" fill="#64748b">다음 반복으로 바로 이동</text>
+        </svg>
+    </div>
+
+    <h3>전체 일기 출력 함수</h3>
+    <p>저장된 일기를 보기 좋게 출력하는 함수를 만듭니다. 날짜는 1, 2, 3... 순서로 표시하고, 일기가 없으면 안내 메시지를 출력합니다.</p>
+
+    <div class="code"><span class="cmt"># 전체 일기 출력 함수</span>
+<span class="kw">def</span> <span class="fn">show_diary</span>(diary):
+    <span class="kw">if</span> <span class="fn">len</span>(diary) == <span class="num">0</span>:
+        <span class="fn">print</span>(<span class="str">"아직 일기가 없습니다."</span>)
+        <span class="kw">return</span>
+    <span class="fn">print</span>(<span class="str">"\n===== 나의 일기장 ====="</span>)
+    <span class="kw">for</span> i, entry <span class="kw">in</span> <span class="fn">enumerate</span>(diary, <span class="num">1</span>):
+        <span class="fn">print</span>(<span class="str">f"Day {i:2d}: {entry}"</span>)
+    <span class="fn">print</span>(<span class="str">f"====================="</span>)
+    <span class="fn">print</span>(<span class="str">f"총 {len(diary)}일의 기록"</span>)</div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요 — Step 2</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">while 루프로 일기 3개를 입력한 뒤 "quit"으로 종료해보세요.</div>
+                <div class="practice-result">diary 리스트에 3개가 저장되고 루프가 종료됨</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">빈 문자열을 입력했을 때 "다시 입력" 메시지가 나오는지 확인하세요.</div>
+                <div class="practice-result">continue 덕분에 빈 항목이 리스트에 추가되지 않음</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc"><code>show_diary(diary)</code>를 호출해서 번호가 붙은 전체 일기가 출력되는지 확인하세요.</div>
+                <div class="practice-result">Day  1: ... Day  2: ... 형식으로 출력</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== 4페이지: 완성 코드 + 문제 ===== -->
+<div class="page">
+    <h2>Step 3 — 완성 코드 & 도전 문제</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="처리" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>지금까지 배운 내용을 합쳐 완전한 한줄 일기 앱을 만듭니다. 입력 → 저장 → 출력의 흐름을 함수로 정리합니다.</p>
+
+    <!-- SVG: 함수 분리 원리 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 460 48" style="max-width:460px;width:100%">
+            <rect x="5" y="8" width="138" height="32" rx="6" fill="#f5f3ff" stroke="#7c3aed" stroke-width="1.5"/>
+            <text x="72" y="22" text-anchor="middle" font-size="9" fill="#5b21b6" font-weight="700">함수로 분리하면?</text>
+            <text x="72" y="34" text-anchor="middle" font-size="8" fill="#64748b">재사용 + 가독성</text>
+            <rect x="153" y="8" width="90" height="32" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="198" y="22" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">write_diary()</text>
+            <text x="198" y="34" text-anchor="middle" font-size="8" fill="#64748b">쓰기 담당</text>
+            <rect x="253" y="8" width="90" height="32" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="298" y="22" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">show_diary()</text>
+            <text x="298" y="34" text-anchor="middle" font-size="8" fill="#64748b">출력 담당</text>
+            <rect x="353" y="8" width="102" height="32" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+            <text x="404" y="22" text-anchor="middle" font-size="9" fill="#5b21b6" font-weight="700">while 메뉴</text>
+            <text x="404" y="34" text-anchor="middle" font-size="8" fill="#64748b">조율 담당</text>
+        </svg>
+    </div>
+
+    <!-- SVG: 완성 앱 구조 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 64" style="max-width:460px;width:100%">
+            <rect x="5" y="8" width="100" height="48" rx="8" fill="#f5f3ff" stroke="#7c3aed" stroke-width="1.5"/>
+            <text x="55" y="28" text-anchor="middle" font-size="9" fill="#5b21b6" font-weight="700">write_diary()</text>
+            <text x="55" y="44" text-anchor="middle" font-size="8" fill="#64748b">입력 + 저장</text>
+            <line x1="110" y1="32" x2="148" y2="32" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arr1)"/>
+            <rect x="150" y="8" width="100" height="48" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="200" y="28" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">show_diary()</text>
+            <text x="200" y="44" text-anchor="middle" font-size="8" fill="#64748b">전체 출력</text>
+            <line x1="255" y1="32" x2="293" y2="32" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arr1)"/>
+            <rect x="295" y="8" width="100" height="48" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="345" y="28" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">search_diary()</text>
+            <text x="345" y="44" text-anchor="middle" font-size="8" fill="#64748b">키워드 검색</text>
+            <line x1="400" y1="32" x2="438" y2="32" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arr1)"/>
+            <rect x="440" y="14" width="15" height="36" rx="4" fill="#e0e7ff"/>
+            <text x="447" y="30" text-anchor="middle" font-size="7" fill="#3730a3">...</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># 완성된 한줄 일기 앱</span>
+diary = []
+
+<span class="kw">def</span> <span class="fn">write_diary</span>():
+    entry = <span class="fn">input</span>(<span class="str">f"Day {len(diary)+1} 일기: "</span>)
+    <span class="kw">if</span> entry:
+        diary.<span class="fn">append</span>(entry)
+        <span class="fn">print</span>(<span class="str">"저장 완료!"</span>)
+
+<span class="kw">def</span> <span class="fn">show_diary</span>():
+    <span class="kw">if</span> <span class="kw">not</span> diary:
+        <span class="fn">print</span>(<span class="str">"일기가 없습니다."</span>)
+        <span class="kw">return</span>
+    <span class="kw">for</span> i, entry <span class="kw">in</span> <span class="fn">enumerate</span>(diary, <span class="num">1</span>):
+        <span class="fn">print</span>(<span class="str">f"Day {i}: {entry}"</span>)
+
+<span class="kw">while</span> <span class="kw">True</span>:
+    menu = <span class="fn">input</span>(<span class="str">"\n1.쓰기 2.보기 3.종료: "</span>)
+    <span class="kw">if</span> menu == <span class="str">"1"</span>:
+        <span class="fn">write_diary</span>()
+    <span class="kw">elif</span> menu == <span class="str">"2"</span>:
+        <span class="fn">show_diary</span>()
+    <span class="kw">elif</span> menu == <span class="str">"3"</span>:
+        <span class="fn">print</span>(<span class="str">"안녕히 가세요!"</span>)
+        <span class="kw">break</span></div>
+
+    <!-- SVG: 리스트 음수 인덱스 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 460 48" style="max-width:460px;width:100%">
+            <rect x="5" y="8" width="450" height="32" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="230" y="23" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">음수 인덱스: 뒤에서부터 셈</text>
+            <text x="100" y="36" text-anchor="middle" font-size="8" fill="#64748b">diary[-3] = 첫 번째</text>
+            <text x="230" y="36" text-anchor="middle" font-size="8" fill="#64748b">diary[-2] = 두 번째</text>
+            <text x="360" y="36" text-anchor="middle" font-size="8" fill="#14532d" font-weight="700">diary[-1] = 마지막</text>
+        </svg>
+    </div>
+
+    <!-- SVG: in 연산자 설명 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 460 48" style="max-width:460px;width:100%">
+            <rect x="5" y="8" width="215" height="32" rx="8" fill="#f5f3ff" stroke="#7c3aed" stroke-width="1.5"/>
+            <text x="113" y="22" text-anchor="middle" font-size="9" fill="#5b21b6" font-weight="700">if "학교" in entry</text>
+            <text x="113" y="36" text-anchor="middle" font-size="8" fill="#64748b">"학교" 포함 → True / 없음 → False</text>
+            <rect x="235" y="8" width="220" height="32" rx="8" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="345" y="22" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">max(diary, key=len)</text>
+            <text x="345" y="36" text-anchor="middle" font-size="8" fill="#64748b">가장 긴 문자열 항목 반환</text>
+        </svg>
+    </div>
+
+    <!-- 문제 1 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q1</div>
+            <div class="problem-label">리스트의 마지막 일기 출력하기</div>
+            <div class="problem-diff easy">쉬움</div>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">diary 리스트에 일기가 3개 있을 때, 마지막으로 쓴 일기만 출력하는 코드를 작성하세요. 인덱스 <code>-1</code>을 사용합니다.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">조건</span><span class="problem-example-value">diary = ["월요일", "화요일", "수요일"]</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">가장 최근 일기: 수요일</span></div>
+            </div>
+        </div>
+        <div class="problem-toggle">
+            <details>
+                <summary>힌트 / 정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">힌트: diary[-1]은 리스트의 마지막 항목입니다.</div>
+                    <div class="answer-code">print("가장 최근 일기:", diary[-1])</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <!-- 문제 2 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q2</div>
+            <div class="problem-label">특정 단어가 포함된 일기 찾기</div>
+            <div class="problem-diff medium">보통</div>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">diary 리스트에서 특정 단어가 포함된 일기만 출력하는 함수 <code>search(keyword)</code>를 작성하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">입력</span><span class="problem-example-value">search("학교")</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">"학교"가 포함된 일기만 출력</span></div>
+            </div>
+        </div>
+        <div class="problem-toggle">
+            <details>
+                <summary>힌트 / 정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">힌트: if keyword in entry 로 포함 여부 확인</div>
+                    <div class="answer-code">def search(keyword):
+    for entry in diary:
+        if keyword in entry:
+            print(entry)</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <!-- 문제 3 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q3</div>
+            <div class="problem-label">가장 긴 일기 찾기</div>
+            <div class="problem-diff hard">어려움</div>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">diary 리스트에서 글자 수가 가장 많은 일기를 찾아 출력하세요. <code>max()</code>와 <code>key=len</code>을 사용하면 한 줄로 구현할 수 있습니다.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">가장 긴 일기: 오늘은 학교에서... (32자)</span></div>
+            </div>
+        </div>
+        <div class="problem-toggle">
+            <details>
+                <summary>힌트 / 정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">힌트: max(diary, key=len) 으로 가장 긴 문자열을 찾습니다.</div>
+                    <div class="answer-code">longest = max(diary, key=len)
+print(f"가장 긴 일기: {longest} ({len(longest)}자)")</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <!-- 핵심 요약 -->
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>핵심 요약</h3>
+        <ul>
+            <li><code>list.append(x)</code> — 리스트 끝에 항목 x를 추가</li>
+            <li><code>while True: ... break</code> — 조건이 맞을 때까지 반복</li>
+            <li><code>for i, v in enumerate(lst, 1)</code> — 번호와 값 동시에 순회</li>
+            <li><code>len(lst)</code> — 리스트 항목 수 반환</li>
+            <li><code>if keyword in entry</code> — 문자열 포함 여부 확인</li>
+        </ul>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

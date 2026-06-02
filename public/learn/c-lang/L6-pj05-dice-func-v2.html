@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 프로젝트 05: 주사위 게임 함수</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+.page { width: 210mm; min-height: 297mm; margin: 16px auto; padding: 18mm 20mm 15mm 22mm; background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: relative; page-break-after: always; }
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after { content: counter(pagenum); position: absolute; bottom: 10mm; right: 16mm; font-size: 10px; color: #94a3b8; font-weight: 600; }
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark { position: absolute; top: -10px; right: -15px; font-size: 200px; font-weight: 900; color: rgba(180,195,212,0.3); line-height: 1; pointer-events: none; }
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 34px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #2563eb; font-weight: 600; }
+.code { background: #0f172a; border-radius: 8px; padding: 16px 20px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.8; margin: 14px 0; white-space: pre-wrap; }
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.practice { margin: 18px 0; border-left: 4px solid #3b82f6; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 14px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+.problem { margin: 16px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+.summary { border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+.pj-banner { background: linear-gradient(135deg, #1e3a5f 0%, #2d5a8e 100%); border-radius: 10px; padding: 16px 20px; margin: 0 0 20px; color: #fff; }
+.pj-banner-label { font-size: 11px; font-weight: 700; color: #93c5fd; letter-spacing: 2px; margin-bottom: 4px; }
+.pj-banner-title { font-size: 18px; font-weight: 900; }
+.pj-banner-desc { font-size: 13px; color: #bfdbfe; margin-top: 4px; }
+.callout { border-radius: 8px; padding: 12px 16px; margin: 14px 0; font-size: 14px; line-height: 1.7; }
+.callout.blue { background: #eff6ff; border-left: 4px solid #3b82f6; color: #1e40af; }
+.callout.green { background: #f0fdf4; border-left: 4px solid #22c55e; color: #166534; }
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">P5</div>
+        <div class="cover-label">Level 6 · Project 05</div>
+        <h1 class="cover-title">주사위 게임 함수<br>— rollDice / checkWin 분리</h1>
+        <p class="cover-sub">주사위를 굴리는 함수와 승패를 판단하는 함수를 분리해서 게임 로직을 구조적으로 만드는 프로젝트입니다.</p>
+
+        <div style="text-align:center;margin:24px 0;">
+            <svg viewBox="0 0 480 130" style="max-width:480px;width:100%">
+                <defs><marker id="d1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#6366f1"/></marker></defs>
+                <!-- main -->
+                <rect x="10" y="45" width="90" height="40" rx="6" fill="#ede9fe" stroke="#6366f1" stroke-width="1.5"/>
+                <text x="55" y="69" text-anchor="middle" font-size="12" fill="#4338ca" font-weight="700">main()</text>
+                <line x1="100" y1="65" x2="130" y2="40" stroke="#6366f1" stroke-width="1.5" marker-end="url(#d1)"/>
+                <line x1="100" y1="65" x2="130" y2="90" stroke="#6366f1" stroke-width="1.5" marker-end="url(#d1)"/>
+                <!-- rollDice -->
+                <rect x="135" y="15" width="120" height="46" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="195" y="37" text-anchor="middle" font-size="12" fill="#1d4ed8" font-weight="700">rollDice()</text>
+                <text x="195" y="53" text-anchor="middle" font-size="11" fill="#2563eb">rand()%6+1 반환</text>
+                <!-- checkWin -->
+                <rect x="135" y="67" width="120" height="46" rx="6" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="195" y="89" text-anchor="middle" font-size="12" fill="#166534" font-weight="700">checkWin(p, c)</text>
+                <text x="195" y="105" text-anchor="middle" font-size="11" fill="#22c55e">승/패/무 판정</text>
+                <!-- 결과 -->
+                <defs><marker id="d2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker></defs>
+                <line x1="255" y1="90" x2="290" y2="90" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#d2)"/>
+                <rect x="295" y="67" width="90" height="46" rx="6" fill="#fef9c3" stroke="#eab308" stroke-width="1.5"/>
+                <text x="340" y="89" text-anchor="middle" font-size="12" fill="#854d0e" font-weight="700">결과 출력</text>
+                <text x="340" y="105" text-anchor="middle" font-size="10" fill="#92400e">승리 / 패배 / 무승부</text>
+                <!-- 난수 공식 -->
+                <rect x="410" y="15" width="65" height="46" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="442" y="35" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">rand()%6</text>
+                <text x="442" y="51" text-anchor="middle" font-size="9" fill="#166534">+1 = 1~6</text>
+            </svg>
+        </div>
+
+        <div class="cover-goals">
+            <h3>이 프로젝트에서 배우는 것</h3>
+            <ul>
+                <li>rand()와 srand()로 난수를 생성할 수 있습니다.</li>
+                <li>rollDice()로 1~6 난수를 반환하는 함수를 만듭니다.</li>
+                <li>checkWin(player, computer)으로 승패를 판단합니다.</li>
+                <li>게임 로직을 역할별 함수로 분리하는 구조를 배웁니다.</li>
+                <li>반복문으로 여러 판을 진행하는 프로그램을 만듭니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="page">
+    <div class="pj-banner">
+        <div class="pj-banner-label">PROJECT 05</div>
+        <div class="pj-banner-title">주사위 게임 함수</div>
+        <div class="pj-banner-desc">rand() + rollDice/checkWin 함수 분리</div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/c-lang/gear.png" alt="함수 기어 - 재사용 가능한 코드 구조" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>rand() — 난수 생성</h2>
+    <p><code>rand()</code>는 0부터 큰 수까지 무작위 숫자를 만듭니다. <code>% 6 + 1</code>을 써서 1~6 범위로 만듭니다. <code>srand(time(0))</code>으로 매번 다른 결과를 얻습니다.</p>
+
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+            <rect x="10" y="15" width="440" height="50" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="30" y="38" font-size="13" fill="#374151" font-family="JetBrains Mono">rand()</text>
+            <text x="100" y="38" font-size="13" fill="#94a3b8" font-family="JetBrains Mono">= 큰 수 (예: 18439)</text>
+            <text x="30" y="58" font-size="13" fill="#1d4ed8" font-family="JetBrains Mono">rand() % 6</text>
+            <text x="150" y="58" font-size="13" fill="#94a3b8" font-family="JetBrains Mono">= 0~5</text>
+            <text x="260" y="58" font-size="13" fill="#166534" font-family="JetBrains Mono">rand()%6+1 = 1~6</text>
+        </svg>
+    </div>
+
+    <div class="code">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;   <span class="cmt">// rand(), srand()</span>
+#include &lt;time.h&gt;     <span class="cmt">// time()</span>
+
+<span class="cmt">// 주사위 굴리기 함수</span>
+<span class="kw">int</span> <span class="fn">rollDice</span>() {
+    <span class="kw">return</span> <span class="fn">rand</span>() % <span class="num">6</span> + <span class="num">1</span>;   <span class="cmt">// 1~6 반환</span>
+}
+
+<span class="cmt">// 승패 판정 함수: 1=승, -1=패, 0=무승부</span>
+<span class="kw">int</span> <span class="fn">checkWin</span>(<span class="kw">int</span> player, <span class="kw">int</span> computer) {
+    <span class="kw">if</span> (player &gt; computer) <span class="kw">return</span> <span class="num">1</span>;
+    <span class="kw">if</span> (player &lt; computer) <span class="kw">return</span> -<span class="num">1</span>;
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+
+    <div class="callout blue">
+        <strong>srand(time(0)) 이란?</strong> 매번 프로그램을 실행할 때 다른 난수를 얻으려면 난수의 씨앗(seed)을 현재 시간으로 설정합니다. main 시작 부분에 한 번만 호출합니다.
+    </div>
+
+    <div style="display:flex;align-items:center;gap:6px;margin:14px 0 4px;">
+        <img src="/images/learn/c-lang/book.png" alt="교재 - 함수 개념 학습" style="width:24px;height:24px;object-fit:contain;background:#fff;border-radius:8px;">
+        <span style="font-size:12px;color:#1d4ed8;font-weight:600;">실습 구역</span>
+    </div>
+<div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc"><code>int d = rollDice();</code> 후 d를 출력해 보세요. 실행할 때마다 다른 숫자가 나옵니다.</div>
+                <div class="practice-result">1~6 사이의 숫자가 출력됩니다</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc"><code>checkWin(5, 3)</code>, <code>checkWin(2, 4)</code>, <code>checkWin(3, 3)</code>의 반환값은?</div>
+                <div class="practice-result">1, -1, 0 이 각각 반환됩니다</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page">
+    <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/c-lang/puzzle.png" alt="퍼즐 조각 - 함수 조합으로 완성되는 프로그램" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>주사위 게임 — 전체 코드</h2>
+
+    <div class="code"><span class="cmt">/* ====== 주사위 게임 함수 ====== */</span>
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;time.h&gt;
+
+<span class="kw">int</span> <span class="fn">rollDice</span>() { <span class="kw">return</span> <span class="fn">rand</span>() % <span class="num">6</span> + <span class="num">1</span>; }
+
+<span class="kw">int</span> <span class="fn">checkWin</span>(<span class="kw">int</span> player, <span class="kw">int</span> computer) {
+    <span class="kw">if</span> (player &gt; computer) <span class="kw">return</span>  <span class="num">1</span>;
+    <span class="kw">if</span> (player &lt; computer) <span class="kw">return</span> -<span class="num">1</span>;
+    <span class="kw">return</span> <span class="num">0</span>;
+}
+
+<span class="kw">void</span> <span class="fn">printResult</span>(<span class="kw">int</span> result) {
+    <span class="kw">if</span>      (result ==  <span class="num">1</span>) <span class="fn">printf</span>(<span class="str">"[승리!] 내가 이겼다!\n"</span>);
+    <span class="kw">else if</span> (result == -<span class="num">1</span>) <span class="fn">printf</span>(<span class="str">"[패배] 컴퓨터가 이겼다...\n"</span>);
+    <span class="kw">else</span>                   <span class="fn">printf</span>(<span class="str">"[무승부] 비겼다!\n"</span>);
+}
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="fn">srand</span>(<span class="fn">time</span>(<span class="num">0</span>));
+
+    <span class="kw">int</span> wins = <span class="num">0</span>, losses = <span class="num">0</span>, draws = <span class="num">0</span>;
+    <span class="kw">int</span> i, player, computer, result;
+
+    <span class="fn">printf</span>(<span class="str">"=== 주사위 게임 (5판) ===\n"</span>);
+    <span class="kw">for</span> (i = <span class="num">1</span>; i &lt;= <span class="num">5</span>; i++) {
+        player   = <span class="fn">rollDice</span>();
+        computer = <span class="fn">rollDice</span>();
+        result   = <span class="fn">checkWin</span>(player, computer);
+
+        <span class="fn">printf</span>(<span class="str">"%d판: 나=%d  컴=%d  "</span>, i, player, computer);
+        <span class="fn">printResult</span>(result);
+
+        <span class="kw">if</span>      (result ==  <span class="num">1</span>) wins++;
+        <span class="kw">else if</span> (result == -<span class="num">1</span>) losses++;
+        <span class="kw">else</span>                   draws++;
+    }
+    <span class="fn">printf</span>(<span class="str">"결과: %d승 %d패 %d무\n"</span>, wins, losses, draws);
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 95" style="max-width:460px;width:100%">
+            <rect x="10" y="10" width="440" height="75" rx="8" fill="#0f172a"/>
+            <text x="25" y="30" font-size="11" fill="#67e8f9" font-family="JetBrains Mono">=== 주사위 게임 (5판) ===</text>
+            <text x="25" y="47" font-size="11" fill="#86efac" font-family="JetBrains Mono">1판: 나=5  컴=3  [승리!] 내가 이겼다!</text>
+            <text x="25" y="63" font-size="11" fill="#fca5a5" font-family="JetBrains Mono">2판: 나=2  컴=6  [패배] 컴퓨터가 이겼다...</text>
+            <text x="25" y="79" font-size="11" fill="#fbbf24" font-family="JetBrains Mono">결과: 2승 2패 1무</text>
+        </svg>
+    </div>
+</div>
+
+<div class="page">
+    <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/c-lang/book.png" alt="교재 - 함수 개념 학습" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>연습 문제</h2>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">1</div>
+            <div class="problem-label">rand() 범위 계산</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">다음 식의 범위를 쓰세요.<br>
+            ① <code>rand() % 10</code><br>
+            ② <code>rand() % 10 + 1</code><br>
+            ③ <code>rand() % 4 + 1</code></div>
+            <details class="problem-toggle">
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">① 0~9  ② 1~10  ③ 1~4</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">2</div>
+            <div class="problem-label">checkWin 반환값 해석</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text"><code>checkWin(player, computer)</code>가 반환하는 값의 의미를 설명하세요.<br>
+            반환값: 1 / -1 / 0</div>
+            <details class="problem-toggle">
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">1 = 플레이어 승, -1 = 컴퓨터 승(플레이어 패), 0 = 무승부</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">3</div>
+            <div class="problem-label">10면체 주사위</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">1~10 범위의 주사위를 굴리는 <code>rollD10()</code> 함수를 만드세요.</div>
+            <details class="problem-toggle">
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code"><span style="color:#c084fc">int</span> <span style="color:#67e8f9">rollD10</span>() {
+    <span style="color:#c084fc">return</span> <span style="color:#67e8f9">rand</span>() % <span style="color:#7dd3fc">10</span> + <span style="color:#7dd3fc">1</span>;
+}</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">4</div>
+            <div class="problem-label">연속 3번 이기면 승리</div>
+            <span class="problem-diff hard">어려움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">플레이어가 <strong>연속으로 3번 이기면</strong> "대승리!"를 출력하고 종료하는 main을 작성하세요. while 루프를 활용하세요.</div>
+            <details class="problem-toggle">
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">연속 승리 횟수를 저장하는 변수 streak를 만들고, 이기면 streak++, 지면 streak=0으로 초기화합니다.</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:8px;margin:16px 0 6px;padding:8px 14px;background:#f0f9ff;border-radius:6px;border:1px solid #bae6fd;">
+        <img src="/images/learn/c-lang/gear.png" alt="함수 기어 - 재사용 가능한 코드 구조" style="width:28px;height:28px;object-fit:contain;background:#fff;border-radius:8px;">
+        <img src="/images/learn/c-lang/puzzle.png" alt="퍼즐 조각 - 함수 조합으로 완성되는 프로그램" style="width:28px;height:28px;object-fit:contain;background:#fff;border-radius:8px;">
+        <span style="font-size:12px;color:#0369a1;font-weight:600;">핵심 정리</span>
+    </div>
+<div class="summary">
+        <h3>핵심 정리</h3>
+        <ul>
+            <li><code>srand(time(0))</code> — main 시작 시 한 번만 호출</li>
+            <li><code>rand() % N + 1</code> — 1~N 범위 난수</li>
+            <li>함수 역할 분리: rollDice(생성), checkWin(판정), printResult(출력)</li>
+            <li>결과를 -1/0/1 같은 정수로 반환하면 처리하기 편리함</li>
+        </ul>
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:20px;padding-top:10px;border-top:1px solid #f1f5f9;">
+        <img src="/images/learn/c-lang/flowchart.png" alt="순서도 - 함수 호출 흐름" style="width:22px;height:22px;object-fit:contain;opacity:0.6;background:#fff;border-radius:8px;">
+        <span style="font-size:10px;color:#cbd5e1;">코딩쏙 C언어</span>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

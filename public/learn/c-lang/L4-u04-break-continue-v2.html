@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — break와 continue</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+/* ── 페이지 ── */
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+/* ── 챕터 표지 ── */
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+
+/* ── 본문 ── */
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+
+/* ── 코드 블록 ── */
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 14px;
+    color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+
+/* ── 따라해보세요 ── */
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+
+/* ── 문제 ── */
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fce7f3; color: #9d174d; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+
+/* ── 요약 ── */
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+/* ── 비교 카드 ── */
+.compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 16px 0; }
+.compare-card { border-radius: 10px; padding: 14px 16px; }
+.compare-card.break-card { background: #fef2f2; border: 1.5px solid #fca5a5; }
+.compare-card.continue-card { background: #eff6ff; border: 1.5px solid #93c5fd; }
+.compare-card h4 { font-size: 14px; font-weight: 800; margin-bottom: 6px; }
+.compare-card.break-card h4 { color: #dc2626; }
+.compare-card.continue-card h4 { color: #1d4ed8; }
+.compare-card p { font-size: 13px; color: #475569; margin: 0; line-height: 1.6; }
+
+/* ── 경고 박스 ── */
+.warn-box { background: #fffbeb; border: 1.5px solid #f59e0b; border-radius: 8px; padding: 12px 16px; margin: 14px 0; }
+.warn-box-title { font-size: 13px; font-weight: 800; color: #92400e; margin-bottom: 4px; }
+.warn-box p { font-size: 13px; color: #78350f; margin: 0; line-height: 1.6; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+
+<!-- ═══════════════════════════════════ PAGE 1: COVER ═══════════════════════════════════ -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">04</div>
+        <div class="cover-label">Chapter 04</div>
+        <h1 class="cover-title">반복 제어 —<br>break와 continue</h1>
+        <p class="cover-sub">반복문을 내 뜻대로 조종하는 두 가지 무기를 배웁니다.</p>
+
+        <!-- 로드맵 SVG -->
+        <div style="margin:18px 0 10px;">
+            <svg viewBox="0 0 500 52" style="max-width:500px;width:100%">
+                <defs>
+                    <marker id="rm-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                    </marker>
+                </defs>
+                <rect x="2" y="10" width="72" height="30" rx="6" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1.5"/>
+                <text x="38" y="30" text-anchor="middle" font-size="9.5" fill="#64748b" font-weight="700">for 반복문</text>
+                <line x1="76" y1="25" x2="92" y2="25" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#rm-arrow)"/>
+                <rect x="95" y="10" width="72" height="30" rx="6" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1.5"/>
+                <text x="131" y="30" text-anchor="middle" font-size="9.5" fill="#64748b" font-weight="700">while 반복</text>
+                <line x1="169" y1="25" x2="185" y2="25" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#rm-arrow)"/>
+                <rect x="188" y="10" width="72" height="30" rx="6" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1.5"/>
+                <text x="224" y="30" text-anchor="middle" font-size="9.5" fill="#64748b" font-weight="700">중첩 루프</text>
+                <line x1="262" y1="25" x2="278" y2="25" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#rm-arrow)"/>
+                <rect x="281" y="6" width="92" height="38" rx="7" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+                <text x="327" y="27" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="800">break &amp;</text>
+                <text x="327" y="39" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="800">continue</text>
+                <line x1="375" y1="25" x2="391" y2="25" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#rm-arrow)"/>
+                <rect x="394" y="10" width="102" height="30" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="445" y="30" text-anchor="middle" font-size="9.5" fill="#166534" font-weight="700">배열 + 반복</text>
+            </svg>
+        </div>
+
+        <!-- break / continue 시각화 SVG -->
+        <div style="text-align:center; margin: 20px 0;">
+            <svg viewBox="0 0 480 200" style="max-width:480px;width:100%">
+                <defs>
+                    <marker id="cv-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#dc2626"/>
+                    </marker>
+                    <marker id="cv-arrow-b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#1d4ed8"/>
+                    </marker>
+                </defs>
+
+                <!-- break 시각화 (왼쪽) -->
+                <rect x="20" y="10" width="190" height="175" rx="10" fill="#fff7f7" stroke="#fca5a5" stroke-width="1.5"/>
+                <text x="115" y="30" text-anchor="middle" font-size="12" fill="#dc2626" font-weight="800">break — 탈출</text>
+                <!-- 반복 블록들 -->
+                <rect x="40" y="40" width="150" height="24" rx="5" fill="#fecaca" stroke="#f87171" stroke-width="1"/>
+                <text x="115" y="57" text-anchor="middle" font-size="10" fill="#7f1d1d" font-weight="600">i=0 실행</text>
+                <rect x="40" y="70" width="150" height="24" rx="5" fill="#fecaca" stroke="#f87171" stroke-width="1"/>
+                <text x="115" y="87" text-anchor="middle" font-size="10" fill="#7f1d1d" font-weight="600">i=1 실행</text>
+                <!-- break 지점 -->
+                <rect x="40" y="100" width="150" height="24" rx="5" fill="#dc2626" stroke="#b91c1c" stroke-width="1.5"/>
+                <text x="115" y="117" text-anchor="middle" font-size="10" fill="#fff" font-weight="800">i=2 → BREAK!</text>
+                <!-- 취소선 블록 -->
+                <rect x="40" y="130" width="150" height="24" rx="5" fill="#e5e7eb" stroke="#d1d5db" stroke-width="1" opacity="0.5"/>
+                <text x="115" y="147" text-anchor="middle" font-size="10" fill="#9ca3af" font-weight="600">i=3 건너뜀</text>
+                <line x1="40" y1="142" x2="190" y2="142" stroke="#9ca3af" stroke-width="1.5"/>
+                <!-- 탈출 화살표 -->
+                <path d="M115,125 L115,165 L205,165" stroke="#dc2626" stroke-width="2.5" fill="none" stroke-dasharray="5,3" marker-end="url(#cv-arrow)"/>
+                <text x="208" y="169" font-size="10" fill="#dc2626" font-weight="700">루프 밖으로!</text>
+
+                <!-- continue 시각화 (오른쪽) -->
+                <rect x="265" y="10" width="190" height="175" rx="10" fill="#f0f7ff" stroke="#93c5fd" stroke-width="1.5"/>
+                <text x="360" y="30" text-anchor="middle" font-size="12" fill="#1d4ed8" font-weight="800">continue — 건너뛰기</text>
+                <!-- 반복 블록들 -->
+                <rect x="285" y="40" width="150" height="24" rx="5" fill="#bfdbfe" stroke="#60a5fa" stroke-width="1"/>
+                <text x="360" y="57" text-anchor="middle" font-size="10" fill="#1e3a8a" font-weight="600">i=0 실행</text>
+                <rect x="285" y="70" width="150" height="24" rx="5" fill="#bfdbfe" stroke="#60a5fa" stroke-width="1"/>
+                <text x="360" y="87" text-anchor="middle" font-size="10" fill="#1e3a8a" font-weight="600">i=1 실행</text>
+                <!-- continue 지점 -->
+                <rect x="285" y="100" width="150" height="24" rx="5" fill="#2563eb" stroke="#1d4ed8" stroke-width="1.5"/>
+                <text x="360" y="117" text-anchor="middle" font-size="10" fill="#fff" font-weight="800">i=2 → CONTINUE!</text>
+                <!-- 스킵 화살표 (위로 돌아감) -->
+                <path d="M360,100 C360,72 430,72 430,40 C430,28 400,28 370,34" stroke="#1d4ed8" stroke-width="2" fill="none" stroke-dasharray="4,3" marker-end="url(#cv-arrow-b)"/>
+                <rect x="285" y="130" width="150" height="24" rx="5" fill="#bfdbfe" stroke="#60a5fa" stroke-width="1"/>
+                <text x="360" y="147" text-anchor="middle" font-size="10" fill="#1e3a8a" font-weight="600">i=3 실행 (계속됨)</text>
+                <text x="360" y="170" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="600">나머지는 계속 돈다</text>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="반복" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 유닛에서 배우는 것</h3>
+            <ul>
+                <li><code>break</code>가 반복문을 즉시 탈출한다는 것을 설명할 수 있습니다.</li>
+                <li><code>continue</code>가 현재 반복만 건너뛴다는 것을 설명할 수 있습니다.</li>
+                <li><code>break</code>와 <code>continue</code>의 차이를 비교할 수 있습니다.</li>
+                <li>중첩 반복문에서 <code>break</code>의 범위를 이해할 수 있습니다.</li>
+                <li>남용 시 생기는 문제를 인식하고 올바르게 사용할 수 있습니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+
+<!-- ═══════════════════════════════════ PAGE 2: break ═══════════════════════════════════ -->
+<div class="page">
+    <h2>break — 반복문에서 즉시 탈출</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/clock.png" alt="반복 시간" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p><code>break</code>는 반복문 안에서 실행되는 순간 <strong>반복문 전체를 즉시 끝냅니다.</strong> 남은 반복 횟수가 얼마나 남았든 상관없이 바로 빠져나옵니다.</p>
+
+    <!-- 탈출 흐름도 SVG -->
+    <div style="text-align:center; margin:16px 0;">
+        <svg viewBox="0 0 480 160" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="p2-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#374151"/>
+                </marker>
+                <marker id="p2-red-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#dc2626"/>
+                </marker>
+                <marker id="p2-gray-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <!-- 시작 -->
+            <rect x="10" y="60" width="70" height="34" rx="17" fill="#1e3a5f"/>
+            <text x="45" y="82" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">반복 시작</text>
+            <line x1="80" y1="77" x2="100" y2="77" stroke="#374151" stroke-width="2" marker-end="url(#p2-arrow)"/>
+            <!-- 조건 마름모 -->
+            <polygon points="130,60 175,77 130,94 85,77" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5" transform="translate(20,0)"/>
+            <text x="160" y="74" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">조건</text>
+            <text x="160" y="86" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">만족?</text>
+            <!-- 조건 참 → break -->
+            <line x1="205" y1="77" x2="240" y2="77" stroke="#374151" stroke-width="2" marker-end="url(#p2-arrow)"/>
+            <text x="222" y="70" text-anchor="middle" font-size="9" fill="#22c55e" font-weight="700">예</text>
+            <rect x="243" y="62" width="72" height="30" rx="5" fill="#dc2626"/>
+            <text x="279" y="82" text-anchor="middle" font-size="12" fill="#fff" font-weight="800">break</text>
+            <!-- break → 루프 밖 -->
+            <path d="M315,77 L380,77 L380,130 L440,130" stroke="#dc2626" stroke-width="2.5" fill="none" marker-end="url(#p2-red-arrow)"/>
+            <rect x="442" y="114" width="32" height="32" rx="16" fill="#166534"/>
+            <text x="458" y="135" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">종료</text>
+            <!-- 조건 거짓 → 실행 -->
+            <line x1="160" y1="95" x2="160" y2="130" stroke="#374151" stroke-width="2" marker-end="url(#p2-arrow)"/>
+            <text x="168" y="115" font-size="9" fill="#64748b" font-weight="600">아니오</text>
+            <rect x="115" y="132" width="90" height="26" rx="6" fill="#dbeafe" stroke="#93c5fd" stroke-width="1.5"/>
+            <text x="160" y="150" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">반복 내용 실행</text>
+            <!-- 실행 → 다시 조건 -->
+            <path d="M115,145 L60,145 L60,77 L85,77" stroke="#94a3b8" stroke-width="1.5" fill="none" marker-end="url(#p2-gray-arrow)"/>
+            <!-- 라벨 -->
+            <text x="240" y="155" text-anchor="middle" font-size="10" fill="#dc2626" font-weight="700">break 실행 시 즉시 루프 종료</text>
+        </svg>
+    </div>
+
+    <!-- 코드 예시 -->
+    <p>아래 코드는 1~10 중에서 <strong>5를 찾으면 즉시 멈춥니다.</strong></p>
+    <div class="code"><span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="kw">int</span> i;
+    <span class="kw">for</span> (i = <span class="num">1</span>; i &lt;= <span class="num">10</span>; i++) {
+        <span class="kw">if</span> (i == <span class="num">5</span>) {
+            <span class="fn">printf</span>(<span class="str">"5를 찾았다! 멈춘다.\n"</span>);
+            <span class="kw">break</span>;          <span class="cmt">// 반복문 즉시 탈출</span>
+        }
+        <span class="fn">printf</span>(<span class="str">"%d 확인 중\n"</span>, i);
+    }
+    <span class="fn">printf</span>(<span class="str">"반복문이 끝났다.\n"</span>);
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+    <p style="font-size:13px;color:#64748b;">출력: <code>1 확인 중</code> → <code>2 확인 중</code> → ... → <code>4 확인 중</code> → <code>5를 찾았다! 멈춘다.</code> → <code>반복문이 끝났다.</code></p>
+
+    <!-- 실행 흐름도 SVG (i 값별) -->
+    <div style="text-align:center; margin:14px 0;">
+        <svg viewBox="0 0 480 80" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="p2b-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <!-- i=1,2,3,4 -->
+            <rect x="4" y="20" width="56" height="36" rx="6" fill="#dcfce7" stroke="#86efac" stroke-width="1.5"/>
+            <text x="32" y="38" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">i=1</text>
+            <text x="32" y="51" text-anchor="middle" font-size="9" fill="#166534">출력</text>
+            <line x1="62" y1="38" x2="78" y2="38" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#p2b-arrow)"/>
+
+            <rect x="80" y="20" width="56" height="36" rx="6" fill="#dcfce7" stroke="#86efac" stroke-width="1.5"/>
+            <text x="108" y="38" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">i=2</text>
+            <text x="108" y="51" text-anchor="middle" font-size="9" fill="#166534">출력</text>
+            <line x1="138" y1="38" x2="154" y2="38" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#p2b-arrow)"/>
+
+            <rect x="156" y="20" width="56" height="36" rx="6" fill="#dcfce7" stroke="#86efac" stroke-width="1.5"/>
+            <text x="184" y="38" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">i=3</text>
+            <text x="184" y="51" text-anchor="middle" font-size="9" fill="#166534">출력</text>
+            <line x1="214" y1="38" x2="230" y2="38" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#p2b-arrow)"/>
+
+            <rect x="232" y="20" width="56" height="36" rx="6" fill="#dcfce7" stroke="#86efac" stroke-width="1.5"/>
+            <text x="260" y="38" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">i=4</text>
+            <text x="260" y="51" text-anchor="middle" font-size="9" fill="#166534">출력</text>
+            <line x1="290" y1="38" x2="306" y2="38" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#p2b-arrow)"/>
+
+            <!-- i=5 break -->
+            <rect x="308" y="14" width="64" height="48" rx="7" fill="#dc2626" stroke="#b91c1c" stroke-width="2"/>
+            <text x="340" y="34" text-anchor="middle" font-size="11" fill="#fff" font-weight="800">i=5</text>
+            <text x="340" y="50" text-anchor="middle" font-size="10" fill="#fecaca" font-weight="700">break!</text>
+
+            <!-- i=6~10 취소선 -->
+            <rect x="384" y="20" width="90" height="36" rx="6" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="429" y="38" text-anchor="middle" font-size="10" fill="#94a3b8" font-weight="600">i=6~10</text>
+            <text x="429" y="51" text-anchor="middle" font-size="9" fill="#94a3b8">실행 안 됨</text>
+            <line x1="384" y1="20" x2="474" y2="56" stroke="#ef4444" stroke-width="1.5"/>
+            <line x1="384" y1="56" x2="474" y2="20" stroke="#ef4444" stroke-width="1.5"/>
+        </svg>
+    </div>
+
+    <!-- 따라해보세요 -->
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/calculator.png" alt="계산" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+            <div class="practice-item">
+                <div class="practice-num">01</div>
+                <div class="practice-desc">위 코드를 그대로 입력하고 실행해 출력 순서를 확인하세요.</div>
+                <div class="practice-result">1 확인 중 ~ 4 확인 중, 그다음 "5를 찾았다!"</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">02</div>
+                <div class="practice-desc"><code>if (i == 5)</code>를 <code>if (i == 3)</code>으로 바꾸고 결과 변화를 확인하세요.</div>
+                <div class="practice-result">1 확인 중, 2 확인 중, 3을 찾았다! — 더 일찍 멈춤</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">03</div>
+                <div class="practice-desc"><code>while (1)</code>로 무한 루프를 만들고, <code>i == 7</code>일 때 <code>break</code>로 탈출하세요.</div>
+                <div class="practice-result">1~6 출력 후 종료 — break 없으면 무한 루프!</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ═══════════════════════════════════ PAGE 3: continue ═══════════════════════════════════ -->
+<div class="page">
+    <h2>continue — 현재 반복만 건너뛰기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/flowchart.png" alt="흐름도" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p><code>continue</code>는 <code>break</code>와 다릅니다. 반복문을 끝내는 게 아니라 <strong>현재 반복 회차의 나머지 코드를 건너뛰고</strong> 다음 반복으로 넘어갑니다.</p>
+
+    <!-- continue 흐름도 SVG -->
+    <div style="text-align:center; margin:14px 0;">
+        <svg viewBox="0 0 480 168" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="p3-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#374151"/>
+                </marker>
+                <marker id="p3-blue-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#1d4ed8"/>
+                </marker>
+                <marker id="p3-gray-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <!-- 시작 -->
+            <rect x="10" y="60" width="70" height="34" rx="17" fill="#1e3a5f"/>
+            <text x="45" y="82" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">반복 시작</text>
+            <line x1="80" y1="77" x2="100" y2="77" stroke="#374151" stroke-width="2" marker-end="url(#p3-arrow)"/>
+            <!-- 조건 마름모 -->
+            <polygon points="130,60 175,77 130,94 85,77" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5" transform="translate(20,0)"/>
+            <text x="160" y="74" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">건너뛸</text>
+            <text x="160" y="86" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">조건?</text>
+            <!-- 조건 참 → continue -->
+            <line x1="205" y1="77" x2="240" y2="77" stroke="#374151" stroke-width="2" marker-end="url(#p3-arrow)"/>
+            <text x="222" y="70" text-anchor="middle" font-size="9" fill="#22c55e" font-weight="700">예</text>
+            <rect x="243" y="62" width="82" height="30" rx="5" fill="#2563eb"/>
+            <text x="284" y="82" text-anchor="middle" font-size="12" fill="#fff" font-weight="800">continue</text>
+            <!-- continue → 다음 반복 (위로 루프) -->
+            <path d="M284,62 L284,20 L45,20 L45,60" stroke="#1d4ed8" stroke-width="2.5" fill="none" stroke-dasharray="5,3" marker-end="url(#p3-blue-arrow)"/>
+            <text x="160" y="14" text-anchor="middle" font-size="9.5" fill="#1d4ed8" font-weight="700">다음 반복으로 점프!</text>
+            <!-- 조건 거짓 → 실행 -->
+            <line x1="160" y1="95" x2="160" y2="130" stroke="#374151" stroke-width="2" marker-end="url(#p3-arrow)"/>
+            <text x="168" y="115" font-size="9" fill="#64748b" font-weight="600">아니오</text>
+            <rect x="115" y="132" width="90" height="26" rx="6" fill="#dbeafe" stroke="#93c5fd" stroke-width="1.5"/>
+            <text x="160" y="150" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">나머지 코드 실행</text>
+            <!-- 실행 → 다시 -->
+            <path d="M115,145 L60,145 L60,77 L85,77" stroke="#94a3b8" stroke-width="1.5" fill="none" marker-end="url(#p3-gray-arrow)"/>
+            <!-- 루프 종료 -->
+            <rect x="370" y="60" width="95" height="34" rx="17" fill="#166534"/>
+            <text x="417" y="82" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">반복 조건 끝나면 종료</text>
+            <line x1="160" y1="94" x2="160" y2="94"/>
+            <text x="284" y="158" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">반복문 자체는 계속 실행됨</text>
+        </svg>
+    </div>
+
+    <!-- 코드 예시 -->
+    <p>아래 코드는 1~10 중 <strong>홀수는 건너뛰고 짝수만 출력합니다.</strong></p>
+    <div class="code"><span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="kw">int</span> i;
+    <span class="kw">for</span> (i = <span class="num">1</span>; i &lt;= <span class="num">10</span>; i++) {
+        <span class="kw">if</span> (i % <span class="num">2</span> != <span class="num">0</span>) {    <span class="cmt">// 홀수이면</span>
+            <span class="kw">continue</span>;           <span class="cmt">// 아래 printf 건너뜀</span>
+        }
+        <span class="fn">printf</span>(<span class="str">"%d\n"</span>, i);     <span class="cmt">// 짝수만 여기까지 옴</span>
+    }
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+    <p style="font-size:13px;color:#64748b;">출력: <code>2  4  6  8  10</code> — 홀수는 출력 없이 다음 회차로 넘어감</p>
+
+    <!-- 실행 흐름도 SVG (짝수/홀수 구분) -->
+    <div style="text-align:center; margin:14px 0;">
+        <svg viewBox="0 0 480 72" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="p3b-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <!-- i=1 skip -->
+            <rect x="4" y="16" width="50" height="40" rx="6" fill="#e0e7ff" stroke="#a5b4fc" stroke-width="1.5"/>
+            <text x="29" y="33" text-anchor="middle" font-size="10" fill="#3730a3" font-weight="700">i=1</text>
+            <text x="29" y="47" text-anchor="middle" font-size="8.5" fill="#6366f1">continue</text>
+            <line x1="56" y1="36" x2="66" y2="36" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#p3b-arrow)"/>
+            <!-- i=2 print -->
+            <rect x="68" y="16" width="50" height="40" rx="6" fill="#dcfce7" stroke="#86efac" stroke-width="1.5"/>
+            <text x="93" y="33" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">i=2</text>
+            <text x="93" y="47" text-anchor="middle" font-size="8.5" fill="#166534">출력</text>
+            <line x1="120" y1="36" x2="130" y2="36" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#p3b-arrow)"/>
+            <!-- i=3 skip -->
+            <rect x="132" y="16" width="50" height="40" rx="6" fill="#e0e7ff" stroke="#a5b4fc" stroke-width="1.5"/>
+            <text x="157" y="33" text-anchor="middle" font-size="10" fill="#3730a3" font-weight="700">i=3</text>
+            <text x="157" y="47" text-anchor="middle" font-size="8.5" fill="#6366f1">continue</text>
+            <line x1="184" y1="36" x2="194" y2="36" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#p3b-arrow)"/>
+            <!-- i=4 print -->
+            <rect x="196" y="16" width="50" height="40" rx="6" fill="#dcfce7" stroke="#86efac" stroke-width="1.5"/>
+            <text x="221" y="33" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">i=4</text>
+            <text x="221" y="47" text-anchor="middle" font-size="8.5" fill="#166534">출력</text>
+            <line x1="248" y1="36" x2="258" y2="36" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#p3b-arrow)"/>
+            <!-- ... -->
+            <text x="270" y="40" font-size="14" fill="#94a3b8" font-weight="700">...</text>
+            <line x1="282" y1="36" x2="292" y2="36" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#p3b-arrow)"/>
+            <!-- i=10 print -->
+            <rect x="294" y="16" width="56" height="40" rx="6" fill="#dcfce7" stroke="#86efac" stroke-width="1.5"/>
+            <text x="322" y="33" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">i=10</text>
+            <text x="322" y="47" text-anchor="middle" font-size="8.5" fill="#166534">출력</text>
+            <!-- 범례 -->
+            <rect x="368" y="16" width="12" height="12" rx="2" fill="#e0e7ff" stroke="#a5b4fc" stroke-width="1"/>
+            <text x="384" y="27" font-size="9" fill="#3730a3" font-weight="600">continue (홀수)</text>
+            <rect x="368" y="34" width="12" height="12" rx="2" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+            <text x="384" y="45" font-size="9" fill="#166534" font-weight="600">출력 (짝수)</text>
+        </svg>
+    </div>
+
+    <!-- 따라해보세요 -->
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">01</div>
+                <div class="practice-desc">위 짝수 출력 코드를 입력하고, 짝수만 나오는지 확인하세요.</div>
+                <div class="practice-result">2 4 6 8 10</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">02</div>
+                <div class="practice-desc">조건을 바꿔서 3의 배수를 건너뛰고 나머지 숫자를 출력하세요. (<code>i % 3 == 0</code>이면 continue)</div>
+                <div class="practice-result">1 2 4 5 7 8 10</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">03</div>
+                <div class="practice-desc">1~20 중 5와 10을 건너뛰고 나머지를 출력하는 코드를 만드세요. (<code>i == 5 || i == 10</code>이면 continue)</div>
+                <div class="practice-result">1 2 3 4 6 7 8 9 11 ... 20 (5와 10만 빠짐)</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ═══════════════════════════════════ PAGE 4: 비교 + 중첩 루프 + 주의 ═══════════════════════════════════ -->
+<div class="page">
+    <h2>break vs continue 비교</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>두 키워드는 생김새는 비슷하지만 동작이 완전히 다릅니다. 헷갈리기 쉬우니 나란히 비교해봅니다.</p>
+
+    <!-- 나란히 비교 SVG -->
+    <div style="text-align:center; margin:14px 0;">
+        <svg viewBox="0 0 480 140" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="p4-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#dc2626"/>
+                </marker>
+                <marker id="p4-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#2563eb"/>
+                </marker>
+            </defs>
+            <!-- break 영역 -->
+            <rect x="10" y="10" width="210" height="120" rx="10" fill="#fff5f5" stroke="#fca5a5" stroke-width="1.5"/>
+            <rect x="10" y="10" width="210" height="32" rx="10" fill="#dc2626"/>
+            <rect x="10" y="30" width="210" height="12" rx="0" fill="#dc2626"/>
+            <text x="115" y="33" text-anchor="middle" font-size="13" fill="#fff" font-weight="800">break</text>
+            <!-- 루프 블록들 -->
+            <rect x="30" y="52" width="50" height="22" rx="4" fill="#fecaca" stroke="#f87171" stroke-width="1"/>
+            <text x="55" y="67" text-anchor="middle" font-size="9" fill="#7f1d1d" font-weight="600">i=0</text>
+            <rect x="90" y="52" width="50" height="22" rx="4" fill="#fecaca" stroke="#f87171" stroke-width="1"/>
+            <text x="115" y="67" text-anchor="middle" font-size="9" fill="#7f1d1d" font-weight="600">i=1</text>
+            <rect x="150" y="52" width="50" height="22" rx="4" fill="#dc2626" stroke="#b91c1c" stroke-width="1.5"/>
+            <text x="175" y="63" text-anchor="middle" font-size="8" fill="#fff" font-weight="800">i=2</text>
+            <text x="175" y="72" text-anchor="middle" font-size="8" fill="#fecaca">STOP</text>
+            <!-- 루프 밖 화살표 -->
+            <path d="M175,74 L175,105 L210,105" stroke="#dc2626" stroke-width="2" fill="none" marker-end="url(#p4-red)"/>
+            <text x="118" y="120" text-anchor="middle" font-size="9.5" fill="#dc2626" font-weight="700">반복문 완전 종료</text>
+
+            <!-- continue 영역 -->
+            <rect x="260" y="10" width="210" height="120" rx="10" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.5"/>
+            <rect x="260" y="10" width="210" height="32" rx="10" fill="#2563eb"/>
+            <rect x="260" y="30" width="210" height="12" rx="0" fill="#2563eb"/>
+            <text x="365" y="33" text-anchor="middle" font-size="13" fill="#fff" font-weight="800">continue</text>
+            <!-- 루프 블록들 -->
+            <rect x="280" y="52" width="40" height="22" rx="4" fill="#bfdbfe" stroke="#60a5fa" stroke-width="1"/>
+            <text x="300" y="67" text-anchor="middle" font-size="9" fill="#1e3a8a" font-weight="600">i=0</text>
+            <rect x="328" y="52" width="40" height="22" rx="4" fill="#bfdbfe" stroke="#60a5fa" stroke-width="1"/>
+            <text x="348" y="67" text-anchor="middle" font-size="9" fill="#1e3a8a" font-weight="600">i=1</text>
+            <!-- i=2 skip -->
+            <rect x="376" y="52" width="40" height="22" rx="4" fill="#2563eb" stroke="#1d4ed8" stroke-width="1.5"/>
+            <text x="396" y="63" text-anchor="middle" font-size="8" fill="#fff" font-weight="800">i=2</text>
+            <text x="396" y="72" text-anchor="middle" font-size="8" fill="#bfdbfe">SKIP</text>
+            <!-- 돌아가는 화살표 -->
+            <path d="M396,52 C396,30 300,30 300,52" stroke="#2563eb" stroke-width="2" fill="none" stroke-dasharray="4,2" marker-end="url(#p4-blue)"/>
+            <rect x="280" y="84" width="40" height="22" rx="4" fill="#bfdbfe" stroke="#60a5fa" stroke-width="1"/>
+            <text x="300" y="99" text-anchor="middle" font-size="9" fill="#1e3a8a" font-weight="600">i=3</text>
+            <text x="365" y="120" text-anchor="middle" font-size="9.5" fill="#2563eb" font-weight="700">i=3부터 반복 계속</text>
+        </svg>
+    </div>
+
+    <div class="compare-grid">
+        <div class="compare-card break-card">
+            <h4>break</h4>
+            <p>반복문 자체를 즉시 종료. 남은 반복 횟수 무시. 반복문 바깥 코드로 이동.</p>
+        </div>
+        <div class="compare-card continue-card">
+            <h4>continue</h4>
+            <p>현재 회차의 나머지 코드만 건너뜀. 반복문은 계속 실행. 다음 회차로 이동.</p>
+        </div>
+    </div>
+
+    <h2 style="margin-top:20px;">중첩 루프에서 break의 범위</h2>
+    <p>중첩된 반복문에서 <code>break</code>는 <strong>자신이 속한 가장 안쪽 반복문만 탈출합니다.</strong> 바깥 반복문은 계속 실행됩니다.</p>
+
+    <!-- 중첩 루프 break SVG -->
+    <div style="text-align:center; margin:12px 0;">
+        <svg viewBox="0 0 480 110" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="p4c-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#dc2626"/>
+                </marker>
+            </defs>
+            <!-- 바깥 루프 -->
+            <rect x="10" y="8" width="460" height="94" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+            <text x="28" y="24" font-size="10" fill="#64748b" font-weight="700">바깥 루프 (i=0,1,2)</text>
+            <!-- 안쪽 루프들 -->
+            <!-- i=0 -->
+            <rect x="28" y="30" width="130" height="60" rx="8" fill="#fff" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="93" y="46" text-anchor="middle" font-size="9" fill="#64748b" font-weight="600">안쪽 루프 i=0</text>
+            <rect x="40" y="52" width="35" height="20" rx="4" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+            <text x="57" y="66" text-anchor="middle" font-size="8" fill="#166534">j=0</text>
+            <rect x="82" y="52" width="35" height="20" rx="4" fill="#dc2626" stroke="#b91c1c" stroke-width="1.5"/>
+            <text x="99" y="62" text-anchor="middle" font-size="7" fill="#fff" font-weight="800">j=1</text>
+            <text x="99" y="70" text-anchor="middle" font-size="7" fill="#fca5a5">break</text>
+            <path d="M99,72 L99,88 L158,88 L158,58" stroke="#dc2626" stroke-width="1.5" fill="none" stroke-dasharray="3,2" marker-end="url(#p4c-red)"/>
+            <!-- i=1 -->
+            <rect x="175" y="30" width="130" height="60" rx="8" fill="#fff" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="240" y="46" text-anchor="middle" font-size="9" fill="#64748b" font-weight="600">안쪽 루프 i=1</text>
+            <rect x="187" y="52" width="35" height="20" rx="4" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+            <text x="204" y="66" text-anchor="middle" font-size="8" fill="#166534">j=0</text>
+            <rect x="229" y="52" width="35" height="20" rx="4" fill="#dc2626" stroke="#b91c1c" stroke-width="1.5"/>
+            <text x="246" y="62" text-anchor="middle" font-size="7" fill="#fff" font-weight="800">j=1</text>
+            <text x="246" y="70" text-anchor="middle" font-size="7" fill="#fca5a5">break</text>
+            <path d="M246,72 L246,88 L305,88 L305,58" stroke="#dc2626" stroke-width="1.5" fill="none" stroke-dasharray="3,2" marker-end="url(#p4c-red)"/>
+            <!-- i=2 -->
+            <rect x="322" y="30" width="130" height="60" rx="8" fill="#fff" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="387" y="46" text-anchor="middle" font-size="9" fill="#64748b" font-weight="600">안쪽 루프 i=2</text>
+            <rect x="334" y="52" width="35" height="20" rx="4" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+            <text x="351" y="66" text-anchor="middle" font-size="8" fill="#166534">j=0</text>
+            <rect x="376" y="52" width="35" height="20" rx="4" fill="#dc2626" stroke="#b91c1c" stroke-width="1.5"/>
+            <text x="393" y="62" text-anchor="middle" font-size="7" fill="#fff" font-weight="800">j=1</text>
+            <text x="393" y="70" text-anchor="middle" font-size="7" fill="#fca5a5">break</text>
+            <!-- 라벨 -->
+            <text x="240" y="6" text-anchor="middle" font-size="9" fill="#dc2626" font-weight="700">안쪽 break는 안쪽 루프만 탈출 — 바깥 루프는 계속 돔</text>
+        </svg>
+    </div>
+
+    <div class="code" style="font-size:13px;"><span class="kw">for</span> (i = <span class="num">0</span>; i &lt; <span class="num">3</span>; i++) {       <span class="cmt">// 바깥 루프</span>
+    <span class="kw">for</span> (j = <span class="num">0</span>; j &lt; <span class="num">5</span>; j++) {   <span class="cmt">// 안쪽 루프</span>
+        <span class="kw">if</span> (j == <span class="num">2</span>) <span class="kw">break</span>;      <span class="cmt">// 안쪽 루프만 탈출</span>
+        <span class="fn">printf</span>(<span class="str">"(%d,%d) "</span>, i, j);
+    }
+    <span class="fn">printf</span>(<span class="str">"\n"</span>);               <span class="cmt">// 바깥 루프는 계속 실행됨</span>
+}</div>
+    <p style="font-size:13px;color:#64748b;">출력: <code>(0,0) (0,1)</code> / <code>(1,0) (1,1)</code> / <code>(2,0) (2,1)</code> — 각 줄마다 j=2에서 안쪽 루프만 탈출</p>
+
+    <div class="warn-box">
+        <div class="warn-box-title">남용 주의</div>
+        <p><code>break</code>와 <code>continue</code>를 너무 많이 쓰면 코드 흐름이 복잡해집니다. 특히 중첩 반복문에서 여러 개를 쓰면 어디서 나오는지 추적이 어렵습니다. 꼭 필요한 곳에만, 한 반복문 안에 1~2개 이하로 쓰는 것을 권장합니다.</p>
+    </div>
+
+    <!-- 따라해보세요 -->
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">01</div>
+                <div class="practice-desc">위 중첩 루프 코드를 입력하고, 각 줄에서 j가 0과 1만 출력됨을 확인하세요.</div>
+                <div class="practice-result">(0,0) (0,1) / (1,0) (1,1) / (2,0) (2,1)</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">02</div>
+                <div class="practice-desc"><code>break</code>를 <code>continue</code>로 바꾸면 결과가 어떻게 달라지는지 예측하고 실행하여 확인하세요.</div>
+                <div class="practice-result">(0,0) (0,1) (0,3) (0,4) ... j=2만 빠지고 나머지 출력</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">03</div>
+                <div class="practice-desc">구구단 2단을 출력하되, 결과가 10 이상이면 <code>break</code>로 중단하는 코드를 만드세요.</div>
+                <div class="practice-result">2×1=2, 2×2=4, ..., 2×4=8 — 2×5=10에서 중단</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ═══════════════════════════════════ PAGE 5: 문제 + 요약 ═══════════════════════════════════ -->
+<div class="page">
+    <h2>연습 문제</h2>
+
+    <!-- 문제 1 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">1</div>
+            <div class="problem-label">break 동작 이해</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">아래 코드를 실행하면 어떤 숫자들이 출력됩니까? 출력 결과를 적으세요.
+<div class="code" style="margin-top:8px;font-size:13px;"><span class="kw">for</span> (i = <span class="num">1</span>; i &lt;= <span class="num">8</span>; i++) {
+    <span class="kw">if</span> (i == <span class="num">4</span>) <span class="kw">break</span>;
+    <span class="fn">printf</span>(<span class="str">"%d\n"</span>, i);
+}</div></div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력</span>
+                    <span class="problem-example-value">___________________</span>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 / 답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text" style="margin-bottom:8px;">i가 4가 되는 순간 break가 실행되어 반복문이 즉시 끝납니다. i=4는 출력되지 않습니다.</div>
+                <div class="answer-code">1
+2
+3</div>
+            </div>
+        </details>
+    </div>
+
+    <!-- 문제 2 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">2</div>
+            <div class="problem-label">continue 동작 이해</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">아래 코드를 실행하면 어떤 숫자들이 출력됩니까?
+<div class="code" style="margin-top:8px;font-size:13px;"><span class="kw">for</span> (i = <span class="num">1</span>; i &lt;= <span class="num">6</span>; i++) {
+    <span class="kw">if</span> (i == <span class="num">3</span> || i == <span class="num">5</span>) <span class="kw">continue</span>;
+    <span class="fn">printf</span>(<span class="str">"%d\n"</span>, i);
+}</div></div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력</span>
+                    <span class="problem-example-value">___________________</span>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 / 답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text" style="margin-bottom:8px;">i가 3 또는 5일 때 continue가 실행되어 printf를 건너뜁니다. i=3, i=5는 출력되지 않습니다.</div>
+                <div class="answer-code">1
+2
+4
+6</div>
+            </div>
+        </details>
+    </div>
+
+    <!-- 문제 3 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">3</div>
+            <div class="problem-label">코드 작성 — 합계 구하기</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">1부터 시작해서 숫자를 더하다가 합이 처음으로 20을 넘으면 즉시 멈추는 코드를 작성하세요. 마지막에 더한 숫자와 합계를 출력하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력 예</span>
+                    <span class="problem-example-value">마지막 숫자: 6, 합계: 21</span>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 / 답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text" style="margin-bottom:8px;">sum에 i를 더한 후 sum > 20이면 break. break 전에 마지막 i를 저장해두세요.</div>
+                <div class="answer-code"><span class="kw">int</span> i, sum = <span class="num">0</span>;
+<span class="kw">for</span> (i = <span class="num">1</span>; ; i++) {
+    sum += i;
+    <span class="kw">if</span> (sum &gt; <span class="num">20</span>) {
+        <span class="fn">printf</span>(<span class="str">"마지막 숫자: %d, 합계: %d\n"</span>, i, sum);
+        <span class="kw">break</span>;
+    }
+}</div>
+            </div>
+        </details>
+    </div>
+
+    <!-- 문제 4 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">4</div>
+            <div class="problem-label">코드 작성 — 5의 배수 제외</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">1~30의 숫자 중 5의 배수를 제외하고 모두 출력하는 코드를 <code>continue</code>를 사용해 작성하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력 예</span>
+                    <span class="problem-example-value">1 2 3 4 6 7 8 9 11 ... (5, 10, 15, 20, 25, 30 제외)</span>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 / 답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text" style="margin-bottom:8px;"><code>i % 5 == 0</code>이면 continue로 건너뜁니다.</div>
+                <div class="answer-code"><span class="kw">int</span> i;
+<span class="kw">for</span> (i = <span class="num">1</span>; i &lt;= <span class="num">30</span>; i++) {
+    <span class="kw">if</span> (i % <span class="num">5</span> == <span class="num">0</span>) <span class="kw">continue</span>;
+    <span class="fn">printf</span>(<span class="str">"%d\n"</span>, i);
+}</div>
+            </div>
+        </details>
+    </div>
+
+    <!-- 문제 5 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">5</div>
+            <div class="problem-label">응용 — 중첩 루프 + break</div>
+            <span class="problem-diff hard">어려움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">두 수 <code>a</code>와 <code>b</code>를 각각 1~9 범위에서 탐색하여 <code>a * b == 24</code>를 처음 만족하는 쌍을 찾고 출력하세요. 찾으면 두 루프 모두 멈춰야 합니다. (<strong>힌트</strong>: 바깥 루프 탈출을 위해 <code>found</code> 변수 활용)</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력 예</span>
+                    <span class="problem-example-value">3 × 8 = 24</span>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 / 답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text" style="margin-bottom:8px;">안쪽에서 break하면 안쪽 루프만 탈출됩니다. <code>int found = 0;</code>을 선언하고, 찾으면 <code>found = 1;</code> 후 break. 바깥 루프에서 <code>if (found) break;</code>로 탈출합니다.</div>
+                <div class="answer-code"><span class="kw">int</span> a, b, found = <span class="num">0</span>;
+<span class="kw">for</span> (a = <span class="num">1</span>; a &lt;= <span class="num">9</span>; a++) {
+    <span class="kw">for</span> (b = <span class="num">1</span>; b &lt;= <span class="num">9</span>; b++) {
+        <span class="kw">if</span> (a * b == <span class="num">24</span>) {
+            <span class="fn">printf</span>(<span class="str">"%d × %d = 24\n"</span>, a, b);
+            found = <span class="num">1</span>;
+            <span class="kw">break</span>;   <span class="cmt">// 안쪽 루프 탈출</span>
+        }
+    }
+    <span class="kw">if</span> (found) <span class="kw">break</span>;   <span class="cmt">// 바깥 루프도 탈출</span>
+}</div>
+            </div>
+        </details>
+    </div>
+
+    <!-- 요약 -->
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>유닛 요약</h3>
+        <ul>
+            <li><code>break</code> — 반복문을 즉시 완전히 종료. 남은 반복 없이 반복문 바깥으로 이동.</li>
+            <li><code>continue</code> — 현재 회차의 나머지 코드를 건너뜀. 반복문은 계속 실행됨.</li>
+            <li>중첩 루프에서 <code>break</code>는 자신이 속한 가장 안쪽 반복문만 탈출.</li>
+            <li>두 루프 모두 탈출하려면 플래그 변수(<code>found</code> 등)를 활용.</li>
+            <li>남용하면 코드 흐름이 복잡해지므로 필요한 곳에만 사용.</li>
+        </ul>
+    </div>
+</div>
+
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+
+
+
+<script>
+(function(){
+  var KEY = 'cs_ans_' + location.pathname.replace(/[^a-zA-Z0-9]/g,'_');
+  var pagePath = location.pathname;
+  var userId = null;
+  try {
+    userId = window.parent?.localStorage?.getItem('codingssok_user_id')
+      || localStorage.getItem('codingssok_user_id');
+  } catch(e) {}
+
+  function save(){
+    var areas = document.querySelectorAll('textarea');
+    var saved = 0;
+    areas.forEach(function(ta, i){
+      if(ta.value.trim()) {
+        localStorage.setItem(KEY + '_' + i, ta.value);
+        saved++;
+      } else {
+        localStorage.removeItem(KEY + '_' + i);
+      }
+    });
+    if(saved > 0) showSaveIndicator();
+  }
+
+  function load(){
+    var areas = document.querySelectorAll('textarea');
+    var restored = 0;
+    areas.forEach(function(ta, i){
+      var val = localStorage.getItem(KEY + '_' + i);
+      if(val && val.trim()) {
+        ta.value = val;
+        ta.style.borderColor = '#10b981';
+        ta.style.boxShadow = '0 0 0 2px rgba(16,185,129,0.15)';
+        setTimeout(function(){ ta.style.borderColor = ''; ta.style.boxShadow = ''; }, 2000);
+        restored++;
+      }
+    });
+    if(restored > 0) showRestoreIndicator(restored);
+  }
+
+  function saveToDb(){
+    if(!userId) return;
+    var areas = document.querySelectorAll('textarea');
+    var answers = [];
+    areas.forEach(function(ta, i){
+      if(ta.value.trim()) answers.push({ field_index: i, answer_text: ta.value });
+    });
+    if(answers.length === 0) return;
+    fetch('/api/answers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId, page_path: pagePath, answers: answers })
+    }).catch(function(){});
+  }
+
+  function loadFromDb(){
+    if(!userId) return;
+    fetch('/api/answers?user_id=' + encodeURIComponent(userId) + '&page_path=' + encodeURIComponent(pagePath))
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(!d.answers || !d.answers.length) return;
+        var areas = document.querySelectorAll('textarea');
+        d.answers.forEach(function(a){
+          if(areas[a.field_index] && a.answer_text) {
+            areas[a.field_index].value = a.answer_text;
+            localStorage.setItem(KEY + '_' + a.field_index, a.answer_text);
+          }
+        });
+      }).catch(function(){});
+  }
+
+  function showSaveIndicator(){
+    var el = document.getElementById('cs-save-ind');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'cs-save-ind';
+      el.style.cssText = 'position:fixed;bottom:16px;right:16px;padding:6px 14px;border-radius:8px;background:#0f172a;color:#22c55e;font-size:11px;font-weight:700;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+      document.body.appendChild(el);
+    }
+    el.textContent = '\u2713 \uB2F5\uC548 \uC800\uC7A5\uB428'; // ✓ 답안 저장됨
+    el.style.opacity = '1';
+    setTimeout(function(){ el.style.opacity = '0'; }, 1500);
+  }
+
+  function showRestoreIndicator(n){
+    var el = document.getElementById('cs-save-ind');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'cs-save-ind';
+      el.style.cssText = 'position:fixed;bottom:16px;right:16px;padding:6px 14px;border-radius:8px;background:#0f172a;color:#3b82f6;font-size:11px;font-weight:700;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+      document.body.appendChild(el);
+    }
+    el.textContent = '\u21BB ' + n + '\uAC1C \uB2F5\uC548 \uBCF5\uC6D0'; // ↻ n개 답안 복원
+    el.style.color = '#3b82f6';
+    el.style.opacity = '1';
+    setTimeout(function(){ el.style.opacity = '0'; }, 2500);
+  }
+
+  var t = null;
+  document.addEventListener('input', function(e){
+    if(e.target.tagName === 'TEXTAREA'){
+      clearTimeout(t);
+      t = setTimeout(function(){ save(); saveToDb(); }, 300);
+    }
+  });
+  document.addEventListener('change', function(e){
+    if(e.target.tagName === 'TEXTAREA'){ save(); saveToDb(); }
+  });
+  document.addEventListener('focusout', function(e){
+    if(e.target.tagName === 'TEXTAREA'){ save(); saveToDb(); }
+  });
+  window.addEventListener('beforeunload', function(){ save(); saveToDb(); });
+
+  // 즉시 로드
+  load();
+  loadFromDb();
+})();
+</script>
+</body>
+</html>

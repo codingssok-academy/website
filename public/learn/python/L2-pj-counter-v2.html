@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 프로젝트: 글자수 세기</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute; bottom: 10mm; right: 16mm;
+    font-size: 10px; color: #94a3b8; font-weight: 600;
+}
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #0369a1; }
+.cover-accent { width: 7px; background: #f59e0b; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 200px; font-weight: 900; color: rgba(3,105,161,0.08);
+    line-height: 1; pointer-events: none; font-family: 'JetBrains Mono', monospace;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #0369a1; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 36px; font-weight: 900; color: #0c4a6e; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #0c4a6e; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #0369a1; font-weight: 900; }
+h2 { font-size: 20px; font-weight: 800; color: #0c4a6e; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 16px; font-weight: 700; color: #0c4a6e; margin: 18px 0 10px; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f0f9ff; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #0369a1; font-weight: 600;
+}
+ul, ol { margin: 0 0 12px 20px; }
+li { font-size: 14px; color: #374151; line-height: 1.8; }
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13.5px;
+    color: #e2e8f0; line-height: 1.85; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.code .dec { color: #f9a8d4; }
+.practice { margin: 20px 0; border-left: 4px solid #0369a1; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #075985; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #0369a1; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #0369a1; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#0369a1,#0ea5e9); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #0c4a6e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; white-space: pre-wrap; }
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #0c4a6e; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+.output-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #334155; line-height: 1.7; margin: 10px 0; white-space: pre-wrap; }
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- ===== 1페이지: 표지 ===== -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">L2</div>
+        <div class="cover-label">L2 — Project</div>
+        <h1 class="cover-title">프로젝트:<br>글자수 세기</h1>
+        <p class="cover-sub">문장을 입력하면 전체 글자 수, 단어 수, 띄어쓰기 수, 특수문자 수를 분석하는 텍스트 분석 도구를 만듭니다.</p>
+
+        <!-- SVG: 텍스트 분석 시각화 -->
+        <div style="margin:20px 0;">
+            <svg viewBox="0 0 480 130" style="max-width:480px;width:100%">
+                <defs>
+                    <marker id="arrC" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                    </marker>
+                </defs>
+                <!-- 입력 -->
+                <rect x="5" y="40" width="130" height="50" rx="8" fill="#f0f9ff" stroke="#0369a1" stroke-width="1.5"/>
+                <text x="70" y="58" text-anchor="middle" font-size="9" fill="#0369a1" font-weight="700">입력 문장</text>
+                <text x="70" y="74" text-anchor="middle" font-family="monospace" font-size="9" fill="#0c4a6e">"Hello World!"</text>
+                <!-- 화살표 -->
+                <line x1="140" y1="65" x2="168" y2="65" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrC)"/>
+                <!-- 분석 박스들 -->
+                <rect x="170" y="10" width="90" height="36" rx="6" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="215" y="26" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">글자 수</text>
+                <text x="215" y="40" text-anchor="middle" font-size="11" fill="#14532d" font-weight="900">12</text>
+                <rect x="270" y="10" width="90" height="36" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="315" y="26" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">단어 수</text>
+                <text x="315" y="40" text-anchor="middle" font-size="11" fill="#78350f" font-weight="900">2</text>
+                <rect x="370" y="10" width="105" height="36" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+                <text x="422" y="26" text-anchor="middle" font-size="9" fill="#5b21b6" font-weight="700">띄어쓰기</text>
+                <text x="422" y="40" text-anchor="middle" font-size="11" fill="#3b0764" font-weight="900">1</text>
+                <rect x="170" y="84" width="90" height="36" rx="6" fill="#fff1f2" stroke="#f43f5e" stroke-width="1.5"/>
+                <text x="215" y="100" text-anchor="middle" font-size="9" fill="#be123c" font-weight="700">특수문자</text>
+                <text x="215" y="114" text-anchor="middle" font-size="11" fill="#881337" font-weight="900">1</text>
+                <rect x="270" y="84" width="90" height="36" rx="6" fill="#f0fdf4" stroke="#86efac" stroke-width="1.5"/>
+                <text x="315" y="100" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">영문자</text>
+                <text x="315" y="114" text-anchor="middle" font-size="11" fill="#14532d" font-weight="900">10</text>
+                <rect x="370" y="84" width="105" height="36" rx="6" fill="#e0f2fe" stroke="#0ea5e9" stroke-width="1.5"/>
+                <text x="422" y="100" text-anchor="middle" font-size="9" fill="#0369a1" font-weight="700">숫자</text>
+                <text x="422" y="114" text-anchor="middle" font-size="11" fill="#0c4a6e" font-weight="900">0</text>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/laptop.png" alt="노트북" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 프로젝트에서 배우는 것</h3>
+            <ul>
+                <li><code>len(text)</code>으로 전체 글자 수를 셉니다.</li>
+                <li><code>text.split()</code>으로 단어 리스트를 만들고 단어 수를 셉니다.</li>
+                <li><code>text.count(" ")</code>으로 띄어쓰기 개수를 셉니다.</li>
+                <li><code>for char in text</code>로 한 글자씩 순회하며 분류합니다.</li>
+                <li><code>char.isalpha()</code>, <code>char.isdigit()</code> 메서드를 활용합니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- ===== 2페이지: 기본 카운팅 ===== -->
+<div class="page">
+    <h2>Step 1 — 기본 글자/단어/띄어쓰기 카운트</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p><code>len()</code>, <code>split()</code>, <code>count()</code>만으로도 유용한 통계를 뽑을 수 있습니다. 파이썬 문자열의 내장 메서드들을 활용합니다.</p>
+
+    <!-- SVG: len vs split 비교 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 460 52" style="max-width:460px;width:100%">
+            <rect x="5" y="8" width="215" height="36" rx="8" fill="#f0f9ff" stroke="#0369a1" stroke-width="1.5"/>
+            <text x="113" y="24" text-anchor="middle" font-size="9" fill="#0369a1" font-weight="700">len("Hello World") = 11</text>
+            <text x="113" y="38" text-anchor="middle" font-size="8" fill="#64748b">공백 포함 전체 글자 수</text>
+            <rect x="235" y="8" width="220" height="36" rx="8" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="345" y="24" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">len("Hello World".split()) = 2</text>
+            <text x="345" y="38" text-anchor="middle" font-size="8" fill="#64748b">공백 기준 단어 수</text>
+        </svg>
+    </div>
+
+    <!-- SVG: split() 동작 원리 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 60" style="max-width:460px;width:100%">
+            <defs>
+                <marker id="arrSp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="5" y="10" width="150" height="40" rx="8" fill="#f0f9ff" stroke="#0369a1" stroke-width="1.5"/>
+            <text x="80" y="27" text-anchor="middle" font-family="monospace" font-size="10" fill="#0c4a6e" font-weight="700">"나는 밥을 먹었다"</text>
+            <text x="80" y="42" text-anchor="middle" font-size="8" fill="#64748b">문자열 원본</text>
+            <line x1="160" y1="30" x2="198" y2="30" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrSp)"/>
+            <text x="179" y="24" text-anchor="middle" font-size="8" fill="#0369a1">.split()</text>
+            <rect x="200" y="10" width="255" height="40" rx="8" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="327" y="27" text-anchor="middle" font-family="monospace" font-size="10" fill="#166534" font-weight="700">["나는", "밥을", "먹었다"]</text>
+            <text x="327" y="42" text-anchor="middle" font-size="8" fill="#64748b">공백 기준으로 나뉜 리스트 (3개)</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># 기본 통계 함수</span>
+<span class="kw">def</span> <span class="fn">basic_count</span>(text):
+    chars = <span class="fn">len</span>(text)           <span class="cmt"># 전체 글자 수 (공백 포함)</span>
+    words = <span class="fn">len</span>(text.<span class="fn">split</span>())   <span class="cmt"># 단어 수</span>
+    spaces = text.<span class="fn">count</span>(<span class="str">" "</span>)    <span class="cmt"># 띄어쓰기 수</span>
+
+    <span class="fn">print</span>(<span class="str">f"전체 글자수: {chars}"</span>)
+    <span class="fn">print</span>(<span class="str">f"단어 수:    {words}"</span>)
+    <span class="fn">print</span>(<span class="str">f"띄어쓰기:   {spaces}"</span>)
+
+text = <span class="fn">input</span>(<span class="str">"문장을 입력하세요: "</span>)
+<span class="fn">basic_count</span>(text)</div>
+
+    <div class="output-box">문장을 입력하세요: 안녕하세요 저는 파이썬을 배우고 있습니다
+전체 글자수: 21
+단어 수:    5
+띄어쓰기:   4</div>
+
+    <!-- SVG: count() 동작 -->
+    <div style="text-align:center;margin:10px 0;">
+        <svg viewBox="0 0 460 48" style="max-width:460px;width:100%">
+            <rect x="5" y="8" width="450" height="32" rx="8" fill="#fefce8" stroke="#ca8a04" stroke-width="1.5"/>
+            <text x="230" y="23" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">"banana".count("a") = 3  |  "hello".count("l") = 2</text>
+            <text x="230" y="37" text-anchor="middle" font-size="8" fill="#64748b">count(x) — 문자열에서 x가 등장하는 횟수 반환</text>
+        </svg>
+    </div>
+
+    <h3>for 문으로 글자 분류하기</h3>
+    <p><code>for char in text</code>로 글자를 하나씩 순회하면서 <code>isalpha()</code>, <code>isdigit()</code>, <code>isspace()</code> 메서드로 종류를 분류할 수 있습니다.</p>
+
+    <!-- SVG: 글자 분류 원리 -->
+    <div style="text-align:center;margin:10px 0;">
+        <svg viewBox="0 0 460 50" style="max-width:460px;width:100%">
+            <rect x="5" y="8" width="100" height="36" rx="6" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="55" y="24" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">isalpha()</text>
+            <text x="55" y="38" text-anchor="middle" font-size="8" fill="#64748b">영문/한글 문자</text>
+            <rect x="115" y="8" width="100" height="36" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="165" y="24" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">isdigit()</text>
+            <text x="165" y="38" text-anchor="middle" font-size="8" fill="#64748b">숫자 0-9</text>
+            <rect x="225" y="8" width="100" height="36" rx="6" fill="#f0f9ff" stroke="#0369a1" stroke-width="1.5"/>
+            <text x="275" y="24" text-anchor="middle" font-size="9" fill="#0369a1" font-weight="700">isspace()</text>
+            <text x="275" y="38" text-anchor="middle" font-size="8" fill="#64748b">공백/탭/줄바꿈</text>
+            <rect x="335" y="8" width="120" height="36" rx="6" fill="#fff1f2" stroke="#f43f5e" stroke-width="1.5"/>
+            <text x="395" y="24" text-anchor="middle" font-size="9" fill="#be123c" font-weight="700">그 외 (특수문자)</text>
+            <text x="395" y="38" text-anchor="middle" font-size="8" fill="#64748b">!@#$% 등</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">def</span> <span class="fn">detail_count</span>(text):
+    alpha = digit = space = special = <span class="num">0</span>
+
+    <span class="kw">for</span> char <span class="kw">in</span> text:
+        <span class="kw">if</span> char.<span class="fn">isalpha</span>():
+            alpha += <span class="num">1</span>
+        <span class="kw">elif</span> char.<span class="fn">isdigit</span>():
+            digit += <span class="num">1</span>
+        <span class="kw">elif</span> char.<span class="fn">isspace</span>():
+            space += <span class="num">1</span>
+        <span class="kw">else</span>:
+            special += <span class="num">1</span>
+
+    <span class="fn">print</span>(<span class="str">f"문자: {alpha}  숫자: {digit}  공백: {space}  특수: {special}"</span>)</div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="완성" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+        <div class="practice-head">따라해보세요 — Step 1</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">"Hello World 123!"을 text 변수에 저장하고 basic_count()를 호출하세요.</div>
+                <div class="practice-result">전체 글자수: 16 / 단어 수: 3 / 띄어쓰기: 2</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">detail_count("Hello World 123!")를 호출해서 각 종류별 개수를 확인하세요.</div>
+                <div class="practice-result">문자: 10  숫자: 3  공백: 2  특수: 1</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">직접 문장을 input으로 입력받아 두 함수 모두 실행해보세요.</div>
+                <div class="practice-result">자신이 입력한 문장에 대한 통계가 출력됨</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== 3페이지: 완성 + 문제 ===== -->
+<div class="page">
+    <h2>Step 2 — 완성 코드 & 도전 문제</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/flowchart.png" alt="흐름" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>기본 카운트와 상세 분류를 합쳐 완전한 텍스트 분석 도구를 완성합니다. 결과를 시각적으로 보기 좋게 정리합니다.</p>
+
+    <!-- SVG: 카운터 변수 증가 패턴 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 460 48" style="max-width:460px;width:100%">
+            <rect x="5" y="8" width="215" height="32" rx="8" fill="#f0f9ff" stroke="#0369a1" stroke-width="1.5"/>
+            <text x="113" y="23" text-anchor="middle" font-size="9" fill="#0369a1" font-weight="700">alpha = 0  →  alpha += 1  →  alpha += 1</text>
+            <text x="113" y="37" text-anchor="middle" font-size="8" fill="#64748b">카운터 패턴: 초기화 → 반복 증가</text>
+            <rect x="235" y="8" width="220" height="32" rx="8" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="345" y="23" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">alpha = digit = space = 0</text>
+            <text x="345" y="37" text-anchor="middle" font-size="8" fill="#64748b">여러 변수 동시에 0으로 초기화</text>
+        </svg>
+    </div>
+
+    <!-- SVG: 완성 앱 출력 예시 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+            <rect x="5" y="5" width="450" height="70" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="22" text-anchor="middle" font-size="9" fill="#0c4a6e" font-weight="700">출력 예시: "Python 3.12 is great!"</text>
+            <rect x="20" y="30" width="95" height="36" rx="6" fill="#dcfce7"/>
+            <text x="67" y="46" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">글자수: 22</text>
+            <text x="67" y="60" text-anchor="middle" font-size="8" fill="#64748b">len(text)</text>
+            <rect x="125" y="30" width="95" height="36" rx="6" fill="#fef3c7"/>
+            <text x="172" y="46" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">단어: 4</text>
+            <text x="172" y="60" text-anchor="middle" font-size="8" fill="#64748b">split()</text>
+            <rect x="230" y="30" width="95" height="36" rx="6" fill="#f0f9ff"/>
+            <text x="277" y="46" text-anchor="middle" font-size="9" fill="#0369a1" font-weight="700">숫자: 3</text>
+            <text x="277" y="60" text-anchor="middle" font-size="8" fill="#64748b">isdigit()</text>
+            <rect x="335" y="30" width="105" height="36" rx="6" fill="#fff1f2"/>
+            <text x="387" y="46" text-anchor="middle" font-size="9" fill="#be123c" font-weight="700">특수문자: 2</text>
+            <text x="387" y="60" text-anchor="middle" font-size="8" fill="#64748b">!   .</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># 완성된 텍스트 분석기</span>
+<span class="kw">def</span> <span class="fn">analyze</span>(text):
+    <span class="fn">print</span>(<span class="str">"\n===== 텍스트 분석 결과 ====="</span>)
+    <span class="fn">print</span>(<span class="str">f"입력 문장: {text}"</span>)
+    <span class="fn">print</span>(<span class="str">f"전체 글자수: {len(text)}"</span>)
+    <span class="fn">print</span>(<span class="str">f"단어 수:    {len(text.split())}"</span>)
+    <span class="fn">print</span>(<span class="str">f"띄어쓰기:   {text.count(' ')}"</span>)
+
+    alpha = digit = space = special = <span class="num">0</span>
+    <span class="kw">for</span> c <span class="kw">in</span> text:
+        <span class="kw">if</span> c.<span class="fn">isalpha</span>(): alpha += <span class="num">1</span>
+        <span class="kw">elif</span> c.<span class="fn">isdigit</span>(): digit += <span class="num">1</span>
+        <span class="kw">elif</span> c.<span class="fn">isspace</span>(): space += <span class="num">1</span>
+        <span class="kw">else</span>: special += <span class="num">1</span>
+
+    <span class="fn">print</span>(<span class="str">f"문자: {alpha} / 숫자: {digit} / 특수문자: {special}"</span>)
+
+text = <span class="fn">input</span>(<span class="str">"문장을 입력하세요: "</span>)
+<span class="fn">analyze</span>(text)</div>
+
+    <!-- SVG: max with key 설명 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 460 48" style="max-width:460px;width:100%">
+            <rect x="5" y="8" width="450" height="32" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+            <text x="230" y="23" text-anchor="middle" font-size="9" fill="#5b21b6" font-weight="700">max("banana", key="banana".count) → "a"</text>
+            <text x="230" y="37" text-anchor="middle" font-size="8" fill="#64748b">각 글자를 count()로 평가하여 가장 높은 값의 글자 반환</text>
+        </svg>
+    </div>
+
+    <!-- SVG: 리스트 컴프리헨션 예시 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 460 48" style="max-width:460px;width:100%">
+            <rect x="5" y="8" width="450" height="32" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="230" y="23" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">[len(w) for w in text.split()] — 단어 길이 리스트</text>
+            <text x="230" y="37" text-anchor="middle" font-size="8" fill="#64748b">"I love Python" → [1, 5, 6]  |  min=1  max=6  avg=4.0</text>
+        </svg>
+    </div>
+
+    <!-- 문제 1 -->
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/lightbulb.png" alt="아이디어" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q1</div>
+            <div class="problem-label">가장 많이 나온 글자 찾기</div>
+            <div class="problem-diff easy">쉬움</div>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">"banana" 문자열에서 가장 많이 등장한 글자를 찾으세요. <code>text.count(char)</code>를 for 문 안에서 사용하면 됩니다.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">입력</span><span class="problem-example-value">"banana"</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">가장 많은 글자: 'a' (3번)</span></div>
+            </div>
+        </div>
+        <div class="problem-toggle">
+            <details>
+                <summary>힌트 / 정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">힌트: max()와 key=text.count 를 활용하세요.</div>
+                    <div class="answer-code">text = "banana"
+most = max(text, key=text.count)
+print(f"가장 많은 글자: '{most}' ({text.count(most)}번)")</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <!-- 문제 2 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q2</div>
+            <div class="problem-label">모음/자음 세기</div>
+            <div class="problem-diff medium">보통</div>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">영어 문장에서 모음(a,e,i,o,u)과 자음의 수를 세는 코드를 작성하세요. 소문자로 변환 후 비교합니다.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">입력</span><span class="problem-example-value">"Hello World"</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">모음: 3, 자음: 7</span></div>
+            </div>
+        </div>
+        <div class="problem-toggle">
+            <details>
+                <summary>힌트 / 정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">힌트: if c.lower() in "aeiou": vowel += 1</div>
+                    <div class="answer-code">text = "Hello World"
+vowels = consonants = 0
+for c in text:
+    if c.isalpha():
+        if c.lower() in "aeiou":
+            vowels += 1
+        else:
+            consonants += 1
+print(f"모음: {vowels}, 자음: {consonants}")</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <!-- 문제 3 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q3</div>
+            <div class="problem-label">단어 길이 통계</div>
+            <div class="problem-diff hard">어려움</div>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">문장의 각 단어 길이를 리스트에 저장하고, 가장 짧은 단어와 긴 단어, 평균 길이를 출력하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">입력</span><span class="problem-example-value">"I love Python"</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">최단: 1, 최장: 6, 평균: 3.7</span></div>
+            </div>
+        </div>
+        <div class="problem-toggle">
+            <details>
+                <summary>힌트 / 정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">힌트: lengths = [len(w) for w in text.split()]</div>
+                    <div class="answer-code">text = "I love Python"
+lengths = [len(w) for w in text.split()]
+print(f"최단: {min(lengths)}")
+print(f"최장: {max(lengths)}")
+print(f"평균: {sum(lengths)/len(lengths):.1f}")</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <!-- SVG: 완성 함수 구조 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 460 44" style="max-width:460px;width:100%">
+            <rect x="5" y="8" width="450" height="28" rx="8" fill="#f0f9ff" stroke="#0369a1" stroke-width="1.5"/>
+            <text x="230" y="21" text-anchor="middle" font-size="9" fill="#0369a1" font-weight="700">analyze(text) 함수 호출 → 기본 통계 + 글자 분류 + 결과 출력</text>
+            <text x="230" y="33" text-anchor="middle" font-size="8" fill="#64748b">하나의 함수로 모든 분석을 처리 — 재사용 가능</text>
+        </svg>
+    </div>
+
+    <!-- 핵심 요약 -->
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/keyboard.png" alt="키보드" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>핵심 요약</h3>
+        <ul>
+            <li><code>len(text)</code> — 전체 글자 수 (공백 포함)</li>
+            <li><code>text.split()</code> — 공백 기준 단어 리스트 반환</li>
+            <li><code>text.count("x")</code> — "x"가 text에 나오는 횟수</li>
+            <li><code>char.isalpha()</code> — 문자 여부 / <code>isdigit()</code> — 숫자 여부</li>
+            <li><code>for c in text</code> — 문자열을 한 글자씩 순회</li>
+        </ul>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

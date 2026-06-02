@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 프로젝트: 시간표 관리</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 16px; font-weight: 700; color: #1e3a5f; margin: 18px 0 10px; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+ul, ol { margin: 0 0 12px 20px; }
+li { font-size: 14px; color: #374151; line-height: 1.8; }
+
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13.5px;
+    color: #e2e8f0; line-height: 1.85; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.code .dec { color: #f9a8d4; }
+
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+.output-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #334155; line-height: 1.7; margin: 10px 0; }
+
+.compare-table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13px; }
+.compare-table th { background: #1e3a5f; color: #fff; padding: 8px 12px; text-align: left; font-weight: 700; }
+.compare-table td { padding: 7px 12px; border-bottom: 1px solid #e2e8f0; color: #374151; }
+.compare-table tr:nth-child(even) td { background: #f8fafc; }
+.compare-table code { background: #e0e7ff; padding: 1px 5px; border-radius: 3px; font-family: 'JetBrains Mono', monospace; color: #3730a3; font-size: 12px; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- 1페이지: 표지 -->
+<div class="page cover">
+  <div class="cover-sidebar"></div>
+  <div class="cover-accent"></div>
+  <div class="cover-body">
+    <div class="cover-watermark">60</div>
+    <div class="cover-label">L3 — Unit 60 Project · R1</div>
+    <h1 class="cover-title">프로젝트:<br>시간표 관리</h1>
+    <p class="cover-sub">datetime 모듈로 날짜와 시간을 다루고, 수업 일정을 딕셔너리로 관리합니다. JSON 저장으로 데이터를 영속화하는 시간표 관리 시스템을 만듭니다.</p>
+    <div style="margin:24px 0;">
+      <svg viewBox="0 0 480 170" style="max-width:480px;width:100%">
+        <defs><marker id="cv1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker></defs>
+        <rect x="5" y="10" width="130" height="150" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+        <text x="70" y="28" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">datetime 모듈</text>
+        <line x1="15" y1="34" x2="125" y2="34" stroke="#93c5fd" stroke-width="0.8"/>
+        <text x="70" y="50" text-anchor="middle" font-size="8" fill="#1d4ed8">datetime.now()</text>
+        <line x1="15" y1="56" x2="125" y2="56" stroke="#93c5fd" stroke-width="0.8"/>
+        <text x="70" y="72" text-anchor="middle" font-size="8" fill="#1d4ed8">strftime(format)</text>
+        <line x1="15" y1="78" x2="125" y2="78" stroke="#93c5fd" stroke-width="0.8"/>
+        <text x="70" y="94" text-anchor="middle" font-size="8" fill="#1d4ed8">strptime(str, fmt)</text>
+        <line x1="15" y1="100" x2="125" y2="100" stroke="#93c5fd" stroke-width="0.8"/>
+        <text x="70" y="116" text-anchor="middle" font-size="8" fill="#1d4ed8">timedelta(days=)</text>
+        <line x1="15" y1="122" x2="125" y2="122" stroke="#93c5fd" stroke-width="0.8"/>
+        <text x="70" y="138" text-anchor="middle" font-size="8" fill="#1d4ed8">weekday()</text>
+        <line x1="15" y1="144" x2="125" y2="144" stroke="#93c5fd" stroke-width="0.8"/>
+        <text x="70" y="158" text-anchor="middle" font-size="8" fill="#1d4ed8">isoweekday()</text>
+        <path d="M138,85 L178,85" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#cv1)"/>
+        <rect x="181" y="10" width="120" height="150" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+        <text x="241" y="28" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">시간표 기능</text>
+        <line x1="191" y1="34" x2="291" y2="34" stroke="#86efac" stroke-width="0.8"/>
+        <text x="241" y="50" text-anchor="middle" font-size="9" fill="#166534">add_class()</text>
+        <line x1="191" y1="56" x2="291" y2="56" stroke="#86efac" stroke-width="0.8"/>
+        <text x="241" y="72" text-anchor="middle" font-size="9" fill="#166534">show_today()</text>
+        <line x1="191" y1="78" x2="291" y2="78" stroke="#86efac" stroke-width="0.8"/>
+        <text x="241" y="94" text-anchor="middle" font-size="9" fill="#166534">show_week()</text>
+        <line x1="191" y1="100" x2="291" y2="100" stroke="#86efac" stroke-width="0.8"/>
+        <text x="241" y="116" text-anchor="middle" font-size="9" fill="#166534">delete_class()</text>
+        <line x1="191" y1="122" x2="291" y2="122" stroke="#86efac" stroke-width="0.8"/>
+        <text x="241" y="138" text-anchor="middle" font-size="9" fill="#166534">save_schedule()</text>
+        <line x1="191" y1="144" x2="291" y2="144" stroke="#86efac" stroke-width="0.8"/>
+        <text x="241" y="158" text-anchor="middle" font-size="9" fill="#166534">load_schedule()</text>
+        <path d="M304,85 L344,85" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#cv1)"/>
+        <rect x="347" y="10" width="128" height="150" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+        <text x="411" y="28" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">주간 시간표</text>
+        <text x="411" y="48" text-anchor="middle" font-size="8" fill="#92400e">월: [수학 09:00]</text>
+        <text x="411" y="64" text-anchor="middle" font-size="8" fill="#92400e">화: [영어 10:00]</text>
+        <text x="411" y="80" text-anchor="middle" font-size="8" fill="#92400e">수: [과학 09:00]</text>
+        <text x="411" y="96" text-anchor="middle" font-size="8" fill="#92400e">목: [수학 11:00]</text>
+        <text x="411" y="112" text-anchor="middle" font-size="8" fill="#92400e">금: [국어 13:00]</text>
+        <text x="411" y="134" text-anchor="middle" font-size="7" fill="#64748b">schedule.json</text>
+      </svg>
+    </div>
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/puzzle.png" alt="고급 기능" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+      <h3>이 프로젝트에서 만드는 것</h3>
+      <ul>
+        <li>datetime.now()와 strftime/strptime으로 날짜 파싱</li>
+        <li>timedelta로 날짜 연산 (D-day 계산)</li>
+        <li>요일별 딕셔너리로 시간표 데이터 구조 설계</li>
+        <li>수업 추가, 삭제, 조회, 오늘 시간표 출력</li>
+        <li>JSON 저장/불러오기로 영속적 시간표 관리</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- 2페이지: 핵심 개념 -->
+<div class="page">
+  <h2>핵심 개념 — datetime과 날짜 연산</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="처리" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+  <p>datetime 모듈은 날짜와 시간을 다루는 파이썬 내장 모듈입니다. <code>datetime.now()</code>로 현재 시각을 가져오고, <code>strftime()</code>으로 원하는 형식의 문자열로 변환합니다. <code>strptime()</code>은 반대로 문자열을 datetime 객체로 변환합니다. weekday()는 월요일=0, 일요일=6으로 반환합니다.</p>
+  <div style="text-align:center;margin:14px 0;">
+    <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+      <defs><marker id="dt1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker></defs>
+      <text x="230" y="14" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">strftime / strptime 변환 흐름</text>
+      <rect x="5" y="22" width="110" height="46" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+      <text x="60" y="40" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">datetime</text>
+      <text x="60" y="56" text-anchor="middle" font-size="8" fill="#64748b">객체</text>
+      <path d="M118,38 L158,38" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#dt1)"/>
+      <text x="138" y="30" text-anchor="middle" font-size="7" fill="#64748b">strftime</text>
+      <path d="M158,50 L118,50" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#dt1)"/>
+      <text x="138" y="62" text-anchor="middle" font-size="7" fill="#64748b">strptime</text>
+      <rect x="161" y="22" width="120" height="46" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+      <text x="221" y="40" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">"2025-03-21"</text>
+      <text x="221" y="56" text-anchor="middle" font-size="8" fill="#64748b">문자열</text>
+      <rect x="300" y="22" width="155" height="46" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+      <text x="377" y="36" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">%Y-%m-%d %H:%M</text>
+      <text x="377" y="52" text-anchor="middle" font-size="8" fill="#92400e">%A=요일 %j=연간날짜</text>
+    </svg>
+  </div>
+  <div style="text-align:center;margin:14px 0;">
+    <svg viewBox="0 0 460 72" style="max-width:460px;width:100%">
+      <defs><marker id="td1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker></defs>
+      <text x="230" y="14" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">timedelta로 날짜 연산 — D-day 계산</text>
+      <rect x="5" y="22" width="100" height="42" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+      <text x="55" y="38" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">target_date</text>
+      <text x="55" y="54" text-anchor="middle" font-size="8" fill="#64748b">시험일 datetime</text>
+      <text x="140" y="44" text-anchor="middle" font-size="16" fill="#64748b" font-weight="700">-</text>
+      <rect x="160" y="22" width="100" height="42" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+      <text x="210" y="38" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">today</text>
+      <text x="210" y="54" text-anchor="middle" font-size="8" fill="#64748b">datetime.now()</text>
+      <text x="295" y="44" text-anchor="middle" font-size="16" fill="#64748b" font-weight="700">=</text>
+      <rect x="310" y="22" width="145" height="42" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+      <text x="382" y="38" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">timedelta</text>
+      <text x="382" y="54" text-anchor="middle" font-size="8" fill="#92400e">.days 로 일수 추출</text>
+    </svg>
+  </div>
+  <div class="code"><span class="cmt"># datetime 기본 사용법</span>
+<span class="kw">from</span> datetime <span class="kw">import</span> datetime, timedelta
+
+now = datetime.<span class="fn">now</span>()
+<span class="fn">print</span>(now.<span class="fn">strftime</span>(<span class="str">"%Y년 %m월 %d일 %H:%M"</span>))    <span class="cmt"># 2025년 03월 21일 09:30</span>
+dt = datetime.<span class="fn">strptime</span>(<span class="str">"2025-06-20"</span>, <span class="str">"%Y-%m-%d"</span>)
+diff = (dt - now).days
+<span class="fn">print</span>(<span class="str">f"D-{diff}"</span>)     <span class="cmt"># 기말고사까지 남은 일수</span>
+
+delta = timedelta(days=<span class="num">7</span>)
+<span class="fn">print</span>((now + delta).<span class="fn">strftime</span>(<span class="str">"%Y-%m-%d"</span>))   <span class="cmt"># 1주일 뒤</span></div>
+  <div style="text-align:center;margin:12px 0;">
+    <svg viewBox="0 0 460 60" style="max-width:460px;width:100%">
+      <defs><marker id="wk1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker></defs>
+      <text x="230" y="13" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">weekday() 반환값 매핑</text>
+      <rect x="5" y="22" width="54" height="28" rx="5" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+      <text x="32" y="40" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">0 = 월</text>
+      <rect x="65" y="22" width="54" height="28" rx="5" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+      <text x="92" y="40" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">1 = 화</text>
+      <rect x="125" y="22" width="54" height="28" rx="5" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+      <text x="152" y="40" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">2 = 수</text>
+      <rect x="185" y="22" width="54" height="28" rx="5" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+      <text x="212" y="40" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">3 = 목</text>
+      <rect x="245" y="22" width="54" height="28" rx="5" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+      <text x="272" y="40" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">4 = 금</text>
+      <rect x="305" y="22" width="54" height="28" rx="5" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+      <text x="332" y="40" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">5 = 토</text>
+      <rect x="365" y="22" width="54" height="28" rx="5" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+      <text x="392" y="40" text-anchor="middle" font-size="9" fill="#991b1b" font-weight="700">6 = 일</text>
+    </svg>
+  </div>
+  <h3>Step 1 — 시간표 데이터 구조와 수업 추가</h3>
+  <p>요일을 키로, 수업 목록을 값으로 갖는 딕셔너리로 시간표를 설계합니다. <code>weekday()</code>는 0~6(월~일)을 반환하므로 DAYS 리스트와 매핑합니다. add_class는 요일과 시간을 입력받아 schedule에 추가합니다.</p>
+  <div style="text-align:center;margin:12px 0;">
+    <svg viewBox="0 0 460 60" style="max-width:460px;width:100%">
+      <defs><marker id="sc1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker></defs>
+      <text x="230" y="13" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">schedule 딕셔너리 구조</text>
+      <rect x="5" y="20" width="60" height="32" rx="5" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+      <text x="35" y="39" text-anchor="middle" font-size="8" fill="#1d4ed8" font-weight="700">"월"</text>
+      <rect x="75" y="20" width="60" height="32" rx="5" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+      <text x="105" y="39" text-anchor="middle" font-size="8" fill="#1d4ed8" font-weight="700">"화"</text>
+      <rect x="145" y="20" width="60" height="32" rx="5" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+      <text x="175" y="39" text-anchor="middle" font-size="8" fill="#1d4ed8" font-weight="700">"수"</text>
+      <rect x="215" y="20" width="60" height="32" rx="5" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+      <text x="245" y="39" text-anchor="middle" font-size="8" fill="#1d4ed8" font-weight="700">"목"</text>
+      <rect x="285" y="20" width="60" height="32" rx="5" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+      <text x="315" y="39" text-anchor="middle" font-size="8" fill="#1d4ed8" font-weight="700">"금"</text>
+      <text x="395" y="36" text-anchor="middle" font-size="9" fill="#64748b">각 값 = list</text>
+    </svg>
+  </div>
+  <div class="code"><span class="cmt"># Step 1: 시간표 데이터 구조</span>
+<span class="kw">from</span> datetime <span class="kw">import</span> datetime, timedelta
+
+DAYS = [<span class="str">"월"</span>, <span class="str">"화"</span>, <span class="str">"수"</span>, <span class="str">"목"</span>, <span class="str">"금"</span>, <span class="str">"토"</span>, <span class="str">"일"</span>]
+
+schedule = {day: [] <span class="kw">for</span> day <span class="kw">in</span> DAYS}   <span class="cmt"># 딕셔너리 컴프리헨션</span>
+
+<span class="kw">def</span> <span class="fn">add_class</span>(day, subject, time_str):
+    <span class="str">"""time_str 형식: '09:30'"""</span>
+    schedule[day].<span class="fn">append</span>({"subject": subject, "time": time_str})
+    schedule[day].<span class="fn">sort</span>(key=<span class="kw">lambda</span> x: x[<span class="str">"time"</span>])
+    <span class="fn">print</span>(<span class="str">f"[추가] {day}요일 {time_str} {subject}"</span>)
+
+<span class="kw">def</span> <span class="fn">show_today</span>():
+    today = datetime.<span class="fn">now</span>()
+    day = DAYS[today.<span class="fn">weekday</span>()]
+    <span class="fn">print</span>(<span class="str">f"오늘({today.strftime('%Y-%m-%d')}) {day}요일 시간표:"</span>)
+    classes = schedule.<span class="fn">get</span>(day, [])
+    <span class="kw">if not</span> classes:
+        <span class="fn">print</span>(<span class="str">"  수업 없음"</span>)
+    <span class="kw">else</span>:
+        <span class="kw">for</span> c <span class="kw">in</span> classes:
+            <span class="fn">print</span>(<span class="str">f"  {c['time']} {c['subject']}"</span>)</div>
+  <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="완성" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+    <div class="practice-head">따라해보세요 — Step 1</div>
+    <div class="practice-body">
+      <div class="practice-item">
+        <div class="practice-num">1</div>
+        <div class="practice-desc"><code>add_class("월", "수학", "09:00")</code>, <code>add_class("월", "영어", "11:00")</code>를 호출하세요.</div>
+        <div class="practice-result">월요일 리스트에 시간 순으로 정렬되어 저장됩니다</div>
+      </div>
+      <div class="practice-item">
+        <div class="practice-num">2</div>
+        <div class="practice-desc"><code>datetime.now().weekday()</code>의 반환값과 해당 요일을 확인하세요.</div>
+        <div class="practice-result">0=월, 1=화 ... 6=일로 매핑됩니다</div>
+      </div>
+      <div class="practice-item">
+        <div class="practice-num">3</div>
+        <div class="practice-desc">딕셔너리 컴프리헨션 <code>{day: [] for day in DAYS}</code>의 결과를 직접 출력해 보세요.</div>
+        <div class="practice-result">7개 요일 키에 빈 리스트가 할당됩니다</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 3페이지: Step 2 -->
+<div class="page">
+  <h2>Step 2 — 주간 조회 + JSON 저장</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/database.png" alt="데이터" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+  <div style="text-align:center;margin:10px 0;">
+    <svg viewBox="0 0 460 62" style="max-width:460px;width:100%">
+      <defs><marker id="s2a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker></defs>
+      <text x="230" y="13" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">Step 2 구현 목표</text>
+      <rect x="5" y="20" width="95" height="32" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+      <text x="52" y="39" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">show_week()</text>
+      <path d="M103,36 L123,36" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#s2a)"/>
+      <rect x="126" y="20" width="95" height="32" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+      <text x="173" y="39" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">delete_class()</text>
+      <path d="M224,36 L244,36" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#s2a)"/>
+      <rect x="247" y="20" width="95" height="32" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+      <text x="294" y="39" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">save_schedule()</text>
+      <path d="M345,36 L365,36" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#s2a)"/>
+      <rect x="368" y="20" width="87" height="32" rx="6" fill="#ede9fe" stroke="#8b5cf6" stroke-width="1.5"/>
+      <text x="411" y="39" text-anchor="middle" font-size="9" fill="#5b21b6" font-weight="700">load_schedule()</text>
+    </svg>
+  </div>
+  <p><code>show_week()</code>는 schedule 딕셔너리의 모든 요일을 순회하고, <code>delete_class()</code>는 특정 요일에서 subject 이름이 일치하는 항목을 제거합니다. JSON 저장 시 datetime 객체는 직렬화 불가하므로 시간을 문자열로만 관리합니다.</p>
+  <div style="text-align:center;margin:12px 0;">
+    <svg viewBox="0 0 460 60" style="max-width:460px;width:100%">
+      <defs><marker id="js3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker></defs>
+      <text x="230" y="13" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">schedule dict JSON 직렬화 흐름</text>
+      <rect x="5" y="20" width="130" height="32" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+      <text x="70" y="39" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">schedule (dict of lists)</text>
+      <path d="M138,36 L168,36" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#js3)"/>
+      <text x="153" y="30" text-anchor="middle" font-size="7" fill="#64748b">json.dump</text>
+      <rect x="171" y="20" width="110" height="32" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+      <text x="226" y="39" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">schedule.json</text>
+      <path d="M284,36 L314,36" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#js3)"/>
+      <text x="299" y="30" text-anchor="middle" font-size="7" fill="#64748b">json.load</text>
+      <rect x="317" y="20" width="138" height="32" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+      <text x="386" y="39" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">schedule 복원</text>
+    </svg>
+  </div>
+  <div class="code"><span class="cmt"># Step 2: 주간 조회 + 삭제 + JSON</span>
+<span class="kw">import</span> json
+
+<span class="kw">def</span> <span class="fn">show_week</span>():
+    <span class="fn">print</span>(<span class="str">"=== 주간 시간표 ==="</span>)
+    <span class="kw">for</span> day <span class="kw">in</span> DAYS[:5]:    <span class="cmt"># 월~금만</span>
+        classes = schedule[day]
+        <span class="kw">if</span> classes:
+            <span class="fn">print</span>(<span class="str">f"{day}: {', '.join(f\"{c['time']}{c['subject']}\" for c in classes)}"</span>)
+
+<span class="kw">def</span> <span class="fn">delete_class</span>(day, subject):
+    before = <span class="fn">len</span>(schedule[day])
+    schedule[day] = [c <span class="kw">for</span> c <span class="kw">in</span> schedule[day] <span class="kw">if</span> c[<span class="str">"subject"</span>] != subject]
+    <span class="kw">if</span> <span class="fn">len</span>(schedule[day]) &lt; before:
+        <span class="fn">print</span>(<span class="str">f"[삭제] {day} {subject}"</span>)
+
+<span class="kw">def</span> <span class="fn">save_schedule</span>(path=<span class="str">"schedule.json"</span>):
+    <span class="kw">with</span> <span class="fn">open</span>(path, <span class="str">"w"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+        json.<span class="fn">dump</span>(schedule, f, ensure_ascii=<span class="kw">False</span>, indent=<span class="num">2</span>)
+
+<span class="kw">def</span> <span class="fn">load_schedule</span>(path=<span class="str">"schedule.json"</span>):
+    <span class="kw">global</span> schedule
+    <span class="kw">try</span>:
+        <span class="kw">with</span> <span class="fn">open</span>(path, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+            schedule = json.<span class="fn">load</span>(f)
+        <span class="fn">print</span>(<span class="str">"시간표 불러오기 완료"</span>)
+    <span class="kw">except</span> FileNotFoundError:
+        <span class="fn">print</span>(<span class="str">"저장 파일 없음"</span>)
+
+<span class="kw">def</span> <span class="fn">dday</span>(date_str):
+    <span class="str">"""date_str: 'YYYY-MM-DD'"""</span>
+    target = datetime.<span class="fn">strptime</span>(date_str, <span class="str">"%Y-%m-%d"</span>)
+    diff = (target - datetime.<span class="fn">now</span>().<span class="fn">replace</span>(hour=<span class="num">0</span>, minute=<span class="num">0</span>)).days
+    <span class="fn">print</span>(<span class="str">f"D-{diff}"</span> <span class="kw">if</span> diff &gt; <span class="num">0</span> <span class="kw">else</span> <span class="str">f"D+{abs(diff)}"</span>)</div>
+  <div class="practice">
+    <div class="practice-head">따라해보세요 — Step 2</div>
+    <div class="practice-body">
+      <div class="practice-item">
+        <div class="practice-num">1</div>
+        <div class="practice-desc">여러 수업을 추가한 뒤 <code>show_week()</code>로 전체 시간표를 출력하세요.</div>
+        <div class="practice-result">월~금 시간표가 시간 순서로 출력됩니다</div>
+      </div>
+      <div class="practice-item">
+        <div class="practice-num">2</div>
+        <div class="practice-desc"><code>save_schedule()</code> 후 <code>load_schedule()</code>을 호출해 데이터가 유지되는지 확인하세요.</div>
+        <div class="practice-result">JSON 파일에서 딕셔너리가 그대로 복원됩니다</div>
+      </div>
+      <div class="practice-item">
+        <div class="practice-num">3</div>
+        <div class="practice-desc"><code>dday("2025-06-20")</code>로 기말고사까지 남은 일수를 계산해 보세요.</div>
+        <div class="practice-result">D-N 형식으로 남은 일수가 출력됩니다</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 4페이지: 연습 문제 + 요약 -->
+<div class="page">
+  <h2>연습 문제</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+  <div style="text-align:center;margin:10px 0 6px;">
+    <svg viewBox="0 0 460 56" style="max-width:460px;width:100%">
+      <defs><marker id="ad1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker></defs>
+      <text x="230" y="13" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">add_class 실행 흐름</text>
+      <rect x="5" y="20" width="110" height="28" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+      <text x="60" y="38" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">add_class(day, subject, time)</text>
+      <path d="M118,34 L148,34" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#ad1)"/>
+      <rect x="151" y="20" width="110" height="28" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+      <text x="206" y="38" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">schedule[day].append()</text>
+      <path d="M264,34 L294,34" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#ad1)"/>
+      <rect x="297" y="20" width="158" height="28" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+      <text x="376" y="38" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">.sort(key=lambda x: x["time"])</text>
+    </svg>
+  </div>
+  <div style="text-align:center;margin:10px 0 16px;">
+    <svg viewBox="0 0 460 52" style="max-width:460px;width:100%">
+      <defs><marker id="qf1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker></defs>
+      <text x="230" y="13" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">문제 구성</text>
+      <rect x="5" y="20" width="140" height="28" rx="6" fill="#d1fae5" stroke="#22c55e" stroke-width="1.5"/>
+      <text x="75" y="38" text-anchor="middle" font-size="9" fill="#065f46" font-weight="700">Q1: 다음 수업 조회</text>
+      <path d="M148,34 L168,34" stroke="#94a3b8" stroke-width="1" marker-end="url(#qf1)"/>
+      <rect x="171" y="20" width="130" height="28" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+      <text x="236" y="38" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">Q2: 수업 수정</text>
+      <path d="M304,34 L324,34" stroke="#94a3b8" stroke-width="1" marker-end="url(#qf1)"/>
+      <rect x="327" y="20" width="128" height="28" rx="6" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+      <text x="391" y="38" text-anchor="middle" font-size="9" fill="#991b1b" font-weight="700">Q3: 일정 충돌 검사</text>
+    </svg>
+  </div>
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">Q1</div>
+      <div class="problem-label">다음 수업 조회</div>
+      <div class="problem-diff easy">Easy</div>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">오늘 현재 시각 이후 가장 가까운 수업을 출력하는 <code>next_class()</code> 함수를 작성하세요. 오늘 남은 수업이 없으면 "오늘 수업 없음"을 출력합니다. <code>datetime.now()</code>와 <code>strptime</code>으로 시간을 비교합니다.</div>
+      <div class="problem-example">
+        <div class="problem-example-row"><div class="problem-example-label">호출</div><div class="problem-example-value">next_class()</div></div>
+        <div class="problem-example-row"><div class="problem-example-label">출력</div><div class="problem-example-value">다음 수업: 14:00 과학</div></div>
+      </div>
+      <details class="problem-toggle">
+        <summary>힌트 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="hint-text">오늘 요일의 수업 중 <code>datetime.strptime(c["time"], "%H:%M").time()</code>이 현재 시간보다 큰 것 중 가장 이른 것을 찾습니다.</div>
+        </div>
+      </details>
+      <details class="problem-toggle">
+        <summary>정답 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="answer-code">def next_class():
+    now = datetime.now()
+    day = DAYS[now.weekday()]
+    current_time = now.time()
+    upcoming = [c for c in schedule[day]
+                if datetime.strptime(c["time"], "%H:%M").time() > current_time]
+    if upcoming:
+        c = upcoming[0]
+        print(f"다음 수업: {c['time']} {c['subject']}")
+    else:
+        print("오늘 수업 없음")</div>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">Q2</div>
+      <div class="problem-label">수업 시간 수정</div>
+      <div class="problem-diff medium">Medium</div>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text"><code>update_class(day, subject, new_time)</code> 함수를 작성하세요. 해당 요일에서 subject를 찾아 시간을 수정하고, 수정 후 시간 순으로 재정렬합니다. 없는 과목이면 오류 메시지를 출력합니다.</div>
+      <div class="problem-example">
+        <div class="problem-example-row"><div class="problem-example-label">호출</div><div class="problem-example-value">update_class("월", "수학", "10:00")</div></div>
+        <div class="problem-example-row"><div class="problem-example-label">출력</div><div class="problem-example-value">[수정] 월 수학 10:00</div></div>
+      </div>
+      <details class="problem-toggle">
+        <summary>힌트 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="hint-text">리스트 순회 중 <code>c["subject"] == subject</code>인 항목을 찾아 <code>c["time"] = new_time</code>으로 수정합니다. 수정 후 <code>sort(key=...)</code>를 다시 호출합니다.</div>
+        </div>
+      </details>
+      <details class="problem-toggle">
+        <summary>정답 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="answer-code">def update_class(day, subject, new_time):
+    for c in schedule[day]:
+        if c["subject"] == subject:
+            c["time"] = new_time
+            schedule[day].sort(key=lambda x: x["time"])
+            print(f"[수정] {day} {subject} {new_time}")
+            return
+    print(f"[오류] {day} {subject} 없음")</div>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">Q3</div>
+      <div class="problem-label">시간 충돌 검사</div>
+      <div class="problem-diff hard">Hard</div>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">같은 요일에 동일한 시간대(시간이 같은 경우)의 수업이 이미 존재하면 추가를 막는 <code>safe_add(day, subject, time_str)</code>를 작성하세요. <code>strptime</code>으로 시간을 파싱해 <code>timedelta</code>로 30분 이내 충돌을 감지합니다.</div>
+      <div class="problem-example">
+        <div class="problem-example-row"><div class="problem-example-label">충돌</div><div class="problem-example-value">safe_add("월", "체육", "09:20") → 충돌!</div></div>
+        <div class="problem-example-row"><div class="problem-example-label">정상</div><div class="problem-example-value">safe_add("월", "체육", "11:00") → 추가됨</div></div>
+      </div>
+      <details class="problem-toggle">
+        <summary>힌트 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="hint-text"><code>abs((t1 - t2).seconds) &lt; 1800</code>로 30분 이내 충돌을 판단합니다. datetime.strptime으로 두 시간을 datetime 객체로 변환해 뺄셈합니다.</div>
+        </div>
+      </details>
+      <details class="problem-toggle">
+        <summary>정답 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="answer-code">def safe_add(day, subject, time_str):
+    new_t = datetime.strptime(time_str, "%H:%M")
+    for c in schedule[day]:
+        exist_t = datetime.strptime(c["time"], "%H:%M")
+        if abs((new_t - exist_t).seconds) < 1800:
+            print(f"[충돌] {c['time']} {c['subject']}와 30분 이내")
+            return
+    add_class(day, subject, time_str)</div>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div style="text-align:center;margin:10px 0;">
+    <svg viewBox="0 0 460 50" style="max-width:460px;width:100%">
+      <defs><marker id="sy1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker></defs>
+      <text x="230" y="13" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">전체 시스템 흐름</text>
+      <rect x="5" y="20" width="80" height="24" rx="5" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+      <text x="45" y="35" text-anchor="middle" font-size="8" fill="#1d4ed8" font-weight="700">add_class()</text>
+      <path d="M88,32 L108,32" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#sy1)"/>
+      <rect x="111" y="20" width="80" height="24" rx="5" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+      <text x="151" y="35" text-anchor="middle" font-size="8" fill="#166534" font-weight="700">schedule dict</text>
+      <path d="M194,32 L214,32" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#sy1)"/>
+      <rect x="217" y="20" width="80" height="24" rx="5" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+      <text x="257" y="35" text-anchor="middle" font-size="8" fill="#92400e" font-weight="700">show_week()</text>
+      <path d="M300,32 L320,32" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#sy1)"/>
+      <rect x="323" y="20" width="80" height="24" rx="5" fill="#ede9fe" stroke="#8b5cf6" stroke-width="1.5"/>
+      <text x="363" y="35" text-anchor="middle" font-size="8" fill="#5b21b6" font-weight="700">save_schedule()</text>
+      <path d="M406,32 L426,32" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#sy1)"/>
+      <rect x="429" y="20" width="27" height="24" rx="5" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+      <text x="442" y="35" text-anchor="middle" font-size="7" fill="#166534" font-weight="700">JSON</text>
+    </svg>
+  </div>
+  <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+    <h3>핵심 요약</h3>
+    <ul>
+      <li><strong>datetime.now()</strong> — 현재 날짜/시간 반환, <code>.weekday()</code>로 요일 인덱스(0=월)</li>
+      <li><strong>strftime / strptime</strong> — datetime <--> 문자열 양방향 변환, %Y %m %d %H %M</li>
+      <li><strong>timedelta</strong> — 날짜 연산, <code>(target - today).days</code>로 D-day 계산</li>
+      <li><strong>딕셔너리 컴프리헨션</strong> — <code>{day: [] for day in DAYS}</code>로 요일별 리스트 초기화</li>
+      <li><strong>JSON 저장</strong> — 문자열 기반 시간 데이터는 직렬화 가능, datetime 객체는 불가</li>
+    </ul>
+  </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

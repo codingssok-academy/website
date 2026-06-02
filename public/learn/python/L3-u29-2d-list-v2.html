@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 2차원 리스트: 표와 격자</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+/* ── 페이지 ── */
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+/* ── 챕터 표지 ── */
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+
+/* ── 본문 ── */
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 16px; font-weight: 700; color: #1e3a5f; margin: 18px 0 10px; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+ul, ol { margin: 0 0 12px 20px; }
+li { font-size: 14px; color: #374151; line-height: 1.8; }
+
+/* ── 코드 블록 ── */
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13.5px;
+    color: #e2e8f0; line-height: 1.85; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.code .dec { color: #f9a8d4; }
+
+/* ── 따라해보세요 ── */
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+
+/* ── 문제 ── */
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+
+/* ── 요약 ── */
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+/* ── 단계 박스 ── */
+.step-box { border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 14px 18px; margin: 14px 0; background: #fff; }
+.step-label { font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+.step-title { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 8px; }
+
+/* ── 출력 박스 ── */
+.output-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #334155; line-height: 1.7; margin: 10px 0; }
+
+/* ── 정보 표 ── */
+.info-table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13.5px; }
+.info-table th { background: #f1f5f9; color: #1e3a5f; font-weight: 700; padding: 8px 12px; border: 1px solid #e2e8f0; text-align: left; }
+.info-table td { padding: 7px 12px; border: 1px solid #e2e8f0; color: #334155; vertical-align: top; }
+.info-table tr:nth-child(even) td { background: #fafbfc; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- ═══ 1페이지: 표지 ═══ -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">29</div>
+        <div class="cover-label">L3 — Unit 29</div>
+        <h1 class="cover-title">2차원 리스트:<br>표와 격자</h1>
+        <p class="cover-sub">리스트 안에 리스트를 넣어 행과 열로 이루어진 2차원 데이터를 다룹니다.</p>
+
+        <!-- SVG 1: 2차원 리스트 격자 시각화 (3x3) -->
+        <div style="margin:24px 0;">
+            <svg viewBox="0 0 480 160" style="max-width:480px;width:100%">
+                <!-- 배경 레이블 -->
+                <text x="10" y="18" font-size="11" fill="#64748b" font-weight="600">matrix = [</text>
+                <text x="10" y="36" font-size="11" fill="#64748b" font-weight="600">  [1, 2, 3],</text>
+                <text x="10" y="54" font-size="11" fill="#64748b" font-weight="600">  [4, 5, 6],</text>
+                <text x="10" y="72" font-size="11" fill="#64748b" font-weight="600">  [7, 8, 9]</text>
+                <text x="10" y="90" font-size="11" fill="#64748b" font-weight="600">]</text>
+                <!-- 화살표 -->
+                <line x1="160" y1="55" x2="195" y2="55" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arw1)"/>
+                <defs>
+                    <marker id="arw1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                    </marker>
+                </defs>
+                <!-- 열 인덱스 헤더 -->
+                <text x="248" y="14" text-anchor="middle" font-size="10" fill="#3b82f6" font-weight="700">열 0</text>
+                <text x="308" y="14" text-anchor="middle" font-size="10" fill="#3b82f6" font-weight="700">열 1</text>
+                <text x="368" y="14" text-anchor="middle" font-size="10" fill="#3b82f6" font-weight="700">열 2</text>
+                <!-- 행 인덱스 -->
+                <text x="200" y="48" text-anchor="middle" font-size="10" fill="#10b981" font-weight="700">행 0</text>
+                <text x="200" y="88" text-anchor="middle" font-size="10" fill="#10b981" font-weight="700">행 1</text>
+                <text x="200" y="128" text-anchor="middle" font-size="10" fill="#10b981" font-weight="700">행 2</text>
+                <!-- 격자 셀 -->
+                <!-- 행0 -->
+                <rect x="220" y="22" width="56" height="40" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="248" y="46" text-anchor="middle" font-size="18" fill="#1d4ed8" font-weight="800">1</text>
+                <rect x="280" y="22" width="56" height="40" rx="6" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.5"/>
+                <text x="308" y="46" text-anchor="middle" font-size="18" fill="#1d4ed8" font-weight="800">2</text>
+                <rect x="340" y="22" width="56" height="40" rx="6" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.5"/>
+                <text x="368" y="46" text-anchor="middle" font-size="18" fill="#1d4ed8" font-weight="800">3</text>
+                <!-- 행1 -->
+                <rect x="220" y="66" width="56" height="40" rx="6" fill="#d1fae5" stroke="#10b981" stroke-width="1.5"/>
+                <text x="248" y="90" text-anchor="middle" font-size="18" fill="#065f46" font-weight="800">4</text>
+                <rect x="280" y="66" width="56" height="40" rx="6" fill="#ecfdf5" stroke="#6ee7b7" stroke-width="1.5"/>
+                <text x="308" y="90" text-anchor="middle" font-size="18" fill="#065f46" font-weight="800">5</text>
+                <rect x="340" y="66" width="56" height="40" rx="6" fill="#ecfdf5" stroke="#6ee7b7" stroke-width="1.5"/>
+                <text x="368" y="90" text-anchor="middle" font-size="18" fill="#065f46" font-weight="800">6</text>
+                <!-- 행2 -->
+                <rect x="220" y="110" width="56" height="40" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="248" y="134" text-anchor="middle" font-size="18" fill="#92400e" font-weight="800">7</text>
+                <rect x="280" y="110" width="56" height="40" rx="6" fill="#fffbeb" stroke="#fcd34d" stroke-width="1.5"/>
+                <text x="308" y="134" text-anchor="middle" font-size="18" fill="#92400e" font-weight="800">8</text>
+                <rect x="340" y="110" width="56" height="40" rx="6" fill="#fffbeb" stroke="#fcd34d" stroke-width="1.5"/>
+                <text x="368" y="134" text-anchor="middle" font-size="18" fill="#92400e" font-weight="800">9</text>
+                <!-- 레이블: matrix[1][2] = 6 -->
+                <text x="396" y="90" font-size="10" fill="#64748b">matrix[1][2] = 6</text>
+                <line x1="396" y1="84" x2="398" y2="79" stroke="#64748b" stroke-width="1"/>
+                <line x1="395" y1="85" x2="395" y2="86" stroke="#64748b" stroke-width="1"/>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/database.png" alt="데이터" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 유닛에서 배우는 것</h3>
+            <ul>
+                <li>2차원 리스트를 생성하고 <code>matrix[행][열]</code>로 접근할 수 있습니다.</li>
+                <li>이중 for문으로 모든 원소를 순회할 수 있습니다.</li>
+                <li>성적표, 좌석 배치도, 틱택토 보드를 2차원 리스트로 표현할 수 있습니다.</li>
+                <li>행 합계와 열 합계를 계산하는 코드를 작성할 수 있습니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ 2페이지: 2차원 리스트란? ═══ -->
+<div class="page">
+    <h2>2차원 리스트란?</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/folder.png" alt="구조" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>파이썬에서 리스트 안에 또 다른 리스트를 넣으면 <strong>2차원 리스트</strong>가 됩니다. 행(가로줄)과 열(세로줄)로 이루어진 표나 격자 구조를 표현하는 데 사용합니다.</p>
+
+    <!-- SVG 2: 1차원 vs 2차원 리스트 비교 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 480 110" style="max-width:480px;width:100%">
+            <!-- 1차원 리스트 -->
+            <text x="90" y="16" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="700">1차원 리스트</text>
+            <text x="90" y="32" text-anchor="middle" font-size="10" fill="#64748b">[10, 20, 30, 40]</text>
+            <rect x="10" y="40" width="48" height="36" rx="5" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="34" y="62" text-anchor="middle" font-size="14" fill="#1d4ed8" font-weight="700">10</text>
+            <rect x="62" y="40" width="48" height="36" rx="5" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="86" y="62" text-anchor="middle" font-size="14" fill="#1d4ed8" font-weight="700">20</text>
+            <rect x="114" y="40" width="48" height="36" rx="5" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="138" y="62" text-anchor="middle" font-size="14" fill="#1d4ed8" font-weight="700">30</text>
+            <rect x="166" y="40" width="48" height="36" rx="5" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="190" y="62" text-anchor="middle" font-size="14" fill="#1d4ed8" font-weight="700">40</text>
+            <!-- 인덱스 -->
+            <text x="34" y="90" text-anchor="middle" font-size="9" fill="#94a3b8">[0]</text>
+            <text x="86" y="90" text-anchor="middle" font-size="9" fill="#94a3b8">[1]</text>
+            <text x="138" y="90" text-anchor="middle" font-size="9" fill="#94a3b8">[2]</text>
+            <text x="190" y="90" text-anchor="middle" font-size="9" fill="#94a3b8">[3]</text>
+            <!-- 구분선 -->
+            <line x1="240" y1="10" x2="240" y2="100" stroke="#e2e8f0" stroke-width="1.5" stroke-dasharray="4,3"/>
+            <!-- 2차원 리스트 -->
+            <text x="360" y="16" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="700">2차원 리스트</text>
+            <text x="360" y="32" text-anchor="middle" font-size="10" fill="#64748b">[[10,20],[30,40],[50,60]]</text>
+            <!-- 행0 -->
+            <rect x="255" y="40" width="44" height="28" rx="4" fill="#d1fae5" stroke="#10b981" stroke-width="1.5"/>
+            <text x="277" y="58" text-anchor="middle" font-size="12" fill="#065f46" font-weight="700">10</text>
+            <rect x="303" y="40" width="44" height="28" rx="4" fill="#d1fae5" stroke="#10b981" stroke-width="1.5"/>
+            <text x="325" y="58" text-anchor="middle" font-size="12" fill="#065f46" font-weight="700">20</text>
+            <!-- 행1 -->
+            <rect x="255" y="72" width="44" height="28" rx="4" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="277" y="90" text-anchor="middle" font-size="12" fill="#92400e" font-weight="700">30</text>
+            <rect x="303" y="72" width="44" height="28" rx="4" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="325" y="90" text-anchor="middle" font-size="12" fill="#92400e" font-weight="700">40</text>
+            <!-- 행2 -->
+            <rect x="255" y="104" width="44" height="0" rx="4" fill="#ede9fe" stroke="#8b5cf6" stroke-width="0"/>
+            <!-- 인덱스 표시 -->
+            <text x="351" y="58" font-size="9" fill="#94a3b8">[0][0] [0][1]</text>
+            <text x="351" y="90" font-size="9" fill="#94a3b8">[1][0] [1][1]</text>
+        </svg>
+    </div>
+
+    <h3>기본 생성 문법</h3>
+    <div class="code"><span class="cmt"># 3행 3열 행렬</span>
+matrix = [[<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>],
+           [<span class="num">4</span>, <span class="num">5</span>, <span class="num">6</span>],
+           [<span class="num">7</span>, <span class="num">8</span>, <span class="num">9</span>]]
+
+<span class="fn">print</span>(matrix)          <span class="cmt"># [[1, 2, 3], [4, 5, 6], [7, 8, 9]]</span>
+<span class="fn">print</span>(matrix[<span class="num">0</span>])       <span class="cmt"># [1, 2, 3]  → 첫 번째 행 전체</span>
+<span class="fn">print</span>(matrix[<span class="num">1</span>][<span class="num">2</span>])    <span class="cmt"># 6         → 1행 2열의 값</span></div>
+
+    <p>리스트의 각 원소가 다시 리스트이기 때문에 <code>matrix[행]</code>으로 한 행 전체를, <code>matrix[행][열]</code>으로 개별 값을 꺼냅니다.</p>
+
+    <h3>값 변경</h3>
+    <div class="code">matrix[<span class="num">0</span>][<span class="num">0</span>] = <span class="num">99</span>   <span class="cmt"># 0행 0열을 99로 변경</span>
+<span class="fn">print</span>(matrix[<span class="num">0</span>])  <span class="cmt"># [99, 2, 3]</span></div>
+
+    <!-- 따라해보세요 1 -->
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="처리" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+        <div class="practice-head">따라해보세요 1 — 2차원 리스트 만들기</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">STEP 1</div>
+                <div class="practice-desc">3x3 행렬을 만들고 각 위치의 값을 출력합니다.</div>
+                <div class="code"><span class="dec">grid</span> = [[<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>],
+         [<span class="num">4</span>, <span class="num">5</span>, <span class="num">6</span>],
+         [<span class="num">7</span>, <span class="num">8</span>, <span class="num">9</span>]]
+
+<span class="fn">print</span>(<span class="str">"0행 1열:"</span>, grid[<span class="num">0</span>][<span class="num">1</span>])  <span class="cmt"># 2</span>
+<span class="fn">print</span>(<span class="str">"2행 0열:"</span>, grid[<span class="num">2</span>][<span class="num">0</span>])  <span class="cmt"># 7</span>
+<span class="fn">print</span>(<span class="str">"1행 전체:"</span>, grid[<span class="num">1</span>])     <span class="cmt"># [4, 5, 6]</span></div>
+                <div class="practice-result">0행 1열: 2 / 2행 0열: 7 / 1행 전체: [4, 5, 6]</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">STEP 2</div>
+                <div class="practice-desc">중앙값(1행 1열)을 0으로 바꾸고 확인합니다.</div>
+                <div class="code">grid[<span class="num">1</span>][<span class="num">1</span>] = <span class="num">0</span>
+<span class="fn">print</span>(grid[<span class="num">1</span>])  <span class="cmt"># [4, 0, 6]</span></div>
+                <div class="practice-result">출력: [4, 0, 6]</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ 3페이지: 인덱스 매핑 + 이중 for문 ═══ -->
+<div class="page">
+    <h2>인덱스 [행][열] 매핑과 이중 for문</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/hard-drive.png" alt="저장소" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+    <!-- SVG 3: 인덱스 [행][열] 전체 매핑 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 145" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="arw2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#6366f1"/>
+                </marker>
+            </defs>
+            <!-- 열 헤더 -->
+            <text x="100" y="18" text-anchor="middle" font-size="10" fill="#3b82f6" font-weight="700">열 0</text>
+            <text x="160" y="18" text-anchor="middle" font-size="10" fill="#3b82f6" font-weight="700">열 1</text>
+            <text x="220" y="18" text-anchor="middle" font-size="10" fill="#3b82f6" font-weight="700">열 2</text>
+            <text x="280" y="18" text-anchor="middle" font-size="10" fill="#3b82f6" font-weight="700">열 3</text>
+            <!-- 행 헤더 -->
+            <text x="36" y="52" text-anchor="middle" font-size="10" fill="#10b981" font-weight="700">행 0</text>
+            <text x="36" y="92" text-anchor="middle" font-size="10" fill="#10b981" font-weight="700">행 1</text>
+            <text x="36" y="132" text-anchor="middle" font-size="10" fill="#10b981" font-weight="700">행 2</text>
+            <!-- 행0 -->
+            <rect x="60" y="26" width="80" height="36" rx="5" fill="#eff6ff" stroke="#93c5fd" stroke-width="1"/>
+            <text x="100" y="41" text-anchor="middle" font-size="8" fill="#3b82f6">[0][0]</text>
+            <text x="100" y="55" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="700">A</text>
+            <rect x="144" y="26" width="80" height="36" rx="5" fill="#eff6ff" stroke="#93c5fd" stroke-width="1"/>
+            <text x="184" y="41" text-anchor="middle" font-size="8" fill="#3b82f6">[0][1]</text>
+            <text x="184" y="55" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="700">B</text>
+            <rect x="228" y="26" width="80" height="36" rx="5" fill="#eff6ff" stroke="#93c5fd" stroke-width="1"/>
+            <text x="268" y="41" text-anchor="middle" font-size="8" fill="#3b82f6">[0][2]</text>
+            <text x="268" y="55" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="700">C</text>
+            <rect x="312" y="26" width="80" height="36" rx="5" fill="#eff6ff" stroke="#93c5fd" stroke-width="1"/>
+            <text x="352" y="41" text-anchor="middle" font-size="8" fill="#3b82f6">[0][3]</text>
+            <text x="352" y="55" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="700">D</text>
+            <!-- 행1 -->
+            <rect x="60" y="66" width="80" height="36" rx="5" fill="#ecfdf5" stroke="#6ee7b7" stroke-width="1"/>
+            <text x="100" y="81" text-anchor="middle" font-size="8" fill="#10b981">[1][0]</text>
+            <text x="100" y="95" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="700">E</text>
+            <rect x="144" y="66" width="80" height="36" rx="5" fill="#ecfdf5" stroke="#6ee7b7" stroke-width="1"/>
+            <text x="184" y="81" text-anchor="middle" font-size="8" fill="#10b981">[1][1]</text>
+            <text x="184" y="95" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="700">F</text>
+            <rect x="228" y="66" width="80" height="36" rx="5" fill="#ecfdf5" stroke="#6ee7b7" stroke-width="1"/>
+            <text x="268" y="81" text-anchor="middle" font-size="8" fill="#10b981">[1][2]</text>
+            <text x="268" y="95" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="700">G</text>
+            <rect x="312" y="66" width="80" height="36" rx="5" fill="#ecfdf5" stroke="#6ee7b7" stroke-width="1"/>
+            <text x="352" y="81" text-anchor="middle" font-size="8" fill="#10b981">[1][3]</text>
+            <text x="352" y="95" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="700">H</text>
+            <!-- 행2 -->
+            <rect x="60" y="106" width="80" height="36" rx="5" fill="#fffbeb" stroke="#fcd34d" stroke-width="1"/>
+            <text x="100" y="121" text-anchor="middle" font-size="8" fill="#f59e0b">[2][0]</text>
+            <text x="100" y="135" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="700">I</text>
+            <rect x="144" y="106" width="80" height="36" rx="5" fill="#fffbeb" stroke="#fcd34d" stroke-width="1"/>
+            <text x="184" y="121" text-anchor="middle" font-size="8" fill="#f59e0b">[2][1]</text>
+            <text x="184" y="135" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="700">J</text>
+            <rect x="228" y="106" width="80" height="36" rx="5" fill="#fffbeb" stroke="#fcd34d" stroke-width="1"/>
+            <text x="268" y="121" text-anchor="middle" font-size="8" fill="#f59e0b">[2][2]</text>
+            <text x="268" y="135" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="700">K</text>
+            <rect x="312" y="106" width="80" height="36" rx="5" fill="#fffbeb" stroke="#fcd34d" stroke-width="1"/>
+            <text x="352" y="121" text-anchor="middle" font-size="8" fill="#f59e0b">[2][3]</text>
+            <text x="352" y="135" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="700">L</text>
+            <!-- 크기 표시 -->
+            <text x="450" y="88" text-anchor="middle" font-size="10" fill="#6366f1" font-weight="700">3행</text>
+            <text x="450" y="100" text-anchor="middle" font-size="10" fill="#6366f1" font-weight="700">x 4열</text>
+        </svg>
+    </div>
+
+    <h3>이중 for문으로 전체 순회</h3>
+    <p>2차원 리스트의 모든 원소를 방문하려면 for문 안에 또 다른 for문을 씁니다. 바깥 루프는 행, 안쪽 루프는 열을 담당합니다.</p>
+
+    <!-- SVG 4: 순회 순서 화살표 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 480 90" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="arw3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#6366f1"/>
+                </marker>
+                <marker id="arw3d" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#10b981"/>
+                </marker>
+            </defs>
+            <!-- 셀 행0 -->
+            <rect x="20" y="5" width="50" height="34" rx="5" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="45" y="17" text-anchor="middle" font-size="8" fill="#3b82f6">[0][0]</text>
+            <text x="45" y="31" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="700">1</text>
+            <rect x="76" y="5" width="50" height="34" rx="5" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="101" y="17" text-anchor="middle" font-size="8" fill="#3b82f6">[0][1]</text>
+            <text x="101" y="31" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="700">2</text>
+            <rect x="132" y="5" width="50" height="34" rx="5" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="157" y="17" text-anchor="middle" font-size="8" fill="#3b82f6">[0][2]</text>
+            <text x="157" y="31" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="700">3</text>
+            <!-- 화살표 행0 가로 -->
+            <line x1="71" y1="22" x2="75" y2="22" stroke="#6366f1" stroke-width="1.5" marker-end="url(#arw3)"/>
+            <line x1="127" y1="22" x2="131" y2="22" stroke="#6366f1" stroke-width="1.5" marker-end="url(#arw3)"/>
+            <!-- 행0->행1 꺾기 화살표 -->
+            <polyline points="182,22 195,22 195,60 20,60" fill="none" stroke="#10b981" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arw3d)"/>
+            <!-- 셀 행1 -->
+            <rect x="20" y="45" width="50" height="34" rx="5" fill="#ecfdf5" stroke="#10b981" stroke-width="1.5"/>
+            <text x="45" y="57" text-anchor="middle" font-size="8" fill="#10b981">[1][0]</text>
+            <text x="45" y="71" text-anchor="middle" font-size="12" fill="#065f46" font-weight="700">4</text>
+            <rect x="76" y="45" width="50" height="34" rx="5" fill="#ecfdf5" stroke="#10b981" stroke-width="1.5"/>
+            <text x="101" y="57" text-anchor="middle" font-size="8" fill="#10b981">[1][1]</text>
+            <text x="101" y="71" text-anchor="middle" font-size="12" fill="#065f46" font-weight="700">5</text>
+            <rect x="132" y="45" width="50" height="34" rx="5" fill="#ecfdf5" stroke="#10b981" stroke-width="1.5"/>
+            <text x="157" y="57" text-anchor="middle" font-size="8" fill="#10b981">[1][2]</text>
+            <text x="157" y="71" text-anchor="middle" font-size="12" fill="#065f46" font-weight="700">6</text>
+            <!-- 화살표 행1 가로 -->
+            <line x1="71" y1="62" x2="75" y2="62" stroke="#6366f1" stroke-width="1.5" marker-end="url(#arw3)"/>
+            <line x1="127" y1="62" x2="131" y2="62" stroke="#6366f1" stroke-width="1.5" marker-end="url(#arw3)"/>
+            <!-- 순서 번호 -->
+            <text x="230" y="22" font-size="11" fill="#64748b" font-weight="600">순회 순서:</text>
+            <text x="230" y="40" font-size="11" fill="#6366f1" font-weight="700">1 → 2 → 3</text>
+            <text x="230" y="58" font-size="11" fill="#10b981" font-weight="700">줄 바꿈</text>
+            <text x="230" y="76" font-size="11" fill="#6366f1" font-weight="700">4 → 5 → 6</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="dec">matrix</span> = [[<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>],
+            [<span class="num">4</span>, <span class="num">5</span>, <span class="num">6</span>]]
+
+<span class="kw">for</span> row <span class="kw">in</span> matrix:          <span class="cmt"># row = 각 행 리스트</span>
+    <span class="kw">for</span> value <span class="kw">in</span> row:      <span class="cmt"># value = 개별 원소</span>
+        <span class="fn">print</span>(value, end=<span class="str">" "</span>)
+    <span class="fn">print</span>()                 <span class="cmt"># 행 끝에서 줄바꿈</span></div>
+
+    <div class="output-box">1 2 3<br>4 5 6</div>
+
+    <p><code>range()</code>를 사용한 인덱스 기반 이중 for문도 자주 씁니다.</p>
+
+    <div class="code"><span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="fn">len</span>(matrix)):          <span class="cmt"># i = 행 인덱스</span>
+    <span class="kw">for</span> j <span class="kw">in</span> <span class="fn">range</span>(<span class="fn">len</span>(matrix[i])): <span class="cmt"># j = 열 인덱스</span>
+        <span class="fn">print</span>(<span class="str">f"[</span><span class="dec">{i}</span><span class="str">][</span><span class="dec">{j}</span><span class="str">]="</span>, matrix[i][j], end=<span class="str">" "</span>)
+    <span class="fn">print</span>()</div>
+
+    <div class="output-box">[0][0]= 1 [0][1]= 2 [0][2]= 3<br>[1][0]= 4 [1][1]= 5 [1][2]= 6</div>
+</div>
+
+<!-- ═══ 4페이지: 실용 예 — 성적표 ═══ -->
+<div class="page">
+    <h2>실용 예 1 — 성적표</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>2차원 리스트로 학생별 과목 성적을 저장합니다. 행은 학생, 열은 과목입니다.</p>
+
+    <!-- SVG 5: 성적표 구조 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 110" style="max-width:480px;width:100%">
+            <!-- 헤더 -->
+            <rect x="10" y="10" width="80" height="28" rx="4" fill="#1e3a5f"/>
+            <text x="50" y="28" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">이름</text>
+            <rect x="94" y="10" width="80" height="28" rx="4" fill="#1e3a5f"/>
+            <text x="134" y="28" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">국어</text>
+            <rect x="178" y="10" width="80" height="28" rx="4" fill="#1e3a5f"/>
+            <text x="218" y="28" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">수학</text>
+            <rect x="262" y="10" width="80" height="28" rx="4" fill="#1e3a5f"/>
+            <text x="302" y="28" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">영어</text>
+            <!-- 데이터 행0 -->
+            <rect x="10" y="42" width="80" height="22" rx="3" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+            <text x="50" y="57" text-anchor="middle" font-size="10" fill="#334155">지수</text>
+            <rect x="94" y="42" width="80" height="22" rx="3" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+            <text x="134" y="57" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="600">85</text>
+            <rect x="178" y="42" width="80" height="22" rx="3" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+            <text x="218" y="57" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="600">92</text>
+            <rect x="262" y="42" width="80" height="22" rx="3" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+            <text x="302" y="57" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="600">78</text>
+            <!-- 데이터 행1 -->
+            <rect x="10" y="68" width="80" height="22" rx="3" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+            <text x="50" y="83" text-anchor="middle" font-size="10" fill="#334155">민준</text>
+            <rect x="94" y="68" width="80" height="22" rx="3" fill="#ecfdf5" stroke="#6ee7b7" stroke-width="1"/>
+            <text x="134" y="83" text-anchor="middle" font-size="10" fill="#065f46" font-weight="600">76</text>
+            <rect x="178" y="68" width="80" height="22" rx="3" fill="#ecfdf5" stroke="#6ee7b7" stroke-width="1"/>
+            <text x="218" y="83" text-anchor="middle" font-size="10" fill="#065f46" font-weight="600">88</text>
+            <rect x="262" y="68" width="80" height="22" rx="3" fill="#ecfdf5" stroke="#6ee7b7" stroke-width="1"/>
+            <text x="302" y="83" text-anchor="middle" font-size="10" fill="#065f46" font-weight="600">95</text>
+            <!-- 데이터 행2 -->
+            <rect x="10" y="94" width="80" height="22" rx="3" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+            <text x="50" y="109" text-anchor="middle" font-size="10" fill="#334155">서아</text>
+            <rect x="94" y="94" width="80" height="22" rx="3" fill="#fffbeb" stroke="#fcd34d" stroke-width="1"/>
+            <text x="134" y="109" text-anchor="middle" font-size="10" fill="#92400e" font-weight="600">90</text>
+            <rect x="178" y="94" width="80" height="22" rx="3" fill="#fffbeb" stroke="#fcd34d" stroke-width="1"/>
+            <text x="218" y="109" text-anchor="middle" font-size="10" fill="#92400e" font-weight="600">84</text>
+            <rect x="262" y="94" width="80" height="22" rx="3" fill="#fffbeb" stroke="#fcd34d" stroke-width="1"/>
+            <text x="302" y="109" text-anchor="middle" font-size="10" fill="#92400e" font-weight="600">91</text>
+            <!-- 인덱스 표시 -->
+            <text x="365" y="55" font-size="9" fill="#94a3b8">scores[0] = [85, 92, 78]</text>
+            <text x="365" y="83" font-size="9" fill="#94a3b8">scores[1] = [76, 88, 95]</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="dec">scores</span> = [
+    [<span class="num">85</span>, <span class="num">92</span>, <span class="num">78</span>],  <span class="cmt"># 지수</span>
+    [<span class="num">76</span>, <span class="num">88</span>, <span class="num">95</span>],  <span class="cmt"># 민준</span>
+    [<span class="num">90</span>, <span class="num">84</span>, <span class="num">91</span>],  <span class="cmt"># 서아</span>
+]
+names    = [<span class="str">"지수"</span>, <span class="str">"민준"</span>, <span class="str">"서아"</span>]
+subjects = [<span class="str">"국어"</span>, <span class="str">"수학"</span>, <span class="str">"영어"</span>]
+
+<span class="kw">for</span> i, name <span class="kw">in</span> <span class="fn">enumerate</span>(names):
+    avg = <span class="fn">sum</span>(scores[i]) / <span class="fn">len</span>(scores[i])
+    <span class="fn">print</span>(<span class="str">f"</span><span class="dec">{name}</span><span class="str"> 평균: </span><span class="dec">{avg:.1f}</span><span class="str">"</span>)</div>
+
+    <div class="output-box">지수 평균: 85.0<br>민준 평균: 86.3<br>서아 평균: 88.3</div>
+
+    <!-- 따라해보세요 2 -->
+    <div class="practice">
+        <div class="practice-head">따라해보세요 2 — 성적표 출력</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">STEP 1</div>
+                <div class="practice-desc">각 학생의 과목별 점수를 표 형식으로 출력합니다.</div>
+                <div class="code"><span class="fn">print</span>(<span class="str">f"{'이름':4s} | 국어 | 수학 | 영어"</span>)
+<span class="fn">print</span>(<span class="str">"-" * 26</span>)
+<span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="fn">len</span>(names)):
+    row = scores[i]
+    <span class="fn">print</span>(<span class="str">f"{names[i]:4s} | {row[0]:4d} | {row[1]:4d} | {row[2]:4d}"</span>)</div>
+                <div class="practice-result">이름 | 국어 | 수학 | 영어 (표 형식 출력)</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ 5페이지: 실용 예 — 좌석 배치도 + 틱택토 ═══ -->
+<div class="page">
+    <h2>실용 예 2 — 좌석 배치도와 틱택토 보드</h2>
+
+    <!-- SVG 6: 좌석 배치도 -->
+    <h3>좌석 배치도</h3>
+    <div style="text-align:center;margin:10px 0 6px;">
+        <svg viewBox="0 0 480 100" style="max-width:480px;width:100%">
+            <!-- 교실 앞쪽 -->
+            <rect x="130" y="5" width="220" height="18" rx="4" fill="#1e3a5f"/>
+            <text x="240" y="17" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">칠판 (교실 앞)</text>
+            <!-- 좌석 행0 -->
+            <rect x="80" y="32" width="52" height="20" rx="3" fill="#d1fae5" stroke="#10b981" stroke-width="1"/>
+            <text x="106" y="46" text-anchor="middle" font-size="9" fill="#065f46">seat[0][0]</text>
+            <rect x="140" y="32" width="52" height="20" rx="3" fill="#d1fae5" stroke="#10b981" stroke-width="1"/>
+            <text x="166" y="46" text-anchor="middle" font-size="9" fill="#065f46">seat[0][1]</text>
+            <rect x="200" y="32" width="52" height="20" rx="3" fill="#d1fae5" stroke="#10b981" stroke-width="1"/>
+            <text x="226" y="46" text-anchor="middle" font-size="9" fill="#065f46">seat[0][2]</text>
+            <rect x="260" y="32" width="52" height="20" rx="3" fill="#d1fae5" stroke="#10b981" stroke-width="1"/>
+            <text x="286" y="46" text-anchor="middle" font-size="9" fill="#065f46">seat[0][3]</text>
+            <rect x="320" y="32" width="52" height="20" rx="3" fill="#d1fae5" stroke="#10b981" stroke-width="1"/>
+            <text x="346" y="46" text-anchor="middle" font-size="9" fill="#065f46">seat[0][4]</text>
+            <!-- 좌석 행1 -->
+            <rect x="80" y="58" width="52" height="20" rx="3" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="106" y="72" text-anchor="middle" font-size="9" fill="#1d4ed8">seat[1][0]</text>
+            <rect x="140" y="58" width="52" height="20" rx="3" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="166" y="72" text-anchor="middle" font-size="9" fill="#1d4ed8">seat[1][1]</text>
+            <rect x="200" y="58" width="52" height="20" rx="3" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="226" y="72" text-anchor="middle" font-size="9" fill="#1d4ed8">seat[1][2]</text>
+            <rect x="260" y="58" width="52" height="20" rx="3" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="286" y="72" text-anchor="middle" font-size="9" fill="#1d4ed8">seat[1][3]</text>
+            <rect x="320" y="58" width="52" height="20" rx="3" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="346" y="72" text-anchor="middle" font-size="9" fill="#1d4ed8">seat[1][4]</text>
+            <!-- 행 레이블 -->
+            <text x="72" y="46" text-anchor="end" font-size="9" fill="#94a3b8">1행</text>
+            <text x="72" y="72" text-anchor="end" font-size="9" fill="#94a3b8">2행</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="dec">seats</span> = [
+    [<span class="str">"지수"</span>, <span class="str">"민준"</span>, <span class="str">"서아"</span>, <span class="str">"준호"</span>, <span class="str">"하은"</span>],
+    [<span class="str">"태양"</span>, <span class="str">"유나"</span>, <span class="str">"재원"</span>, <span class="str">"소연"</span>, <span class="str">"도현"</span>],
+    [<span class="str">"보미"</span>, <span class="str">"성우"</span>, <span class="str">"지아"</span>, <span class="str">"민서"</span>, <span class="str">"현준"</span>],
+]
+
+<span class="fn">print</span>(<span class="str">"1행 3번 자리:"</span>, seats[<span class="num">0</span>][<span class="num">2</span>])   <span class="cmt"># 서아</span>
+<span class="fn">print</span>(<span class="str">"3행 5번 자리:"</span>, seats[<span class="num">2</span>][<span class="num">4</span>])   <span class="cmt"># 현준</span></div>
+
+    <!-- SVG 7: 틱택토 보드 -->
+    <h3>틱택토 보드</h3>
+    <div style="text-align:center;margin:8px 0;">
+        <svg viewBox="0 0 480 100" style="max-width:480px;width:100%">
+            <!-- 격자선 -->
+            <line x1="100" y1="10" x2="100" y2="100" stroke="#94a3b8" stroke-width="2"/>
+            <line x1="155" y1="10" x2="155" y2="100" stroke="#94a3b8" stroke-width="2"/>
+            <line x1="10" y1="40" x2="210" y2="40" stroke="#94a3b8" stroke-width="2"/>
+            <line x1="10" y1="70" x2="210" y2="70" stroke="#94a3b8" stroke-width="2"/>
+            <!-- X O 표시 -->
+            <text x="55" y="32" text-anchor="middle" font-size="18" fill="#ef4444" font-weight="900">X</text>
+            <text x="128" y="32" text-anchor="middle" font-size="18" fill="#3b82f6" font-weight="900">O</text>
+            <text x="183" y="32" text-anchor="middle" font-size="18" fill="#94a3b8" font-weight="900">_</text>
+            <text x="55" y="62" text-anchor="middle" font-size="18" fill="#94a3b8" font-weight="900">_</text>
+            <text x="128" y="62" text-anchor="middle" font-size="18" fill="#ef4444" font-weight="900">X</text>
+            <text x="183" y="62" text-anchor="middle" font-size="18" fill="#3b82f6" font-weight="900">O</text>
+            <text x="55" y="92" text-anchor="middle" font-size="18" fill="#94a3b8" font-weight="900">_</text>
+            <text x="128" y="92" text-anchor="middle" font-size="18" fill="#94a3b8" font-weight="900">_</text>
+            <text x="183" y="92" text-anchor="middle" font-size="18" fill="#ef4444" font-weight="900">X</text>
+            <!-- 코드 -->
+            <text x="230" y="20" font-size="10" fill="#64748b">board[0] = ["X","O","_"]</text>
+            <text x="230" y="38" font-size="10" fill="#64748b">board[1] = ["_","X","O"]</text>
+            <text x="230" y="56" font-size="10" fill="#64748b">board[2] = ["_","_","X"]</text>
+            <text x="230" y="80" font-size="10" fill="#ef4444" font-weight="700">X 대각선 승리!</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="dec">board</span> = [
+    [<span class="str">"X"</span>, <span class="str">"O"</span>, <span class="str">"_"</span>],
+    [<span class="str">"_"</span>, <span class="str">"X"</span>, <span class="str">"O"</span>],
+    [<span class="str">"_"</span>, <span class="str">"_"</span>, <span class="str">"X"</span>],
+]
+
+<span class="cmt"># 보드 출력 함수</span>
+<span class="kw">def</span> <span class="fn">print_board</span>(b):
+    <span class="kw">for</span> row <span class="kw">in</span> b:
+        <span class="fn">print</span>(<span class="str">" | "</span>.join(row))
+        <span class="fn">print</span>(<span class="str">"-" * 9</span>)
+
+<span class="fn">print_board</span>(board)</div>
+
+    <div class="output-box">X | O | _<br>---------<br>_ | X | O<br>---------<br>_ | _ | X<br>---------</div>
+
+    <!-- 따라해보세요 3 -->
+    <div class="practice">
+        <div class="practice-head">따라해보세요 3 — 좌석 배치도 출력</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">STEP 1</div>
+                <div class="practice-desc">이중 for문으로 좌석 배치도를 행마다 출력합니다.</div>
+                <div class="code"><span class="kw">for</span> i, row <span class="kw">in</span> <span class="fn">enumerate</span>(seats):
+    <span class="fn">print</span>(<span class="str">f"{i+1}행:"</span>, <span class="str">" "</span>.join(row))</div>
+                <div class="practice-result">1행: 지수 민준 서아 준호 하은 / 2행: ... / 3행: ...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ 6페이지: 행/열 합계 구하기 ═══ -->
+<div class="page">
+    <h2>행 합계와 열 합계 구하기</h2>
+    <p>2차원 리스트에서 각 행의 합계(가로 합)와 각 열의 합계(세로 합)를 구하는 것은 성적 처리, 통계 등에서 자주 사용합니다.</p>
+
+    <!-- SVG 8: 행 합계 시각화 -->
+    <h3>행 합계 (가로 합)</h3>
+    <div style="text-align:center;margin:10px 0;">
+        <svg viewBox="0 0 480 100" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="arw4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#6366f1"/>
+                </marker>
+            </defs>
+            <!-- 행0 -->
+            <rect x="10" y="10" width="48" height="30" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="34" y="30" text-anchor="middle" font-size="14" fill="#1d4ed8" font-weight="700">85</text>
+            <rect x="64" y="10" width="48" height="30" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="88" y="30" text-anchor="middle" font-size="14" fill="#1d4ed8" font-weight="700">92</text>
+            <rect x="118" y="10" width="48" height="30" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="142" y="30" text-anchor="middle" font-size="14" fill="#1d4ed8" font-weight="700">78</text>
+            <line x1="170" y1="25" x2="185" y2="25" stroke="#6366f1" stroke-width="1.5" marker-end="url(#arw4)"/>
+            <rect x="188" y="10" width="55" height="30" rx="4" fill="#1e3a5f"/>
+            <text x="215" y="30" text-anchor="middle" font-size="13" fill="#fff" font-weight="700">= 255</text>
+            <text x="252" y="30" font-size="11" fill="#64748b"> 지수 합계</text>
+            <!-- 행1 -->
+            <rect x="10" y="48" width="48" height="30" rx="4" fill="#ecfdf5" stroke="#10b981" stroke-width="1.5"/>
+            <text x="34" y="68" text-anchor="middle" font-size="14" fill="#065f46" font-weight="700">76</text>
+            <rect x="64" y="48" width="48" height="30" rx="4" fill="#ecfdf5" stroke="#10b981" stroke-width="1.5"/>
+            <text x="88" y="68" text-anchor="middle" font-size="14" fill="#065f46" font-weight="700">88</text>
+            <rect x="118" y="48" width="48" height="30" rx="4" fill="#ecfdf5" stroke="#10b981" stroke-width="1.5"/>
+            <text x="142" y="68" text-anchor="middle" font-size="14" fill="#065f46" font-weight="700">95</text>
+            <line x1="170" y1="63" x2="185" y2="63" stroke="#6366f1" stroke-width="1.5" marker-end="url(#arw4)"/>
+            <rect x="188" y="48" width="55" height="30" rx="4" fill="#1e3a5f"/>
+            <text x="215" y="68" text-anchor="middle" font-size="13" fill="#fff" font-weight="700">= 259</text>
+            <text x="252" y="68" font-size="11" fill="#64748b"> 민준 합계</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="dec">scores</span> = [
+    [<span class="num">85</span>, <span class="num">92</span>, <span class="num">78</span>],  <span class="cmt"># 지수</span>
+    [<span class="num">76</span>, <span class="num">88</span>, <span class="num">95</span>],  <span class="cmt"># 민준</span>
+    [<span class="num">90</span>, <span class="num">84</span>, <span class="num">91</span>],  <span class="cmt"># 서아</span>
+]
+names = [<span class="str">"지수"</span>, <span class="str">"민준"</span>, <span class="str">"서아"</span>]
+
+<span class="cmt"># 행 합계: 각 학생의 총점</span>
+<span class="kw">for</span> i, row <span class="kw">in</span> <span class="fn">enumerate</span>(scores):
+    total = <span class="fn">sum</span>(row)
+    <span class="fn">print</span>(<span class="str">f"{names[i]} 총점: {total}"</span>)</div>
+
+    <div class="output-box">지수 총점: 255<br>민준 총점: 259<br>서아 총점: 265</div>
+
+    <!-- SVG 9: 열 합계 시각화 -->
+    <h3>열 합계 (세로 합)</h3>
+    <div style="text-align:center;margin:10px 0;">
+        <svg viewBox="0 0 480 110" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="arw5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#f59e0b"/>
+                </marker>
+            </defs>
+            <!-- 열0 -->
+            <rect x="40" y="5" width="50" height="25" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="65" y="22" text-anchor="middle" font-size="13" fill="#1d4ed8" font-weight="700">85</text>
+            <rect x="40" y="34" width="50" height="25" rx="4" fill="#ecfdf5" stroke="#10b981" stroke-width="1"/>
+            <text x="65" y="51" text-anchor="middle" font-size="13" fill="#065f46" font-weight="700">76</text>
+            <rect x="40" y="63" width="50" height="25" rx="4" fill="#fffbeb" stroke="#f59e0b" stroke-width="1"/>
+            <text x="65" y="80" text-anchor="middle" font-size="13" fill="#92400e" font-weight="700">90</text>
+            <line x1="65" y1="92" x2="65" y2="100" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#arw5)"/>
+            <text x="65" y="112" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="700">251</text>
+            <!-- 열1 -->
+            <rect x="100" y="5" width="50" height="25" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="125" y="22" text-anchor="middle" font-size="13" fill="#1d4ed8" font-weight="700">92</text>
+            <rect x="100" y="34" width="50" height="25" rx="4" fill="#ecfdf5" stroke="#10b981" stroke-width="1"/>
+            <text x="125" y="51" text-anchor="middle" font-size="13" fill="#065f46" font-weight="700">88</text>
+            <rect x="100" y="63" width="50" height="25" rx="4" fill="#fffbeb" stroke="#f59e0b" stroke-width="1"/>
+            <text x="125" y="80" text-anchor="middle" font-size="13" fill="#92400e" font-weight="700">84</text>
+            <line x1="125" y1="92" x2="125" y2="100" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#arw5)"/>
+            <text x="125" y="112" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="700">264</text>
+            <!-- 열2 -->
+            <rect x="160" y="5" width="50" height="25" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="185" y="22" text-anchor="middle" font-size="13" fill="#1d4ed8" font-weight="700">78</text>
+            <rect x="160" y="34" width="50" height="25" rx="4" fill="#ecfdf5" stroke="#10b981" stroke-width="1"/>
+            <text x="185" y="51" text-anchor="middle" font-size="13" fill="#065f46" font-weight="700">95</text>
+            <rect x="160" y="63" width="50" height="25" rx="4" fill="#fffbeb" stroke="#f59e0b" stroke-width="1"/>
+            <text x="185" y="80" text-anchor="middle" font-size="13" fill="#92400e" font-weight="700">91</text>
+            <line x1="185" y1="92" x2="185" y2="100" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#arw5)"/>
+            <text x="185" y="112" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="700">264</text>
+            <!-- 과목 헤더 -->
+            <text x="65" y="3" text-anchor="middle" font-size="9" fill="#94a3b8">국어</text>
+            <text x="125" y="3" text-anchor="middle" font-size="9" fill="#94a3b8">수학</text>
+            <text x="185" y="3" text-anchor="middle" font-size="9" fill="#94a3b8">영어</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># 열 합계: 각 과목의 총점</span>
+subjects = [<span class="str">"국어"</span>, <span class="str">"수학"</span>, <span class="str">"영어"</span>]
+cols = <span class="fn">len</span>(scores[<span class="num">0</span>])
+
+<span class="kw">for</span> j <span class="kw">in</span> <span class="fn">range</span>(cols):
+    col_sum = <span class="num">0</span>
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="fn">len</span>(scores)):
+        col_sum += scores[i][j]
+    <span class="fn">print</span>(<span class="str">f"{subjects[j]} 총점: {col_sum}"</span>)</div>
+
+    <div class="output-box">국어 총점: 251<br>수학 총점: 264<br>영어 총점: 264</div>
+</div>
+
+<!-- ═══ 7페이지: 문제 ═══ -->
+<div class="page">
+    <h2>연습 문제</h2>
+
+    <!-- 문제 1 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q1</div>
+            <div class="problem-label">2차원 리스트 접근</div>
+            <span class="problem-diff easy">Easy</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">아래 2차원 리스트 <code>data</code>가 있습니다. <code>data[2][1]</code>의 값을 출력하고, <code>data[0][0]</code>을 <code>99</code>로 바꾼 뒤 <code>data[0]</code>을 출력하는 코드를 완성하세요.</div>
+            <div class="code"><span class="dec">data</span> = [
+    [<span class="num">10</span>, <span class="num">20</span>, <span class="num">30</span>],
+    [<span class="num">40</span>, <span class="num">50</span>, <span class="num">60</span>],
+    [<span class="num">70</span>, <span class="num">80</span>, <span class="num">90</span>],
+]
+
+<span class="fn">print</span>(data[___][___])  <span class="cmt"># 80</span>
+data[___][___] = <span class="num">99</span>
+<span class="fn">print</span>(data[___])       <span class="cmt"># [99, 20, 30]</span></div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력 1</span>
+                    <span class="problem-example-value">80</span>
+                </div>
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력 2</span>
+                    <span class="problem-example-value">[99, 20, 30]</span>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">data[행][열] — 행은 0부터 시작합니다. 2행 1열이면 data[2][1].</div>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">print(data[2][1])   # 80
+data[0][0] = 99
+print(data[0])      # [99, 20, 30]</div>
+            </div>
+        </details>
+    </div>
+
+    <!-- 문제 2 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q2</div>
+            <div class="problem-label">이중 for문으로 곱셈표 만들기</div>
+            <span class="problem-diff medium">Medium</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">이중 for문을 사용해 3x3 곱셈표를 2차원 리스트로 만들고, 각 행을 출력하세요. 예: <code>table[i][j] = (i+1) * (j+1)</code></div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력</span>
+                    <span class="problem-example-value">[1, 2, 3] / [2, 4, 6] / [3, 6, 9]</span>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">빈 리스트 <code>table = []</code>에 각 행을 append합니다. 행을 만들 때도 빈 리스트에 append하면 됩니다.</div>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">table = []
+for i in range(3):
+    row = []
+    for j in range(3):
+        row.append((i+1) * (j+1))
+    table.append(row)
+
+for row in table:
+    print(row)</div>
+            </div>
+        </details>
+    </div>
+
+    <!-- 문제 3 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q3</div>
+            <div class="problem-label">가장 높은 점수 학생 찾기</div>
+            <span class="problem-diff hard">Hard</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">아래 성적 데이터에서 각 학생의 평균을 구하고, 평균이 가장 높은 학생의 이름과 평균을 출력하세요.</div>
+            <div class="code"><span class="dec">scores</span> = [[<span class="num">85</span>, <span class="num">92</span>, <span class="num">78</span>], [<span class="num">76</span>, <span class="num">88</span>, <span class="num">95</span>], [<span class="num">90</span>, <span class="num">84</span>, <span class="num">91</span>]]
+names = [<span class="str">"지수"</span>, <span class="str">"민준"</span>, <span class="str">"서아"</span>]</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력</span>
+                    <span class="problem-example-value">최고 평균: 서아 (88.3)</span>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">최대 평균을 저장할 변수를 -1로 초기화하고, 각 학생의 평균과 비교해 갱신합니다.</div>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">best_name = ""
+best_avg = -1
+for i in range(len(scores)):
+    avg = sum(scores[i]) / len(scores[i])
+    if avg > best_avg:
+        best_avg = avg
+        best_name = names[i]
+print(f"최고 평균: {best_name} ({best_avg:.1f})")</div>
+            </div>
+        </details>
+    </div>
+</div>
+
+<!-- ═══ 8페이지: 정리 + 요약 ═══ -->
+<div class="page">
+    <h2>핵심 정리</h2>
+
+    <!-- SVG 10: 전체 개념 요약 다이어그램 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 130" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="arw6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <!-- 중앙: 2차원 리스트 -->
+            <rect x="160" y="45" width="160" height="40" rx="8" fill="#1e3a5f"/>
+            <text x="240" y="62" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">2차원 리스트</text>
+            <text x="240" y="77" text-anchor="middle" font-size="9" fill="#93c5fd">[[...], [...], [...]]</text>
+            <!-- 왼쪽 위: 생성 -->
+            <rect x="5" y="5" width="120" height="35" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="65" y="19" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">생성</text>
+            <text x="65" y="32" text-anchor="middle" font-size="8" fill="#64748b">matrix = [[...]]</text>
+            <line x1="125" y1="22" x2="158" y2="58" stroke="#94a3b8" stroke-width="1" marker-end="url(#arw6)"/>
+            <!-- 오른쪽 위: 접근 -->
+            <rect x="355" y="5" width="120" height="35" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="415" y="19" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">접근</text>
+            <text x="415" y="32" text-anchor="middle" font-size="8" fill="#64748b">m[행][열]</text>
+            <line x1="355" y1="22" x2="322" y2="58" stroke="#94a3b8" stroke-width="1" marker-end="url(#arw6)"/>
+            <!-- 왼쪽 아래: 이중 for -->
+            <rect x="5" y="90" width="120" height="35" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="65" y="104" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">이중 for문</text>
+            <text x="65" y="117" text-anchor="middle" font-size="8" fill="#64748b">for row / for val</text>
+            <line x1="125" y1="107" x2="158" y2="77" stroke="#94a3b8" stroke-width="1" marker-end="url(#arw6)"/>
+            <!-- 오른쪽 아래: 활용 -->
+            <rect x="355" y="90" width="120" height="35" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="415" y="104" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">활용</text>
+            <text x="415" y="117" text-anchor="middle" font-size="8" fill="#64748b">성적표, 좌석, 게임</text>
+            <line x1="355" y1="107" x2="322" y2="77" stroke="#94a3b8" stroke-width="1" marker-end="url(#arw6)"/>
+        </svg>
+    </div>
+
+    <!-- 요약 표 -->
+    <table class="info-table">
+        <thead>
+            <tr>
+                <th>항목</th>
+                <th>문법</th>
+                <th>설명</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>생성</td>
+                <td><code>matrix = [[1,2],[3,4]]</code></td>
+                <td>리스트 안에 리스트를 넣음</td>
+            </tr>
+            <tr>
+                <td>행 접근</td>
+                <td><code>matrix[i]</code></td>
+                <td>i번째 행 전체를 리스트로 반환</td>
+            </tr>
+            <tr>
+                <td>원소 접근</td>
+                <td><code>matrix[i][j]</code></td>
+                <td>i행 j열의 값</td>
+            </tr>
+            <tr>
+                <td>값 변경</td>
+                <td><code>matrix[i][j] = 값</code></td>
+                <td>해당 위치 값을 변경</td>
+            </tr>
+            <tr>
+                <td>전체 순회</td>
+                <td><code>for row in matrix: for v in row:</code></td>
+                <td>이중 for문으로 모든 원소 방문</td>
+            </tr>
+            <tr>
+                <td>행 합계</td>
+                <td><code>sum(matrix[i])</code></td>
+                <td>i번째 행의 원소 합</td>
+            </tr>
+            <tr>
+                <td>열 합계</td>
+                <td><code>sum(matrix[i][j] for i in range(...))</code></td>
+                <td>j번째 열의 원소 합</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>이 유닛에서 배운 것</h3>
+        <ul>
+            <li>2차원 리스트는 <strong>리스트 안의 리스트</strong>로 행과 열이 있는 표 구조를 만듭니다.</li>
+            <li><code>matrix[행][열]</code>으로 원소에 접근하고 값을 변경할 수 있습니다.</li>
+            <li><strong>이중 for문</strong>으로 모든 원소를 행 순서대로 순회합니다.</li>
+            <li>성적표, 좌석 배치도, 틱택토 보드 등 실생활 표 구조를 코드로 표현할 수 있습니다.</li>
+            <li><code>sum(row)</code>으로 행 합계, 인덱스 기반 이중 for문으로 열 합계를 구합니다.</li>
+        </ul>
+    </div>
+
+    <!-- SVG 11: 다음 단원 예고 -->
+    <div style="text-align:center;margin-top:20px;">
+        <svg viewBox="0 0 480 55" style="max-width:480px;width:100%">
+            <rect x="10" y="8" width="460" height="38" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="240" y="24" text-anchor="middle" font-size="11" fill="#64748b" font-weight="600">다음 유닛 예고</text>
+            <text x="240" y="40" text-anchor="middle" font-size="13" fill="#1e3a5f" font-weight="800">Unit 30 — 딕셔너리: 키와 값의 쌍</text>
+        </svg>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

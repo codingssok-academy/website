@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>L8-PJ10 포인터+malloc으로 동적 문자열(malloc 맛보기)</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #e2e8f0; font-family: 'Noto Sans KR', sans-serif; }
+  .page { width: 210mm; min-height: 297mm; background: white; margin: 0 auto 12px; padding: 18mm 20mm 15mm 22mm; position: relative; overflow: hidden; page-break-after: always; counter-increment: pagenum; }
+  .cover-sidebar { position: absolute; left: 0; top: 0; bottom: 0; width: 10px; background: #1e3a5f; }
+  .cover-accent  { position: absolute; left: 10px; top: 0; bottom: 0; width: 7px; background: #0891b2; }
+  .page::after { content: counter(pagenum); position: absolute; bottom: 10mm; right: 15mm; font-size: 10px; color: #94a3b8; font-family: 'JetBrains Mono', monospace; }
+  .page::before { content: 'PJ'; position: absolute; right: 18mm; top: 12mm; font-size: 72px; font-weight: 900; color: rgba(8,145,178,0.04); font-family: 'JetBrains Mono', monospace; pointer-events: none; }
+  .cover-header { display: flex; gap: 6px; align-items: center; margin-bottom: 8mm; }
+  .cover-chapter-badge { background: #0e7490; color: white; font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+  .cover-unit-badge { background: #ecfeff; color: #0891b2; font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 20px; border: 1px solid #a5f3fc; }
+  .cover-title { font-size: 26px; font-weight: 900; color: #0c4a6e; line-height: 1.25; margin-bottom: 4px; }
+  .cover-subtitle { font-size: 13px; color: #0891b2; font-weight: 500; margin-bottom: 6mm; }
+  .cover-desc { font-size: 11.5px; color: #475569; line-height: 1.75; background: #f0f9ff; padding: 10px 14px; border-left: 3px solid #0891b2; border-radius: 0 6px 6px 0; margin-bottom: 6mm; }
+  .cover-meta { display: flex; gap: 8px; flex-wrap: wrap; }
+  .cover-meta span { background: #f1f5f9; border: 1px solid #e2e8f0; padding: 3px 10px; border-radius: 12px; font-size: 10px; color: #64748b; }
+  .section-title { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 800; color: #0c4a6e; margin-bottom: 8px; padding-bottom: 5px; border-bottom: 2px solid #e0f2fe; }
+  .section-title .icon { background: #0891b2; color: white; width: 24px; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 13px; }
+  .code { background: #0f172a; border-radius: 8px; padding: 12px 15px; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; line-height: 1.7; color: #e2e8f0; margin: 8px 0; position: relative; }
+  .code-label { position: absolute; top: 6px; right: 10px; font-size: 9px; color: #475569; font-family: 'JetBrains Mono', monospace; }
+  .code .kw { color: #c084fc; } .code .fn { color: #67e8f9; } .code .str { color: #86efac; }
+  .code .num { color: #7dd3fc; } .code .cmt { color: #64748b; font-style: italic; }
+  .code .ptr { color: #fbbf24; }
+  .output-box { background: #0f172a; border: 1px solid #1e3a5f; border-radius: 8px; padding: 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: #86efac; margin: 8px 0; }
+  .output-box .prompt { color: #64748b; } .output-box .label { color: #7dd3fc; }
+  .info-box { background: #f0f9ff; border-left: 3px solid #0891b2; border-radius: 0 6px 6px 0; padding: 8px 12px; margin: 6px 0; font-size: 11px; color: #0c4a6e; line-height: 1.6; }
+  .warn-box { background: #fff7ed; border-left: 3px solid #f97316; border-radius: 0 6px 6px 0; padding: 8px 12px; margin: 6px 0; font-size: 11px; color: #7c2d12; line-height: 1.6; }
+  .challenge { background: linear-gradient(135deg, #ecfeff 0%, #f0f9ff 100%); border: 1.5px solid #67e8f9; border-radius: 10px; padding: 12px 15px; margin: 8px 0; }
+  .challenge h3 { font-size: 13px; font-weight: 800; color: #0891b2; margin-bottom: 8px; }
+  .challenge-item { background: white; border: 1px solid #e0f2fe; border-radius: 6px; padding: 8px 12px; margin: 5px 0; font-size: 11px; }
+  .challenge-item .num { display: inline-block; background: #0891b2; color: white; width: 18px; height: 18px; border-radius: 50%; font-size: 10px; font-weight: 700; text-align: center; line-height: 18px; margin-right: 6px; }
+  .problem { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 14px; margin: 6px 0; }
+  .problem summary { font-size: 11.5px; font-weight: 700; color: #0c4a6e; cursor: pointer; list-style: none; display: flex; align-items: flex-start; gap: 6px; }
+  .problem summary::marker { display: none; }
+  .problem .q-num { background: #0891b2; color: white; width: 20px; height: 20px; border-radius: 50%; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .answer { margin-top: 8px; padding: 8px 10px; background: #ecfeff; border-radius: 6px; font-size: 11px; color: #0c4a6e; line-height: 1.6; border: 1px solid #a5f3fc; }
+  .summary-box { background: linear-gradient(135deg, #0c4a6e 0%, #0e7490 100%); color: white; border-radius: 10px; padding: 12px 15px; margin: 8px 0; }
+  .summary-box h3 { font-size: 13px; font-weight: 800; margin-bottom: 8px; color: #7dd3fc; }
+  .summary-box ul { list-style: none; padding: 0; }
+  .summary-box ul li { font-size: 11px; line-height: 1.75; padding-left: 12px; position: relative; }
+  .summary-box ul li::before { content: '→'; position: absolute; left: 0; color: #67e8f9; }
+  body { counter-reset: pagenum; }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- PAGE 1: 커버 -->
+<div class="page">
+  <div class="cover-sidebar"></div>
+  <div class="cover-accent"></div>
+  <div class="cover-header">
+    <span class="cover-chapter-badge">CHAPTER 8</span>
+    <span class="cover-unit-badge">PROJECT 10</span>
+  </div>
+  <div class="cover-title">malloc으로<br>동적 문자열</div>
+  <div class="cover-subtitle">Dynamic String with malloc — First Taste</div>
+  <div class="cover-desc">
+    스택 배열은 크기를 미리 정해야 한다. malloc을 쓰면 실행 중에 필요한 만큼 힙 메모리를 할당할 수 있다.<br>
+    L8의 마무리로 동적 메모리 배분의 기초를 맛본다. (L9 동적 메모리에서 완전히 다룬다)
+  </div>
+
+  <!-- 커버 SVG: 스택 vs 힙 비교 -->
+  <svg width="100%" height="200" viewBox="0 0 520 200">
+    <defs>
+      <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+        <path d="M0,0 L0,6 L8,3 z" fill="#0891b2"/>
+      </marker>
+    </defs>
+
+    <!-- 스택 -->
+    <rect x="10" y="10" width="230" height="175" rx="8" fill="#fff1f2" stroke="#fca5a5" stroke-width="2"/>
+    <text x="125" y="30" text-anchor="middle" font-family="Noto Sans KR" font-size="12" fill="#dc2626" font-weight="700">스택 메모리</text>
+    <text x="125" y="45" text-anchor="middle" font-family="Noto Sans KR" font-size="9" fill="#dc2626">크기 컴파일 타임에 결정</text>
+
+    <rect x="25" y="55" width="200" height="30" rx="4" fill="#0f172a"/>
+    <text x="35" y="68" font-family="JetBrains Mono" font-size="9.5" fill="#c084fc">char</text>
+    <text x="60" y="68" font-family="JetBrains Mono" font-size="9.5" fill="#e2e8f0"> name[</text>
+    <text x="102" y="68" font-family="JetBrains Mono" font-size="9.5" fill="#7dd3fc">20</text>
+    <text x="118" y="68" font-family="JetBrains Mono" font-size="9.5" fill="#e2e8f0">];</text>
+    <text x="35" y="80" font-family="JetBrains Mono" font-size="9.5" fill="#64748b">// 항상 20바이트 사용</text>
+
+    <rect x="25" y="100" width="200" height="56" rx="4" fill="#fee2e2" stroke="#fca5a5"/>
+    <text x="125" y="116" text-anchor="middle" font-family="Noto Sans KR" font-size="10" fill="#dc2626" font-weight="700">문제점</text>
+    <text x="125" y="130" text-anchor="middle" font-family="Noto Sans KR" font-size="9.5" fill="#7c2d12">이름이 3글자면 17바이트 낭비</text>
+    <text x="125" y="144" text-anchor="middle" font-family="Noto Sans KR" font-size="9.5" fill="#7c2d12">이름이 25글자면 버퍼 오버플로우!</text>
+
+    <text x="125" y="175" text-anchor="middle" font-family="Noto Sans KR" font-size="10" fill="#dc2626">크기 = 고정</text>
+
+    <!-- 힙 -->
+    <rect x="265" y="10" width="245" height="175" rx="8" fill="#f0fdf4" stroke="#86efac" stroke-width="2"/>
+    <text x="387" y="30" text-anchor="middle" font-family="Noto Sans KR" font-size="12" fill="#16a34a" font-weight="700">힙 메모리 (malloc)</text>
+    <text x="387" y="45" text-anchor="middle" font-family="Noto Sans KR" font-size="9" fill="#16a34a">크기 실행 중에 결정!</text>
+
+    <rect x="280" y="55" width="215" height="44" rx="4" fill="#0f172a"/>
+    <text x="289" y="71" font-family="JetBrains Mono" font-size="9.5" fill="#c084fc">int</text>
+    <text x="309" y="71" font-family="JetBrains Mono" font-size="9.5" fill="#e2e8f0"> len = </text>
+    <text x="345" y="71" font-family="JetBrains Mono" font-size="9.5" fill="#67e8f9">strlen</text>
+    <text x="384" y="71" font-family="JetBrains Mono" font-size="9.5" fill="#e2e8f0">(src);</text>
+    <text x="289" y="84" font-family="JetBrains Mono" font-size="9.5" fill="#c084fc">char</font></text>
+    <text x="314" y="84" font-family="JetBrains Mono" font-size="9.5" fill="#fbbf24"> *p</text>
+    <text x="330" y="84" font-family="JetBrains Mono" font-size="9.5" fill="#e2e8f0"> = </text>
+    <text x="344" y="84" font-family="JetBrains Mono" font-size="9.5" fill="#67e8f9">malloc</text>
+    <text x="383" y="84" font-family="JetBrains Mono" font-size="9.5" fill="#e2e8f0">(len+</text>
+    <text x="418" y="84" font-family="JetBrains Mono" font-size="9.5" fill="#7dd3fc">1</text>
+    <text x="428" y="84" font-family="JetBrains Mono" font-size="9.5" fill="#e2e8f0">);</text>
+
+    <rect x="280" y="110" width="215" height="42" rx="4" fill="#dcfce7" stroke="#86efac"/>
+    <text x="387" y="126" text-anchor="middle" font-family="Noto Sans KR" font-size="10" fill="#166534" font-weight="700">장점</text>
+    <text x="387" y="140" text-anchor="middle" font-family="Noto Sans KR" font-size="9.5" fill="#166534">필요한 만큼만 정확하게 할당!</text>
+
+    <text x="387" y="175" text-anchor="middle" font-family="Noto Sans KR" font-size="10" fill="#16a34a">크기 = 문자열 길이 + 1('\0')</text>
+  </svg>
+
+  <div class="cover-meta">
+    <span>난이도 </span>
+    <span>malloc / free 기초</span>
+    <span>힙 메모리 맛보기</span>
+    <span>메모리 누수 주의</span>
+  </div>
+</div>
+
+<!-- PAGE 2: malloc 원리 + 완성 코드 -->
+<div class="page">
+  <div class="cover-sidebar"></div>
+  <div class="cover-accent"></div>
+
+  <div style="display:flex;align-items:center;gap:8px;margin:10px 0 6px;padding:6px 12px;background:#eff6ff;border-radius:6px;">
+    <img src="/images/learn/computer-basics/cpu.png" alt="CPU - 포인터와 메모리 처리" style="width:26px;height:26px;object-fit:contain;background:#fff;border-radius:8px;">
+</div>
+<div class="section-title">
+    <div class="icon"></div>
+    malloc 기본 원리
+  </div>
+
+  <!-- malloc 흐름 SVG -->
+  <svg width="100%" height="90" viewBox="0 0 520 90">
+    <defs>
+      <marker id="arrB" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto">
+        <path d="M0,0 L0,6 L7,3 z" fill="#0891b2"/>
+      </marker>
+    </defs>
+    <text x="10" y="16" font-family="Noto Sans KR" font-size="10" fill="#0c4a6e" font-weight="700">malloc 사용 3단계</text>
+    <rect x="10" y="24" width="140" height="56" rx="6" fill="#ecfeff" stroke="#67e8f9"/>
+    <text x="80" y="42" text-anchor="middle" font-family="JetBrains Mono" font-size="9.5" fill="#0891b2" font-weight="700">1. 할당</text>
+    <text x="80" y="56" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#334155">p = malloc(n);</text>
+    <text x="80" y="70" text-anchor="middle" font-family="Noto Sans KR" font-size="8.5" fill="#64748b">n바이트 힙 확보</text>
+    <line x1="150" y1="52" x2="175" y2="52" stroke="#0891b2" stroke-width="1.5" marker-end="url(#arrB)"/>
+
+    <rect x="175" y="24" width="140" height="56" rx="6" fill="#ecfeff" stroke="#67e8f9"/>
+    <text x="245" y="42" text-anchor="middle" font-family="JetBrains Mono" font-size="9.5" fill="#0891b2" font-weight="700">2. 사용</text>
+    <text x="245" y="56" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#334155">strcpy(p, src);</text>
+    <text x="245" y="70" text-anchor="middle" font-family="Noto Sans KR" font-size="8.5" fill="#64748b">배열처럼 사용</text>
+    <line x1="315" y1="52" x2="340" y2="52" stroke="#0891b2" stroke-width="1.5" marker-end="url(#arrB)"/>
+
+    <rect x="340" y="24" width="170" height="56" rx="6" fill="#fef9c3" stroke="#fbbf24"/>
+    <text x="425" y="42" text-anchor="middle" font-family="JetBrains Mono" font-size="9.5" fill="#d97706" font-weight="700">3. 해제 (필수!)</text>
+    <text x="425" y="56" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#334155">free(p);</text>
+    <text x="425" y="70" text-anchor="middle" font-family="Noto Sans KR" font-size="8.5" fill="#92400e">안 하면 메모리 누수!</text>
+  </svg>
+
+  <div style="display:flex;align-items:center;gap:8px;margin:10px 0 6px;padding:6px 12px;background:#eff6ff;border-radius:6px;">
+    <img src="/images/learn/computer-basics/ram.png" alt="RAM - 포인터가 가리키는 메모리" style="width:26px;height:26px;object-fit:contain;background:#fff;border-radius:8px;">
+</div>
+<div class="section-title">
+    <div class="icon"></div>
+    완성 코드
+  </div>
+
+  <div class="code">
+    <span class="code-label">dynamic_str.c</span>
+    <span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span><br>
+    <span class="kw">#include</span> <span class="str">&lt;stdlib.h&gt;</span>  <span class="cmt">// malloc, free</span><br>
+    <span class="kw">#include</span> <span class="str">&lt;string.h&gt;</span>  <span class="cmt">// strlen, strcpy</span><br>
+    <br>
+    <span class="cmt">/* 동적으로 문자열 복사본 생성 */</span><br>
+    <span class="kw">char</span> <span class="ptr">*</span><span class="fn">my_strdup</span>(<span class="kw">const</span> <span class="kw">char</span> <span class="ptr">*src</span>) {<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">int</span> len = <span class="fn">strlen</span>(src);<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">char</span> <span class="ptr">*copy</span> = (<span class="kw">char</span> <span class="ptr">*</span>)<span class="fn">malloc</span>(len + <span class="num">1</span>);<span class="cmt"> // +1: '\0'</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">if</span> (<span class="ptr">copy</span> == NULL) {<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">printf</span>(<span class="str">"메모리 할당 실패!\n"</span>);<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">return</span> NULL;<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">strcpy</span>(<span class="ptr">copy</span>, src);<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">return</span> <span class="ptr">copy</span>;<br>
+    }<br>
+    <br>
+    <span class="kw">int</span> <span class="fn">main</span>() {<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">const</span> <span class="kw">char</span> <span class="ptr">*msg</span> = <span class="str">"Hello, Dynamic Memory!"</span>;<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">char</span> <span class="ptr">*copy</span> = <span class="fn">my_strdup</span>(msg);<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">if</span> (<span class="ptr">copy</span> == NULL) <span class="kw">return</span> <span class="num">1</span>;<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">printf</span>(<span class="str">"원본: %s\n"</span>, msg);<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">printf</span>(<span class="str">"복사: %s\n"</span>, <span class="ptr">copy</span>);<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">printf</span>(<span class="str">"크기: %zu바이트 할당\n"</span>, <span class="fn">strlen</span>(msg) + <span class="num">1</span>);<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">free</span>(<span class="ptr">copy</span>);  <span class="cmt">// 반드시 해제!</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="ptr">copy</span> = NULL; <span class="cmt">// 해제 후 NULL 대입 (안전)</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">return</span> <span class="num">0</span>;<br>
+    }
+  </div>
+
+  <div class="output-box">
+    <span class="prompt">$ gcc dynamic_str.c -o dynamic_str &amp;&amp; ./dynamic_str</span><br>
+    <span class="label">원본:</span> Hello, Dynamic Memory!<br>
+    <span class="label">복사:</span> Hello, Dynamic Memory!<br>
+    <span class="label">크기:</span> 23바이트 할당
+  </div>
+
+  <div class="warn-box">
+    <strong>메모리 누수 주의:</strong> malloc으로 할당한 메모리는 프로그램이 종료할 때까지 자동 해제되지 않는다. 반드시 free(p)를 호출해야 한다. free 후 p = NULL을 대입하는 습관을 들이자.
+  </div>
+</div>
+
+<!-- PAGE 3: 응용 + 메모리 영역 비교 -->
+<div class="page">
+  <div class="cover-sidebar"></div>
+  <div class="cover-accent"></div>
+
+  <div class="section-title">
+    <div class="icon"></div>
+    C 메모리 영역 지도
+  </div>
+
+  <!-- 메모리 영역 SVG -->
+  <svg width="100%" height="145" viewBox="0 0 520 145">
+    <text x="10" y="16" font-family="Noto Sans KR" font-size="10" fill="#0c4a6e" font-weight="700">C 프로그램 메모리 영역 (낮은 주소 → 높은 주소)</text>
+
+    <!-- 코드 영역 -->
+    <rect x="10" y="24" width="500" height="22" rx="4" fill="#e0e7ff" stroke="#818cf8"/>
+    <text x="260" y="39" text-anchor="middle" font-family="Noto Sans KR" font-size="9.5" fill="#4338ca" font-weight="700">코드(텍스트) 영역 — 프로그램 코드, 문자열 리터럴("Hello")</text>
+
+    <!-- 데이터 영역 -->
+    <rect x="10" y="50" width="500" height="22" rx="4" fill="#fce7f3" stroke="#f9a8d4"/>
+    <text x="260" y="65" text-anchor="middle" font-family="Noto Sans KR" font-size="9.5" fill="#9d174d" font-weight="700">데이터 영역 — 전역/정적 변수 (int global = 10;)</text>
+
+    <!-- 힙 영역 -->
+    <rect x="10" y="76" width="500" height="30" rx="4" fill="#dcfce7" stroke="#86efac" stroke-width="2"/>
+    <text x="260" y="88" text-anchor="middle" font-family="Noto Sans KR" font-size="9.5" fill="#166534" font-weight="700">힙(Heap) 영역 — malloc/free로 관리 </text>
+    <text x="260" y="100" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#22c55e">char *p = malloc(100); // 힙에 100바이트 할당</text>
+
+    <!-- 스택 영역 -->
+    <rect x="10" y="110" width="500" height="30" rx="4" fill="#fef9c3" stroke="#fbbf24" stroke-width="2"/>
+    <text x="260" y="122" text-anchor="middle" font-family="Noto Sans KR" font-size="9.5" fill="#92400e" font-weight="700">스택(Stack) 영역 — 지역 변수, 함수 호출</text>
+    <text x="260" y="134" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#d97706">int x = 10; char arr[20]; // 스택에 자동 할당/해제</text>
+  </svg>
+
+  <div class="section-title" style="margin-top:4px">
+    <div class="icon"></div>
+    응용: 여러 문자열 동적 배열
+  </div>
+
+  <div class="code">
+    <span class="code-label">multi_str.c</span>
+    <span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span><br>
+    <span class="kw">#include</span> <span class="str">&lt;stdlib.h&gt;</span><br>
+    <span class="kw">#include</span> <span class="str">&lt;string.h&gt;</span><br>
+    <br>
+    <span class="kw">int</span> <span class="fn">main</span>() {<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">const</span> <span class="kw">char</span> <span class="ptr">*words[]</span> = {<span class="str">"cat"</span>, <span class="str">"elephant"</span>, <span class="str">"dog"</span>};<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">int</span> n = <span class="num">3</span>;<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">char</span> <span class="ptr">**copies</span> = (<span class="kw">char</span> <span class="ptr">**</span>)<span class="fn">malloc</span>(n * <span class="kw">sizeof</span>(<span class="kw">char</span> <span class="ptr">*</span>));<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; n; i++) {<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="ptr">copies[i]</span> = (<span class="kw">char</span> <span class="ptr">*</span>)<span class="fn">malloc</span>(<span class="fn">strlen</span>(words[i]) + <span class="num">1</span>);<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">strcpy</span>(<span class="ptr">copies[i]</span>, words[i]);<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; n; i++) <span class="fn">printf</span>(<span class="str">"%s\n"</span>, <span class="ptr">copies[i]</span>);<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; n; i++) <span class="fn">free</span>(<span class="ptr">copies[i]</span>);<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">free</span>(<span class="ptr">copies</span>);<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">return</span> <span class="num">0</span>;<br>
+    }
+  </div>
+</div>
+
+<!-- PAGE 4: 도전 + 연습문제 -->
+<div class="page">
+  <div class="cover-sidebar"></div>
+  <div class="cover-accent"></div>
+
+  <div style="display:flex;align-items:center;gap:8px;margin:12px 0 6px;padding:7px 12px;background:#fefce8;border-radius:6px;border-left:3px solid #f59e0b;">
+    <img src="/images/learn/c-lang/binary-code.png" alt="이진 코드 - 메모리 주소 표현" style="width:24px;height:24px;object-fit:contain;background:#fff;border-radius:8px;">
+    <span style="font-size:12px;color:#92400e;font-weight:600;">도전 과제</span>
+</div>
+<div class="challenge">
+    <h3>도전 과제</h3>
+    <div class="challenge-item">
+      <span class="num">1</span>
+      <strong>동적 정수 배열:</strong> 사용자로부터 n을 입력받아 int 배열 n개를 malloc으로 할당하고 1부터 n까지 채운 후 출력. 마지막에 free.
+    </div>
+    <div class="challenge-item">
+      <span class="num">2</span>
+      <strong>문자열 이어 붙이기:</strong> 두 문자열을 받아 합친 새 문자열을 동적 할당으로 만드는 <code>char *strjoin(const char *a, const char *b)</code>를 구현하라.
+    </div>
+    <div class="challenge-item">
+      <span class="num">3</span>
+      <strong>realloc 사용:</strong> malloc으로 10바이트 할당 후, realloc으로 20바이트로 늘리는 코드를 작성하라. 기존 내용이 보존됨을 확인.
+    </div>
+  </div>
+
+  <div class="section-title" style="margin-top:10px">
+    <div class="icon"></div>
+    연습문제
+  </div>
+
+  <details class="problem">
+    <summary><span class="q-num">1</span> <code>malloc(strlen(src) + 1)</code>에서 +1을 하는 이유는?</summary>
+    <div class="answer">문자열 끝에 null 문자('\0')가 들어갈 공간이 필요하다. strlen은 '\0'을 제외한 길이를 반환하므로 실제 저장에 필요한 바이트는 strlen + 1이다. 예: "Hello"는 strlen=5, 필요 공간=6.</div>
+  </details>
+
+  <details class="problem">
+    <summary><span class="q-num">2</span> malloc이 NULL을 반환할 수 있는 경우는?</summary>
+    <div class="answer">시스템 메모리가 부족할 때. 할당 크기가 너무 클 때. NULL 반환 시 역참조하면 세그폴트 발생. 항상 if (ptr == NULL) 체크 후 사용해야 한다.</div>
+  </details>
+
+  <details class="problem">
+    <summary><span class="q-num">3</span> free(p) 후 p = NULL을 대입하는 이유는?</summary>
+    <div class="answer">free 후 p는 여전히 해제된 메모리 주소를 가리킨다 (댕글링 포인터). p = NULL을 대입하면 실수로 다시 역참조할 때 즉시 크래시가 발생하여 버그를 쉽게 발견할 수 있다. NULL 확인으로 이미 해제됐는지도 알 수 있다.</div>
+  </details>
+
+  <details class="problem">
+    <summary><span class="q-num">4</span> 스택 배열과 힙(malloc) 배열의 생존 범위 차이는?</summary>
+    <div class="answer">스택: 함수가 끝나면 자동 해제. 함수 밖으로 주소를 반환하면 안 됨.<br>
+    힙: free를 호출할 때까지 살아있음. 함수 밖으로 반환 가능. 하지만 free를 직접 관리해야 한다.</div>
+  </details>
+
+  <details class="problem">
+    <summary><span class="q-num">5</span> <code>(char *)malloc(...)</code>에서 (char *) 캐스팅이 필요한가?</summary>
+    <div class="answer">순수 C에서는 불필요 (void *가 자동으로 변환). 그러나 C++ 코드에서는 필수. 명시적 캐스팅은 의도를 분명히 하지만, 캐스팅 실수가 오류를 가리는 경우도 있다. C 코드에서는 캐스팅 없이 쓰는 것이 표준적이다.</div>
+  </details>
+
+  <div class="summary-box">
+    <h3>이번 프로젝트 핵심</h3>
+    <ul>
+      <li>malloc(n): n바이트 힙 메모리 할당, void * 반환</li>
+      <li>반드시 NULL 체크 후 사용</li>
+      <li>strlen + 1 = 문자열 저장에 필요한 실제 바이트</li>
+      <li>free(p) 로 해제 필수 — 안 하면 메모리 누수</li>
+      <li>free 후 p = NULL 대입 습관화</li>
+    </ul>
+  </div>
+
+    <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:20px;padding-top:10px;border-top:1px solid #f1f5f9;">
+        <img src="/images/learn/c-lang/code-screen.png" alt="코드 화면 - 포인터 코드 예시" style="width:22px;height:22px;object-fit:contain;opacity:0.6;background:#fff;border-radius:8px;">
+        <span style="font-size:10px;color:#cbd5e1;">코딩쏙 C언어</span>
+    </div>
+</div>
+
+
+<div style="display:flex;align-items:center;gap:10px;margin:16px 0;padding:10px 16px;background:#f8fafc;border-radius:8px;border:1px solid #e5e7eb;">
+    <img src="/images/learn/computer-basics/cpu.png" alt="CPU - 포인터와 메모리 처리" style="width:32px;height:32px;object-fit:contain;background:#fff;border-radius:8px;">
+</div>
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

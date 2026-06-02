@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 프로젝트: 모스 부호 변환기</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute; bottom: 10mm; right: 16mm;
+    font-size: 10px; color: #94a3b8; font-weight: 600;
+}
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #f59e0b; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark { position: absolute; top: -10px; right: -15px; font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3); line-height: 1; pointer-events: none; }
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #f59e0b; font-weight: 900; }
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 16px; font-weight: 700; color: #1e3a5f; margin: 18px 0 10px; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #2563eb; font-weight: 600; }
+ul, ol { margin: 0 0 12px 20px; }
+li { font-size: 14px; color: #374151; line-height: 1.8; }
+.code { background: #0f172a; border-radius: 8px; padding: 16px 20px; font-family: 'JetBrains Mono', monospace; font-size: 13.5px; color: #e2e8f0; line-height: 1.85; margin: 14px 0; overflow-x: auto; white-space: pre-wrap; }
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.code .dec { color: #f9a8d4; }
+.practice { margin: 20px 0; border-left: 4px solid #f59e0b; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #92400e; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #f59e0b; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #f59e0b; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; white-space: pre-wrap; }
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+.step-box { border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 14px 18px; margin: 14px 0; background: #fff; }
+.step-label { font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+.step-title { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 8px; }
+.output-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #334155; line-height: 1.7; margin: 10px 0; white-space: pre-wrap; }
+.compare-table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13px; }
+.compare-table th { background: #1e3a5f; color: #fff; padding: 8px 12px; text-align: left; font-weight: 700; }
+.compare-table td { padding: 7px 12px; border-bottom: 1px solid #e2e8f0; color: #374151; }
+.compare-table tr:nth-child(even) td { background: #f8fafc; }
+.compare-table code { background: #e0e7ff; padding: 1px 5px; border-radius: 3px; font-family: 'JetBrains Mono', monospace; color: #3730a3; font-size: 12px; }
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- 1페이지: 표지 -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">PJ</div>
+        <div class="cover-label">L3 — Project</div>
+        <h1 class="cover-title">프로젝트:<br>모스 부호 변환기</h1>
+        <p class="cover-sub">딕셔너리로 알파벳과 모스 부호를 매핑해 암호화와 복호화를 구현하고, 비밀 메시지 전송 시뮬레이션을 만들어봅니다.</p>
+
+        <div style="margin:24px 0;">
+            <svg viewBox="0 0 500 155" style="max-width:500px;width:100%">
+                <defs>
+                    <marker id="arwMC" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                    </marker>
+                </defs>
+                <rect x="165" y="57" width="170" height="42" rx="8" fill="#1e3a5f"/>
+                <text x="250" y="75" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">morse.py</text>
+                <text x="250" y="90" text-anchor="middle" font-size="9" fill="#fde68a">완성 목표</text>
+                <rect x="5" y="5" width="130" height="36" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="70" y="19" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">모스 부호 딕셔너리</text>
+                <text x="70" y="33" text-anchor="middle" font-size="8" fill="#64748b">알파벳→. - 매핑</text>
+                <line x1="138" y1="23" x2="163" y2="68" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwMC)"/>
+                <rect x="365" y="5" width="130" height="36" rx="6" fill="#d1fae5" stroke="#10b981" stroke-width="1.5"/>
+                <text x="430" y="19" text-anchor="middle" font-size="9" fill="#065f46" font-weight="700">암호화 (encode)</text>
+                <text x="430" y="33" text-anchor="middle" font-size="8" fill="#64748b">텍스트 → 모스</text>
+                <line x1="362" y1="23" x2="337" y2="68" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwMC)"/>
+                <rect x="5" y="112" width="130" height="36" rx="6" fill="#ede9fe" stroke="#8b5cf6" stroke-width="1.5"/>
+                <text x="70" y="126" text-anchor="middle" font-size="9" fill="#6d28d9" font-weight="700">복호화 (decode)</text>
+                <text x="70" y="140" text-anchor="middle" font-size="8" fill="#64748b">모스 → 텍스트</text>
+                <line x1="138" y1="130" x2="163" y2="90" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwMC)"/>
+                <rect x="365" y="112" width="130" height="36" rx="6" fill="#fce7f3" stroke="#ec4899" stroke-width="1.5"/>
+                <text x="430" y="126" text-anchor="middle" font-size="9" fill="#9d174d" font-weight="700">역방향 딕셔너리</text>
+                <text x="430" y="140" text-anchor="middle" font-size="8" fill="#64748b">items()로 키-값 뒤집기</text>
+                <line x1="362" y1="130" x2="337" y2="90" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwMC)"/>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 프로젝트에서 만드는 것</h3>
+            <ul>
+                <li>딕셔너리로 알파벳과 모스 부호를 1:1 매핑할 수 있습니다.</li>
+                <li>딕셔너리 조회로 텍스트를 모스 부호로 암호화할 수 있습니다.</li>
+                <li><code>.items()</code>로 딕셔너리를 뒤집어 복호화 딕셔너리를 만들 수 있습니다.</li>
+                <li><code>join()</code>으로 리스트를 문자열로 합쳐 깔끔하게 출력할 수 있습니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- 2페이지: 핵심 개념 + 모스 딕셔너리 -->
+<div class="page">
+    <h2>핵심 개념 — 딕셔너리 매핑과 역방향 변환</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/monitor.png" alt="모니터" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+    <h3>모스 부호란?</h3>
+    <p>모스 부호는 점(.)과 선(-)으로 알파벳을 표현하는 암호 체계입니다. 19세기에 전신으로 메시지를 보낼 때 사용했습니다.</p>
+
+    <div style="margin:14px 0;">
+        <svg viewBox="0 0 500 85" style="max-width:500px;width:100%">
+            <rect x="0" y="5" width="500" height="75" rx="8" fill="#1e3a5f"/>
+            <text x="20" y="26" font-size="10" fill="#fde68a" font-weight="700">알파벳 → 모스 부호 예시</text>
+            <!-- S -->
+            <rect x="20" y="32" width="40" height="35" rx="5" fill="#f59e0b"/>
+            <text x="40" y="50" text-anchor="middle" font-size="16" fill="#fff" font-weight="900">S</text>
+            <text x="40" y="63" text-anchor="middle" font-size="9" fill="#fef3c7">. . .</text>
+            <!-- O -->
+            <rect x="72" y="32" width="40" height="35" rx="5" fill="#f59e0b"/>
+            <text x="92" y="50" text-anchor="middle" font-size="16" fill="#fff" font-weight="900">O</text>
+            <text x="92" y="63" text-anchor="middle" font-size="9" fill="#fef3c7">- - -</text>
+            <!-- S -->
+            <rect x="124" y="32" width="40" height="35" rx="5" fill="#f59e0b"/>
+            <text x="144" y="50" text-anchor="middle" font-size="16" fill="#fff" font-weight="900">S</text>
+            <text x="144" y="63" text-anchor="middle" font-size="9" fill="#fef3c7">. . .</text>
+            <!-- = SOS -->
+            <text x="200" y="52" font-size="14" fill="#94a3b8">=</text>
+            <rect x="225" y="32" width="255" height="35" rx="5" fill="#ef4444"/>
+            <text x="352" y="55" text-anchor="middle" font-size="13" fill="#fff" font-weight="700">... --- ...  (SOS)</text>
+        </svg>
+    </div>
+
+    <h3>딕셔너리 매핑 구조</h3>
+    <p>키(알파벳)와 값(모스 부호)을 1:1로 연결한 딕셔너리를 만들고, 인덱싱으로 변환합니다.</p>
+
+    <div style="margin:14px 0;">
+        <svg viewBox="0 0 500 65" style="max-width:500px;width:100%">
+            <rect x="0" y="5" width="500" height="55" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="20" y="25" font-size="11" fill="#374151" font-weight="700">딕셔너리 조회 흐름</text>
+            <text x="20" y="42" font-size="11" fill="#374151" font-family="monospace">morse_code["H"] = "...."   →  글자 "H" → 모스 "...."</text>
+            <text x="20" y="57" font-size="10" fill="#64748b" font-family="monospace">morse_code.get("H", "?")   →  없는 문자는 "?" 반환</text>
+        </svg>
+    </div>
+
+    <div class="step-box">
+        <div class="step-label">Step 1</div>
+        <div class="step-title">모스 부호 딕셔너리 만들기</div>
+        <p>알파벳 A~Z를 모스 부호와 매핑한 딕셔너리를 선언합니다.</p>
+    </div>
+
+    <div class="code">morse_code = {
+    <span class="str">'A'</span>: <span class="str">'.-'</span>,   <span class="str">'B'</span>: <span class="str">'-...'</span>, <span class="str">'C'</span>: <span class="str">'-.-.'</span>,
+    <span class="str">'D'</span>: <span class="str">'-..'</span>,  <span class="str">'E'</span>: <span class="str">'.'</span>,    <span class="str">'F'</span>: <span class="str">'..-.'</span>,
+    <span class="str">'G'</span>: <span class="str">'--.'</span>,  <span class="str">'H'</span>: <span class="str">'....'</span>, <span class="str">'I'</span>: <span class="str">'..'</span>,
+    <span class="str">'J'</span>: <span class="str">'.---'</span>, <span class="str">'K'</span>: <span class="str">'-.-'</span>,  <span class="str">'L'</span>: <span class="str">'.-..'</span>,
+    <span class="str">'M'</span>: <span class="str">'--'</span>,   <span class="str">'N'</span>: <span class="str">'-.'</span>,   <span class="str">'O'</span>: <span class="str">'---'</span>,
+    <span class="str">'P'</span>: <span class="str">'.--.'</span>, <span class="str">'Q'</span>: <span class="str">'--.-'</span>, <span class="str">'R'</span>: <span class="str">'.-.'</span>,
+    <span class="str">'S'</span>: <span class="str">'...'</span>,  <span class="str">'T'</span>: <span class="str">'-'</span>,    <span class="str">'U'</span>: <span class="str">'..-'</span>,
+    <span class="str">'V'</span>: <span class="str">'...-'</span>, <span class="str">'W'</span>: <span class="str">'.--'</span>,  <span class="str">'X'</span>: <span class="str">'-..-'</span>,
+    <span class="str">'Y'</span>: <span class="str">'-.--'</span>, <span class="str">'Z'</span>: <span class="str">'--..'</span>,
+}
+<span class="fn">print</span>(morse_code[<span class="str">'S'</span>])   <span class="cmt"># ...</span>
+<span class="fn">print</span>(morse_code[<span class="str">'O'</span>])   <span class="cmt"># ---</span></div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="완성" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">STEP 1</div>
+                <div class="practice-desc">morse.py를 만들고 위의 morse_code 딕셔너리를 그대로 입력하세요.</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">STEP 2</div>
+                <div class="practice-desc"><code>morse_code['H']</code>, <code>morse_code['I']</code>를 출력해보고 HI가 모스로 어떻게 되는지 확인하세요.</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">STEP 3</div>
+                <div class="practice-desc">SOS를 모스로 직접 계산해보세요. S, O, S를 각각 출력하고 연결해보세요.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3페이지: Step 2 암호화 + Step 3 복호화 -->
+<div class="page">
+    <h2>Step 2 — 텍스트를 모스 부호로 암호화</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="패턴" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+    <p>텍스트의 각 글자를 대문자로 변환하고 morse_code 딕셔너리에서 조회합니다. 각 글자 사이는 공백, 단어 사이는 <code>/</code>로 구분합니다.</p>
+
+    <div class="code"><span class="kw">def</span> <span class="fn">encode</span>(text):
+    result = []
+    <span class="kw">for</span> word <span class="kw">in</span> text.<span class="fn">upper</span>().<span class="fn">split</span>():
+        encoded_word = []
+        <span class="kw">for</span> char <span class="kw">in</span> word:
+            code = morse_code.<span class="fn">get</span>(char, <span class="str">'?'</span>)
+            encoded_word.<span class="fn">append</span>(code)
+        result.<span class="fn">append</span>(<span class="str">' '</span>.<span class="fn">join</span>(encoded_word))
+    <span class="kw">return</span> <span class="str">' / '</span>.<span class="fn">join</span>(result)
+
+<span class="fn">print</span>(<span class="fn">encode</span>(<span class="str">"HELLO"</span>))
+<span class="fn">print</span>(<span class="fn">encode</span>(<span class="str">"SOS"</span>))
+<span class="fn">print</span>(<span class="fn">encode</span>(<span class="str">"HI THERE"</span>))</div>
+
+    <div class="output-box">.... . .-.. .-.. ---
+... --- ...
+.... .. / - .... . .-. .</div>
+
+    <div style="margin:14px 0;">
+        <svg viewBox="0 0 500 65" style="max-width:500px;width:100%">
+            <rect x="0" y="5" width="500" height="55" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="20" y="25" font-size="11" fill="#374151" font-weight="700">join() 동작 원리</text>
+            <text x="20" y="42" font-size="11" fill="#374151" font-family="monospace">["...","---","..."] → " ".join(리스트) → "... --- ..."</text>
+            <text x="20" y="57" font-size="10" fill="#64748b" font-family="monospace">구분자.join(리스트)  — 리스트 원소를 구분자로 연결</text>
+        </svg>
+    </div>
+
+    <h2 style="margin-top:18px;">Step 3 — 모스 부호 복호화</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/clock.png" alt="반복" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+    <p>복호화는 morse_code 딕셔너리의 키와 값을 뒤집은 역방향 딕셔너리를 만들어 조회합니다.</p>
+
+    <div class="code"><span class="cmt"># 역방향 딕셔너리: 모스 부호 → 알파벳</span>
+reverse_morse = {v: k <span class="kw">for</span> k, v <span class="kw">in</span> morse_code.<span class="fn">items</span>()}
+
+<span class="kw">def</span> <span class="fn">decode</span>(morse_text):
+    result = []
+    <span class="kw">for</span> word <span class="kw">in</span> morse_text.<span class="fn">split</span>(<span class="str">' / '</span>):
+        decoded_word = []
+        <span class="kw">for</span> code <span class="kw">in</span> word.<span class="fn">split</span>(<span class="str">' '</span>):
+            letter = reverse_morse.<span class="fn">get</span>(code, <span class="str">'?'</span>)
+            decoded_word.<span class="fn">append</span>(letter)
+        result.<span class="fn">append</span>(<span class="str">''</span>.<span class="fn">join</span>(decoded_word))
+    <span class="kw">return</span> <span class="str">' '</span>.<span class="fn">join</span>(result)
+
+<span class="fn">print</span>(<span class="fn">decode</span>(<span class="str">".... . .-.. .-.. ---"</span>))   <span class="cmt"># HELLO</span>
+<span class="fn">print</span>(<span class="fn">decode</span>(<span class="str">"... --- ..."</span>))               <span class="cmt"># SOS</span></div>
+
+    <div style="margin:14px 0;">
+        <svg viewBox="0 0 500 65" style="max-width:500px;width:100%">
+            <rect x="0" y="5" width="500" height="55" rx="8" fill="#1e3a5f"/>
+            <text x="20" y="26" font-size="10" fill="#fde68a" font-weight="700" font-family="monospace">딕셔너리 컴프리헨션으로 역방향 딕셔너리</text>
+            <text x="20" y="43" font-size="10" fill="#e2e8f0" font-family="monospace">{v: k for k, v in morse_code.items()}</text>
+            <text x="20" y="57" font-size="9" fill="#94a3b8" font-family="monospace">{".-": "A", "-...": "B", ...}  키와 값을 서로 바꿈</text>
+        </svg>
+    </div>
+
+    <div style="margin:14px 0;">
+        <svg viewBox="0 0 500 55" style="max-width:500px;width:100%">
+            <rect x="0" y="5" width="500" height="45" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="20" y="25" font-size="11" fill="#374151" font-weight="700">encode() vs decode() 역방향 관계</text>
+            <text x="20" y="40" font-size="10" fill="#64748b" font-family="monospace">HELLO → encode() → .... . .-.. .-.. ---  → decode() → HELLO</text>
+        </svg>
+    </div>
+
+    <div style="margin:14px 0;">
+        <svg viewBox="0 0 500 50" style="max-width:500px;width:100%">
+            <rect x="0" y="5" width="500" height="40" rx="8" fill="#1e3a5f"/>
+            <text x="20" y="23" font-size="10" fill="#fde68a" font-weight="700" font-family="monospace">단어 구분자: " / "  글자 구분자: " " (공백)</text>
+            <text x="20" y="37" font-size="9" fill="#94a3b8" font-family="monospace">HI THERE → ".... .. / - .... . .-. ."</text>
+        </svg>
+    </div>
+</div>
+
+<!-- 4페이지: 문제 -->
+<div class="page">
+    <h2>실전 문제</h2>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q1</div>
+            <div class="problem-label">join() 활용 — 리스트를 문자열로</div>
+            <div class="problem-diff easy">쉬움</div>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">아래 리스트를 <code>" / "</code> 구분자로 연결한 문자열로 만드세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">입력</span>
+                    <span class="problem-example-value">codes = ["...","---","..."]</span>
+                </div>
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력</span>
+                    <span class="problem-example-value">"... / --- / ..."</span>
+                </div>
+            </div>
+            <details class="problem-toggle">
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">" / ".join(codes) 형태로 작성하세요.</div>
+                </div>
+            </details>
+            <details class="problem-toggle">
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code">result = " / ".join(codes)
+print(result)  # ... / --- / ...</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q2</div>
+            <div class="problem-label">역방향 딕셔너리 컴프리헨션</div>
+            <div class="problem-diff medium">보통</div>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">아래 딕셔너리의 키와 값을 서로 바꾼 역방향 딕셔너리를 딕셔너리 컴프리헨션으로 만드세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">원본</span>
+                    <span class="problem-example-value">d = {"A": ".-", "B": "-...", "S": "..."}</span>
+                </div>
+                <div class="problem-example-row">
+                    <span class="problem-example-label">결과</span>
+                    <span class="problem-example-value">{".-": "A", "-...": "B", "...": "S"}</span>
+                </div>
+            </div>
+            <details class="problem-toggle">
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">{v: k for k, v in d.items()} 패턴을 사용하세요.</div>
+                </div>
+            </details>
+            <details class="problem-toggle">
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code">reverse_d = {v: k for k, v in d.items()}
+# {".-": "A", "-...": "B", "...": "S"}</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q3</div>
+            <div class="problem-label">비밀 메시지 시뮬레이션</div>
+            <div class="problem-diff hard">어려움</div>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">사용자에게 모드(1: 암호화, 2: 복호화)와 메시지를 입력받아 처리하는 대화형 프로그램을 작성하세요. "QUIT" 입력 시 종료합니다.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">입력</span>
+                    <span class="problem-example-value">모드: 1, 메시지: HELLO</span>
+                </div>
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력</span>
+                    <span class="problem-example-value">.... . .-.. .-.. ---</span>
+                </div>
+            </div>
+            <details class="problem-toggle">
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">while True 루프 안에서 모드를 입력받고, 1이면 encode(), 2이면 decode()를 호출하세요.</div>
+                </div>
+            </details>
+            <details class="problem-toggle">
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code">while True:
+    mode = input("모드 (1:암호화 / 2:복호화 / QUIT:종료): ")
+    if mode.upper() == "QUIT":
+        print("종료합니다.")
+        break
+    msg = input("메시지: ")
+    if mode == "1":
+        print("결과:", encode(msg))
+    elif mode == "2":
+        print("결과:", decode(msg))
+    else:
+        print("1 또는 2를 입력하세요.")</div>
+                </div>
+            </details>
+        </div>
+    </div>
+</div>
+
+<!-- 5페이지: 최종 완성본 + 요약 -->
+<div class="page">
+    <h2>최종 완성본 + 핵심 요약</h2>
+
+    <div class="code"><span class="cmt"># 모스 부호 딕셔너리 (일부)</span>
+morse_code = {
+    <span class="str">'A'</span>:<span class="str">'.-'</span>,<span class="str">'B'</span>:<span class="str">'-...'</span>,<span class="str">'C'</span>:<span class="str">'-.-.'</span>,<span class="str">'D'</span>:<span class="str">'-.. '</span>,<span class="str">'E'</span>:<span class="str">'.'</span>,
+    <span class="str">'H'</span>:<span class="str">'....'</span>,<span class="str">'I'</span>:<span class="str">'..'</span>,<span class="str">'L'</span>:<span class="str">'.-..'</span>,<span class="str">'M'</span>:<span class="str">'--'</span>,<span class="str">'N'</span>:<span class="str">'-.'</span>,
+    <span class="str">'O'</span>:<span class="str">'---'</span>,<span class="str">'R'</span>:<span class="str">'.-.'</span>,<span class="str">'S'</span>:<span class="str">'...'</span>,<span class="str">'T'</span>:<span class="str">'-'</span>,<span class="str">'W'</span>:<span class="str">'.--'</span>,
+}
+reverse_morse = {v: k <span class="kw">for</span> k, v <span class="kw">in</span> morse_code.<span class="fn">items</span>()}
+
+<span class="kw">def</span> <span class="fn">encode</span>(text):
+    result = []
+    <span class="kw">for</span> word <span class="kw">in</span> text.<span class="fn">upper</span>().<span class="fn">split</span>():
+        result.<span class="fn">append</span>(<span class="str">' '</span>.<span class="fn">join</span>(morse_code.<span class="fn">get</span>(c, <span class="str">'?'</span>) <span class="kw">for</span> c <span class="kw">in</span> word))
+    <span class="kw">return</span> <span class="str">' / '</span>.<span class="fn">join</span>(result)
+
+<span class="kw">def</span> <span class="fn">decode</span>(morse_text):
+    result = []
+    <span class="kw">for</span> word <span class="kw">in</span> morse_text.<span class="fn">split</span>(<span class="str">' / '</span>):
+        result.<span class="fn">append</span>(<span class="str">''</span>.<span class="fn">join</span>(reverse_morse.<span class="fn">get</span>(c, <span class="str">'?'</span>) <span class="kw">for</span> c <span class="kw">in</span> word.<span class="fn">split</span>()))
+    <span class="kw">return</span> <span class="str">' '</span>.<span class="fn">join</span>(result)
+
+<span class="fn">print</span>(<span class="fn">encode</span>(<span class="str">"HELLO WORLD"</span>))
+<span class="fn">print</span>(<span class="fn">decode</span>(<span class="fn">encode</span>(<span class="str">"HELLO WORLD"</span>)))</div>
+
+    <div style="margin:14px 0;">
+        <svg viewBox="0 0 500 60" style="max-width:500px;width:100%">
+            <rect x="0" y="5" width="500" height="50" rx="8" fill="#0f172a"/>
+            <text x="20" y="25" font-size="11" fill="#fde68a" font-family="monospace">.... . .-.. .-.. --- / .-- --- .-. .-.. -..</text>
+            <text x="20" y="42" font-size="11" fill="#86efac" font-family="monospace">HELLO WORLD</text>
+        </svg>
+    </div>
+
+    <div style="margin:14px 0;">
+        <svg viewBox="0 0 500 60" style="max-width:500px;width:100%">
+            <rect x="0" y="5" width="500" height="50" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="20" y="25" font-size="11" fill="#374151" font-weight="700">join() vs split() 반대 동작</text>
+            <text x="20" y="42" font-size="10" fill="#64748b" font-family="monospace">join(): 리스트 → 문자열   |   split(): 문자열 → 리스트</text>
+        </svg>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>핵심 요약</h3>
+        <ul>
+            <li><strong>딕셔너리 매핑</strong> — 알파벳과 모스 부호처럼 1:1 대응 관계를 표현</li>
+            <li><strong>dict.get(key, default)</strong> — 없는 키에 안전하게 기본값 반환</li>
+            <li><strong>dict.items()</strong> — (키, 값) 쌍의 이터러블 반환</li>
+            <li><strong>{v: k for k, v in d.items()}</strong> — 딕셔너리 컴프리헨션으로 역방향 딕셔너리</li>
+            <li><strong>구분자.join(리스트)</strong> — 리스트 원소를 구분자로 연결해 문자열 생성</li>
+            <li><strong>str.split(구분자)</strong> — 문자열을 구분자 기준으로 리스트로 분리</li>
+            <li><strong>str.upper()</strong> — 문자열을 대문자로 변환, 입력 정규화에 활용</li>
+        </ul>
+    </div>
+
+    <div style="margin:14px 0;">
+        <svg viewBox="0 0 500 55" style="max-width:500px;width:100%">
+            <rect x="0" y="5" width="155" height="45" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="77" y="25" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">딕셔너리 매핑</text>
+            <text x="77" y="39" text-anchor="middle" font-size="9" fill="#64748b">1:1 대응 암호화</text>
+            <rect x="172" y="5" width="155" height="45" rx="8" fill="#ede9fe" stroke="#8b5cf6" stroke-width="1.5"/>
+            <text x="249" y="25" text-anchor="middle" font-size="10" fill="#6d28d9" font-weight="700">역방향 딕셔너리</text>
+            <text x="249" y="39" text-anchor="middle" font-size="9" fill="#64748b">items() + 컴프리헨션</text>
+            <rect x="344" y="5" width="155" height="45" rx="8" fill="#d1fae5" stroke="#10b981" stroke-width="1.5"/>
+            <text x="421" y="25" text-anchor="middle" font-size="10" fill="#065f46" font-weight="700">join / split</text>
+            <text x="421" y="39" text-anchor="middle" font-size="9" fill="#64748b">리스트-문자열 변환</text>
+        </svg>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

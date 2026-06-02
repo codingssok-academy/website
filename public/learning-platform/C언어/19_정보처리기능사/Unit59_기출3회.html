@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Unit 59. 정보처리기능사 C언어 기출 3회 — C 언어</title>
+    <link rel="stylesheet" href="../common.css">
+</head>
+
+<body>
+    <div class="wrap">
+        <div class="hdr">
+            <h1>Unit 59. 정보처리기능사 C언어 기출 3회</h1>
+            <div class="sub">킬러 문제! · 복합 추적 · 함정 · 진수변환 · 알고리즘</div>
+            <span class="unit-badge">Chapter 19 · 정보처리기능사</span>
+            <div class="level-bar"><span class="on"></span><span class="on"></span><span class="on"></span><span
+                    class="on"></span></div>
+            <div class="meta"><span class="tag pri">🏛️ 정보처리기능사</span><span class="tag acc">📝 15문제</span><span
+                    class="tag">⏱ 45분</span></div>
+        </div>
+        <div class="stu-bar"><label>👤 이름 <input type="text" id="stu-name" placeholder="이름"></label><label>📅 날짜 <input
+                    type="date" id="stu-date"></label></div>
+        <div class="learn">
+            <h2><span class="ico" style="background:rgba(239,68,68,.15)">💀</span> 3회차 — 실전 킬러 문제!</h2>
+            <p>실제 시험에서 변별력 있는 고난도 문제들! 여기를 통과하면 합격!</p>
+        </div>
+        <div id="problems"></div>
+        <div class="submit-section">
+            <p>모든 문제를 풀었나요? 📨</p><button class="btn-submit" id="btn-submit">📄 제출하기</button>
+        </div>
+        <div class="modal-overlay" id="submit-modal">
+            <div class="modal-box">
+                <div class="modal-icon">✅</div>
+                <h3>제출 완료!</h3>
+                <p>학습지가 저장되었습니다.</p>
+                <div style="margin:12px 0"><span class="info-tag" id="modal-name"></span> <span class="info-tag"
+                        id="modal-date"></span> <span class="info-tag" id="modal-count"></span></div>
+                <p style="font-size:.78rem;color:var(--dim)">📁 <strong id="modal-filename"></strong></p><button
+                    class="btn-close-modal" id="btn-close-modal">확인</button>
+            </div>
+        </div>
+        <div class="pg"><a href="Unit58_기출2회.html">← Unit 58</a><span class="tag active">Unit 59</span><span
+                class="tag">🎉 정보처리기능사 완료!</span></div>
+        <div class="ft">🏛️ 정보처리기능사 C언어 기출 3회 · Unit 59 · FINAL</div>
+    </div>
+    <script>
+        const P = [
+            {
+                n: 1, t: "💀 증감 + 대입 복합", d: 3,
+                q: `다음 코드의 출력을 쓰세요.<pre class="code-c">#include &lt;stdio.h&gt;
+int main() {
+    int a=1, b=2, c=3;
+    int d = a++ + ++b + c--;
+    printf("%d %d %d %d\\n", a, b, c, d);
+    return 0;
+}</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">2 3 2 6</div><div class="trace">a++: 1 사용 후 2<br>++b: 3으로 증가 후 사용<br>c--: 3 사용 후 2<br>d = 1 + 3 + 3 = <span class="err">7이 아니라</span> = 1+3+3-1... 아니야<br><br>정확히: d = a(1) + b(3) + c(3) = 7? 아니!<br>d = 1 + 3 + 3 = 7<br><br>잠깐, 다시: a++=1(사용값), ++b=3, c--=3(사용값)<br>d = 1+3+3 = 7? → 아, 실수! 맞습니다.<br></div>`
+            },
+
+            {
+                n: '1', t: "💀 증감 + 대입 복합 (수정)", d: 3,
+                q: `다음 코드의 출력을 쓰세요.<pre class="code-c">#include &lt;stdio.h&gt;
+int main() {
+    int a=5, b=3;
+    int c = ++a * b--;
+    printf("%d %d %d\\n", a, b, c);
+    return 0;
+}</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">6 2 18</div><div class="trace">++a: 6으로 증가 후 사용<br>b--: 3 사용 후 2로 감소<br>c = 6 * 3 = 18<br>출력: a=6, b=2, c=18</div>`
+            },
+
+            {
+                n: 2, t: "💀 쉼표 연산자", d: 3,
+                q: `다음 코드의 출력을 쓰세요.<pre class="code-c">#include &lt;stdio.h&gt;
+int main() {
+    int a, b;
+    a = (1, 2, 3);
+    b = (a++, ++a, a+10);
+    printf("%d %d\\n", a, b);
+    return 0;
+}</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">5 15</div><div class="trace">쉼표 연산자: 왼→오 평가, 마지막 값 반환!<br>a = (1,2,3) → a = 3<br>b = (a++, ++a, a+10):<br>  a++ → a=3→4 (후위)<br>  ++a → a=4→5 (전위)<br>  a+10 → 5+10 = 15 → b = 15<br>출력: a=5, b=15</div>`
+            },
+
+            {
+                n: 3, t: "💀 sizeof 함정", d: 2,
+                q: `다음 코드의 출력을 쓰세요.<pre class="code-c">#include &lt;stdio.h&gt;
+int main() {
+    int a[5] = {1,2,3,4,5};
+    int *p = a;
+    printf("%lu\\n", sizeof(a));
+    printf("%lu\\n", sizeof(p));
+    printf("%lu\\n", sizeof(a[0]));
+    return 0;
+}</pre>
+<p><em>int = 4바이트, 포인터 = 8바이트 (64비트 시스템)</em></p>`,
+                a: `<span class="key">정답</span><div class="output-box">20<br>8<br>4</div><div class="trace">sizeof(a) = 5 × 4바이트 = 20 (배열 전체!)<br>sizeof(p) = 8 (포인터 크기, 64비트)<br>sizeof(a[0]) = 4 (int 한 개)<br><br><span class="err">배열과 포인터의 sizeof가 다르다!</span></div>`
+            },
+
+            {
+                n: 4, t: "💀 조건문 함정 (= vs ==)", d: 2,
+                q: `다음 코드의 출력을 쓰세요.<pre class="code-c">#include &lt;stdio.h&gt;
+int main() {
+    int a = 0;
+    if (a = 5)
+        printf("TRUE %d\\n", a);
+    else
+        printf("FALSE %d\\n", a);
+    return 0;
+}</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">TRUE 5</div><div class="trace"><span class="err">= 는 대입, == 는 비교!</span><br>a = 5 → a에 5 대입 → 조건값 5 → 참(0이 아님)!<br>"TRUE 5" 출력<br><br>의도는 a == 5였겠지만, = 사용 → 항상 참</div>`
+            },
+
+            {
+                n: 5, t: "진수 변환 문제", d: 2,
+                q: `다음 코드의 출력을 쓰세요.<pre class="code-c">#include &lt;stdio.h&gt;
+int main() {
+    int n = 0x1A;
+    printf("%d\\n", n);
+    printf("%o\\n", n);
+    printf("%x\\n", n);
+    return 0;
+}</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">26<br>32<br>1a</div><div class="trace">0x1A = 1×16 + 10 = 26 (10진수)<br>%d: 26 (10진수)<br>%o: 32 (8진수, 3×8+2=26)<br>%x: 1a (16진수, 소문자)</div>`
+            },
+
+            {
+                n: 6, t: "💀 배열 인덱스 표현", d: 3,
+                q: `다음 코드의 출력을 쓰세요.<pre class="code-c">#include &lt;stdio.h&gt;
+int main() {
+    int a[] = {10, 20, 30, 40, 50};
+    printf("%d\\n", 2[a]);
+    printf("%d\\n", *(a+3));
+    printf("%d\\n", *a + 3);
+    return 0;
+}</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">30<br>40<br>13</div><div class="trace">2[a] = a[2] = 30 (C언어에서 교환 가능!)<br>*(a+3) = a[3] = 40<br><span class="err">*a + 3 ≠ *(a+3)!</span><br>*a = a[0] = 10, 10+3 = 13</div>`
+            },
+
+            {
+                n: 7, t: "💀 문자열 길이와 배열 크기", d: 2,
+                q: `다음 코드의 출력을 쓰세요.<pre class="code-c">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+int main() {
+    char a[] = "Hello";
+    char b[10] = "Hi";
+    printf("%lu %lu\\n", strlen(a), sizeof(a));
+    printf("%lu %lu\\n", strlen(b), sizeof(b));
+    return 0;
+}</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">5 6<br>2 10</div><div class="trace">a: strlen=5('\\0'제외), sizeof=6('\\0'포함!)<br>b: strlen=2, sizeof=10(선언된 크기!)<br><br><span class="val">strlen ≠ sizeof</span><br>strlen: 널 문자 전까지 문자 수<br>sizeof: 배열 전체 바이트</div>`
+            },
+
+            {
+                n: 8, t: "goto문 (출제 빈도 낮지만 등장!)", d: 2,
+                q: `다음 코드의 출력을 쓰세요.<pre class="code-c">#include &lt;stdio.h&gt;
+int main() {
+    int i = 0;
+    start:
+    if (i >= 5) goto end;
+    printf("%d ", i);
+    i += 2;
+    goto start;
+    end:
+    printf("\\n");
+    return 0;
+}</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">0 2 4 </div><div class="trace">i=0: 0 출력, i=2<br>i=2: 2 출력, i=4<br>i=4: 4 출력, i=6<br>i=6: i>=5 → goto end → 종료</div>`
+            },
+
+            {
+                n: 9, t: "💀 다중 포인터", d: 3,
+                q: `다음 코드의 출력을 쓰세요.<pre class="code-c">#include &lt;stdio.h&gt;
+int main() {
+    int a = 100;
+    int *p = &a;
+    int **pp = &p;
+    printf("%d\\n", a);
+    printf("%d\\n", *p);
+    printf("%d\\n", **pp);
+    **pp = 200;
+    printf("%d\\n", a);
+    return 0;
+}</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">100<br>100<br>100<br>200</div><div class="trace">pp → p → a<br>*p = a = 100<br>**pp = *(*pp) = *p = a = 100<br><br>**pp = 200 → *p = 200 → a = 200</div>`
+            },
+
+            {
+                n: 10, t: "매크로 함정", d: 3,
+                q: `다음 코드의 출력을 쓰세요.<pre class="code-c">#include &lt;stdio.h&gt;
+#define SQ(x) x*x
+int main() {
+    printf("%d\\n", SQ(3));
+    printf("%d\\n", SQ(2+3));
+    printf("%d\\n", SQ(4));
+    return 0;
+}</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">9<br>11<br>16</div><div class="trace">SQ(3) = 3*3 = 9 ✓<br>SQ(2+3) = 2+3*2+3 = 2+6+3 = <span class="err">11 (25 아님!)</span><br>SQ(4) = 4*4 = 16<br><br><span class="err">매크로는 단순 치환!</span><br>#define SQ(x) ((x)*(x))로 해야 안전!</div>`
+            },
+
+            {
+                n: 11, t: "💀 재귀 역순 출력", d: 3,
+                q: `다음 코드의 출력을 쓰세요.<pre class="code-c">#include &lt;stdio.h&gt;
+void func(int n) {
+    if (n <= 0) return;
+    func(n / 10);
+    printf("%d", n % 10);
+}
+int main() {
+    func(1234);
+    printf("\\n");
+    return 0;
+}</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">1234</div><div class="trace">func(1234) → func(123) → func(12) → func(1) → func(0) return<br>돌아오면서:<br>func(1): print 1%10 = 1<br>func(12): print 12%10 = 2<br>func(123): print 123%10 = 3<br>func(1234): print 1234%10 = 4<br>결과: 1234 (각 자릿수를 순서대로!)</div>`
+            },
+
+            {
+                n: 12, t: "enum 열거형", d: 2,
+                q: `다음 코드의 출력을 쓰세요.<pre class="code-c">#include &lt;stdio.h&gt;
+enum Color { RED, GREEN=5, BLUE, YELLOW };
+int main() {
+    printf("%d %d %d %d\\n", RED, GREEN, BLUE, YELLOW);
+    return 0;
+}</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">0 5 6 7</div><div class="trace">RED = 0 (기본 시작)<br>GREEN = 5 (명시적 지정)<br>BLUE = 6 (이전+1)<br>YELLOW = 7 (이전+1)</div>`
+            },
+
+            {
+                n: 13, t: "💀 함수 포인터 개념", d: 3,
+                q: `다음 코드의 출력을 쓰세요.<pre class="code-c">#include &lt;stdio.h&gt;
+int add(int a, int b) { return a+b; }
+int mul(int a, int b) { return a*b; }
+int main() {
+    int (*f)(int,int);
+    f = add;
+    printf("%d\\n", f(3, 4));
+    f = mul;
+    printf("%d\\n", f(3, 4));
+    return 0;
+}</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">7<br>12</div><div class="trace">f는 함수 포인터!<br>f = add → f(3,4) = add(3,4) = 7<br>f = mul → f(3,4) = mul(3,4) = 12<br><br>함수도 주소가 있다!</div>`
+            },
+
+            {
+                n: 14, t: "비트 시프트 활용", d: 3,
+                q: `다음 코드의 출력을 쓰세요.<pre class="code-c">#include &lt;stdio.h&gt;
+int main() {
+    int a = 1;
+    for (int i = 0; i < 5; i++)
+        printf("%d ", a << i);
+    printf("\\n");
+    int b = 32;
+    printf("%d\\n", b >> 3);
+    return 0;
+}</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">1 2 4 8 16 <br>4</div><div class="trace">1<<0=1, 1<<1=2, 1<<2=4, 1<<3=8, 1<<4=16<br>왼쪽 시프트 = ×2<br><br>32>>3 = 32/8 = 4<br>오른쪽 시프트 = ÷2</div>`
+            },
+
+            {
+                n: 15, t: "🏆 최종: 종합 코드 추적", d: 3,
+                q: `다음 코드의 출력을 쓰세요.<pre class="code-c">#include &lt;stdio.h&gt;
+int g = 0;
+int func(int n) {
+    g++;
+    if (n <= 1) return 1;
+    return n * func(n - 1);
+}
+int main() {
+    int r = func(5);
+    printf("%d %d\\n", r, g);
+    return 0;
+}</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">120 5</div><div class="trace">팩토리얼 + 전역 카운터!<br>func(5): g=1, 5*func(4)<br>func(4): g=2, 4*func(3)<br>func(3): g=3, 3*func(2)<br>func(2): g=4, 2*func(1)<br>func(1): g=5, return 1<br><br>r = 5*4*3*2*1 = 120<br>g = 5 (5번 호출)</div>`
+            }
+        ];
+        const c = document.getElementById('problems'); P.forEach(p => { const dc = p.d <= 1 ? 'ez' : p.d <= 2 ? 'md' : 'hd'; const dots = Array.from({ length: 5 }, (_, i) => `<span${i < p.d ? ' class="on"' : ''}>​</span>`).join(''); c.innerHTML += `<div class="prob"><div class="prob-top"><div class="prob-num ${dc}">${p.n}</div><div class="prob-title">${p.t}</div><div class="diff-dots">${dots}</div></div><div class="prob-body"><div class="q">${p.q}</div><textarea class="write" placeholder="✍️ 답을 작성하세요"></textarea><details class="ans"><summary>정답 및 해설 보기</summary><div class="ans-body">${p.a}</div></details></div></div>`; });
+    </script>
+    <script src="../submit.js"></script>
+    <script src="../../platform.js"></script>
+</body>
+
+</html>

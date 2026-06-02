@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 미니 스프레드시트</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+.page { width: 210mm; min-height: 297mm; margin: 16px auto; padding: 18mm 20mm 15mm 22mm; background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: relative; page-break-after: always; }
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after { content: counter(pagenum); position: absolute; bottom: 10mm; right: 16mm; font-size: 10px; color: #94a3b8; font-weight: 600; }
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark { position: absolute; top: -10px; right: -15px; font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3); line-height: 1; pointer-events: none; }
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #2563eb; font-weight: 600; }
+.code { background: #0f172a; border-radius: 8px; padding: 16px 20px; font-family: 'JetBrains Mono', monospace; font-size: 14px; color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap; }
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fce7f3; color: #9d174d; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<div class="page cover">
+  <div class="cover-sidebar"></div>
+  <div class="cover-accent"></div>
+  <div class="cover-body">
+    <div class="cover-watermark">P9</div>
+    <div class="cover-label">Project 09 · Level 5</div>
+    <h1 class="cover-title">미니 스프레드시트</h1>
+    <p class="cover-sub">2차원 배열로 행과 열을 가진 표를 만들고, 각 행과 열의 합계를 자동으로 계산하여 출력합니다.</p>
+    <div style="margin:24px 0;">
+      <svg viewBox="0 0 460 130" style="max-width:460px;width:100%">
+        <text x="230" y="16" text-anchor="middle" font-size="11" fill="#64748b" font-weight="600">3행 4열 표 + 행합계 + 열합계</text>
+        <!-- 헤더 -->
+        <rect x="10" y="24" width="60" height="24" rx="3" fill="#1e3a5f"/><text x="40" y="40" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">항목</text>
+        <rect x="75" y="24" width="60" height="24" rx="3" fill="#1e3a5f"/><text x="105" y="40" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">1분기</text>
+        <rect x="140" y="24" width="60" height="24" rx="3" fill="#1e3a5f"/><text x="170" y="40" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">2분기</text>
+        <rect x="205" y="24" width="60" height="24" rx="3" fill="#1e3a5f"/><text x="235" y="40" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">3분기</text>
+        <rect x="270" y="24" width="60" height="24" rx="3" fill="#1e3a5f"/><text x="300" y="40" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">4분기</text>
+        <rect x="335" y="24" width="60" height="24" rx="3" fill="#2d5a8e"/><text x="365" y="40" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">합계</text>
+        <!-- 데이터 행 1 -->
+        <rect x="10" y="52" width="60" height="22" rx="3" fill="#f1f5f9"/><text x="40" y="67" text-anchor="middle" font-size="9" fill="#374151">국어</text>
+        <rect x="75" y="52" width="60" height="22" rx="3" fill="#fff" stroke="#e2e8f0"/><text x="105" y="67" text-anchor="middle" font-size="10" fill="#1d4ed8">85</text>
+        <rect x="140" y="52" width="60" height="22" rx="3" fill="#fff" stroke="#e2e8f0"/><text x="170" y="67" text-anchor="middle" font-size="10" fill="#1d4ed8">90</text>
+        <rect x="205" y="52" width="60" height="22" rx="3" fill="#fff" stroke="#e2e8f0"/><text x="235" y="67" text-anchor="middle" font-size="10" fill="#1d4ed8">88</text>
+        <rect x="270" y="52" width="60" height="22" rx="3" fill="#fff" stroke="#e2e8f0"/><text x="300" y="67" text-anchor="middle" font-size="10" fill="#1d4ed8">92</text>
+        <rect x="335" y="52" width="60" height="22" rx="3" fill="#dbeafe" stroke="#3b82f6"/><text x="365" y="67" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">355</text>
+        <!-- 데이터 행 2 -->
+        <rect x="10" y="78" width="60" height="22" rx="3" fill="#f1f5f9"/><text x="40" y="93" text-anchor="middle" font-size="9" fill="#374151">수학</text>
+        <rect x="75" y="78" width="60" height="22" rx="3" fill="#fff" stroke="#e2e8f0"/><text x="105" y="93" text-anchor="middle" font-size="10" fill="#1d4ed8">75</text>
+        <rect x="140" y="78" width="60" height="22" rx="3" fill="#fff" stroke="#e2e8f0"/><text x="170" y="93" text-anchor="middle" font-size="10" fill="#1d4ed8">80</text>
+        <rect x="205" y="78" width="60" height="22" rx="3" fill="#fff" stroke="#e2e8f0"/><text x="235" y="93" text-anchor="middle" font-size="10" fill="#1d4ed8">78</text>
+        <rect x="270" y="78" width="60" height="22" rx="3" fill="#fff" stroke="#e2e8f0"/><text x="300" y="93" text-anchor="middle" font-size="10" fill="#1d4ed8">82</text>
+        <rect x="335" y="78" width="60" height="22" rx="3" fill="#dbeafe" stroke="#3b82f6"/><text x="365" y="93" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">315</text>
+        <!-- 열합계 -->
+        <rect x="75" y="104" width="60" height="22" rx="3" fill="#fefce8" stroke="#f59e0b"/><text x="105" y="119" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">160</text>
+        <rect x="140" y="104" width="60" height="22" rx="3" fill="#fefce8" stroke="#f59e0b"/><text x="170" y="119" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">170</text>
+        <rect x="205" y="104" width="60" height="22" rx="3" fill="#fefce8" stroke="#f59e0b"/><text x="235" y="119" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">166</text>
+        <rect x="270" y="104" width="60" height="22" rx="3" fill="#fefce8" stroke="#f59e0b"/><text x="300" y="119" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">174</text>
+      </svg>
+    </div>
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/database.png" alt="데이터베이스" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+      <h3>이 프로젝트에서 배우는 것</h3>
+      <ul>
+        <li>2차원 배열 선언과 초기화 방법을 배웁니다.</li>
+        <li>중첩 for문으로 행과 열을 순회합니다.</li>
+        <li>행 합계와 열 합계를 각각 계산합니다.</li>
+        <li>표 형식으로 데이터를 정렬 출력합니다.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+  <h2>2차원 배열 선언과 접근</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/folder.png" alt="데이터" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+  <p>2차원 배열은 행(row)과 열(column)을 가진 표입니다. <code>arr[행][열]</code>로 특정 칸에 접근합니다.</p>
+  <div style="text-align:center;margin:14px 0;">
+    <svg viewBox="0 0 460 110" style="max-width:460px;width:100%">
+      <text x="230" y="16" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="800">int data[3][4] — 3행 4열 배열</text>
+      <!-- 열 인덱스 -->
+      <text x="90" y="32" text-anchor="middle" font-size="9" fill="#94a3b8">[0]</text>
+      <text x="150" y="32" text-anchor="middle" font-size="9" fill="#94a3b8">[1]</text>
+      <text x="210" y="32" text-anchor="middle" font-size="9" fill="#94a3b8">[2]</text>
+      <text x="270" y="32" text-anchor="middle" font-size="9" fill="#94a3b8">[3]</text>
+      <!-- 행 0 -->
+      <text x="30" y="52" font-size="9" fill="#94a3b8">[0]</text>
+      <rect x="60" y="38" width="60" height="24" rx="3" fill="#dbeafe" stroke="#3b82f6"/><text x="90" y="54" text-anchor="middle" font-size="11" fill="#1d4ed8">85</text>
+      <rect x="120" y="38" width="60" height="24" rx="3" fill="#dbeafe" stroke="#3b82f6"/><text x="150" y="54" text-anchor="middle" font-size="11" fill="#1d4ed8">90</text>
+      <rect x="180" y="38" width="60" height="24" rx="3" fill="#dbeafe" stroke="#3b82f6"/><text x="210" y="54" text-anchor="middle" font-size="11" fill="#1d4ed8">88</text>
+      <rect x="240" y="38" width="60" height="24" rx="3" fill="#dbeafe" stroke="#3b82f6"/><text x="270" y="54" text-anchor="middle" font-size="11" fill="#1d4ed8">92</text>
+      <!-- 행 1 -->
+      <text x="30" y="79" font-size="9" fill="#94a3b8">[1]</text>
+      <rect x="60" y="65" width="60" height="24" rx="3" fill="#f0fdf4" stroke="#22c55e"/><text x="90" y="81" text-anchor="middle" font-size="11" fill="#166534">75</text>
+      <rect x="120" y="65" width="60" height="24" rx="3" fill="#f0fdf4" stroke="#22c55e"/><text x="150" y="81" text-anchor="middle" font-size="11" fill="#166534">80</text>
+      <rect x="180" y="65" width="60" height="24" rx="3" fill="#fefce8" stroke="#f59e0b" stroke-width="2"/><text x="210" y="81" text-anchor="middle" font-size="11" fill="#92400e" font-weight="800">78</text>
+      <rect x="240" y="65" width="60" height="24" rx="3" fill="#f0fdf4" stroke="#22c55e"/><text x="270" y="81" text-anchor="middle" font-size="11" fill="#166534">82</text>
+      <!-- 접근 예시 -->
+      <text x="350" y="55" font-size="10" fill="#374151">data[0][2] = 88</text>
+      <text x="350" y="73" font-size="10" fill="#374151">data[1][2] = 78</text>
+      <path d="M242,50 L345,50" stroke="#f59e0b" stroke-width="1" stroke-dasharray="3,2"/>
+    </svg>
+  </div>
+  <div class="code"><span class="cmt">// 2차원 배열 선언과 초기화</span>
+<span class="kw">int</span> data[<span class="num">3</span>][<span class="num">4</span>] = {
+    {<span class="num">85</span>, <span class="num">90</span>, <span class="num">88</span>, <span class="num">92</span>},  <span class="cmt">// 0행: 국어</span>
+    {<span class="num">75</span>, <span class="num">80</span>, <span class="num">78</span>, <span class="num">82</span>},  <span class="cmt">// 1행: 수학</span>
+    {<span class="num">90</span>, <span class="num">85</span>, <span class="num">95</span>, <span class="num">88</span>}   <span class="cmt">// 2행: 영어</span>
+};
+<span class="cmt">// 접근: data[행][열]</span>
+<span class="fn">printf</span>(<span class="str">"%d\n"</span>, data[<span class="num">1</span>][<span class="num">2</span>]);  <span class="cmt">// 78 (수학 3분기)</span></div>
+  <h2>행 합계와 열 합계</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/hard-drive.png" alt="저장소" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+  <div class="code"><span class="cmt">// 행 합계</span>
+<span class="kw">for</span> (<span class="kw">int</span> r = <span class="num">0</span>; r &lt; <span class="num">3</span>; r++) {
+    <span class="kw">int</span> rowSum = <span class="num">0</span>;
+    <span class="kw">for</span> (<span class="kw">int</span> c = <span class="num">0</span>; c &lt; <span class="num">4</span>; c++)
+        rowSum += data[r][c];
+    <span class="fn">printf</span>(<span class="str">"%d행 합계: %d\n"</span>, r, rowSum);
+}
+<span class="cmt">// 열 합계</span>
+<span class="kw">for</span> (<span class="kw">int</span> c = <span class="num">0</span>; c &lt; <span class="num">4</span>; c++) {
+    <span class="kw">int</span> colSum = <span class="num">0</span>;
+    <span class="kw">for</span> (<span class="kw">int</span> r = <span class="num">0</span>; r &lt; <span class="num">3</span>; r++)
+        colSum += data[r][c];
+    <span class="fn">printf</span>(<span class="str">"%d열 합계: %d\n"</span>, c, colSum);
+}</div>
+</div>
+
+<div class="page">
+  <h2>표 형식으로 출력하기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="처리" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+  <p>printf의 %Nd 형식을 사용해 숫자를 고정 너비로 출력하면 깔끔한 표 형식이 됩니다.</p>
+  <div class="code">#<span class="kw">include</span> <span class="str">&lt;stdio.h&gt;</span>
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="kw">char</span> *label[<span class="num">3</span>] = {<span class="str">"국어"</span>, <span class="str">"수학"</span>, <span class="str">"영어"</span>};
+    <span class="kw">int</span> data[<span class="num">3</span>][<span class="num">4</span>] = {
+        {<span class="num">85</span>,<span class="num">90</span>,<span class="num">88</span>,<span class="num">92</span>}, {<span class="num">75</span>,<span class="num">80</span>,<span class="num">78</span>,<span class="num">82</span>}, {<span class="num">90</span>,<span class="num">85</span>,<span class="num">95</span>,<span class="num">88</span>}
+    };
+
+    <span class="fn">printf</span>(<span class="str">"%-6s %5s %5s %5s %5s %6s\n"</span>,
+           <span class="str">"과목"</span>,<span class="str">"1분기"</span>,<span class="str">"2분기"</span>,<span class="str">"3분기"</span>,<span class="str">"4분기"</span>,<span class="str">"합계"</span>);
+    <span class="fn">printf</span>(<span class="str">"------------------------------------\n"</span>);
+
+    <span class="kw">int</span> colSum[<span class="num">4</span>] = {<span class="num">0</span>};
+    <span class="kw">for</span> (<span class="kw">int</span> r=<span class="num">0</span>;r&lt;<span class="num">3</span>;r++) {
+        <span class="kw">int</span> rSum = <span class="num">0</span>;
+        <span class="fn">printf</span>(<span class="str">"%-6s"</span>, label[r]);
+        <span class="kw">for</span> (<span class="kw">int</span> c=<span class="num">0</span>;c&lt;<span class="num">4</span>;c++) {
+            <span class="fn">printf</span>(<span class="str">"%6d"</span>, data[r][c]);
+            rSum += data[r][c];
+            colSum[c] += data[r][c];
+        }
+        <span class="fn">printf</span>(<span class="str">"%7d\n"</span>, rSum);
+    }
+    <span class="fn">printf</span>(<span class="str">"합계  "</span>);
+    <span class="kw">for</span>(<span class="kw">int</span> c=<span class="num">0</span>;c&lt;<span class="num">4</span>;c++) <span class="fn">printf</span>(<span class="str">"%6d"</span>,colSum[c]);
+    <span class="fn">printf</span>(<span class="str">"\n"</span>);
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+  <div style="text-align:center;margin:12px 0;">
+    <svg viewBox="0 0 460 90" style="max-width:460px;width:100%">
+      <rect x="10" y="8" width="440" height="78" rx="8" fill="#0f172a"/>
+      <text x="30" y="28" font-size="10" fill="#67e8f9" font-family="JetBrains Mono">과목    1분기 2분기 3분기 4분기  합계</text>
+      <text x="30" y="44" font-size="10" fill="#e2e8f0" font-family="JetBrains Mono">국어       85    90    88    92   355</text>
+      <text x="30" y="60" font-size="10" fill="#e2e8f0" font-family="JetBrains Mono">수학       75    80    78    82   315</text>
+      <text x="30" y="76" font-size="10" fill="#f59e0b" font-family="JetBrains Mono">합계      160   170   166   174</text>
+    </svg>
+  </div>
+</div>
+
+<div class="page">
+  <h2>연습 문제</h2>
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">1</div>
+      <div class="problem-label">전체 평균 계산</div>
+      <span class="problem-diff easy">쉬움</span>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">3×4 표의 전체 12개 값의 평균을 구하세요.</div>
+      <div class="problem-example">
+        <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">전체 평균: 85.7</span></div>
+      </div>
+      <details class="problem-toggle">
+        <summary>힌트 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="hint-text">행합계를 모두 더해 12로 나누거나, 중첩 for문으로 전체 합계를 구한 뒤 3*4=12로 나눕니다.</div>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">2</div>
+      <div class="problem-label">각 행의 최고점 찾기</div>
+      <span class="problem-diff medium">중간</span>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">각 행(과목)에서 가장 높은 분기 점수와 그 분기 번호를 출력하세요.</div>
+      <div class="problem-example">
+        <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">국어 최고: 92 (4분기)</span></div>
+      </div>
+      <details class="problem-toggle">
+        <summary>정답 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="answer-code"><span class="kw">for</span>(<span class="kw">int</span> r=<span class="num">0</span>;r&lt;<span class="num">3</span>;r++){
+  <span class="kw">int</span> mx=data[r][<span class="num">0</span>],mci=<span class="num">0</span>;
+  <span class="kw">for</span>(<span class="kw">int</span> c=<span class="num">1</span>;c&lt;<span class="num">4</span>;c++)
+    <span class="kw">if</span>(data[r][c]&gt;mx){mx=data[r][c];mci=c;}
+  <span class="fn">printf</span>(<span class="str">"%s 최고:%d (%d분기)\n"</span>,label[r],mx,mci+<span class="num">1</span>);
+}</div>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">3</div>
+      <div class="problem-label">행렬 전치 (Transpose)</div>
+      <span class="problem-diff hard">어려움</span>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">3×4 행렬을 4×3으로 전치(행↔열 교환)하여 출력하세요. trans[c][r] = data[r][c]</div>
+      <div class="problem-example">
+        <div class="problem-example-row"><span class="problem-example-label">원본</span><span class="problem-example-value">3행 4열 data[3][4]</span></div>
+        <div class="problem-example-row"><span class="problem-example-label">전치</span><span class="problem-example-value">4행 3열 trans[4][3]</span></div>
+      </div>
+      <details class="problem-toggle">
+        <summary>힌트 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="hint-text">int trans[4][3]; for(r) for(c) trans[c][r] = data[r][c];</div>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+    <h3>핵심 정리</h3>
+    <ul>
+      <li>2차원 배열: <code>int arr[행수][열수]</code></li>
+      <li>접근: <code>arr[r][c]</code> (r=행 인덱스, c=열 인덱스)</li>
+      <li>행 순회: 외부 for=행, 내부 for=열</li>
+      <li>열 순회: 외부 for=열, 내부 for=행</li>
+      <li>printf <code>%6d</code>: 6칸 고정 너비 출력 (표 정렬용)</li>
+    </ul>
+  </div>
+</div>
+
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="완성" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

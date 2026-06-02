@@ -1,0 +1,106 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
+const STUDENT_KEY = "codingssok_parent_student";
+const CODE_VERIFIED_KEY = "codingssok_code_verified";
+const HW_CHECK_KEY = "codingssok_hw_last_check";
+const APP_VERSION = "2.0.0";
+
+const cardClass = "bg-white rounded-[20px] overflow-hidden shadow-[0_1px_8px_rgba(0,0,0,0.06),0_0_0_1px_rgba(226,232,240,0.8)]";
+const sectionLabel = "text-[11px] font-extrabold text-slate-500 uppercase tracking-wider mb-2.5 pl-1";
+
+export default function ParentSettingsPage() {
+    const [studentName, setStudentName] = useState("");
+
+    useEffect(() => {
+        setStudentName(localStorage.getItem(STUDENT_KEY) ?? "");
+    }, []);
+
+    const handleClearData = () => {
+        if (!confirm("저장된 모든 데이터를 지우고 처음 화면으로 돌아갑니다.")) return;
+        localStorage.removeItem(STUDENT_KEY);
+        localStorage.removeItem(CODE_VERIFIED_KEY);
+        localStorage.removeItem(HW_CHECK_KEY);
+        window.location.href = "/parent";
+    };
+
+    return (
+        <div className="px-4 pt-5 pb-2 max-w-[480px] mx-auto">
+            {/* Header */}
+            <div className="mb-7">
+                <div className="text-[13px] text-slate-500 font-semibold mb-0.5">앱 설정</div>
+                <div className="text-xl font-black text-slate-900">설정</div>
+            </div>
+
+            {/* Student info */}
+            <section className="mb-5">
+                <div className={sectionLabel}>학생 정보</div>
+                <div className={cardClass}>
+                    <div className="flex items-center gap-3.5 px-5 py-4">
+                        <div className="w-11 h-11 rounded-[14px] bg-blue-50 flex items-center justify-center shrink-0">
+                            <span className="material-symbols-outlined text-2xl text-blue-600" style={{ fontVariationSettings: "'FILL' 1" }}>
+                                person
+                            </span>
+                        </div>
+                        <div className="flex-1">
+                            <div className="text-[11px] text-slate-500 font-semibold mb-0.5">현재 학생</div>
+                            <div className="text-base font-extrabold text-slate-900">{studentName || "\u2014"}</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* App info */}
+            <section className="mb-5">
+                <div className={sectionLabel}>앱 정보</div>
+                <div className={cardClass}>
+                    <SettingsRow icon="info" iconBg="bg-blue-50" iconColor="text-blue-600" label="버전" value={`v${APP_VERSION}`} />
+                    <SettingsRow icon="school" iconBg="bg-green-50" iconColor="text-green-600" label="서비스" value="코딩쏙 학부모 앱" divider={false} />
+                </div>
+            </section>
+
+            {/* Data */}
+            <section>
+                <div className={sectionLabel}>데이터</div>
+                <div className={cardClass}>
+                    <button
+                        onClick={handleClearData}
+                        className="w-full flex items-center gap-3.5 px-5 py-4 bg-transparent border-none cursor-pointer text-left font-[inherit] min-h-[60px]"
+                    >
+                        <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center shrink-0">
+                            <span className="material-symbols-outlined text-xl text-red-500" style={{ fontVariationSettings: "'FILL' 1" }}>
+                                delete
+                            </span>
+                        </div>
+                        <div className="flex-1">
+                            <div className="text-sm font-bold text-red-500">데이터 초기화</div>
+                            <div className="text-[11px] text-slate-400 mt-0.5">저장된 학생 이름을 지웁니다</div>
+                        </div>
+                        <span className="material-symbols-outlined text-lg text-slate-300">chevron_right</span>
+                    </button>
+                </div>
+            </section>
+
+            <div className="text-center mt-8 text-[11px] text-slate-300 font-semibold">
+                코딩쏙 학부모 앱 v{APP_VERSION}
+            </div>
+        </div>
+    );
+}
+
+function SettingsRow({ icon, iconBg, iconColor, label, value, divider = true }: {
+    icon: string; iconBg: string; iconColor: string; label: string; value: string; divider?: boolean;
+}) {
+    return (
+        <div className={`flex items-center gap-3.5 px-5 py-3.5 ${divider ? "border-b border-slate-50" : ""}`}>
+            <div className={`w-10 h-10 rounded-xl ${iconBg} flex items-center justify-center shrink-0`}>
+                <span className={`material-symbols-outlined text-xl ${iconColor}`} style={{ fontVariationSettings: "'FILL' 1" }}>
+                    {icon}
+                </span>
+            </div>
+            <div className="text-sm font-bold text-gray-700 flex-1">{label}</div>
+            <div className="text-[13px] text-slate-500 font-semibold">{value}</div>
+        </div>
+    );
+}

@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 프로젝트 07: 통계 함수 라이브러리</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+.page { width: 210mm; min-height: 297mm; margin: 16px auto; padding: 18mm 20mm 15mm 22mm; background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: relative; page-break-after: always; }
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after { content: counter(pagenum); position: absolute; bottom: 10mm; right: 16mm; font-size: 10px; color: #94a3b8; font-weight: 600; }
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark { position: absolute; top: -10px; right: -15px; font-size: 200px; font-weight: 900; color: rgba(180,195,212,0.3); line-height: 1; pointer-events: none; }
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 34px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #2563eb; font-weight: 600; }
+.code { background: #0f172a; border-radius: 8px; padding: 16px 20px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.8; margin: 14px 0; white-space: pre-wrap; }
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.practice { margin: 18px 0; border-left: 4px solid #3b82f6; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 14px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+.problem { margin: 16px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+.summary { border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+.pj-banner { background: linear-gradient(135deg, #1e3a5f 0%, #2d5a8e 100%); border-radius: 10px; padding: 16px 20px; margin: 0 0 20px; color: #fff; }
+.pj-banner-label { font-size: 11px; font-weight: 700; color: #93c5fd; letter-spacing: 2px; margin-bottom: 4px; }
+.pj-banner-title { font-size: 18px; font-weight: 900; }
+.pj-banner-desc { font-size: 13px; color: #bfdbfe; margin-top: 4px; }
+.func-list { margin: 14px 0; }
+.func-row { display: flex; align-items: center; gap: 14px; padding: 8px 14px; border-bottom: 1px solid #f1f5f9; }
+.func-row:last-child { border-bottom: none; }
+.func-sig { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #2563eb; font-weight: 600; flex: 1; }
+.func-desc { font-size: 13px; color: #64748b; flex: 1; }
+.callout { border-radius: 8px; padding: 12px 16px; margin: 14px 0; font-size: 14px; line-height: 1.7; }
+.callout.blue { background: #eff6ff; border-left: 4px solid #3b82f6; color: #1e40af; }
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">P7</div>
+        <div class="cover-label">Level 6 · Project 07</div>
+        <h1 class="cover-title">통계 함수 라이브러리<br>— sum/avg/max/min/count</h1>
+        <p class="cover-sub">배열을 받아서 합계, 평균, 최대값, 최소값, 개수를 반환하는 통계 함수 5개로 나만의 라이브러리를 만드는 프로젝트입니다.</p>
+
+        <div style="text-align:center;margin:20px 0;">
+            <svg viewBox="0 0 480 130" style="max-width:480px;width:100%">
+                <defs><marker id="s1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#6366f1"/></marker></defs>
+                <!-- 배열 -->
+                <rect x="10" y="45" width="130" height="40" rx="6" fill="#ede9fe" stroke="#6366f1" stroke-width="1.5"/>
+                <text x="75" y="62" text-anchor="middle" font-size="11" fill="#4338ca" font-weight="700">int arr[] = </text>
+                <text x="75" y="78" text-anchor="middle" font-size="11" fill="#6366f1">{80,95,72,88,65}</text>
+                <!-- 화살표 -->
+                <line x1="145" y1="65" x2="175" y2="65" stroke="#6366f1" stroke-width="1.5" marker-end="url(#s1)"/>
+                <!-- 함수들 -->
+                <rect x="180" y="5" width="80" height="24" rx="5" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="220" y="21" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">sum() = 400</text>
+                <rect x="180" y="35" width="80" height="24" rx="5" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="220" y="51" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">avg() = 80.0</text>
+                <rect x="180" y="65" width="80" height="24" rx="5" fill="#fef9c3" stroke="#eab308" stroke-width="1.5"/>
+                <text x="220" y="81" text-anchor="middle" font-size="11" fill="#854d0e" font-weight="700">max() = 95</text>
+                <rect x="180" y="95" width="80" height="24" rx="5" fill="#fed7aa" stroke="#f97316" stroke-width="1.5"/>
+                <text x="220" y="111" text-anchor="middle" font-size="11" fill="#9a3412" font-weight="700">min() = 65</text>
+                <rect x="295" y="50" width="80" height="24" rx="5" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+                <text x="335" y="66" text-anchor="middle" font-size="11" fill="#dc2626" font-weight="700">count() = 5</text>
+                <defs><marker id="s2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker></defs>
+                <!-- 결과 박스 -->
+                <rect x="410" y="40" width="65" height="50" rx="6" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+                <text x="442" y="60" text-anchor="middle" font-size="10" fill="#374151" font-weight="700">통계</text>
+                <text x="442" y="78" text-anchor="middle" font-size="10" fill="#374151">결과</text>
+                <line x1="376" y1="62" x2="408" y2="62" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#s2)"/>
+            </svg>
+        </div>
+
+        <div class="cover-goals">
+            <h3>이 프로젝트에서 배우는 것</h3>
+            <ul>
+                <li>배열과 크기(n)를 매개변수로 받는 함수를 만듭니다.</li>
+                <li>for 루프로 배열 전체를 순회하는 패턴을 익힙니다.</li>
+                <li>합계, 평균, 최대, 최소 알고리즘을 구현합니다.</li>
+                <li>int/double 반환 함수를 상황에 맞게 선택합니다.</li>
+                <li>함수 5개를 조합해 통계 보고서를 출력합니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="page">
+    <div class="pj-banner">
+        <div class="pj-banner-label">PROJECT 07</div>
+        <div class="pj-banner-title">통계 함수 라이브러리</div>
+        <div class="pj-banner-desc">배열 매개변수 + 5가지 통계 알고리즘</div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/c-lang/gear.png" alt="함수 기어 - 재사용 가능한 코드 구조" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>5가지 통계 함수</h2>
+
+    <div class="func-list" style="border:1.5px solid #e2e8f0;border-radius:8px;">
+        <div class="func-row">
+            <div class="func-sig">int sum(int arr[], int n)</div>
+            <div class="func-desc">배열 n개 원소의 합계</div>
+        </div>
+        <div class="func-row">
+            <div class="func-sig">double avg(int arr[], int n)</div>
+            <div class="func-desc">배열 n개 원소의 평균</div>
+        </div>
+        <div class="func-row">
+            <div class="func-sig">int maxVal(int arr[], int n)</div>
+            <div class="func-desc">배열에서 가장 큰 값</div>
+        </div>
+        <div class="func-row">
+            <div class="func-sig">int minVal(int arr[], int n)</div>
+            <div class="func-desc">배열에서 가장 작은 값</div>
+        </div>
+        <div class="func-row">
+            <div class="func-sig">int count(int arr[], int n, int target)</div>
+            <div class="func-desc">target보다 큰 원소 개수</div>
+        </div>
+    </div>
+
+    <div class="code"><span class="cmt">// 합계</span>
+<span class="kw">int</span> <span class="fn">sum</span>(<span class="kw">int</span> arr[], <span class="kw">int</span> n) {
+    <span class="kw">int</span> total = <span class="num">0</span>, i;
+    <span class="kw">for</span> (i = <span class="num">0</span>; i &lt; n; i++) total += arr[i];
+    <span class="kw">return</span> total;
+}
+
+<span class="cmt">// 평균</span>
+<span class="kw">double</span> <span class="fn">avg</span>(<span class="kw">int</span> arr[], <span class="kw">int</span> n) {
+    <span class="kw">return</span> (<span class="kw">double</span>)<span class="fn">sum</span>(arr, n) / n;  <span class="cmt">// sum 함수 재사용!</span>
+}
+
+<span class="cmt">// 최대값</span>
+<span class="kw">int</span> <span class="fn">maxVal</span>(<span class="kw">int</span> arr[], <span class="kw">int</span> n) {
+    <span class="kw">int</span> m = arr[<span class="num">0</span>], i;
+    <span class="kw">for</span> (i = <span class="num">1</span>; i &lt; n; i++)
+        <span class="kw">if</span> (arr[i] &gt; m) m = arr[i];
+    <span class="kw">return</span> m;
+}
+
+<span class="cmt">// 최소값</span>
+<span class="kw">int</span> <span class="fn">minVal</span>(<span class="kw">int</span> arr[], <span class="kw">int</span> n) {
+    <span class="kw">int</span> m = arr[<span class="num">0</span>], i;
+    <span class="kw">for</span> (i = <span class="num">1</span>; i &lt; n; i++)
+        <span class="kw">if</span> (arr[i] &lt; m) m = arr[i];
+    <span class="kw">return</span> m;
+}</div>
+
+    <div class="callout blue">
+        <strong>핵심 패턴:</strong> 최대/최소는 첫 번째 원소로 초기화하고, 나머지와 비교합니다. 배열을 함수에 넘길 때는 배열 이름(arr)과 크기(n)를 같이 넘깁니다.
+    </div>
+</div>
+
+<div class="page">
+    <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/c-lang/puzzle.png" alt="퍼즐 조각 - 함수 조합으로 완성되는 프로그램" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>통계 라이브러리 — 전체 코드</h2>
+
+    <div class="code"><span class="cmt">/* ====== 통계 함수 라이브러리 ====== */</span>
+#include &lt;stdio.h&gt;
+
+<span class="kw">int</span>    <span class="fn">sum</span>   (<span class="kw">int</span> arr[], <span class="kw">int</span> n) { <span class="kw">int</span> s=<span class="num">0</span>,i; <span class="kw">for</span>(i=<span class="num">0</span>;i&lt;n;i++) s+=arr[i]; <span class="kw">return</span> s; }
+<span class="kw">double</span> <span class="fn">avg</span>   (<span class="kw">int</span> arr[], <span class="kw">int</span> n) { <span class="kw">return</span> (<span class="kw">double</span>)<span class="fn">sum</span>(arr,n)/n; }
+<span class="kw">int</span>    <span class="fn">maxVal</span>(<span class="kw">int</span> arr[], <span class="kw">int</span> n) { <span class="kw">int</span> m=arr[<span class="num">0</span>],i; <span class="kw">for</span>(i=<span class="num">1</span>;i&lt;n;i++) <span class="kw">if</span>(arr[i]&gt;m) m=arr[i]; <span class="kw">return</span> m; }
+<span class="kw">int</span>    <span class="fn">minVal</span>(<span class="kw">int</span> arr[], <span class="kw">int</span> n) { <span class="kw">int</span> m=arr[<span class="num">0</span>],i; <span class="kw">for</span>(i=<span class="num">1</span>;i&lt;n;i++) <span class="kw">if</span>(arr[i]&lt;m) m=arr[i]; <span class="kw">return</span> m; }
+<span class="kw">int</span>    <span class="fn">countAbove</span>(<span class="kw">int</span> arr[], <span class="kw">int</span> n, <span class="kw">int</span> target) {
+    <span class="kw">int</span> c=<span class="num">0</span>,i; <span class="kw">for</span>(i=<span class="num">0</span>;i&lt;n;i++) <span class="kw">if</span>(arr[i]&gt;target) c++; <span class="kw">return</span> c;
+}
+
+<span class="kw">void</span> <span class="fn">printStats</span>(<span class="kw">int</span> arr[], <span class="kw">int</span> n) {
+    <span class="kw">int</span> i;
+    <span class="fn">printf</span>(<span class="str">"데이터: "</span>);
+    <span class="kw">for</span>(i=<span class="num">0</span>;i&lt;n;i++) <span class="fn">printf</span>(<span class="str">"%d "</span>, arr[i]);
+    <span class="fn">printf</span>(<span class="str">"\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"합계 : %d\n"</span>,   <span class="fn">sum</span>(arr,n));
+    <span class="fn">printf</span>(<span class="str">"평균 : %.2f\n"</span>, <span class="fn">avg</span>(arr,n));
+    <span class="fn">printf</span>(<span class="str">"최대 : %d\n"</span>,   <span class="fn">maxVal</span>(arr,n));
+    <span class="fn">printf</span>(<span class="str">"최소 : %d\n"</span>,   <span class="fn">minVal</span>(arr,n));
+    <span class="fn">printf</span>(<span class="str">"80점 초과: %d명\n"</span>, <span class="fn">countAbove</span>(arr,n,<span class="num">80</span>));
+}
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="kw">int</span> scores[] = {<span class="num">80</span>, <span class="num">95</span>, <span class="num">72</span>, <span class="num">88</span>, <span class="num">65</span>, <span class="num">91</span>, <span class="num">78</span>};
+    <span class="kw">int</span> n = <span class="kw">sizeof</span>(scores) / <span class="kw">sizeof</span>(scores[<span class="num">0</span>]);
+    <span class="fn">printStats</span>(scores, n);
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 100" style="max-width:460px;width:100%">
+            <rect x="10" y="10" width="440" height="80" rx="8" fill="#0f172a"/>
+            <text x="25" y="30" font-size="11" fill="#67e8f9" font-family="JetBrains Mono">데이터: 80 95 72 88 65 91 78</text>
+            <text x="25" y="48" font-size="11" fill="#86efac" font-family="JetBrains Mono">합계: 569   평균: 81.29</text>
+            <text x="25" y="65" font-size="11" fill="#86efac" font-family="JetBrains Mono">최대: 95   최소: 65</text>
+            <text x="25" y="82" font-size="11" fill="#fbbf24" font-family="JetBrains Mono">80점 초과: 3명</text>
+        </svg>
+    </div>
+</div>
+
+<div class="page">
+    <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/c-lang/book.png" alt="교재 - 함수 개념 학습" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>연습 문제</h2>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">1</div>
+            <div class="problem-label">배열 크기 계산</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text"><code>int arr[] = {10, 20, 30, 40, 50};</code> 일 때 <code>sizeof(arr)/sizeof(arr[0])</code>의 결과는?</div>
+            <details class="problem-toggle">
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">5 — sizeof(arr)는 배열 전체 바이트(20), sizeof(arr[0])는 int 하나의 바이트(4), 20/4=5</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">2</div>
+            <div class="problem-label">최대값 알고리즘</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">배열 <code>{5, 2, 8, 1, 9}</code>에서 maxVal 함수가 동작하는 과정을 단계별로 추적하세요. m 값이 어떻게 바뀌나요?</div>
+            <details class="problem-toggle">
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">m=5 → 2비교(유지5) → 8비교(m=8) → 1비교(유지8) → 9비교(m=9) → 최종 9 반환</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">3</div>
+            <div class="problem-label">범위 내 개수</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">min 이상 max 이하인 원소의 개수를 반환하는 <code>countRange(arr, n, min, max)</code> 함수를 만드세요.</div>
+            <details class="problem-toggle">
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code"><span style="color:#c084fc">int</span> <span style="color:#67e8f9">countRange</span>(<span style="color:#c084fc">int</span> arr[], <span style="color:#c084fc">int</span> n, <span style="color:#c084fc">int</span> lo, <span style="color:#c084fc">int</span> hi) {
+    <span style="color:#c084fc">int</span> c=0, i;
+    <span style="color:#c084fc">for</span>(i=0;i&lt;n;i++)
+        <span style="color:#c084fc">if</span>(arr[i]&gt;=lo &amp;&amp; arr[i]&lt;=hi) c++;
+    <span style="color:#c084fc">return</span> c;
+}</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">4</div>
+            <div class="problem-label">중앙값 구하기</div>
+            <span class="problem-diff hard">어려움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">배열을 오름차순으로 정렬한 뒤 중앙값을 반환하는 <code>median(arr, n)</code> 함수를 만드세요. (버블 정렬 사용)</div>
+            <details class="problem-toggle">
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">① 버블 정렬로 배열 정렬 ② n이 홀수면 arr[n/2], 짝수면 (arr[n/2-1]+arr[n/2])/2.0 반환</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:8px;margin:16px 0 6px;padding:8px 14px;background:#f0f9ff;border-radius:6px;border:1px solid #bae6fd;">
+        <img src="/images/learn/c-lang/gear.png" alt="함수 기어 - 재사용 가능한 코드 구조" style="width:28px;height:28px;object-fit:contain;background:#fff;border-radius:8px;">
+        <img src="/images/learn/c-lang/puzzle.png" alt="퍼즐 조각 - 함수 조합으로 완성되는 프로그램" style="width:28px;height:28px;object-fit:contain;background:#fff;border-radius:8px;">
+        <span style="font-size:12px;color:#0369a1;font-weight:600;">핵심 정리</span>
+    </div>
+<div class="summary">
+        <h3>핵심 정리</h3>
+        <ul>
+            <li>배열 매개변수: <code>int arr[], int n</code> 쌍으로 넘김</li>
+            <li>최대/최소: 첫 원소로 초기화 후 반복 비교</li>
+            <li>avg에서 sum 재사용 — 함수는 함수를 호출할 수 있음</li>
+            <li><code>sizeof(arr)/sizeof(arr[0])</code> — 배열 크기 자동 계산</li>
+        </ul>
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:20px;padding-top:10px;border-top:1px solid #f1f5f9;">
+        <img src="/images/learn/c-lang/flowchart.png" alt="순서도 - 함수 호출 흐름" style="width:22px;height:22px;object-fit:contain;opacity:0.6;background:#fff;border-radius:8px;">
+        <span style="font-size:10px;color:#cbd5e1;">코딩쏙 C언어</span>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

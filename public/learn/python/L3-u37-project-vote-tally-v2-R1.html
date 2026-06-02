@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 프로젝트: 단어장 프로그램</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: 'bullet'; content: '\25CF'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; font-size: 8px; top: 8px; }
+
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 16px; font-weight: 700; color: #1e3a5f; margin: 18px 0 10px; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+ul, ol { margin: 0 0 12px 20px; }
+li { font-size: 14px; color: #374151; line-height: 1.8; }
+
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13.5px;
+    color: #e2e8f0; line-height: 1.85; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.code .dec { color: #f9a8d4; }
+
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; display: inline-block; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+.step-box { border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 14px 18px; margin: 14px 0; background: #fff; }
+.step-label { font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+.step-title { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 8px; }
+
+.output-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #334155; line-height: 1.7; margin: 10px 0; }
+
+.compare-table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13px; }
+.compare-table th { background: #1e3a5f; color: #fff; padding: 8px 12px; text-align: left; font-weight: 700; }
+.compare-table td { padding: 7px 12px; border-bottom: 1px solid #e2e8f0; color: #374151; }
+.compare-table tr:nth-child(even) td { background: #f8fafc; }
+.compare-table code { background: #e0e7ff; padding: 1px 5px; border-radius: 3px; font-family: 'JetBrains Mono', monospace; color: #3730a3; font-size: 12px; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- 1페이지: 표지 -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">37</div>
+        <div class="cover-label">L3 — Unit 37 Project R1</div>
+        <h1 class="cover-title">프로젝트:<br>단어장 프로그램</h1>
+        <p class="cover-sub">영어-한국어 딕셔너리를 딕셔너리로 구현합니다. 단어 추가/삭제/검색은 물론, 퀴즈 모드와 JSON 저장/불러오기까지 완성합니다.</p>
+
+        <!-- SVG: 시스템 전체 구조도 -->
+        <div style="margin:24px 0;">
+            <svg viewBox="0 0 500 150" style="max-width:500px;width:100%">
+                <defs>
+                    <marker id="arwCov1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                    </marker>
+                </defs>
+                <!-- 중앙: vocab.py -->
+                <rect x="165" y="54" width="170" height="42" rx="8" fill="#1e3a5f"/>
+                <text x="250" y="72" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">vocab.py</text>
+                <text x="250" y="87" text-anchor="middle" font-size="9" fill="#93c5fd">단어장 프로그램</text>
+                <!-- 왼쪽 위: 단어 추가/삭제 -->
+                <rect x="5" y="8" width="125" height="34" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="67" y="22" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">단어 추가/삭제</text>
+                <text x="67" y="36" text-anchor="middle" font-size="8" fill="#64748b">dict[key] = val / del</text>
+                <line x1="133" y1="25" x2="163" y2="65" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov1)"/>
+                <!-- 오른쪽 위: 검색 -->
+                <rect x="370" y="8" width="125" height="34" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="432" y="22" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">단어 검색</text>
+                <text x="432" y="36" text-anchor="middle" font-size="8" fill="#64748b">dict.get() + in 연산자</text>
+                <line x1="367" y1="25" x2="337" y2="65" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov1)"/>
+                <!-- 왼쪽 아래: 퀴즈 모드 -->
+                <rect x="5" y="108" width="125" height="34" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="67" y="122" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">퀴즈 모드</text>
+                <text x="67" y="136" text-anchor="middle" font-size="8" fill="#64748b">random.choice + 정답 비교</text>
+                <line x1="133" y1="125" x2="163" y2="88" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov1)"/>
+                <!-- 오른쪽 아래: JSON 저장 -->
+                <rect x="370" y="108" width="125" height="34" rx="6" fill="#eff6ff" stroke="#6366f1" stroke-width="1.5"/>
+                <text x="432" y="122" text-anchor="middle" font-size="9" fill="#4338ca" font-weight="700">JSON 저장/불러오기</text>
+                <text x="432" y="136" text-anchor="middle" font-size="8" fill="#64748b">json.dump / json.load</text>
+                <line x1="367" y1="125" x2="337" y2="88" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov1)"/>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/puzzle.png" alt="고급 기능" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 유닛에서 만드는 것</h3>
+            <ul>
+                <li>딕셔너리로 영어-한국어 단어 쌍을 저장하고 관리할 수 있습니다.</li>
+                <li><code>dict[key] = value</code>로 단어를 추가하고 <code>del dict[key]</code>로 삭제할 수 있습니다.</li>
+                <li><code>dict.get()</code>과 <code>in</code> 연산자로 단어를 안전하게 검색할 수 있습니다.</li>
+                <li><code>random.choice(list(dict.keys()))</code>로 퀴즈 단어를 무작위 선택할 수 있습니다.</li>
+                <li><code>json.dump()</code>와 <code>json.load()</code>로 단어장을 파일에 저장하고 불러올 수 있습니다.</li>
+                <li>반복 퀴즈로 맞은 개수와 정답률을 계산해 출력할 수 있습니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- 2페이지: Step 1~2 -->
+<div class="page">
+    <h2>Step 1 — 딕셔너리로 단어장 기본 구조 만들기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="처리" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>단어장의 핵심은 영어 단어를 키, 한국어 뜻을 값으로 저장하는 딕셔너리입니다. 단어 추가와 삭제 함수를 먼저 만듭니다.</p>
+
+    <!-- SVG: 딕셔너리 구조 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 480 80" style="max-width:480px;width:100%">
+            <rect x="5" y="10" width="470" height="60" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="20" y="30" font-size="9" fill="#94a3b8" font-weight="700">vocabulary (dict)</text>
+            <!-- key-value pairs -->
+            <rect x="20" y="36" width="80" height="24" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="60" y="52" text-anchor="middle" font-size="8" fill="#1d4ed8" font-weight="700">"apple" : "사과"</text>
+            <rect x="110" y="36" width="80" height="24" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="150" y="52" text-anchor="middle" font-size="8" fill="#1d4ed8" font-weight="700">"book" : "책"</text>
+            <rect x="200" y="36" width="80" height="24" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="240" y="52" text-anchor="middle" font-size="8" fill="#1d4ed8" font-weight="700">"cat" : "고양이"</text>
+            <rect x="290" y="36" width="80" height="24" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,2"/>
+            <text x="330" y="52" text-anchor="middle" font-size="8" fill="#94a3b8">"dog" : "개" ...</text>
+            <text x="400" y="50" font-size="9" fill="#64748b">키: 영어 단어</text>
+            <text x="400" y="63" font-size="9" fill="#64748b">값: 한국어 뜻</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># vocab.py — Step 1: 기본 구조</span>
+<span class="kw">import</span> json
+<span class="kw">import</span> random
+
+<span class="cmt"># 기본 단어장 (딕셔너리)</span>
+vocabulary = {
+    <span class="str">"apple"</span>: <span class="str">"사과"</span>,
+    <span class="str">"book"</span>: <span class="str">"책"</span>,
+    <span class="str">"cat"</span>: <span class="str">"고양이"</span>,
+    <span class="str">"dog"</span>: <span class="str">"개"</span>,
+    <span class="str">"house"</span>: <span class="str">"집"</span>
+}
+
+<span class="kw">def</span> <span class="fn">add_word</span>(english, korean):
+    <span class="str">"""단어 추가"""</span>
+    vocabulary[english] = korean
+    <span class="fn">print</span>(<span class="str">f"추가됨: {english} = {korean}"</span>)
+
+<span class="kw">def</span> <span class="fn">delete_word</span>(english):
+    <span class="str">"""단어 삭제"""</span>
+    <span class="kw">if</span> english <span class="kw">in</span> vocabulary:
+        <span class="kw">del</span> vocabulary[english]
+        <span class="fn">print</span>(<span class="str">f"삭제됨: {english}"</span>)
+    <span class="kw">else</span>:
+        <span class="fn">print</span>(<span class="str">f"없는 단어: {english}"</span>)</div>
+
+    <h3>Step 2 — 단어 검색 기능</h3>
+    <p>단어가 딕셔너리에 있는지 확인하려면 <code>in</code> 연산자나 <code>get()</code>을 씁니다. <code>get()</code>은 없는 단어일 때 <code>None</code> 대신 기본 메시지를 반환합니다.</p>
+
+    <!-- SVG: 검색 흐름 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 480 70" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="arwS2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="5" y="20" width="100" height="30" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="55" y="39" text-anchor="middle" font-size="9" fill="#374151" font-weight="700">search("apple")</text>
+            <line x1="108" y1="35" x2="140" y2="35" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwS2)"/>
+            <rect x="143" y="20" width="120" height="30" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="203" y="33" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">"apple" in vocab?</text>
+            <text x="203" y="45" text-anchor="middle" font-size="8" fill="#64748b">True / False</text>
+            <line x1="266" y1="35" x2="298" y2="35" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwS2)"/>
+            <rect x="300" y="20" width="85" height="30" rx="6" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="342" y="33" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">결과 반환</text>
+            <text x="342" y="45" text-anchor="middle" font-size="8" fill="#64748b">get() 활용</text>
+            <text x="400" y="30" font-size="8" fill="#94a3b8">True: "사과"</text>
+            <text x="400" y="45" font-size="8" fill="#94a3b8">False: "없는 단어"</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">def</span> <span class="fn">search_word</span>(english):
+    <span class="str">"""단어 검색 — get()으로 안전하게"""</span>
+    result = vocabulary.<span class="fn">get</span>(english, <span class="str">None</span>)
+    <span class="kw">if</span> result:
+        <span class="fn">print</span>(<span class="str">f"{english} = {result}"</span>)
+    <span class="kw">else</span>:
+        <span class="fn">print</span>(<span class="str">f"'{english}'은(는) 단어장에 없습니다."</span>)
+
+<span class="kw">def</span> <span class="fn">show_all</span>():
+    <span class="str">"""전체 단어 출력"""</span>
+    <span class="fn">print</span>(<span class="str">f"\n--- 전체 단어 ({len(vocabulary)}개) ---"</span>)
+    <span class="kw">for</span> eng, kor <span class="kw">in</span> <span class="fn">sorted</span>(vocabulary.<span class="fn">items</span>()):
+        <span class="fn">print</span>(<span class="str">f"  {eng:<12} {kor}"</span>)</div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="완성" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">01</div>
+                <div class="practice-desc"><code>add_word("water", "물")</code>을 실행하고 <code>show_all()</code>로 확인하세요.</div>
+                <div class="practice-result">water = 물 항목이 목록에 추가됨</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">02</div>
+                <div class="practice-desc"><code>search_word("cat")</code>과 <code>search_word("elephant")</code>를 각각 실행하세요.</div>
+                <div class="practice-result">cat = 고양이 / 'elephant'은(는) 단어장에 없습니다.</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">03</div>
+                <div class="practice-desc"><code>delete_word("book")</code>으로 삭제 후 다시 <code>show_all()</code>을 실행하세요.</div>
+                <div class="practice-result">삭제됨: book — book이 목록에서 사라짐</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3페이지: Step 3~4 -->
+<div class="page">
+    <h2>Step 3 — 퀴즈 모드 구현</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/database.png" alt="데이터" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>퀴즈 모드는 딕셔너리에서 무작위로 단어를 골라 뜻을 맞히는 기능입니다. <code>random.choice(list(vocabulary.keys()))</code>로 무작위 키를 선택합니다.</p>
+
+    <!-- SVG: 퀴즈 흐름도 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 480 90" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="arwQ" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="5" y="30" width="90" height="30" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="50" y="49" text-anchor="middle" font-size="9" fill="#374151" font-weight="700">퀴즈 시작</text>
+            <line x1="98" y1="45" x2="118" y2="45" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwQ)"/>
+            <rect x="120" y="30" width="90" height="30" rx="6" fill="#eff6ff" stroke="#6366f1" stroke-width="1.5"/>
+            <text x="165" y="43" text-anchor="middle" font-size="9" fill="#4338ca" font-weight="700">random.choice</text>
+            <text x="165" y="55" text-anchor="middle" font-size="8" fill="#64748b">무작위 키 선택</text>
+            <line x1="213" y1="45" x2="233" y2="45" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwQ)"/>
+            <rect x="235" y="30" width="90" height="30" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="280" y="43" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">input 입력</text>
+            <text x="280" y="55" text-anchor="middle" font-size="8" fill="#64748b">사용자 답변</text>
+            <line x1="328" y1="45" x2="348" y2="45" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwQ)"/>
+            <rect x="350" y="30" width="90" height="30" rx="6" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="395" y="43" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">정답 비교</text>
+            <text x="395" y="55" text-anchor="middle" font-size="8" fill="#64748b">== 연산자</text>
+            <!-- 루프 화살표 -->
+            <path d="M 395 62 Q 395 80 250 80 Q 120 80 120 62" stroke="#cbd5e1" stroke-width="1.5" fill="none" stroke-dasharray="4,2" marker-end="url(#arwQ)"/>
+            <text x="250" y="78" text-anchor="middle" font-size="8" fill="#94a3b8">n번 반복</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">def</span> <span class="fn">quiz_mode</span>(rounds=<span class="num">5</span>):
+    <span class="str">"""퀴즈 모드 — rounds번 문제 출제"""</span>
+    <span class="fn">print</span>(<span class="str">f"\n--- 단어 퀴즈 ({rounds}문제) ---"</span>)
+    correct = <span class="num">0</span>
+
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(rounds):
+        word = random.<span class="fn">choice</span>(<span class="fn">list</span>(vocabulary.<span class="fn">keys</span>()))
+        answer = <span class="fn">input</span>(<span class="str">f"Q{i+1}. '{word}'의 뜻은? "</span>)
+
+        <span class="kw">if</span> answer == vocabulary[word]:
+            <span class="fn">print</span>(<span class="str">"정답!"</span>)
+            correct += <span class="num">1</span>
+        <span class="kw">else</span>:
+            <span class="fn">print</span>(<span class="str">f"오답. 정답: {vocabulary[word]}"</span>)
+
+    rate = correct / rounds * <span class="num">100</span>
+    <span class="fn">print</span>(<span class="str">f"\n결과: {correct}/{rounds}개 정답 ({rate:.1f}%)"</span>)</div>
+
+    <h3>Step 4 — JSON 저장과 불러오기</h3>
+    <p><code>json.dump()</code>로 단어장 딕셔너리를 파일에 저장하고, <code>json.load()</code>로 프로그램 시작 시 이전 단어장을 불러옵니다.</p>
+
+    <!-- SVG: JSON 저장 흐름 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 480 70" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="arwJ" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <!-- 메모리 딕셔너리 -->
+            <rect x="5" y="20" width="130" height="30" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="70" y="33" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">vocabulary (dict)</text>
+            <text x="70" y="45" text-anchor="middle" font-size="8" fill="#64748b">메모리 상의 딕셔너리</text>
+            <!-- 저장 화살표 -->
+            <line x1="138" y1="35" x2="175" y2="35" stroke="#22c55e" stroke-width="2" marker-end="url(#arwJ)"/>
+            <text x="156" y="29" text-anchor="middle" font-size="8" fill="#22c55e" font-weight="700">dump</text>
+            <!-- JSON 파일 -->
+            <rect x="178" y="20" width="120" height="30" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="238" y="33" text-anchor="middle" font-size="9" fill="#374151" font-weight="700">vocab.json</text>
+            <text x="238" y="45" text-anchor="middle" font-size="8" fill="#64748b">파일 시스템</text>
+            <!-- 불러오기 화살표 -->
+            <line x1="301" y1="35" x2="338" y2="35" stroke="#6366f1" stroke-width="2" marker-end="url(#arwJ)"/>
+            <text x="319" y="29" text-anchor="middle" font-size="8" fill="#6366f1" font-weight="700">load</text>
+            <!-- 복원된 딕셔너리 -->
+            <rect x="340" y="20" width="135" height="30" rx="6" fill="#eff6ff" stroke="#6366f1" stroke-width="1.5"/>
+            <text x="407" y="33" text-anchor="middle" font-size="9" fill="#4338ca" font-weight="700">vocabulary (복원)</text>
+            <text x="407" y="45" text-anchor="middle" font-size="8" fill="#64748b">다음 실행 시 유지</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">def</span> <span class="fn">save_vocab</span>(filename=<span class="str">"vocab.json"</span>):
+    <span class="str">"""단어장을 JSON 파일로 저장"""</span>
+    <span class="kw">with</span> <span class="fn">open</span>(filename, <span class="str">"w"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+        json.<span class="fn">dump</span>(vocabulary, f, ensure_ascii=<span class="kw">False</span>, indent=<span class="num">2</span>)
+    <span class="fn">print</span>(<span class="str">f"저장 완료: {filename}"</span>)
+
+<span class="kw">def</span> <span class="fn">load_vocab</span>(filename=<span class="str">"vocab.json"</span>):
+    <span class="str">"""JSON 파일에서 단어장 불러오기"""</span>
+    <span class="kw">global</span> vocabulary
+    <span class="kw">try</span>:
+        <span class="kw">with</span> <span class="fn">open</span>(filename, <span class="str">"r"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+            vocabulary = json.<span class="fn">load</span>(f)
+        <span class="fn">print</span>(<span class="str">f"불러오기 완료: {len(vocabulary)}개 단어"</span>)
+    <span class="kw">except</span> FileNotFoundError:
+        <span class="fn">print</span>(<span class="str">"저장된 단어장이 없습니다. 기본 단어장으로 시작합니다."</span>)</div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">04</div>
+                <div class="practice-desc"><code>quiz_mode(3)</code>으로 3문제 퀴즈를 실행하고 정답률을 확인하세요.</div>
+                <div class="practice-result">3문제 중 맞은 개수와 정답률(%)이 출력됨</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">05</div>
+                <div class="practice-desc"><code>save_vocab()</code>으로 현재 단어장을 저장하고 <code>vocab.json</code> 파일을 텍스트 에디터로 확인하세요.</div>
+                <div class="practice-result">JSON 형식으로 영어-한국어 쌍이 저장된 파일 확인</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">06</div>
+                <div class="practice-desc">파이썬 재시작 후 <code>load_vocab()</code>으로 불러오고 <code>show_all()</code>로 단어가 유지됐는지 확인하세요.</div>
+                <div class="practice-result">이전에 저장한 단어들이 그대로 복원됨</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 4페이지: 완성 코드 + 문제 -->
+<div class="page">
+    <h2>Step 5 — 메인 메뉴로 완성하기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>모든 기능을 메뉴 방식으로 묶어 사용자가 원하는 작업을 선택할 수 있도록 합니다.</p>
+
+    <!-- SVG: 메뉴 구조 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 480 75" style="max-width:480px;width:100%">
+            <rect x="190" y="5" width="100" height="28" rx="6" fill="#1e3a5f"/>
+            <text x="240" y="24" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">메인 메뉴</text>
+            <defs>
+                <marker id="arwM" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <line x1="240" y1="34" x2="240" y2="44" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwM)"/>
+            <!-- 메뉴 항목들 -->
+            <rect x="5" y="46" width="80" height="22" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="45" y="61" text-anchor="middle" font-size="8" fill="#1d4ed8" font-weight="700">1. 단어 추가</text>
+            <rect x="95" y="46" width="80" height="22" rx="4" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+            <text x="135" y="61" text-anchor="middle" font-size="8" fill="#92400e" font-weight="700">2. 단어 검색</text>
+            <rect x="185" y="46" width="80" height="22" rx="4" fill="#f0fdf4" stroke="#22c55e" stroke-width="1"/>
+            <text x="225" y="61" text-anchor="middle" font-size="8" fill="#166534" font-weight="700">3. 퀴즈 모드</text>
+            <rect x="275" y="46" width="80" height="22" rx="4" fill="#eff6ff" stroke="#6366f1" stroke-width="1"/>
+            <text x="315" y="61" text-anchor="middle" font-size="8" fill="#4338ca" font-weight="700">4. 저장/불러오기</text>
+            <rect x="365" y="46" width="80" height="22" rx="4" fill="#fee2e2" stroke="#ef4444" stroke-width="1"/>
+            <text x="405" y="61" text-anchor="middle" font-size="8" fill="#991b1b" font-weight="700">5. 종료</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">def</span> <span class="fn">main</span>():
+    <span class="fn">load_vocab</span>()  <span class="cmt"># 시작 시 저장된 단어장 불러오기</span>
+    <span class="kw">while</span> <span class="kw">True</span>:
+        <span class="fn">print</span>(<span class="str">"\n1.단어추가 2.단어검색 3.퀴즈 4.전체보기 5.저장 6.종료"</span>)
+        choice = <span class="fn">input</span>(<span class="str">"선택: "</span>)
+        <span class="kw">if</span> choice == <span class="str">"1"</span>:
+            eng = <span class="fn">input</span>(<span class="str">"영어: "</span>)
+            kor = <span class="fn">input</span>(<span class="str">"한국어: "</span>)
+            <span class="fn">add_word</span>(eng, kor)
+        <span class="kw">elif</span> choice == <span class="str">"2"</span>:
+            eng = <span class="fn">input</span>(<span class="str">"검색할 단어: "</span>)
+            <span class="fn">search_word</span>(eng)
+        <span class="kw">elif</span> choice == <span class="str">"3"</span>:
+            <span class="fn">quiz_mode</span>(<span class="num">5</span>)
+        <span class="kw">elif</span> choice == <span class="str">"4"</span>:
+            <span class="fn">show_all</span>()
+        <span class="kw">elif</span> choice == <span class="str">"5"</span>:
+            <span class="fn">save_vocab</span>()
+        <span class="kw">elif</span> choice == <span class="str">"6"</span>:
+            <span class="fn">save_vocab</span>()  <span class="cmt"># 종료 시 자동 저장</span>
+            <span class="fn">print</span>(<span class="str">"단어장을 저장하고 종료합니다."</span>)
+            <span class="kw">break</span>
+
+<span class="fn">main</span>()</div>
+
+    <!-- 문제 1 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q1</div>
+            <div class="problem-label">단어 검색 함수 완성</div>
+            <div class="problem-diff easy">쉬움</div>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text"><code>search_word()</code> 함수에서 <code>vocabulary.get(english, None)</code> 대신, 없는 단어일 때 바로 "없는 단어"를 반환하도록 <code>get()</code>의 기본값을 수정하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <div class="problem-example-label">입력</div>
+                    <div class="problem-example-value">search_word("xyz")</div>
+                </div>
+                <div class="problem-example-row">
+                    <div class="problem-example-label">출력</div>
+                    <div class="problem-example-value">xyz = 없는 단어</div>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text"><code>vocabulary.get(english, "없는 단어")</code> — get()의 두 번째 인자가 기본값입니다.</div>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">result = vocabulary.get(english, "없는 단어")
+print(f"{english} = {result}")</div>
+            </div>
+        </details>
+    </div>
+
+    <!-- 문제 2 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q2</div>
+            <div class="problem-label">단어 개수별 통계 출력</div>
+            <div class="problem-diff medium">보통</div>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text"><code>show_all()</code> 함수를 수정해서, 전체 단어 수와 함께 첫 글자 알파벳별 단어 개수를 <code>counts.get(letter, 0) + 1</code> 패턴으로 집계해서 출력하세요. 힌트: <code>word[0]</code>으로 첫 글자를 추출하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <div class="problem-example-label">출력</div>
+                    <div class="problem-example-value">a: 3개, b: 2개, c: 1개 ...</div>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">첫 글자: <code>word[0]</code> / 집계: <code>counts.get(letter, 0) + 1</code></div>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">counts = {}
+for word in vocabulary:
+    letter = word[0]
+    counts[letter] = counts.get(letter, 0) + 1
+for letter, cnt in sorted(counts.items()):
+    print(f"{letter}: {cnt}개")</div>
+            </div>
+        </details>
+    </div>
+
+    <!-- 문제 3 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q3</div>
+            <div class="problem-label">역방향 검색 기능 추가</div>
+            <div class="problem-diff hard">어려움</div>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">한국어 뜻을 입력하면 해당 영어 단어를 찾아주는 <code>reverse_search(korean)</code> 함수를 작성하세요. 여러 개의 영어 단어가 같은 뜻을 가질 수 있으므로 리스트로 반환합니다.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <div class="problem-example-label">입력</div>
+                    <div class="problem-example-value">reverse_search("사과")</div>
+                </div>
+                <div class="problem-example-row">
+                    <div class="problem-example-label">출력</div>
+                    <div class="problem-example-value">['apple']</div>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text"><code>vocabulary.items()</code>로 (영어, 한국어) 쌍을 순회하며 값이 일치하는 키를 모읍니다.</div>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">def reverse_search(korean):
+    results = [eng for eng, kor in vocabulary.items()
+               if kor == korean]
+    if results:
+        print(f"'{korean}' 검색 결과: {results}")
+    else:
+        print(f"'{korean}'에 해당하는 단어 없음")</div>
+            </div>
+        </details>
+    </div>
+</div>
+
+<!-- 5페이지: 요약 -->
+<div class="page">
+    <h2>핵심 요약</h2>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>단어장 프로그램 핵심 기법</h3>
+        <ul>
+            <li><strong>단어 추가</strong>: <code>dict[key] = value</code> — 키가 없으면 새로 추가, 있으면 덮어쓰기</li>
+            <li><strong>단어 삭제</strong>: <code>del dict[key]</code> — 삭제 전 <code>in</code>으로 존재 확인 필수</li>
+            <li><strong>안전 검색</strong>: <code>dict.get(key, 기본값)</code> — KeyError 없이 안전하게 조회</li>
+            <li><strong>무작위 선택</strong>: <code>random.choice(list(dict.keys()))</code> — 퀴즈 단어 선택</li>
+            <li><strong>JSON 저장</strong>: <code>json.dump(dict, f, ensure_ascii=False, indent=2)</code></li>
+            <li><strong>JSON 불러오기</strong>: <code>json.load(f)</code> — try/except로 파일 없을 때 처리</li>
+            <li><strong>역방향 검색</strong>: <code>items()</code> 순회로 값이 일치하는 키 찾기</li>
+        </ul>
+    </div>
+
+    <!-- SVG: 전체 기능 구조 요약 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 480 160" style="max-width:480px;width:100%">
+            <text x="240" y="18" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="800">단어장 프로그램 구조</text>
+            <!-- 중앙 핵심 -->
+            <rect x="170" y="28" width="140" height="36" rx="8" fill="#1e3a5f"/>
+            <text x="240" y="46" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">vocabulary = {}</text>
+            <text x="240" y="59" text-anchor="middle" font-size="8" fill="#93c5fd">핵심 딕셔너리</text>
+            <!-- 기능 노드들 -->
+            <rect x="5" y="80" width="90" height="28" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="50" y="98" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">add / delete</text>
+            <rect x="105" y="80" width="90" height="28" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="150" y="98" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">search / get()</text>
+            <rect x="205" y="80" width="90" height="28" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="250" y="98" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">quiz / random</text>
+            <rect x="305" y="80" width="90" height="28" rx="6" fill="#eff6ff" stroke="#6366f1" stroke-width="1.5"/>
+            <text x="350" y="98" text-anchor="middle" font-size="9" fill="#4338ca" font-weight="700">save / load</text>
+            <rect x="405" y="80" width="70" height="28" rx="6" fill="#fff7ed" stroke="#f97316" stroke-width="1.5"/>
+            <text x="440" y="98" text-anchor="middle" font-size="9" fill="#c2410c" font-weight="700">reverse</text>
+            <defs>
+                <marker id="arwSum" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#cbd5e1"/>
+                </marker>
+            </defs>
+            <line x1="50" y1="80" x2="185" y2="65" stroke="#cbd5e1" stroke-width="1.5" marker-end="url(#arwSum)"/>
+            <line x1="150" y1="80" x2="210" y2="65" stroke="#cbd5e1" stroke-width="1.5" marker-end="url(#arwSum)"/>
+            <line x1="250" y1="80" x2="245" y2="65" stroke="#cbd5e1" stroke-width="1.5" marker-end="url(#arwSum)"/>
+            <line x1="350" y1="80" x2="275" y2="65" stroke="#cbd5e1" stroke-width="1.5" marker-end="url(#arwSum)"/>
+            <line x1="440" y1="80" x2="308" y2="65" stroke="#cbd5e1" stroke-width="1.5" marker-end="url(#arwSum)"/>
+            <!-- JSON 파일 -->
+            <rect x="170" y="128" width="140" height="26" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5" stroke-dasharray="4,2"/>
+            <text x="240" y="145" text-anchor="middle" font-size="9" fill="#64748b">vocab.json (파일)</text>
+            <line x1="240" y1="128" x2="240" y2="115" stroke="#6366f1" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#arwSum)"/>
+        </svg>
+    </div>
+
+    <!-- SVG: JSON 파일 내부 구조 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 80" style="max-width:480px;width:100%">
+            <rect x="5" y="5" width="470" height="70" rx="8" fill="#0f172a"/>
+            <text x="20" y="22" font-family="JetBrains Mono, monospace" font-size="9" fill="#64748b">vocab.json</text>
+            <text x="20" y="36" font-family="JetBrains Mono, monospace" font-size="9" fill="#e2e8f0">{"apple": "사과",</text>
+            <text x="20" y="49" font-family="JetBrains Mono, monospace" font-size="9" fill="#e2e8f0">  "book":  "책",</text>
+            <text x="20" y="62" font-family="JetBrains Mono, monospace" font-size="9" fill="#e2e8f0">  "cat":   "고양이"}</text>
+            <rect x="340" y="20" width="125" height="46" rx="6" fill="rgba(255,255,255,0.05)" stroke="#475569" stroke-width="1"/>
+            <text x="402" y="35" text-anchor="middle" font-size="8" fill="#93c5fd">ensure_ascii=False</text>
+            <text x="402" y="47" text-anchor="middle" font-size="8" fill="#86efac">한글 그대로 저장</text>
+            <text x="402" y="59" text-anchor="middle" font-size="8" fill="#7dd3fc">indent=2 들여쓰기</text>
+        </svg>
+    </div>
+
+    <!-- SVG: 퀴즈 정답률 계산 -->
+    <div style="text-align:center;margin:10px 0;">
+        <svg viewBox="0 0 480 60" style="max-width:480px;width:100%">
+            <text x="10" y="20" font-size="10" fill="#1e3a5f" font-weight="700">정답률 계산 공식</text>
+            <rect x="10" y="28" width="130" height="24" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="75" y="44" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">correct (맞은 수)</text>
+            <text x="155" y="44" text-anchor="middle" font-size="14" fill="#94a3b8">/</text>
+            <rect x="170" y="28" width="100" height="24" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="220" y="44" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">rounds (전체)</text>
+            <text x="285" y="44" text-anchor="middle" font-size="14" fill="#94a3b8">*</text>
+            <rect x="300" y="28" width="60" height="24" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="330" y="44" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">100</text>
+            <text x="375" y="44" text-anchor="middle" font-size="14" fill="#94a3b8">=</text>
+            <rect x="390" y="28" width="80" height="24" rx="6" fill="#eff6ff" stroke="#6366f1" stroke-width="1.5"/>
+            <text x="430" y="44" text-anchor="middle" font-size="9" fill="#4338ca" font-weight="700">정답률 (%)</text>
+        </svg>
+    </div>
+
+    <h3>딕셔너리 패턴 비교표</h3>
+    <table class="compare-table">
+        <tr>
+            <th>패턴</th>
+            <th>코드</th>
+            <th>용도</th>
+        </tr>
+        <tr>
+            <td>안전 조회</td>
+            <td><code>d.get(key, "기본값")</code></td>
+            <td>없는 키 접근 시 오류 방지</td>
+        </tr>
+        <tr>
+            <td>존재 확인</td>
+            <td><code>if english in vocabulary</code></td>
+            <td>삭제 전 확인, 조건 분기</td>
+        </tr>
+        <tr>
+            <td>전체 순회</td>
+            <td><code>d.items()</code></td>
+            <td>키-값 동시 접근</td>
+        </tr>
+        <tr>
+            <td>정렬 출력</td>
+            <td><code>sorted(d.items())</code></td>
+            <td>알파벳 순 목록 출력</td>
+        </tr>
+        <tr>
+            <td>무작위 키</td>
+            <td><code>random.choice(list(d.keys()))</code></td>
+            <td>퀴즈 단어 선택</td>
+        </tr>
+    </table>
+
+    <!-- SVG: 완성 출력 예시 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 90" style="max-width:480px;width:100%">
+            <rect x="5" y="5" width="470" height="80" rx="8" fill="#0f172a"/>
+            <text x="20" y="22" font-family="JetBrains Mono, monospace" font-size="9" fill="#64748b">$ python vocab.py</text>
+            <text x="20" y="37" font-family="JetBrains Mono, monospace" font-size="9" fill="#86efac">불러오기 완료: 5개 단어</text>
+            <text x="20" y="50" font-family="JetBrains Mono, monospace" font-size="9" fill="#e2e8f0">--- 단어 퀴즈 (5문제) ---</text>
+            <text x="20" y="63" font-family="JetBrains Mono, monospace" font-size="9" fill="#7dd3fc">Q1. 'apple'의 뜻은? 사과</text>
+            <text x="20" y="76" font-family="JetBrains Mono, monospace" font-size="9" fill="#86efac">정답! | 결과: 4/5개 정답 (80.0%)</text>
+        </svg>
+    </div>
+
+    <div class="step-box">
+        <div class="step-label">도전 과제</div>
+        <div class="step-title">단어장 확장하기</div>
+        <ul>
+            <li>단어 수정 기능: <code>update_word(english, new_korean)</code> 추가</li>
+            <li>오답 노트: 퀴즈에서 틀린 단어만 모아서 재시험 보기</li>
+            <li>카테고리 기능: 중첩 딕셔너리로 <code>{"동물": {"cat": "고양이"}}</code> 구조 구현</li>
+        </ul>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

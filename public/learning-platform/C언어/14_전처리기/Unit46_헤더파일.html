@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Unit 46. 헤더 파일과 분할 컴파일 — C 언어 코딩 도장</title>
+    <link rel="stylesheet" href="../common.css">
+</head>
+
+<body>
+    <div class="wrap">
+        <div class="hdr">
+            <h1>Unit 46. 헤더 파일과 분할 컴파일</h1>
+            <div class="sub">.h 파일 · extern · 모듈화 · Makefile</div>
+            <span class="unit-badge">Chapter 14 · 전처리기</span>
+            <div class="level-bar"><span class="on"></span><span class="on"></span><span class="on"></span></div>
+            <div class="meta"><span class="tag pri">🖥️ C언어</span><span class="tag acc">📝 10문제</span><span
+                    class="tag">⏱ 20~30분</span></div>
+        </div>
+        <div class="stu-bar"><label>👤 이름 <input type="text" id="stu-name" placeholder="이름"></label><label>📅 날짜 <input
+                    type="date" id="stu-date"></label></div>
+        <div class="learn">
+            <h2><span class="ico" style="background:rgba(59,130,246,.15)">📦</span> 분할 컴파일 = 파일을 나눠서 관리</h2>
+            <p>큰 프로그램을 여러 .c/.h 파일로 나누어 체계적 관리!</p>
+        </div>
+        <div id="problems"></div>
+        <div class="submit-section">
+            <p>모든 문제를 풀었나요? 📨</p><button class="btn-submit" id="btn-submit">📄 제출하기</button>
+        </div>
+        <div class="modal-overlay" id="submit-modal">
+            <div class="modal-box">
+                <div class="modal-icon">✅</div>
+                <h3>제출 완료!</h3>
+                <p>학습지가 저장되었습니다.</p>
+                <div style="margin:12px 0"><span class="info-tag" id="modal-name"></span> <span class="info-tag"
+                        id="modal-date"></span> <span class="info-tag" id="modal-count"></span></div>
+                <p style="font-size:.78rem;color:var(--dim)">📁 <strong id="modal-filename"></strong></p><button
+                    class="btn-close-modal" id="btn-close-modal">확인</button>
+            </div>
+        </div>
+        <div class="pg"><a href="Unit45_전처리기.html">← Unit 45</a><span class="tag active">Unit 46</span><a
+                href="../15_고급주제/Unit47_열거형.html">Unit 47 →</a></div>
+        <div class="ft">🖥️ C 언어 코딩 도장 · Unit 46 · 헤더 파일</div>
+    </div>
+    <script>
+        const P = [
+            {
+                n: 1, t: "헤더 파일의 역할", d: 1,
+                q: `헤더 파일(.h)에 무엇을 넣나요?`,
+                a: `<span class="key">정답</span><div class="trace">헤더 파일에 넣는 것:<br>✅ 함수 프로토타입 (선언)<br>✅ 구조체/enum/typedef 정의<br>✅ #define 상수/매크로<br>✅ extern 변수 선언<br><br><span class="err">❌ 함수 구현(정의)은 .c 파일에!</span></div>`
+            },
+
+            {
+                n: 2, t: "분할 컴파일 구조", d: 2,
+                q: `3개 파일로 프로그램을 분할하세요.`,
+                a: `<span class="key">정답</span><pre class="code-c"><span class="cm">// math_util.h</span>
+#ifndef MATH_UTIL_H
+#define MATH_UTIL_H
+int add(int a, int b);
+int mul(int a, int b);
+#endif
+
+<span class="cm">// math_util.c</span>
+#include "math_util.h"
+int add(int a, int b) { return a+b; }
+int mul(int a, int b) { return a*b; }
+
+<span class="cm">// main.c</span>
+#include &lt;stdio.h&gt;
+#include "math_util.h"
+int main() {
+    printf("%d\\n", add(3,5));
+    return 0;
+}</pre>`},
+
+            {
+                n: 3, t: "컴파일 과정", d: 2,
+                q: `분할 컴파일하는 명령을 쓰세요.`,
+                a: `<span class="key">정답</span><pre class="code-c"><span class="cm">// 방법 1: 한 번에</span>
+gcc main.c math_util.c -o program
+
+<span class="cm">// 방법 2: 개별 컴파일 후 링크</span>
+gcc -c main.c        <span class="cm">// → main.o</span>
+gcc -c math_util.c   <span class="cm">// → math_util.o</span>
+gcc main.o math_util.o -o program</pre>`},
+
+            {
+                n: 4, t: "extern 키워드", d: 2,
+                q: `전역 변수를 다른 파일에서 사용하세요.`,
+                a: `<span class="key">정답</span><pre class="code-c"><span class="cm">// global.c</span>
+int count = 0;  <span class="cm">// 정의 (메모리 할당)</span>
+
+<span class="cm">// global.h</span>
+extern int count; <span class="cm">// 선언 (외부에 있다!)</span>
+
+<span class="cm">// main.c</span>
+#include "global.h"
+count++; <span class="cm">// 사용 가능!</span></pre><div class="trace">extern = "이 변수는 다른 파일에 정의되어 있어요"</div>`},
+
+            {
+                n: 5, t: "static과 범위 제한", d: 2,
+                q: `static의 파일 범위 제한을 설명하세요.`,
+                a: `<span class="key">정답</span><pre class="code-c"><span class="cm">// helper.c</span>
+static int secret = 42; <span class="cm">// 이 파일에서만 접근!</span>
+static void helper() { } <span class="cm">// 이 파일에서만 호출!</span>
+
+<span class="cm">// main.c</span>
+<span class="cm">// secret, helper() 접근 불가!</span></pre><div class="trace">전역 static: <span class="val">파일 스코프 제한</span><br>다른 파일에서 접근 방지 (캡슐화)</div>`},
+
+            {
+                n: 6, t: "심사: 구조체 헤더", d: 2,
+                q: `구조체를 헤더 파일로 공유하세요.`,
+                a: `<span class="key">정답</span><pre class="code-c"><span class="cm">// student.h</span>
+#ifndef STUDENT_H
+#define STUDENT_H
+typedef struct {
+    char name[30];
+    int score;
+} Student;
+void printStudent(const Student *s);
+#endif
+
+<span class="cm">// student.c</span>
+#include &lt;stdio.h&gt;
+#include "student.h"
+void printStudent(const Student *s) {
+    printf("%s: %d\\n", s->name, s->score);
+}</pre>`},
+
+            {
+                n: 7, t: "심사: Makefile", d: 3,
+                q: `Makefile의 기본 구조를 쓰세요.`,
+                a: `<span class="key">정답</span><pre class="code-c"><span class="cm"># Makefile</span>
+CC = gcc
+CFLAGS = -Wall -g
+
+program: main.o math_util.o
+	$(CC) $(CFLAGS) -o $@ $^
+
+main.o: main.c math_util.h
+	$(CC) $(CFLAGS) -c main.c
+
+math_util.o: math_util.c math_util.h
+	$(CC) $(CFLAGS) -c math_util.c
+
+clean:
+	rm -f *.o program</pre><div class="trace">make 명령으로 자동 빌드!<br>변경된 파일만 다시 컴파일 → 빠른 빌드</div>`},
+
+            {
+                n: 8, t: "심사: 순환 포함 방지", d: 3,
+                q: `a.h가 b.h를 include하고, b.h가 a.h를 include하면?`,
+                a: `<span class="key">정답</span><div class="trace"><span class="err">순환 포함 에러!</span><br>a.h → b.h → a.h → b.h → ...<br><br>해결법:<br>1. 인클루드 가드 (#ifndef) 사용<br>2. 전방 선언 (forward declaration):<pre class="code-c"><span class="cm">// a.h 에서</span>
+struct B; <span class="cm">// 전방 선언 (포인터만 사용 가능)</span></pre></div>`},
+
+            {
+                n: 9, t: "심사: 라이브러리 링크", d: 2,
+                q: `수학 라이브러리를 링크하세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">#include &lt;math.h&gt;
+double r = sqrt(2.0);
+
+<span class="cm">// 컴파일:</span>
+<span class="cm">// gcc main.c -lm -o program</span></pre><div class="trace">-lm: math 라이브러리 링크<br>-lpthread: 스레드 라이브러리<br>-l: 라이브러리 링크 옵션</div>`},
+
+            {
+                n: 10, t: "🏆 Unit 46 종합", d: 2,
+                q: `다음 중 헤더 파일에 넣으면 안 되는 것은?<pre class="code-c">// A) int add(int a, int b);
+// B) int add(int a, int b) { return a+b; }
+// C) typedef struct { int x; } Point;
+// D) #define MAX 100
+// E) extern int count;
+// F) int count = 0;</pre>`,
+                a: `<span class="key">정답</span><div class="trace">❌ B) 함수 정의 → .c 파일에!<br>❌ F) 변수 정의 → .c 파일에!<br><br>✅ A) 함수 선언 (프로토타입)<br>✅ C) typedef/구조체 정의<br>✅ D) 매크로 상수<br>✅ E) extern 선언</div>`
+            }
+        ];
+        const c = document.getElementById('problems'); P.forEach(p => { const dc = p.d <= 1 ? 'ez' : p.d <= 2 ? 'md' : 'hd'; const dots = Array.from({ length: 5 }, (_, i) => `<span${i < p.d ? ' class="on"' : ''}>​</span>`).join(''); c.innerHTML += `<div class="prob"><div class="prob-top"><div class="prob-num ${dc}">${p.n}</div><div class="prob-title">${p.t}</div><div class="diff-dots">${dots}</div></div><div class="prob-body"><div class="q">${p.q}</div><textarea class="write" placeholder="✍️ 답을 작성하세요"></textarea><details class="ans"><summary>정답 및 해설 보기</summary><div class="ans-body">${p.a}</div></details></div></div>`; });
+    </script>
+    <script src="../submit.js"></script>
+    <script src="../../platform.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 프로젝트 01: 인사말 생성기</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 200px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 34px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 16px; font-weight: 700; color: #1e3a5f; margin: 16px 0 8px; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.code .type { color: #fbbf24; }
+
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+.pj-banner { background: linear-gradient(135deg, #1e3a5f 0%, #2d5a8e 100%); border-radius: 10px; padding: 16px 20px; margin: 0 0 20px; color: #fff; }
+.pj-banner-label { font-size: 11px; font-weight: 700; color: #93c5fd; letter-spacing: 2px; margin-bottom: 4px; }
+.pj-banner-title { font-size: 18px; font-weight: 900; }
+.pj-banner-desc { font-size: 13px; color: #bfdbfe; margin-top: 4px; }
+
+.step-box { display: flex; gap: 12px; margin: 16px 0; }
+.step { flex: 1; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 12px 14px; }
+.step-num { font-size: 10px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.step-title { font-size: 13px; font-weight: 700; color: #1e3a5f; margin-bottom: 4px; }
+.step-desc { font-size: 12px; color: #64748b; line-height: 1.6; }
+
+.callout { border-radius: 8px; padding: 12px 16px; margin: 14px 0; font-size: 14px; line-height: 1.7; }
+.callout.blue { background: #eff6ff; border-left: 4px solid #3b82f6; color: #1e40af; }
+.callout.green { background: #f0fdf4; border-left: 4px solid #22c55e; color: #166534; }
+.callout.yellow { background: #fffbeb; border-left: 4px solid #f59e0b; color: #92400e; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- 표지 -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">P1</div>
+        <div class="cover-label">Level 6 · Project 01</div>
+        <h1 class="cover-title">인사말 생성기<br>— void 함수 첫 프로젝트</h1>
+        <p class="cover-sub">void greet(char name[]) 함수를 만들어 이름을 받아 인사말을 출력하는 첫 번째 함수 프로젝트입니다.</p>
+
+        <div style="text-align:center;margin:24px 0;">
+            <svg viewBox="0 0 480 130" style="max-width:480px;width:100%">
+                <defs>
+                    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#3b82f6"/>
+                    </marker>
+                </defs>
+                <!-- main 박스 -->
+                <rect x="10" y="40" width="110" height="50" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+                <text x="65" y="61" text-anchor="middle" font-size="12" fill="#1d4ed8" font-weight="700">main()</text>
+                <text x="65" y="78" text-anchor="middle" font-size="11" fill="#2563eb">greet("홍길동")</text>
+                <!-- 화살표 -->
+                <line x1="120" y1="65" x2="160" y2="65" stroke="#3b82f6" stroke-width="2" marker-end="url(#arr)"/>
+                <!-- greet 함수 박스 -->
+                <rect x="165" y="20" width="150" height="90" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="2"/>
+                <text x="240" y="42" text-anchor="middle" font-size="12" fill="#166534" font-weight="700">void greet(char name[])</text>
+                <text x="240" y="62" text-anchor="middle" font-size="11" fill="#374151" font-family="JetBrains Mono">printf("안녕,");</text>
+                <text x="240" y="80" text-anchor="middle" font-size="11" fill="#374151" font-family="JetBrains Mono">printf(name);</text>
+                <text x="240" y="98" text-anchor="middle" font-size="10" fill="#64748b">반환값 없음(void)</text>
+                <!-- 출력 화살표 -->
+                <line x1="315" y1="65" x2="355" y2="65" stroke="#22c55e" stroke-width="2" marker-end="url(#arr2)"/>
+                <defs>
+                    <marker id="arr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#22c55e"/>
+                    </marker>
+                </defs>
+                <!-- 출력 박스 -->
+                <rect x="360" y="40" width="110" height="50" rx="8" fill="#fef9c3" stroke="#eab308" stroke-width="2"/>
+                <text x="415" y="61" text-anchor="middle" font-size="11" fill="#854d0e" font-weight="700">화면 출력</text>
+                <text x="415" y="78" text-anchor="middle" font-size="11" fill="#92400e">안녕, 홍길동!</text>
+            </svg>
+        </div>
+
+        <div class="cover-goals">
+            <h3>이 프로젝트에서 배우는 것</h3>
+            <ul>
+                <li>void 함수를 선언하고 호출할 수 있습니다.</li>
+                <li>char name[] 매개변수로 문자열을 받을 수 있습니다.</li>
+                <li>함수 안에서 printf로 인사말을 출력할 수 있습니다.</li>
+                <li>main에서 함수를 여러 번 호출해 재사용성을 체험합니다.</li>
+                <li>함수가 왜 편한지 직접 느낄 수 있습니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- 2페이지: 개념 설명 + 기초 코드 -->
+<div class="page">
+    <div class="pj-banner">
+        <div class="pj-banner-label">PROJECT 01</div>
+        <div class="pj-banner-title">인사말 생성기</div>
+        <div class="pj-banner-desc">void 함수와 char[] 매개변수 활용</div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/c-lang/gear.png" alt="함수 기어 - 재사용 가능한 코드 구조" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>void 함수란?</h2>
+    <p>함수에는 두 종류가 있습니다. 결과를 돌려주는 함수(<code>return</code> 있음)와, 그냥 작업만 하고 끝나는 함수(<code>void</code>)입니다. 인사말을 출력하는 것처럼 "화면에 뭔가 보여주고 끝"이면 <code>void</code>를 씁니다.</p>
+
+    <div style="text-align:center;margin:18px 0;">
+        <svg viewBox="0 0 460 110" style="max-width:460px;width:100%">
+            <rect x="10" y="10" width="200" height="90" rx="8" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="110" y="32" text-anchor="middle" font-size="12" fill="#dc2626" font-weight="800">반환값 있는 함수</text>
+            <text x="110" y="55" text-anchor="middle" font-size="11" fill="#374151" font-family="JetBrains Mono">int add(int a, int b)</text>
+            <text x="110" y="73" text-anchor="middle" font-size="11" fill="#374151" font-family="JetBrains Mono">return a + b;</text>
+            <text x="110" y="94" text-anchor="middle" font-size="10" fill="#ef4444">결과값을 main에 돌려줌</text>
+            <rect x="250" y="10" width="200" height="90" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="350" y="32" text-anchor="middle" font-size="12" fill="#166534" font-weight="800">void 함수</text>
+            <text x="350" y="55" text-anchor="middle" font-size="11" fill="#374151" font-family="JetBrains Mono">void greet(char name[])</text>
+            <text x="350" y="73" text-anchor="middle" font-size="11" fill="#374151" font-family="JetBrains Mono">printf("안녕, %s!", name);</text>
+            <text x="350" y="94" text-anchor="middle" font-size="10" fill="#22c55e">출력만 하고 끝, return 없음</text>
+        </svg>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/c-lang/puzzle.png" alt="퍼즐 조각 - 함수 조합으로 완성되는 프로그램" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>char name[] — 문자열 매개변수</h2>
+    <p>C언어에서 문자열은 <code>char</code> 배열로 저장합니다. 함수에서 문자열을 받으려면 매개변수를 <code>char name[]</code>으로 씁니다. <code>%s</code>로 출력합니다.</p>
+
+    <div class="code"><span class="cmt">// 함수 선언</span>
+<span class="kw">void</span> <span class="fn">greet</span>(<span class="type">char</span> name[]) {
+    <span class="fn">printf</span>(<span class="str">"안녕하세요, %s님!\n"</span>, name);
+    <span class="fn">printf</span>(<span class="str">"코딩쏙에 오신 것을 환영합니다!\n"</span>);
+}
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="fn">greet</span>(<span class="str">"홍길동"</span>);   <span class="cmt">// 함수 호출 1</span>
+    <span class="fn">greet</span>(<span class="str">"김코딩"</span>);   <span class="cmt">// 함수 호출 2 — 재사용!</span>
+    <span class="fn">greet</span>(<span class="str">"이자바"</span>);   <span class="cmt">// 함수 호출 3</span>
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+
+    <div class="step-box">
+        <div class="step">
+            <div class="step-num">STEP 1</div>
+            <div class="step-title">함수 선언</div>
+            <div class="step-desc">void greet(char name[]) { } 뼈대를 만든다</div>
+        </div>
+        <div class="step">
+            <div class="step-num">STEP 2</div>
+            <div class="step-title">본체 작성</div>
+            <div class="step-desc">printf로 name을 포함한 인사말 출력</div>
+        </div>
+        <div class="step">
+            <div class="step-num">STEP 3</div>
+            <div class="step-title">main에서 호출</div>
+            <div class="step-desc">greet("이름"); 으로 여러 번 호출</div>
+        </div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:6px;margin:14px 0 4px;">
+        <img src="/images/learn/c-lang/book.png" alt="교재 - 함수 개념 학습" style="width:24px;height:24px;object-fit:contain;background:#fff;border-radius:8px;">
+        <span style="font-size:12px;color:#1d4ed8;font-weight:600;">실습 구역</span>
+    </div>
+<div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">위 코드를 그대로 입력하고 실행해 보세요.</div>
+                <div class="practice-result">안녕하세요, 홍길동님! / 안녕하세요, 김코딩님! 등이 출력됩니다</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc"><code>greet("자기 이름");</code>을 한 줄 추가해 보세요.</div>
+                <div class="practice-result">본인 이름으로 인사말이 출력됩니다</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3페이지: 확장 + 프로젝트 전체 코드 -->
+<div class="page">
+    <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/c-lang/book.png" alt="교재 - 함수 개념 학습" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>인사말 생성기 — 전체 코드</h2>
+    <p>시간대별로 다른 인사말을 출력하는 함수를 추가해서 프로젝트를 완성합니다.</p>
+
+    <div class="code"><span class="cmt">/* ====== 인사말 생성기 전체 코드 ====== */</span>
+#include &lt;stdio.h&gt;
+
+<span class="cmt">/* 기본 인사 함수 */</span>
+<span class="kw">void</span> <span class="fn">greet</span>(<span class="type">char</span> name[]) {
+    <span class="fn">printf</span>(<span class="str">"============================\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"  안녕하세요, %s님!\n"</span>, name);
+    <span class="fn">printf</span>(<span class="str">"  코딩쏙에 오신 것을 환영합니다!\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"============================\n"</span>);
+}
+
+<span class="cmt">/* 시간대별 인사 함수 */</span>
+<span class="kw">void</span> <span class="fn">greetByTime</span>(<span class="type">char</span> name[], <span class="kw">int</span> hour) {
+    <span class="fn">printf</span>(<span class="str">"%s님, "</span>, name);
+    <span class="kw">if</span> (hour &lt; <span class="num">12</span>) {
+        <span class="fn">printf</span>(<span class="str">"좋은 아침입니다!\n"</span>);
+    } <span class="kw">else if</span> (hour &lt; <span class="num">18</span>) {
+        <span class="fn">printf</span>(<span class="str">"좋은 오후입니다!\n"</span>);
+    } <span class="kw">else</span> {
+        <span class="fn">printf</span>(<span class="str">"좋은 저녁입니다!\n"</span>);
+    }
+}
+
+<span class="cmt">/* 작별 인사 함수 */</span>
+<span class="kw">void</span> <span class="fn">farewell</span>(<span class="type">char</span> name[]) {
+    <span class="fn">printf</span>(<span class="str">"수고했어요, %s님! 내일 또 봬요!\n"</span>, name);
+}
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="fn">greet</span>(<span class="str">"홍길동"</span>);
+    <span class="fn">greet</span>(<span class="str">"김코딩"</span>);
+
+    <span class="fn">greetByTime</span>(<span class="str">"이자바"</span>, <span class="num">9</span>);   <span class="cmt">// 오전 9시</span>
+    <span class="fn">greetByTime</span>(<span class="str">"박파이"</span>, <span class="num">15</span>);  <span class="cmt">// 오후 3시</span>
+    <span class="fn">greetByTime</span>(<span class="str">"최씨</span><span class="str">"</span>, <span class="num">20</span>);    <span class="cmt">// 저녁 8시</span>
+
+    <span class="fn">farewell</span>(<span class="str">"홍길동"</span>);
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+
+    <div style="text-align:center;margin:20px 0;">
+        <svg viewBox="0 0 460 140" style="max-width:460px;width:100%">
+            <defs>
+                <marker id="ar3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#6366f1"/>
+                </marker>
+            </defs>
+            <!-- main -->
+            <rect x="10" y="50" width="100" height="40" rx="6" fill="#ede9fe" stroke="#6366f1" stroke-width="1.5"/>
+            <text x="60" y="74" text-anchor="middle" font-size="12" fill="#4338ca" font-weight="700">main()</text>
+            <!-- 함수들 -->
+            <rect x="160" y="10" width="120" height="36" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="220" y="32" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">greet(name)</text>
+            <rect x="160" y="57" width="120" height="36" rx="6" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="220" y="79" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">greetByTime(name,h)</text>
+            <rect x="160" y="104" width="120" height="36" rx="6" fill="#fef9c3" stroke="#eab308" stroke-width="1.5"/>
+            <text x="220" y="126" text-anchor="middle" font-size="11" fill="#854d0e" font-weight="700">farewell(name)</text>
+            <!-- 화살표 -->
+            <line x1="110" y1="62" x2="158" y2="28" stroke="#6366f1" stroke-width="1.5" marker-end="url(#ar3)"/>
+            <line x1="110" y1="70" x2="158" y2="75" stroke="#6366f1" stroke-width="1.5" marker-end="url(#ar3)"/>
+            <line x1="110" y1="78" x2="158" y2="116" stroke="#6366f1" stroke-width="1.5" marker-end="url(#ar3)"/>
+            <!-- 출력 -->
+            <rect x="335" y="50" width="115" height="40" rx="6" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="392" y="68" text-anchor="middle" font-size="11" fill="#dc2626" font-weight="700">화면 출력</text>
+            <text x="392" y="84" text-anchor="middle" font-size="10" fill="#64748b">인사말 텍스트</text>
+            <defs><marker id="ar4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker></defs>
+            <line x1="280" y1="75" x2="333" y2="75" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#ar4)"/>
+        </svg>
+    </div>
+
+    <div class="callout blue">
+        <strong>핵심 포인트:</strong> 함수를 한 번 만들면 main에서 몇 번이든 호출할 수 있습니다. 이름만 바꿔 넣으면 같은 인사말 형식이 자동으로 출력됩니다.
+    </div>
+</div>
+
+<!-- 4페이지: 연습 문제 -->
+<div class="page">
+    <h2>연습 문제</h2>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">1</div>
+            <div class="problem-label">void 함수 구조 이해</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">다음 중 void 함수에 대한 설명으로 <strong>틀린</strong> 것은?<br>
+            ① 반환값이 없다<br>
+            ② return 문을 절대 쓸 수 없다<br>
+            ③ 매개변수는 가질 수 있다<br>
+            ④ printf 같은 출력 작업에 적합하다</div>
+            <details class="problem-toggle">
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">정답: ② — void 함수도 return; (값 없이)을 써서 중간에 함수를 빠져나올 수 있습니다.</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">2</div>
+            <div class="problem-label">greet 함수 작성</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">이름을 받아서 "___야, 반가워!" 를 출력하는 void 함수 <code>sayHi</code>를 작성하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">입력</span>
+                    <span class="problem-example-value">sayHi("민준");</span>
+                </div>
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력</span>
+                    <span class="problem-example-value">민준야, 반가워!</span>
+                </div>
+            </div>
+            <details class="problem-toggle">
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code"><span style="color:#c084fc">void</span> <span style="color:#67e8f9">sayHi</span>(<span style="color:#fbbf24">char</span> name[]) {
+    <span style="color:#67e8f9">printf</span>(<span style="color:#86efac">"%s야, 반가워!\n"</span>, name);
+}</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">3</div>
+            <div class="problem-label">생일 축하 함수</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">이름과 나이를 받아서 "___의 ___번째 생일을 축하합니다!" 를 출력하는 void 함수 <code>happyBirthday</code>를 작성하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">입력</span>
+                    <span class="problem-example-value">happyBirthday("수아", 15);</span>
+                </div>
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력</span>
+                    <span class="problem-example-value">수아의 15번째 생일을 축하합니다!</span>
+                </div>
+            </div>
+            <details class="problem-toggle">
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code"><span style="color:#c084fc">void</span> <span style="color:#67e8f9">happyBirthday</span>(<span style="color:#fbbf24">char</span> name[], <span style="color:#c084fc">int</span> age) {
+    <span style="color:#67e8f9">printf</span>(<span style="color:#86efac">"%s의 %d번째 생일을 축하합니다!\n"</span>, name, age);
+}</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">4</div>
+            <div class="problem-label">함수 3개 연결</div>
+            <span class="problem-diff hard">어려움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">다음 3개 함수를 모두 작성하고, main에서 각각 호출하는 전체 프로그램을 완성하세요.<br>
+            · <code>printName(char name[])</code> — 이름 출력<br>
+            · <code>printAge(int age)</code> — 나이 출력<br>
+            · <code>printSchool(char school[])</code> — 학교 출력</div>
+            <details class="problem-toggle">
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">각 함수 안에서 printf만 쓰면 됩니다. main에서 세 함수를 차례로 호출하세요.</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:8px;margin:16px 0 6px;padding:8px 14px;background:#f0f9ff;border-radius:6px;border:1px solid #bae6fd;">
+        <img src="/images/learn/c-lang/gear.png" alt="함수 기어 - 재사용 가능한 코드 구조" style="width:28px;height:28px;object-fit:contain;background:#fff;border-radius:8px;">
+        <img src="/images/learn/c-lang/puzzle.png" alt="퍼즐 조각 - 함수 조합으로 완성되는 프로그램" style="width:28px;height:28px;object-fit:contain;background:#fff;border-radius:8px;">
+        <span style="font-size:12px;color:#0369a1;font-weight:600;">핵심 정리</span>
+    </div>
+<div class="summary">
+        <h3>핵심 정리</h3>
+        <ul>
+            <li><code>void 함수이름(매개변수)</code> — 반환값 없는 함수 선언</li>
+            <li><code>char name[]</code> — 문자열 매개변수, <code>%s</code>로 출력</li>
+            <li>함수 한 번 만들면 main에서 몇 번이든 호출 가능</li>
+            <li>void 함수도 return; 으로 중간 탈출 가능</li>
+        </ul>
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:20px;padding-top:10px;border-top:1px solid #f1f5f9;">
+        <img src="/images/learn/c-lang/flowchart.png" alt="순서도 - 함수 호출 흐름" style="width:22px;height:22px;object-fit:contain;opacity:0.6;background:#fff;border-radius:8px;">
+        <span style="font-size:10px;color:#cbd5e1;">코딩쏙 C언어</span>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

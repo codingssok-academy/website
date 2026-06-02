@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>성취도 대시보드 — 학습 플랫폼</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #1e1c1a;
+            --card: #252320;
+            --border: #3a3632;
+            --tx: #f5f0e8;
+            --tx2: #d4cec4;
+            --tx3: #b0a898;
+            --indigo: #EC5212;
+            --violet: #e8854a;
+            --emerald: #22c55e;
+            --red: #ef4444;
+            --amber: #f59e0b;
+            --orange: #e8854a;
+            --cyan: #22d3ee;
+            --pink: #fb7185;
+            --rose: #fb7185;
+            --shadow: 0 1px 3px rgba(0, 0, 0, .12);
+        }
+
+        body {
+            font-family: 'Noto Sans KR', 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--tx);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 24px 60px;
+        }
+
+        /* Header */
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 20px;
+            color: var(--indigo);
+            text-decoration: none;
+            font-size: .85rem;
+            font-weight: 600;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        .dash-header {
+            text-align: center;
+            padding: 20px 0 32px;
+        }
+
+        .dash-header h1 {
+            font-family: 'Outfit';
+            font-size: clamp(1.8rem, 4vw, 2.4rem);
+            font-weight: 900;
+            background: linear-gradient(135deg, #EC5212, #e8854a, #22c55e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+
+        .dash-header h1 svg {
+            display: inline;
+            vertical-align: middle;
+        }
+
+        .dash-header p {
+            color: var(--tx3);
+            font-size: .9rem;
+        }
+
+        /* ─── Tab Bar ─── */
+        .tab-bar {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 28px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            background: var(--card);
+            font-size: .82rem;
+            font-weight: 700;
+            cursor: pointer;
+            color: var(--tx2);
+            transition: all .2s;
+        }
+
+        .tab-btn.active {
+            background: var(--indigo);
+            color: #fff;
+            border-color: var(--indigo);
+        }
+
+        .tab-btn.active.tab-kf {
+            background: #818cf8;
+            border-color: #818cf8;
+        }
+
+        .tab-btn.active.tab-ct {
+            background: var(--emerald);
+            border-color: var(--emerald);
+        }
+
+        .tab-btn.active.tab-cl {
+            background: var(--amber);
+            border-color: var(--amber);
+        }
+
+        .tab-btn.active.tab-koi {
+            background: var(--orange);
+            border-color: var(--orange);
+        }
+
+        .tab-btn:hover:not(.active) {
+            border-color: var(--indigo);
+            color: var(--indigo);
+        }
+
+        /* ─── Stats Grid ─── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px;
+            margin-bottom: 28px;
+        }
+
+        .stat-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: var(--shadow);
+            transition: transform .2s, box-shadow .2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, .08);
+        }
+
+        .stat-num {
+            font-family: 'Outfit';
+            font-size: 2rem;
+            font-weight: 900;
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: .75rem;
+            color: var(--tx3);
+        }
+
+        .stat-card.blue .stat-num {
+            color: var(--indigo);
+        }
+
+        .stat-card.green .stat-num {
+            color: var(--emerald);
+        }
+
+        .stat-card.red .stat-num {
+            color: var(--red);
+        }
+
+        .stat-card.orange .stat-num {
+            color: var(--orange);
+        }
+
+        .stat-card.amber .stat-num {
+            color: var(--amber);
+        }
+
+        .stat-card.pink .stat-num {
+            color: var(--pink);
+        }
+
+        /* ─── Chart Cards ─── */
+        .chart-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .chart-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: var(--shadow);
+        }
+
+        .chart-card.full {
+            grid-column: 1 / -1;
+        }
+
+        .chart-card h3 {
+            font-size: .9rem;
+            font-weight: 800;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .chart-card h3 svg {
+            width: 18px;
+            height: 18px;
+            fill: none;
+            stroke: var(--indigo);
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        canvas {
+            max-height: 300px;
+        }
+
+        /* ─── Track Overview Cards ─── */
+        .track-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 14px;
+            margin-bottom: 28px;
+        }
+
+        .track-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            transition: transform .2s, box-shadow .2s;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .track-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, .08);
+        }
+
+        .track-name {
+            font-size: .95rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .track-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .track-progress {
+            height: 6px;
+            background: #f1f5f9;
+            border-radius: 99px;
+            overflow: hidden;
+            margin-bottom: 6px;
+        }
+
+        .track-fill {
+            height: 100%;
+            border-radius: 99px;
+            transition: width .5s ease;
+        }
+
+        .track-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: .72rem;
+            color: var(--tx3);
+        }
+
+        .track-stats strong {
+            color: var(--tx);
+            font-weight: 800;
+        }
+
+        /* ─── Heatmap ─── */
+        .heatmap-wrap {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px 24px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .heatmap-title {
+            font-size: .82rem;
+            font-weight: 800;
+            margin-bottom: 12px;
+        }
+
+        .heatmap {
+            display: flex;
+            gap: 3px;
+            justify-content: center;
+        }
+
+        .hm-col {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .hm-cell {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+            background: #f1f5f9;
+            transition: background .2s;
+        }
+
+        .hm-cell.hm-1 {
+            background: #c7d2fe;
+        }
+
+        .hm-cell.hm-2 {
+            background: #818cf8;
+        }
+
+        .hm-cell.hm-3 {
+            background: #6366f1;
+        }
+
+        .hm-cell.hm-4 {
+            background: #4338ca;
+        }
+
+        /* ─── Empty State ─── */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--tx3);
+        }
+
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            stroke: #cbd5e1;
+            fill: none;
+            stroke-width: 1.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            margin-bottom: 16px;
+        }
+
+        .empty-state h3 {
+            color: var(--tx2);
+            margin-bottom: 8px;
+        }
+
+        /* ─── Actions ─── */
+        .actions-wrap {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 32px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 10px 24px;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            background: var(--card);
+            font-size: .82rem;
+            font-weight: 700;
+            cursor: pointer;
+            color: var(--tx2);
+            transition: all .2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .action-btn:hover {
+            border-color: var(--indigo);
+            color: var(--indigo);
+            transform: translateY(-1px);
+        }
+
+        .action-btn.danger {
+            border-color: #fca5a5;
+            color: var(--red);
+        }
+
+        .action-btn.danger:hover {
+            background: var(--red);
+            color: #fff;
+        }
+
+        .action-btn svg {
+            width: 14px;
+            height: 14px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        @media (max-width: 768px) {
+            .chart-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">← 허브로 돌아가기</a>
+
+        <div class="dash-header">
+            <h1>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle">
+                    <line x1="18" y1="20" x2="18" y2="10" />
+                    <line x1="12" y1="20" x2="12" y2="4" />
+                    <line x1="6" y1="20" x2="6" y2="14" />
+                </svg>
+                성취도 대시보드
+            </h1>
+            <p>4개 트랙 · 학습 현황을 한눈에 확인하세요</p>
+        </div>
+
+        <div class="tab-bar">
+            <button class="tab-btn active" data-tab="all">📊 전체</button>
+            <button class="tab-btn tab-kf" data-tab="kf">코딩 기초</button>
+            <button class="tab-btn tab-ct" data-tab="ct">컴퓨팅 사고력</button>
+            <button class="tab-btn tab-cl" data-tab="cl">C 언어</button>
+            <button class="tab-btn tab-koi" data-tab="koi">KOI 기출</button>
+        </div>
+
+        <div id="stats-grid" class="stats-grid"></div>
+        <div id="track-overview"></div>
+        <div id="heatmap-section"></div>
+        <div id="charts" class="chart-grid"></div>
+
+        <div class="actions-wrap">
+            <button class="action-btn" onclick="exportAll()">
+                <svg viewBox="0 0 24 24">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                전체 백업
+            </button>
+            <button class="action-btn" onclick="document.getElementById('impFile').click()">
+                <svg viewBox="0 0 24 24">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="17 8 12 3 7 8" />
+                    <line x1="12" y1="3" x2="12" y2="15" />
+                </svg>
+                복원
+            </button>
+            <button class="action-btn danger" id="reset-btn">
+                <svg viewBox="0 0 24 24">
+                    <polyline points="3 6 5 6 21 6" />
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                </svg>
+                데이터 초기화
+            </button>
+        </div>
+        <input type="file" id="impFile" accept=".json" style="display:none" onchange="importAll(event)">
+    </div>
+
+    <script>
+        (function () {
+            'use strict';
+
+            // ═══ Data Access Layer ═══
+            function getKFCT() { try { return JSON.parse(localStorage.getItem('ct_platform') || '{}'); } catch { return {}; } }
+            function getKOI() { try { return JSON.parse(localStorage.getItem('koi_p') || '{}'); } catch { return {}; } }
+
+            function countPrefix(prefix) {
+                const all = getKFCT();
+                let correct = 0, wrong = 0;
+                for (const [key, data] of Object.entries(all)) {
+                    if (!key.startsWith(prefix)) continue;
+                    if (typeof data === 'object') {
+                        Object.values(data).forEach(v => {
+                            if (v === 'correct') correct++;
+                            if (v === 'wrong') wrong++;
+                        });
+                    }
+                }
+                return { correct, wrong, total: correct + wrong };
+            }
+
+            function countKeys(keys) {
+                const all = getKFCT();
+                let correct = 0, wrong = 0;
+                keys.forEach(k => {
+                    const data = all[k];
+                    if (!data) return;
+                    Object.values(data).forEach(v => {
+                        if (v === 'correct') correct++;
+                        if (v === 'wrong') wrong++;
+                    });
+                });
+                return { correct, wrong, total: correct + wrong };
+            }
+
+            function getKOIStats() {
+                const d = getKOI();
+                let done = 0, wip = 0, todo = 0;
+                const entries = Object.values(d);
+                entries.forEach(v => {
+                    if (v.status === 'done') done++;
+                    else if (v.status === 'wip') wip++;
+                });
+                // Total KOI problems ~ 103 (from data.js)
+                const totalProblems = Math.max(entries.length, done + wip);
+                return { done, wip, total: totalProblems || 103, entries: entries.length };
+            }
+
+            // ═══ Track Definitions ═══
+            const KF_DOMAINS = {
+                '논리적 사고': { keys: ['kf_논리_쉬움', 'kf_논리_보통', 'kf_논리_어려움'], color: '#818cf8', max: 180 },
+                '수학적 사고': { keys: ['kf_수학_쉬움', 'kf_수학_보통', 'kf_수학_어려움'], color: '#fb923c', max: 180 },
+                '순서도': { keys: ['kf_순서도_쉬움', 'kf_순서도_보통', 'kf_순서도_어려움'], color: '#22d3ee', max: 180 },
+                '문제해결': { keys: ['kf_문제해결_쉬움', 'kf_문제해결_보통', 'kf_문제해결_어려움'], color: '#4ade80', max: 180 },
+                '이산수학': { keys: ['kf_이산수학_쉬움', 'kf_이산수학_보통', 'kf_이산수학_어려움'], color: '#f472b6', max: 180 }
+            };
+
+            const CT_DOMAINS = {
+                '분해': { keys: ['ct_분해_Level1', 'ct_분해_Level2', 'ct_분해_Level3', 'ct_분해_Level4', 'ct_분해_Level5'], color: '#6366f1', max: 300 },
+                '패턴인식': { keys: ['ct_패턴_Level1', 'ct_패턴_Level2', 'ct_패턴_Level3', 'ct_패턴_Level4', 'ct_패턴_Level5'], color: '#10b981', max: 300 },
+                '추상화': { keys: ['ct_추상화_Level1', 'ct_추상화_Level2', 'ct_추상화_Level3', 'ct_추상화_Level4', 'ct_추상화_Level5'], color: '#06b6d4', max: 300 },
+                '알고리즘': { keys: ['ct_알고리즘_Level1', 'ct_알고리즘_Level2', 'ct_알고리즘_Level3', 'ct_알고리즘_Level4', 'ct_알고리즘_Level5'], color: '#f97316', max: 300 },
+                '종합평가': { keys: ['ct_종합평가_Level1', 'ct_종합평가_Level2', 'ct_종합평가_Level3'], color: '#a855f7', max: 180 },
+                '프로젝트': { keys: ['ct_프로젝트_Level1', 'ct_프로젝트_Level2', 'ct_프로젝트_Level3'], color: '#f43f5e', max: 60 }
+            };
+
+            // C언어 — ct_platform에서 cl_ 프리픽스로 챕터별 데이터 읽기
+            function getCLChapterStats() {
+                const all = getKFCT();
+                const chapters = {};
+                for (const [key, data] of Object.entries(all)) {
+                    if (!key.startsWith('cl_')) continue;
+                    let correct = 0, wrong = 0;
+                    Object.values(data).forEach(v => {
+                        if (v === 'correct') correct++;
+                        if (v === 'wrong') wrong++;
+                    });
+                    chapters[key] = { correct, wrong, total: correct + wrong };
+                }
+                return chapters;
+            }
+
+            // ═══ State ═══
+            let currentTab = 'all';
+            let charts = [];
+
+            // ═══ Main Render ═══
+            function render() {
+                charts.forEach(c => c.destroy());
+                charts = [];
+
+                switch (currentTab) {
+                    case 'all': renderAll(); break;
+                    case 'kf': renderKF(); break;
+                    case 'ct': renderCT(); break;
+                    case 'cl': renderCL(); break;
+                    case 'koi': renderKOI(); break;
+                }
+            }
+
+            // ═══ Tab: 전체 ═══
+            function renderAll() {
+                const kf = countPrefix('kf_');
+                const ct = countPrefix('ct_');
+                const cl = countPrefix('cl_');
+                const koi = getKOIStats();
+                const grandTotal = kf.total + ct.total + cl.total + koi.done;
+                const grandCorrect = kf.correct + ct.correct + cl.correct + koi.done;
+                const grandWrong = kf.wrong + ct.wrong + cl.wrong;
+                const rate = grandTotal > 0 ? Math.round(grandCorrect / (grandTotal || 1) * 100) : 0;
+
+                // Stats
+                const sg = document.getElementById('stats-grid');
+                sg.innerHTML = `
+                    <div class="stat-card blue"><div class="stat-num">${grandTotal}</div><div class="stat-label">총 풀이 문제</div></div>
+                    <div class="stat-card green"><div class="stat-num">${grandCorrect}</div><div class="stat-label">정답 / 완료</div></div>
+                    <div class="stat-card red"><div class="stat-num">${grandWrong}</div><div class="stat-label">오답</div></div>
+                    <div class="stat-card orange"><div class="stat-num">${rate}%</div><div class="stat-label">정답률</div></div>
+                    <div class="stat-card pink"><div class="stat-num">4</div><div class="stat-label">학습 트랙</div></div>
+                `;
+
+                // Track overview cards
+                const tracks = [
+                    { name: '코딩 기초 사고력', color: '#818cf8', stats: kf, max: 900, href: '코딩기초/index.html' },
+                    { name: '컴퓨팅 사고력', color: '#10b981', stats: ct, max: 1440, href: '컴퓨팅사고력/index.html' },
+                    { name: 'C 언어', color: '#f59e0b', stats: cl, max: 1285, href: 'C언어/index.html' },
+                    { name: 'KOI 기출', color: '#f97316', stats: { total: koi.done, correct: koi.done, wrong: 0 }, max: koi.total, href: 'KOI기출/index.html' }
+                ];
+                document.getElementById('track-overview').innerHTML = '<div class="track-grid">' + tracks.map(t => {
+                    const pct = t.max > 0 ? Math.round(t.stats.total / t.max * 100) : 0;
+                    const correctRate = t.stats.total > 0 ? Math.round(t.stats.correct / t.stats.total * 100) : 0;
+                    return `<a href="${t.href}" class="track-card">
+                        <div class="track-name"><span class="track-dot" style="background:${t.color}"></span>${t.name}</div>
+                        <div class="track-progress"><div class="track-fill" style="width:${pct}%;background:${t.color}"></div></div>
+                        <div class="track-stats"><span>풀이 <strong>${t.stats.total}</strong>/${t.max}</span><span><strong>${pct}%</strong></span></div>
+                    </a>`;
+                }).join('') + '</div>';
+
+                // Heatmap
+                renderHeatmap();
+
+                // Charts
+                const cg = document.getElementById('charts');
+                if (grandTotal === 0) {
+                    cg.innerHTML = `<div class="chart-card full"><div class="empty-state">
+                        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                        <h3>아직 학습 데이터가 없어요</h3><p>학습지에서 문제를 풀고 채점하면 여기에 분석이 표시됩니다!</p></div></div>`;
+                    return;
+                }
+
+                cg.innerHTML = `
+                    <div class="chart-card"><h3><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 0 20"/></svg>트랙별 풀이 비율</h3><canvas id="trackDonut"></canvas></div>
+                    <div class="chart-card"><h3><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>트랙별 정답률</h3><canvas id="trackRadar"></canvas></div>
+                    <div class="chart-card full"><h3><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>트랙별 정답 / 오답</h3><canvas id="trackBar"></canvas></div>
+                `;
+
+                // Donut
+                charts.push(new Chart(document.getElementById('trackDonut'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: tracks.map(t => t.name),
+                        datasets: [{ data: tracks.map(t => t.stats.total), backgroundColor: tracks.map(t => t.color), borderWidth: 0, borderRadius: 4 }]
+                    },
+                    options: { cutout: '65%', plugins: { legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 14 } } } }
+                }));
+
+                // Radar
+                const radarData = tracks.map(t => t.stats.total > 0 ? Math.round(t.stats.correct / t.stats.total * 100) : 0);
+                charts.push(new Chart(document.getElementById('trackRadar'), {
+                    type: 'radar',
+                    data: {
+                        labels: tracks.map(t => t.name),
+                        datasets: [{ label: '정답률(%)', data: radarData, backgroundColor: 'rgba(99,102,241,.15)', borderColor: '#6366f1', borderWidth: 2, pointBackgroundColor: '#6366f1', pointRadius: 4 }]
+                    },
+                    options: { scales: { r: { beginAtZero: true, max: 100, ticks: { stepSize: 20, font: { size: 10 } } } }, plugins: { legend: { display: false } } }
+                }));
+
+                // Bar
+                charts.push(new Chart(document.getElementById('trackBar'), {
+                    type: 'bar',
+                    data: {
+                        labels: tracks.map(t => t.name),
+                        datasets: [
+                            { label: '정답/완료', data: tracks.map(t => t.stats.correct), backgroundColor: '#10b981', borderRadius: 6 },
+                            { label: '오답', data: tracks.map(t => t.stats.wrong), backgroundColor: '#fca5a5', borderRadius: 6 }
+                        ]
+                    },
+                    options: { scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } }, plugins: { legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 14 } } } }
+                }));
+            }
+
+            // ═══ Tab: 코딩 기초 ═══
+            function renderKF() {
+                renderDomainTab(KF_DOMAINS, 'kf', 900, '#818cf8');
+            }
+
+            // ═══ Tab: 컴퓨팅 사고력 ═══
+            function renderCT() {
+                renderDomainTab(CT_DOMAINS, 'ct', 1440, '#10b981');
+            }
+
+            // Generic domain-based tab
+            function renderDomainTab(domains, prefix, totalMax, accentColor) {
+                const entries = Object.entries(domains);
+                const allKeys = entries.flatMap(([, v]) => v.keys);
+                const totalStats = countKeys(allKeys);
+                const domainStats = entries.map(([name, cfg]) => ({
+                    name, ...countKeys(cfg.keys), color: cfg.color, max: cfg.max
+                }));
+                const completePct = totalMax > 0 ? Math.round((totalStats.total / totalMax) * 100) : 0;
+                const correctPct = totalStats.total > 0 ? Math.round((totalStats.correct / totalStats.total) * 100) : 0;
+
+                document.getElementById('stats-grid').innerHTML = `
+                    <div class="stat-card blue"><div class="stat-num">${totalStats.total}</div><div class="stat-label">총 풀이</div></div>
+                    <div class="stat-card green"><div class="stat-num">${totalStats.correct}</div><div class="stat-label">정답</div></div>
+                    <div class="stat-card red"><div class="stat-num">${totalStats.wrong}</div><div class="stat-label">오답</div></div>
+                    <div class="stat-card orange"><div class="stat-num">${correctPct}%</div><div class="stat-label">정답률</div></div>
+                    <div class="stat-card"><div class="stat-num">${completePct}%</div><div class="stat-label">완료율 (${totalMax}문제)</div></div>
+                `;
+                document.getElementById('track-overview').innerHTML = '';
+                document.getElementById('heatmap-section').innerHTML = '';
+
+                const cg = document.getElementById('charts');
+                if (totalStats.total === 0) {
+                    cg.innerHTML = `<div class="chart-card full"><div class="empty-state">
+                        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                        <h3>아직 학습 데이터가 없어요</h3><p>학습지에서 문제를 풀고 채점하면 여기에 분석이 표시됩니다!</p></div></div>`;
+                    return;
+                }
+
+                cg.innerHTML = `
+                    <div class="chart-card"><h3><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>영역별 정답률</h3><canvas id="radarChart"></canvas></div>
+                    <div class="chart-card"><h3><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 0 20"/></svg>전체 완료율</h3><canvas id="doughnutChart"></canvas></div>
+                    <div class="chart-card full"><h3><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>영역별 풀이 현황</h3><canvas id="barChart"></canvas></div>
+                `;
+
+                // Radar
+                charts.push(new Chart(document.getElementById('radarChart'), {
+                    type: 'radar',
+                    data: {
+                        labels: domainStats.map(d => d.name),
+                        datasets: [{ label: '정답률(%)', data: domainStats.map(d => d.total > 0 ? Math.round(d.correct / d.total * 100) : 0), backgroundColor: 'rgba(99,102,241,.15)', borderColor: accentColor, borderWidth: 2, pointBackgroundColor: accentColor, pointRadius: 4 }]
+                    },
+                    options: { scales: { r: { beginAtZero: true, max: 100, ticks: { stepSize: 20, font: { size: 11 } } } }, plugins: { legend: { display: false } } }
+                }));
+
+                // Doughnut
+                const remaining = Math.max(totalMax - totalStats.total, 0);
+                charts.push(new Chart(document.getElementById('doughnutChart'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['풀이 완료', '미풀이'],
+                        datasets: [{ data: [totalStats.total, remaining], backgroundColor: [accentColor, '#f1f5f9'], borderWidth: 0, borderRadius: 4 }]
+                    },
+                    options: { cutout: '70%', plugins: { legend: { position: 'bottom', labels: { font: { size: 12 }, padding: 16 } } } }
+                }));
+
+                // Bar
+                charts.push(new Chart(document.getElementById('barChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: domainStats.map(d => d.name),
+                        datasets: [
+                            { label: '정답', data: domainStats.map(d => d.correct), backgroundColor: '#10b981', borderRadius: 6 },
+                            { label: '오답', data: domainStats.map(d => d.wrong), backgroundColor: '#fca5a5', borderRadius: 6 }
+                        ]
+                    },
+                    options: { scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } }, plugins: { legend: { position: 'bottom', labels: { font: { size: 12 }, padding: 16 } } } }
+                }));
+            }
+
+            // ═══ Tab: C 언어 ═══
+            function renderCL() {
+                const cl = countPrefix('cl_');
+                const chapters = getCLChapterStats();
+                const chapterEntries = Object.entries(chapters).sort((a, b) => a[0].localeCompare(b[0]));
+                const totalMax = 1285;
+                const completePct = totalMax > 0 ? Math.round((cl.total / totalMax) * 100) : 0;
+                const correctPct = cl.total > 0 ? Math.round((cl.correct / cl.total) * 100) : 0;
+
+                document.getElementById('stats-grid').innerHTML = `
+                    <div class="stat-card blue"><div class="stat-num">${cl.total}</div><div class="stat-label">총 풀이</div></div>
+                    <div class="stat-card green"><div class="stat-num">${cl.correct}</div><div class="stat-label">정답</div></div>
+                    <div class="stat-card red"><div class="stat-num">${cl.wrong}</div><div class="stat-label">오답</div></div>
+                    <div class="stat-card orange"><div class="stat-num">${correctPct}%</div><div class="stat-label">정답률</div></div>
+                    <div class="stat-card amber"><div class="stat-num">${chapterEntries.length}</div><div class="stat-label">학습한 유닛</div></div>
+                    <div class="stat-card"><div class="stat-num">${completePct}%</div><div class="stat-label">완료율 (${totalMax}문제)</div></div>
+                `;
+                document.getElementById('track-overview').innerHTML = '';
+                document.getElementById('heatmap-section').innerHTML = '';
+
+                const cg = document.getElementById('charts');
+                if (cl.total === 0) {
+                    cg.innerHTML = `<div class="chart-card full"><div class="empty-state">
+                        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                        <h3>아직 C 언어 학습 데이터가 없어요</h3><p>C 언어 유닛에서 문제를 풀고 채점하면 표시됩니다!</p></div></div>`;
+                    return;
+                }
+
+                // Show top 15 chapters by total problems
+                const topChapters = chapterEntries.sort((a, b) => b[1].total - a[1].total).slice(0, 15);
+                cg.innerHTML = `
+                    <div class="chart-card"><h3><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 0 20"/></svg>전체 완료율</h3><canvas id="clDonut"></canvas></div>
+                    <div class="chart-card"><h3><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M15.5 8.5A5 5 0 1 0 15.5 15.5"/></svg>정답 / 오답 비율</h3><canvas id="clPie"></canvas></div>
+                    <div class="chart-card full"><h3><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>유닛별 풀이 현황 (Top ${topChapters.length})</h3><canvas id="clBar"></canvas></div>
+                `;
+
+                // Doughnut
+                charts.push(new Chart(document.getElementById('clDonut'), {
+                    type: 'doughnut',
+                    data: { labels: ['풀이 완료', '미풀이'], datasets: [{ data: [cl.total, Math.max(totalMax - cl.total, 0)], backgroundColor: ['#f59e0b', '#f1f5f9'], borderWidth: 0, borderRadius: 4 }] },
+                    options: { cutout: '70%', plugins: { legend: { position: 'bottom', labels: { font: { size: 12 }, padding: 16 } } } }
+                }));
+
+                // Pie
+                charts.push(new Chart(document.getElementById('clPie'), {
+                    type: 'doughnut',
+                    data: { labels: ['정답', '오답'], datasets: [{ data: [cl.correct, cl.wrong], backgroundColor: ['#10b981', '#fca5a5'], borderWidth: 0, borderRadius: 4 }] },
+                    options: { cutout: '60%', plugins: { legend: { position: 'bottom', labels: { font: { size: 12 }, padding: 16 } } } }
+                }));
+
+                // Bar — unit-level
+                const labels = topChapters.map(([k]) => k.replace('cl_', '').replace(/Unit\d+_?/i, '').substring(0, 10));
+                charts.push(new Chart(document.getElementById('clBar'), {
+                    type: 'bar',
+                    data: {
+                        labels,
+                        datasets: [
+                            { label: '정답', data: topChapters.map(([, v]) => v.correct), backgroundColor: '#10b981', borderRadius: 4 },
+                            { label: '오답', data: topChapters.map(([, v]) => v.wrong), backgroundColor: '#fca5a5', borderRadius: 4 }
+                        ]
+                    },
+                    options: { indexAxis: 'y', scales: { x: { beginAtZero: true, grid: { color: '#f1f5f9' } }, y: { grid: { display: false } } }, plugins: { legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 14 } } } }
+                }));
+            }
+
+            // ═══ Tab: KOI 기출 ═══
+            function renderKOI() {
+                const koi = getKOIStats();
+                const d = getKOI();
+                const totalProblems = koi.total;
+                const donePct = totalProblems > 0 ? Math.round(koi.done / totalProblems * 100) : 0;
+
+                // Count by year
+                const yearCounts = {};
+                for (const [key, val] of Object.entries(d)) {
+                    const year = key.split('-')[0];
+                    if (!yearCounts[year]) yearCounts[year] = { done: 0, wip: 0, total: 0 };
+                    yearCounts[year].total++;
+                    if (val.status === 'done') yearCounts[year].done++;
+                    if (val.status === 'wip') yearCounts[year].wip++;
+                }
+
+                // Streak
+                const dates = new Set();
+                Object.values(d).forEach(v => { if (v.doneDate) dates.add(v.doneDate); });
+                let streak = 0;
+                const day = new Date();
+                const fmt = d => d.toISOString().slice(0, 10);
+                if (!dates.has(fmt(day))) { day.setDate(day.getDate() - 1); }
+                while (dates.has(fmt(day))) { streak++; day.setDate(day.getDate() - 1); }
+
+                // Total time
+                let totalTime = 0, timedCount = 0;
+                Object.values(d).forEach(v => { if (v.time > 0) { totalTime += v.time; timedCount++; } });
+                const avgTime = timedCount > 0 ? Math.round(totalTime / timedCount) : 0;
+                const fmtTime = s => { const m = Math.floor(s / 60), sec = s % 60; return `${m}:${String(sec).padStart(2, '0')}`; };
+
+                document.getElementById('stats-grid').innerHTML = `
+                    <div class="stat-card blue"><div class="stat-num">${koi.entries}</div><div class="stat-label">총 문제</div></div>
+                    <div class="stat-card green"><div class="stat-num">${koi.done}</div><div class="stat-label">완료</div></div>
+                    <div class="stat-card amber"><div class="stat-num">${koi.wip}</div><div class="stat-label">진행중</div></div>
+                    <div class="stat-card orange"><div class="stat-num">${donePct}%</div><div class="stat-label">완료율</div></div>
+                    <div class="stat-card pink"><div class="stat-num">${streak}</div><div class="stat-label">일 연속</div></div>
+                    <div class="stat-card"><div class="stat-num">${fmtTime(totalTime)}</div><div class="stat-label">총 풀이시간</div></div>
+                `;
+                document.getElementById('track-overview').innerHTML = '';
+                document.getElementById('heatmap-section').innerHTML = '';
+
+                const cg = document.getElementById('charts');
+                if (koi.entries === 0) {
+                    cg.innerHTML = `<div class="chart-card full"><div class="empty-state">
+                        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                        <h3>아직 KOI 기출 데이터가 없어요</h3><p>KOI 기출 아카이브에서 문제를 풀면 표시됩니다!</p></div></div>`;
+                    return;
+                }
+
+                const years = Object.keys(yearCounts).sort((a, b) => b - a);
+                cg.innerHTML = `
+                    <div class="chart-card"><h3><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 0 20"/></svg>전체 진행률</h3><canvas id="koiDonut"></canvas></div>
+                    <div class="chart-card"><h3><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>연도별 진행률</h3><canvas id="koiRadar"></canvas></div>
+                    <div class="chart-card full"><h3><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>연도별 풀이 현황</h3><canvas id="koiBar"></canvas></div>
+                `;
+
+                // Donut
+                const remaining = koi.entries - koi.done - koi.wip;
+                charts.push(new Chart(document.getElementById('koiDonut'), {
+                    type: 'doughnut',
+                    data: { labels: ['완료', '진행중', '미풀이'], datasets: [{ data: [koi.done, koi.wip, remaining], backgroundColor: ['#10b981', '#fbbf24', '#f1f5f9'], borderWidth: 0, borderRadius: 4 }] },
+                    options: { cutout: '70%', plugins: { legend: { position: 'bottom', labels: { font: { size: 12 }, padding: 16 } } } }
+                }));
+
+                // Radar by year
+                const radarData = years.map(y => {
+                    const yc = yearCounts[y];
+                    return yc.total > 0 ? Math.round(yc.done / yc.total * 100) : 0;
+                });
+                charts.push(new Chart(document.getElementById('koiRadar'), {
+                    type: 'radar',
+                    data: {
+                        labels: years,
+                        datasets: [{ label: '완료율(%)', data: radarData, backgroundColor: 'rgba(249,115,22,.15)', borderColor: '#f97316', borderWidth: 2, pointBackgroundColor: '#f97316', pointRadius: 4 }]
+                    },
+                    options: { scales: { r: { beginAtZero: true, max: 100, ticks: { stepSize: 20, font: { size: 11 } } } }, plugins: { legend: { display: false } } }
+                }));
+
+                // Bar by year
+                charts.push(new Chart(document.getElementById('koiBar'), {
+                    type: 'bar',
+                    data: {
+                        labels: years,
+                        datasets: [
+                            { label: '완료', data: years.map(y => yearCounts[y].done), backgroundColor: '#10b981', borderRadius: 6 },
+                            { label: '진행중', data: years.map(y => yearCounts[y].wip), backgroundColor: '#fbbf24', borderRadius: 6 },
+                            { label: '미풀이', data: years.map(y => yearCounts[y].total - yearCounts[y].done - yearCounts[y].wip), backgroundColor: '#e2e8f0', borderRadius: 6 }
+                        ]
+                    },
+                    options: { scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' }, stacked: true }, x: { grid: { display: false }, stacked: true } }, plugins: { legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 14 } } } }
+                }));
+            }
+
+            // ═══ Heatmap (KOI doneDate + kf/ct timestamp) ═══
+            function renderHeatmap() {
+                const d = getKOI();
+                const counts = {};
+                Object.values(d).forEach(v => { if (v.doneDate) counts[v.doneDate] = (counts[v.doneDate] || 0) + 1; });
+
+                // Also check if there's any activity at all
+                const hasActivity = Object.keys(counts).length > 0;
+                if (!hasActivity) { document.getElementById('heatmap-section').innerHTML = ''; return; }
+
+                let html = '';
+                const today = new Date();
+                for (let w = 11; w >= 0; w--) {
+                    html += '<div class="hm-col">';
+                    for (let day = 0; day < 7; day++) {
+                        const dt = new Date(today);
+                        dt.setDate(dt.getDate() - (w * 7 + 6 - day));
+                        const key = dt.toISOString().slice(0, 10);
+                        const c = counts[key] || 0;
+                        const lvl = c === 0 ? '' : c <= 1 ? 'hm-1' : c <= 2 ? 'hm-2' : c <= 4 ? 'hm-3' : 'hm-4';
+                        html += `<div class="hm-cell ${lvl}" title="${key}: ${c}문제"></div>`;
+                    }
+                    html += '</div>';
+                }
+
+                document.getElementById('heatmap-section').innerHTML = `
+                    <div class="heatmap-wrap"><div class="heatmap-title">활동 히트맵 (12주)</div><div class="heatmap">${html}</div></div>
+                `;
+            }
+
+            // ═══ Tab Handling ═══
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentTab = btn.dataset.tab;
+                    render();
+                });
+            });
+
+            // ═══ Export/Import/Reset ═══
+            window.exportAll = function () {
+                const data = {
+                    ct_platform: getKFCT(),
+                    koi_p: getKOI(),
+                    ct_answers: (() => { try { return JSON.parse(localStorage.getItem('ct_answers') || '{}'); } catch { return {}; } })(),
+                    exportDate: new Date().toISOString(),
+                    version: '4.0'
+                };
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = `학습플랫폼_백업_${new Date().toISOString().slice(0, 10)}.json`;
+                a.click();
+            };
+
+            window.importAll = function (e) {
+                const f = e.target.files[0];
+                if (!f) return;
+                const r = new FileReader();
+                r.onload = ev => {
+                    try {
+                        const d = JSON.parse(ev.target.result);
+                        if (d.ct_platform) localStorage.setItem('ct_platform', JSON.stringify(d.ct_platform));
+                        if (d.koi_p) localStorage.setItem('koi_p', JSON.stringify(d.koi_p));
+                        if (d.ct_answers) localStorage.setItem('ct_answers', JSON.stringify(d.ct_answers));
+                        render();
+                        alert('복원 완료!');
+                    } catch (err) { alert('파일 오류: ' + err.message); }
+                };
+                r.readAsText(f);
+            };
+
+            document.getElementById('reset-btn').addEventListener('click', () => {
+                if (confirm('모든 학습 데이터를 삭제할까요?\n(코딩기초 + 컴퓨팅사고력 + C언어 + KOI 기출)\n이 작업은 되돌릴 수 없습니다.')) {
+                    localStorage.removeItem('ct_platform');
+                    localStorage.removeItem('ct_answers');
+                    localStorage.removeItem('koi_p');
+                    localStorage.removeItem('koi_plan');
+                    render();
+                    alert('모든 학습 데이터가 초기화되었습니다.');
+                }
+            });
+
+            render();
+        })();
+    </script>
+</body>
+
+</html>

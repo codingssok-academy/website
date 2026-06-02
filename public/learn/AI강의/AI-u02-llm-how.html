@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — LLM은 어떻게 말할까</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/learn/textbook-base.css">
+</head>
+<body>
+
+<div class="page cover">
+    <div class="cover-sidebar" style="background: #06b6d4;"></div>
+    <div class="cover-accent" style="background: #3b82f6;"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">LLM</div>
+        <div class="cover-label">AI LITERACY · UNIT 02</div>
+        <h1 class="cover-title">LLM은 어떻게 말할까</h1>
+        <p class="cover-sub">확률 기반 다음 단어 예측의 비밀</p>
+        <div class="cover-goals">
+            <h3>이 단원에서 배울 것</h3>
+            <ul>
+                <li>토큰(token) — AI가 글을 쪼개는 단위</li>
+                <li>다음 단어를 "확률"로 고르는 방식</li>
+                <li>Temperature — 창의성 조절 다이얼</li>
+                <li>왜 같은 질문에 매번 답이 조금씩 다른가</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="page">
+    <h2>1. AI는 이해하지 않는다</h2>
+    <p>충격적일 수 있지만, ChatGPT나 Claude는 "이해"하지 않아요. <strong>다음에 올 단어를 확률로 예측</strong>하는 기계일 뿐이에요.</p>
+
+    <div class="info-box">
+        <p>💡 "저는 오늘 학교에..." → 다음 단어로 뭐가 올 확률이 높을까?</p>
+    </div>
+
+    <ul style="margin: 0 0 14px 24px; font-size: 14px; line-height: 1.9; color: #374151;">
+        <li>"갔어요" — 45% 확률</li>
+        <li>"가요" — 30% 확률</li>
+        <li>"갑니다" — 15% 확률</li>
+        <li>"안 가요" — 5% 확률</li>
+        <li>"...(기타)" — 5% 확률</li>
+    </ul>
+
+    <p>AI는 이 확률 분포에서 한 단어를 뽑아요. 그리고 그 단어를 포함해서 다시 "다음 단어 확률"을 계산해요. 이걸 문장이 끝날 때까지 반복.</p>
+
+    <h3>토큰 (Token)</h3>
+    <p>AI가 다루는 최소 단위는 "단어"가 아니라 "토큰"이에요. 영어로 <code>apple</code>은 1토큰이지만, 한국어로 <code>안녕하세요</code>는 약 3-5토큰이에요 (모델마다 다름).</p>
+    <p>GPT-4는 영어 1단어 ≈ 1.3토큰, 한국어 1글자 ≈ 1-2토큰으로 잡아요.</p>
+</div>
+
+<div class="page">
+    <h2>2. Temperature — 창의성 다이얼</h2>
+    <p>AI가 확률 분포에서 단어를 뽑을 때, "가장 확률 높은 것만 뽑을지", "랜덤하게 다양하게 뽑을지"를 조절하는 값이 <strong>Temperature</strong>예요.</p>
+
+    <table>
+        <tr><th>Temperature</th><th>동작</th><th>결과</th></tr>
+        <tr><td>0</td><td>항상 최고 확률 단어 선택</td><td>같은 답변 반복, 딱딱함</td></tr>
+        <tr><td>0.3</td><td>거의 확정적</td><td>일관된 답, 사실 답변에 적합</td></tr>
+        <tr><td>0.7</td><td>적당한 랜덤</td><td>일반 대화 기본값</td></tr>
+        <tr><td>1.0</td><td>원본 확률 그대로</td><td>창의적, 예측 불가</td></tr>
+        <tr><td>1.5+</td><td>의도적 왜곡</td><td>시·소설 등 창작용</td></tr>
+    </table>
+
+    <div class="highlight-box">
+        <p>⚠️ Temperature가 높을수록 "창의적"이지만 "환각(거짓말)"도 늘어요. 코드 생성이나 사실 질문엔 0.2~0.5가 적당해요.</p>
+    </div>
+</div>
+
+<div class="page">
+    <h2>3. 왜 매번 답이 다를까?</h2>
+    <p>Temperature가 0이 아니면 <strong>랜덤</strong>이 섞여요. 같은 질문에 같은 확률 분포가 나와도, 뽑히는 단어가 달라질 수 있어요.</p>
+
+    <pre><code># 같은 프롬프트, 다른 결과
+질문: "오늘 기분이 어때?"
+답1: "오늘은 꽤 좋은 하루예요!"
+답2: "좋아요, 오늘 하루가 순조로워요."
+답3: "기분이 괜찮네요, 감사합니다."</code></pre>
+
+    <p>의미는 비슷하지만 단어 선택이 매번 달라요. 확률이 비슷한 여러 단어 중 랜덤으로 뽑히기 때문이에요.</p>
+
+    <h2 style="margin-top: 20px;">4. Context Window — 기억의 한계</h2>
+    <p>AI는 한 번에 기억할 수 있는 토큰 수가 정해져 있어요. 이걸 <strong>Context Window</strong>라고 해요.</p>
+
+    <table>
+        <tr><th>모델</th><th>Context Window</th><th>비고</th></tr>
+        <tr><td>GPT-3.5</td><td>16K 토큰</td><td>약 12,000 단어</td></tr>
+        <tr><td>GPT-4</td><td>128K 토큰</td><td>소설 한 권</td></tr>
+        <tr><td>Claude 3.5</td><td>200K 토큰</td><td>논문 수십 편</td></tr>
+        <tr><td>Claude 4.6 (1M)</td><td>1,000K 토큰</td><td>책 수백 권</td></tr>
+    </table>
+
+    <div class="think-box">
+        <p>🤔 Context Window를 넘어가면 AI는 앞부분을 "잊어요". 긴 대화를 하다가 AI가 초반 내용을 까먹는 이유예요.</p>
+    </div>
+</div>
+
+<div class="page">
+    <h2>5. 핵심 정리</h2>
+
+    <ul style="margin: 0 0 14px 24px; font-size: 14px; line-height: 1.9; color: #374151;">
+        <li>✅ LLM은 "이해"가 아니라 "다음 단어 확률 예측"</li>
+        <li>✅ 토큰 단위로 처리 (단어 ≠ 토큰)</li>
+        <li>✅ Temperature로 창의성 vs 정확성 조절</li>
+        <li>✅ Context Window 넘으면 앞 내용 잊음</li>
+    </ul>
+
+    <div class="quiz-box">
+        <h3>퀴즈</h3>
+        <div class="quiz-item"><div class="qnum">1</div><div>AI에게 정확한 수학 답을 받고 싶을 때 Temperature는 몇으로?</div></div>
+        <div class="quiz-item"><div class="qnum">2</div><div>GPT-4의 Context Window는 얼마? (토큰 기준)</div></div>
+        <div class="quiz-item"><div class="qnum">3</div><div>같은 질문에 다른 답이 나오는 이유는?</div></div>
+    </div>
+
+    <div style="background: #f8fafc; border-radius: 8px; padding: 12px 16px; margin-top: 14px; font-size: 12px; color: #64748b;">
+        <strong>정답:</strong><br>
+        1. 0 또는 0.2 (낮게 — 정답이 뻔할 때 창의성 필요 없음)<br>
+        2. 128K 토큰<br>
+        3. Temperature&gt;0이면 확률 분포에서 랜덤으로 단어를 뽑기 때문
+    </div>
+</div>
+
+</body>
+</html>

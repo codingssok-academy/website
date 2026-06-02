@@ -1,0 +1,384 @@
+<!-- Elite Academy Code Editor Page -->
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Elite Academy - 코드 에디터</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#13daec",
+                        "editor-bg": "#0f172a",
+                        "editor-sidebar": "#1e293b",
+                        "editor-line": "#334155",
+                        "editor-active": "#1e3a5f",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "sans": ["Inter", "sans-serif"],
+                        "mono": ["JetBrains Mono", "monospace"],
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+        }
+
+        .editor-area {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            line-height: 1.8;
+            tab-size: 4;
+        }
+
+        .line-num {
+            color: #475569;
+            min-width: 3.5em;
+            text-align: right;
+            padding-right: 1.5em;
+            user-select: none;
+            border-right: 1px solid #1e293b;
+        }
+
+        .active-line {
+            background: rgba(30, 58, 95, 0.5);
+        }
+
+        .cursor-blink {
+            animation: blink 1s step-end infinite;
+        }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0;
+            }
+        }
+
+        .output-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .output-scroll::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 10px;
+        }
+
+        .file-tab.active {
+            background: #0f172a;
+            border-bottom: 2px solid #13daec;
+            color: white;
+        }
+
+        .file-tab {
+            background: #1e293b;
+            color: #94a3b8;
+            border-bottom: 2px solid transparent;
+        }
+    </style>
+</head>
+
+<body class="bg-editor-bg text-slate-300 h-screen flex flex-col overflow-hidden">
+    <!-- Top Bar -->
+    <header class="bg-editor-sidebar border-b border-slate-700/50 px-4 py-2 flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2">
+                <div class="size-6 text-primary flex items-center justify-center">
+                    <span class="material-symbols-outlined text-xl">code</span>
+                </div>
+                <span class="text-sm font-bold text-white">Elite Editor</span>
+            </div>
+            <div class="hidden md:flex items-center gap-1 ml-4 text-xs text-slate-500">
+                <button class="px-2 py-1 hover:bg-slate-700 rounded transition-colors">File</button>
+                <button class="px-2 py-1 hover:bg-slate-700 rounded transition-colors">Edit</button>
+                <button class="px-2 py-1 hover:bg-slate-700 rounded transition-colors">View</button>
+                <button class="px-2 py-1 hover:bg-slate-700 rounded transition-colors">Run</button>
+                <button class="px-2 py-1 hover:bg-slate-700 rounded transition-colors">Help</button>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <div
+                class="hidden md:flex items-center gap-2 px-3 py-1.5 bg-slate-800 border border-slate-600 rounded-lg text-xs text-slate-400">
+                <span class="material-symbols-outlined text-sm">search</span>
+                <span>검색... (Ctrl+K)</span>
+            </div>
+            <select
+                class="bg-slate-800 border border-slate-600 text-xs text-slate-300 rounded-lg px-3 py-1.5 focus:ring-primary focus:border-primary">
+                <option>JavaScript</option>
+                <option>Python</option>
+                <option>C</option>
+                <option>HTML</option>
+                <option>CSS</option>
+            </select>
+            <button
+                class="flex items-center gap-1.5 px-4 py-1.5 bg-green-600 hover:bg-green-500 text-white text-xs font-bold rounded-lg transition-colors shadow-lg shadow-green-600/20">
+                <span class="material-symbols-outlined text-sm">play_arrow</span> Run
+            </button>
+        </div>
+    </header>
+
+    <div class="flex-1 flex overflow-hidden">
+        <!-- Sidebar: File Explorer -->
+        <aside class="w-56 bg-editor-sidebar border-r border-slate-700/50 flex flex-col shrink-0 hidden md:flex">
+            <div
+                class="px-3 py-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-slate-700/30">
+                Explorer</div>
+            <div class="flex-1 overflow-y-auto p-2 text-xs">
+                <div class="mb-3">
+                    <div class="flex items-center gap-1 px-2 py-1.5 text-slate-400 font-semibold">
+                        <span class="material-symbols-outlined text-xs">expand_more</span>
+                        <span class="material-symbols-outlined text-sm text-yellow-500">folder</span>
+                        <span>내 프로젝트</span>
+                    </div>
+                    <div class="ml-4 space-y-0.5">
+                        <div
+                            class="flex items-center gap-1.5 px-2 py-1 rounded cursor-pointer bg-primary/10 text-primary font-medium">
+                            <span class="material-symbols-outlined text-sm text-orange-400">javascript</span>
+                            <span>main.js</span>
+                        </div>
+                        <div
+                            class="flex items-center gap-1.5 px-2 py-1 rounded cursor-pointer hover:bg-slate-700/50 text-slate-400">
+                            <span class="material-symbols-outlined text-sm text-blue-400">html</span>
+                            <span>index.html</span>
+                        </div>
+                        <div
+                            class="flex items-center gap-1.5 px-2 py-1 rounded cursor-pointer hover:bg-slate-700/50 text-slate-400">
+                            <span class="material-symbols-outlined text-sm text-purple-400">css</span>
+                            <span>style.css</span>
+                        </div>
+                        <div
+                            class="flex items-center gap-1.5 px-2 py-1 rounded cursor-pointer hover:bg-slate-700/50 text-slate-400">
+                            <span class="material-symbols-outlined text-sm text-slate-400">description</span>
+                            <span>README.md</span>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div class="flex items-center gap-1 px-2 py-1.5 text-slate-400 font-semibold">
+                        <span class="material-symbols-outlined text-xs">chevron_right</span>
+                        <span class="material-symbols-outlined text-sm text-yellow-500">folder</span>
+                        <span>utils</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Editor Area -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- File Tabs -->
+            <div class="flex items-center bg-editor-sidebar border-b border-slate-700/30 shrink-0">
+                <div
+                    class="file-tab active flex items-center gap-2 px-4 py-2.5 text-xs font-medium cursor-pointer border-r border-slate-700/30">
+                    <span class="material-symbols-outlined text-sm text-orange-400">javascript</span>
+                    main.js
+                    <button class="ml-1 hover:bg-slate-600 rounded p-0.5"><span
+                            class="material-symbols-outlined text-xs">close</span></button>
+                </div>
+                <div
+                    class="file-tab flex items-center gap-2 px-4 py-2.5 text-xs font-medium cursor-pointer hover:bg-slate-700/50 border-r border-slate-700/30">
+                    <span class="material-symbols-outlined text-sm text-blue-400">html</span>
+                    index.html
+                    <button class="ml-1 hover:bg-slate-600 rounded p-0.5"><span
+                            class="material-symbols-outlined text-xs">close</span></button>
+                </div>
+            </div>
+
+            <!-- Editor + Output Split -->
+            <div class="flex-1 flex flex-col overflow-hidden">
+                <!-- Code Area -->
+                <div class="flex-1 overflow-auto editor-area">
+                    <table class="w-full border-collapse">
+                        <tbody>
+                            <tr class="hover:bg-slate-800/30">
+                                <td class="line-num py-0 px-2">1</td>
+                                <td class="py-0 px-4"><span class="text-slate-500">// 🏋️ 데일리 챌린지: 배열 중복 제거</span></td>
+                            </tr>
+                            <tr class="hover:bg-slate-800/30">
+                                <td class="line-num py-0 px-2">2</td>
+                                <td class="py-0 px-4"><span class="text-slate-500">// Set을 사용하지 않고 구현하기</span></td>
+                            </tr>
+                            <tr class="hover:bg-slate-800/30">
+                                <td class="line-num py-0 px-2">3</td>
+                                <td class="py-0 px-4"></td>
+                            </tr>
+                            <tr class="active-line">
+                                <td class="line-num py-0 px-2 text-primary">4</td>
+                                <td class="py-0 px-4"><span class="text-purple-400">function</span> <span
+                                        class="text-yellow-300">removeDuplicates</span>(<span
+                                        class="text-orange-300">arr</span>) {</td>
+                            </tr>
+                            <tr class="hover:bg-slate-800/30">
+                                <td class="line-num py-0 px-2">5</td>
+                                <td class="py-0 px-4"> <span class="text-purple-400">const</span> <span
+                                        class="text-blue-300">result</span> = [];</td>
+                            </tr>
+                            <tr class="hover:bg-slate-800/30">
+                                <td class="line-num py-0 px-2">6</td>
+                                <td class="py-0 px-4"> <span class="text-purple-400">const</span> <span
+                                        class="text-blue-300">seen</span> = {};</td>
+                            </tr>
+                            <tr class="hover:bg-slate-800/30">
+                                <td class="line-num py-0 px-2">7</td>
+                                <td class="py-0 px-4"></td>
+                            </tr>
+                            <tr class="hover:bg-slate-800/30">
+                                <td class="line-num py-0 px-2">8</td>
+                                <td class="py-0 px-4"> <span class="text-purple-400">for</span> (<span
+                                        class="text-purple-400">let</span> <span class="text-blue-300">i</span> = <span
+                                        class="text-green-400">0</span>; <span class="text-blue-300">i</span> &lt; <span
+                                        class="text-orange-300">arr</span>.<span class="text-blue-300">length</span>;
+                                    <span class="text-blue-300">i</span>++) {</td>
+                            </tr>
+                            <tr class="hover:bg-slate-800/30">
+                                <td class="line-num py-0 px-2">9</td>
+                                <td class="py-0 px-4"> <span class="text-purple-400">if</span> (!<span
+                                        class="text-blue-300">seen</span>[<span class="text-orange-300">arr</span>[<span
+                                        class="text-blue-300">i</span>]]) {</td>
+                            </tr>
+                            <tr class="hover:bg-slate-800/30">
+                                <td class="line-num py-0 px-2">10</td>
+                                <td class="py-0 px-4"> <span class="text-blue-300">seen</span>[<span
+                                        class="text-orange-300">arr</span>[<span class="text-blue-300">i</span>]] =
+                                    <span class="text-green-400">true</span>;</td>
+                            </tr>
+                            <tr class="hover:bg-slate-800/30">
+                                <td class="line-num py-0 px-2">11</td>
+                                <td class="py-0 px-4"> <span class="text-blue-300">result</span>.<span
+                                        class="text-yellow-300">push</span>(<span
+                                        class="text-orange-300">arr</span>[<span class="text-blue-300">i</span>]);</td>
+                            </tr>
+                            <tr class="hover:bg-slate-800/30">
+                                <td class="line-num py-0 px-2">12</td>
+                                <td class="py-0 px-4"> }</td>
+                            </tr>
+                            <tr class="hover:bg-slate-800/30">
+                                <td class="line-num py-0 px-2">13</td>
+                                <td class="py-0 px-4"> }</td>
+                            </tr>
+                            <tr class="hover:bg-slate-800/30">
+                                <td class="line-num py-0 px-2">14</td>
+                                <td class="py-0 px-4"></td>
+                            </tr>
+                            <tr class="hover:bg-slate-800/30">
+                                <td class="line-num py-0 px-2">15</td>
+                                <td class="py-0 px-4"> <span class="text-purple-400">return</span> <span
+                                        class="text-blue-300">result</span>;</td>
+                            </tr>
+                            <tr class="hover:bg-slate-800/30">
+                                <td class="line-num py-0 px-2">16</td>
+                                <td class="py-0 px-4">}</td>
+                            </tr>
+                            <tr class="hover:bg-slate-800/30">
+                                <td class="line-num py-0 px-2">17</td>
+                                <td class="py-0 px-4"></td>
+                            </tr>
+                            <tr class="hover:bg-slate-800/30">
+                                <td class="line-num py-0 px-2">18</td>
+                                <td class="py-0 px-4"><span class="text-slate-500">// 테스트</span></td>
+                            </tr>
+                            <tr class="hover:bg-slate-800/30">
+                                <td class="line-num py-0 px-2">19</td>
+                                <td class="py-0 px-4"><span class="text-purple-400">const</span> <span
+                                        class="text-blue-300">testArr</span> = [<span class="text-green-400">1</span>,
+                                    <span class="text-green-400">2</span>, <span class="text-green-400">3</span>, <span
+                                        class="text-green-400">2</span>, <span class="text-green-400">4</span>, <span
+                                        class="text-green-400">1</span>, <span class="text-green-400">5</span>, <span
+                                        class="text-green-400">3</span>];</td>
+                            </tr>
+                            <tr class="hover:bg-slate-800/30">
+                                <td class="line-num py-0 px-2">20</td>
+                                <td class="py-0 px-4"><span class="text-blue-300">console</span>.<span
+                                        class="text-yellow-300">log</span>(<span
+                                        class="text-yellow-300">removeDuplicates</span>(<span
+                                        class="text-blue-300">testArr</span>));</td>
+                            </tr>
+                            <tr class="hover:bg-slate-800/30">
+                                <td class="line-num py-0 px-2">21</td>
+                                <td class="py-0 px-4"><span class="text-slate-500">// 출력: [1, 2, 3, 4, 5]</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Output Panel -->
+                <div class="border-t border-slate-700/50 bg-slate-900 shrink-0">
+                    <div class="flex items-center justify-between px-4 py-2 border-b border-slate-700/30">
+                        <div class="flex items-center gap-4">
+                            <button
+                                class="text-xs font-medium text-primary border-b-2 border-primary pb-1">Console</button>
+                            <button
+                                class="text-xs font-medium text-slate-500 hover:text-slate-300 transition-colors">Problems</button>
+                            <button
+                                class="text-xs font-medium text-slate-500 hover:text-slate-300 transition-colors">Output</button>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button class="p-1 text-slate-500 hover:text-slate-300"><span
+                                    class="material-symbols-outlined text-sm">delete</span></button>
+                            <button class="p-1 text-slate-500 hover:text-slate-300"><span
+                                    class="material-symbols-outlined text-sm">expand_less</span></button>
+                        </div>
+                    </div>
+                    <div class="h-32 overflow-y-auto output-scroll p-4 font-mono text-sm space-y-1">
+                        <div class="flex items-start gap-2">
+                            <span class="text-green-400 text-xs mt-0.5">▶</span>
+                            <span class="text-slate-300">[1, 2, 3, 4, 5]</span>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <span class="text-primary text-xs mt-0.5">ℹ</span>
+                            <span class="text-slate-500">실행 완료 (0.003초)</span>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <span class="text-green-400 text-xs mt-0.5">✓</span>
+                            <span class="text-green-400">테스트 통과! 예상 출력과 일치합니다.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Status Bar -->
+    <footer class="bg-primary text-white px-4 py-1 flex items-center justify-between text-xs shrink-0">
+        <div class="flex items-center gap-4">
+            <span class="flex items-center gap-1"><span class="material-symbols-outlined text-xs">check_circle</span>
+                저장됨</span>
+            <span>Ln 4, Col 1</span>
+            <span>Spaces: 2</span>
+        </div>
+        <div class="flex items-center gap-4">
+            <span>UTF-8</span>
+            <span>JavaScript</span>
+            <span class="flex items-center gap-1"><span class="material-symbols-outlined text-xs">memory</span> Node.js
+                v20</span>
+        </div>
+    </footer>
+</body>
+
+</html>

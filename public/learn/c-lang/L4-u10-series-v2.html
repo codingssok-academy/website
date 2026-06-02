@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 수열과 누적</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 16px; font-weight: 700; color: #1e3a5f; margin: 16px 0 8px; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 14px;
+    color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+.formula-box { background: #f0f9ff; border: 1.5px solid #7dd3fc; border-radius: 10px; padding: 14px 18px; margin: 14px 0; }
+.formula-box .formula-title { font-size: 13px; font-weight: 700; color: #0369a1; margin-bottom: 8px; }
+.formula-box .formula-row { font-size: 14px; color: #0c4a6e; line-height: 1.8; font-family: 'JetBrains Mono', monospace; }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 14px 0; }
+.info-box { background: #fefce8; border: 1.5px solid #fcd34d; border-radius: 8px; padding: 12px 16px; margin: 12px 0; }
+.info-box .info-title { font-size: 12px; font-weight: 700; color: #92400e; margin-bottom: 6px; }
+.info-box .info-text { font-size: 13px; color: #78350f; line-height: 1.7; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- ===== 표지 ===== -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">10</div>
+        <div class="cover-label">Unit 10 · Level 4 — 반복문 심화</div>
+        <h1 class="cover-title">수열과 누적</h1>
+        <p class="cover-sub">반복문으로 합계, 팩토리얼, 피보나치 수열을 계산하고, 평균·최대·최소를 구하는 누적 패턴을 마스터합니다.</p>
+        <div style="margin:24px 0;">
+            <svg viewBox="0 0 520 60" style="max-width:520px;width:100%">
+                <rect x="5" y="10" width="100" height="36" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="55" y="32" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">1+2+...+n 합</text>
+                <line x1="110" y1="28" x2="128" y2="28" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="133" y="10" width="100" height="36" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="183" y="32" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">팩토리얼 n!</text>
+                <line x1="238" y1="28" x2="256" y2="28" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="261" y="10" width="100" height="36" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="311" y="32" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">피보나치</text>
+                <line x1="366" y1="28" x2="384" y2="28" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="389" y="10" width="120" height="36" rx="6" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+                <text x="449" y="32" text-anchor="middle" font-size="10" fill="#dc2626" font-weight="700">평균/최대/최소</text>
+            </svg>
+        </div>
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="반복" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 유닛에서 배우는 것</h3>
+            <ul>
+                <li>누적 합계 변수(sum)를 사용해 1부터 n까지 더할 수 있습니다.</li>
+                <li>가우스 공식 n*(n+1)/2 와 for문 결과를 비교할 수 있습니다.</li>
+                <li>팩토리얼을 for문으로 계산할 수 있습니다.</li>
+                <li>피보나치 수열의 점화식을 코드로 구현할 수 있습니다.</li>
+                <li>여러 수의 평균, 최대값, 최소값을 누적 방식으로 구할 수 있습니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- ===== p2: 1+2+...+n 합계 ===== -->
+<div class="page">
+    <h2>1 + 2 + ... + n 합계</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/clock.png" alt="반복 시간" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>반복문에서 가장 기본적인 패턴은 <strong>누적 합계</strong>입니다. <code>sum</code> 변수를 0으로 초기화하고, 반복할 때마다 더해갑니다.</p>
+
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 500 130" style="max-width:500px;width:100%">
+            <!-- 누적 합 시각화 -->
+            <text x="20" y="20" font-size="12" fill="#1e3a5f" font-weight="700">sum 변수의 변화 과정 (n=5)</text>
+            <!-- 화살표 흐름 -->
+            <rect x="20" y="32" width="56" height="28" rx="5" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5"/>
+            <text x="48" y="50" text-anchor="middle" font-size="11" fill="#64748b" font-weight="700">sum=0</text>
+            <line x1="80" y1="46" x2="94" y2="46" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#a10)"/>
+            <rect x="98" y="32" width="56" height="28" rx="5" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="126" y="50" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">+1=1</text>
+            <line x1="158" y1="46" x2="172" y2="46" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#a10)"/>
+            <rect x="176" y="32" width="56" height="28" rx="5" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="204" y="50" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">+2=3</text>
+            <line x1="236" y1="46" x2="250" y2="46" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#a10)"/>
+            <rect x="254" y="32" width="56" height="28" rx="5" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="282" y="50" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">+3=6</text>
+            <line x1="314" y1="46" x2="328" y2="46" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#a10)"/>
+            <rect x="332" y="32" width="56" height="28" rx="5" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="360" y="50" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">+4=10</text>
+            <line x1="392" y1="46" x2="406" y2="46" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#a10)"/>
+            <rect x="410" y="32" width="60" height="28" rx="5" fill="#1e3a5f" stroke="#1e3a5f" stroke-width="1.5"/>
+            <text x="440" y="50" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">+5=15</text>
+            <!-- 가우스 비교 -->
+            <rect x="20" y="75" width="460" height="45" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="250" y="95" text-anchor="middle" font-size="12" fill="#166534" font-weight="700">가우스 공식과 비교</text>
+            <text x="250" y="113" text-anchor="middle" font-size="11" fill="#374151">for문: 0+1+2+3+4+5 = 15 &nbsp;&nbsp;|&nbsp;&nbsp; 가우스: n*(n+1)/2 = 5*6/2 = 15</text>
+            <defs>
+                <marker id="a10" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt">// 방법 1: for문으로 누적</span>
+<span class="kw">int</span> n = <span class="num">100</span>;
+<span class="kw">int</span> sum = <span class="num">0</span>;          <span class="cmt">// 반드시 0으로 초기화!</span>
+
+<span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">1</span>; i &lt;= n; i++) {
+    sum += i;           <span class="cmt">// sum = sum + i</span>
+}
+<span class="fn">printf</span>(<span class="str">"합계: %d\n"</span>, sum);   <span class="cmt">// 합계: 5050</span>
+
+<span class="cmt">// 방법 2: 가우스 공식 (수식 한 줄)</span>
+<span class="kw">int</span> gauss = n * (n + <span class="num">1</span>) / <span class="num">2</span>;
+<span class="fn">printf</span>(<span class="str">"가우스: %d\n"</span>, gauss); <span class="cmt">// 가우스: 5050</span></div>
+
+    <div class="info-box">
+        <div class="info-title">가우스 공식의 원리</div>
+        <div class="info-text">1+100=101, 2+99=101, 3+98=101 ... 이렇게 50쌍을 만들면 101*50=5050. 일반화하면 n*(n+1)/2입니다.</div>
+    </div>
+
+    <h3>홀수 합, 짝수 합 — 조건을 붙인 누적</h3>
+    <div class="code"><span class="kw">int</span> odd_sum = <span class="num">0</span>, even_sum = <span class="num">0</span>;
+<span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">1</span>; i &lt;= <span class="num">10</span>; i++) {
+    <span class="kw">if</span> (i % <span class="num">2</span> == <span class="num">1</span>) odd_sum  += i;  <span class="cmt">// 홀수만 더함</span>
+    <span class="kw">else</span>          even_sum += i;  <span class="cmt">// 짝수만 더함</span>
+}
+<span class="fn">printf</span>(<span class="str">"홀수합: %d, 짝수합: %d\n"</span>, odd_sum, even_sum);
+<span class="cmt">// 홀수합: 25, 짝수합: 30</span></div>
+
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+            <rect x="10" y="8" width="200" height="62" rx="8" fill="#fef2f2" stroke="#fca5a5" stroke-width="1.5"/>
+            <text x="110" y="26" text-anchor="middle" font-size="11" fill="#dc2626" font-weight="700">홀수 합</text>
+            <text x="110" y="44" text-anchor="middle" font-size="11" fill="#64748b" font-family="JetBrains Mono">1+3+5+7+9 = 25</text>
+            <text x="110" y="62" text-anchor="middle" font-size="10" fill="#ef4444">i%2==1 조건</text>
+            <rect x="250" y="8" width="200" height="62" rx="8" fill="#dbeafe" stroke="#93c5fd" stroke-width="1.5"/>
+            <text x="350" y="26" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">짝수 합</text>
+            <text x="350" y="44" text-anchor="middle" font-size="11" fill="#64748b" font-family="JetBrains Mono">2+4+6+8+10 = 30</text>
+            <text x="350" y="62" text-anchor="middle" font-size="10" fill="#3b82f6">i%2==0 조건</text>
+        </svg>
+    </div>
+</div>
+
+<!-- ===== p3: 팩토리얼 + 피보나치 ===== -->
+<div class="page">
+    <h2>팩토리얼(n!) 과 피보나치 수열</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/flowchart.png" alt="흐름도" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+    <h3>팩토리얼 — 곱 누적</h3>
+    <p>팩토리얼은 1부터 n까지 <strong>곱하는</strong> 누적입니다. 합과 달리 초기값을 <code>1</code>로 설정해야 합니다(0으로 하면 모든 값이 0이 됩니다).</p>
+
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 90" style="max-width:500px;width:100%">
+            <text x="20" y="18" font-size="12" fill="#1e3a5f" font-weight="700">5! = 1 × 2 × 3 × 4 × 5 = 120</text>
+            <rect x="20" y="26" width="50" height="28" rx="5" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5"/>
+            <text x="45" y="44" text-anchor="middle" font-size="11" fill="#64748b" font-weight="700">fact=1</text>
+            <line x1="74" y1="40" x2="87" y2="40" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#a11)"/>
+            <rect x="91" y="26" width="54" height="28" rx="5" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="118" y="44" text-anchor="middle" font-size="11" fill="#92400e" font-weight="700">×1=1</text>
+            <line x1="149" y1="40" x2="162" y2="40" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#a11)"/>
+            <rect x="166" y="26" width="54" height="28" rx="5" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="193" y="44" text-anchor="middle" font-size="11" fill="#92400e" font-weight="700">×2=2</text>
+            <line x1="224" y1="40" x2="237" y2="40" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#a11)"/>
+            <rect x="241" y="26" width="54" height="28" rx="5" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="268" y="44" text-anchor="middle" font-size="11" fill="#92400e" font-weight="700">×3=6</text>
+            <line x1="299" y1="40" x2="312" y2="40" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#a11)"/>
+            <rect x="316" y="26" width="56" height="28" rx="5" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="344" y="44" text-anchor="middle" font-size="11" fill="#92400e" font-weight="700">×4=24</text>
+            <line x1="376" y1="40" x2="389" y2="40" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#a11)"/>
+            <rect x="393" y="26" width="60" height="28" rx="5" fill="#1e3a5f" stroke="#1e3a5f" stroke-width="1.5"/>
+            <text x="423" y="44" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">×5=120</text>
+            <rect x="20" y="62" width="433" height="22" rx="4" fill="#fffbeb"/>
+            <text x="236" y="76" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">주의: 초기값은 0이 아니라 1! (fact = 0으로 시작하면 곱이 항상 0)</text>
+            <defs>
+                <marker id="a11" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">int</span> n = <span class="num">5</span>;
+<span class="kw">long long</span> fact = <span class="num">1</span>;    <span class="cmt">// 초기값 1 (곱의 항등원)</span>
+
+<span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">1</span>; i &lt;= n; i++) {
+    fact *= i;           <span class="cmt">// fact = fact * i</span>
+}
+<span class="fn">printf</span>(<span class="str">"%d! = %lld\n"</span>, n, fact);  <span class="cmt">// 5! = 120</span></div>
+
+    <h3>피보나치 수열</h3>
+    <p>피보나치는 <strong>앞의 두 수를 더해서 다음 수를 만드는</strong> 수열입니다. 1, 1, 2, 3, 5, 8, 13, ...</p>
+
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 110" style="max-width:460px;width:100%">
+            <!-- 피보나치 흐름 -->
+            <rect x="10" y="10" width="440" height="50" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <!-- 원들 -->
+            <circle cx="45" cy="35" r="18" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="45" y="39" text-anchor="middle" font-size="13" fill="#1d4ed8" font-weight="800">1</text>
+            <circle cx="100" cy="35" r="18" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="100" y="39" text-anchor="middle" font-size="13" fill="#1d4ed8" font-weight="800">1</text>
+            <circle cx="155" cy="35" r="18" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="155" y="39" text-anchor="middle" font-size="13" fill="#166534" font-weight="800">2</text>
+            <circle cx="210" cy="35" r="18" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="210" y="39" text-anchor="middle" font-size="13" fill="#166534" font-weight="800">3</text>
+            <circle cx="265" cy="35" r="18" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="265" y="39" text-anchor="middle" font-size="13" fill="#92400e" font-weight="800">5</text>
+            <circle cx="320" cy="35" r="18" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="320" y="39" text-anchor="middle" font-size="13" fill="#92400e" font-weight="800">8</text>
+            <circle cx="375" cy="35" r="18" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="375" y="39" text-anchor="middle" font-size="13" fill="#dc2626" font-weight="800">13</text>
+            <circle cx="430" cy="35" r="18" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="430" y="39" text-anchor="middle" font-size="13" fill="#dc2626" font-weight="800">21</text>
+            <!-- 더하기 화살표 -->
+            <path d="M45,53 Q72,75 100,53" fill="none" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3"/>
+            <text x="72" y="74" text-anchor="middle" font-size="9" fill="#64748b">→2</text>
+            <path d="M100,53 Q127,75 155,53" fill="none" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3"/>
+            <text x="127" y="74" text-anchor="middle" font-size="9" fill="#64748b">→3</text>
+            <path d="M155,53 Q182,75 210,53" fill="none" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3"/>
+            <text x="182" y="74" text-anchor="middle" font-size="9" fill="#64748b">→5</text>
+            <text x="230" y="100" font-size="10" fill="#64748b">f(n) = f(n-1) + f(n-2)</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">int</span> a = <span class="num">1</span>, b = <span class="num">1</span>, c;    <span class="cmt">// a=이전, b=현재, c=다음</span>
+<span class="fn">printf</span>(<span class="str">"%d %d "</span>, a, b);      <span class="cmt">// 1 1</span>
+
+<span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">3</span>; i &lt;= <span class="num">10</span>; i++) {
+    c = a + b;              <span class="cmt">// 다음 피보나치 = 앞 두 수의 합</span>
+    <span class="fn">printf</span>(<span class="str">"%d "</span>, c);
+    a = b;                  <span class="cmt">// 한 칸씩 밀기</span>
+    b = c;
+}
+<span class="cmt">// 1 1 2 3 5 8 13 21 34 55</span></div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/calculator.png" alt="계산" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">10! 을 계산하는 코드를 작성해보세요. 결과가 3628800이 나오는지 확인하세요.</div>
+                <div class="practice-result">long long을 쓰면 큰 수도 안전합니다</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">피보나치 20번째 수를 출력해보세요.</div>
+                <div class="practice-result">20번째 피보나치 = 6765</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== p4: 평균 최대 최소 ===== -->
+<div class="page">
+    <h2>평균 · 최대값 · 최소값 누적 패턴</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>여러 수를 입력받아 평균, 최대, 최소를 구하는 것은 실전에서 자주 쓰이는 패턴입니다.</p>
+
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 120" style="max-width:460px;width:100%">
+            <rect x="10" y="8" width="136" height="102" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="78" y="28" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">평균 패턴</text>
+            <text x="78" y="46" text-anchor="middle" font-size="10" fill="#374151">sum = 0; 초기화</text>
+            <text x="78" y="62" text-anchor="middle" font-size="10" fill="#374151">sum += 입력값;</text>
+            <text x="78" y="78" text-anchor="middle" font-size="10" fill="#374151">avg = sum / n;</text>
+
+            <rect x="162" y="8" width="136" height="102" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="230" y="28" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">최대값 패턴</text>
+            <text x="230" y="46" text-anchor="middle" font-size="10" fill="#374151">max = 첫 번째 값;</text>
+            <text x="230" y="62" text-anchor="middle" font-size="10" fill="#374151">if (x > max)</text>
+            <text x="230" y="78" text-anchor="middle" font-size="10" fill="#374151">    max = x;</text>
+
+            <rect x="314" y="8" width="136" height="102" rx="8" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="382" y="28" text-anchor="middle" font-size="11" fill="#dc2626" font-weight="700">최소값 패턴</text>
+            <text x="382" y="46" text-anchor="middle" font-size="10" fill="#374151">min = 첫 번째 값;</text>
+            <text x="382" y="62" text-anchor="middle" font-size="10" fill="#374151">if (x &lt; min)</text>
+            <text x="382" y="78" text-anchor="middle" font-size="10" fill="#374151">    min = x;</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">int</span> n = <span class="num">5</span>, x;
+<span class="kw">int</span> sum = <span class="num">0</span>, max_v, min_v;
+
+<span class="fn">printf</span>(<span class="str">"숫자 %d개 입력: "</span>, n);
+<span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;x);
+max_v = min_v = x;     <span class="cmt">// 첫 번째 값으로 초기화</span>
+sum = x;
+
+<span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">2</span>; i &lt;= n; i++) {
+    <span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;x);
+    sum += x;
+    <span class="kw">if</span> (x &gt; max_v) max_v = x;  <span class="cmt">// 더 크면 갱신</span>
+    <span class="kw">if</span> (x &lt; min_v) min_v = x;  <span class="cmt">// 더 작으면 갱신</span>
+}
+
+<span class="fn">printf</span>(<span class="str">"합계: %d\n"</span>, sum);
+<span class="fn">printf</span>(<span class="str">"평균: %.1f\n"</span>, (<span class="kw">double</span>)sum / n);
+<span class="fn">printf</span>(<span class="str">"최대: %d, 최소: %d\n"</span>, max_v, min_v);</div>
+
+    <div class="info-box">
+        <div class="info-title">왜 max/min 초기값을 첫 번째 입력값으로 하나요?</div>
+        <div class="info-text">max를 0으로 초기화하면, 입력이 모두 음수일 때 최대값이 0이 되는 오류가 생깁니다. 반드시 첫 번째 실제 입력값으로 초기화해야 합니다.</div>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 90" style="max-width:460px;width:100%">
+            <text x="20" y="18" font-size="12" fill="#1e3a5f" font-weight="700">예시: 10, 30, 20, 50, 40 입력 시</text>
+            <!-- 바 차트 -->
+            <rect x="40" y="70" width="30" height="20" fill="#3b82f6" rx="2"/>
+            <text x="55" y="88" text-anchor="middle" font-size="9" fill="#374151">10</text>
+            <rect x="90" y="40" width="30" height="50" fill="#3b82f6" rx="2"/>
+            <text x="105" y="88" text-anchor="middle" font-size="9" fill="#374151">30</text>
+            <rect x="140" y="55" width="30" height="35" fill="#3b82f6" rx="2"/>
+            <text x="155" y="88" text-anchor="middle" font-size="9" fill="#374151">20</text>
+            <rect x="190" y="20" width="30" height="70" fill="#ef4444" rx="2"/>
+            <text x="205" y="88" text-anchor="middle" font-size="9" fill="#dc2626" font-weight="700">50(max)</text>
+            <rect x="240" y="35" width="30" height="55" fill="#3b82f6" rx="2"/>
+            <text x="255" y="88" text-anchor="middle" font-size="9" fill="#374151">40</text>
+            <!-- 요약 -->
+            <rect x="290" y="18" width="160" height="62" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="370" y="36" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">결과</text>
+            <text x="300" y="52" font-size="10" fill="#374151">합: 150 / 평균: 30.0</text>
+            <text x="300" y="66" font-size="10" fill="#374151">최대: 50 / 최소: 10</text>
+        </svg>
+    </div>
+</div>
+
+<!-- ===== p5: 문제 ===== -->
+<div class="page">
+    <h2>연습 문제</h2>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">1</div>
+            <div class="problem-label">1부터 50까지 짝수 합</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">1부터 50까지의 짝수만 더한 값을 구하는 코드를 작성하고, 결과값을 쓰세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">650</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">for(i=2; i&lt;=50; i+=2) sum+=i; 또는 if(i%2==0) 조건 사용</div>
+            </div>
+        </details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">2</div>
+            <div class="problem-label">팩토리얼 초기값 오류 찾기</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">아래 코드의 오류를 찾고 수정하세요.</div>
+            <div class="answer-code"><span style="color:#c084fc">int</span> fact = 0;   <span style="color:#64748b">// 오류?</span>
+<span style="color:#c084fc">for</span> (<span style="color:#c084fc">int</span> i=1; i&lt;=5; i++) fact *= i;
+<span style="color:#67e8f9">printf</span>(<span style="color:#86efac">"%d\n"</span>, fact);</div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">fact = 0 을 fact = 1 로 바꿔야 합니다. 0에 무엇을 곱해도 0이 됩니다.</div>
+            </div>
+        </details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">3</div>
+            <div class="problem-label">피보나치 7번째 수</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">피보나치 수열의 7번째 수는 무엇인가요? (1, 1, 2, 3, 5, 8, 13... 순서)</div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">7번째 = 13</div>
+            </div>
+        </details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">4</div>
+            <div class="problem-label">최대값 코드 완성</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">3개의 정수를 입력받아 가장 큰 값을 출력하는 코드를 완성하세요.</div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code"><span style="color:#c084fc">int</span> x, max_v;
+<span style="color:#67e8f9">scanf</span>(<span style="color:#86efac">"%d"</span>, &amp;x); max_v = x;
+<span style="color:#c084fc">for</span> (<span style="color:#c084fc">int</span> i=2; i&lt;=3; i++) {
+    <span style="color:#67e8f9">scanf</span>(<span style="color:#86efac">"%d"</span>, &amp;x);
+    <span style="color:#c084fc">if</span> (x > max_v) max_v = x;
+}
+<span style="color:#67e8f9">printf</span>(<span style="color:#86efac">"최대: %d\n"</span>, max_v);</div>
+            </div>
+        </details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">5</div>
+            <div class="problem-label">가우스 공식 검증</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">n=200일 때 1+2+...+200의 합을 가우스 공식으로 구하세요. for문 코드와 동일한 값이 나오는지 확인하세요.</div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">n*(n+1)/2 = 200*201/2 = 20100</div>
+            </div>
+        </details>
+    </div>
+
+    <div class="summary" style="margin-top:16px;">
+        <h3>Unit 10 핵심 정리</h3>
+        <ul>
+            <li>누적 합계: sum = 0 으로 초기화, sum += i 반복</li>
+            <li>가우스 공식: 1~n 합 = n*(n+1)/2</li>
+            <li>팩토리얼: fact = 1 로 초기화, fact *= i 반복</li>
+            <li>피보나치: c = a + b, 그 후 a=b, b=c 로 이동</li>
+            <li>최대/최소 초기값은 반드시 첫 번째 실제 입력값으로</li>
+        </ul>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+
+
+
+<script>
+(function(){
+  var KEY = 'cs_ans_' + location.pathname.replace(/[^a-zA-Z0-9]/g,'_');
+  var pagePath = location.pathname;
+  var userId = null;
+  try {
+    userId = window.parent?.localStorage?.getItem('codingssok_user_id')
+      || localStorage.getItem('codingssok_user_id');
+  } catch(e) {}
+
+  function save(){
+    var areas = document.querySelectorAll('textarea');
+    var saved = 0;
+    areas.forEach(function(ta, i){
+      if(ta.value.trim()) {
+        localStorage.setItem(KEY + '_' + i, ta.value);
+        saved++;
+      } else {
+        localStorage.removeItem(KEY + '_' + i);
+      }
+    });
+    if(saved > 0) showSaveIndicator();
+  }
+
+  function load(){
+    var areas = document.querySelectorAll('textarea');
+    var restored = 0;
+    areas.forEach(function(ta, i){
+      var val = localStorage.getItem(KEY + '_' + i);
+      if(val && val.trim()) {
+        ta.value = val;
+        ta.style.borderColor = '#10b981';
+        ta.style.boxShadow = '0 0 0 2px rgba(16,185,129,0.15)';
+        setTimeout(function(){ ta.style.borderColor = ''; ta.style.boxShadow = ''; }, 2000);
+        restored++;
+      }
+    });
+    if(restored > 0) showRestoreIndicator(restored);
+  }
+
+  function saveToDb(){
+    if(!userId) return;
+    var areas = document.querySelectorAll('textarea');
+    var answers = [];
+    areas.forEach(function(ta, i){
+      if(ta.value.trim()) answers.push({ field_index: i, answer_text: ta.value });
+    });
+    if(answers.length === 0) return;
+    fetch('/api/answers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId, page_path: pagePath, answers: answers })
+    }).catch(function(){});
+  }
+
+  function loadFromDb(){
+    if(!userId) return;
+    fetch('/api/answers?user_id=' + encodeURIComponent(userId) + '&page_path=' + encodeURIComponent(pagePath))
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(!d.answers || !d.answers.length) return;
+        var areas = document.querySelectorAll('textarea');
+        d.answers.forEach(function(a){
+          if(areas[a.field_index] && a.answer_text) {
+            areas[a.field_index].value = a.answer_text;
+            localStorage.setItem(KEY + '_' + a.field_index, a.answer_text);
+          }
+        });
+      }).catch(function(){});
+  }
+
+  function showSaveIndicator(){
+    var el = document.getElementById('cs-save-ind');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'cs-save-ind';
+      el.style.cssText = 'position:fixed;bottom:16px;right:16px;padding:6px 14px;border-radius:8px;background:#0f172a;color:#22c55e;font-size:11px;font-weight:700;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+      document.body.appendChild(el);
+    }
+    el.textContent = '\u2713 \uB2F5\uC548 \uC800\uC7A5\uB428'; // ✓ 답안 저장됨
+    el.style.opacity = '1';
+    setTimeout(function(){ el.style.opacity = '0'; }, 1500);
+  }
+
+  function showRestoreIndicator(n){
+    var el = document.getElementById('cs-save-ind');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'cs-save-ind';
+      el.style.cssText = 'position:fixed;bottom:16px;right:16px;padding:6px 14px;border-radius:8px;background:#0f172a;color:#3b82f6;font-size:11px;font-weight:700;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+      document.body.appendChild(el);
+    }
+    el.textContent = '\u21BB ' + n + '\uAC1C \uB2F5\uC548 \uBCF5\uC6D0'; // ↻ n개 답안 복원
+    el.style.color = '#3b82f6';
+    el.style.opacity = '1';
+    setTimeout(function(){ el.style.opacity = '0'; }, 2500);
+  }
+
+  var t = null;
+  document.addEventListener('input', function(e){
+    if(e.target.tagName === 'TEXTAREA'){
+      clearTimeout(t);
+      t = setTimeout(function(){ save(); saveToDb(); }, 300);
+    }
+  });
+  document.addEventListener('change', function(e){
+    if(e.target.tagName === 'TEXTAREA'){ save(); saveToDb(); }
+  });
+  document.addEventListener('focusout', function(e){
+    if(e.target.tagName === 'TEXTAREA'){ save(); saveToDb(); }
+  });
+  window.addEventListener('beforeunload', function(){ save(); saveToDb(); });
+
+  // 즉시 로드
+  load();
+  loadFromDb();
+})();
+</script>
+</body>
+</html>

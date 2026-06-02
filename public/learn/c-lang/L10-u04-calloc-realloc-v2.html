@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — calloc과 realloc</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+.page { width: 210mm; min-height: 297mm; margin: 16px auto; padding: 18mm 20mm 15mm 22mm; background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: relative; page-break-after: always; }
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after { content: counter(pagenum); position: absolute; bottom: 10mm; right: 16mm; font-size: 10px; color: #94a3b8; font-weight: 600; }
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark { position: absolute; top: -10px; right: -15px; font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3); line-height: 1; pointer-events: none; }
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #2563eb; font-weight: 600; }
+.code { background: #0f172a; border-radius: 8px; padding: 16px 20px; font-family: 'JetBrains Mono', monospace; font-size: 14px; color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap; }
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fce7f3; color: #9d174d; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+.info-box { background: #eff6ff; border-left: 4px solid #3b82f6; border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 14px 0; font-size: 14px; color: #1e40af; }
+.warn-box { background: #fff7ed; border-left: 4px solid #f59e0b; border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 14px 0; font-size: 14px; color: #92400e; }
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<div class="page cover">
+  <div class="cover-sidebar"></div>
+  <div class="cover-accent"></div>
+  <div class="cover-body">
+    <div class="cover-watermark">L10</div>
+    <div class="cover-label">Chapter 10 · Unit 04</div>
+    <h1 class="cover-title">calloc과 realloc<br>0초기화와 크기 변경</h1>
+    <p class="cover-sub">calloc으로 0으로 초기화된 메모리를 할당하고, realloc으로 이미 할당된 메모리 크기를 바꾸는 방법을 배웁니다.</p>
+    <div style="margin:20px 0;">
+      <svg viewBox="0 0 500 60" style="max-width:500px;width:100%">
+        <rect x="5" y="10" width="80" height="35" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+        <text x="45" y="32" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">malloc</text>
+        <line x1="90" y1="27" x2="105" y2="27" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#cv1)"/>
+        <rect x="110" y="10" width="100" height="35" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+        <text x="160" y="32" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">calloc (0초기화)</text>
+        <line x1="215" y1="27" x2="230" y2="27" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#cv1)"/>
+        <rect x="235" y="10" width="110" height="35" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+        <text x="290" y="32" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">realloc (크기변경)</text>
+        <line x1="350" y1="27" x2="365" y2="27" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#cv1)"/>
+        <rect x="370" y="10" width="80" height="35" rx="6" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+        <text x="410" y="32" text-anchor="middle" font-size="10" fill="#dc2626" font-weight="700">NULL 체크</text>
+        <line x1="455" y1="27" x2="470" y2="27" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#cv1)"/>
+        <rect x="475" y="10" width="20" height="35" rx="6" fill="#eff6ff" stroke="#6366f1" stroke-width="1.5"/>
+        <text x="485" y="32" text-anchor="middle" font-size="9" fill="#4338ca" font-weight="700">free</text>
+        <defs><marker id="cv1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker></defs>
+      </svg>
+    </div>
+    <div class="cover-goals">
+      <h3>이 유닛에서 배우는 것</h3>
+      <ul>
+        <li>calloc의 문법과 malloc과의 차이를 설명합니다.</li>
+        <li>calloc이 0으로 초기화하는 이유를 이해합니다.</li>
+        <li>realloc으로 배열 크기를 늘리거나 줄입니다.</li>
+        <li>realloc 실패 시 원본 메모리를 보호합니다.</li>
+        <li>세 함수(malloc/calloc/realloc)를 상황에 맞게 선택합니다.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+  <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/computer-basics/ram.png" alt="RAM - 동적 메모리 할당 공간" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>calloc — 0으로 초기화된 메모리 할당</h2>
+  <p><code>calloc</code>은 "clear allocation"의 줄임말입니다. malloc과 달리 할당한 메모리를 모두 <strong>0으로 초기화</strong>합니다.</p>
+  <div style="text-align:center;margin:18px 0;">
+    <svg viewBox="0 0 460 130" style="max-width:460px;width:100%">
+      <rect x="10" y="10" width="200" height="110" rx="8" fill="#fffbeb" stroke="#f59e0b" stroke-width="2"/>
+      <text x="110" y="34" text-anchor="middle" font-size="12" fill="#92400e" font-weight="800">malloc 후 상태</text>
+      <rect x="25" y="50" width="40" height="35" rx="4" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1"/>
+      <text x="45" y="72" text-anchor="middle" font-size="11" fill="#64748b">???</text>
+      <rect x="75" y="50" width="40" height="35" rx="4" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1"/>
+      <text x="95" y="72" text-anchor="middle" font-size="11" fill="#64748b">???</text>
+      <rect x="125" y="50" width="40" height="35" rx="4" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1"/>
+      <text x="145" y="72" text-anchor="middle" font-size="11" fill="#64748b">???</text>
+      <text x="110" y="110" text-anchor="middle" font-size="10" fill="#92400e">쓰레기값! 초기화 필요</text>
+      <rect x="250" y="10" width="200" height="110" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="2"/>
+      <text x="350" y="34" text-anchor="middle" font-size="12" fill="#166534" font-weight="800">calloc 후 상태</text>
+      <rect x="265" y="50" width="40" height="35" rx="4" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+      <text x="285" y="72" text-anchor="middle" font-size="14" fill="#166534" font-weight="800">0</text>
+      <rect x="315" y="50" width="40" height="35" rx="4" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+      <text x="335" y="72" text-anchor="middle" font-size="14" fill="#166534" font-weight="800">0</text>
+      <rect x="365" y="50" width="40" height="35" rx="4" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+      <text x="385" y="72" text-anchor="middle" font-size="14" fill="#166534" font-weight="800">0</text>
+      <text x="350" y="110" text-anchor="middle" font-size="10" fill="#166534">자동으로 0 초기화됨</text>
+    </svg>
+  </div>
+  <div class="code"><span class="cmt">// calloc 문법: calloc(개수, 하나의 크기)</span>
+<span class="kw">int</span> *arr = (<span class="kw">int</span>*)<span class="fn">calloc</span>(<span class="num">5</span>, <span class="kw">sizeof</span>(<span class="kw">int</span>)); <span class="cmt">// 5개, 각 4바이트</span>
+<span class="kw">if</span> (arr == <span class="num">NULL</span>) { <span class="kw">return</span> <span class="num">1</span>; }
+<span class="cmt">// arr[0]~arr[4]가 모두 0으로 초기화됨</span>
+<span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; <span class="num">5</span>; i++) <span class="fn">printf</span>(<span class="str">"%d "</span>, arr[i]); <span class="cmt">// 0 0 0 0 0</span>
+<span class="fn">free</span>(arr);
+
+<span class="cmt">// malloc과 비교 (같은 결과를 내려면 memset 필요)</span>
+<span class="kw">int</span> *arr2 = (<span class="kw">int</span>*)<span class="fn">malloc</span>(<span class="kw">sizeof</span>(<span class="kw">int</span>) * <span class="num">5</span>);
+<span class="fn">memset</span>(arr2, <span class="num">0</span>, <span class="kw">sizeof</span>(<span class="kw">int</span>) * <span class="num">5</span>);  <span class="cmt">// 수동으로 0 초기화</span>
+<span class="fn">free</span>(arr2);</div>
+  <div class="info-box">calloc(n, size) = malloc(n * size) + 0으로 초기화. 문법이 약간 다릅니다: 개수와 크기를 따로 전달합니다.</div>
+</div>
+
+<div class="page">
+  <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/computer-basics/cpu.png" alt="CPU - 동적 메모리 처리 장치" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>realloc — 이미 할당된 메모리 크기 변경</h2>
+  <p><code>realloc</code>은 이미 malloc/calloc으로 할당한 메모리의 크기를 바꿉니다. 기존 데이터는 보존되면서 크기만 변경됩니다.</p>
+  <div style="text-align:center;margin:18px 0;">
+    <svg viewBox="0 0 460 150" style="max-width:460px;width:100%">
+      <text x="10" y="20" font-size="11" fill="#374151" font-weight="700">1단계: malloc으로 3개 할당</text>
+      <rect x="10" y="30" width="55" height="35" rx="4" fill="#bfdbfe" stroke="#3b82f6" stroke-width="1.5"/>
+      <text x="37" y="52" text-anchor="middle" font-size="13" fill="#1d4ed8" font-weight="700">10</text>
+      <rect x="75" y="30" width="55" height="35" rx="4" fill="#bfdbfe" stroke="#3b82f6" stroke-width="1.5"/>
+      <text x="102" y="52" text-anchor="middle" font-size="13" fill="#1d4ed8" font-weight="700">20</text>
+      <rect x="140" y="30" width="55" height="35" rx="4" fill="#bfdbfe" stroke="#3b82f6" stroke-width="1.5"/>
+      <text x="167" y="52" text-anchor="middle" font-size="13" fill="#1d4ed8" font-weight="700">30</text>
+      <text x="230" y="50" font-size="12" fill="#94a3b8">realloc으로 5개로 확장</text>
+      <path d="M230,55 L230,80" stroke="#f59e0b" stroke-width="2" marker-end="url(#rc1)"/>
+      <text x="10" y="98" font-size="11" fill="#374151" font-weight="700">2단계: 5개로 확장 후 상태</text>
+      <rect x="10" y="108" width="55" height="35" rx="4" fill="#bfdbfe" stroke="#3b82f6" stroke-width="1.5"/>
+      <text x="37" y="130" text-anchor="middle" font-size="13" fill="#1d4ed8" font-weight="700">10</text>
+      <rect x="75" y="108" width="55" height="35" rx="4" fill="#bfdbfe" stroke="#3b82f6" stroke-width="1.5"/>
+      <text x="102" y="130" text-anchor="middle" font-size="13" fill="#1d4ed8" font-weight="700">20</text>
+      <rect x="140" y="108" width="55" height="35" rx="4" fill="#bfdbfe" stroke="#3b82f6" stroke-width="1.5"/>
+      <text x="167" y="130" text-anchor="middle" font-size="13" fill="#1d4ed8" font-weight="700">30</text>
+      <rect x="205" y="108" width="55" height="35" rx="4" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1.5"/>
+      <text x="232" y="130" text-anchor="middle" font-size="13" fill="#94a3b8" font-weight="700">?</text>
+      <rect x="270" y="108" width="55" height="35" rx="4" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1.5"/>
+      <text x="297" y="130" text-anchor="middle" font-size="13" fill="#94a3b8" font-weight="700">?</text>
+      <text x="10" y="155" font-size="10" fill="#374151">기존 데이터(10,20,30) 보존, 새 공간(4,5번째)은 초기화 안됨</text>
+      <defs><marker id="rc1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#f59e0b"/></marker></defs>
+    </svg>
+  </div>
+  <div class="code"><span class="cmt">// realloc 사용법: 안전한 패턴</span>
+<span class="kw">int</span> *arr = (<span class="kw">int</span>*)<span class="fn">malloc</span>(<span class="kw">sizeof</span>(<span class="kw">int</span>) * <span class="num">3</span>);
+arr[<span class="num">0</span>]=<span class="num">10</span>; arr[<span class="num">1</span>]=<span class="num">20</span>; arr[<span class="num">2</span>]=<span class="num">30</span>;
+
+<span class="cmt">// 5개로 크기 늘리기 (안전 패턴)</span>
+<span class="kw">int</span> *tmp = (<span class="kw">int</span>*)<span class="fn">realloc</span>(arr, <span class="kw">sizeof</span>(<span class="kw">int</span>) * <span class="num">5</span>);
+<span class="kw">if</span> (tmp == <span class="num">NULL</span>) {
+    <span class="fn">free</span>(arr);  <span class="cmt">// 원본 해제</span>
+    <span class="kw">return</span> <span class="num">1</span>;
+}
+arr = tmp;  <span class="cmt">// 성공 시 arr 업데이트</span>
+arr[<span class="num">3</span>]=<span class="num">40</span>; arr[<span class="num">4</span>]=<span class="num">50</span>;
+<span class="fn">free</span>(arr);</div>
+  <div class="warn-box">realloc(arr, 새크기) 에서 arr에 직접 대입하지 말고 임시 포인터(tmp)에 받아야 합니다. 실패 시 NULL 반환 — arr이 NULL이 되면 원본도 잃어버립니다!</div>
+  <div style="display:flex;align-items:center;gap:6px;margin:14px 0 4px;">
+        <img src="/images/learn/computer-basics/hard-drive.png" alt="하드 드라이브 - 메모리 저장 개념" style="width:24px;height:24px;object-fit:contain;background:#fff;border-radius:8px;">
+        <span style="font-size:12px;color:#1d4ed8;font-weight:600;">실습 구역</span>
+    </div>
+<div class="practice">
+    <div class="practice-head">따라해보세요</div>
+    <div class="practice-body">
+      <div class="practice-item">
+        <div class="practice-num">1</div>
+        <div class="practice-desc">calloc으로 정수 4개를 0 초기화하여 할당하고 출력하세요.</div>
+        <div class="code"><span class="kw">int</span> *arr = (<span class="kw">int</span>*)<span class="fn">calloc</span>(<span class="num">4</span>, <span class="kw">sizeof</span>(<span class="kw">int</span>));
+<span class="kw">if</span> (arr == <span class="num">NULL</span>) <span class="kw">return</span> <span class="num">1</span>;
+<span class="kw">for</span> (<span class="kw">int</span> i=<span class="num">0</span>; i&lt;<span class="num">4</span>; i++) <span class="fn">printf</span>(<span class="str">"%d "</span>, arr[i]); <span class="cmt">// 0 0 0 0</span>
+<span class="fn">free</span>(arr);</div>
+        <div class="practice-result">0 0 0 0 출력됩니다</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+  <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/computer-basics/hard-drive.png" alt="하드 드라이브 - 메모리 저장 개념" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>세 함수 비교 — malloc vs calloc vs realloc</h2>
+  <div style="text-align:center;margin:16px 0;">
+    <svg viewBox="0 0 460 160" style="max-width:460px;width:100%">
+      <rect x="5" y="5" width="145" height="150" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="2"/>
+      <text x="77" y="28" text-anchor="middle" font-size="13" fill="#1d4ed8" font-weight="800">malloc</text>
+      <text x="15" y="50" font-size="10" fill="#374151">문법: malloc(바이트)</text>
+      <text x="15" y="68" font-size="10" fill="#374151">초기화: 안 함 (쓰레기값)</text>
+      <text x="15" y="86" font-size="10" fill="#374151">속도: 빠름</text>
+      <text x="15" y="104" font-size="10" fill="#1d4ed8" font-weight="700">용도: 일반적 할당</text>
+      <text x="15" y="122" font-size="10" fill="#374151" font-family="JetBrains Mono">malloc(n*sizeof(T))</text>
+      <rect x="160" y="5" width="145" height="150" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="2"/>
+      <text x="232" y="28" text-anchor="middle" font-size="13" fill="#166534" font-weight="800">calloc</text>
+      <text x="170" y="50" font-size="10" fill="#374151">문법: calloc(개수, 크기)</text>
+      <text x="170" y="68" font-size="10" fill="#374151">초기화: 0으로 자동</text>
+      <text x="170" y="86" font-size="10" fill="#374151">속도: 약간 느림</text>
+      <text x="170" y="104" font-size="10" fill="#166534" font-weight="700">용도: 0 초기화 필요 시</text>
+      <text x="170" y="122" font-size="10" fill="#374151" font-family="JetBrains Mono">calloc(n, sizeof(T))</text>
+      <rect x="315" y="5" width="140" height="150" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+      <text x="385" y="28" text-anchor="middle" font-size="13" fill="#92400e" font-weight="800">realloc</text>
+      <text x="325" y="50" font-size="10" fill="#374151">문법: realloc(ptr, 새크기)</text>
+      <text x="325" y="68" font-size="10" fill="#374151">초기화: 기존 데이터 유지</text>
+      <text x="325" y="86" font-size="10" fill="#374151">속도: 상황에 따라 다름</text>
+      <text x="325" y="104" font-size="10" fill="#92400e" font-weight="700">용도: 크기 변경</text>
+      <text x="325" y="122" font-size="10" fill="#374151" font-family="JetBrains Mono">realloc(arr, 새크기)</text>
+    </svg>
+  </div>
+</div>
+
+<div class="page">
+  <h2>연습 문제</h2>
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">1</div>
+      <div class="problem-label">calloc 문법</div>
+      <div class="problem-diff easy">쉬움</div>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">int 7개를 0으로 초기화하여 동적 할당하는 올바른 코드는?<br>① calloc(7, int)<br>② calloc(7, sizeof(int))<br>③ calloc(sizeof(int), 7, 0)<br>④ malloc(7, sizeof(int))</div>
+      <details class="problem-toggle">
+        <summary>힌트 / 정답 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="answer-code">정답: ②
+calloc(개수, 하나의크기) 형태입니다.
+int *arr = (int*)calloc(7, sizeof(int));</div>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">2</div>
+      <div class="problem-label">malloc vs calloc 차이</div>
+      <div class="problem-diff easy">쉬움</div>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">malloc과 calloc의 가장 큰 차이점은 무엇인가요?</div>
+      <details class="problem-toggle">
+        <summary>힌트 / 정답 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="answer-code">calloc은 할당 후 모든 바이트를 0으로 초기화합니다.
+malloc은 초기화하지 않아 쓰레기값이 들어있습니다.</div>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">3</div>
+      <div class="problem-label">realloc 안전 패턴</div>
+      <div class="problem-diff medium">보통</div>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">realloc 사용 시 arr = realloc(arr, ...) 처럼 직접 대입하면 안 되는 이유는?</div>
+      <details class="problem-toggle">
+        <summary>힌트 / 정답 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="answer-code">realloc이 실패하면 NULL을 반환합니다.
+arr = realloc(arr, ...) 처럼 쓰면 실패 시 arr이 NULL이 되어
+원본 메모리 주소를 잃어버립니다 (메모리 누수 + 해제 불가).
+반드시 임시 포인터에 받아서 NULL 체크 후 교체해야 합니다.</div>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">4</div>
+      <div class="problem-label">realloc 코드 작성</div>
+      <div class="problem-diff medium">보통</div>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">malloc으로 3개 할당 후 realloc으로 6개로 확장하는 안전한 코드를 작성하세요.</div>
+      <details class="problem-toggle">
+        <summary>힌트 / 정답 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="answer-code">int *arr = (int*)malloc(sizeof(int)*3);
+if (arr == NULL) return 1;
+arr[0]=1; arr[1]=2; arr[2]=3;
+
+int *tmp = (int*)realloc(arr, sizeof(int)*6);
+if (tmp == NULL) { free(arr); return 1; }
+arr = tmp;
+arr[3]=4; arr[4]=5; arr[5]=6;
+free(arr);</div>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">5</div>
+      <div class="problem-label">calloc으로 성적 초기화</div>
+      <div class="problem-diff hard">어려움</div>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">calloc으로 학생 5명의 점수 배열을 만들고, 실제 값을 입력받아 평균을 출력하세요.</div>
+      <details class="problem-toggle">
+        <summary>힌트 / 정답 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="answer-code">int *scores = (int*)calloc(5, sizeof(int));
+if (scores == NULL) return 1;
+int sum = 0;
+for (int i=0; i&lt;5; i++) {
+    printf("%d번 점수: ", i+1);
+    scanf("%d", &scores[i]);
+    sum += scores[i];
+}
+printf("평균: %.1f\n", (double)sum/5);
+free(scores);</div>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;margin:16px 0 6px;padding:8px 14px;background:#f0f9ff;border-radius:6px;border:1px solid #bae6fd;">
+        <img src="/images/learn/computer-basics/ram.png" alt="RAM - 동적 메모리 할당 공간" style="width:28px;height:28px;object-fit:contain;background:#fff;border-radius:8px;">
+        <img src="/images/learn/computer-basics/cpu.png" alt="CPU - 동적 메모리 처리 장치" style="width:28px;height:28px;object-fit:contain;background:#fff;border-radius:8px;">
+        <span style="font-size:12px;color:#0369a1;font-weight:600;">핵심 정리</span>
+    </div>
+<div class="summary">
+    <h3>핵심 정리</h3>
+    <ul>
+      <li>calloc(n, size) — n개×size 바이트, 모두 0으로 초기화</li>
+      <li>malloc vs calloc — 초기화 여부가 핵심 차이</li>
+      <li>realloc(ptr, 새크기) — 기존 데이터 유지하며 크기 변경</li>
+      <li>realloc 안전 패턴 — 임시 포인터에 받아서 NULL 체크 후 교체</li>
+    </ul>
+  </div>
+
+    <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:20px;padding-top:10px;border-top:1px solid #f1f5f9;">
+        <img src="/images/learn/c-lang/binary-code.png" alt="이진 코드 - 메모리 할당 구조" style="width:22px;height:22px;object-fit:contain;opacity:0.6;background:#fff;border-radius:8px;">
+        <span style="font-size:10px;color:#cbd5e1;">코딩쏙 C언어</span>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

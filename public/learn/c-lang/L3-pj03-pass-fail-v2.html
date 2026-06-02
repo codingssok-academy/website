@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 프로젝트: 합격 불합격 판정</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+/* ── 페이지 ── */
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+/* ── 챕터 표지 ── */
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 200px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none; letter-spacing: -4px;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-pj-badge {
+    display: inline-block; padding: 4px 14px; background: linear-gradient(135deg,#f59e0b,#eab308);
+    color: #fff; font-size: 13px; font-weight: 800; border-radius: 99px; margin-bottom: 10px; letter-spacing: 1px;
+}
+.cover-title { font-size: 36px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+
+/* ── 본문 ── */
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 16px; font-weight: 800; color: #1e3a5f; margin: 18px 0 10px; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code, span code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+strong { color: #1e3a5f; }
+
+/* ── 코드 블록 ── */
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13.5px;
+    color: #e2e8f0; line-height: 1.85; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw  { color: #c084fc; }
+.code .fn  { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; font-style: italic; }
+.code .op  { color: #f9a8d4; }
+
+/* ── 스텝 카드 ── */
+.step {
+    margin: 18px 0; border-radius: 12px; overflow: hidden;
+    border: 1.5px solid #e2e8f0;
+}
+.step-head {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 18px; background: #f8fafc; border-bottom: 1.5px solid #e2e8f0;
+}
+.step-num {
+    width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 900; color: #fff; flex-shrink: 0;
+    background: linear-gradient(135deg,#3b82f6,#2563eb);
+}
+.step-title { font-size: 15px; font-weight: 800; color: #1e3a5f; }
+.step-body { padding: 14px 18px; }
+.step-desc { font-size: 14px; color: #475569; line-height: 1.7; margin-bottom: 10px; }
+
+/* ── 확장 카드 ── */
+.ext {
+    margin: 18px 0; border-radius: 12px; overflow: hidden;
+    border: 1.5px solid #e2e8f0;
+}
+.ext-head {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 18px; border-bottom: 1.5px solid #e2e8f0;
+}
+.ext-head.lv1 { background: #f0fdf4; }
+.ext-head.lv2 { background: #fef3c7; }
+.ext-head.lv3 { background: #fdf4ff; }
+.ext-badge {
+    padding: 3px 12px; border-radius: 99px; font-size: 11px; font-weight: 800; flex-shrink: 0;
+}
+.ext-badge.lv1 { background: #dcfce7; color: #166534; }
+.ext-badge.lv2 { background: #fef3c7; color: #92400e; }
+.ext-badge.lv3 { background: #f3e8ff; color: #6b21a8; }
+.ext-title { font-size: 15px; font-weight: 800; color: #1e3a5f; }
+.ext-body { padding: 14px 18px; }
+.ext-desc { font-size: 14px; color: #475569; line-height: 1.7; margin-bottom: 10px; }
+
+/* ── 연습 ── */
+.practice { margin: 16px 0; border-left: 4px solid #3b82f6; border-radius: 0 10px 10px 0; background: #f8fafc; }
+.practice-head { padding: 8px 16px; font-size: 13px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 16px 12px; }
+
+/* ── 포인트 박스 ── */
+.point {
+    background: #fffbeb; border: 1.5px solid #f59e0b; border-radius: 8px;
+    padding: 12px 16px; margin: 14px 0;
+}
+.point-title { font-size: 13px; font-weight: 800; color: #92400e; margin-bottom: 6px; }
+.point-text { font-size: 13px; color: #78350f; line-height: 1.7; }
+
+/* ── 도전 과제 ── */
+.challenge {
+    border: 2px solid #6366f1; border-radius: 12px; padding: 16px 20px; margin: 16px 0;
+    background: #fafafe;
+}
+.challenge-title { font-size: 15px; font-weight: 800; color: #4338ca; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+.challenge-item { font-size: 14px; color: #374151; padding: 5px 0 5px 20px; position: relative; line-height: 1.6; }
+.challenge-item::before { content: ''; position: absolute; left: 0; font-size: 9px; color: #6366f1; top: 8px; }
+
+/* ── 요약 ── */
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; margin-top: 0; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+/* ── 페이지 3 전체 코드 헤더 ── */
+.final-code-header {
+    background: linear-gradient(135deg,#1e3a5f,#2d5a8e);
+    border-radius: 10px 10px 0 0; padding: 12px 20px;
+    font-size: 14px; font-weight: 700; color: #e2e8f0;
+    display: flex; align-items: center; gap: 10px; margin-top: 20px;
+}
+.final-code-header .dot { width: 10px; height: 10px; border-radius: 50%; }
+.final-code-body {
+    background: #0f172a; border-radius: 0 0 10px 10px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #e2e8f0; line-height: 1.9; padding: 16px 20px; margin-bottom: 16px;
+    white-space: pre-wrap;
+}
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════
+     PAGE 1 — 커버
+═══════════════════════════════════════════════════════ -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">PJ</div>
+        <div class="cover-label">Level 3 · Project 03</div>
+        <div class="cover-pj-badge">PROJECT</div>
+        <h1 class="cover-title">합격 불합격 판정<br>프로그램 만들기</h1>
+        <p class="cover-sub">점수를 입력받아 합격인지 불합격인지 알려주는 프로그램을 직접 만들어봅니다.<br>if-else 조건문과 논리 연산자를 활용합니다.</p>
+
+        <!-- 시험지 + 결과 SVG -->
+        <div style="text-align:center;margin:22px 0 18px;">
+            <svg viewBox="0 0 520 160" style="max-width:520px;width:100%">
+                <defs>
+                    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                    </marker>
+                    <marker id="arr-ok" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#22c55e"/>
+                    </marker>
+                    <marker id="arr-ng" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#ef4444"/>
+                    </marker>
+                </defs>
+                <!-- 시험지 -->
+                <rect x="10" y="15" width="120" height="130" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+                <rect x="20" y="25" width="100" height="16" rx="3" fill="#1e3a5f"/>
+                <text x="70" y="37" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">중간고사 성적표</text>
+                <rect x="22" y="50" width="96" height="1.5" fill="#e2e8f0"/>
+                <text x="30" y="68" font-size="9" fill="#64748b">국어</text>
+                <rect x="55" y="58" width="58" height="14" rx="3" fill="#dbeafe"/>
+                <text x="84" y="69" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">72</text>
+                <text x="30" y="90" font-size="9" fill="#64748b">수학</text>
+                <rect x="55" y="80" width="58" height="14" rx="3" fill="#dbeafe"/>
+                <text x="84" y="91" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">55</text>
+                <text x="30" y="112" font-size="9" fill="#64748b">영어</text>
+                <rect x="55" y="102" width="58" height="14" rx="3" fill="#dbeafe"/>
+                <text x="84" y="113" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">83</text>
+                <rect x="22" y="122" width="96" height="1.5" fill="#e2e8f0"/>
+                <text x="30" y="138" font-size="9" fill="#475569" font-weight="700">평균</text>
+                <text x="84" y="138" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="900">70</text>
+
+                <!-- 화살표 -->
+                <line x1="140" y1="80" x2="170" y2="80" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arr)"/>
+
+                <!-- 판별 박스 -->
+                <rect x="178" y="58" width="120" height="44" rx="8" fill="#fffbeb" stroke="#f59e0b" stroke-width="2"/>
+                <text x="238" y="78" text-anchor="middle" font-size="11" fill="#92400e" font-weight="800">if (score &gt;= 60)</text>
+                <text x="238" y="95" text-anchor="middle" font-size="10" fill="#78350f">60점 이상?</text>
+
+                <!-- 분기 -->
+                <line x1="298" y1="70" x2="338" y2="45" stroke="#22c55e" stroke-width="1.5" marker-end="url(#arr-ok)"/>
+                <line x1="298" y1="90" x2="338" y2="115" stroke="#ef4444" stroke-width="1.5" marker-end="url(#arr-ng)"/>
+                <text x="312" y="55" font-size="9" fill="#22c55e" font-weight="700">YES</text>
+                <text x="312" y="108" font-size="9" fill="#ef4444" font-weight="700">NO</text>
+
+                <!-- 합격 -->
+                <rect x="345" y="22" width="120" height="42" rx="8" fill="#dcfce7" stroke="#22c55e" stroke-width="2"/>
+                <text x="405" y="40" text-anchor="middle" font-size="14" fill="#166534" font-weight="900">합격</text>
+                <text x="405" y="57" text-anchor="middle" font-size="10" fill="#15803d">PASS</text>
+
+                <!-- 불합격 -->
+                <rect x="345" y="92" width="120" height="42" rx="8" fill="#fee2e2" stroke="#ef4444" stroke-width="2"/>
+                <text x="405" y="110" text-anchor="middle" font-size="14" fill="#dc2626" font-weight="900">불합격</text>
+                <text x="405" y="127" text-anchor="middle" font-size="10" fill="#b91c1c">FAIL</text>
+
+                <text x="260" y="155" text-anchor="middle" font-size="11" fill="#64748b" font-weight="600">점수 입력 → 조건 판별 → 결과 출력</text>
+            </svg>
+        </div>
+
+        <!-- 프로그램 흐름도 -->
+        <div style="text-align:center;margin:0 0 18px;">
+            <svg viewBox="0 0 480 56" style="max-width:480px;width:100%">
+                <defs>
+                    <marker id="fa" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                    </marker>
+                </defs>
+                <rect x="5" y="10" width="88" height="30" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="49" y="30" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">1. 점수 입력</text>
+                <line x1="96" y1="25" x2="112" y2="25" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#fa)"/>
+                <rect x="116" y="10" width="100" height="30" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="166" y="30" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">2. if-else 판별</text>
+                <line x1="220" y1="25" x2="236" y2="25" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#fa)"/>
+                <rect x="240" y="10" width="100" height="30" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="290" y="30" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">3. 결과 출력</text>
+                <line x1="344" y1="25" x2="360" y2="25" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#fa)"/>
+                <rect x="364" y="10" width="110" height="30" rx="6" fill="#fdf4ff" stroke="#a855f7" stroke-width="1.5"/>
+                <text x="419" y="30" text-anchor="middle" font-size="10" fill="#6b21a8" font-weight="700">4. 확장 도전</text>
+                <text x="240" y="52" text-anchor="middle" font-size="10" fill="#94a3b8">이 프로젝트의 전체 흐름</text>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/lightbulb.png" alt="아이디어" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 프로젝트에서 만드는 것</h3>
+            <ul>
+                <li>점수를 입력받아 합격 / 불합격을 판정하는 프로그램</li>
+                <li>과목 3개 평균으로 합격 여부를 계산하는 확장 버전</li>
+                <li>잘못된 점수 입력(음수, 100초과)을 걸러내는 입력 검증</li>
+                <li>결과에 맞는 격려 메시지를 출력하는 기능</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     PAGE 2 — 단계별 구현
+═══════════════════════════════════════════════════════ -->
+<div class="page">
+    <h2>단계별 구현</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>프로그램을 한 번에 완성하지 않습니다. <strong>작은 단계로 쪼개서</strong> 하나씩 확인하면서 만듭니다.</p>
+
+    <!-- STEP 1 -->
+    <div class="step">
+        <div class="step-head">
+            <div class="step-num">1</div>
+            <div class="step-title">점수 입력받기 (0 ~ 100)</div>
+        </div>
+        <div class="step-body">
+            <div class="step-desc">사용자가 키보드로 점수를 입력하면 변수에 저장합니다. <code>scanf</code>로 정수를 읽어옵니다.</div>
+            <div class="code"><span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="kw">int</span> score;                          <span class="cmt">// 점수를 담을 변수</span>
+
+    <span class="fn">printf</span>(<span class="str">"점수를 입력하세요 (0~100): "</span>);
+    <span class="fn">scanf</span>(<span class="str">"%d"</span>, <span class="op">&amp;</span>score);              <span class="cmt">// 키보드에서 정수 읽기</span>
+
+    <span class="fn">printf</span>(<span class="str">"입력한 점수: %d\n"</span>, score);  <span class="cmt">// 확인용 출력</span>
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+            <div class="practice">
+                <div class="practice-head">확인 포인트</div>
+                <div class="practice-body" style="font-size:13px;color:#475569;padding-top:8px;line-height:1.8;">
+                    <code>int score;</code> — 정수형 변수 선언<br>
+                    <code>&amp;score</code> — scanf는 주소가 필요, &amp; 는 "score의 주소"를 뜻합니다<br>
+                    <code>%d</code> — 정수를 입력/출력할 때 쓰는 서식 지정자
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- STEP 2 -->
+    <div class="step">
+        <div class="step-head">
+            <div class="step-num">2</div>
+            <div class="step-title">if-else로 60점 기준 합격 판별</div>
+        </div>
+        <div class="step-body">
+            <div class="step-desc">입력받은 점수가 <strong>60점 이상</strong>이면 합격, 그 미만이면 불합격으로 나눕니다.</div>
+
+            <!-- if-else 구조 SVG -->
+            <div style="text-align:center;margin:10px 0;">
+                <svg viewBox="0 0 460 130" style="max-width:460px;width:100%">
+                    <defs>
+                        <marker id="b1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                            <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                        </marker>
+                        <marker id="b2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                            <path d="M0,0 L10,5 L0,10 z" fill="#22c55e"/>
+                        </marker>
+                        <marker id="b3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                            <path d="M0,0 L10,5 L0,10 z" fill="#ef4444"/>
+                        </marker>
+                    </defs>
+                    <!-- 입력 -->
+                    <rect x="170" y="5" width="120" height="28" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                    <text x="230" y="23" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">score 입력</text>
+                    <!-- 화살표 아래 -->
+                    <line x1="230" y1="33" x2="230" y2="50" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#b1)"/>
+                    <!-- 마름모 조건 -->
+                    <polygon points="230,52 310,76 230,100 150,76" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.5"/>
+                    <text x="230" y="73" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">score</text>
+                    <text x="230" y="87" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">&gt;= 60 ?</text>
+                    <!-- YES 오른쪽 -->
+                    <line x1="310" y1="76" x2="355" y2="76" stroke="#22c55e" stroke-width="1.5" marker-end="url(#b2)"/>
+                    <text x="333" y="70" text-anchor="middle" font-size="9" fill="#22c55e" font-weight="700">YES</text>
+                    <rect x="358" y="62" width="90" height="28" rx="6" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+                    <text x="403" y="80" text-anchor="middle" font-size="11" fill="#166534" font-weight="800">합격 출력</text>
+                    <!-- NO 왼쪽 -->
+                    <line x1="150" y1="76" x2="105" y2="76" stroke="#ef4444" stroke-width="1.5" marker-end="url(#b3)"/>
+                    <text x="128" y="70" text-anchor="middle" font-size="9" fill="#ef4444" font-weight="700">NO</text>
+                    <rect x="12" y="62" width="90" height="28" rx="6" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+                    <text x="57" y="80" text-anchor="middle" font-size="11" fill="#dc2626" font-weight="800">불합격 출력</text>
+                    <text x="230" y="122" text-anchor="middle" font-size="10" fill="#94a3b8">조건이 참(true)이면 위, 거짓(false)이면 아래 경로</text>
+                </svg>
+            </div>
+
+            <div class="code"><span class="kw">if</span> (score <span class="op">&gt;=</span> <span class="num">60</span>) {
+    <span class="fn">printf</span>(<span class="str">"합격입니다!\n"</span>);
+} <span class="kw">else</span> {
+    <span class="fn">printf</span>(<span class="str">"불합격입니다.\n"</span>);
+}</div>
+        </div>
+    </div>
+
+    <!-- STEP 3 -->
+    <div class="step">
+        <div class="step-head">
+            <div class="step-num">3</div>
+            <div class="step-title">합격 / 불합격 메시지 출력 — 완성 코드</div>
+        </div>
+        <div class="step-body">
+            <div class="step-desc">Step 1 + Step 2를 합쳐 완성합니다. 아래 코드를 그대로 입력해 실행해보세요.</div>
+            <div class="code"><span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="kw">int</span> score;
+
+    <span class="fn">printf</span>(<span class="str">"점수를 입력하세요 (0~100): "</span>);
+    <span class="fn">scanf</span>(<span class="str">"%d"</span>, <span class="op">&amp;</span>score);
+
+    <span class="kw">if</span> (score <span class="op">&gt;=</span> <span class="num">60</span>) {
+        <span class="fn">printf</span>(<span class="str">"결과: 합격입니다!\n"</span>);
+    } <span class="kw">else</span> {
+        <span class="fn">printf</span>(<span class="str">"결과: 불합격입니다.\n"</span>);
+    }
+
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+        </div>
+    </div>
+
+    <!-- 입출력 예시 SVG -->
+    <div style="text-align:center;margin:16px 0 6px;">
+        <svg viewBox="0 0 460 90" style="max-width:460px;width:100%">
+            <!-- 케이스 1: 합격 -->
+            <rect x="5" y="5" width="210" height="80" rx="8" fill="#0f172a"/>
+            <text x="18" y="23" font-size="9" fill="#64748b" font-family="JetBrains Mono">$ ./a.out</text>
+            <text x="18" y="40" font-size="10" fill="#e2e8f0" font-family="JetBrains Mono">점수를 입력하세요: </text>
+            <text x="170" y="40" font-size="10" fill="#7dd3fc" font-family="JetBrains Mono">75</text>
+            <text x="18" y="58" font-size="10" fill="#86efac" font-family="JetBrains Mono">결과: 합격입니다!</text>
+            <rect x="5" y="74" width="210" height="10" rx="0 0 8 8" fill="#1e293b"/>
+            <text x="110" y="82" text-anchor="middle" font-size="8" fill="#22c55e" font-weight="700">75점 입력 — 합격</text>
+            <!-- 케이스 2: 불합격 -->
+            <rect x="245" y="5" width="210" height="80" rx="8" fill="#0f172a"/>
+            <text x="258" y="23" font-size="9" fill="#64748b" font-family="JetBrains Mono">$ ./a.out</text>
+            <text x="258" y="40" font-size="10" fill="#e2e8f0" font-family="JetBrains Mono">점수를 입력하세요: </text>
+            <text x="410" y="40" font-size="10" fill="#7dd3fc" font-family="JetBrains Mono">45</text>
+            <text x="258" y="58" font-size="10" fill="#fca5a5" font-family="JetBrains Mono">결과: 불합격입니다.</text>
+            <rect x="245" y="74" width="210" height="10" rx="0 0 8 8" fill="#1e293b"/>
+            <text x="350" y="82" text-anchor="middle" font-size="8" fill="#ef4444" font-weight="700">45점 입력 — 불합격</text>
+        </svg>
+    </div>
+
+    <div class="point">
+        <div class="point-title">핵심 정리</div>
+        <div class="point-text">
+            <code>if (조건) { ... } else { ... }</code> — 조건이 참이면 if 블록, 거짓이면 else 블록 실행<br>
+            <code>&gt;=</code> 는 "이상(크거나 같다)"을 뜻하는 비교 연산자입니다.
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     PAGE 3 — 확장 과제
+═══════════════════════════════════════════════════════ -->
+<div class="page">
+    <h2>확장 과제</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/monitor.png" alt="모니터" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>기본 프로그램이 동작하면 세 가지 확장 과제에 도전합니다. 순서대로 코드에 추가하세요.</p>
+
+    <!-- 확장 1 -->
+    <div class="ext">
+        <div class="ext-head lv1">
+            <span class="ext-badge lv1">확장 1</span>
+            <span class="ext-title">과목 3개 평균으로 합격 판정</span>
+        </div>
+        <div class="ext-body">
+            <div class="ext-desc">국어, 수학, 영어 세 과목 점수를 각각 입력받아 평균을 구하고, 평균이 60점 이상이면 합격으로 처리합니다.</div>
+
+            <!-- 평균 계산 SVG -->
+            <div style="text-align:center;margin:8px 0 12px;">
+                <svg viewBox="0 0 460 72" style="max-width:460px;width:100%">
+                    <rect x="5" y="10" width="68" height="50" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.2"/>
+                    <text x="39" y="31" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">korean</text>
+                    <text x="39" y="50" text-anchor="middle" font-size="14" fill="#1d4ed8" font-weight="900">72</text>
+
+                    <text x="83" y="39" text-anchor="middle" font-size="16" fill="#94a3b8" font-weight="300">+</text>
+
+                    <rect x="94" y="10" width="68" height="50" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.2"/>
+                    <text x="128" y="31" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">math</text>
+                    <text x="128" y="50" text-anchor="middle" font-size="14" fill="#1d4ed8" font-weight="900">55</text>
+
+                    <text x="172" y="39" text-anchor="middle" font-size="16" fill="#94a3b8" font-weight="300">+</text>
+
+                    <rect x="183" y="10" width="68" height="50" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.2"/>
+                    <text x="217" y="31" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">english</text>
+                    <text x="217" y="50" text-anchor="middle" font-size="14" fill="#1d4ed8" font-weight="900">83</text>
+
+                    <text x="264" y="39" text-anchor="middle" font-size="14" fill="#94a3b8">÷ 3 =</text>
+
+                    <rect x="308" y="10" width="68" height="50" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+                    <text x="342" y="31" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">avg</text>
+                    <text x="342" y="50" text-anchor="middle" font-size="14" fill="#92400e" font-weight="900">70</text>
+
+                    <line x1="385" y1="35" x2="400" y2="35" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arr)"/>
+                    <rect x="406" y="18" width="50" height="34" rx="6" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+                    <text x="431" y="38" text-anchor="middle" font-size="11" fill="#166534" font-weight="900">합격</text>
+
+                    <text x="230" y="68" text-anchor="middle" font-size="9" fill="#94a3b8">(72 + 55 + 83) ÷ 3 = 70 → 60 이상 → 합격</text>
+                    <defs>
+                        <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                            <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                        </marker>
+                    </defs>
+                </svg>
+            </div>
+
+            <div class="code"><span class="kw">int</span> korean, math, english, avg;
+
+<span class="fn">printf</span>(<span class="str">"국어 점수: "</span>); <span class="fn">scanf</span>(<span class="str">"%d"</span>, <span class="op">&amp;</span>korean);
+<span class="fn">printf</span>(<span class="str">"수학 점수: "</span>); <span class="fn">scanf</span>(<span class="str">"%d"</span>, <span class="op">&amp;</span>math);
+<span class="fn">printf</span>(<span class="str">"영어 점수: "</span>); <span class="fn">scanf</span>(<span class="str">"%d"</span>, <span class="op">&amp;</span>english);
+
+avg = (korean <span class="op">+</span> math <span class="op">+</span> english) <span class="op">/</span> <span class="num">3</span>;  <span class="cmt">// 평균 계산</span>
+<span class="fn">printf</span>(<span class="str">"평균: %d점\n"</span>, avg);
+
+<span class="kw">if</span> (avg <span class="op">&gt;=</span> <span class="num">60</span>) {
+    <span class="fn">printf</span>(<span class="str">"결과: 합격입니다!\n"</span>);
+} <span class="kw">else</span> {
+    <span class="fn">printf</span>(<span class="str">"결과: 불합격입니다.\n"</span>);
+}</div>
+        </div>
+    </div>
+
+    <!-- 확장 2 -->
+    <div class="ext">
+        <div class="ext-head lv2">
+            <span class="ext-badge lv2">확장 2</span>
+            <span class="ext-title">잘못된 입력 처리 — 논리 연산자 활용</span>
+        </div>
+        <div class="ext-body">
+            <div class="ext-desc">음수이거나 100을 초과하는 점수는 유효하지 않습니다. <strong>논리 연산자 <code>||</code>(또는)</strong>로 두 조건을 동시에 검사합니다.</div>
+
+            <!-- 논리 연산자 SVG -->
+            <div style="text-align:center;margin:8px 0 12px;">
+                <svg viewBox="0 0 460 60" style="max-width:460px;width:100%">
+                    <rect x="5" y="10" width="130" height="40" rx="6" fill="#fee2e2" stroke="#ef4444" stroke-width="1.2"/>
+                    <text x="70" y="28" text-anchor="middle" font-size="10" fill="#dc2626" font-weight="700">score &lt; 0</text>
+                    <text x="70" y="44" text-anchor="middle" font-size="9" fill="#b91c1c">음수 입력</text>
+
+                    <text x="163" y="35" text-anchor="middle" font-size="16" fill="#6366f1" font-weight="900">||</text>
+                    <text x="163" y="52" text-anchor="middle" font-size="8" fill="#818cf8">OR (또는)</text>
+
+                    <rect x="188" y="10" width="130" height="40" rx="6" fill="#fee2e2" stroke="#ef4444" stroke-width="1.2"/>
+                    <text x="253" y="28" text-anchor="middle" font-size="10" fill="#dc2626" font-weight="700">score &gt; 100</text>
+                    <text x="253" y="44" text-anchor="middle" font-size="9" fill="#b91c1c">100 초과 입력</text>
+
+                    <line x1="325" y1="30" x2="348" y2="30" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#ca)"/>
+                    <rect x="352" y="10" width="103" height="40" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+                    <text x="403" y="28" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">잘못된 입력</text>
+                    <text x="403" y="43" text-anchor="middle" font-size="9" fill="#78350f">오류 메시지 출력</text>
+                    <defs>
+                        <marker id="ca" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                            <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                        </marker>
+                    </defs>
+                </svg>
+            </div>
+
+            <div class="code"><span class="kw">if</span> (score <span class="op">&lt;</span> <span class="num">0</span> <span class="op">||</span> score <span class="op">&gt;</span> <span class="num">100</span>) {
+    <span class="fn">printf</span>(<span class="str">"오류: 0~100 범위의 점수를 입력하세요.\n"</span>);
+} <span class="kw">else if</span> (score <span class="op">&gt;=</span> <span class="num">60</span>) {
+    <span class="fn">printf</span>(<span class="str">"결과: 합격입니다!\n"</span>);
+} <span class="kw">else</span> {
+    <span class="fn">printf</span>(<span class="str">"결과: 불합격입니다.\n"</span>);
+}</div>
+            <div class="practice">
+                <div class="practice-head">논리 연산자 정리</div>
+                <div class="practice-body" style="font-size:13px;color:#475569;padding-top:8px;line-height:1.9;">
+                    <code>||</code> (OR) — 둘 중 하나라도 참이면 참 &nbsp;|&nbsp; <code>-5 &lt; 0</code>이 참이므로 → 오류로 처리<br>
+                    <code>&amp;&amp;</code> (AND) — 둘 다 참이어야 참 &nbsp;|&nbsp; <code>score &gt;= 0 &amp;&amp; score &lt;= 100</code> 유효 범위 검사
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 확장 3 -->
+    <div class="ext">
+        <div class="ext-head lv3">
+            <span class="ext-badge lv3">확장 3</span>
+            <span class="ext-title">결과에 맞는 격려 메시지 출력</span>
+        </div>
+        <div class="ext-body">
+            <div class="ext-desc">단순한 합격/불합격 외에, 합격이면 "축하합니다!", 불합격이면 "다음에 도전!" 메시지를 추가합니다.</div>
+
+            <!-- 메시지 분기 SVG -->
+            <div style="text-align:center;margin:8px 0 12px;">
+                <svg viewBox="0 0 460 78" style="max-width:460px;width:100%">
+                    <rect x="160" y="5" width="140" height="28" rx="6" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.5"/>
+                    <text x="230" y="23" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">avg >= 60 ?</text>
+                    <line x1="230" y1="33" x2="170" y2="52" stroke="#22c55e" stroke-width="1.5" marker-end="url(#da)"/>
+                    <line x1="230" y1="33" x2="290" y2="52" stroke="#ef4444" stroke-width="1.5" marker-end="url(#db)"/>
+                    <text x="180" y="48" font-size="9" fill="#22c55e" font-weight="700">YES</text>
+                    <text x="264" y="48" font-size="9" fill="#ef4444" font-weight="700">NO</text>
+                    <rect x="40" y="54" width="160" height="22" rx="5" fill="#dcfce7" stroke="#22c55e" stroke-width="1.2"/>
+                    <text x="120" y="69" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">합격! 축하합니다!</text>
+                    <rect x="258" y="54" width="162" height="22" rx="5" fill="#fee2e2" stroke="#ef4444" stroke-width="1.2"/>
+                    <text x="339" y="69" text-anchor="middle" font-size="9" fill="#dc2626" font-weight="700">불합격. 다음에 도전!</text>
+                    <defs>
+                        <marker id="da" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                            <path d="M0,0 L10,5 L0,10 z" fill="#22c55e"/>
+                        </marker>
+                        <marker id="db" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                            <path d="M0,0 L10,5 L0,10 z" fill="#ef4444"/>
+                        </marker>
+                    </defs>
+                </svg>
+            </div>
+
+            <div class="code"><span class="kw">if</span> (avg <span class="op">&gt;=</span> <span class="num">60</span>) {
+    <span class="fn">printf</span>(<span class="str">"결과: 합격입니다!\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"축하합니다! 정말 잘했어요!\n"</span>);
+} <span class="kw">else</span> {
+    <span class="fn">printf</span>(<span class="str">"결과: 불합격입니다.\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"다음에 도전! 분명 할 수 있어요!\n"</span>);
+}</div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     PAGE 4 — 전체 코드 + 도전 과제
+═══════════════════════════════════════════════════════ -->
+<div class="page">
+    <h2>전체 코드 — 확장 3까지 완성본</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/keyboard.png" alt="키보드" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>세 가지 확장을 모두 합친 최종 코드입니다. 직접 입력해서 실행해보세요.</p>
+
+    <div class="final-code-header">
+        <span class="dot" style="background:#ef4444;"></span>
+        <span class="dot" style="background:#f59e0b;"></span>
+        <span class="dot" style="background:#22c55e;"></span>
+        <span style="margin-left:6px;">pass_fail.c — 합격 불합격 판정 프로그램 완성본</span>
+    </div>
+    <div class="final-code-body"><span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="kw">int</span> korean, math, english, avg;
+
+    <span class="cmt">/* ── 점수 입력 ── */</span>
+    <span class="fn">printf</span>(<span class="str">"=== 합격 불합격 판정 프로그램 ===\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"국어 점수를 입력하세요: "</span>);
+    <span class="fn">scanf</span>(<span class="str">"%d"</span>, <span class="op">&amp;</span>korean);
+    <span class="fn">printf</span>(<span class="str">"수학 점수를 입력하세요: "</span>);
+    <span class="fn">scanf</span>(<span class="str">"%d"</span>, <span class="op">&amp;</span>math);
+    <span class="fn">printf</span>(<span class="str">"영어 점수를 입력하세요: "</span>);
+    <span class="fn">scanf</span>(<span class="str">"%d"</span>, <span class="op">&amp;</span>english);
+
+    <span class="cmt">/* ── 입력값 검증 ── */</span>
+    <span class="kw">if</span> (korean <span class="op">&lt;</span> <span class="num">0</span> <span class="op">||</span> korean <span class="op">&gt;</span> <span class="num">100</span> <span class="op">||</span>
+        math   <span class="op">&lt;</span> <span class="num">0</span> <span class="op">||</span> math   <span class="op">&gt;</span> <span class="num">100</span> <span class="op">||</span>
+        english <span class="op">&lt;</span> <span class="num">0</span> <span class="op">||</span> english <span class="op">&gt;</span> <span class="num">100</span>) {
+        <span class="fn">printf</span>(<span class="str">"오류: 0~100 범위의 점수를 입력하세요.\n"</span>);
+        <span class="kw">return</span> <span class="num">1</span>;
+    }
+
+    <span class="cmt">/* ── 평균 계산 ── */</span>
+    avg = (korean <span class="op">+</span> math <span class="op">+</span> english) <span class="op">/</span> <span class="num">3</span>;
+    <span class="fn">printf</span>(<span class="str">"\n평균 점수: %d점\n"</span>, avg);
+
+    <span class="cmt">/* ── 합격 판정 + 격려 메시지 ── */</span>
+    <span class="kw">if</span> (avg <span class="op">&gt;=</span> <span class="num">60</span>) {
+        <span class="fn">printf</span>(<span class="str">"결과: 합격입니다!\n"</span>);
+        <span class="fn">printf</span>(<span class="str">"축하합니다! 정말 잘했어요!\n"</span>);
+    } <span class="kw">else</span> {
+        <span class="fn">printf</span>(<span class="str">"결과: 불합격입니다.\n"</span>);
+        <span class="fn">printf</span>(<span class="str">"다음에 도전! 분명 할 수 있어요!\n"</span>);
+    }
+
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+
+    <!-- 실행 결과 예시 SVG -->
+    <div style="text-align:center;margin:10px 0 16px;">
+        <svg viewBox="0 0 460 100" style="max-width:460px;width:100%">
+            <rect x="5" y="5" width="210" height="92" rx="8" fill="#0f172a"/>
+            <text x="18" y="22" font-size="9" fill="#64748b" font-family="JetBrains Mono">국어: 72  수학: 55  영어: 83</text>
+            <text x="18" y="40" font-size="10" fill="#e2e8f0" font-family="JetBrains Mono">평균 점수: 70점</text>
+            <text x="18" y="58" font-size="10" fill="#86efac" font-family="JetBrains Mono">결과: 합격입니다!</text>
+            <text x="18" y="76" font-size="10" fill="#86efac" font-family="JetBrains Mono">축하합니다!</text>
+            <rect x="5" y="88" width="210" height="9" rx="0 0 8 8" fill="#1e293b"/>
+            <text x="110" y="95" text-anchor="middle" font-size="8" fill="#22c55e" font-weight="700">평균 70점 → 합격</text>
+
+            <rect x="245" y="5" width="210" height="92" rx="8" fill="#0f172a"/>
+            <text x="258" y="22" font-size="9" fill="#64748b" font-family="JetBrains Mono">국어: 50  수학: 45  영어: 55</text>
+            <text x="258" y="40" font-size="10" fill="#e2e8f0" font-family="JetBrains Mono">평균 점수: 50점</text>
+            <text x="258" y="58" font-size="10" fill="#fca5a5" font-family="JetBrains Mono">결과: 불합격입니다.</text>
+            <text x="258" y="76" font-size="10" fill="#fca5a5" font-family="JetBrains Mono">다음에 도전!</text>
+            <rect x="245" y="88" width="210" height="9" rx="0 0 8 8" fill="#1e293b"/>
+            <text x="350" y="95" text-anchor="middle" font-size="8" fill="#ef4444" font-weight="700">평균 50점 → 불합격</text>
+        </svg>
+    </div>
+
+    <!-- 도전 과제 -->
+    <div class="challenge">
+        <div class="challenge-title">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1L10 5.5H15L11 8.5L12.5 13L8 10.2L3.5 13L5 8.5L1 5.5H6L8 1Z" fill="#6366f1"/></svg>
+            도전 과제
+        </div>
+        <div class="challenge-item">점수를 90점 이상, 80점 이상, 70점 이상, 60점 이상, 60점 미만으로 나눠 "A / B / C / D / F" 등급도 출력해보세요. (<code>else if</code> 활용)</div>
+        <div class="challenge-item">합격 과목 수를 세어 출력해보세요. 예: "60점 이상 과목: 2개"</div>
+        <div class="challenge-item">세 과목 중 가장 높은 점수와 가장 낮은 점수를 찾아 출력해보세요.</div>
+        <div class="challenge-item">while 반복문을 사용해 잘못된 점수를 입력하면 다시 입력받도록 바꿔보세요.</div>
+    </div>
+
+    <!-- 요약 -->
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>이 프로젝트에서 배운 것</h3>
+        <ul>
+            <li><code>scanf("%d", &amp;변수)</code> — 키보드에서 정수 입력받기</li>
+            <li><code>if (조건) { } else { }</code> — 조건에 따라 실행 흐름 분기</li>
+            <li><code>else if</code> — 세 가지 이상 경우를 순서대로 검사</li>
+            <li><code>||</code> (OR), <code>&amp;&amp;</code> (AND) — 두 조건을 묶는 논리 연산자</li>
+            <li>평균 = (합계) / 개수 — 정수 나눗셈, 소수점 이하 버림 주의</li>
+            <li>입력 검증 — 프로그램 안전성의 기본, 항상 범위를 확인</li>
+        </ul>
+    </div>
+</div>
+
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="완성" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/flowchart.png" alt="흐름도" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

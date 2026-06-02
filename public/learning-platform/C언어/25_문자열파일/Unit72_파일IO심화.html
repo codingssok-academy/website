@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Unit 72. 파일 I/O 심화 — C 언어</title>
+    <link rel="stylesheet" href="../common.css">
+</head>
+
+<body>
+    <div class="wrap">
+        <div class="hdr">
+            <h1>Unit 72. 파일 I/O 심화</h1>
+            <div class="sub">바이너리 · fseek/ftell · 구조체 저장 · 임시파일 · 에러 처리</div>
+            <span class="unit-badge">Chapter 25 · 문자열·파일</span>
+            <div class="level-bar"><span class="on"></span><span class="on"></span><span class="on"></span><span
+                    class="on"></span></div>
+            <div class="meta"><span class="tag pri">💾 파일I/O</span><span class="tag acc">📝 15문제</span><span
+                    class="tag">⏱ 50분</span></div>
+        </div>
+        <div class="stu-bar"><label>👤 이름 <input type="text" id="stu-name" placeholder="이름"></label><label>📅 날짜 <input
+                    type="date" id="stu-date"></label></div>
+        <div id="problems"></div>
+        <div class="submit-section">
+            <p>모든 문제를 풀었나요? 📨</p><button class="btn-submit" id="btn-submit">📄 제출하기</button>
+        </div>
+        <div class="modal-overlay" id="submit-modal">
+            <div class="modal-box">
+                <div class="modal-icon">✅</div>
+                <h3>제출 완료!</h3>
+                <p>학습지가 저장되었습니다.</p>
+                <div style="margin:12px 0"><span class="info-tag" id="modal-name"></span> <span class="info-tag"
+                        id="modal-date"></span> <span class="info-tag" id="modal-count"></span></div>
+                <p style="font-size:.78rem;color:var(--dim)">📁 <strong id="modal-filename"></strong></p><button
+                    class="btn-close-modal" id="btn-close-modal">확인</button>
+            </div>
+        </div>
+        <div class="pg"><a href="Unit71_문자열심화.html">← Unit 71</a><span class="tag active">Unit 72</span><a
+                href="../26_DP그래프/Unit73_DP.html">Unit 73 →</a></div>
+        <div class="ft">💾 파일 I/O 심화 · Unit 72</div>
+    </div>
+    <script>
+        const P = [
+            {
+                n: 1, t: "파일 열기 모드 총정리", d: 1,
+                q: `각 모드의 동작을 설명하세요.
+<pre class="code-c">FILE *f;
+f = fopen("test.txt", "r");   <span class="cm">// ?</span>
+f = fopen("test.txt", "w");   <span class="cm">// ?</span>
+f = fopen("test.txt", "a");   <span class="cm">// ?</span>
+f = fopen("test.txt", "r+");  <span class="cm">// ?</span>
+f = fopen("test.txt", "w+");  <span class="cm">// ?</span>
+f = fopen("test.bin", "rb");  <span class="cm">// ?</span>
+f = fopen("test.bin", "wb");  <span class="cm">// ?</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">"r"  → 읽기 전용 (파일 없으면 실패)
+"w"  → 쓰기 전용 (<span class="err">기존 내용 삭제!</span> 없으면 생성)
+"a"  → 추가 전용 (끝에 이어쓰기, 없으면 생성)
+"r+" → 읽기+쓰기 (파일 없으면 실패)
+"w+" → 읽기+쓰기 (기존 삭제, 없으면 생성)
+"rb" → 바이너리 읽기
+"wb" → 바이너리 쓰기</pre><div class="trace">⚠️ "w"는 기존 파일 내용 전부 삭제!<br>b: 바이너리 모드 (윈도우에서 중요!)<br>윈도우: \\n ⟷ \\r\\n 변환 방지</div>`},
+
+            {
+                n: 2, t: "바이너리 파일 읽기/쓰기 (fread/fwrite)", d: 2,
+                q: `정수 배열을 바이너리 파일로 저장하고 읽으세요.
+<pre class="code-c">int arr[5] = {10, 20, 30, 40, 50};
+<span class="cm">// 바이너리로 저장 → 다시 읽기</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c"><span class="cm">// 저장</span>
+FILE *f = fopen("data.bin", "wb");
+fwrite(arr, sizeof(int), 5, f);
+fclose(f);
+
+<span class="cm">// 읽기</span>
+int loaded[5];
+f = fopen("data.bin", "rb");
+size_t read = fread(loaded, sizeof(int), 5, f);
+fclose(f);
+printf("읽은 수: %lu\\n", read); <span class="cm">// 5</span>
+for (int i=0;i<5;i++) printf("%d ",loaded[i]);</pre><div class="trace">fwrite(데이터, 크기, 개수, 파일)<br>fread(버퍼, 크기, 개수, 파일)<br>텍스트보다 빠르고 정확!</div>`},
+
+            {
+                n: 3, t: "구조체 파일 저장/로드", d: 2,
+                q: `학생 배열을 파일에 저장하고 불러오세요.
+<pre class="code-c">typedef struct { char name[20]; int score; } Student;
+Student arr[] = { {"Kim",90}, {"Lee",85}, {"Park",95} };</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c"><span class="cm">// 저장</span>
+FILE *f = fopen("students.dat", "wb");
+int n = 3;
+fwrite(&n, sizeof(int), 1, f); <span class="cm">// 개수 먼저!</span>
+fwrite(arr, sizeof(Student), n, f);
+fclose(f);
+
+<span class="cm">// 로드</span>
+f = fopen("students.dat", "rb");
+int count;
+fread(&count, sizeof(int), 1, f);
+Student *loaded = malloc(count * sizeof(Student));
+fread(loaded, sizeof(Student), count, f);
+fclose(f);
+
+for (int i=0;i<count;i++)
+    printf("%s: %d\\n", loaded[i].name, loaded[i].score);
+free(loaded);</pre>`},
+
+            {
+                n: 4, t: "fseek / ftell / rewind", d: 2,
+                q: `파일의 특정 위치로 이동하세요.
+<pre class="code-c"><span class="cm">// 파일 크기 구하기</span>
+<span class="cm">// 파일 중간부터 읽기</span>
+<span class="cm">// 처음으로 돌아가기</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">FILE *f = fopen("data.bin", "rb");
+
+<span class="cm">// 파일 크기</span>
+fseek(f, 0, SEEK_END);   <span class="cm">// 끝으로</span>
+long size = ftell(f);      <span class="cm">// 현재 위치 = 크기</span>
+printf("크기: %ld bytes\\n", size);
+
+<span class="cm">// 3번째 int 위치로</span>
+fseek(f, 2*sizeof(int), SEEK_SET);
+int val;
+fread(&val, sizeof(int), 1, f);
+printf("3번째: %d\\n", val);
+
+<span class="cm">// 처음으로</span>
+rewind(f); <span class="cm">// = fseek(f, 0, SEEK_SET)</span>
+fclose(f);</pre><div class="trace">SEEK_SET: 파일 시작 기준<br>SEEK_CUR: 현재 위치 기준<br>SEEK_END: 파일 끝 기준</div>`},
+
+            {
+                n: 5, t: "한 줄씩 읽기 (fgets)", d: 2,
+                q: `텍스트 파일을 한 줄씩 읽고 줄번호를 붙이세요.
+<pre class="code-c"><span class="cm">// 입력 파일 → 줄번호 붙여서 출력</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">FILE *f = fopen("input.txt", "r");
+if (!f) { perror("open"); return 1; }
+char line[256];
+int num = 1;
+while (fgets(line, sizeof(line), f)) {
+    <span class="cm">// 줄바꿈 제거</span>
+    line[strcspn(line, "\\n")] = '\\0';
+    printf("%3d: %s\\n", num++, line);
+}
+fclose(f);</pre><div class="trace">fgets: 줄바꿈 포함해서 읽음!<br>strcspn: 첫 '\\n' 위치 찾기<br>해당 위치에 '\\0' → 줄바꿈 제거</div>`},
+
+            {
+                n: 6, t: "fprintf / fscanf", d: 2,
+                q: `텍스트 파일에 포맷팅된 데이터를 저장하세요.
+<pre class="code-c"><span class="cm">// 이름,점수 형식으로 저장 → 다시 읽기</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c"><span class="cm">// 저장</span>
+FILE *f = fopen("scores.txt", "w");
+fprintf(f, "Kim %d\\n", 90);
+fprintf(f, "Lee %d\\n", 85);
+fclose(f);
+
+<span class="cm">// 읽기</span>
+f = fopen("scores.txt", "r");
+char name[20]; int score;
+while (fscanf(f, "%s %d", name, &score) == 2)
+    printf("%s: %d점\\n", name, score);
+fclose(f);</pre>`},
+
+            {
+                n: 7, t: "파일 복사 프로그램", d: 2,
+                q: `바이너리 안전한 파일 복사를 작성하세요.
+<pre class="code-c">int fileCopy(const char *src, const char *dst) {
+    <span class="cm">// 모든 종류의 파일 복사 가능</span>
+}</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">int fileCopy(const char *src, const char *dst) {
+    FILE *in = fopen(src, "rb");
+    FILE *out = fopen(dst, "wb");
+    if (!in || !out) return -1;
+
+    char buf[4096]; <span class="cm">// 4KB 버퍼</span>
+    size_t n;
+    while ((n = fread(buf, 1, sizeof(buf), in)) > 0)
+        fwrite(buf, 1, n, out);
+
+    fclose(in);
+    fclose(out);
+    return 0;
+}</pre><div class="trace">"rb"/"wb": 바이너리 → 모든 파일 OK<br>4KB 버퍼로 효율적 복사<br>fread 반환값 = 실제 읽은 바이트 수</div>`},
+
+            {
+                n: 8, t: "임시 파일 (tmpfile/tmpnam)", d: 2,
+                q: `임시 파일을 안전하게 생성하세요.
+<pre class="code-c"><span class="cm">// tmpfile()과 tmpnam() 사용법과 차이</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c"><span class="cm">// 방법 1: tmpfile (더 안전! 자동 삭제)</span>
+FILE *tmp = tmpfile();
+fprintf(tmp, "임시 데이터");
+rewind(tmp);
+char buf[50];
+fgets(buf, sizeof(buf), tmp);
+printf("%s\\n", buf);
+fclose(tmp); <span class="cm">// 자동 삭제됨!</span>
+
+<span class="cm">// 방법 2: tmpnam (파일명 생성만)</span>
+char name[L_tmpnam];
+tmpnam(name);
+printf("임시파일명: %s\\n", name);
+<span class="cm">// 직접 열고 닫고 삭제해야 함</span></pre><div class="trace">tmpfile: 익명 임시파일, fclose 시 자동 삭제<br>tmpnam: 이름만 생성, 보안 취약 (TOCTOU)<br>→ tmpfile이 더 안전!</div>`},
+
+            {
+                n: 9, t: "버퍼링 제어 (setvbuf/fflush)", d: 2,
+                q: `파일 버퍼링 모드를 설정하세요.
+<pre class="code-c"><span class="cm">// 전체 버퍼링 / 줄 버퍼링 / 버퍼 없음</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c"><span class="cm">// 전체 버퍼링 (기본, 파일)</span>
+setvbuf(f, NULL, _IOFBF, 8192);
+
+<span class="cm">// 줄 버퍼링 (기본, stdout)</span>
+setvbuf(f, NULL, _IOLBF, 0);
+
+<span class="cm">// 버퍼 없음 (기본, stderr)</span>
+setvbuf(f, NULL, _IONBF, 0);
+
+<span class="cm">// 수동 플러시</span>
+fprintf(f, "즉시 기록!");
+fflush(f); <span class="cm">// 버퍼→파일 강제 기록</span></pre><div class="trace">_IOFBF: Full Buffering<br>_IOLBF: Line Buffering<br>_IONBF: No Buffering<br>fflush: 버퍼 강제 비우기</div>`},
+
+            {
+                n: 10, t: "파일 크기와 단어 수 세기", d: 2,
+                q: `텍스트 파일의 줄 수, 단어 수, 문자 수를 세세요.
+<pre class="code-c"><span class="cm">// wc 명령어 구현!</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">void wc(const char *filename) {
+    FILE *f = fopen(filename, "r");
+    int lines=0, words=0, chars=0;
+    int inWord = 0;
+    int ch;
+    while ((ch = fgetc(f)) != EOF) {
+        chars++;
+        if (ch == '\\n') lines++;
+        if (ch==' '||ch=='\\n'||ch=='\\t') inWord=0;
+        else if (!inWord) { inWord=1; words++; }
+    }
+    fclose(f);
+    printf("%d줄 %d단어 %d문자\\n", lines, words, chars);
+}</pre>`},
+
+            {
+                n: 11, t: "[출력예측] 파일 포인터 이동", d: 2,
+                q: `<pre class="code-c"><span class="cm">// data.bin에 {10,20,30,40,50} 저장된 상태</span>
+FILE *f = fopen("data.bin", "rb");
+int val;
+fseek(f, 3*sizeof(int), SEEK_SET);
+fread(&val, sizeof(int), 1, f);
+printf("%d\\n", val);
+printf("%ld\\n", ftell(f));
+fseek(f, -2*(long)sizeof(int), SEEK_CUR);
+fread(&val, sizeof(int), 1, f);
+printf("%d\\n", val);
+fclose(f);</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">40<br>16<br>30</div><div class="trace">fseek(3*4, SET): 위치 12 → arr[3]=40<br>fread 후: 위치 16<br>fseek(-8, CUR): 16-8=8 → arr[2]=30</div>`
+            },
+
+            {
+                n: 12, t: "파일 잠금 (flock 개념)", d: 2,
+                q: `다중 프로세스에서 파일 접근을 안전하게 하는 방법을 설명하세요.
+<pre class="code-c"><span class="cm">// 파일 잠금이 필요한 이유와 방법</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c"><span class="cm">// POSIX flock (Linux/Mac)</span>
+#include &lt;sys/file.h&gt;
+int fd = open("data.txt", O_RDWR);
+flock(fd, LOCK_EX); <span class="cm">// 배타적 잠금</span>
+<span class="cm">// ... 파일 작업 ...</span>
+flock(fd, LOCK_UN); <span class="cm">// 잠금 해제</span>
+
+<span class="cm">// Windows: LockFile / _locking</span>
+<span class="cm">// 크로스플랫폼: 잠금 파일(.lock) 생성</span>
+
+<span class="cm">// 간단한 방법: .lock 파일</span>
+FILE *lock = fopen("data.lock", "wx"); <span class="cm">// 독점 생성</span>
+if (lock) {
+    <span class="cm">// 잠금 획득 → 작업 수행</span>
+    fclose(lock);
+    remove("data.lock"); <span class="cm">// 잠금 해제</span>
+}</pre>`},
+
+            {
+                n: 13, t: "INI 파일 파서", d: 3,
+                q: `간단한 INI 형식 파일을 파싱하세요.
+<pre class="code-c"><span class="cm">// [Section]</span>
+<span class="cm">// key = value</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">void parseINI(const char *filename) {
+    FILE *f = fopen(filename, "r");
+    char line[256], section[50]="";
+    while (fgets(line, sizeof(line), f)) {
+        line[strcspn(line,"\\n")] = 0;
+        if (line[0]=='[') {
+            sscanf(line, "[%[^]]]", section);
+            printf("섹션: %s\\n", section);
+        } else if (line[0]!=';' && line[0]!='#' && line[0]) {
+            char key[50], val[100];
+            if (sscanf(line, "%[^=]=%[^\\n]", key, val)==2)
+                printf("  %s = %s\\n", key, val);
+        }
+    }
+    fclose(f);
+}</pre>`},
+
+            {
+                n: 14, t: "파일 에러 처리 패턴", d: 2,
+                q: `안전한 파일 처리 패턴을 작성하세요.
+<pre class="code-c"><span class="cm">// 열기 실패, 읽기 에러, 디스크 풀 등 처리</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">int processFile(const char *name) {
+    FILE *f = fopen(name, "r");
+    if (!f) {
+        perror("fopen"); return -1;
+    }
+
+    char buf[256];
+    while (fgets(buf, sizeof(buf), f)) {
+        if (ferror(f)) {
+            perror("fgets");
+            fclose(f); return -2;
+        }
+        <span class="cm">// 처리...</span>
+    }
+
+    if (!feof(f)) {
+        printf("예상치 못한 종료!\\n");
+        fclose(f); return -3;
+    }
+
+    fclose(f);
+    return 0; <span class="cm">// 성공</span>
+}</pre><div class="trace">ferror: 에러 발생 확인<br>feof: EOF 도달 확인<br>perror: strerror(errno) 자동 출력</div>`},
+
+            {
+                n: 15, t: "🏆 간단한 데이터베이스 (CRUD)", d: 4,
+                q: `파일 기반 학생 DB의 CRUD를 구현하세요.
+<pre class="code-c"><span class="cm">// Create(추가), Read(조회), Update(수정), Delete(삭제)</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">typedef struct { int id; char name[20]; int score; int active; } Rec;
+
+void create(const char *fn, Rec r) {
+    FILE *f = fopen(fn, "ab");
+    r.active = 1;
+    fwrite(&r, sizeof(Rec), 1, f);
+    fclose(f);
+}
+Rec* readAll(const char *fn, int *cnt) {
+    FILE *f = fopen(fn, "rb");
+    fseek(f,0,SEEK_END);
+    *cnt = ftell(f)/sizeof(Rec);
+    rewind(f);
+    Rec *arr = malloc(*cnt * sizeof(Rec));
+    fread(arr, sizeof(Rec), *cnt, f);
+    fclose(f); return arr;
+}
+void update(const char *fn, int id, int newScore) {
+    FILE *f = fopen(fn, "r+b");
+    Rec r;
+    while (fread(&r,sizeof(Rec),1,f)==1) {
+        if (r.id==id && r.active) {
+            r.score = newScore;
+            fseek(f, -(long)sizeof(Rec), SEEK_CUR);
+            fwrite(&r, sizeof(Rec), 1, f);
+            break;
+        }
+    }
+    fclose(f);
+}
+void delete(const char *fn, int id) {
+    FILE *f = fopen(fn, "r+b");
+    Rec r;
+    while (fread(&r,sizeof(Rec),1,f)==1) {
+        if (r.id==id) {
+            r.active = 0; <span class="cm">// 논리적 삭제!</span>
+            fseek(f, -(long)sizeof(Rec), SEEK_CUR);
+            fwrite(&r, sizeof(Rec), 1, f);
+            break;
+        }
+    }
+    fclose(f);
+}</pre>`}
+        ];
+        const c = document.getElementById('problems'); P.forEach(p => { const dc = p.d <= 1 ? 'ez' : p.d <= 2 ? 'md' : 'hd'; const dots = Array.from({ length: 5 }, (_, i) => `<span${i < p.d ? ' class="on"' : ''}>​</span>`).join(''); c.innerHTML += `<div class="prob"><div class="prob-top"><div class="prob-num ${dc}">${p.n}</div><div class="prob-title">${p.t}</div><div class="diff-dots">${dots}</div></div><div class="prob-body"><div class="q">${p.q}</div><textarea class="write" placeholder="✍️ 답을 작성하세요" rows="8"></textarea><details class="ans"><summary>정답 및 해설 보기</summary><div class="ans-body">${p.a}</div></details></div></div>`; });
+    </script>
+    <script src="../submit.js"></script>
+    <script src="../../platform.js"></script>
+</body>
+
+</html>

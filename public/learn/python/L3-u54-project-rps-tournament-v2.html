@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 프로젝트: 가위바위보 토너먼트</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+/* -- 페이지 -- */
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+/* -- 챕터 표지 -- */
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+
+/* -- 본문 -- */
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 16px; font-weight: 700; color: #1e3a5f; margin: 18px 0 10px; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+ul, ol { margin: 0 0 12px 20px; }
+li { font-size: 14px; color: #374151; line-height: 1.8; }
+
+/* -- 코드 블록 -- */
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13.5px;
+    color: #e2e8f0; line-height: 1.85; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.code .dec { color: #f9a8d4; }
+
+/* -- 따라해보세요 -- */
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+
+/* -- 문제 -- */
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+
+/* -- 요약 -- */
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+/* -- 단계 박스 -- */
+.step-box { border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 14px 18px; margin: 14px 0; background: #fff; }
+.step-label { font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+.step-title { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 8px; }
+
+/* -- 출력 박스 -- */
+.output-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #334155; line-height: 1.7; margin: 10px 0; }
+
+/* -- 비교 테이블 -- */
+.compare-table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13px; }
+.compare-table th { background: #1e3a5f; color: #fff; padding: 8px 12px; text-align: left; font-weight: 700; }
+.compare-table td { padding: 7px 12px; border-bottom: 1px solid #e2e8f0; color: #374151; }
+.compare-table tr:nth-child(even) td { background: #f8fafc; }
+.compare-table code { background: #e0e7ff; padding: 1px 5px; border-radius: 3px; font-family: 'JetBrains Mono', monospace; color: #3730a3; font-size: 12px; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- 1페이지: 표지 -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">54</div>
+        <div class="cover-label">L3 — Unit 54 Project</div>
+        <h1 class="cover-title">프로젝트:<br>가위바위보 토너먼트</h1>
+        <p class="cover-sub">플레이어 클래스, 랜덤 컴퓨터 상대, 재귀 토너먼트 대진표, 승패 기록, 최종 우승자 출력까지 — 객체지향과 재귀를 결합한 완성형 게임을 만듭니다.</p>
+
+        <!-- SVG: 토너먼트 전체 구조도 -->
+        <div style="margin:24px 0;">
+            <svg viewBox="0 0 520 190" style="max-width:520px;width:100%">
+                <defs>
+                    <marker id="arwCov" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                    </marker>
+                </defs>
+                <!-- 8강 -->
+                <rect x="5" y="10" width="80" height="28" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="45" y="28" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">Alice vs Bot1</text>
+                <rect x="5" y="48" width="80" height="28" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="45" y="66" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">Bob vs Bot2</text>
+                <rect x="5" y="100" width="80" height="28" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="45" y="118" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">Carol vs Bot3</text>
+                <rect x="5" y="138" width="80" height="28" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="45" y="156" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">Dave vs Bot4</text>
+                <!-- 준결승 -->
+                <line x1="88" y1="24" x2="140" y2="55" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#arwCov)"/>
+                <line x1="88" y1="62" x2="140" y2="55" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#arwCov)"/>
+                <line x1="88" y1="114" x2="140" y2="130" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#arwCov)"/>
+                <line x1="88" y1="152" x2="140" y2="130" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#arwCov)"/>
+                <rect x="143" y="38" width="90" height="34" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="188" y="53" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">준결승 A</text>
+                <text x="188" y="65" text-anchor="middle" font-size="8" fill="#64748b">승자 진출</text>
+                <rect x="143" y="113" width="90" height="34" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="188" y="128" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">준결승 B</text>
+                <text x="188" y="140" text-anchor="middle" font-size="8" fill="#64748b">승자 진출</text>
+                <!-- 결승 -->
+                <line x1="236" y1="55" x2="290" y2="95" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#arwCov)"/>
+                <line x1="236" y1="130" x2="290" y2="95" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#arwCov)"/>
+                <rect x="293" y="72" width="90" height="46" rx="8" fill="#1e3a5f"/>
+                <text x="338" y="91" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">결승전</text>
+                <text x="338" y="108" text-anchor="middle" font-size="8" fill="#93c5fd">최종 우승자</text>
+                <!-- 우승자 -->
+                <line x1="386" y1="95" x2="415" y2="95" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+                <rect x="418" y="72" width="90" height="46" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="2"/>
+                <text x="463" y="91" text-anchor="middle" font-size="10" fill="#92400e" font-weight="900">Champion</text>
+                <text x="463" y="108" text-anchor="middle" font-size="8" fill="#64748b">기록 저장</text>
+                <!-- 레이블 -->
+                <text x="45" y="185" text-anchor="middle" font-size="8" fill="#64748b">8강</text>
+                <text x="188" y="165" text-anchor="middle" font-size="8" fill="#64748b">준결승</text>
+                <text x="338" y="130" text-anchor="middle" font-size="8" fill="#64748b">결승</text>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/puzzle.png" alt="고급 기능" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 유닛에서 만드는 것</h3>
+            <ul>
+                <li><code>Player</code> 클래스로 이름, 승/패/무 기록을 객체로 관리할 수 있습니다.</li>
+                <li><code>random.choice()</code>로 컴퓨터가 매번 다른 선택을 하는 랜덤 상대를 만들 수 있습니다.</li>
+                <li>재귀 함수로 참가자 목록을 절반씩 줄여가며 토너먼트 대진표를 구현할 수 있습니다.</li>
+                <li>매 경기 결과를 <code>Player</code> 객체의 속성에 기록하고 통계로 출력할 수 있습니다.</li>
+                <li>최종 우승자를 결정하고 전체 경기 기록을 출력할 수 있습니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- 2페이지: Player 클래스 -->
+<div class="page">
+    <h2>Step 1 — Player 클래스 설계</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="처리" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>토너먼트의 핵심은 <code>Player</code> 클래스입니다. 이름과 승/패/무 카운터를 속성으로 가지고, 게임 결과를 기록하는 메서드를 제공합니다.</p>
+
+    <!-- SVG: Player 클래스 UML -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 160" style="max-width:500px;width:100%">
+            <!-- 클래스 박스 -->
+            <rect x="130" y="10" width="240" height="140" rx="8" fill="#fff" stroke="#1e3a5f" stroke-width="2"/>
+            <!-- 클래스명 -->
+            <rect x="130" y="10" width="240" height="36" rx="8" fill="#1e3a5f"/>
+            <rect x="130" y="38" width="240" height="8" fill="#1e3a5f"/>
+            <text x="250" y="34" text-anchor="middle" font-size="13" fill="#fff" font-weight="900">Player</text>
+            <!-- 속성 구분선 -->
+            <line x1="130" y1="56" x2="370" y2="56" stroke="#e2e8f0" stroke-width="1.5"/>
+            <!-- 속성 -->
+            <text x="148" y="72" font-size="11" fill="#374151" font-family="monospace">name: str</text>
+            <text x="148" y="88" font-size="11" fill="#374151" font-family="monospace">wins: int = 0</text>
+            <text x="148" y="104" font-size="11" fill="#374151" font-family="monospace">losses: int = 0</text>
+            <!-- 메서드 구분선 -->
+            <line x1="130" y1="112" x2="370" y2="112" stroke="#e2e8f0" stroke-width="1.5"/>
+            <!-- 메서드 -->
+            <text x="148" y="128" font-size="11" fill="#2563eb" font-family="monospace">record_win()</text>
+            <text x="148" y="144" font-size="11" fill="#2563eb" font-family="monospace">record_loss()</text>
+            <!-- 아이콘 표시 -->
+            <text x="355" y="72" font-size="10" fill="#94a3b8">-</text>
+            <text x="355" y="88" font-size="10" fill="#94a3b8">-</text>
+            <text x="355" y="104" font-size="10" fill="#94a3b8">-</text>
+            <text x="355" y="128" font-size="10" fill="#94a3b8">+</text>
+            <text x="355" y="144" font-size="10" fill="#94a3b8">+</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">class</span> <span class="dec">Player</span>:
+    <span class="str">"""가위바위보 플레이어"""</span>
+
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="dec">self</span>, name: <span class="fn">str</span>):
+        <span class="dec">self</span>.name = name
+        <span class="dec">self</span>.wins = <span class="num">0</span>
+        <span class="dec">self</span>.losses = <span class="num">0</span>
+
+    <span class="kw">def</span> <span class="fn">record_win</span>(<span class="dec">self</span>):
+        <span class="dec">self</span>.wins += <span class="num">1</span>
+
+    <span class="kw">def</span> <span class="fn">record_loss</span>(<span class="dec">self</span>):
+        <span class="dec">self</span>.losses += <span class="num">1</span>
+
+    <span class="kw">def</span> <span class="fn">__repr__</span>(<span class="dec">self</span>):
+        <span class="kw">return</span> <span class="str">f"Player({self.name!r}, W={self.wins}, L={self.losses})"</span></div>
+
+    <!-- SVG: 객체 인스턴스 예시 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 70" style="max-width:500px;width:100%">
+            <defs>
+                <marker id="arwInst" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="5" y="10" width="110" height="50" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="60" y="30" text-anchor="middle" font-size="10" fill="#374151" font-family="monospace">Player("Alice")</text>
+            <text x="60" y="47" text-anchor="middle" font-size="9" fill="#94a3b8">생성자 호출</text>
+            <line x1="118" y1="35" x2="138" y2="35" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwInst)"/>
+            <rect x="140" y="5" width="160" height="60" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="220" y="22" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">alice 객체</text>
+            <text x="220" y="37" text-anchor="middle" font-size="9" fill="#374151" font-family="monospace">name = "Alice"</text>
+            <text x="220" y="52" text-anchor="middle" font-size="9" fill="#374151" font-family="monospace">wins=0  losses=0</text>
+            <line x1="303" y1="35" x2="323" y2="35" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwInst)"/>
+            <rect x="326" y="10" width="164" height="50" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="408" y="28" text-anchor="middle" font-size="9" fill="#166534">alice.record_win() 후</text>
+            <text x="408" y="44" text-anchor="middle" font-size="9" fill="#374151" font-family="monospace">wins=1  losses=0</text>
+        </svg>
+    </div>
+
+    <p>컴퓨터 상대도 <code>Player</code>를 그대로 사용합니다. 이름만 <code>"Bot"</code>으로 지정하면 됩니다.</p>
+
+    <h3>가위바위보 한 판 결과 판정 함수</h3>
+    <p><code>CHOICES</code> 상수와 <code>BEATS</code>딕셔너리로 승패를 판정합니다. <code>random.choice()</code>는 리스트에서 무작위 항목을 선택합니다.</p>
+
+    <div class="code"><span class="kw">import</span> random
+
+CHOICES = [<span class="str">"가위"</span>, <span class="str">"바위"</span>, <span class="str">"보"</span>]
+BEATS = {<span class="str">"가위"</span>: <span class="str">"보"</span>, <span class="str">"바위"</span>: <span class="str">"가위"</span>, <span class="str">"보"</span>: <span class="str">"바위"</span>}
+
+<span class="kw">def</span> <span class="fn">play_match</span>(p1: Player, p2: Player) -> Player:
+    <span class="str">"""p1 vs p2 한 경기. 승자(Player)를 반환. 무승부면 재경기."""</span>
+    <span class="kw">while</span> <span class="num">True</span>:
+        c1 = random.<span class="fn">choice</span>(CHOICES)
+        c2 = random.<span class="fn">choice</span>(CHOICES)
+        <span class="fn">print</span>(<span class="str">f"  {p1.name}: {c1}  |  {p2.name}: {c2}"</span>)
+        <span class="kw">if</span> c1 == c2:
+            <span class="fn">print</span>(<span class="str">"  무승부 — 재경기"</span>)
+        <span class="kw">elif</span> BEATS[c1] == c2:
+            p1.<span class="fn">record_win</span>()
+            p2.<span class="fn">record_loss</span>()
+            <span class="fn">print</span>(<span class="str">f"  [{p1.name}] 승리"</span>)
+            <span class="kw">return</span> p1
+        <span class="kw">else</span>:
+            p2.<span class="fn">record_win</span>()
+            p1.<span class="fn">record_loss</span>()
+            <span class="fn">print</span>(<span class="str">f"  [{p2.name}] 승리"</span>)
+            <span class="kw">return</span> p2</div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="완성" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+        <div class="practice-head">따라해보세요 — Step 1</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc"><code>Player</code> 클래스를 입력하고 두 플레이어를 만들어 <code>__repr__</code>을 출력해 보세요.</div>
+                <div class="code">alice = <span class="dec">Player</span>(<span class="str">"Alice"</span>)
+bob = <span class="dec">Player</span>(<span class="str">"Bob"</span>)
+<span class="fn">print</span>(alice)
+<span class="fn">print</span>(bob)</div>
+                <div class="practice-result">Player('Alice', W=0, L=0) 형태로 출력되면 성공</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc"><code>BEATS</code> 딕셔너리를 출력하고, "가위"가 이기는 것이 "보"인지 확인하세요.</div>
+                <div class="code"><span class="fn">print</span>(BEATS[<span class="str">"가위"</span>])
+<span class="fn">print</span>(BEATS[<span class="str">"바위"</span>])
+<span class="fn">print</span>(BEATS[<span class="str">"보"</span>])</div>
+                <div class="practice-result">보 / 가위 / 바위 순서로 출력되면 성공</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc"><code>play_match(alice, bob)</code>를 3번 호출하고 승패가 기록되는지 확인하세요.</div>
+                <div class="code"><span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(<span class="num">3</span>):
+    <span class="fn">play_match</span>(alice, bob)
+<span class="fn">print</span>(alice)
+<span class="fn">print</span>(bob)</div>
+                <div class="practice-result">두 플레이어의 wins+losses 합계가 3이면 성공</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3페이지: 재귀 토너먼트 -->
+<div class="page">
+    <h2>Step 2 — 재귀로 토너먼트 대진표 구현</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/database.png" alt="데이터" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>토너먼트는 "참가자 목록을 두 그룹으로 나누어 각 그룹에서 승자를 뽑아 다시 경기"하는 구조입니다. 이 반복 패턴을 재귀로 자연스럽게 표현할 수 있습니다.</p>
+
+    <!-- SVG: 재귀 기저 사례 vs 일반 사례 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 130" style="max-width:500px;width:100%">
+            <defs>
+                <marker id="arwRec" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <!-- 기저 사례 -->
+            <rect x="5" y="10" width="220" height="110" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="2"/>
+            <text x="115" y="30" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">기저 사례 (Base Case)</text>
+            <line x1="15" y1="36" x2="220" y2="36" stroke="#bbf7d0" stroke-width="1"/>
+            <text x="115" y="52" text-anchor="middle" font-size="10" fill="#374151">참가자 1명이면</text>
+            <text x="115" y="68" text-anchor="middle" font-size="10" fill="#374151" font-family="monospace">len(players) == 1</text>
+            <text x="115" y="87" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">그 플레이어가 우승자</text>
+            <text x="115" y="103" text-anchor="middle" font-size="10" fill="#374151" font-family="monospace">return players[0]</text>
+            <!-- 일반 사례 -->
+            <rect x="275" y="10" width="220" height="110" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+            <text x="385" y="30" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">일반 사례 (Recursive)</text>
+            <line x1="285" y1="36" x2="490" y2="36" stroke="#bfdbfe" stroke-width="1"/>
+            <text x="385" y="52" text-anchor="middle" font-size="10" fill="#374151">절반으로 나누어</text>
+            <text x="385" y="68" text-anchor="middle" font-size="10" fill="#374151">각 절반의 우승자 결정</text>
+            <text x="385" y="87" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">두 우승자끼리 경기</text>
+            <text x="385" y="103" text-anchor="middle" font-size="10" fill="#374151" font-family="monospace">play_match(w1, w2)</text>
+        </svg>
+    </div>
+
+    <h3>재귀 토너먼트 함수</h3>
+    <div class="code"><span class="kw">def</span> <span class="fn">run_tournament</span>(players: <span class="fn">list</span>, round_name: <span class="fn">str</span> = <span class="str">"1라운드"</span>) -> Player:
+    <span class="str">"""참가자 목록을 받아 재귀적으로 토너먼트를 진행하고 우승자를 반환"""</span>
+    <span class="kw">if</span> <span class="fn">len</span>(players) == <span class="num">1</span>:          <span class="cmt"># 기저 사례</span>
+        <span class="kw">return</span> players[<span class="num">0</span>]
+
+    mid = <span class="fn">len</span>(players) // <span class="num">2</span>
+    left  = players[:mid]
+    right = players[mid:]
+
+    <span class="fn">print</span>(<span class="str">f"\n--- {round_name} 상단 ---"</span>)
+    winner_left  = <span class="fn">run_tournament</span>(left,  <span class="str">f"{round_name}-A"</span>)
+
+    <span class="fn">print</span>(<span class="str">f"\n--- {round_name} 하단 ---"</span>)
+    winner_right = <span class="fn">run_tournament</span>(right, <span class="str">f"{round_name}-B"</span>)
+
+    <span class="fn">print</span>(<span class="str">f"\n[{round_name}] {winner_left.name} vs {winner_right.name}"</span>)
+    <span class="kw">return</span> <span class="fn">play_match</span>(winner_left, winner_right)</div>
+
+    <!-- SVG: 재귀 호출 트리 (4명) -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 150" style="max-width:500px;width:100%">
+            <defs>
+                <marker id="arwTree" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <!-- 루트: 4명 -->
+            <rect x="185" y="5" width="130" height="30" rx="6" fill="#1e3a5f"/>
+            <text x="250" y="25" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">run_tournament([A,B,C,D])</text>
+            <!-- 2단계 -->
+            <line x1="210" y1="38" x2="140" y2="66" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#arwTree)"/>
+            <line x1="290" y1="38" x2="360" y2="66" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#arwTree)"/>
+            <rect x="70" y="68" width="130" height="28" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="135" y="86" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">run_tournament([A,B])</text>
+            <rect x="300" y="68" width="130" height="28" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="365" y="86" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">run_tournament([C,D])</text>
+            <!-- 3단계 -->
+            <line x1="105" y1="98" x2="55" y2="120" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#arwTree)"/>
+            <line x1="165" y1="98" x2="200" y2="120" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#arwTree)"/>
+            <line x1="335" y1="98" x2="295" y2="120" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#arwTree)"/>
+            <line x1="395" y1="98" x2="440" y2="120" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#arwTree)"/>
+            <rect x="10" y="122" width="80" height="24" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="50" y="138" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">[A] 반환</text>
+            <rect x="165" y="122" width="80" height="24" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="205" y="138" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">[B] 반환</text>
+            <rect x="255" y="122" width="80" height="24" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="295" y="138" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">[C] 반환</text>
+            <rect x="410" y="122" width="80" height="24" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="450" y="138" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">[D] 반환</text>
+        </svg>
+    </div>
+
+    <div class="output-box">--- 1라운드 상단-A ---
+  Alice: 바위  |  Bob: 가위
+  [Alice] 승리
+
+--- 1라운드 하단-B ---
+  Carol: 보  |  Dave: 바위
+  [Carol] 승리
+
+[1라운드] Alice vs Carol
+  Alice: 가위  |  Carol: 가위
+  무승부 — 재경기
+  Alice: 바위  |  Carol: 가위
+  [Alice] 승리</div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요 — Step 2</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">4명으로 토너먼트를 실행해 재귀 흐름을 관찰하세요.</div>
+                <div class="code">players = [<span class="dec">Player</span>(n) <span class="kw">for</span> n <span class="kw">in</span> [<span class="str">"Alice"</span>, <span class="str">"Bob"</span>, <span class="str">"Carol"</span>, <span class="str">"Dave"</span>]]
+winner = <span class="fn">run_tournament</span>(players, <span class="str">"결승"</span>)
+<span class="fn">print</span>(<span class="str">f"\n최종 우승자: {winner.name}"</span>)</div>
+                <div class="practice-result">최종 우승자 이름이 출력되면 성공</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">참가자를 2명으로 줄여 기저 사례가 작동하는지 확인하세요.</div>
+                <div class="code">two = [<span class="dec">Player</span>(<span class="str">"X"</span>), <span class="dec">Player</span>(<span class="str">"Y"</span>)]
+<span class="fn">print</span>(<span class="fn">run_tournament</span>(two, <span class="str">"미니"</span>))</div>
+                <div class="practice-result">X 또는 Y 중 하나가 Player 형태로 출력되면 성공</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">8명으로 늘려 더 깊은 재귀를 경험해 보세요.</div>
+                <div class="code">eight = [<span class="dec">Player</span>(<span class="str">f"P{i}"</span>) <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">1</span>, <span class="num">9</span>)]
+w8 = <span class="fn">run_tournament</span>(eight, <span class="str">"8강"</span>)
+<span class="fn">print</span>(<span class="str">f"우승: {w8.name}"</span>)</div>
+                <div class="practice-result">8강 → 준결승 → 결승 순으로 출력되면 성공</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 4페이지: 승패 기록 + 최종 우승자 출력 -->
+<div class="page">
+    <h2>Step 3 — 승패 기록과 최종 우승자 출력</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>토너먼트가 끝나면 모든 플레이어의 승/패 기록을 표로 출력하고 최종 우승자를 강조합니다.</p>
+
+    <!-- SVG: 출력 구조 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 80" style="max-width:500px;width:100%">
+            <defs>
+                <marker id="arwRpt" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="5" y="20" width="110" height="40" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="60" y="37" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">players 리스트</text>
+            <text x="60" y="52" text-anchor="middle" font-size="8" fill="#64748b">각 Player 객체</text>
+            <line x1="118" y1="40" x2="138" y2="40" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwRpt)"/>
+            <rect x="141" y="10" width="160" height="60" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="221" y="30" text-anchor="middle" font-size="9" fill="#374151" font-weight="700">정렬 (승 내림차순)</text>
+            <text x="221" y="47" text-anchor="middle" font-size="8" fill="#64748b" font-family="monospace">sorted(key=lambda p:</text>
+            <text x="221" y="60" text-anchor="middle" font-size="8" fill="#64748b" font-family="monospace">p.wins, reverse=True)</text>
+            <line x1="304" y1="40" x2="324" y2="40" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwRpt)"/>
+            <rect x="327" y="15" width="165" height="50" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="409" y="35" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">순위표 출력</text>
+            <text x="409" y="52" text-anchor="middle" font-size="8" fill="#64748b">이름 / 승 / 패 표시</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">def</span> <span class="fn">print_results</span>(players: <span class="fn">list</span>, winner: Player):
+    <span class="str">"""전체 경기 기록과 우승자를 출력"""</span>
+    <span class="fn">print</span>(<span class="str">"\n" + "=" * 38</span>)
+    <span class="fn">print</span>(<span class="str">f"  최종 우승자: {winner.name}"</span>)
+    <span class="fn">print</span>(<span class="str">"=" * 38</span>)
+    <span class="fn">print</span>(<span class="str">f"{'이름':&lt;10} {'승':&gt;4} {'패':&gt;4}"</span>)
+    <span class="fn">print</span>(<span class="str">"-" * 22</span>)
+    ranked = <span class="fn">sorted</span>(players, key=<span class="kw">lambda</span> p: p.wins, reverse=<span class="num">True</span>)
+    <span class="kw">for</span> p <span class="kw">in</span> ranked:
+        marker = <span class="str">" &lt;-- 우승"</span> <span class="kw">if</span> p.name == winner.name <span class="kw">else</span> <span class="str">""</span>
+        <span class="fn">print</span>(<span class="str">f"  {p.name:&lt;10} {p.wins:&gt;3} {p.losses:&gt;4}{marker}"</span>)</div>
+
+    <div class="output-box">======================================
+  최종 우승자: Alice
+======================================
+이름            승    패
+----------------------
+  Alice          3    1  &lt;-- 우승
+  Carol          2    1
+  Bob            1    1
+  Dave           0    1</div>
+
+    <!-- SVG: sorted + lambda 동작 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 90" style="max-width:500px;width:100%">
+            <defs>
+                <marker id="arwSort" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <!-- 정렬 전 -->
+            <rect x="5" y="10" width="200" height="70" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="105" y="28" text-anchor="middle" font-size="9" fill="#64748b" font-weight="700">정렬 전 (삽입 순)</text>
+            <text x="105" y="44" text-anchor="middle" font-size="9" fill="#374151" font-family="monospace">Alice(W=3) Bob(W=1)</text>
+            <text x="105" y="60" text-anchor="middle" font-size="9" fill="#374151" font-family="monospace">Carol(W=2) Dave(W=0)</text>
+            <!-- 화살표 -->
+            <line x1="208" y1="45" x2="228" y2="45" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwSort)"/>
+            <text x="218" y="40" text-anchor="middle" font-size="7" fill="#64748b">sorted</text>
+            <text x="218" y="55" text-anchor="middle" font-size="7" fill="#64748b">↓ wins</text>
+            <!-- 정렬 후 -->
+            <rect x="231" y="10" width="264" height="70" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="363" y="28" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">정렬 후 (승 내림차순)</text>
+            <text x="363" y="44" text-anchor="middle" font-size="9" fill="#374151" font-family="monospace">Alice(W=3) Carol(W=2)</text>
+            <text x="363" y="60" text-anchor="middle" font-size="9" fill="#374151" font-family="monospace">Bob(W=1) Dave(W=0)</text>
+        </svg>
+    </div>
+
+    <h3>전체 프로그램 진입점</h3>
+    <div class="code"><span class="kw">def</span> <span class="fn">main</span>():
+    names = [<span class="str">"Alice"</span>, <span class="str">"Bob"</span>, <span class="str">"Carol"</span>, <span class="str">"Dave"</span>]
+    players = [<span class="dec">Player</span>(n) <span class="kw">for</span> n <span class="kw">in</span> names]
+
+    <span class="fn">print</span>(<span class="str">"=== 가위바위보 토너먼트 시작 ==="</span>)
+    winner = <span class="fn">run_tournament</span>(players, <span class="str">"결승"</span>)
+    <span class="fn">print_results</span>(players, winner)
+
+<span class="kw">if</span> __name__ == <span class="str">"__main__"</span>:
+    <span class="fn">main</span>()</div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요 — Step 3</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc"><code>print_results</code>를 추가하고 <code>main()</code>을 실행해 전체 흐름을 확인하세요.</div>
+                <div class="code"><span class="fn">main</span>()</div>
+                <div class="practice-result">결과표가 출력되고 우승자 옆에 화살표가 표시되면 성공</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">참가자 이름을 5개로 늘려 홀수 토너먼트를 테스트하세요. 절반 나누기에서 어떻게 처리되는지 확인합니다.</div>
+                <div class="code">names5 = [<span class="str">"A"</span>, <span class="str">"B"</span>, <span class="str">"C"</span>, <span class="str">"D"</span>, <span class="str">"E"</span>]
+p5 = [<span class="dec">Player</span>(n) <span class="kw">for</span> n <span class="kw">in</span> names5]
+<span class="fn">run_tournament</span>(p5, <span class="str">"5강"</span>)</div>
+                <div class="practice-result">5명이 2명+3명으로 나뉘어 처리되면 성공</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc"><code>ranked</code>에서 <code>reverse=False</code>로 바꿔 승이 적은 순서로 정렬되는지 확인하세요.</div>
+                <div class="code">ranked = <span class="fn">sorted</span>(players, key=<span class="kw">lambda</span> p: p.wins, reverse=<span class="num">False</span>)
+<span class="kw">for</span> p <span class="kw">in</span> ranked:
+    <span class="fn">print</span>(p)</div>
+                <div class="practice-result">승이 0인 플레이어가 먼저 출력되면 성공</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 5페이지: 확장 기능 + 문제 + 핵심 요약 -->
+<div class="page">
+    <h2>Step 4 — 확장: 컴퓨터 vs 사람 모드</h2>
+    <p>토너먼트에 사람 플레이어를 추가하면 게임이 더 재미있어집니다. <code>is_human</code> 속성을 <code>Player</code>에 추가하고, <code>play_match</code>에서 사람이면 <code>input()</code>으로 선택을 받습니다.</p>
+
+    <!-- SVG: 사람 vs 컴퓨터 분기 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 500 100" style="max-width:500px;width:100%">
+            <defs>
+                <marker id="arwHu" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="185" y="5" width="130" height="34" rx="8" fill="#1e3a5f"/>
+            <text x="250" y="27" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">play_match(p1, p2)</text>
+            <line x1="230" y1="42" x2="140" y2="60" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#arwHu)"/>
+            <line x1="270" y1="42" x2="360" y2="60" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#arwHu)"/>
+            <rect x="50" y="63" width="170" height="30" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="135" y="82" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">p.is_human == True</text>
+            <rect x="280" y="63" width="170" height="30" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="365" y="82" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">random.choice(CHOICES)</text>
+            <text x="135" y="97" text-anchor="middle" font-size="8" fill="#64748b">input() 으로 선택</text>
+            <text x="365" y="97" text-anchor="middle" font-size="8" fill="#64748b">자동 랜덤 선택</text>
+        </svg>
+    </div>
+
+    <!-- SVG: 가위바위보 승패 관계 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 500 80" style="max-width:500px;width:100%">
+            <defs>
+                <marker id="arwRps" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#ef4444"/>
+                </marker>
+            </defs>
+            <!-- 가위 -->
+            <rect x="30" y="20" width="80" height="40" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+            <text x="70" y="44" text-anchor="middle" font-size="12" fill="#1d4ed8" font-weight="900">가위</text>
+            <!-- 바위 -->
+            <rect x="210" y="20" width="80" height="40" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="2"/>
+            <text x="250" y="44" text-anchor="middle" font-size="12" fill="#92400e" font-weight="900">바위</text>
+            <!-- 보 -->
+            <rect x="390" y="20" width="80" height="40" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="2"/>
+            <text x="430" y="44" text-anchor="middle" font-size="12" fill="#166534" font-weight="900">보</text>
+            <!-- 가위 → 보 (이김) -->
+            <path d="M110,32 Q270,5 388,32" stroke="#ef4444" stroke-width="1.5" fill="none" marker-end="url(#arwRps)"/>
+            <text x="250" y="12" text-anchor="middle" font-size="9" fill="#ef4444" font-weight="700">가위가 보를 이김</text>
+            <!-- 바위 → 가위 (이김) -->
+            <line x1="208" y1="48" x2="113" y2="48" stroke="#ef4444" stroke-width="1.5" marker-end="url(#arwRps)"/>
+            <text x="161" y="44" text-anchor="middle" font-size="8" fill="#ef4444">바위가 가위를</text>
+            <!-- 보 → 바위 (이김) -->
+            <line x1="388" y1="55" x2="293" y2="55" stroke="#ef4444" stroke-width="1.5" marker-end="url(#arwRps)"/>
+            <text x="341" y="70" text-anchor="middle" font-size="8" fill="#ef4444">보가 바위를</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">class</span> <span class="dec">Player</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="dec">self</span>, name: <span class="fn">str</span>, is_human: <span class="fn">bool</span> = <span class="num">False</span>):
+        <span class="dec">self</span>.name = name
+        <span class="dec">self</span>.is_human = is_human
+        <span class="dec">self</span>.wins = <span class="num">0</span>
+        <span class="dec">self</span>.losses = <span class="num">0</span>
+    <span class="cmt"># record_win, record_loss, __repr__ 동일</span>
+
+<span class="kw">def</span> <span class="fn">get_choice</span>(player: Player) -> <span class="fn">str</span>:
+    <span class="kw">if</span> player.is_human:
+        <span class="kw">while</span> <span class="num">True</span>:
+            c = <span class="fn">input</span>(<span class="str">f"{player.name}의 선택 (가위/바위/보): "</span>).<span class="fn">strip</span>()
+            <span class="kw">if</span> c <span class="kw">in</span> CHOICES:
+                <span class="kw">return</span> c
+            <span class="fn">print</span>(<span class="str">"가위, 바위, 보 중 하나를 입력하세요."</span>)
+    <span class="kw">return</span> random.<span class="fn">choice</span>(CHOICES)</div>
+
+    <!-- SVG: 완성 프로그램 모듈 구조 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 90" style="max-width:500px;width:100%">
+            <rect x="5" y="5" width="490" height="80" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="250" y="22" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">rps_tournament.py 모듈 구조</text>
+            <!-- 모듈들 -->
+            <rect x="15" y="30" width="88" height="44" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="59" y="48" text-anchor="middle" font-size="8" fill="#1d4ed8" font-weight="700">Player</text>
+            <text x="59" y="62" text-anchor="middle" font-size="7" fill="#64748b">클래스</text>
+            <rect x="115" y="30" width="88" height="44" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="159" y="48" text-anchor="middle" font-size="8" fill="#166534" font-weight="700">CHOICES</text>
+            <text x="159" y="62" text-anchor="middle" font-size="7" fill="#64748b">BEATS 상수</text>
+            <rect x="215" y="30" width="88" height="44" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="259" y="48" text-anchor="middle" font-size="8" fill="#92400e" font-weight="700">play_match</text>
+            <text x="259" y="62" text-anchor="middle" font-size="7" fill="#64748b">한 경기 함수</text>
+            <rect x="315" y="30" width="88" height="44" rx="6" fill="#fdf4ff" stroke="#a855f7" stroke-width="1.5"/>
+            <text x="359" y="48" text-anchor="middle" font-size="8" fill="#7e22ce" font-weight="700">run_tournament</text>
+            <text x="359" y="62" text-anchor="middle" font-size="7" fill="#64748b">재귀 함수</text>
+            <rect x="415" y="30" width="72" height="44" rx="6" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="451" y="48" text-anchor="middle" font-size="8" fill="#991b1b" font-weight="700">main</text>
+            <text x="451" y="62" text-anchor="middle" font-size="7" fill="#64748b">진입점</text>
+        </svg>
+    </div>
+
+    <!-- 문제 1 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">1</div>
+            <div class="problem-label">승률 계산 메서드 추가</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <p class="problem-text"><code>Player</code> 클래스에 <code>win_rate()</code> 메서드를 추가하세요. 전체 경기 수(wins + losses)가 0이면 <code>0.0</code>을 반환하고, 아니면 <code>wins / (wins + losses)</code>를 반환합니다.</p>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">예)</span>
+                    <span class="problem-example-value">alice.wins=3, alice.losses=1 → win_rate() = 0.75</span>
+                </div>
+                <div class="problem-example-row">
+                    <span class="problem-example-label">예)</span>
+                    <span class="problem-example-value">new_player.wins=0, new_player.losses=0 → win_rate() = 0.0</span>
+                </div>
+            </div>
+        </div>
+        <div class="problem-toggle">
+            <details>
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">total = self.wins + self.losses 를 먼저 계산하고, total == 0이면 0.0을 반환하세요. 아니면 self.wins / total을 반환합니다.</div>
+                </div>
+            </details>
+            <details>
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code"><span style="color:#c084fc">def</span> <span style="color:#67e8f9">win_rate</span>(self) -> float:
+    total = self.wins + self.losses
+    <span style="color:#c084fc">if</span> total == <span style="color:#7dd3fc">0</span>:
+        <span style="color:#c084fc">return</span> <span style="color:#7dd3fc">0.0</span>
+    <span style="color:#c084fc">return</span> self.wins / total</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <!-- 문제 2 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">2</div>
+            <div class="problem-label">토너먼트 라운드 수 계산</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <p class="problem-text">참가자 수 <code>n</code>을 받아 토너먼트에서 치러지는 총 경기 수를 반환하는 <code>total_matches(n)</code> 함수를 작성하세요. 토너먼트에서 총 경기 수는 항상 <code>n - 1</code>입니다.</p>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">예)</span>
+                    <span class="problem-example-value">total_matches(4) → 3</span>
+                </div>
+                <div class="problem-example-row">
+                    <span class="problem-example-label">예)</span>
+                    <span class="problem-example-value">total_matches(8) → 7</span>
+                </div>
+            </div>
+        </div>
+        <div class="problem-toggle">
+            <details>
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">매 경기마다 한 명이 탈락합니다. n명에서 1명의 우승자가 나오려면 정확히 n-1번의 경기가 필요합니다.</div>
+                </div>
+            </details>
+            <details>
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code"><span style="color:#c084fc">def</span> <span style="color:#67e8f9">total_matches</span>(n: int) -> int:
+    <span style="color:#86efac">"""참가자 n명의 토너먼트 총 경기 수"""</span>
+    <span style="color:#c084fc">return</span> n - <span style="color:#7dd3fc">1</span></div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <!-- 문제 3 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">3</div>
+            <div class="problem-label">최다 승자 찾기</div>
+            <span class="problem-diff hard">어려움</span>
+        </div>
+        <div class="problem-body">
+            <p class="problem-text"><code>players</code> 리스트에서 <code>wins</code>가 가장 많은 플레이어를 반환하는 <code>top_scorer(players)</code> 함수를 작성하세요. 동점이면 먼저 등장하는 플레이어를 반환합니다. 내장 함수 <code>max()</code>와 <code>key</code> 인자를 사용하세요.</p>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">예)</span>
+                    <span class="problem-example-value">wins=[3,1,2,0] → 첫 번째 플레이어 반환</span>
+                </div>
+            </div>
+        </div>
+        <div class="problem-toggle">
+            <details>
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">max(players, key=lambda p: p.wins) 처럼 key 인자에 lambda를 사용하면 한 줄로 해결할 수 있습니다.</div>
+                </div>
+            </details>
+            <details>
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code"><span style="color:#c084fc">def</span> <span style="color:#67e8f9">top_scorer</span>(players: list) -> Player:
+    <span style="color:#86efac">"""가장 많은 승을 올린 플레이어 반환"""</span>
+    <span style="color:#c084fc">return</span> <span style="color:#67e8f9">max</span>(players, key=<span style="color:#c084fc">lambda</span> p: p.wins)</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <!-- 핵심 요약 -->
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>핵심 요약</h3>
+        <ul>
+            <li><code>class Player</code>: <code>__init__</code>에서 속성 초기화, 메서드로 상태 변경 — 객체가 자신의 데이터를 관리</li>
+            <li><code>random.choice(list)</code>: 리스트에서 무작위 항목 한 개 선택 — 컴퓨터 상대 구현에 핵심</li>
+            <li><code>BEATS</code> 딕셔너리: 승패 판정 로직을 데이터로 분리 — if/elif 중첩 없이 깔끔하게 처리</li>
+            <li>재귀 토너먼트: 기저 사례(1명) + 일반 사례(절반 분할) — 참가자 수에 관계없이 작동</li>
+            <li><code>sorted(key=lambda p: p.wins, reverse=True)</code>: 객체 리스트를 속성 기준으로 정렬</li>
+            <li><code>max(players, key=lambda p: p.wins)</code>: 객체 리스트에서 속성 최댓값 보유 객체 반환</li>
+        </ul>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Unit 16. 자료형의 확장과 축소 — C 언어 코딩 도장</title>
+    <link rel="stylesheet" href="../common.css">
+</head>
+
+<body>
+    <div class="wrap">
+        <div class="hdr">
+            <h1>Unit 16. 자료형의 확장과 축소</h1>
+            <div class="sub">암묵적 변환 · 명시적 캐스팅 · 데이터 손실</div>
+            <span class="unit-badge">Chapter 04 · 입력과 연산자</span>
+            <div class="level-bar"><span class="on"></span><span class="on"></span><span class="on"></span></div>
+            <div class="meta">
+                <span class="tag pri">🖥️ C언어</span>
+                <span class="tag acc">📝 15문제</span>
+                <span class="tag">⏱ 25~40분</span>
+            </div>
+        </div>
+        <div class="stu-bar">
+            <label>👤 이름 <input type="text" id="stu-name" placeholder="이름"></label>
+            <label>📅 날짜 <input type="date" id="stu-date"></label>
+        </div>
+        <div class="learn">
+            <h2><span class="ico" style="background:rgba(16,185,129,.15)">🔄</span> 형 변환 (Type Conversion)</h2>
+            <p>작은 자료형 → 큰 자료형은 안전(<strong>확장</strong>), 큰 → 작은은 데이터 손실 위험(<strong>축소</strong>)!</p>
+            <div class="tip">💡 int → double (안전!) vs double → int (소수점 손실!)</div>
+        </div>
+        <div id="problems"></div>
+        <div class="submit-section">
+            <p>모든 문제를 풀었나요? 📨</p><button class="btn-submit" id="btn-submit">📄 제출하기</button>
+        </div>
+        <div class="modal-overlay" id="submit-modal">
+            <div class="modal-box">
+                <div class="modal-icon">✅</div>
+                <h3>제출 완료!</h3>
+                <p>학습지가 저장되었습니다.</p>
+                <div style="margin:12px 0"><span class="info-tag" id="modal-name"></span> <span class="info-tag"
+                        id="modal-date"></span> <span class="info-tag" id="modal-count"></span></div>
+                <p style="font-size:.78rem;color:var(--dim)">📁 <strong id="modal-filename"></strong></p><button
+                    class="btn-close-modal" id="btn-close-modal">확인</button>
+            </div>
+        </div>
+        <div class="pg"><a href="Unit15_나머지연산.html">← Unit 15</a><span class="tag active">Unit 16</span><a
+                href="../05_조건문/Unit17_if조건문.html">Unit 17 →</a></div>
+        <div class="ft">🖥️ C 언어 코딩 도장 · Unit 16 · 자료형 변환</div>
+    </div>
+    <script>
+        const P = [
+            {
+                n: 1, t: "암묵적 확장", d: 1,
+                q: `다음 코드의 출력을 쓰세요.<pre class="code-c">int a = 10;
+double b = a;  <span class="cm">// int → double</span>
+printf("%f\\n", b);</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">10.000000</div><div class="trace">int(10) → double(10.0): 안전한 확장!<br>데이터 손실 없음.</div>`
+            },
+
+            {
+                n: 2, t: "암묵적 축소", d: 1,
+                q: `다음 코드의 출력을 쓰세요.<pre class="code-c">double d = 3.78;
+int n = d;  <span class="cm">// double → int</span>
+printf("%d\\n", n);</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">3</div><div class="trace">double(3.78) → int(3): <span class="err">소수점 버림!</span><br>반올림이 아니라 절삭(truncation)!</div>`
+            },
+
+            {
+                n: 3, t: "명시적 캐스팅", d: 1,
+                q: `명시적 형 변환(캐스팅)의 문법을 쓰세요.<pre class="code-c">int a = 7, b = 2;
+double result = _______ a / b;</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">double result = <span class="val">(double)</span>a / b;  <span class="cm">// 3.5</span></pre><div class="trace">(자료형)변수 형태로 캐스팅<br>a를 double로 변환 후 나눗셈 → 실수 결과</div>`
+            },
+
+            {
+                n: 4, t: "캐스팅 위치 주의", d: 2,
+                q: `다음 두 코드의 출력이 다른 이유를 설명하세요.<pre class="code-c">int a = 7, b = 2;
+printf("%.2f\\n", (double)a / b);    <span class="cm">// ①</span>
+printf("%.2f\\n", (double)(a / b));  <span class="cm">// ②</span></pre>`,
+                a: `<span class="key">정답</span><div class="output-box">3.50<br>3.00</div><div class="trace">① (double)a → 7.0, 7.0/2 = <span class="val">3.50</span><br>② a/b → 정수 나눗셈 = 3, (double)3 = <span class="err">3.00</span><br><br>캐스팅을 어디에 하느냐에 따라 결과가 달라집니다!</div>`
+            },
+
+            {
+                n: 5, t: "자료형 확장 순서", d: 2,
+                q: `C의 자료형 확장(promotion) 순서를 쓰세요.`,
+                a: `<span class="key">정답</span><div class="trace">char/short → <span class="val">int</span> → long → long long → <span class="val">float</span> → <span class="val">double</span> → long double<br><br>작은 쪽이 큰 쪽으로 자동 변환됩니다.</div>`
+            },
+
+            {
+                n: 6, t: "int + double 혼합", d: 2,
+                q: `다음 코드의 출력을 쓰세요.<pre class="code-c">int a = 5;
+double b = 2.5;
+printf("%f\\n", a + b);
+printf("%f\\n", a * b);</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">7.500000<br>12.500000</div><div class="trace">int + double → a가 double로 자동 변환<br>5.0 + 2.5 = 7.5, 5.0 * 2.5 = 12.5</div>`
+            },
+
+            {
+                n: 7, t: "char → int 변환", d: 2,
+                q: `다음 코드의 출력을 쓰세요.<pre class="code-c">char ch = 'A';
+int n = ch;       <span class="cm">// char → int</span>
+printf("%d\\n", n);
+printf("%c\\n", (char)(n + 5));</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">65<br>F</div><div class="trace">'A'=65, 65+5=70='F'</div>`
+            },
+
+            {
+                n: 8, t: "큰 정수 → 작은 정수", d: 2,
+                q: `다음 코드의 출력을 쓰세요.<pre class="code-c">int big = 300;
+char small = (char)big;
+printf("%d\\n", small);</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">44</div><div class="trace">300 = 256 + 44<br>char는 1바이트(0~255) → 300 % 256 = <span class="val">44</span><br><span class="err">데이터 손실 발생!</span></div>`
+            },
+
+            {
+                n: 9, t: "unsigned와 음수", d: 2,
+                q: `다음 코드의 출력을 쓰세요.<pre class="code-c">unsigned int u = -1;
+printf("%u\\n", u);
+printf("%d\\n", u);</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">4294967295<br>-1</div><div class="trace">-1의 비트패턴: 11111...1 (32개)<br>unsigned로 해석 → 4,294,967,295 (UINT_MAX)<br>signed로 해석 → -1</div>`
+            },
+
+            {
+                n: 10, t: "연습문제: 평균 실수 출력", d: 2,
+                q: `정수 3개의 평균을 실수로 출력하세요.<pre class="code-c">int a = 1, b = 2, c = 4;
+printf("평균: ___\\n", ___________);</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">printf("평균: %.2f\\n", <span class="val">(double)(a + b + c) / 3</span>);</pre><div class="output-box">평균: 2.33</div>`
+            },
+
+            {
+                n: 11, t: "연습문제: 반올림", d: 2,
+                q: `실수를 정수로 반올림하는 코드를 작성하세요.<pre class="code-c">double d = 3.7;
+int rounded = (int)(d + ___);
+printf("%d\\n", rounded);  <span class="cm">// 4</span></pre>`,
+                a: `<span class="key">정답</span> <code>0.5</code><div class="trace">3.7 + 0.5 = 4.2 → (int)4.2 = 4 ✓<br>3.2 + 0.5 = 3.7 → (int)3.7 = 3 ✓</div><div class="explain">💡 C에는 반올림 함수 round()도 있습니다 (math.h)</div>`
+            },
+
+            {
+                n: 12, t: "심사문제: 형 변환 추적", d: 2,
+                q: `다음 코드의 출력을 쓰세요.<pre class="code-c">double d = 9.99;
+int n = (int)d;
+char c = (char)n;
+printf("d=%.2f, n=%d, c=%d('%c')\\n", d, n, c, c);</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">d=9.99, n=9, c=9('\\t')</div><div class="trace">9.99→9(정수 절삭)→9(ASCII = 탭 문자)</div>`
+            },
+
+            {
+                n: 13, t: "심사문제: float 정밀도 손실", d: 3,
+                q: `다음 코드의 출력을 쓰세요.<pre class="code-c">int big = 16777217;
+float f = (float)big;
+printf("원본: %d\\n", big);
+printf("float: %.0f\\n", f);</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">원본: 16777217<br>float: 16777216</div><div class="trace">float는 유효 7자리 → 큰 정수를 정확히 표현 못 함!<br><span class="err">int → float에서도 정밀도 손실 가능!</span></div>`
+            },
+
+            {
+                n: 14, t: "심사문제: 복합 연산", d: 2,
+                q: `다음 코드의 출력을 쓰세요.<pre class="code-c">int a = 10, b = 3;
+printf("A: %d\\n", a / b);
+printf("B: %.1f\\n", (double)a / b);
+printf("C: %.1f\\n", (double)(a / b));
+printf("D: %d\\n", (int)((double)a / b));</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">A: 3<br>B: 3.3<br>C: 3.0<br>D: 3</div>`
+            },
+
+            {
+                n: 15, t: "🏆 Unit 16 종합", d: 3,
+                q: `다음 코드의 출력 결과를 쓰세요.<pre class="code-c">char c = 200;     <span class="cm">// signed char</span>
+unsigned char uc = 200;
+int i = c;
+int j = uc;
+printf("c=%d, uc=%d\\n", c, uc);
+printf("i=%d, j=%d\\n", i, j);
+
+double d = 3.9;
+int k = (int)d;
+int m = (int)(d + 0.5);
+printf("k=%d, m=%d\\n", k, m);</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">c=-56, uc=200<br>i=-56, j=200<br>k=3, m=4</div><div class="trace">signed char 200 = -56 (오버플로우!)<br>unsigned char 200 = 200 (정상)<br>d=3.9→절삭=3, d+0.5=4.4→절삭=4(반올림효과)</div>`
+            }
+        ];
+        const c = document.getElementById('problems'); P.forEach(p => { const dc = p.d <= 1 ? 'ez' : p.d <= 2 ? 'md' : 'hd'; const dots = Array.from({ length: 5 }, (_, i) => `<span${i < p.d ? ' class="on"' : ''}>​</span>`).join(''); c.innerHTML += `<div class="prob"><div class="prob-top"><div class="prob-num ${dc}">${p.n}</div><div class="prob-title">${p.t}</div><div class="diff-dots">${dots}</div></div><div class="prob-body"><div class="q">${p.q}</div><textarea class="write" placeholder="✍️ 답을 작성하세요"></textarea><details class="ans"><summary>정답 및 해설 보기</summary><div class="ans-body">${p.a}</div></details></div></div>`; });
+    </script>
+    <script src="../submit.js"></script>
+    <script src="../../platform.js"></script>
+</body>
+
+</html>

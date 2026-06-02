@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — *p로 원본 변경, call by value vs reference</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+.page { width: 210mm; min-height: 297mm; margin: 16px auto; padding: 18mm 20mm 15mm 22mm; background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: relative; page-break-after: always; }
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after { content: counter(pagenum); position: absolute; bottom: 10mm; right: 16mm; font-size: 10px; color: #94a3b8; font-weight: 600; }
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #7c3aed; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark { position: absolute; top: -10px; right: -15px; font-size: 260px; font-weight: 900; color: rgba(124,58,237,0.12); line-height: 1; pointer-events: none; }
+.cover-label { font-size: 14px; font-weight: 500; color: #7c3aed; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 36px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #7c3aed; font-weight: 900; }
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #7c3aed; font-weight: 600; }
+.code { background: #0f172a; border-radius: 8px; padding: 16px 20px; font-family: 'JetBrains Mono', monospace; font-size: 14px; color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap; }
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.practice { margin: 20px 0; border-left: 4px solid #7c3aed; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #5b21b6; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #7c3aed; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #7c3aed; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#7c3aed,#a855f7); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #4c1d95; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+.summary { background: #fff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+.callout { background: #f5f3ff; border-left: 4px solid #7c3aed; border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 14px 0; }
+.callout p { margin: 0; font-size: 14px; color: #4c1d95; }
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<div class="page cover">
+  <div class="cover-sidebar"></div>
+  <div class="cover-accent"></div>
+  <div class="cover-body">
+    <div class="cover-watermark">L8</div>
+    <div class="cover-label">Chapter 8 — Unit 04</div>
+    <h1 class="cover-title">*p = 10; 원본 변경<br>Call by Value vs Reference</h1>
+    <p class="cover-sub">포인터의 핵심 활용 — 함수에서 원본 값을 수정하는 방법을 배웁니다. 값 전달과 주소 전달의 차이를 이해합니다.</p>
+    <div style="margin:24px 0;">
+      <svg viewBox="0 0 500 130" style="max-width:500px;width:100%">
+        <defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#7c3aed"/></marker></defs>
+        <!-- call by value -->
+        <rect x="10" y="10" width="200" height="110" rx="8" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+        <text x="110" y="30" text-anchor="middle" font-size="11" fill="#dc2626" font-weight="800">Call by Value (값 전달)</text>
+        <rect x="25" y="40" width="60" height="30" rx="4" fill="#dbeafe" stroke="#3b82f6"/>
+        <text x="55" y="60" text-anchor="middle" font-size="10" fill="#1d4ed8">a=10</text>
+        <rect x="120" y="40" width="70" height="30" rx="4" fill="#e2e8f0" stroke="#94a3b8"/>
+        <text x="155" y="60" text-anchor="middle" font-size="10" fill="#64748b">복사본=10</text>
+        <line x1="90" y1="55" x2="115" y2="55" stroke="#ef4444" stroke-width="1.5" marker-end="url(#arr)"/>
+        <text x="110" y="90" text-anchor="middle" font-size="9" fill="#ef4444">복사본만 변경 → 원본 a 그대로</text>
+        <text x="110" y="108" text-anchor="middle" font-size="10" fill="#dc2626" font-weight="700">a = 10 (변화 없음)</text>
+        <!-- call by reference -->
+        <rect x="290" y="10" width="200" height="110" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+        <text x="390" y="30" text-anchor="middle" font-size="11" fill="#166534" font-weight="800">Call by Reference (주소 전달)</text>
+        <rect x="305" y="40" width="60" height="30" rx="4" fill="#dbeafe" stroke="#3b82f6"/>
+        <text x="335" y="60" text-anchor="middle" font-size="10" fill="#1d4ed8">a=10</text>
+        <rect x="395" y="40" width="80" height="30" rx="4" fill="#f5f3ff" stroke="#7c3aed"/>
+        <text x="435" y="60" text-anchor="middle" font-size="10" fill="#5b21b6">*p → a</text>
+        <path d="M395,55 L368,55" stroke="#7c3aed" stroke-width="1.5" marker-end="url(#arr)"/>
+        <text x="390" y="90" text-anchor="middle" font-size="9" fill="#22c55e">*p로 원본 직접 변경!</text>
+        <text x="390" y="108" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">a = 99 (변경됨)</text>
+      </svg>
+    </div>
+    <div class="cover-goals">
+      <h3>이 유닛에서 배우는 것</h3>
+      <ul>
+        <li>*p = 값; 으로 포인터를 통해 원본을 변경합니다.</li>
+        <li>Call by Value — 값을 복사해서 전달하는 방식을 이해합니다.</li>
+        <li>Call by Reference — 주소를 전달해 원본을 수정합니다.</li>
+        <li>포인터 매개변수를 사용하는 함수를 작성합니다.</li>
+        <li>swap 함수를 포인터로 구현합니다.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- 페이지 2 -->
+<div class="page">
+  <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/computer-basics/cpu.png" alt="CPU - 포인터와 메모리 처리" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>Call by Value — 복사본만 바뀐다</h2>
+  <p>함수에 변수를 그냥 넘기면 <strong>값의 복사본</strong>이 전달됩니다. 함수 안에서 값을 바꿔도 원본은 그대로입니다.</p>
+  <div class="code"><span class="kw">void</span> <span class="fn">double_val</span>(<span class="kw">int</span> x) {  <span class="cmt">// x는 a의 복사본</span>
+    x = x * <span class="num">2</span>;               <span class="cmt">// 복사본만 변경</span>
+    <span class="fn">printf</span>(<span class="str">"함수 안 x=%d\n"</span>, x);  <span class="cmt">// 20</span>
+}
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="kw">int</span> a = <span class="num">10</span>;
+    <span class="fn">double_val</span>(a);               <span class="cmt">// a를 복사해서 전달</span>
+    <span class="fn">printf</span>(<span class="str">"main의 a=%d\n"</span>, a);  <span class="cmt">// 10 — 원본 그대로!</span>
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+  <div style="text-align:center;margin:18px 0;">
+    <svg viewBox="0 0 460 160" style="max-width:460px;width:100%">
+      <defs><marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#ef4444"/></marker></defs>
+      <!-- main 스택 -->
+      <rect x="10" y="20" width="180" height="120" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+      <text x="100" y="38" text-anchor="middle" font-size="11" fill="#64748b" font-weight="700">main() 스택</text>
+      <rect x="25" y="48" width="140" height="38" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+      <text x="95" y="66" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">int a = 10</text>
+      <text x="95" y="80" text-anchor="middle" font-size="9" fill="#3b82f6">0x1000</text>
+      <text x="100" y="125" text-anchor="middle" font-size="9" fill="#22c55e" font-weight="600">a는 계속 10</text>
+      <!-- 화살표 (복사) -->
+      <path d="M195,67 L240,67" stroke="#ef4444" stroke-width="2" marker-end="url(#a1)"/>
+      <text x="217" y="58" text-anchor="middle" font-size="10" fill="#ef4444" font-weight="700">복사!</text>
+      <!-- 함수 스택 -->
+      <rect x="250" y="20" width="180" height="120" rx="8" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+      <text x="340" y="38" text-anchor="middle" font-size="11" fill="#dc2626" font-weight="700">double_val() 스택</text>
+      <rect x="265" y="48" width="140" height="38" rx="6" fill="#fee2e2" stroke="#ef4444" stroke-width="2"/>
+      <text x="335" y="66" text-anchor="middle" font-size="10" fill="#dc2626" font-weight="700">int x = 10 (복사)</text>
+      <text x="335" y="80" text-anchor="middle" font-size="9" fill="#ef4444">0x2000 (다른 주소!)</text>
+      <text x="335" y="110" text-anchor="middle" font-size="9" fill="#ef4444">x = x*2 → x=20</text>
+      <text x="335" y="125" text-anchor="middle" font-size="9" fill="#dc2626" font-weight="600">함수 끝나면 x 사라짐</text>
+    </svg>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/computer-basics/ram.png" alt="RAM - 포인터가 가리키는 메모리" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>Call by Reference — 주소로 원본을 바꾼다</h2>
+  <p>함수에 변수의 <strong>주소</strong>를 넘기면, 함수 안에서 포인터로 원본에 직접 접근해 값을 변경할 수 있습니다.</p>
+  <div class="code"><span class="kw">void</span> <span class="fn">double_ref</span>(<span class="kw">int</span> *p) {  <span class="cmt">// p는 주소를 받음</span>
+    *p = *p * <span class="num">2</span>;              <span class="cmt">// 원본 직접 변경!</span>
+    <span class="fn">printf</span>(<span class="str">"함수 안 *p=%d\n"</span>, *p);  <span class="cmt">// 20</span>
+}
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="kw">int</span> a = <span class="num">10</span>;
+    <span class="fn">double_ref</span>(&amp;a);              <span class="cmt">// a의 주소 전달</span>
+    <span class="fn">printf</span>(<span class="str">"main의 a=%d\n"</span>, a);  <span class="cmt">// 20 — 원본 바뀜!</span>
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+</div>
+
+<!-- 페이지 3 -->
+<div class="page">
+  <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/c-lang/magnifying-glass.png" alt="돋보기 - 포인터 주소 탐색" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>Call by Value vs Reference 비교</h2>
+  <div style="text-align:center;margin:18px 0;">
+    <svg viewBox="0 0 460 230" style="max-width:460px;width:100%">
+      <defs><marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#7c3aed"/></marker></defs>
+      <!-- 헤더 -->
+      <rect x="10" y="10" width="200" height="30" rx="6" fill="#fef2f2" stroke="#ef4444"/>
+      <text x="110" y="30" text-anchor="middle" font-size="12" fill="#dc2626" font-weight="800">Call by Value</text>
+      <rect x="250" y="10" width="200" height="30" rx="6" fill="#f0fdf4" stroke="#22c55e"/>
+      <text x="350" y="30" text-anchor="middle" font-size="12" fill="#166534" font-weight="800">Call by Reference</text>
+      <!-- 항목 비교 -->
+      <text x="10" y="58" font-size="11" fill="#1e3a5f" font-weight="700">전달 방식</text>
+      <text x="110" y="58" text-anchor="middle" font-size="11" fill="#ef4444">값 복사</text>
+      <text x="350" y="58" text-anchor="middle" font-size="11" fill="#22c55e">주소 전달</text>
+      <line x1="10" y1="63" x2="450" y2="63" stroke="#e2e8f0" stroke-width="1"/>
+      <text x="10" y="82" font-size="11" fill="#1e3a5f" font-weight="700">함수 매개변수</text>
+      <text x="110" y="82" text-anchor="middle" font-size="11" fill="#64748b" font-family="JetBrains Mono">int x</text>
+      <text x="350" y="82" text-anchor="middle" font-size="11" fill="#5b21b6" font-family="JetBrains Mono">int *p</text>
+      <line x1="10" y1="87" x2="450" y2="87" stroke="#e2e8f0" stroke-width="1"/>
+      <text x="10" y="106" font-size="11" fill="#1e3a5f" font-weight="700">호출 방법</text>
+      <text x="110" y="106" text-anchor="middle" font-size="11" fill="#64748b" font-family="JetBrains Mono">f(a)</text>
+      <text x="350" y="106" text-anchor="middle" font-size="11" fill="#5b21b6" font-family="JetBrains Mono">f(&amp;a)</text>
+      <line x1="10" y1="111" x2="450" y2="111" stroke="#e2e8f0" stroke-width="1"/>
+      <text x="10" y="130" font-size="11" fill="#1e3a5f" font-weight="700">원본 변경</text>
+      <text x="110" y="130" text-anchor="middle" font-size="13" fill="#ef4444" font-weight="900">불가</text>
+      <text x="350" y="130" text-anchor="middle" font-size="13" fill="#22c55e" font-weight="900">가능</text>
+      <line x1="10" y1="135" x2="450" y2="135" stroke="#e2e8f0" stroke-width="1"/>
+      <text x="10" y="154" font-size="11" fill="#1e3a5f" font-weight="700">메모리</text>
+      <text x="110" y="154" text-anchor="middle" font-size="11" fill="#ef4444">복사본 생성</text>
+      <text x="350" y="154" text-anchor="middle" font-size="11" fill="#22c55e">주소만 전달</text>
+      <line x1="10" y1="159" x2="450" y2="159" stroke="#e2e8f0" stroke-width="1"/>
+      <text x="10" y="178" font-size="11" fill="#1e3a5f" font-weight="700">사용 예</text>
+      <text x="110" y="178" text-anchor="middle" font-size="10" fill="#64748b">계산값 반환</text>
+      <text x="350" y="178" text-anchor="middle" font-size="10" fill="#22c55e">swap, 여러값 반환</text>
+      <!-- 요약 -->
+      <rect x="10" y="192" width="440" height="32" rx="6" fill="#f5f3ff" stroke="#7c3aed"/>
+      <text x="230" y="210" text-anchor="middle" font-size="11" fill="#5b21b6" font-weight="700">함수에서 원본을 바꿔야 한다면? → 주소(&amp;a)를 전달하고 포인터(*p)로 접근!</text>
+    </svg>
+  </div>
+
+  <h2>swap 함수 — 포인터의 대표 예제</h2>
+  <p>두 변수의 값을 교환하는 swap 함수는 포인터 없이는 불가능합니다.</p>
+  <div class="code"><span class="kw">void</span> <span class="fn">swap</span>(<span class="kw">int</span> *a, <span class="kw">int</span> *b) {
+    <span class="kw">int</span> tmp = *a;   <span class="cmt">// a가 가리키는 값 임시 저장</span>
+    *a = *b;         <span class="cmt">// b의 값을 a에 저장</span>
+    *b = tmp;        <span class="cmt">// tmp를 b에 저장</span>
+}
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="kw">int</span> x = <span class="num">10</span>, y = <span class="num">20</span>;
+    <span class="fn">printf</span>(<span class="str">"전: x=%d, y=%d\n"</span>, x, y);  <span class="cmt">// 10 20</span>
+    <span class="fn">swap</span>(&amp;x, &amp;y);
+    <span class="fn">printf</span>(<span class="str">"후: x=%d, y=%d\n"</span>, x, y);  <span class="cmt">// 20 10</span>
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+  <div style="text-align:center;margin:14px 0;">
+    <svg viewBox="0 0 460 110" style="max-width:460px;width:100%">
+      <defs><marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#7c3aed"/></marker></defs>
+      <text x="55" y="16" text-anchor="middle" font-size="10" fill="#64748b" font-weight="700">시작</text>
+      <rect x="10" y="22" width="90" height="35" rx="6" fill="#dbeafe" stroke="#3b82f6"/>
+      <text x="55" y="38" text-anchor="middle" font-size="10" fill="#1d4ed8">x=10</text>
+      <text x="55" y="52" text-anchor="middle" font-size="10" fill="#3b82f6" font-family="JetBrains Mono">0x1000</text>
+      <rect x="105" y="22" width="90" height="35" rx="6" fill="#f0fdf4" stroke="#22c55e"/>
+      <text x="150" y="38" text-anchor="middle" font-size="10" fill="#166534">y=20</text>
+      <text x="150" y="52" text-anchor="middle" font-size="10" fill="#22c55e" font-family="JetBrains Mono">0x1004</text>
+      <!-- tmp -->
+      <rect x="210" y="22" width="90" height="35" rx="6" fill="#fef3c7" stroke="#f59e0b"/>
+      <text x="255" y="38" text-anchor="middle" font-size="10" fill="#92400e">tmp=10</text>
+      <text x="255" y="52" text-anchor="middle" font-size="9" fill="#f59e0b">int tmp=*a</text>
+      <!-- 결과 -->
+      <rect x="330" y="22" width="90" height="35" rx="6" fill="#dbeafe" stroke="#3b82f6"/>
+      <text x="375" y="38" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">x=20</text>
+      <text x="375" y="52" text-anchor="middle" font-size="9" fill="#3b82f6">*a=*b</text>
+      <!-- 결과2 -->
+      <text x="330" y="78" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">y=10 (*b=tmp)</text>
+      <text x="230" y="95" text-anchor="middle" font-size="10" fill="#7c3aed" font-weight="700">x와 y가 교환됨!</text>
+    </svg>
+  </div>
+</div>
+
+<!-- 페이지 4 -->
+<div class="page">
+  <h2>*p로 연산 결과 저장</h2>
+  <p>포인터 매개변수를 활용하면 함수가 여러 값을 "반환"할 수 있습니다.</p>
+  <div class="code"><span class="cmt">// 포인터로 여러 결과 반환</span>
+<span class="kw">void</span> <span class="fn">calc</span>(<span class="kw">int</span> a, <span class="kw">int</span> b, <span class="kw">int</span> *sum, <span class="kw">int</span> *diff) {
+    *sum  = a + b;   <span class="cmt">// sum이 가리키는 곳에 합 저장</span>
+    *diff = a - b;   <span class="cmt">// diff가 가리키는 곳에 차 저장</span>
+}
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="kw">int</span> s, d;
+    <span class="fn">calc</span>(<span class="num">10</span>, <span class="num">3</span>, &amp;s, &amp;d);
+    <span class="fn">printf</span>(<span class="str">"합=%d, 차=%d\n"</span>, s, d);  <span class="cmt">// 합=13, 차=7</span>
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+
+  <div style="text-align:center;margin:14px 0;">
+    <svg viewBox="0 0 460 130" style="max-width:460px;width:100%">
+      <defs><marker id="a4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#7c3aed"/></marker></defs>
+      <text x="230" y="16" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="800">포인터 매개변수 흐름</text>
+      <!-- main -->
+      <rect x="10" y="24" width="130" height="95" rx="6" fill="#f8fafc" stroke="#cbd5e1"/>
+      <text x="75" y="40" text-anchor="middle" font-size="10" fill="#64748b" font-weight="700">main()</text>
+      <rect x="20" y="48" width="50" height="22" rx="4" fill="#dbeafe" stroke="#3b82f6"/>
+      <text x="45" y="63" text-anchor="middle" font-size="9" fill="#1d4ed8">s = ?</text>
+      <rect x="80" y="48" width="50" height="22" rx="4" fill="#f0fdf4" stroke="#22c55e"/>
+      <text x="105" y="63" text-anchor="middle" font-size="9" fill="#166534">d = ?</text>
+      <text x="45" y="90" text-anchor="middle" font-size="9" fill="#1d4ed8">s = 13</text>
+      <text x="105" y="90" text-anchor="middle" font-size="9" fill="#166534">d = 7</text>
+      <text x="75" y="110" text-anchor="middle" font-size="8" fill="#22c55e">함수 완료 후</text>
+      <!-- 화살표 -->
+      <line x1="145" y1="59" x2="195" y2="59" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#a4)"/>
+      <text x="170" y="53" text-anchor="middle" font-size="8" fill="#3b82f6">&amp;s</text>
+      <line x1="145" y1="75" x2="195" y2="75" stroke="#22c55e" stroke-width="1.5" marker-end="url(#a4)"/>
+      <text x="170" y="70" text-anchor="middle" font-size="8" fill="#22c55e">&amp;d</text>
+      <!-- calc -->
+      <rect x="200" y="24" width="250" height="95" rx="6" fill="#f5f3ff" stroke="#7c3aed"/>
+      <text x="325" y="40" text-anchor="middle" font-size="10" fill="#5b21b6" font-weight="700">calc(10, 3, &amp;s, &amp;d)</text>
+      <text x="325" y="58" text-anchor="middle" font-size="10" fill="#64748b" font-family="JetBrains Mono">int *sum = &amp;s</text>
+      <text x="325" y="74" text-anchor="middle" font-size="10" fill="#64748b" font-family="JetBrains Mono">int *diff = &amp;d</text>
+      <text x="325" y="90" text-anchor="middle" font-size="10" fill="#5b21b6" font-family="JetBrains Mono">*sum = 10+3 = 13</text>
+      <text x="325" y="108" text-anchor="middle" font-size="10" fill="#5b21b6" font-family="JetBrains Mono">*diff = 10-3 = 7</text>
+    </svg>
+  </div>
+  <div style="display:flex;align-items:center;gap:6px;margin:14px 0 4px;">
+        <img src="/images/learn/c-lang/magnifying-glass.png" alt="돋보기 - 포인터 주소 탐색" style="width:24px;height:24px;object-fit:contain;background:#fff;border-radius:8px;">
+        <span style="font-size:12px;color:#1d4ed8;font-weight:600;">실습 구역</span>
+    </div>
+<div class="practice">
+    <div class="practice-head">따라해보세요</div>
+    <div class="practice-body">
+      <div class="practice-item">
+        <div class="practice-num">1</div>
+        <div class="practice-desc">포인터 매개변수로 변수를 3배로 만드는 함수 <code>triple</code>을 작성해보세요.</div>
+        <div class="code"><span class="kw">void</span> <span class="fn">triple</span>(<span class="kw">int</span> *p) {
+    *p = *p * <span class="num">3</span>;
+}
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="kw">int</span> n = <span class="num">5</span>;
+    <span class="fn">triple</span>(&amp;n);
+    <span class="fn">printf</span>(<span class="str">"%d\n"</span>, n);  <span class="cmt">// 15</span>
+}</div>
+        <div class="practice-result">n이 15로 바뀝니다</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 페이지 5 -->
+<div class="page">
+  <h2>정리 + 연습문제</h2>
+  <div style="display:flex;align-items:center;gap:8px;margin:16px 0 6px;padding:8px 14px;background:#f0f9ff;border-radius:6px;border:1px solid #bae6fd;">
+        <img src="/images/learn/computer-basics/cpu.png" alt="CPU - 포인터와 메모리 처리" style="width:28px;height:28px;object-fit:contain;background:#fff;border-radius:8px;">
+        <img src="/images/learn/computer-basics/ram.png" alt="RAM - 포인터가 가리키는 메모리" style="width:28px;height:28px;object-fit:contain;background:#fff;border-radius:8px;">
+        <span style="font-size:12px;color:#0369a1;font-weight:600;">핵심 정리</span>
+    </div>
+<div class="summary">
+    <h3>핵심 정리</h3>
+    <ul>
+      <li>Call by Value: 값 복사 전달 → 원본 변경 불가</li>
+      <li>Call by Reference: 주소 전달 → *p로 원본 직접 변경 가능</li>
+      <li>호출: <code>f(&amp;a)</code>, 매개변수: <code>int *p</code>, 사용: <code>*p = 새값</code></li>
+      <li>swap 함수는 포인터의 가장 대표적인 활용 예제</li>
+      <li>포인터 매개변수로 여러 결과를 함수에서 반환할 수 있음</li>
+    </ul>
+  </div>
+
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">1</div>
+      <div class="problem-label">출력 예측 (Call by Value)</div>
+      <span class="problem-diff easy">쉬움</span>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">아래 코드 실행 후 a의 값은?</div>
+      <div class="problem-example">
+        <div class="problem-example-row"><span class="problem-example-value">void add(int x){x=x+100;}</span></div>
+        <div class="problem-example-row"><span class="problem-example-value">int a=5; add(a);</span></div>
+        <div class="problem-example-row"><span class="problem-example-label">a =</span><span class="problem-example-value">?</span></div>
+      </div>
+    </div>
+    <details class="problem-toggle">
+      <summary>정답 보기</summary>
+      <div class="problem-toggle-content"><div class="answer-code">5 — Call by Value, 복사본만 변경. 원본 a는 그대로.</div></div>
+    </details>
+  </div>
+
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">2</div>
+      <div class="problem-label">포인터로 값 두 배 만들기</div>
+      <span class="problem-diff easy">쉬움</span>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">포인터 매개변수를 받아 값을 2배로 만드는 <code>double_it</code> 함수를 작성하세요.</div>
+    </div>
+    <details class="problem-toggle">
+      <summary>정답 보기</summary>
+      <div class="problem-toggle-content">
+        <div class="answer-code">void double_it(int *p) {
+    *p = *p * 2;
+}</div>
+      </div>
+    </details>
+  </div>
+
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">3</div>
+      <div class="problem-label">swap 완성하기</div>
+      <span class="problem-diff medium">보통</span>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">빈칸을 채워 swap 함수를 완성하세요.</div>
+      <div class="problem-example">
+        <div class="problem-example-row"><span class="problem-example-value">void swap(int *a, int *b) {</span></div>
+        <div class="problem-example-row"><span class="problem-example-value">    int tmp = ___;</span></div>
+        <div class="problem-example-row"><span class="problem-example-value">    *a = ___;</span></div>
+        <div class="problem-example-row"><span class="problem-example-value">    *b = ___;</span></div>
+        <div class="problem-example-row"><span class="problem-example-value">}</span></div>
+      </div>
+    </div>
+    <details class="problem-toggle">
+      <summary>정답 보기</summary>
+      <div class="problem-toggle-content">
+        <div class="answer-code">int tmp = *a;
+*a = *b;
+*b = tmp;</div>
+      </div>
+    </details>
+  </div>
+
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">4</div>
+      <div class="problem-label">Call by Reference 출력 예측</div>
+      <span class="problem-diff medium">보통</span>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">아래 코드 실행 후 x, y 값은?</div>
+      <div class="problem-example">
+        <div class="problem-example-row"><span class="problem-example-value">int x=3, y=7;</span></div>
+        <div class="problem-example-row"><span class="problem-example-value">swap(&amp;x, &amp;y);</span></div>
+        <div class="problem-example-row"><span class="problem-example-label">x=</span><span class="problem-example-value">? y=?</span></div>
+      </div>
+    </div>
+    <details class="problem-toggle">
+      <summary>정답 보기</summary>
+      <div class="problem-toggle-content"><div class="answer-code">x=7, y=3 — swap으로 두 값이 교환됨</div></div>
+    </details>
+  </div>
+
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">5</div>
+      <div class="problem-label">min_max 함수 작성</div>
+      <span class="problem-diff hard">어려움</span>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">a, b 두 수를 받아 포인터로 최소값, 최대값을 동시에 반환하는 <code>min_max</code> 함수를 작성하세요.</div>
+    </div>
+    <details class="problem-toggle">
+      <summary>정답 보기</summary>
+      <div class="problem-toggle-content">
+        <div class="answer-code">void min_max(int a, int b, int *mn, int *mx) {
+    if (a &lt; b) { *mn = a; *mx = b; }
+    else        { *mn = b; *mx = a; }
+}</div>
+      </div>
+    </details>
+  </div>
+
+    <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:20px;padding-top:10px;border-top:1px solid #f1f5f9;">
+        <img src="/images/learn/c-lang/code-screen.png" alt="코드 화면 - 포인터 코드 예시" style="width:22px;height:22px;object-fit:contain;opacity:0.6;background:#fff;border-radius:8px;">
+        <span style="font-size:10px;color:#cbd5e1;">코딩쏙 C언어</span>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

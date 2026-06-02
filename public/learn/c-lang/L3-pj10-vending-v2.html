@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 프로젝트: 자판기 시뮬레이터</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+/* ── 페이지 ── */
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+/* ── 챕터 표지 ── */
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 220px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+
+/* ── 본문 ── */
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin: 16px 0 8px; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+
+/* ── 코드 블록 ── */
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.code .pp { color: #f97316; }
+
+/* ── 따라해보세요 ── */
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+
+/* ── 문제 ── */
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #e2e8f0; line-height: 1.7; white-space: pre-wrap; }
+
+/* ── 요약 ── */
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+/* ── 프로젝트 전용 ── */
+.project-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: linear-gradient(135deg, #1e3a5f, #2d5a8e);
+    color: #fff; font-size: 11px; font-weight: 800; padding: 4px 12px;
+    border-radius: 99px; letter-spacing: 1px; margin-bottom: 12px;
+}
+.step-box {
+    border: 1.5px solid #e2e8f0; border-radius: 10px;
+    margin: 14px 0; overflow: hidden;
+}
+.step-head {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 16px; background: #f8fafc;
+    border-bottom: 1.5px solid #e2e8f0;
+}
+.step-num {
+    width: 24px; height: 24px; background: #1e3a5f; color: #fff;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 900; flex-shrink: 0;
+}
+.step-title { font-size: 14px; font-weight: 700; color: #1e3a5f; }
+.step-body { padding: 12px 16px; }
+.step-body p { font-size: 14px; margin-bottom: 6px; }
+
+.callout {
+    padding: 10px 14px; border-radius: 8px; margin: 12px 0;
+    font-size: 14px; line-height: 1.7;
+}
+.callout.tip { background: #eff6ff; border-left: 4px solid #3b82f6; color: #1e40af; }
+.callout.warn { background: #fffbeb; border-left: 4px solid #f59e0b; color: #92400e; }
+.callout.info { background: #f0fdf4; border-left: 4px solid #22c55e; color: #166534; }
+.callout strong { font-weight: 800; }
+
+.output-box {
+    background: #1e293b; border-radius: 8px; padding: 14px 18px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #94a3b8; line-height: 1.9; margin: 12px 0;
+}
+.output-box .out-label { color: #64748b; font-size: 11px; font-weight: 600; margin-bottom: 6px; letter-spacing: 1px; }
+.output-box .out-line { color: #e2e8f0; }
+.output-box .out-input { color: #86efac; }
+.output-box .out-result { color: #67e8f9; font-weight: 600; }
+.output-box .out-err { color: #f87171; }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+.two-col-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin: 14px 0; }
+
+.card {
+    border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 12px 14px;
+    background: #fff;
+}
+.card-title { font-size: 12px; font-weight: 800; color: #475569; margin-bottom: 6px; letter-spacing: 0.5px; }
+.card-val { font-size: 22px; font-weight: 900; color: #1e3a5f; }
+.card-sub { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+
+.challenge-list { margin: 0; padding: 0; list-style: none; }
+.challenge-list li {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px 0; border-bottom: 1px solid #f1f5f9;
+    font-size: 14px; color: #334155; line-height: 1.6;
+}
+.challenge-list li:last-child { border-bottom: none; }
+.challenge-num {
+    width: 22px; height: 22px; background: #e6a817; color: #fff;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 900; flex-shrink: 0; margin-top: 1px;
+}
+
+.keyword-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+.kw-tag {
+    background: #eff6ff; border: 1px solid #bfdbfe; color: #1d4ed8;
+    font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 99px;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+
+<!-- ══════════════════════════════════════════
+     PAGE 1 — 커버
+═══════════════════════════════════════════ -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">PJ</div>
+
+        <div class="project-badge">PROJECT 10</div>
+        <div class="cover-label" style="margin-top:8px;">L3b 종합 프로젝트</div>
+        <h1 class="cover-title">자판기 시뮬레이터</h1>
+        <p class="cover-sub">switch + if-else + 연산을 한 곳에 모아 실제 자판기 동작을 C로 구현합니다.</p>
+
+        <!-- 자판기 UI SVG -->
+        <div style="display:flex;gap:32px;align-items:flex-start;margin:22px 0 20px;">
+            <svg viewBox="0 0 220 280" style="width:220px;flex-shrink:0;">
+                <!-- 자판기 본체 -->
+                <rect x="10" y="10" width="200" height="260" rx="14" fill="#1e3a5f" stroke="#2d5a8e" stroke-width="2"/>
+                <!-- 화면 상단 -->
+                <rect x="24" y="22" width="172" height="36" rx="6" fill="#0f172a"/>
+                <text x="110" y="36" text-anchor="middle" font-size="9" fill="#94a3b8" font-family="JetBrains Mono" font-weight="600">VENDING MACHINE</text>
+                <text x="110" y="50" text-anchor="middle" font-size="10" fill="#67e8f9" font-family="JetBrains Mono" font-weight="700">번호를 선택하세요</text>
+                <!-- 메뉴 버튼 3개 (기본버전) -->
+                <!-- 콜라 -->
+                <rect x="24" y="68" width="76" height="52" rx="8" fill="#1d4ed8" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="62" y="84" text-anchor="middle" font-size="8" fill="#bfdbfe" font-weight="600">1번</text>
+                <text x="62" y="98" text-anchor="middle" font-size="11" fill="#fff" font-weight="800">콜라</text>
+                <text x="62" y="112" text-anchor="middle" font-size="9" fill="#93c5fd" font-family="JetBrains Mono">1,200원</text>
+                <!-- 사이다 -->
+                <rect x="120" y="68" width="76" height="52" rx="8" fill="#166534" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="158" y="84" text-anchor="middle" font-size="8" fill="#bbf7d0" font-weight="600">2번</text>
+                <text x="158" y="98" text-anchor="middle" font-size="11" fill="#fff" font-weight="800">사이다</text>
+                <text x="158" y="112" text-anchor="middle" font-size="9" fill="#86efac" font-family="JetBrains Mono">1,000원</text>
+                <!-- 커피 -->
+                <rect x="24" y="130" width="76" height="52" rx="8" fill="#92400e" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="62" y="146" text-anchor="middle" font-size="8" fill="#fde68a" font-weight="600">3번</text>
+                <text x="62" y="160" text-anchor="middle" font-size="11" fill="#fff" font-weight="800">커피</text>
+                <text x="62" y="174" text-anchor="middle" font-size="9" fill="#fcd34d" font-family="JetBrains Mono">1,500원</text>
+                <!-- 빈 슬롯 표시 -->
+                <rect x="120" y="130" width="76" height="52" rx="8" fill="#0f172a" stroke="#334155" stroke-width="1.5" stroke-dasharray="4 3"/>
+                <text x="158" y="160" text-anchor="middle" font-size="9" fill="#475569">메뉴 추가</text>
+                <!-- 동전 투입구 -->
+                <rect x="24" y="196" width="172" height="28" rx="6" fill="#0f172a"/>
+                <text x="110" y="206" text-anchor="middle" font-size="8" fill="#64748b" font-weight="600">동전 투입구</text>
+                <rect x="80" y="207" width="60" height="10" rx="3" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+                <text x="110" y="215" text-anchor="middle" font-size="7" fill="#475569" font-family="JetBrains Mono">INSERT COIN</text>
+                <!-- 거스름돈 출구 -->
+                <rect x="24" y="234" width="80" height="26" rx="6" fill="#0f172a" stroke="#334155" stroke-width="1"/>
+                <text x="64" y="251" text-anchor="middle" font-size="8" fill="#475569">거스름돈</text>
+                <!-- 상품 출구 -->
+                <rect x="116" y="234" width="80" height="26" rx="6" fill="#0f172a" stroke="#334155" stroke-width="1"/>
+                <text x="156" y="251" text-anchor="middle" font-size="8" fill="#475569">상품 출구</text>
+            </svg>
+
+            <!-- 처리 흐름도 SVG -->
+            <svg viewBox="0 0 230 280" style="width:230px;flex-shrink:0;">
+                <text x="115" y="15" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="800">처리 흐름도</text>
+                <!-- 시작 -->
+                <ellipse cx="115" cy="36" rx="46" ry="16" fill="#1e3a5f"/>
+                <text x="115" y="40" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">시작</text>
+                <!-- 화살표 -->
+                <line x1="115" y1="52" x2="115" y2="64" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#fl1)"/>
+                <!-- 메뉴 출력 -->
+                <rect x="64" y="64" width="102" height="26" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="115" y="81" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">메뉴 출력</text>
+                <line x1="115" y1="90" x2="115" y2="102" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#fl1)"/>
+                <!-- 번호 입력 -->
+                <rect x="64" y="102" width="102" height="26" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="115" y="119" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">번호 입력 (switch)</text>
+                <line x1="115" y1="128" x2="115" y2="140" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#fl1)"/>
+                <!-- 금액 입력 -->
+                <rect x="64" y="140" width="102" height="26" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="115" y="157" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">금액 입력</text>
+                <line x1="115" y1="166" x2="115" y2="178" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#fl1)"/>
+                <!-- 금액 판단 다이아몬드 -->
+                <polygon points="115,178 165,200 115,222 65,200" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="115" y="197" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">금액 >=</text>
+                <text x="115" y="209" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">가격?</text>
+                <!-- YES 화살표 -->
+                <line x1="115" y1="222" x2="115" y2="234" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#fl1)"/>
+                <text x="120" y="232" font-size="9" fill="#166534" font-weight="700">YES</text>
+                <!-- 거스름돈 -->
+                <rect x="64" y="234" width="102" height="26" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="115" y="251" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">거스름돈 출력</text>
+                <!-- NO 화살표 (오른쪽으로) -->
+                <line x1="165" y1="200" x2="188" y2="200" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#fl1)"/>
+                <text x="168" y="196" font-size="9" fill="#dc2626" font-weight="700">NO</text>
+                <!-- 금액 부족 -->
+                <rect x="188" y="188" width="36" height="24" rx="4" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+                <text x="206" y="198" text-anchor="middle" font-size="7" fill="#dc2626" font-weight="700">금액</text>
+                <text x="206" y="208" text-anchor="middle" font-size="7" fill="#dc2626" font-weight="700">부족</text>
+                <defs>
+                    <marker id="fl1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                    </marker>
+                </defs>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/lightbulb.png" alt="아이디어" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 프로젝트에서 배우는 것</h3>
+            <ul>
+                <li>switch문으로 메뉴 번호를 선택하고 각 음료 가격을 분기할 수 있습니다.</li>
+                <li>if-else로 투입 금액과 가격을 비교해 거스름돈을 계산할 수 있습니다.</li>
+                <li>배열로 메뉴 5개를 관리하고 재고(stock) 변수를 다룰 수 있습니다.</li>
+                <li>나머지 연산(%)으로 동전 단위(500원, 100원, 50원, 10원)를 분해할 수 있습니다.</li>
+                <li>switch + if-else + 연산을 하나의 프로그램으로 통합할 수 있습니다.</li>
+            </ul>
+        </div>
+
+        <div class="keyword-row" style="margin-top:16px;">
+            <span class="kw-tag">switch</span>
+            <span class="kw-tag">if-else</span>
+            <span class="kw-tag">나머지 연산 %</span>
+            <span class="kw-tag">정수 나누기 /</span>
+            <span class="kw-tag">재고 변수</span>
+            <span class="kw-tag">배열</span>
+        </div>
+    </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     PAGE 2 — 기본 자판기: switch + if-else
+═══════════════════════════════════════════ -->
+<div class="page">
+    <h2>기본 자판기 — switch + if-else 조합</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+    <p>자판기의 두 가지 핵심 동작은 <strong>메뉴 선택</strong>과 <strong>금액 확인</strong>입니다. 메뉴 선택에는 <code>switch</code>, 금액 비교에는 <code>if-else</code>를 씁니다.</p>
+
+    <!-- 흐름 단계별 설명 SVG -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 520 80" style="max-width:520px;width:100%">
+            <defs>
+                <marker id="ar1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <!-- STEP 1 -->
+            <rect x="5" y="18" width="88" height="42" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="49" y="34" text-anchor="middle" font-size="9" fill="#3b82f6" font-weight="800">STEP 1</text>
+            <text x="49" y="50" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">메뉴 출력</text>
+            <text x="49" y="62" text-anchor="middle" font-size="8" fill="#64748b">printf로 목록</text>
+            <!-- 화살표 -->
+            <line x1="94" y1="39" x2="110" y2="39" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#ar1)"/>
+            <!-- STEP 2 -->
+            <rect x="111" y="18" width="100" height="42" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="161" y="34" text-anchor="middle" font-size="9" fill="#22c55e" font-weight="800">STEP 2</text>
+            <text x="161" y="50" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">번호 선택</text>
+            <text x="161" y="62" text-anchor="middle" font-size="8" fill="#64748b">scanf + switch</text>
+            <!-- 화살표 -->
+            <line x1="212" y1="39" x2="228" y2="39" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#ar1)"/>
+            <!-- STEP 3 -->
+            <rect x="229" y="18" width="100" height="42" rx="8" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="279" y="34" text-anchor="middle" font-size="9" fill="#f59e0b" font-weight="800">STEP 3</text>
+            <text x="279" y="50" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">금액 입력</text>
+            <text x="279" y="62" text-anchor="middle" font-size="8" fill="#64748b">scanf로 투입</text>
+            <!-- 화살표 -->
+            <line x1="330" y1="39" x2="346" y2="39" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#ar1)"/>
+            <!-- STEP 4 -->
+            <rect x="347" y="18" width="165" height="42" rx="8" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="430" y="34" text-anchor="middle" font-size="9" fill="#ef4444" font-weight="800">STEP 4</text>
+            <text x="430" y="50" text-anchor="middle" font-size="10" fill="#dc2626" font-weight="700">금액 비교 (if-else)</text>
+            <text x="430" y="62" text-anchor="middle" font-size="8" fill="#64748b">거스름돈 or 부족 메시지</text>
+        </svg>
+    </div>
+
+    <div class="step-box">
+        <div class="step-head">
+            <div class="step-num">1</div>
+            <div class="step-title">메뉴 출력 — printf 반복</div>
+        </div>
+        <div class="step-body">
+            <p>자판기는 켜지면 메뉴 목록을 먼저 보여줍니다.</p>
+            <div class="code"><span class="fn">printf</span>(<span class="str">"=== 자판기 ===\n"</span>);
+<span class="fn">printf</span>(<span class="str">"1. 콜라    1200원\n"</span>);
+<span class="fn">printf</span>(<span class="str">"2. 사이다  1000원\n"</span>);
+<span class="fn">printf</span>(<span class="str">"3. 커피    1500원\n"</span>);
+<span class="fn">printf</span>(<span class="str">"번호를 선택하세요: "</span>);</div>
+        </div>
+    </div>
+
+    <div class="step-box">
+        <div class="step-head">
+            <div class="step-num">2</div>
+            <div class="step-title">번호 선택 — switch문으로 가격 결정</div>
+        </div>
+        <div class="step-body">
+            <p><code>switch</code>는 여러 번호 중 하나를 고를 때 if-else보다 깔끔합니다. 각 <code>case</code>에서 해당 음료의 가격을 <code>price</code> 변수에 담습니다.</p>
+            <div class="code"><span class="kw">int</span> choice, price = <span class="num">0</span>;
+<span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;choice);
+
+<span class="kw">switch</span> (choice) {
+    <span class="kw">case</span> <span class="num">1</span>:
+        price = <span class="num">1200</span>;
+        <span class="fn">printf</span>(<span class="str">"콜라를 선택했습니다.\n"</span>);
+        <span class="kw">break</span>;
+    <span class="kw">case</span> <span class="num">2</span>:
+        price = <span class="num">1000</span>;
+        <span class="fn">printf</span>(<span class="str">"사이다를 선택했습니다.\n"</span>);
+        <span class="kw">break</span>;
+    <span class="kw">case</span> <span class="num">3</span>:
+        price = <span class="num">1500</span>;
+        <span class="fn">printf</span>(<span class="str">"커피를 선택했습니다.\n"</span>);
+        <span class="kw">break</span>;
+    <span class="kw">default</span>:
+        <span class="fn">printf</span>(<span class="str">"잘못된 번호입니다.\n"</span>);
+        <span class="kw">return</span> <span class="num">0</span>;   <span class="cmt">// 프로그램 종료</span>
+}</div>
+            <div class="callout tip"><strong>핵심:</strong> break가 없으면 다음 case까지 실행됩니다(fall-through). 반드시 각 case 끝에 break를 씁니다.</div>
+        </div>
+    </div>
+
+    <div class="step-box">
+        <div class="step-head">
+            <div class="step-num">3 + 4</div>
+            <div class="step-title">금액 입력 → if-else로 거스름돈 계산</div>
+        </div>
+        <div class="step-body">
+            <p>투입 금액을 받은 뒤, <code>if</code>로 가격과 비교합니다. 금액이 충분하면 거스름돈을 출력하고, 부족하면 안내 메시지를 냅니다.</p>
+            <div class="code"><span class="kw">int</span> money;
+<span class="fn">printf</span>(<span class="str">"금액을 투입하세요: "</span>);
+<span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;money);
+
+<span class="kw">if</span> (money >= price) {
+    <span class="kw">int</span> change = money - price;
+    <span class="fn">printf</span>(<span class="str">"구매 완료! 거스름돈: %d원\n"</span>, change);
+} <span class="kw">else</span> {
+    <span class="kw">int</span> short_amount = price - money;
+    <span class="fn">printf</span>(<span class="str">"금액 부족! %d원이 더 필요합니다.\n"</span>, short_amount);
+}</div>
+        </div>
+    </div>
+
+    <!-- 실행 결과 -->
+    <div class="two-col" style="margin-top:14px;">
+        <div>
+            <div style="font-size:12px;font-weight:700;color:#166534;margin-bottom:6px;">충분한 금액 입력 시</div>
+            <div class="output-box">
+                <div class="out-line">=== 자판기 ===</div>
+                <div class="out-line">1. 콜라    1200원</div>
+                <div class="out-line">2. 사이다  1000원</div>
+                <div class="out-line">3. 커피    1500원</div>
+                <div class="out-line">번호를 선택하세요: <span class="out-input">1</span></div>
+                <div class="out-line">콜라를 선택했습니다.</div>
+                <div class="out-line">금액을 투입하세요: <span class="out-input">2000</span></div>
+                <div class="out-result">구매 완료! 거스름돈: 800원</div>
+            </div>
+        </div>
+        <div>
+            <div style="font-size:12px;font-weight:700;color:#dc2626;margin-bottom:6px;">금액 부족 시</div>
+            <div class="output-box">
+                <div class="out-line">=== 자판기 ===</div>
+                <div class="out-line">1. 콜라    1200원</div>
+                <div class="out-line">2. 사이다  1000원</div>
+                <div class="out-line">3. 커피    1500원</div>
+                <div class="out-line">번호를 선택하세요: <span class="out-input">3</span></div>
+                <div class="out-line">커피를 선택했습니다.</div>
+                <div class="out-line">금액을 투입하세요: <span class="out-input">1000</span></div>
+                <div class="out-err">금액 부족! 500원이 더 필요합니다.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="callout warn" style="margin-top:10px;"><strong>주의:</strong> <code>if (money >= price)</code> — 정확히 같은 금액(money == price)도 구매 가능하므로 &gt;=를 씁니다. 거스름돈은 0원이 됩니다.</div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     PAGE 3 — 확장: 메뉴 5개 + 동전 분해 + 재고 관리
+═══════════════════════════════════════════ -->
+<div class="page">
+    <h2>확장 — 메뉴 5개 · 동전 분해 · 재고 관리</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/monitor.png" alt="모니터" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+    <p>실제 자판기는 메뉴가 많고, 거스름돈도 동전 단위로 돌려줍니다. 또 재고가 떨어지면 구매가 안 됩니다. 세 가지를 단계별로 확장해봅니다.</p>
+
+    <!-- 확장 3요소 SVG -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 90" style="max-width:500px;width:100%">
+            <defs>
+                <marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <!-- 박스 1 -->
+            <rect x="10" y="15" width="140" height="60" rx="10" fill="#eff6ff" stroke="#3b82f6" stroke-width="2"/>
+            <text x="80" y="38" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="800">메뉴 5개</text>
+            <text x="80" y="54" text-anchor="middle" font-size="9" fill="#3b82f6">배열로 이름·가격</text>
+            <text x="80" y="67" text-anchor="middle" font-size="9" fill="#3b82f6">한꺼번에 관리</text>
+            <!-- 화살표 -->
+            <line x1="152" y1="45" x2="172" y2="45" stroke="#94a3b8" stroke-width="2" marker-end="url(#ar2)"/>
+            <!-- 박스 2 -->
+            <rect x="174" y="15" width="140" height="60" rx="10" fill="#f0fdf4" stroke="#22c55e" stroke-width="2"/>
+            <text x="244" y="38" text-anchor="middle" font-size="11" fill="#166534" font-weight="800">동전 분해</text>
+            <text x="244" y="54" text-anchor="middle" font-size="9" fill="#22c55e">% 나머지 연산으로</text>
+            <text x="244" y="67" text-anchor="middle" font-size="9" fill="#22c55e">500 → 100 → 50 → 10</text>
+            <!-- 화살표 -->
+            <line x1="316" y1="45" x2="336" y2="45" stroke="#94a3b8" stroke-width="2" marker-end="url(#ar2)"/>
+            <!-- 박스 3 -->
+            <rect x="338" y="15" width="150" height="60" rx="10" fill="#fffbeb" stroke="#f59e0b" stroke-width="2"/>
+            <text x="413" y="38" text-anchor="middle" font-size="11" fill="#92400e" font-weight="800">재고 관리</text>
+            <text x="413" y="54" text-anchor="middle" font-size="9" fill="#f59e0b">stock 배열로 개수 추적</text>
+            <text x="413" y="67" text-anchor="middle" font-size="9" fill="#f59e0b">0이면 품절 처리</text>
+        </svg>
+    </div>
+
+    <h3>확장 1 — 메뉴 5개를 배열로</h3>
+    <p>메뉴가 늘어나면 변수를 5개씩 따로 선언하면 너무 복잡합니다. <strong>배열</strong>로 묶으면 깔끔합니다.</p>
+    <div class="code"><span class="cmt">// 메뉴 이름 (문자열 배열)</span>
+<span class="kw">char</span> *menu[] = {<span class="str">"콜라"</span>, <span class="str">"사이다"</span>, <span class="str">"커피"</span>, <span class="str">"녹차"</span>, <span class="str">"주스"</span>};
+
+<span class="cmt">// 메뉴 가격 배열 (인덱스 0~4)</span>
+<span class="kw">int</span>  price[] = {<span class="num">1200</span>, <span class="num">1000</span>, <span class="num">1500</span>, <span class="num">800</span>, <span class="num">1300</span>};
+
+<span class="cmt">// 메뉴 출력 (for문 활용)</span>
+<span class="fn">printf</span>(<span class="str">"=== 자판기 ===\n"</span>);
+<span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; <span class="num">5</span>; i++) {
+    <span class="fn">printf</span>(<span class="str">"%d. %-6s  %d원\n"</span>, i + <span class="num">1</span>, menu[i], price[i]);
+}</div>
+    <div class="callout info"><strong>%-6s</strong>: 왼쪽 정렬로 6자리 확보. 메뉴 이름 길이가 달라도 가격 위치가 정렬됩니다.</div>
+
+    <h3>확장 2 — 거스름돈을 동전 단위로 분해</h3>
+    <p>거스름돈 1,300원을 돌려줄 때 "500원 2개, 100원 3개"처럼 단위를 나누는 방법입니다. <strong>나누기(/)</strong>로 개수를, <strong>나머지(%)</strong>로 남은 금액을 구합니다.</p>
+
+    <!-- 동전 분해 SVG -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 500 100" style="max-width:500px;width:100%">
+            <defs>
+                <marker id="ar3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <!-- 거스름돈 1300 -->
+            <rect x="5" y="30" width="70" height="40" rx="8" fill="#1e3a5f"/>
+            <text x="40" y="48" text-anchor="middle" font-size="10" fill="#93c5fd" font-weight="600">거스름돈</text>
+            <text x="40" y="63" text-anchor="middle" font-size="13" fill="#fff" font-weight="900">1300</text>
+            <line x1="76" y1="50" x2="92" y2="50" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#ar3)"/>
+            <!-- 500원 -->
+            <circle cx="112" cy="50" r="18" fill="#f59e0b" stroke="#fde68a" stroke-width="2"/>
+            <text x="112" y="54" text-anchor="middle" font-size="9" fill="#fff" font-weight="900">x2</text>
+            <text x="112" y="82" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">500원</text>
+            <line x1="132" y1="50" x2="148" y2="50" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#ar3)"/>
+            <!-- 나머지 300 -->
+            <rect x="148" y="35" width="50" height="30" rx="6" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/>
+            <text x="173" y="50" text-anchor="middle" font-size="9" fill="#64748b">남은</text>
+            <text x="173" y="62" text-anchor="middle" font-size="10" fill="#334155" font-weight="700">300</text>
+            <line x1="200" y1="50" x2="216" y2="50" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#ar3)"/>
+            <!-- 100원 -->
+            <circle cx="234" cy="50" r="18" fill="#94a3b8" stroke="#e2e8f0" stroke-width="2"/>
+            <text x="234" y="54" text-anchor="middle" font-size="9" fill="#fff" font-weight="900">x3</text>
+            <text x="234" y="82" text-anchor="middle" font-size="9" fill="#475569" font-weight="700">100원</text>
+            <line x1="254" y1="50" x2="270" y2="50" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#ar3)"/>
+            <!-- 나머지 0 -->
+            <rect x="270" y="35" width="50" height="30" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1"/>
+            <text x="295" y="50" text-anchor="middle" font-size="9" fill="#166534">남은</text>
+            <text x="295" y="62" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">0</text>
+            <!-- 공식 -->
+            <rect x="330" y="18" width="165" height="64" rx="8" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="412" y="34" text-anchor="middle" font-size="9" fill="#92400e" font-weight="800">공식</text>
+            <text x="412" y="49" text-anchor="middle" font-size="9" fill="#92400e" font-family="JetBrains Mono">개수 = 거스름돈 / 단위</text>
+            <text x="412" y="63" text-anchor="middle" font-size="9" fill="#92400e" font-family="JetBrains Mono">나머지 = 거스름돈 % 단위</text>
+            <text x="412" y="76" text-anchor="middle" font-size="9" fill="#b45309" font-weight="700">1300/500=2,  1300%500=300</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">int</span> change = money - price[choice - <span class="num">1</span>];   <span class="cmt">// 거스름돈</span>
+<span class="fn">printf</span>(<span class="str">"거스름돈: %d원\n"</span>, change);
+
+<span class="kw">int</span> c500 = change / <span class="num">500</span>;   change = change % <span class="num">500</span>;
+<span class="kw">int</span> c100 = change / <span class="num">100</span>;   change = change % <span class="num">100</span>;
+<span class="kw">int</span> c50  = change / <span class="num">50</span>;    change = change % <span class="num">50</span>;
+<span class="kw">int</span> c10  = change / <span class="num">10</span>;
+
+<span class="fn">printf</span>(<span class="str">"  500원 %d개, 100원 %d개, 50원 %d개, 10원 %d개\n"</span>,
+        c500, c100, c50, c10);</div>
+
+    <h3>확장 3 — 재고(stock) 관리</h3>
+    <p>각 메뉴마다 재고 수량을 저장하는 <code>stock</code> 배열을 추가합니다. 구매 시 재고를 1 줄이고, 0이면 품절 처리합니다.</p>
+    <div class="code"><span class="kw">int</span> stock[] = {<span class="num">5</span>, <span class="num">3</span>, <span class="num">4</span>, <span class="num">6</span>, <span class="num">2</span>};   <span class="cmt">// 각 메뉴 재고 수량</span>
+
+<span class="kw">int</span> idx = choice - <span class="num">1</span>;   <span class="cmt">// 배열 인덱스는 0부터</span>
+
+<span class="kw">if</span> (stock[idx] == <span class="num">0</span>) {
+    <span class="fn">printf</span>(<span class="str">"품절입니다!\n"</span>);
+} <span class="kw">else if</span> (money >= price[idx]) {
+    stock[idx]--;   <span class="cmt">// 재고 1 감소</span>
+    <span class="kw">int</span> change = money - price[idx];
+    <span class="fn">printf</span>(<span class="str">"구매 완료! 재고: %d개 남음. 거스름돈: %d원\n"</span>,
+           stock[idx], change);
+} <span class="kw">else</span> {
+    <span class="fn">printf</span>(<span class="str">"금액 부족!\n"</span>);
+}</div>
+
+    <!-- 재고 시각화 SVG -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 80" style="max-width:500px;width:100%">
+            <text x="250" y="14" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="800">재고 배열 시각화</text>
+            <!-- 5개 슬롯 -->
+            <rect x="10"  y="22" width="88" height="44" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="54"  y="38" text-anchor="middle" font-size="9"  fill="#3b82f6" font-weight="700">콜라</text>
+            <text x="54"  y="56" text-anchor="middle" font-size="18" fill="#1d4ed8" font-weight="900">5</text>
+
+            <rect x="108" y="22" width="88" height="44" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="152" y="38" text-anchor="middle" font-size="9"  fill="#22c55e" font-weight="700">사이다</text>
+            <text x="152" y="56" text-anchor="middle" font-size="18" fill="#166534" font-weight="900">3</text>
+
+            <rect x="206" y="22" width="88" height="44" rx="8" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="250" y="38" text-anchor="middle" font-size="9"  fill="#f59e0b" font-weight="700">커피</text>
+            <text x="250" y="56" text-anchor="middle" font-size="18" fill="#92400e" font-weight="900">4</text>
+
+            <rect x="304" y="22" width="88" height="44" rx="8" fill="#f5f3ff" stroke="#8b5cf6" stroke-width="1.5"/>
+            <text x="348" y="38" text-anchor="middle" font-size="9"  fill="#8b5cf6" font-weight="700">녹차</text>
+            <text x="348" y="56" text-anchor="middle" font-size="18" fill="#7c3aed" font-weight="900">6</text>
+
+            <rect x="402" y="22" width="88" height="44" rx="8" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="446" y="38" text-anchor="middle" font-size="9"  fill="#ef4444" font-weight="700">주스</text>
+            <text x="446" y="56" text-anchor="middle" font-size="18" fill="#dc2626" font-weight="900">2</text>
+
+            <!-- 인덱스 표시 -->
+            <text x="54"  y="76" text-anchor="middle" font-size="8" fill="#94a3b8" font-family="JetBrains Mono">[0]</text>
+            <text x="152" y="76" text-anchor="middle" font-size="8" fill="#94a3b8" font-family="JetBrains Mono">[1]</text>
+            <text x="250" y="76" text-anchor="middle" font-size="8" fill="#94a3b8" font-family="JetBrains Mono">[2]</text>
+            <text x="348" y="76" text-anchor="middle" font-size="8" fill="#94a3b8" font-family="JetBrains Mono">[3]</text>
+            <text x="446" y="76" text-anchor="middle" font-size="8" fill="#94a3b8" font-family="JetBrains Mono">[4]</text>
+        </svg>
+    </div>
+
+    <div class="callout tip"><strong>배열 인덱스 주의:</strong> 사용자가 입력하는 번호는 1~5지만, 배열 인덱스는 0~4입니다. <code>idx = choice - 1</code>로 변환해야 합니다.</div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q</div>
+            <div class="problem-label">확인 문제 — 동전 분해 계산</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">거스름돈이 1,750원일 때 500원, 100원, 50원, 10원짜리로 나누면 각각 몇 개씩인지 계산하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">입력</span>
+                    <span class="problem-example-value">change = 1750</span>
+                </div>
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력</span>
+                    <span class="problem-example-value">500원 3개, 100원 2개, 50원 1개, 10원 0개</span>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 / 정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">1750 / 500 = 3, 1750 % 500 = 250 → 250 / 100 = 2, 250 % 100 = 50 → 50 / 50 = 1, 50 % 50 = 0</div>
+                <div class="answer-code" style="margin-top:8px;">int change = 1750;
+int c500 = change / 500;  change = change % 500;  // 3, 250
+int c100 = change / 100;  change = change % 100;  // 2,  50
+int c50  = change / 50;   change = change % 50;   // 1,   0
+int c10  = change / 10;                           // 0
+printf("500원 %d개, 100원 %d개, 50원 %d개, 10원 %d개\n",
+       c500, c100, c50, c10);</div>
+            </div>
+        </details>
+    </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     PAGE 4 — 전체 코드 + 도전 과제
+═══════════════════════════════════════════ -->
+<div class="page">
+    <h2>전체 코드 + 도전 과제</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/keyboard.png" alt="키보드" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+    <p>앞에서 배운 switch + if-else + 동전 분해 + 재고 관리를 하나로 합친 완성 코드입니다.</p>
+
+    <div class="code"><span class="pp">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="cmt">/* ── 메뉴 데이터 ── */</span>
+    <span class="kw">char</span> *menu[]  = {<span class="str">"콜라"</span>, <span class="str">"사이다"</span>, <span class="str">"커피"</span>, <span class="str">"녹차"</span>, <span class="str">"주스"</span>};
+    <span class="kw">int</span>  price[]  = {<span class="num">1200</span>,  <span class="num">1000</span>,    <span class="num">1500</span>,  <span class="num">800</span>,  <span class="num">1300</span>};
+    <span class="kw">int</span>  stock[]  = {<span class="num">5</span>,     <span class="num">3</span>,       <span class="num">4</span>,     <span class="num">6</span>,    <span class="num">2</span>};
+
+    <span class="cmt">/* ── 메뉴 출력 ── */</span>
+    <span class="fn">printf</span>(<span class="str">"=== 자판기 ===\n"</span>);
+    <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; <span class="num">5</span>; i++) {
+        <span class="fn">printf</span>(<span class="str">"%d. %-6s  %4d원  (재고: %d)\n"</span>,
+               i + <span class="num">1</span>, menu[i], price[i], stock[i]);
+    }
+    <span class="fn">printf</span>(<span class="str">"번호를 선택하세요 (1~5): "</span>);
+
+    <span class="cmt">/* ── 번호 선택 ── */</span>
+    <span class="kw">int</span> choice;
+    <span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;choice);
+
+    <span class="kw">if</span> (choice &lt; <span class="num">1</span> || choice &gt; <span class="num">5</span>) {
+        <span class="fn">printf</span>(<span class="str">"잘못된 번호입니다.\n"</span>);
+        <span class="kw">return</span> <span class="num">0</span>;
+    }
+
+    <span class="kw">int</span> idx = choice - <span class="num">1</span>;
+    <span class="fn">printf</span>(<span class="str">"%s를 선택했습니다. 가격: %d원\n"</span>, menu[idx], price[idx]);
+
+    <span class="cmt">/* ── 재고 확인 ── */</span>
+    <span class="kw">if</span> (stock[idx] == <span class="num">0</span>) {
+        <span class="fn">printf</span>(<span class="str">"품절입니다!\n"</span>);
+        <span class="kw">return</span> <span class="num">0</span>;
+    }
+
+    <span class="cmt">/* ── 금액 투입 ── */</span>
+    <span class="kw">int</span> money;
+    <span class="fn">printf</span>(<span class="str">"금액을 투입하세요: "</span>);
+    <span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;money);
+
+    <span class="cmt">/* ── 금액 비교 ── */</span>
+    <span class="kw">if</span> (money &gt;= price[idx]) {
+        stock[idx]--;                        <span class="cmt">// 재고 감소</span>
+        <span class="kw">int</span> change = money - price[idx];    <span class="cmt">// 거스름돈</span>
+        <span class="fn">printf</span>(<span class="str">"구매 완료! 재고 %d개 남음.\n"</span>, stock[idx]);
+        <span class="fn">printf</span>(<span class="str">"거스름돈: %d원\n"</span>, change);
+
+        <span class="cmt">/* ── 동전 분해 ── */</span>
+        <span class="kw">int</span> c500 = change / <span class="num">500</span>; change %= <span class="num">500</span>;
+        <span class="kw">int</span> c100 = change / <span class="num">100</span>; change %= <span class="num">100</span>;
+        <span class="kw">int</span> c50  = change / <span class="num">50</span>;  change %= <span class="num">50</span>;
+        <span class="kw">int</span> c10  = change / <span class="num">10</span>;
+        <span class="fn">printf</span>(<span class="str">"  500원 %d개 | 100원 %d개 | 50원 %d개 | 10원 %d개\n"</span>,
+               c500, c100, c50, c10);
+    } <span class="kw">else</span> {
+        <span class="fn">printf</span>(<span class="str">"금액 부족! %d원이 더 필요합니다.\n"</span>,
+               price[idx] - money);
+    }
+
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+
+    <!-- 실행 결과 예시 -->
+    <div class="output-box" style="margin-top:10px;">
+        <div class="out-label">실행 결과 예시</div>
+        <div class="out-line">=== 자판기 ===</div>
+        <div class="out-line">1. 콜라    1200원  (재고: 5)</div>
+        <div class="out-line">2. 사이다  1000원  (재고: 3)</div>
+        <div class="out-line">3. 커피    1500원  (재고: 4)</div>
+        <div class="out-line">4. 녹차     800원  (재고: 6)</div>
+        <div class="out-line">5. 주스    1300원  (재고: 2)</div>
+        <div class="out-line">번호를 선택하세요 (1~5): <span class="out-input">3</span></div>
+        <div class="out-line">커피를 선택했습니다. 가격: 1500원</div>
+        <div class="out-line">금액을 투입하세요: <span class="out-input">2000</span></div>
+        <div class="out-result">구매 완료! 재고 3개 남음.</div>
+        <div class="out-result">거스름돈: 500원</div>
+        <div class="out-result">  500원 1개 | 100원 0개 | 50원 0개 | 10원 0개</div>
+    </div>
+
+    <!-- 도전 과제 -->
+    <h3 style="margin-top:20px;">도전 과제</h3>
+    <ul class="challenge-list">
+        <li>
+            <div class="challenge-num">1</div>
+            <div>
+                <strong>while 루프 추가</strong> — 한 번 구매 후 프로그램이 끝나지 않고, "계속 이용하시겠습니까? (1: 예 / 0: 아니오)"를 물어서 반복 구매가 되게 만들어보세요.
+            </div>
+        </li>
+        <li>
+            <div class="challenge-num">2</div>
+            <div>
+                <strong>총 매출 계산</strong> — 구매가 일어날 때마다 <code>total_sales</code> 변수에 가격을 더하고, 프로그램이 끝날 때 총 매출을 출력해보세요.
+            </div>
+        </li>
+        <li>
+            <div class="challenge-num">3</div>
+            <div>
+                <strong>잘못된 금액 처리</strong> — 투입 금액이 0원 이하이거나 10원 단위가 아닌 경우(예: 1234원)에 "올바른 금액을 투입하세요."라고 출력해보세요. (<code>money % 10 != 0</code> 조건 활용)
+            </div>
+        </li>
+        <li>
+            <div class="challenge-num">4</div>
+            <div>
+                <strong>전체 품절 감지</strong> — 모든 메뉴의 재고가 0이 되면 "자판기가 비어 있습니다."를 출력하고 프로그램을 종료하는 로직을 추가해보세요.
+            </div>
+        </li>
+        <li>
+            <div class="challenge-num">5</div>
+            <div>
+                <strong>함수로 분리 (심화)</strong> — 메뉴 출력, 금액 비교, 동전 분해 코드를 각각 <code>print_menu()</code>, <code>check_money()</code>, <code>give_change()</code> 함수로 분리해보세요.
+            </div>
+        </li>
+    </ul>
+
+    <!-- 핵심 요약 -->
+    <div class="summary" style="margin-top:18px;">
+        <h3>핵심 정리</h3>
+        <ul>
+            <li><code>switch (choice)</code> — 번호별로 가격을 결정. <code>break</code> 필수.</li>
+            <li><code>if (money &gt;= price)</code> — 금액 충분 여부 판단. <code>else</code>로 부족 처리.</li>
+            <li><code>change / 500</code>, <code>change % 500</code> — 나누기로 개수, 나머지로 남은 금액.</li>
+            <li><code>stock[idx]--</code> — 구매 시 재고 1 감소. 0이면 품절.</li>
+            <li><code>idx = choice - 1</code> — 사용자 번호(1~5)를 배열 인덱스(0~4)로 변환.</li>
+        </ul>
+    </div>
+</div>
+
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="완성" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/flowchart.png" alt="흐름도" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+
+
+
+<script>
+(function(){
+  var KEY = 'cs_ans_' + location.pathname.replace(/[^a-zA-Z0-9]/g,'_');
+  var pagePath = location.pathname;
+  var userId = null;
+  try {
+    userId = window.parent?.localStorage?.getItem('codingssok_user_id')
+      || localStorage.getItem('codingssok_user_id');
+  } catch(e) {}
+
+  function save(){
+    var areas = document.querySelectorAll('textarea');
+    var saved = 0;
+    areas.forEach(function(ta, i){
+      if(ta.value.trim()) {
+        localStorage.setItem(KEY + '_' + i, ta.value);
+        saved++;
+      } else {
+        localStorage.removeItem(KEY + '_' + i);
+      }
+    });
+    if(saved > 0) showSaveIndicator();
+  }
+
+  function load(){
+    var areas = document.querySelectorAll('textarea');
+    var restored = 0;
+    areas.forEach(function(ta, i){
+      var val = localStorage.getItem(KEY + '_' + i);
+      if(val && val.trim()) {
+        ta.value = val;
+        ta.style.borderColor = '#10b981';
+        ta.style.boxShadow = '0 0 0 2px rgba(16,185,129,0.15)';
+        setTimeout(function(){ ta.style.borderColor = ''; ta.style.boxShadow = ''; }, 2000);
+        restored++;
+      }
+    });
+    if(restored > 0) showRestoreIndicator(restored);
+  }
+
+  function saveToDb(){
+    if(!userId) return;
+    var areas = document.querySelectorAll('textarea');
+    var answers = [];
+    areas.forEach(function(ta, i){
+      if(ta.value.trim()) answers.push({ field_index: i, answer_text: ta.value });
+    });
+    if(answers.length === 0) return;
+    fetch('/api/answers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId, page_path: pagePath, answers: answers })
+    }).catch(function(){});
+  }
+
+  function loadFromDb(){
+    if(!userId) return;
+    fetch('/api/answers?user_id=' + encodeURIComponent(userId) + '&page_path=' + encodeURIComponent(pagePath))
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(!d.answers || !d.answers.length) return;
+        var areas = document.querySelectorAll('textarea');
+        d.answers.forEach(function(a){
+          if(areas[a.field_index] && a.answer_text) {
+            areas[a.field_index].value = a.answer_text;
+            localStorage.setItem(KEY + '_' + a.field_index, a.answer_text);
+          }
+        });
+      }).catch(function(){});
+  }
+
+  function showSaveIndicator(){
+    var el = document.getElementById('cs-save-ind');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'cs-save-ind';
+      el.style.cssText = 'position:fixed;bottom:16px;right:16px;padding:6px 14px;border-radius:8px;background:#0f172a;color:#22c55e;font-size:11px;font-weight:700;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+      document.body.appendChild(el);
+    }
+    el.textContent = '\u2713 \uB2F5\uC548 \uC800\uC7A5\uB428'; // ✓ 답안 저장됨
+    el.style.opacity = '1';
+    setTimeout(function(){ el.style.opacity = '0'; }, 1500);
+  }
+
+  function showRestoreIndicator(n){
+    var el = document.getElementById('cs-save-ind');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'cs-save-ind';
+      el.style.cssText = 'position:fixed;bottom:16px;right:16px;padding:6px 14px;border-radius:8px;background:#0f172a;color:#3b82f6;font-size:11px;font-weight:700;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+      document.body.appendChild(el);
+    }
+    el.textContent = '\u21BB ' + n + '\uAC1C \uB2F5\uC548 \uBCF5\uC6D0'; // ↻ n개 답안 복원
+    el.style.color = '#3b82f6';
+    el.style.opacity = '1';
+    setTimeout(function(){ el.style.opacity = '0'; }, 2500);
+  }
+
+  var t = null;
+  document.addEventListener('input', function(e){
+    if(e.target.tagName === 'TEXTAREA'){
+      clearTimeout(t);
+      t = setTimeout(function(){ save(); saveToDb(); }, 300);
+    }
+  });
+  document.addEventListener('change', function(e){
+    if(e.target.tagName === 'TEXTAREA'){ save(); saveToDb(); }
+  });
+  document.addEventListener('focusout', function(e){
+    if(e.target.tagName === 'TEXTAREA'){ save(); saveToDb(); }
+  });
+  window.addEventListener('beforeunload', function(){ save(); saveToDb(); });
+
+  // 즉시 로드
+  load();
+  loadFromDb();
+})();
+</script>
+</body>
+</html>

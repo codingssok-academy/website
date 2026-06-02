@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 리스트 컴프리헨션: 한 줄로 리스트 만들기</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+/* ── 페이지 ── */
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+/* ── 챕터 표지 ── */
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 220px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+
+/* ── 본문 ── */
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 16px; font-weight: 800; color: #1e3a5f; margin: 16px 0 8px; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+ul { padding-left: 20px; margin: 0 0 12px; }
+li { font-size: 14px; color: #374151; line-height: 1.8; }
+
+/* ── 코드 블록 ── */
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 14px;
+    color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.code .op { color: #f472b6; }
+
+/* ── 따라해보세요 ── */
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+.practice-code {
+    background: #0f172a; border-radius: 6px; padding: 12px 16px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #e2e8f0; line-height: 1.7;
+}
+.practice-code .kw { color: #c084fc; }
+.practice-code .fn { color: #67e8f9; }
+.practice-code .str { color: #86efac; }
+.practice-code .num { color: #7dd3fc; }
+.practice-code .cmt { color: #64748b; }
+.practice-code .op { color: #f472b6; }
+
+/* ── 문제 ── */
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+
+/* ── 요약 ── */
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+/* ── 비교 박스 ── */
+.compare-row { display: flex; gap: 12px; margin: 14px 0; }
+.compare-box { flex: 1; border: 1.5px solid #e2e8f0; border-radius: 8px; overflow: hidden; }
+.compare-box-head { padding: 6px 14px; font-size: 12px; font-weight: 700; background: #f8fafc; border-bottom: 1px solid #e2e8f0; }
+.compare-box-body { padding: 10px 14px; }
+
+/* ── 노트 박스 ── */
+.note { border-left: 4px solid #f59e0b; background: #fffbeb; padding: 10px 14px; border-radius: 0 8px 8px 0; margin: 12px 0; font-size: 13px; color: #92400e; line-height: 1.7; }
+.note strong { font-weight: 700; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- ═══ 1페이지: 표지 ═══ -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">28</div>
+        <div class="cover-label">Chapter 28 · L3</div>
+        <h1 class="cover-title">리스트 컴프리헨션<br>한 줄로 리스트 만들기</h1>
+        <p class="cover-sub">for 루프 대신 한 줄로 리스트를 생성하는 파이썬만의 표현 방식을 배웁니다.</p>
+
+        <!-- SVG 1: for 루프 vs 컴프리헨션 개요 비교 -->
+        <div style="margin:24px 0; text-align:center;">
+            <svg viewBox="0 0 460 120" style="max-width:460px;width:100%">
+                <text x="100" y="16" text-anchor="middle" font-size="11" fill="#64748b" font-weight="700">for 루프 방식</text>
+                <rect x="10" y="22" width="190" height="84" rx="8" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.5"/>
+                <text x="22" y="44" font-family="monospace" font-size="11" fill="#e2e8f0">result = []</text>
+                <text x="22" y="62" font-family="monospace" font-size="11" fill="#c084fc">for</text>
+                <text x="48" y="62" font-family="monospace" font-size="11" fill="#e2e8f0"> x </text>
+                <text x="67" y="62" font-family="monospace" font-size="11" fill="#c084fc">in</text>
+                <text x="84" y="62" font-family="monospace" font-size="11" fill="#67e8f9"> range</text>
+                <text x="126" y="62" font-family="monospace" font-size="11" fill="#e2e8f0">(5):</text>
+                <text x="22" y="80" font-family="monospace" font-size="11" fill="#67e8f9">    result</text>
+                <text x="86" y="80" font-family="monospace" font-size="11" fill="#e2e8f0">.append(x</text>
+                <text x="153" y="80" font-family="monospace" font-size="11" fill="#f472b6">**</text>
+                <text x="167" y="80" font-family="monospace" font-size="11" fill="#7dd3fc">2</text>
+                <text x="177" y="80" font-family="monospace" font-size="11" fill="#e2e8f0">)</text>
+                <text x="105" y="102" text-anchor="middle" font-size="10" fill="#94a3b8">3줄 필요</text>
+
+                <!-- 화살표 -->
+                <line x1="208" y1="64" x2="248" y2="64" stroke="#94a3b8" stroke-width="2"/>
+                <polygon points="246,60 256,64 246,68" fill="#94a3b8"/>
+                <text x="228" y="56" text-anchor="middle" font-size="10" fill="#94a3b8" font-weight="600">동일</text>
+
+                <text x="355" y="16" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">컴프리헨션 방식</text>
+                <rect x="260" y="22" width="190" height="84" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="272" y="56" font-family="monospace" font-size="11" fill="#e2e8f0">result = [x</text>
+                <text x="348" y="56" font-family="monospace" font-size="11" fill="#f472b6">**</text>
+                <text x="362" y="56" font-family="monospace" font-size="11" fill="#7dd3fc">2</text>
+                <text x="272" y="74" font-family="monospace" font-size="11" fill="#c084fc">          for</text>
+                <text x="332" y="74" font-family="monospace" font-size="11" fill="#e2e8f0"> x </text>
+                <text x="351" y="74" font-family="monospace" font-size="11" fill="#c084fc">in</text>
+                <text x="368" y="74" font-family="monospace" font-size="11" fill="#67e8f9"> r</text>
+                <text x="380" y="74" font-family="monospace" font-size="11" fill="#67e8f9">...</text>
+                <text x="355" y="102" text-anchor="middle" font-size="10" fill="#1d4ed8">1줄로 끝!</text>
+            </svg>
+        </div>
+
+        <!-- SVG 2: 컴프리헨션 활용 시나리오 -->
+        <div style="margin:16px 0; text-align:center;">
+            <svg viewBox="0 0 460 60" style="max-width:460px;width:100%">
+                <rect x="5" y="10" width="100" height="36" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="55" y="32" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">숫자 변환</text>
+                <line x1="110" y1="28" x2="125" y2="28" stroke="#94a3b8" stroke-width="1.5"/>
+                <polygon points="123,24 133,28 123,32" fill="#94a3b8"/>
+                <rect x="130" y="10" width="100" height="36" rx="6" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+                <text x="180" y="32" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">조건 필터</text>
+                <line x1="235" y1="28" x2="250" y2="28" stroke="#94a3b8" stroke-width="1.5"/>
+                <polygon points="248,24 258,28 248,32" fill="#94a3b8"/>
+                <rect x="255" y="10" width="110" height="36" rx="6" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.5"/>
+                <text x="310" y="32" text-anchor="middle" font-size="11" fill="#854d0e" font-weight="700">문자열 변환</text>
+                <line x1="370" y1="28" x2="385" y2="28" stroke="#94a3b8" stroke-width="1.5"/>
+                <polygon points="383,24 393,28 383,32" fill="#94a3b8"/>
+                <rect x="390" y="10" width="65" height="36" rx="6" fill="#fce7f3" stroke="#db2777" stroke-width="1.5"/>
+                <text x="422" y="32" text-anchor="middle" font-size="11" fill="#9d174d" font-weight="700">기타</text>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/database.png" alt="데이터" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 유닛에서 배우는 것</h3>
+            <ul>
+                <li>리스트 컴프리헨션의 기본 문법을 이해하고 직접 작성할 수 있습니다.</li>
+                <li>for 루프를 컴프리헨션으로 변환하는 방법을 익힙니다.</li>
+                <li>if 조건을 추가해 원하는 요소만 필터링할 수 있습니다.</li>
+                <li>문자열 메서드를 컴프리헨션 표현식에 적용할 수 있습니다.</li>
+                <li>컴프리헨션과 for 루프를 상황에 맞게 선택할 수 있습니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ 2페이지: 기본 문법 ═══ -->
+<div class="page">
+    <h2>리스트 컴프리헨션 기본 문법</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/folder.png" alt="구조" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>리스트 컴프리헨션은 기존 시퀀스를 바탕으로 새로운 리스트를 <strong>한 줄에</strong> 만드는 파이썬 전용 표현식입니다.</p>
+
+    <!-- SVG 3: 문법 해부도 -->
+    <div style="text-align:center; margin:20px 0;">
+        <svg viewBox="0 0 500 110" style="max-width:500px;width:100%">
+            <defs>
+                <marker id="arr3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+                </marker>
+            </defs>
+            <!-- 코드 배경 -->
+            <rect x="30" y="14" width="440" height="38" rx="8" fill="#0f172a"/>
+            <!-- 대괄호 -->
+            <text x="44" y="38" font-family="monospace" font-size="16" fill="#e2e8f0">[</text>
+            <!-- 표현식 -->
+            <text x="58" y="38" font-family="monospace" font-size="16" fill="#86efac">x </text>
+            <text x="75" y="38" font-family="monospace" font-size="16" fill="#f472b6">**</text>
+            <text x="96" y="38" font-family="monospace" font-size="16" fill="#7dd3fc"> 2</text>
+            <!-- for -->
+            <text x="118" y="38" font-family="monospace" font-size="16" fill="#c084fc">  for </text>
+            <!-- 변수 -->
+            <text x="178" y="38" font-family="monospace" font-size="16" fill="#67e8f9">x</text>
+            <!-- in -->
+            <text x="193" y="38" font-family="monospace" font-size="16" fill="#c084fc">  in </text>
+            <!-- 이터러블 -->
+            <text x="238" y="38" font-family="monospace" font-size="16" fill="#67e8f9">range</text>
+            <text x="293" y="38" font-family="monospace" font-size="16" fill="#e2e8f0">(</text>
+            <text x="303" y="38" font-family="monospace" font-size="16" fill="#7dd3fc">5</text>
+            <text x="314" y="38" font-family="monospace" font-size="16" fill="#e2e8f0">)</text>
+            <!-- 닫는 대괄호 -->
+            <text x="328" y="38" font-family="monospace" font-size="16" fill="#e2e8f0">]</text>
+
+            <!-- 라벨 화살표 -->
+            <line x1="80" y1="56" x2="80" y2="72" stroke="#86efac" stroke-width="1.5" marker-end="url(#arr3)"/>
+            <text x="80" y="88" text-anchor="middle" font-size="10" fill="#86efac" font-weight="700">표현식 (결과값)</text>
+
+            <line x1="178" y1="56" x2="178" y2="72" stroke="#67e8f9" stroke-width="1.5" marker-end="url(#arr3)"/>
+            <text x="178" y="88" text-anchor="middle" font-size="10" fill="#67e8f9" font-weight="700">반복 변수</text>
+
+            <line x1="270" y1="56" x2="270" y2="72" stroke="#67e8f9" stroke-width="1.5" marker-end="url(#arr3)"/>
+            <text x="270" y="88" text-anchor="middle" font-size="10" fill="#67e8f9" font-weight="700">이터러블</text>
+
+            <line x1="148" y1="56" x2="148" y2="72" stroke="#c084fc" stroke-width="1.5" marker-end="url(#arr3)"/>
+            <text x="148" y="88" text-anchor="middle" font-size="10" fill="#c084fc" font-weight="700">for...in</text>
+        </svg>
+    </div>
+
+    <div class="note">
+        <strong>공식:</strong> <code>[표현식 for 변수 in 이터러블]</code> — 이터러블의 각 요소를 표현식에 넣어 새 리스트를 만든다.
+    </div>
+
+    <h3>가장 간단한 예제</h3>
+    <div class="code">
+<span class="cmt"># 0~4의 제곱을 리스트로</span>
+squares = [x<span class="op">**</span><span class="num">2</span> <span class="kw">for</span> x <span class="kw">in</span> <span class="fn">range</span>(<span class="num">5</span>)]
+<span class="fn">print</span>(squares)  <span class="cmt"># [0, 1, 4, 9, 16]</span>
+
+<span class="cmt"># 1~5를 두 배로</span>
+doubled = [x <span class="op">*</span> <span class="num">2</span> <span class="kw">for</span> x <span class="kw">in</span> <span class="fn">range</span>(<span class="num">1</span>, <span class="num">6</span>)]
+<span class="fn">print</span>(doubled)  <span class="cmt"># [2, 4, 6, 8, 10]</span>
+    </div>
+
+    <!-- SVG 4: for 루프 → 컴프리헨션 변환 흐름 -->
+    <h3>for 루프와 컴프리헨션 비교</h3>
+    <div style="text-align:center; margin:16px 0;">
+        <svg viewBox="0 0 500 140" style="max-width:500px;width:100%">
+            <!-- for 루프 -->
+            <text x="120" y="16" text-anchor="middle" font-size="11" fill="#64748b" font-weight="700">for 루프</text>
+            <rect x="10" y="22" width="220" height="100" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="22" y="46" font-family="monospace" font-size="12" fill="#e2e8f0">result = []</text>
+            <text x="22" y="64" font-family="monospace" font-size="12" fill="#c084fc">for</text>
+            <text x="50" y="64" font-family="monospace" font-size="12" fill="#e2e8f0"> x </text>
+            <text x="69" y="64" font-family="monospace" font-size="12" fill="#c084fc">in</text>
+            <text x="86" y="64" font-family="monospace" font-size="12" fill="#67e8f9"> nums</text>
+            <text x="129" y="64" font-family="monospace" font-size="12" fill="#e2e8f0">:</text>
+            <text x="22" y="82" font-family="monospace" font-size="12" fill="#67e8f9">    result</text>
+            <text x="86" y="82" font-family="monospace" font-size="12" fill="#e2e8f0">.append(</text>
+            <text x="154" y="82" font-family="monospace" font-size="12" fill="#86efac">x<span class="op">*</span><span class="num">2</span></text>
+            <text x="187" y="82" font-family="monospace" font-size="12" fill="#e2e8f0">)</text>
+            <text x="120" y="112" text-anchor="middle" font-size="10" fill="#94a3b8">총 3줄</text>
+
+            <!-- 화살표 -->
+            <text x="255" y="74" text-anchor="middle" font-size="18" fill="#3b82f6" font-weight="900">→</text>
+
+            <!-- 컴프리헨션 -->
+            <text x="385" y="16" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">컴프리헨션</text>
+            <rect x="270" y="22" width="220" height="100" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="284" y="46" font-family="monospace" font-size="12" fill="#e2e8f0">result = [</text>
+            <text x="284" y="64" font-family="monospace" font-size="12" fill="#86efac">  x</text>
+            <text x="308" y="64" font-family="monospace" font-size="12" fill="#f472b6">*</text>
+            <text x="318" y="64" font-family="monospace" font-size="12" fill="#7dd3fc">2</text>
+            <text x="284" y="82" font-family="monospace" font-size="12" fill="#c084fc">  for</text>
+            <text x="318" y="82" font-family="monospace" font-size="12" fill="#e2e8f0"> x </text>
+            <text x="338" y="82" font-family="monospace" font-size="12" fill="#c084fc">in</text>
+            <text x="356" y="82" font-family="monospace" font-size="12" fill="#67e8f9"> nums</text>
+            <text x="398" y="82" font-family="monospace" font-size="12" fill="#e2e8f0">]</text>
+            <text x="385" y="112" text-anchor="middle" font-size="10" fill="#1d4ed8">총 1줄!</text>
+        </svg>
+    </div>
+
+    <div class="compare-row">
+        <div class="compare-box">
+            <div class="compare-box-head">for 루프로 변환 전</div>
+            <div class="compare-box-body">
+                <div class="practice-code">
+result = []<br>
+<span class="kw">for</span> x <span class="kw">in</span> <span class="fn">range</span>(<span class="num">1</span>, <span class="num">6</span>):<br>
+&nbsp;&nbsp;&nbsp;&nbsp;result.append(x <span class="op">*</span> <span class="num">3</span>)<br>
+<span class="cmt"># [3, 6, 9, 12, 15]</span>
+                </div>
+            </div>
+        </div>
+        <div class="compare-box">
+            <div class="compare-box-head">컴프리헨션으로 변환 후</div>
+            <div class="compare-box-body">
+                <div class="practice-code">
+result = [x <span class="op">*</span> <span class="num">3</span> <span class="kw">for</span> x <span class="kw">in</span> <span class="fn">range</span>(<span class="num">1</span>, <span class="num">6</span>)]<br>
+<span class="cmt"># [3, 6, 9, 12, 15]</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 따라해보세요 1 -->
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="처리" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+        <div class="practice-head">따라해보세요 1 — 기본 컴프리헨션</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">Step 1</div>
+                <div class="practice-desc">0부터 9까지 숫자를 제곱한 리스트를 컴프리헨션으로 만들어 보세요.</div>
+                <div class="practice-code">
+squares = [x<span class="op">**</span><span class="num">2</span> <span class="kw">for</span> x <span class="kw">in</span> <span class="fn">range</span>(<span class="num">10</span>)]<br>
+<span class="fn">print</span>(squares)
+                </div>
+                <div class="practice-result">출력: [0, 1, 4, 9, 16, 25, 36, 49, 64, 81]</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">Step 2</div>
+                <div class="practice-desc">숫자 리스트의 각 요소에 10을 더한 새 리스트를 만들어 보세요.</div>
+                <div class="practice-code">
+nums = [<span class="num">1</span>, <span class="num">5</span>, <span class="num">3</span>, <span class="num">8</span>, <span class="num">2</span>]<br>
+added = [x <span class="op">+</span> <span class="num">10</span> <span class="kw">for</span> x <span class="kw">in</span> nums]<br>
+<span class="fn">print</span>(added)
+                </div>
+                <div class="practice-result">출력: [11, 15, 13, 18, 12]</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ 3페이지: 조건 필터 ═══ -->
+<div class="page">
+    <h2>조건 필터 — if와 함께 쓰기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/hard-drive.png" alt="저장소" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>컴프리헨션 끝에 <code>if 조건</code>을 붙이면 원하는 요소만 골라낼 수 있습니다. 조건이 <code>True</code>인 요소만 결과 리스트에 들어갑니다.</p>
+
+    <!-- SVG 5: 조건 필터 문법 해부 -->
+    <div style="text-align:center; margin:20px 0;">
+        <svg viewBox="0 0 500 120" style="max-width:500px;width:100%">
+            <defs>
+                <marker id="arr5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+                </marker>
+            </defs>
+            <rect x="20" y="14" width="460" height="38" rx="8" fill="#0f172a"/>
+            <text x="34" y="38" font-family="monospace" font-size="15" fill="#e2e8f0">[</text>
+            <text x="44" y="38" font-family="monospace" font-size="15" fill="#86efac">x</text>
+            <text x="58" y="38" font-family="monospace" font-size="15" fill="#c084fc">  for </text>
+            <text x="112" y="38" font-family="monospace" font-size="15" fill="#67e8f9">x</text>
+            <text x="126" y="38" font-family="monospace" font-size="15" fill="#c084fc">  in </text>
+            <text x="172" y="38" font-family="monospace" font-size="15" fill="#67e8f9">nums</text>
+            <text x="216" y="38" font-family="monospace" font-size="15" fill="#c084fc">  if </text>
+            <text x="255" y="38" font-family="monospace" font-size="15" fill="#7dd3fc">x</text>
+            <text x="268" y="38" font-family="monospace" font-size="15" fill="#f472b6"> &gt; </text>
+            <text x="292" y="38" font-family="monospace" font-size="15" fill="#7dd3fc">0</text>
+            <text x="308" y="38" font-family="monospace" font-size="15" fill="#e2e8f0">]</text>
+
+            <line x1="44" y1="56" x2="44" y2="72" stroke="#86efac" stroke-width="1.5" marker-end="url(#arr5)"/>
+            <text x="44" y="88" text-anchor="middle" font-size="10" fill="#86efac" font-weight="700">결과값</text>
+
+            <line x1="112" y1="56" x2="112" y2="72" stroke="#67e8f9" stroke-width="1.5" marker-end="url(#arr5)"/>
+            <text x="112" y="88" text-anchor="middle" font-size="10" fill="#67e8f9" font-weight="700">반복 변수</text>
+
+            <line x1="190" y1="56" x2="190" y2="72" stroke="#67e8f9" stroke-width="1.5" marker-end="url(#arr5)"/>
+            <text x="190" y="88" text-anchor="middle" font-size="10" fill="#67e8f9" font-weight="700">이터러블</text>
+
+            <line x1="272" y1="56" x2="272" y2="72" stroke="#7dd3fc" stroke-width="1.5" marker-end="url(#arr5)"/>
+            <text x="272" y="88" text-anchor="middle" font-size="10" fill="#7dd3fc" font-weight="700">필터 조건</text>
+        </svg>
+    </div>
+
+    <!-- SVG 6: 조건 필터 흐름도 -->
+    <div style="text-align:center; margin:16px 0;">
+        <svg viewBox="0 0 480 130" style="max-width:480px;width:100%">
+            <!-- 입력 리스트 -->
+            <text x="60" y="14" text-anchor="middle" font-size="11" fill="#64748b" font-weight="700">입력 nums</text>
+            <rect x="10" y="20" width="100" height="96" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="60" y="42" text-anchor="middle" font-family="monospace" font-size="13" fill="#7dd3fc">-3</text>
+            <text x="60" y="58" text-anchor="middle" font-family="monospace" font-size="13" fill="#7dd3fc">0</text>
+            <text x="60" y="74" text-anchor="middle" font-family="monospace" font-size="13" fill="#7dd3fc">5</text>
+            <text x="60" y="90" text-anchor="middle" font-family="monospace" font-size="13" fill="#7dd3fc">-1</text>
+            <text x="60" y="106" text-anchor="middle" font-family="monospace" font-size="13" fill="#7dd3fc">8</text>
+
+            <!-- 화살표 -->
+            <line x1="115" y1="68" x2="150" y2="68" stroke="#94a3b8" stroke-width="2"/>
+            <polygon points="148,64 158,68 148,72" fill="#94a3b8"/>
+
+            <!-- 필터 박스 -->
+            <text x="220" y="14" text-anchor="middle" font-size="11" fill="#854d0e" font-weight="700">if x &gt; 0</text>
+            <rect x="155" y="20" width="130" height="96" rx="8" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="220" y="48" text-anchor="middle" font-family="monospace" font-size="12" fill="#dc2626">-3  X</text>
+            <text x="220" y="64" text-anchor="middle" font-family="monospace" font-size="12" fill="#dc2626">0   X</text>
+            <text x="220" y="80" text-anchor="middle" font-family="monospace" font-size="12" fill="#16a34a">5   O</text>
+            <text x="220" y="96" text-anchor="middle" font-family="monospace" font-size="12" fill="#dc2626">-1  X</text>
+            <text x="220" y="112" text-anchor="middle" font-family="monospace" font-size="12" fill="#16a34a">8   O</text>
+
+            <!-- 화살표 -->
+            <line x1="290" y1="68" x2="325" y2="68" stroke="#94a3b8" stroke-width="2"/>
+            <polygon points="323,64 333,68 323,72" fill="#94a3b8"/>
+
+            <!-- 출력 -->
+            <text x="400" y="14" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">결과 리스트</text>
+            <rect x="330" y="20" width="140" height="96" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="400" y="60" text-anchor="middle" font-family="monospace" font-size="13" fill="#7dd3fc">5</text>
+            <text x="400" y="80" text-anchor="middle" font-family="monospace" font-size="13" fill="#7dd3fc">8</text>
+            <text x="400" y="106" text-anchor="middle" font-size="10" fill="#1d4ed8">[5, 8]</text>
+        </svg>
+    </div>
+
+    <div class="code">
+nums = [<span class="op">-</span><span class="num">3</span>, <span class="num">0</span>, <span class="num">5</span>, <span class="op">-</span><span class="num">1</span>, <span class="num">8</span>]
+
+<span class="cmt"># 양수만 남기기</span>
+positives = [x <span class="kw">for</span> x <span class="kw">in</span> nums <span class="kw">if</span> x <span class="op">&gt;</span> <span class="num">0</span>]
+<span class="fn">print</span>(positives)  <span class="cmt"># [5, 8]</span>
+
+<span class="cmt"># 짝수만 남기기</span>
+evens = [x <span class="kw">for</span> x <span class="kw">in</span> <span class="fn">range</span>(<span class="num">10</span>) <span class="kw">if</span> x <span class="op">%</span> <span class="num">2</span> <span class="op">==</span> <span class="num">0</span>]
+<span class="fn">print</span>(evens)  <span class="cmt"># [0, 2, 4, 6, 8]</span>
+
+<span class="cmt"># 10 이상인 수만 두 배로</span>
+result = [x <span class="op">*</span> <span class="num">2</span> <span class="kw">for</span> x <span class="kw">in</span> [<span class="num">5</span>, <span class="num">12</span>, <span class="num">3</span>, <span class="num">18</span>, <span class="num">7</span>] <span class="kw">if</span> x <span class="op">&gt;=</span> <span class="num">10</span>]
+<span class="fn">print</span>(result)  <span class="cmt"># [24, 36]</span>
+    </div>
+
+    <div class="note">
+        <strong>순서 주의:</strong> 필터 <code>if</code>는 항상 <code>for ... in ...</code> 뒤에 붙습니다. <code>[표현식 for 변수 in 이터러블 if 조건]</code>
+    </div>
+
+    <!-- 따라해보세요 2 -->
+    <div class="practice">
+        <div class="practice-head">따라해보세요 2 — 조건 필터</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">Step 1</div>
+                <div class="practice-desc">1~20 중 3의 배수만 모은 리스트를 컴프리헨션으로 만들어 보세요.</div>
+                <div class="practice-code">
+threes = [x <span class="kw">for</span> x <span class="kw">in</span> <span class="fn">range</span>(<span class="num">1</span>, <span class="num">21</span>) <span class="kw">if</span> x <span class="op">%</span> <span class="num">3</span> <span class="op">==</span> <span class="num">0</span>]<br>
+<span class="fn">print</span>(threes)
+                </div>
+                <div class="practice-result">출력: [3, 6, 9, 12, 15, 18]</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">Step 2</div>
+                <div class="practice-desc">점수 리스트에서 60점 이상인 점수만 골라 새 리스트를 만들어 보세요.</div>
+                <div class="practice-code">
+scores = [<span class="num">45</span>, <span class="num">78</span>, <span class="num">92</span>, <span class="num">33</span>, <span class="num">65</span>, <span class="num">55</span>, <span class="num">88</span>]<br>
+passed = [s <span class="kw">for</span> s <span class="kw">in</span> scores <span class="kw">if</span> s <span class="op">&gt;=</span> <span class="num">60</span>]<br>
+<span class="fn">print</span>(passed)
+                </div>
+                <div class="practice-result">출력: [78, 92, 65, 88]</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ 4페이지: 표현식 변환 (문자열) ═══ -->
+<div class="page">
+    <h2>표현식 변환 — 문자열 메서드 적용</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>컴프리헨션의 표현식 자리에는 숫자 연산뿐만 아니라 문자열 메서드도 쓸 수 있습니다. 단어 리스트를 변환할 때 매우 유용합니다.</p>
+
+    <!-- SVG 7: 변환 파이프라인 -->
+    <div style="text-align:center; margin:18px 0;">
+        <svg viewBox="0 0 500 80" style="max-width:500px;width:100%">
+            <!-- 입력 -->
+            <rect x="5" y="15" width="110" height="48" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="60" y="34" text-anchor="middle" font-size="11" fill="#64748b" font-weight="700">입력 리스트</text>
+            <text x="60" y="52" text-anchor="middle" font-family="monospace" font-size="11" fill="#e2e8f0">["hello","world"]</text>
+
+            <!-- 화살표 -->
+            <line x1="120" y1="39" x2="155" y2="39" stroke="#94a3b8" stroke-width="2"/>
+            <polygon points="153,35 163,39 153,43" fill="#94a3b8"/>
+
+            <!-- 컴프리헨션 박스 -->
+            <rect x="160" y="15" width="170" height="48" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="245" y="34" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">컴프리헨션</text>
+            <text x="245" y="52" text-anchor="middle" font-family="monospace" font-size="10" fill="#c084fc">[s.upper() for s in words]</text>
+
+            <!-- 화살표 -->
+            <line x1="335" y1="39" x2="368" y2="39" stroke="#94a3b8" stroke-width="2"/>
+            <polygon points="366,35 376,39 366,43" fill="#94a3b8"/>
+
+            <!-- 출력 -->
+            <rect x="375" y="15" width="115" height="48" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+            <text x="432" y="34" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">결과 리스트</text>
+            <text x="432" y="52" text-anchor="middle" font-family="monospace" font-size="11" fill="#86efac">["HELLO","WORLD"]</text>
+        </svg>
+    </div>
+
+    <div class="code">
+words = [<span class="str">"hello"</span>, <span class="str">"world"</span>, <span class="str">"python"</span>]
+
+<span class="cmt"># 모두 대문자로</span>
+upper_words = [s.upper() <span class="kw">for</span> s <span class="kw">in</span> words]
+<span class="fn">print</span>(upper_words)  <span class="cmt"># ['HELLO', 'WORLD', 'PYTHON']</span>
+
+<span class="cmt"># 각 단어의 길이</span>
+lengths = [<span class="fn">len</span>(s) <span class="kw">for</span> s <span class="kw">in</span> words]
+<span class="fn">print</span>(lengths)  <span class="cmt"># [5, 5, 6]</span>
+
+<span class="cmt"># 앞뒤 공백 제거 후 대문자</span>
+raw = [<span class="str">"  apple  "</span>, <span class="str">" banana "</span>, <span class="str">"cherry"</span>]
+clean = [s.strip().upper() <span class="kw">for</span> s <span class="kw">in</span> raw]
+<span class="fn">print</span>(clean)  <span class="cmt"># ['APPLE', 'BANANA', 'CHERRY']</span>
+    </div>
+
+    <!-- SVG 8: 메서드 체이닝 파이프라인 -->
+    <h3>메서드를 연결해서 쓰기</h3>
+    <div style="text-align:center; margin:14px 0;">
+        <svg viewBox="0 0 480 70" style="max-width:480px;width:100%">
+            <rect x="5" y="15" width="80" height="38" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="45" y="37" text-anchor="middle" font-family="monospace" font-size="11" fill="#e2e8f0">"  apple  "</text>
+            <line x1="90" y1="34" x2="108" y2="34" stroke="#94a3b8" stroke-width="1.5"/>
+            <polygon points="106,30 116,34 106,38" fill="#94a3b8"/>
+            <rect x="118" y="15" width="80" height="38" rx="6" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="158" y="30" text-anchor="middle" font-size="10" fill="#854d0e" font-weight="700">.strip()</text>
+            <text x="158" y="46" text-anchor="middle" font-family="monospace" font-size="11" fill="#86efac">"apple"</text>
+            <line x1="202" y1="34" x2="220" y2="34" stroke="#94a3b8" stroke-width="1.5"/>
+            <polygon points="218,30 228,34 218,38" fill="#94a3b8"/>
+            <rect x="230" y="15" width="80" height="38" rx="6" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="270" y="30" text-anchor="middle" font-size="10" fill="#854d0e" font-weight="700">.upper()</text>
+            <text x="270" y="46" text-anchor="middle" font-family="monospace" font-size="11" fill="#86efac">"APPLE"</text>
+            <line x1="314" y1="34" x2="332" y2="34" stroke="#94a3b8" stroke-width="1.5"/>
+            <polygon points="330,30 340,34 330,38" fill="#94a3b8"/>
+            <rect x="342" y="15" width="130" height="38" rx="6" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="407" y="30" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">결과</text>
+            <text x="407" y="46" text-anchor="middle" font-family="monospace" font-size="11" fill="#7dd3fc">"APPLE"</text>
+        </svg>
+    </div>
+
+    <h3>조건 필터와 표현식 변환을 같이 쓰기</h3>
+    <div class="code">
+words = [<span class="str">"cat"</span>, <span class="str">"elephant"</span>, <span class="str">"ox"</span>, <span class="str">"tiger"</span>, <span class="str">"ant"</span>]
+
+<span class="cmt"># 길이가 3 이상인 단어만 대문자로</span>
+result = [s.upper() <span class="kw">for</span> s <span class="kw">in</span> words <span class="kw">if</span> <span class="fn">len</span>(s) <span class="op">&gt;=</span> <span class="num">3</span>]
+<span class="fn">print</span>(result)  <span class="cmt"># ['CAT', 'ELEPHANT', 'TIGER', 'ANT']</span>
+    </div>
+
+    <!-- 따라해보세요 3 -->
+    <div class="practice">
+        <div class="practice-head">따라해보세요 3 — 문자열 변환</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">Step 1</div>
+                <div class="practice-desc">도시 이름 리스트에서 각 이름의 글자 수를 담은 리스트를 만들어 보세요.</div>
+                <div class="practice-code">
+cities = [<span class="str">"Seoul"</span>, <span class="str">"Busan"</span>, <span class="str">"Incheon"</span>, <span class="str">"Daegu"</span>]<br>
+lengths = [<span class="fn">len</span>(c) <span class="kw">for</span> c <span class="kw">in</span> cities]<br>
+<span class="fn">print</span>(lengths)
+                </div>
+                <div class="practice-result">출력: [5, 5, 7, 5]</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">Step 2</div>
+                <div class="practice-desc">글자 수가 5 이상인 도시 이름만 대문자로 변환해 출력하세요.</div>
+                <div class="practice-code">
+cities = [<span class="str">"Seoul"</span>, <span class="str">"Busan"</span>, <span class="str">"Incheon"</span>, <span class="str">"Daegu"</span>]<br>
+result = [c.upper() <span class="kw">for</span> c <span class="kw">in</span> cities <span class="kw">if</span> <span class="fn">len</span>(c) <span class="op">&gt;=</span> <span class="num">5</span>]<br>
+<span class="fn">print</span>(result)
+                </div>
+                <div class="practice-result">출력: ['SEOUL', 'BUSAN', 'INCHEON', 'DAEGU']</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ 5페이지: 언제 컴프리헨션? 언제 for? + 문제 ═══ -->
+<div class="page">
+    <h2>컴프리헨션 vs for 루프 — 언제 무엇을 쓸까?</h2>
+    <p>컴프리헨션이 항상 좋은 것은 아닙니다. 상황에 따라 for 루프가 더 명확할 때도 있습니다.</p>
+
+    <!-- SVG 9: 선택 기준 다이어그램 -->
+    <div style="text-align:center; margin:16px 0;">
+        <svg viewBox="0 0 480 140" style="max-width:480px;width:100%">
+            <!-- 중앙 질문 -->
+            <rect x="150" y="10" width="180" height="36" rx="8" fill="#1e3a5f"/>
+            <text x="240" y="31" text-anchor="middle" font-size="12" fill="#ffffff" font-weight="700">리스트를 만들어야 한다</text>
+            <!-- 왼쪽 -->
+            <line x1="200" y1="46" x2="130" y2="80" stroke="#94a3b8" stroke-width="1.5"/>
+            <text x="145" y="68" text-anchor="middle" font-size="10" fill="#16a34a" font-weight="700">단순 변환·필터</text>
+            <rect x="10" y="80" width="160" height="44" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+            <text x="90" y="97" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">컴프리헨션 사용</text>
+            <text x="90" y="115" text-anchor="middle" font-size="10" fill="#166534">한 줄, 읽기 쉬움</text>
+            <!-- 오른쪽 -->
+            <line x1="280" y1="46" x2="350" y2="80" stroke="#94a3b8" stroke-width="1.5"/>
+            <text x="338" y="68" text-anchor="middle" font-size="10" fill="#dc2626" font-weight="700">복잡한 로직</text>
+            <rect x="310" y="80" width="160" height="44" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/>
+            <text x="390" y="97" text-anchor="middle" font-size="11" fill="#991b1b" font-weight="700">for 루프 사용</text>
+            <text x="390" y="115" text-anchor="middle" font-size="10" fill="#991b1b">여러 줄, 명확함</text>
+        </svg>
+    </div>
+
+    <div class="compare-row">
+        <div class="compare-box">
+            <div class="compare-box-head">컴프리헨션이 좋을 때</div>
+            <div class="compare-box-body">
+                <ul>
+                    <li>간단한 수식 적용 (<code>x*2</code>, <code>x**2</code>)</li>
+                    <li>하나의 조건으로 필터링</li>
+                    <li>단순 메서드 호출 (<code>s.upper()</code>)</li>
+                    <li>한 줄로 읽어도 의미가 명확할 때</li>
+                </ul>
+            </div>
+        </div>
+        <div class="compare-box">
+            <div class="compare-box-head">for 루프가 좋을 때</div>
+            <div class="compare-box-body">
+                <ul>
+                    <li>조건이 3개 이상으로 복잡할 때</li>
+                    <li>한 줄이 80자를 넘길 것 같을 때</li>
+                    <li>중간에 변수를 저장해야 할 때</li>
+                    <li>다른 사람이 읽기 어려울 것 같을 때</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- SVG 10: 가독성 비교 -->
+    <div style="text-align:center; margin:16px 0;">
+        <svg viewBox="0 0 480 100" style="max-width:480px;width:100%">
+            <text x="240" y="16" text-anchor="middle" font-size="11" fill="#64748b" font-weight="700">가독성 기준</text>
+            <!-- 왼쪽: 좋은 예 -->
+            <rect x="10" y="24" width="210" height="68" rx="8" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>
+            <text x="115" y="42" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">읽기 쉬운 컴프리헨션</text>
+            <text x="22" y="60" font-family="monospace" font-size="10" fill="#86efac">[x*2 for x in nums</text>
+            <text x="22" y="76" font-family="monospace" font-size="10" fill="#86efac">       if x &gt; 0]</text>
+            <text x="115" y="88" text-anchor="middle" font-size="9" fill="#16a34a">짧고 의미가 바로 보인다</text>
+            <!-- 오른쪽: 복잡한 예 -->
+            <rect x="260" y="24" width="210" height="68" rx="8" fill="#fef2f2" stroke="#dc2626" stroke-width="1.5"/>
+            <text x="365" y="42" text-anchor="middle" font-size="10" fill="#991b1b" font-weight="700">복잡해진 컴프리헨션</text>
+            <text x="272" y="60" font-family="monospace" font-size="10" fill="#f87171">[f(x) for x in data</text>
+            <text x="272" y="76" font-family="monospace" font-size="10" fill="#f87171"> if g(x) and h(x)]</text>
+            <text x="365" y="88" text-anchor="middle" font-size="9" fill="#dc2626">for 루프로 바꾸는 게 낫다</text>
+        </svg>
+    </div>
+
+    <div class="note">
+        <strong>규칙:</strong> "한 줄로 읽었을 때 무슨 뜻인지 바로 알 수 있으면" 컴프리헨션, 그렇지 않으면 for 루프를 씁니다.
+    </div>
+
+    <!-- 문제 Q1 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q1</div>
+            <div class="problem-label">for 루프를 컴프리헨션으로 변환하기</div>
+            <div class="problem-diff easy">쉬움</div>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">다음 for 루프 코드를 리스트 컴프리헨션 한 줄로 변환하세요.</div>
+            <div class="problem-example">
+                <div class="practice-code">
+result = []<br>
+<span class="kw">for</span> n <span class="kw">in</span> <span class="fn">range</span>(<span class="num">1</span>, <span class="num">8</span>):<br>
+&nbsp;&nbsp;&nbsp;&nbsp;result.append(n <span class="op">*</span> n)
+                </div>
+            </div>
+            <div class="problem-example-row">
+                <span class="problem-example-label">예상 출력</span>
+                <span class="problem-example-value">[1, 4, 9, 16, 25, 36, 49]</span>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text"><code>[표현식 for 변수 in 이터러블]</code> — n*n 이 표현식, range(1,8) 이 이터러블입니다.</div>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">result = [n <span class="op">*</span> n <span class="kw">for</span> n <span class="kw">in</span> <span class="fn">range</span>(<span class="num">1</span>, <span class="num">8</span>)]</div>
+            </div>
+        </details>
+    </div>
+
+    <!-- 문제 Q2 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q2</div>
+            <div class="problem-label">조건 필터 작성하기</div>
+            <div class="problem-diff medium">보통</div>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">아래 리스트에서 홀수만 골라내는 컴프리헨션을 작성하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">입력</span>
+                    <span class="problem-example-value">nums = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]</span>
+                </div>
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력</span>
+                    <span class="problem-example-value">[1, 3, 5, 7, 9]</span>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">홀수 조건: <code>x % 2 != 0</code> 또는 <code>x % 2 == 1</code></div>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">
+odds = [x <span class="kw">for</span> x <span class="kw">in</span> nums <span class="kw">if</span> x <span class="op">%</span> <span class="num">2</span> <span class="op">!=</span> <span class="num">0</span>]
+                </div>
+            </div>
+        </details>
+    </div>
+</div>
+
+<!-- ═══ 6페이지: 문제 Q3 + 요약 ═══ -->
+<div class="page">
+    <!-- 문제 Q3 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q3</div>
+            <div class="problem-label">표현식 변환 + 필터 결합</div>
+            <div class="problem-diff hard">어려움</div>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">
+                학생 이름 리스트에서 이름 길이가 4자 이상인 이름만 골라 소문자로 변환한 리스트를 컴프리헨션으로 작성하세요.
+            </div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">입력</span>
+                    <span class="problem-example-value">names = ["Kim", "Alexander", "Park", "Liu", "Johnson"]</span>
+                </div>
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력</span>
+                    <span class="problem-example-value">['alexander', 'park', 'johnson']</span>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">표현식: <code>n.lower()</code> / 조건: <code>if len(n) &gt;= 4</code> 를 결합합니다.</div>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">
+names = [<span class="str">"Kim"</span>, <span class="str">"Alexander"</span>, <span class="str">"Park"</span>, <span class="str">"Liu"</span>, <span class="str">"Johnson"</span>]<br>
+result = [n.lower() <span class="kw">for</span> n <span class="kw">in</span> names <span class="kw">if</span> <span class="fn">len</span>(n) <span class="op">&gt;=</span> <span class="num">4</span>]<br>
+<span class="fn">print</span>(result)  <span class="cmt"># ['alexander', 'park', 'johnson']</span>
+                </div>
+            </div>
+        </details>
+    </div>
+
+    <h2>이 유닛에서 배운 것 — 리스트 컴프리헨션 핵심</h2>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>기본 문법</h3>
+        <ul>
+            <li><code>[표현식 for 변수 in 이터러블]</code> — 기본형</li>
+            <li><code>[표현식 for 변수 in 이터러블 if 조건]</code> — 필터 포함형</li>
+            <li>대괄호 <code>[ ]</code> 안에 for...in 구조를 넣는다</li>
+            <li>결과는 항상 새 리스트, 원본 리스트는 변하지 않는다</li>
+        </ul>
+    </div>
+
+    <div class="summary">
+        <h3>핵심 포인트</h3>
+        <ul>
+            <li>표현식 자리에 숫자 연산, 문자열 메서드, 함수 호출 모두 가능</li>
+            <li>조건 <code>if</code>는 항상 <code>for ... in ...</code> 뒤에 붙는다</li>
+            <li>단순하고 읽기 쉬울 때만 컴프리헨션을 쓴다</li>
+            <li>복잡한 로직이 필요하면 for 루프가 더 낫다</li>
+            <li>중첩 컴프리헨션(for 두 개)은 가독성이 떨어지므로 피한다</li>
+        </ul>
+    </div>
+
+    <!-- SVG: 전체 흐름 요약 -->
+    <div style="text-align:center; margin:18px 0;">
+        <svg viewBox="0 0 480 90" style="max-width:480px;width:100%">
+            <text x="240" y="16" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="800">컴프리헨션 3단계 공식</text>
+            <!-- 단계 1 -->
+            <rect x="10" y="26" width="130" height="48" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="75" y="44" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">1. 결과 표현식</text>
+            <text x="75" y="62" text-anchor="middle" font-family="monospace" font-size="11" fill="#86efac">x ** 2</text>
+            <!-- 화살표 -->
+            <line x1="145" y1="50" x2="162" y2="50" stroke="#94a3b8" stroke-width="1.5"/>
+            <polygon points="160,46 170,50 160,54" fill="#94a3b8"/>
+            <!-- 단계 2 -->
+            <rect x="170" y="26" width="140" height="48" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="240" y="44" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">2. for...in 반복</text>
+            <text x="240" y="62" text-anchor="middle" font-family="monospace" font-size="11" fill="#c084fc">for x in nums</text>
+            <!-- 화살표 -->
+            <line x1="315" y1="50" x2="332" y2="50" stroke="#94a3b8" stroke-width="1.5"/>
+            <polygon points="330,46 340,50 330,54" fill="#94a3b8"/>
+            <!-- 단계 3 -->
+            <rect x="340" y="26" width="130" height="48" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="405" y="44" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">3. if 필터 (선택)</text>
+            <text x="405" y="62" text-anchor="middle" font-family="monospace" font-size="11" fill="#7dd3fc">if x &gt; 0</text>
+        </svg>
+    </div>
+
+    <div class="summary">
+        <h3>컴프리헨션 vs for 루프 선택 기준</h3>
+        <ul>
+            <li>한 줄로 읽었을 때 의미가 바로 이해된다 → 컴프리헨션</li>
+            <li>로직이 복잡하거나 줄이 너무 길어진다 → for 루프</li>
+            <li>중간 변수가 필요하다 → for 루프</li>
+            <li>다른 사람이 읽어야 하는 코드 → 명확한 쪽 선택</li>
+        </ul>
+    </div>
+
+    <div class="note">
+        <strong>다음 단원 예고:</strong> 딕셔너리 컴프리헨션 — <code>{k: v for k, v in items}</code> 형태로 딕셔너리도 한 줄에 만들 수 있습니다.
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

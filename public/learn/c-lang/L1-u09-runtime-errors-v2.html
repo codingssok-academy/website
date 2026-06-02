@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 런타임 에러</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 14px;
+    color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- 1페이지: 표지 -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">09</div>
+        <div class="cover-label">Unit 09</div>
+        <h1 class="cover-title">런타임 에러 — 실행 중 오류</h1>
+        <p class="cover-sub">컴파일은 성공했지만 실행 중에 발생하는 오류를 이해하고 고치는 방법을 배웁니다.</p>
+        <div style="margin:20px 0;">
+            <svg viewBox="0 0 480 50" style="max-width:480px;width:100%">
+                <rect x="5" y="10" width="90" height="30" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="50" y="30" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">에러 종류</text>
+                <line x1="100" y1="25" x2="115" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="120" y="10" width="90" height="30" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="165" y="30" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">런타임 에러</text>
+                <line x1="215" y1="25" x2="230" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="235" y="10" width="90" height="30" rx="6" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+                <text x="280" y="30" text-anchor="middle" font-size="10" fill="#dc2626" font-weight="700">원인 분석</text>
+                <line x1="330" y1="25" x2="345" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="350" y="10" width="90" height="30" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="395" y="30" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">수정 방법</text>
+            </svg>
+        </div>
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/magnifying-glass.png" alt="디버깅" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 유닛에서 배우는 것</h3>
+            <ul>
+                <li>컴파일 에러와 런타임 에러의 차이를 설명할 수 있습니다.</li>
+                <li>0으로 나누기 오류가 왜 발생하는지 이해합니다.</li>
+                <li>배열 범위 초과 오류를 인식하고 수정할 수 있습니다.</li>
+                <li>에러 메시지를 읽고 원인을 찾을 수 있습니다.</li>
+                <li>방어적 코딩으로 런타임 에러를 예방할 수 있습니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- 2페이지: 에러의 종류 -->
+<div class="page">
+    <h2>에러의 세 가지 종류</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/lightbulb.png" alt="해결" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>C 프로그램에서 발생하는 오류는 크게 세 가지로 나뉩니다. 런타임 에러는 컴파일은 통과했지만 실행 중에 발생하는 오류입니다.</p>
+
+    <div style="text-align:center;margin:18px 0;">
+        <svg viewBox="0 0 460 130" style="max-width:460px;width:100%">
+            <rect x="10" y="10" width="135" height="110" rx="10" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="77" y="35" text-anchor="middle" font-size="12" fill="#dc2626" font-weight="800">컴파일 에러</text>
+            <text x="77" y="58" text-anchor="middle" font-size="10" fill="#7f1d1d">컴파일 단계에서</text>
+            <text x="77" y="74" text-anchor="middle" font-size="10" fill="#7f1d1d">발생하는 문법 오류</text>
+            <text x="77" y="95" text-anchor="middle" font-family="monospace" font-size="10" fill="#dc2626">int x = ;</text>
+
+            <rect x="163" y="10" width="135" height="110" rx="10" fill="#fffbeb" stroke="#f59e0b" stroke-width="2"/>
+            <text x="230" y="35" text-anchor="middle" font-size="12" fill="#b45309" font-weight="800">런타임 에러</text>
+            <text x="230" y="58" text-anchor="middle" font-size="10" fill="#78350f">실행 중 발생하는</text>
+            <text x="230" y="74" text-anchor="middle" font-size="10" fill="#78350f">예기치 못한 오류</text>
+            <text x="230" y="95" text-anchor="middle" font-family="monospace" font-size="10" fill="#b45309">x / 0</text>
+            <rect x="163" y="10" width="135" height="110" rx="10" fill="none" stroke="#f59e0b" stroke-width="2.5"/>
+
+            <rect x="316" y="10" width="135" height="110" rx="10" fill="#fefce8" stroke="#eab308" stroke-width="1.5"/>
+            <text x="383" y="35" text-anchor="middle" font-size="12" fill="#854d0e" font-weight="800">논리 에러</text>
+            <text x="383" y="58" text-anchor="middle" font-size="10" fill="#713f12">실행은 되지만</text>
+            <text x="383" y="74" text-anchor="middle" font-size="10" fill="#713f12">결과가 틀린 오류</text>
+            <text x="383" y="95" text-anchor="middle" font-family="monospace" font-size="10" fill="#854d0e">1+2 = 4 (?)</text>
+        </svg>
+    </div>
+
+    <p>런타임 에러가 발생하면 프로그램이 갑자기 종료됩니다. 가장 흔한 원인은 <code>0으로 나누기</code>와 <code>배열 범위 초과</code>입니다.</p>
+
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+            <rect x="10" y="10" width="200" height="60" rx="8" fill="#0f172a"/>
+            <text x="110" y="35" text-anchor="middle" font-family="monospace" font-size="12" fill="#86efac">int a = 10, b = 0;</text>
+            <text x="110" y="55" text-anchor="middle" font-family="monospace" font-size="12" fill="#fca5a5">printf("%d", a/b);</text>
+            <line x1="220" y1="40" x2="250" y2="40" stroke="#ef4444" stroke-width="2" marker-end="url(#errarr)"/>
+            <rect x="258" y="10" width="190" height="60" rx="8" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="353" y="32" text-anchor="middle" font-size="11" fill="#dc2626" font-weight="700">Floating point exception</text>
+            <text x="353" y="50" text-anchor="middle" font-size="10" fill="#7f1d1d">프로그램 강제 종료</text>
+            <defs><marker id="errarr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#ef4444"/></marker></defs>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt">// 런타임 에러 예시 — 0으로 나누기</span>
+<span class="kw">int</span> a = <span class="num">10</span>;
+<span class="kw">int</span> b = <span class="num">0</span>;
+<span class="fn">printf</span>(<span class="str">"%d\n"</span>, a / b);  <span class="cmt">// 실행 중 오류 발생!</span></div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/desktop-pc.png" alt="데스크탑" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="분석" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">0으로 나누기 오류를 직접 확인하세요. (컴파일은 성공합니다)</div>
+                <div class="code"><span class="kw">int</span> x = <span class="num">5</span>, y = <span class="num">0</span>;
+<span class="fn">printf</span>(<span class="str">"%d\n"</span>, x / y);</div>
+                <div class="practice-result">컴파일 성공 → 실행 시 프로그램 종료됨</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3페이지: 주요 런타임 에러 -->
+<div class="page">
+    <h2>주요 런타임 에러와 수정법</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드 화면" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>런타임 에러의 종류별로 원인과 해결 방법을 알아봅니다.</p>
+
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 160" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="40" rx="8" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="20" y="28" font-size="12" fill="#dc2626" font-weight="800">0으로 나누기</text>
+            <text x="20" y="44" font-size="0" fill="#dc2626"> </text>
+            <text x="140" y="28" font-family="monospace" font-size="11" fill="#7f1d1d">a / 0 → Floating point exception</text>
+
+            <rect x="10" y="55" width="440" height="40" rx="8" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="20" y="78" font-size="12" fill="#b45309" font-weight="800">배열 범위 초과</text>
+            <text x="140" y="78" font-family="monospace" font-size="11" fill="#78350f">arr[5] but size=3 → Segfault</text>
+
+            <rect x="10" y="105" width="440" height="40" rx="8" fill="#fdf4ff" stroke="#a855f7" stroke-width="1.5"/>
+            <text x="20" y="128" font-size="12" fill="#7e22ce" font-weight="800">NULL 포인터 참조</text>
+            <text x="140" y="128" font-family="monospace" font-size="11" fill="#581c87">*ptr where ptr=NULL → Segfault</text>
+        </svg>
+    </div>
+
+    <p>가장 안전한 방법은 <code>if</code>문으로 미리 검사하는 것입니다. 이를 <strong>방어적 코딩</strong>이라고 합니다.</p>
+
+    <div class="code"><span class="cmt">// 방어적 코딩 — 나누기 전에 검사</span>
+<span class="kw">int</span> a = <span class="num">10</span>;
+<span class="kw">int</span> b = <span class="num">0</span>;
+
+<span class="kw">if</span> (b != <span class="num">0</span>) {
+    <span class="fn">printf</span>(<span class="str">"결과: %d\n"</span>, a / b);
+} <span class="kw">else</span> {
+    <span class="fn">printf</span>(<span class="str">"오류: 0으로 나눌 수 없습니다\n"</span>);
+}</div>
+
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 90" style="max-width:460px;width:100%">
+            <text x="230" y="18" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="800">배열 범위 초과 — 올바른 인덱스</text>
+            <rect x="10" y="28" width="50" height="50" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="35" y="48" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="600">arr[0]</text>
+            <text x="35" y="65" text-anchor="middle" font-family="monospace" font-size="13" fill="#1d4ed8" font-weight="700">10</text>
+            <rect x="68" y="28" width="50" height="50" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="93" y="48" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="600">arr[1]</text>
+            <text x="93" y="65" text-anchor="middle" font-family="monospace" font-size="13" fill="#1d4ed8" font-weight="700">20</text>
+            <rect x="126" y="28" width="50" height="50" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="151" y="48" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="600">arr[2]</text>
+            <text x="151" y="65" text-anchor="middle" font-family="monospace" font-size="13" fill="#1d4ed8" font-weight="700">30</text>
+            <rect x="200" y="28" width="50" height="50" rx="6" fill="#fef2f2" stroke="#ef4444" stroke-width="2"/>
+            <text x="225" y="48" text-anchor="middle" font-size="10" fill="#dc2626" font-weight="600">arr[3]</text>
+            <text x="225" y="65" text-anchor="middle" font-size="12" fill="#dc2626" font-weight="700">???</text>
+            <text x="225" y="88" text-anchor="middle" font-size="9" fill="#dc2626">범위 초과!</text>
+            <rect x="300" y="28" width="150" height="50" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="375" y="48" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">크기: 3</text>
+            <text x="375" y="65" text-anchor="middle" font-size="10" fill="#166534">인덱스: 0, 1, 2 만 사용</text>
+        </svg>
+    </div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">방어적 코딩으로 0 나누기를 막으세요.</div>
+                <div class="code"><span class="kw">int</span> a = <span class="num">20</span>, b = <span class="num">0</span>;
+<span class="kw">if</span> (b != <span class="num">0</span>)
+    <span class="fn">printf</span>(<span class="str">"%d\n"</span>, a / b);
+<span class="kw">else</span>
+    <span class="fn">printf</span>(<span class="str">"나눌 수 없음\n"</span>);</div>
+                <div class="practice-result">나눌 수 없음 이 출력됩니다</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">배열 크기와 인덱스를 확인하세요.</div>
+                <div class="code"><span class="kw">int</span> arr[<span class="num">3</span>] = {<span class="num">10</span>, <span class="num">20</span>, <span class="num">30</span>};
+<span class="fn">printf</span>(<span class="str">"%d %d %d\n"</span>, arr[<span class="num">0</span>], arr[<span class="num">1</span>], arr[<span class="num">2</span>]);</div>
+                <div class="practice-result">10 20 30</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">입력값이 0인지 검사하는 나눗셈 프로그램을 만드세요.</div>
+                <div class="code"><span class="kw">int</span> num;
+<span class="fn">scanf</span>(<span class="str">"%d"</span>, &num);
+<span class="kw">if</span> (num == <span class="num">0</span>) {
+    <span class="fn">printf</span>(<span class="str">"입력이 0입니다\n"</span>);
+} <span class="kw">else</span> {
+    <span class="fn">printf</span>(<span class="str">"100 / %d = %d\n"</span>, num, <span class="num">100</span> / num);
+}</div>
+                <div class="practice-result">0 입력 시 경고, 5 입력 시 20 출력</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 4페이지: 문제 + 핵심 요약 -->
+<div class="page">
+    <h2>직접 풀어보세요</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/monitor.png" alt="모니터" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q1</div>
+            <div class="problem-label">에러 찾기</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">다음 코드에서 런타임 에러가 발생하는 이유를 찾고, 올바르게 수정하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">코드</span><span class="problem-example-value">int x = 8, y = 0; printf("%d", x / y);</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">문제</span><span class="problem-example-value">0으로 나누기</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle"><summary>힌트 보기</summary><div class="problem-toggle-content"><div class="hint-text">나누기 전에 <code>if (y != 0)</code> 조건을 추가하세요.</div></div></details>
+        <details class="problem-toggle"><summary>정답 확인</summary><div class="problem-toggle-content"><div class="answer-code">int x = 8, y = 0;
+if (y != 0)
+    printf("%d\n", x / y);
+else
+    printf("0으로 나눌 수 없습니다\n");</div></div></details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q2</div>
+            <div class="problem-label">배열 범위 확인</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text"><code>int arr[4] = {1, 2, 3, 4};</code> 에서 올바른 인덱스 범위를 쓰고, 모든 값을 출력하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">1 2 3 4</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle"><summary>힌트 보기</summary><div class="problem-toggle-content"><div class="hint-text">크기 4짜리 배열의 인덱스는 0, 1, 2, 3입니다.</div></div></details>
+        <details class="problem-toggle"><summary>정답 확인</summary><div class="problem-toggle-content"><div class="answer-code">int arr[4] = {1, 2, 3, 4};
+printf("%d %d %d %d\n", arr[0], arr[1], arr[2], arr[3]);</div></div></details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q3</div>
+            <div class="problem-label">방어적 나눗셈</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">사용자로부터 두 정수를 입력받아 첫 번째를 두 번째로 나누되, 두 번째가 0이면 "오류" 메시지를 출력하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">입력</span><span class="problem-example-value">10 2</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">10 / 2 = 5</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle"><summary>힌트 보기</summary><div class="problem-toggle-content"><div class="hint-text"><code>scanf("%d %d", &a, &b)</code>로 입력받고 <code>b != 0</code>을 검사하세요.</div></div></details>
+        <details class="problem-toggle"><summary>정답 확인</summary><div class="problem-toggle-content"><div class="answer-code">int a, b;
+scanf("%d %d", &a, &b);
+if (b != 0)
+    printf("%d / %d = %d\n", a, b, a / b);
+else
+    printf("오류: 0으로 나눌 수 없습니다\n");</div></div></details>
+    </div>
+
+    <!-- SVG 6: 에러 발생 흐름 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 60" style="max-width:460px;width:100%">
+            <rect x="5" y="10" width="80" height="40" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="45" y="34" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">코드 작성</text>
+            <line x1="90" y1="30" x2="110" y2="30" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#sv6a)"/>
+            <rect x="115" y="10" width="80" height="40" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="155" y="34" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">컴파일 성공</text>
+            <line x1="200" y1="30" x2="220" y2="30" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#sv6a)"/>
+            <rect x="225" y="10" width="80" height="40" rx="6" fill="#fef2f2" stroke="#ef4444" stroke-width="2"/>
+            <text x="265" y="27" text-anchor="middle" font-size="10" fill="#dc2626" font-weight="700">실행 중</text>
+            <text x="265" y="41" text-anchor="middle" font-size="9" fill="#dc2626">런타임 에러!</text>
+            <line x1="310" y1="30" x2="330" y2="30" stroke="#ef4444" stroke-width="1.5" marker-end="url(#sv6b)"/>
+            <rect x="335" y="10" width="120" height="40" rx="6" fill="#fff7ed" stroke="#f97316" stroke-width="1.5"/>
+            <text x="395" y="27" text-anchor="middle" font-size="10" fill="#c2410c" font-weight="700">프로그램 종료</text>
+            <text x="395" y="41" text-anchor="middle" font-size="9" fill="#c2410c">오류 메시지 출력</text>
+            <defs>
+                <marker id="sv6a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker>
+                <marker id="sv6b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#ef4444"/></marker>
+            </defs>
+        </svg>
+    </div>
+
+    <!-- SVG 7: 배열 인덱스 비교 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 70" style="max-width:460px;width:100%">
+            <text x="100" y="14" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">올바른 배열 접근</text>
+            <rect x="10" y="20" width="45" height="35" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="32" y="32" text-anchor="middle" font-size="8" fill="#1d4ed8">[0]</text>
+            <text x="32" y="46" text-anchor="middle" font-family="monospace" font-size="11" fill="#1d4ed8">10</text>
+            <rect x="60" y="20" width="45" height="35" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="82" y="32" text-anchor="middle" font-size="8" fill="#1d4ed8">[1]</text>
+            <text x="82" y="46" text-anchor="middle" font-family="monospace" font-size="11" fill="#1d4ed8">20</text>
+            <rect x="110" y="20" width="45" height="35" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="132" y="32" text-anchor="middle" font-size="8" fill="#1d4ed8">[2]</text>
+            <text x="132" y="46" text-anchor="middle" font-family="monospace" font-size="11" fill="#1d4ed8">30</text>
+            <text x="175" y="42" text-anchor="middle" font-size="18" fill="#22c55e" font-weight="900">OK</text>
+
+            <text x="340" y="14" text-anchor="middle" font-size="11" fill="#dc2626" font-weight="700">범위 초과 접근</text>
+            <rect x="250" y="20" width="45" height="35" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="272" y="42" text-anchor="middle" font-family="monospace" font-size="11" fill="#1d4ed8">10</text>
+            <rect x="300" y="20" width="45" height="35" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="322" y="42" text-anchor="middle" font-family="monospace" font-size="11" fill="#1d4ed8">20</text>
+            <rect x="350" y="20" width="45" height="35" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="372" y="42" text-anchor="middle" font-family="monospace" font-size="11" fill="#1d4ed8">30</text>
+            <rect x="400" y="20" width="50" height="35" rx="4" fill="#fef2f2" stroke="#ef4444" stroke-width="2"/>
+            <text x="425" y="32" text-anchor="middle" font-size="8" fill="#dc2626">[3]??</text>
+            <text x="425" y="47" text-anchor="middle" font-size="9" fill="#dc2626">CRASH</text>
+        </svg>
+    </div>
+
+    <!-- SVG 8: if 방어 코드 구조 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 70" style="max-width:460px;width:100%">
+            <text x="230" y="14" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="700">방어적 코딩 패턴</text>
+            <rect x="10" y="20" width="100" height="40" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="60" y="37" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">위험 상황</text>
+            <text x="60" y="52" text-anchor="middle" font-family="monospace" font-size="10" fill="#92400e">b == 0 ?</text>
+            <line x1="115" y1="40" x2="140" y2="40" stroke="#94a3b8" stroke-width="1.5"/>
+            <rect x="145" y="20" width="140" height="40" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="215" y="37" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">if (b != 0) 검사</text>
+            <text x="215" y="52" text-anchor="middle" font-size="9" fill="#166534">통과하면 안전 실행</text>
+            <line x1="290" y1="40" x2="315" y2="40" stroke="#94a3b8" stroke-width="1.5"/>
+            <rect x="320" y="20" width="130" height="40" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="385" y="37" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">안전한 실행</text>
+            <text x="385" y="52" text-anchor="middle" font-size="9" fill="#1d4ed8">런타임 에러 없음</text>
+        </svg>
+    </div>
+
+    <!-- SVG 9: 에러 메시지 종류 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 55" style="max-width:460px;width:100%">
+            <rect x="5" y="5" width="210" height="45" rx="6" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="110" y="24" text-anchor="middle" font-family="monospace" font-size="11" fill="#dc2626" font-weight="700">Floating point exception</text>
+            <text x="110" y="40" text-anchor="middle" font-size="10" fill="#7f1d1d">0으로 나누기 발생 시</text>
+            <rect x="245" y="5" width="210" height="45" rx="6" fill="#fdf4ff" stroke="#a855f7" stroke-width="1.5"/>
+            <text x="350" y="24" text-anchor="middle" font-family="monospace" font-size="11" fill="#7e22ce" font-weight="700">Segmentation fault</text>
+            <text x="350" y="40" text-anchor="middle" font-size="10" fill="#581c87">잘못된 메모리 접근 시</text>
+        </svg>
+    </div>
+
+    <!-- SVG 10: 에러 예방 체크리스트 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 55" style="max-width:460px;width:100%">
+            <rect x="5" y="5" width="450" height="45" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="20" y="25" font-size="11" fill="#166534" font-weight="700">예방 체크리스트:</text>
+            <text x="20" y="42" font-size="10" fill="#166534">나누기 전 0 검사  |  배열 크기 확인  |  인덱스 0~N-1 사용  |  오류 메시지 읽기</text>
+        </svg>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>핵심 요약</h3>
+        <ul>
+            <li>런타임 에러는 컴파일은 성공하지만 <strong>실행 중</strong>에 발생하는 오류다</li>
+            <li>가장 흔한 원인: <code>0으로 나누기</code>, <code>배열 범위 초과</code></li>
+            <li>나누기 전에 <code>if (b != 0)</code>으로 검사하는 것이 방어적 코딩이다</li>
+            <li>배열 크기가 N이면 인덱스는 <code>0 ~ N-1</code>까지만 사용한다</li>
+            <li>에러 메시지 "Segmentation fault"는 메모리 접근 오류를 의미한다</li>
+        </ul>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+
+
+
+<script>
+(function(){
+  var KEY = 'cs_ans_' + location.pathname.replace(/[^a-zA-Z0-9]/g,'_');
+  var pagePath = location.pathname;
+  var userId = null;
+  try {
+    userId = window.parent?.localStorage?.getItem('codingssok_user_id')
+      || localStorage.getItem('codingssok_user_id');
+  } catch(e) {}
+
+  function save(){
+    var areas = document.querySelectorAll('textarea');
+    var saved = 0;
+    areas.forEach(function(ta, i){
+      if(ta.value.trim()) {
+        localStorage.setItem(KEY + '_' + i, ta.value);
+        saved++;
+      } else {
+        localStorage.removeItem(KEY + '_' + i);
+      }
+    });
+    if(saved > 0) showSaveIndicator();
+  }
+
+  function load(){
+    var areas = document.querySelectorAll('textarea');
+    var restored = 0;
+    areas.forEach(function(ta, i){
+      var val = localStorage.getItem(KEY + '_' + i);
+      if(val && val.trim()) {
+        ta.value = val;
+        ta.style.borderColor = '#10b981';
+        ta.style.boxShadow = '0 0 0 2px rgba(16,185,129,0.15)';
+        setTimeout(function(){ ta.style.borderColor = ''; ta.style.boxShadow = ''; }, 2000);
+        restored++;
+      }
+    });
+    if(restored > 0) showRestoreIndicator(restored);
+  }
+
+  function saveToDb(){
+    if(!userId) return;
+    var areas = document.querySelectorAll('textarea');
+    var answers = [];
+    areas.forEach(function(ta, i){
+      if(ta.value.trim()) answers.push({ field_index: i, answer_text: ta.value });
+    });
+    if(answers.length === 0) return;
+    fetch('/api/answers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId, page_path: pagePath, answers: answers })
+    }).catch(function(){});
+  }
+
+  function loadFromDb(){
+    if(!userId) return;
+    fetch('/api/answers?user_id=' + encodeURIComponent(userId) + '&page_path=' + encodeURIComponent(pagePath))
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(!d.answers || !d.answers.length) return;
+        var areas = document.querySelectorAll('textarea');
+        d.answers.forEach(function(a){
+          if(areas[a.field_index] && a.answer_text) {
+            areas[a.field_index].value = a.answer_text;
+            localStorage.setItem(KEY + '_' + a.field_index, a.answer_text);
+          }
+        });
+      }).catch(function(){});
+  }
+
+  function showSaveIndicator(){
+    var el = document.getElementById('cs-save-ind');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'cs-save-ind';
+      el.style.cssText = 'position:fixed;bottom:16px;right:16px;padding:6px 14px;border-radius:8px;background:#0f172a;color:#22c55e;font-size:11px;font-weight:700;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+      document.body.appendChild(el);
+    }
+    el.textContent = '\u2713 \uB2F5\uC548 \uC800\uC7A5\uB428'; // ✓ 답안 저장됨
+    el.style.opacity = '1';
+    setTimeout(function(){ el.style.opacity = '0'; }, 1500);
+  }
+
+  function showRestoreIndicator(n){
+    var el = document.getElementById('cs-save-ind');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'cs-save-ind';
+      el.style.cssText = 'position:fixed;bottom:16px;right:16px;padding:6px 14px;border-radius:8px;background:#0f172a;color:#3b82f6;font-size:11px;font-weight:700;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+      document.body.appendChild(el);
+    }
+    el.textContent = '\u21BB ' + n + '\uAC1C \uB2F5\uC548 \uBCF5\uC6D0'; // ↻ n개 답안 복원
+    el.style.color = '#3b82f6';
+    el.style.opacity = '1';
+    setTimeout(function(){ el.style.opacity = '0'; }, 2500);
+  }
+
+  var t = null;
+  document.addEventListener('input', function(e){
+    if(e.target.tagName === 'TEXTAREA'){
+      clearTimeout(t);
+      t = setTimeout(function(){ save(); saveToDb(); }, 300);
+    }
+  });
+  document.addEventListener('change', function(e){
+    if(e.target.tagName === 'TEXTAREA'){ save(); saveToDb(); }
+  });
+  document.addEventListener('focusout', function(e){
+    if(e.target.tagName === 'TEXTAREA'){ save(); saveToDb(); }
+  });
+  window.addEventListener('beforeunload', function(){ save(); saveToDb(); });
+
+  // 즉시 로드
+  load();
+  loadFromDb();
+})();
+</script>
+</body>
+</html>

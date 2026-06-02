@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Unit 65. 연결 리스트 마스터 — C 언어</title>
+    <link rel="stylesheet" href="../common.css">
+</head>
+
+<body>
+    <div class="wrap">
+        <div class="hdr">
+            <h1>Unit 65. 연결 리스트 마스터</h1>
+            <div class="sub">단일·이중 연결 리스트 · 삽입·삭제·역순·병합</div>
+            <span class="unit-badge">Chapter 22 · 자료구조</span>
+            <div class="level-bar"><span class="on"></span><span class="on"></span><span class="on"></span></div>
+            <div class="meta"><span class="tag pri">🔗 연결리스트</span><span class="tag acc">📝 15문제</span><span
+                    class="tag">⏱ 50분</span></div>
+        </div>
+        <div class="stu-bar"><label>👤 이름 <input type="text" id="stu-name" placeholder="이름"></label><label>📅 날짜 <input
+                    type="date" id="stu-date"></label></div>
+        <div id="problems"></div>
+        <div class="submit-section">
+            <p>모든 문제를 풀었나요? 📨</p><button class="btn-submit" id="btn-submit">📄 제출하기</button>
+        </div>
+        <div class="modal-overlay" id="submit-modal">
+            <div class="modal-box">
+                <div class="modal-icon">✅</div>
+                <h3>제출 완료!</h3>
+                <p>학습지가 저장되었습니다.</p>
+                <div style="margin:12px 0"><span class="info-tag" id="modal-name"></span> <span class="info-tag"
+                        id="modal-date"></span> <span class="info-tag" id="modal-count"></span></div>
+                <p style="font-size:.78rem;color:var(--dim)">📁 <strong id="modal-filename"></strong></p><button
+                    class="btn-close-modal" id="btn-close-modal">확인</button>
+            </div>
+        </div>
+        <div class="pg"><a href="../21_정렬알고리즘/Unit64_정렬심화.html">← Unit 64</a><span class="tag active">Unit 65</span><a
+                href="Unit66_스택큐트리.html">Unit 66 →</a></div>
+        <div class="ft">🔗 연결 리스트 마스터 · Unit 65</div>
+    </div>
+    <script>
+        const P = [
+            {
+                n: 1, t: "노드 구조체 정의", d: 1,
+                q: `단일 연결 리스트의 노드 구조체를 정의하세요.
+<pre class="code-c"><span class="cm">// 정수 데이터 + 다음 노드 포인터</span>
+typedef struct Node {
+    <span class="cm">// ?</span>
+} Node;</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">typedef struct Node {
+    int data;
+    struct Node *next;
+} Node;</pre><div class="trace">자기참조 구조체!<br>next는 같은 타입의 포인터<br>typedef 전이므로 struct Node* 사용</div>`},
+
+            {
+                n: 2, t: "노드 생성 (malloc)", d: 2,
+                q: `새 노드를 동적 할당으로 생성하세요.
+<pre class="code-c">Node* createNode(int data) {
+    <span class="cm">// malloc으로 노드 생성, data 설정, next=NULL</span>
+}</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">Node* createNode(int data) {
+    Node *new = (Node*)malloc(sizeof(Node));
+    new->data = data;
+    new->next = NULL;
+    return new;
+}</pre><div class="trace">malloc: 힙에 메모리 할당<br>sizeof(Node): 노드 크기만큼<br>(Node*): void* → Node* 캐스팅</div>`},
+
+            {
+                n: 3, t: "맨 앞에 삽입 (pushFront)", d: 2,
+                q: `리스트 맨 앞에 노드를 추가하세요.
+<pre class="code-c">void pushFront(Node **head, int data) {
+    <span class="cm">// 새 노드를 head 앞에 삽입</span>
+}
+<span class="cm">// head: 1→2→3</span>
+<span class="cm">// pushFront(&head, 0) → 0→1→2→3</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">void pushFront(Node **head, int data) {
+    Node *new = createNode(data);
+    new->next = *head;
+    *head = new;
+}</pre><div class="trace">⚠️ Node **head (이중 포인터!)<br>head 자체를 변경해야 하므로<br>*head = new → head가 새 노드를 가리킴</div>`},
+
+            {
+                n: 4, t: "맨 뒤에 삽입 (pushBack)", d: 2,
+                q: `리스트 맨 뒤에 노드를 추가하세요.
+<pre class="code-c">void pushBack(Node **head, int data) {
+    <span class="cm">// 끝까지 순회 후 추가</span>
+}</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">void pushBack(Node **head, int data) {
+    Node *new = createNode(data);
+    if (*head == NULL) { *head = new; return; }
+    Node *cur = *head;
+    while (cur->next != NULL) cur = cur->next;
+    cur->next = new;
+}</pre><div class="trace">빈 리스트: head = new<br>아니면: 마지막 노드까지 이동 후 연결</div>`},
+
+            {
+                n: 5, t: "리스트 출력", d: 1,
+                q: `연결 리스트의 모든 값을 출력하세요.
+<pre class="code-c">void printList(Node *head) {
+    <span class="cm">// 1 → 2 → 3 → NULL</span>
+}</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">void printList(Node *head) {
+    Node *cur = head;
+    while (cur != NULL) {
+        printf("%d", cur->data);
+        if (cur->next) printf(" -> ");
+        cur = cur->next;
+    }
+    printf(" -> NULL\\n");
+}</pre>`},
+
+            {
+                n: 6, t: "노드 삭제 (특정 값)", d: 2,
+                q: `특정 값을 가진 첫 번째 노드를 삭제하세요.
+<pre class="code-c">void deleteNode(Node **head, int key) {
+    <span class="cm">// key를 가진 첫 노드 삭제</span>
+}</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">void deleteNode(Node **head, int key) {
+    if (*head == NULL) return;
+    if ((*head)->data == key) {
+        Node *temp = *head;
+        *head = (*head)->next;
+        free(temp);
+        return;
+    }
+    Node *cur = *head;
+    while (cur->next && cur->next->data != key)
+        cur = cur->next;
+    if (cur->next) {
+        Node *temp = cur->next;
+        cur->next = temp->next;
+        free(temp);
+    }
+}</pre><div class="trace">head 삭제: head를 다음으로 이동<br>중간 삭제: 이전 노드의 next를 건너뛰기<br>⚠️ free() 필수! 메모리 누수 방지</div>`},
+
+            {
+                n: 7, t: "리스트 길이", d: 1,
+                q: `연결 리스트의 길이(노드 수)를 반환하세요.
+<pre class="code-c">int listLength(Node *head) {
+    <span class="cm">// 노드 수 세기</span>
+}</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">int listLength(Node *head) {
+    int count = 0;
+    Node *cur = head;
+    while (cur) { count++; cur = cur->next; }
+    return count;
+}</pre>`},
+
+            {
+                n: 8, t: "리스트 역순 (reverse)", d: 3,
+                q: `연결 리스트를 제자리에서 역순으로 만드세요.
+<pre class="code-c">void reverseList(Node **head) {
+    <span class="cm">// 1→2→3→NULL</span>
+    <span class="cm">// → 3→2→1→NULL</span>
+}</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">void reverseList(Node **head) {
+    Node *prev = NULL, *cur = *head, *next;
+    while (cur) {
+        next = cur->next;  <span class="cm">// 다음 저장</span>
+        cur->next = prev;  <span class="cm">// 방향 뒤집기</span>
+        prev = cur;        <span class="cm">// prev 이동</span>
+        cur = next;        <span class="cm">// cur 이동</span>
+    }
+    *head = prev;
+}</pre><div class="trace">3개 포인터: prev, cur, next<br>화살표 방향을 하나씩 뒤집기!<br>O(n) 시간, O(1) 공간</div>`},
+
+            {
+                n: 9, t: "N번째 노드 찾기", d: 2,
+                q: `리스트에서 N번째(0-indexed) 노드값을 반환하세요.
+<pre class="code-c">int getNth(Node *head, int n) {
+    <span class="cm">// 없으면 -1</span>
+}</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">int getNth(Node *head, int n) {
+    Node *cur = head;
+    int i = 0;
+    while (cur) {
+        if (i == n) return cur->data;
+        cur = cur->next;
+        i++;
+    }
+    return -1;
+}</pre>`},
+
+            {
+                n: 10, t: "중간 노드 찾기 (투 포인터)", d: 3,
+                q: `리스트의 중간 노드를 찾으세요. (slow/fast 기법)
+<pre class="code-c">int findMiddle(Node *head) {
+    <span class="cm">// 1→2→3→4→5 → 3</span>
+    <span class="cm">// slow는 1칸, fast는 2칸씩</span>
+}</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">int findMiddle(Node *head) {
+    Node *slow = head, *fast = head;
+    while (fast && fast->next) {
+        slow = slow->next;
+        fast = fast->next->next;
+    }
+    return slow->data;
+}</pre><div class="trace">fast가 끝에 도달하면<br>slow는 정확히 중간!<br>O(n), 한 번의 순회로 해결</div>`},
+
+            {
+                n: 11, t: "사이클 감지 (Floyd 알고리즘)", d: 3,
+                q: `리스트에 사이클이 있는지 감지하세요.
+<pre class="code-c">int hasCycle(Node *head) {
+    <span class="cm">// 사이클이 있으면 1, 없으면 0</span>
+}</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">int hasCycle(Node *head) {
+    Node *slow = head, *fast = head;
+    while (fast && fast->next) {
+        slow = slow->next;
+        fast = fast->next->next;
+        if (slow == fast) return 1;
+    }
+    return 0;
+}</pre><div class="trace">토끼와 거북이 알고리즘!<br>사이클 있으면 반드시 만남<br>없으면 fast가 NULL 도달</div>`},
+
+            {
+                n: 12, t: "정렬된 리스트에 삽입", d: 2,
+                q: `오름차순 정렬된 리스트에 올바른 위치에 삽입하세요.
+<pre class="code-c">void sortedInsert(Node **head, int data) {
+    <span class="cm">// 1→3→5에 4 삽입 → 1→3→4→5</span>
+}</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">void sortedInsert(Node **head, int data) {
+    Node *new = createNode(data);
+    if (!*head || (*head)->data >= data) {
+        new->next = *head;
+        *head = new;
+        return;
+    }
+    Node *cur = *head;
+    while (cur->next && cur->next->data < data)
+        cur = cur->next;
+    new->next = cur->next;
+    cur->next = new;
+}</pre>`},
+
+            {
+                n: 13, t: "두 정렬 리스트 병합", d: 3,
+                q: `두 정렬된 리스트를 하나로 병합하세요.
+<pre class="code-c">Node* mergeSorted(Node *a, Node *b) {
+    <span class="cm">// a: 1→3→5, b: 2→4→6</span>
+    <span class="cm">// → 1→2→3→4→5→6</span>
+}</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">Node* mergeSorted(Node *a, Node *b) {
+    if (!a) return b;
+    if (!b) return a;
+    Node *result;
+    if (a->data <= b->data) {
+        result = a;
+        result->next = mergeSorted(a->next, b);
+    } else {
+        result = b;
+        result->next = mergeSorted(a, b->next);
+    }
+    return result;
+}</pre>`},
+
+            {
+                n: 14, t: "리스트 메모리 해제", d: 2,
+                q: `전체 리스트의 모든 노드를 free하세요.
+<pre class="code-c">void freeList(Node **head) {
+    <span class="cm">// 모든 노드 free 후 head = NULL</span>
+}</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">void freeList(Node **head) {
+    Node *cur = *head;
+    while (cur) {
+        Node *next = cur->next;
+        free(cur);
+        cur = next;
+    }
+    *head = NULL;
+}</pre><div class="trace">⚠️ free 전에 next 저장!<br>free(cur) 후에는 cur->next 접근 불가<br>*head = NULL → 댕글링 포인터 방지</div>`},
+
+            {
+                n: 15, t: "🏆 이중 연결 리스트", d: 3,
+                q: `이중 연결 리스트의 구조체와 양방향 삽입을 작성하세요.
+<pre class="code-c">typedef struct DNode {
+    <span class="cm">// data, prev, next</span>
+} DNode;
+void insertAfter(DNode *node, int data) {
+    <span class="cm">// node 다음에 삽입</span>
+}</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">typedef struct DNode {
+    int data;
+    struct DNode *prev, *next;
+} DNode;
+DNode* createDNode(int data) {
+    DNode *n=(DNode*)malloc(sizeof(DNode));
+    n->data=data; n->prev=n->next=NULL;
+    return n;
+}
+void insertAfter(DNode *node, int data) {
+    DNode *new = createDNode(data);
+    new->next = node->next;
+    new->prev = node;
+    if (node->next) node->next->prev = new;
+    node->next = new;
+}</pre><div class="trace">4개 포인터 조작!<br>new→next = 기존 다음<br>new→prev = 현재 노드<br>기존 다음의 prev = new<br>현재의 next = new</div>`}
+        ];
+        const c = document.getElementById('problems'); P.forEach(p => { const dc = p.d <= 1 ? 'ez' : p.d <= 2 ? 'md' : 'hd'; const dots = Array.from({ length: 5 }, (_, i) => `<span${i < p.d ? ' class="on"' : ''}>​</span>`).join(''); c.innerHTML += `<div class="prob"><div class="prob-top"><div class="prob-num ${dc}">${p.n}</div><div class="prob-title">${p.t}</div><div class="diff-dots">${dots}</div></div><div class="prob-body"><div class="q">${p.q}</div><textarea class="write" placeholder="✍️ 답을 작성하세요" rows="8"></textarea><details class="ans"><summary>정답 및 해설 보기</summary><div class="ans-body">${p.a}</div></details></div></div>`; });
+    </script>
+    <script src="../submit.js"></script>
+    <script src="../../platform.js"></script>
+</body>
+
+</html>

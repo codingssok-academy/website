@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 프로젝트 14: 미니 게임 엔진</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+.page { width: 210mm; min-height: 297mm; margin: 16px auto; padding: 18mm 20mm 15mm 22mm; background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: relative; page-break-after: always; }
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after { content: counter(pagenum); position: absolute; bottom: 10mm; right: 16mm; font-size: 10px; color: #94a3b8; font-weight: 600; }
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark { position: absolute; top: -10px; right: -15px; font-size: 200px; font-weight: 900; color: rgba(180,195,212,0.3); line-height: 1; pointer-events: none; }
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 34px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #2563eb; font-weight: 600; }
+.code { background: #0f172a; border-radius: 8px; padding: 16px 20px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.8; margin: 14px 0; white-space: pre-wrap; }
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.practice { margin: 18px 0; border-left: 4px solid #3b82f6; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 14px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+.problem { margin: 16px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+.summary { border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+.pj-banner { background: linear-gradient(135deg, #1e3a5f 0%, #2d5a8e 100%); border-radius: 10px; padding: 16px 20px; margin: 0 0 20px; color: #fff; }
+.pj-banner-label { font-size: 11px; font-weight: 700; color: #93c5fd; letter-spacing: 2px; margin-bottom: 4px; }
+.pj-banner-title { font-size: 18px; font-weight: 900; }
+.pj-banner-desc { font-size: 13px; color: #bfdbfe; margin-top: 4px; }
+.callout { border-radius: 8px; padding: 12px 16px; margin: 14px 0; font-size: 14px; line-height: 1.7; }
+.callout.blue { background: #eff6ff; border-left: 4px solid #3b82f6; color: #1e40af; }
+.callout.green { background: #f0fdf4; border-left: 4px solid #22c55e; color: #166534; }
+.loop-diagram { background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 14px 18px; margin: 14px 0; }
+.loop-step { display: flex; align-items: center; gap: 12px; padding: 6px 0; }
+.loop-num { width: 24px; height: 24px; background: #1e3a5f; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+.loop-desc { font-size: 13px; color: #374151; }
+.loop-func { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #2563eb; font-weight: 600; }
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">P14</div>
+        <div class="cover-label">Level 6 · Project 14</div>
+        <h1 class="cover-title">미니 게임 엔진<br>— init / update / render 구조</h1>
+        <p class="cover-sub">실제 게임 엔진처럼 초기화(init), 업데이트(update), 렌더(render) 3단계 함수 구조로 간단한 텍스트 RPG를 만드는 프로젝트입니다.</p>
+
+        <div style="text-align:center;margin:24px 0;">
+            <svg viewBox="0 0 480 120" style="max-width:480px;width:100%">
+                <defs><marker id="ge1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker></defs>
+                <!-- init -->
+                <rect x="10" y="40" width="90" height="40" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="55" y="58" text-anchor="middle" font-size="12" fill="#1d4ed8" font-weight="700">init()</text>
+                <text x="55" y="72" text-anchor="middle" font-size="10" fill="#2563eb">초기화 (1회)</text>
+                <line x1="100" y1="60" x2="130" y2="60" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#ge1)"/>
+                <!-- 게임 루프 -->
+                <rect x="135" y="20" width="220" height="80" rx="8" fill="#f8fafc" stroke="#6366f1" stroke-width="2" stroke-dasharray="5,3"/>
+                <text x="245" y="35" text-anchor="middle" font-size="10" fill="#6366f1" font-weight="700">게임 루프 (반복)</text>
+                <rect x="148" y="40" width="80" height="28" rx="5" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="188" y="58" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">update()</text>
+                <line x1="228" y1="54" x2="262" y2="54" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#ge1)"/>
+                <rect x="267" y="40" width="80" height="28" rx="5" fill="#fef9c3" stroke="#eab308" stroke-width="1.5"/>
+                <text x="307" y="58" text-anchor="middle" font-size="11" fill="#854d0e" font-weight="700">render()</text>
+                <!-- 루프 화살표 -->
+                <defs><marker id="ge2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#6366f1"/></marker></defs>
+                <path d="M 307,68 Q 307,92 245,92 Q 183,92 188,68" fill="none" stroke="#6366f1" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#ge2)"/>
+                <!-- 종료 -->
+                <line x1="355" y1="60" x2="385" y2="60" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#ge1)"/>
+                <rect x="390" y="40" width="85" height="40" rx="6" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+                <text x="432" y="58" text-anchor="middle" font-size="11" fill="#dc2626" font-weight="700">게임 오버</text>
+                <text x="432" y="72" text-anchor="middle" font-size="10" fill="#ef4444">종료 조건</text>
+            </svg>
+        </div>
+
+        <div class="cover-goals">
+            <h3>이 프로젝트에서 배우는 것</h3>
+            <ul>
+                <li>실제 게임 엔진의 init/update/render 루프 구조를 이해합니다.</li>
+                <li>전역 게임 상태(HP, 레벨, 점수)를 함수로 관리합니다.</li>
+                <li>update: 게임 로직 처리 / render: 화면 출력 분리를 실습합니다.</li>
+                <li>난수로 몬스터 등장, 데미지 등 게임 이벤트를 구현합니다.</li>
+                <li>게임 개발의 기초 패턴을 C 언어로 체험합니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="page">
+    <div class="pj-banner">
+        <div class="pj-banner-label">PROJECT 14</div>
+        <div class="pj-banner-title">미니 게임 엔진</div>
+        <div class="pj-banner-desc">init/update/render 게임 루프 패턴</div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/c-lang/gear.png" alt="함수 기어 - 재사용 가능한 코드 구조" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>게임 루프 3단계</h2>
+
+    <div class="loop-diagram">
+        <div class="loop-step">
+            <div class="loop-num">1</div>
+            <div>
+                <div class="loop-func">void init()</div>
+                <div class="loop-desc">플레이어 HP, 레벨, 점수를 초기값으로 설정. 프로그램 시작 시 한 번만 호출.</div>
+            </div>
+        </div>
+        <div class="loop-step">
+            <div class="loop-num">2</div>
+            <div>
+                <div class="loop-func">int update()</div>
+                <div class="loop-desc">입력 받기 → 게임 로직 처리 → 상태 변경. 게임 오버면 0 반환.</div>
+            </div>
+        </div>
+        <div class="loop-step">
+            <div class="loop-num">3</div>
+            <div>
+                <div class="loop-func">void render()</div>
+                <div class="loop-desc">현재 게임 상태를 화면에 출력. 로직 없음, 출력만.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="code"><span class="cmt">// 전역 게임 상태</span>
+<span class="kw">int</span> playerHP  = <span class="num">100</span>;
+<span class="kw">int</span> playerLv  = <span class="num">1</span>;
+<span class="kw">int</span> score     = <span class="num">0</span>;
+<span class="kw">int</span> turn      = <span class="num">0</span>;
+
+<span class="kw">void</span> <span class="fn">init</span>() {
+    playerHP = <span class="num">100</span>;
+    playerLv = <span class="num">1</span>;
+    score    = <span class="num">0</span>;
+    turn     = <span class="num">0</span>;
+    <span class="fn">printf</span>(<span class="str">"=== 미니 RPG 시작! ===\n"</span>);
+}
+
+<span class="kw">void</span> <span class="fn">render</span>() {
+    <span class="fn">printf</span>(<span class="str">"\n[턴 %d] HP:%d  Lv:%d  점수:%d\n"</span>,
+           turn, playerHP, playerLv, score);
+}</div>
+
+    <div class="callout blue">
+        <strong>update vs render 분리:</strong> update는 게임 상태를 바꾸는 로직(HP 감소, 레벨 업 등)만 담당하고, render는 현재 상태를 출력만 합니다. 이렇게 분리하면 나중에 GUI로 바꿀 때 render만 수정하면 됩니다.
+    </div>
+</div>
+
+<div class="page">
+    <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/c-lang/puzzle.png" alt="퍼즐 조각 - 함수 조합으로 완성되는 프로그램" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>미니 게임 엔진 — 전체 코드</h2>
+
+    <div class="code"><span class="cmt">/* ====== 미니 RPG 게임 엔진 ====== */</span>
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;time.h&gt;
+
+<span class="kw">int</span> hp=<span class="num">100</span>, lv=<span class="num">1</span>, score=<span class="num">0</span>, turn=<span class="num">0</span>;
+
+<span class="kw">void</span> <span class="fn">init</span>() {
+    <span class="fn">srand</span>(<span class="fn">time</span>(<span class="num">0</span>));
+    hp=<span class="num">100</span>; lv=<span class="num">1</span>; score=<span class="num">0</span>; turn=<span class="num">0</span>;
+    <span class="fn">printf</span>(<span class="str">"=== 미니 RPG! HP:100 ===\n"</span>);
+}
+
+<span class="kw">void</span> <span class="fn">render</span>() {
+    <span class="fn">printf</span>(<span class="str">"[턴%d] HP:%3d  Lv:%d  점수:%d\n"</span>,turn,hp,lv,score);
+    <span class="fn">printf</span>(<span class="str">"1.공격  2.방어  0.도망\n선택: "</span>);
+}
+
+<span class="kw">int</span> <span class="fn">update</span>() {
+    <span class="kw">int</span> action;
+    <span class="fn">scanf</span>(<span class="str">"%d"</span>,&amp;action);
+    <span class="kw">if</span>(action==<span class="num">0</span>) <span class="kw">return</span> <span class="num">0</span>;  <span class="cmt">// 도망</span>
+
+    <span class="kw">int</span> monsterDmg = <span class="fn">rand</span>()%<span class="num">20</span>+<span class="num">5</span>;  <span class="cmt">// 5~24 데미지</span>
+
+    <span class="kw">if</span>(action==<span class="num">1</span>) {  <span class="cmt">// 공격</span>
+        <span class="kw">int</span> myDmg = <span class="fn">rand</span>()%<span class="num">15</span>+lv*<span class="num">5</span>;
+        <span class="fn">printf</span>(<span class="str">"공격! 내:%d  몬:%d 데미지\n"</span>,myDmg,monsterDmg);
+        score += myDmg;
+        hp -= monsterDmg;
+    } <span class="kw">else</span> {  <span class="cmt">// 방어</span>
+        <span class="kw">int</span> reducedDmg = monsterDmg/<span class="num">2</span>;
+        <span class="fn">printf</span>(<span class="str">"방어! 받는 데미지: %d\n"</span>,reducedDmg);
+        hp -= reducedDmg;
+    }
+    turn++;
+    <span class="kw">if</span>(score &gt;= lv*<span class="num">100</span>){ lv++; <span class="fn">printf</span>(<span class="str">"레벨업! Lv%d\n"</span>,lv); }
+    <span class="kw">return</span> hp &gt; <span class="num">0</span>;  <span class="cmt">// HP 0이하면 0 반환(게임오버)</span>
+}
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="fn">init</span>();
+    <span class="kw">while</span>(<span class="fn">update</span>() &amp;&amp; (turn &lt; <span class="num">10</span>)) {
+        <span class="fn">render</span>();
+    }
+    <span class="fn">printf</span>(<span class="str">"게임 종료! 최종점수: %d\n"</span>,score);
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+</div>
+
+<div class="page">
+    <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/c-lang/book.png" alt="교재 - 함수 개념 학습" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>연습 문제</h2>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">1</div>
+            <div class="problem-label">게임 루프 순서</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">init/update/render의 올바른 호출 순서를 설명하세요. init는 몇 번 호출하나요?</div>
+            <details class="problem-toggle">
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">init → (update → render) 반복. init는 프로그램 시작 시 단 한 번만 호출합니다.</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">2</div>
+            <div class="problem-label">update 반환값</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">update()가 0을 반환하는 경우는 언제인가요?</div>
+            <details class="problem-toggle">
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">플레이어가 도망치거나(action==0), HP가 0 이하가 될 때 0을 반환합니다. while 루프가 종료됩니다.</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">3</div>
+            <div class="problem-label">회복 아이템 추가</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">메뉴에 "3. 포션 사용 (HP +30)" 을 추가하세요. 포션은 3개로 제한합니다.</div>
+            <details class="problem-toggle">
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">전역 변수 potions=3을 추가합니다. action==3이고 potions>0일 때 hp+=30, potions--. hp가 100을 초과하면 100으로 고정.</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">4</div>
+            <div class="problem-label">보스 몬스터 이벤트</div>
+            <span class="problem-diff hard">어려움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">10턴마다 데미지가 2배인 보스 몬스터가 등장하도록 update()를 수정하세요. 보스 등장 시 "보스 등장!" 메시지도 출력합니다.</div>
+            <details class="problem-toggle">
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text"><code>if(turn % 10 == 9)</code> 조건으로 보스 여부 판별. 보스면 monsterDmg *= 2.</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:8px;margin:16px 0 6px;padding:8px 14px;background:#f0f9ff;border-radius:6px;border:1px solid #bae6fd;">
+        <img src="/images/learn/c-lang/gear.png" alt="함수 기어 - 재사용 가능한 코드 구조" style="width:28px;height:28px;object-fit:contain;background:#fff;border-radius:8px;">
+        <img src="/images/learn/c-lang/puzzle.png" alt="퍼즐 조각 - 함수 조합으로 완성되는 프로그램" style="width:28px;height:28px;object-fit:contain;background:#fff;border-radius:8px;">
+        <span style="font-size:12px;color:#0369a1;font-weight:600;">핵심 정리</span>
+    </div>
+<div class="summary">
+        <h3>핵심 정리</h3>
+        <ul>
+            <li>init(): 초기화(1회) / update(): 로직(반복) / render(): 출력(반복)</li>
+            <li>update가 0 반환 → 게임 루프 종료</li>
+            <li>전역 변수로 게임 상태(hp, lv, score) 공유</li>
+            <li>이 패턴은 Unity, Pygame 등 실제 게임 엔진에도 동일하게 사용됨</li>
+        </ul>
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:20px;padding-top:10px;border-top:1px solid #f1f5f9;">
+        <img src="/images/learn/c-lang/flowchart.png" alt="순서도 - 함수 호출 흐름" style="width:22px;height:22px;object-fit:contain;opacity:0.6;background:#fff;border-radius:8px;">
+        <span style="font-size:10px;color:#cbd5e1;">코딩쏙 C언어</span>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

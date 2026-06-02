@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — printf 여러 줄 출력</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 14px;
+    color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- 1페이지: 표지 -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">10</div>
+        <div class="cover-label">Unit 10</div>
+        <h1 class="cover-title">printf — 여러 줄 출력</h1>
+        <p class="cover-sub">하나의 printf 또는 여러 printf를 이용해 여러 줄을 출력하는 방법을 배웁니다.</p>
+        <div style="margin:20px 0;">
+            <svg viewBox="0 0 480 50" style="max-width:480px;width:100%">
+                <rect x="5" y="10" width="90" height="30" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="50" y="30" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">printf 기본</text>
+                <line x1="100" y1="25" x2="115" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="120" y="10" width="90" height="30" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="165" y="30" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">\n 줄바꿈</text>
+                <line x1="215" y1="25" x2="230" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="235" y="10" width="90" height="30" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="280" y="30" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">여러 줄</text>
+                <line x1="330" y1="25" x2="345" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="350" y="10" width="90" height="30" rx="6" fill="#fdf4ff" stroke="#a855f7" stroke-width="1.5"/>
+                <text x="395" y="30" text-anchor="middle" font-size="10" fill="#7e22ce" font-weight="700">서식 지정자</text>
+            </svg>
+        </div>
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드 화면" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 유닛에서 배우는 것</h3>
+            <ul>
+                <li><code>\n</code>을 사용해 여러 줄을 출력할 수 있습니다.</li>
+                <li>하나의 printf로 여러 줄을 출력할 수 있습니다.</li>
+                <li>여러 개의 printf를 연속으로 사용할 수 있습니다.</li>
+                <li><code>%d</code>, <code>%f</code>, <code>%s</code> 서식 지정자를 이해합니다.</li>
+                <li>정렬된 출력을 만들 수 있습니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- 2페이지: printf 기본과 줄바꿈 -->
+<div class="page">
+    <h2>printf와 줄바꿈</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/monitor.png" alt="모니터" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p><code>printf</code>는 화면에 텍스트를 출력하는 함수입니다. <code>\n</code>은 줄바꿈 문자로, 이 위치에서 다음 줄로 넘어갑니다.</p>
+
+    <div style="text-align:center;margin:18px 0;">
+        <svg viewBox="0 0 460 100" style="max-width:460px;width:100%">
+            <rect x="10" y="10" width="200" height="80" rx="8" fill="#0f172a"/>
+            <text x="110" y="38" text-anchor="middle" font-family="monospace" font-size="12" fill="#86efac">printf("1줄\n2줄\n3줄");</text>
+            <text x="110" y="58" text-anchor="middle" font-family="monospace" font-size="10" fill="#64748b">하나의 printf</text>
+            <line x1="220" y1="50" x2="250" y2="50" stroke="#3b82f6" stroke-width="2" marker-end="url(#marr1)"/>
+            <rect x="258" y="10" width="190" height="80" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="353" y="35" text-anchor="middle" font-family="monospace" font-size="13" fill="#0f172a">1줄</text>
+            <text x="353" y="55" text-anchor="middle" font-family="monospace" font-size="13" fill="#0f172a">2줄</text>
+            <text x="353" y="75" text-anchor="middle" font-family="monospace" font-size="13" fill="#0f172a">3줄</text>
+            <defs><marker id="marr1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#3b82f6"/></marker></defs>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt">// 방법 1: 하나의 printf에 \n 여러 개</span>
+<span class="fn">printf</span>(<span class="str">"이름: 김철수\n나이: 14\n학교: 중학교\n"</span>);</div>
+
+    <p><code>\n</code> 없이 printf를 쓰면 모든 출력이 한 줄에 붙어서 나옵니다.</p>
+
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+            <rect x="10" y="10" width="200" height="60" rx="8" fill="#0f172a"/>
+            <text x="110" y="32" text-anchor="middle" font-family="monospace" font-size="11" fill="#86efac">printf("안녕");</text>
+            <text x="110" y="52" text-anchor="middle" font-family="monospace" font-size="11" fill="#86efac">printf("세상");</text>
+            <line x1="220" y1="40" x2="250" y2="40" stroke="#f59e0b" stroke-width="2" marker-end="url(#marr2)"/>
+            <rect x="258" y="10" width="190" height="60" rx="8" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="353" y="45" text-anchor="middle" font-family="monospace" font-size="14" fill="#92400e">안녕세상</text>
+            <defs><marker id="marr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#f59e0b"/></marker></defs>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt">// 방법 2: printf 여러 개 — \n 있어야 줄바꿈</span>
+<span class="fn">printf</span>(<span class="str">"첫째 줄\n"</span>);
+<span class="fn">printf</span>(<span class="str">"둘째 줄\n"</span>);
+<span class="fn">printf</span>(<span class="str">"셋째 줄\n"</span>);</div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/desktop-pc.png" alt="데스크탑" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/book.png" alt="책" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">하나의 printf로 이름, 나이, 반을 세 줄로 출력하세요.</div>
+                <div class="code"><span class="fn">printf</span>(<span class="str">"이름: 박민준\n나이: 13\n반: 2반\n"</span>);</div>
+                <div class="practice-result">이름/나이/반이 각각 한 줄씩 출력됩니다</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">printf 세 개를 써서 같은 결과를 만드세요.</div>
+                <div class="code"><span class="fn">printf</span>(<span class="str">"이름: 박민준\n"</span>);
+<span class="fn">printf</span>(<span class="str">"나이: 13\n"</span>);
+<span class="fn">printf</span>(<span class="str">"반: 2반\n"</span>);</div>
+                <div class="practice-result">위와 동일한 결과가 나옵니다</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">빈 줄을 포함해서 출력하세요 (이름 출력 후 빈 줄, 그다음 나이 출력).</div>
+                <div class="code"><span class="fn">printf</span>(<span class="str">"이름: 이지은\n\n나이: 15\n"</span>);</div>
+                <div class="practice-result">이름 출력 후 빈 줄이 생기고 나이가 출력됩니다</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3페이지: 서식 지정자와 정렬 -->
+<div class="page">
+    <h2>서식 지정자로 여러 줄 출력</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/keyboard.png" alt="키보드" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>서식 지정자(<code>%d</code>, <code>%f</code>, <code>%s</code>)를 사용하면 변수 값을 여러 줄에 걸쳐 출력할 수 있습니다.</p>
+
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+            <rect x="5" y="10" width="80" height="60" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="45" y="35" text-anchor="middle" font-family="monospace" font-size="14" fill="#1d4ed8" font-weight="800">%d</text>
+            <text x="45" y="58" text-anchor="middle" font-size="10" fill="#1d4ed8">정수</text>
+            <rect x="100" y="10" width="80" height="60" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="140" y="35" text-anchor="middle" font-family="monospace" font-size="14" fill="#92400e" font-weight="800">%f</text>
+            <text x="140" y="58" text-anchor="middle" font-size="10" fill="#92400e">실수</text>
+            <rect x="195" y="10" width="80" height="60" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="235" y="35" text-anchor="middle" font-family="monospace" font-size="14" fill="#166534" font-weight="800">%s</text>
+            <text x="235" y="58" text-anchor="middle" font-size="10" fill="#166534">문자열</text>
+            <rect x="290" y="10" width="80" height="60" rx="6" fill="#fdf4ff" stroke="#a855f7" stroke-width="1.5"/>
+            <text x="330" y="35" text-anchor="middle" font-family="monospace" font-size="14" fill="#7e22ce" font-weight="800">%c</text>
+            <text x="330" y="58" text-anchor="middle" font-size="10" fill="#7e22ce">문자</text>
+            <rect x="385" y="10" width="70" height="60" rx="6" fill="#fff7ed" stroke="#f97316" stroke-width="1.5"/>
+            <text x="420" y="35" text-anchor="middle" font-family="monospace" font-size="14" fill="#c2410c" font-weight="800">%.2f</text>
+            <text x="420" y="58" text-anchor="middle" font-size="10" fill="#c2410c">소수 2자리</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">int</span> age = <span class="num">14</span>;
+<span class="kw">float</span> height = <span class="num">162.5</span>;
+<span class="kw">char</span> name[] = <span class="str">"김지훈"</span>;
+
+<span class="fn">printf</span>(<span class="str">"이름: %s\n"</span>, name);
+<span class="fn">printf</span>(<span class="str">"나이: %d살\n"</span>, age);
+<span class="fn">printf</span>(<span class="str">"키: %.1f cm\n"</span>, height);</div>
+
+    <p>하나의 printf로 여러 변수를 여러 줄에 출력할 수도 있습니다.</p>
+
+    <div class="code"><span class="cmt">// 하나의 printf로 여러 변수 출력</span>
+<span class="fn">printf</span>(<span class="str">"이름: %s\n나이: %d살\n키: %.1f cm\n"</span>, name, age, height);</div>
+
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 90" style="max-width:460px;width:100%">
+            <text x="230" y="16" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="800">실행 결과</text>
+            <rect x="10" y="22" width="440" height="60" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="30" y="42" font-family="monospace" font-size="13" fill="#0f172a">이름: 김지훈</text>
+            <text x="30" y="58" font-family="monospace" font-size="13" fill="#0f172a">나이: 14살</text>
+            <text x="30" y="74" font-family="monospace" font-size="13" fill="#0f172a">키: 162.5 cm</text>
+        </svg>
+    </div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">정수와 실수를 각각 다른 줄에 출력하세요.</div>
+                <div class="code"><span class="kw">int</span> score = <span class="num">95</span>;
+<span class="kw">float</span> avg = <span class="num">87.5</span>;
+<span class="fn">printf</span>(<span class="str">"점수: %d\n평균: %.1f\n"</span>, score, avg);</div>
+                <div class="practice-result">점수: 95 / 평균: 87.5</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">성적표 형태로 세 과목을 출력하세요.</div>
+                <div class="code"><span class="fn">printf</span>(<span class="str">"=== 성적표 ===\n"</span>);
+<span class="fn">printf</span>(<span class="str">"국어: %d\n"</span>, <span class="num">88</span>);
+<span class="fn">printf</span>(<span class="str">"영어: %d\n"</span>, <span class="num">92</span>);
+<span class="fn">printf</span>(<span class="str">"수학: %d\n"</span>, <span class="num">79</span>);</div>
+                <div class="practice-result">제목과 세 과목이 각 줄에 출력됩니다</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">빈 줄로 섹션을 구분해 출력하세요.</div>
+                <div class="code"><span class="fn">printf</span>(<span class="str">"[ 개인 정보 ]\n"</span>);
+<span class="fn">printf</span>(<span class="str">"이름: 최유나\n\n"</span>);
+<span class="fn">printf</span>(<span class="str">"[ 학교 정보 ]\n"</span>);
+<span class="fn">printf</span>(<span class="str">"학교: 서울중학교\n"</span>);</div>
+                <div class="practice-result">두 섹션이 빈 줄로 구분되어 출력됩니다</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 4페이지: 문제 + 핵심 요약 -->
+<div class="page">
+    <h2>직접 풀어보세요</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/lightbulb.png" alt="아이디어" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q1</div>
+            <div class="problem-label">여러 줄 인사말</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">하나의 printf를 사용해 아래 세 줄을 출력하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">안녕하세요!</span></div>
+                <div class="problem-example-row"><span class="problem-example-label"></span><span class="problem-example-value">저는 C언어를 배웁니다.</span></div>
+                <div class="problem-example-row"><span class="problem-example-label"></span><span class="problem-example-value">열심히 하겠습니다.</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle"><summary>힌트 보기</summary><div class="problem-toggle-content"><div class="hint-text"><code>\n</code>을 두 번 써서 세 줄로 나눠지게 만드세요.</div></div></details>
+        <details class="problem-toggle"><summary>정답 확인</summary><div class="problem-toggle-content"><div class="answer-code">printf("안녕하세요!\n저는 C언어를 배웁니다.\n열심히 하겠습니다.\n");</div></div></details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q2</div>
+            <div class="problem-label">변수 여러 줄 출력</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text"><code>int age = 13; float height = 155.0;</code>를 선언하고, 각각 다른 줄에 출력하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">나이: 13살</span></div>
+                <div class="problem-example-row"><span class="problem-example-label"></span><span class="problem-example-value">키: 155.0 cm</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle"><summary>힌트 보기</summary><div class="problem-toggle-content"><div class="hint-text"><code>%d</code>로 정수, <code>%.1f</code>로 소수점 1자리 실수를 출력하세요.</div></div></details>
+        <details class="problem-toggle"><summary>정답 확인</summary><div class="problem-toggle-content"><div class="answer-code">int age = 13;
+float height = 155.0;
+printf("나이: %d살\n", age);
+printf("키: %.1f cm\n", height);</div></div></details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q3</div>
+            <div class="problem-label">성적 출력표</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">국어 90, 영어 85, 수학 95를 변수에 저장하고, 제목과 합계까지 출력하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">--- 성적 ---</span></div>
+                <div class="problem-example-row"><span class="problem-example-label"></span><span class="problem-example-value">국어: 90, 영어: 85, 수학: 95</span></div>
+                <div class="problem-example-row"><span class="problem-example-label"></span><span class="problem-example-value">합계: 270</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle"><summary>힌트 보기</summary><div class="problem-toggle-content"><div class="hint-text"><code>int total = korean + english + math;</code>로 합계를 구하세요.</div></div></details>
+        <details class="problem-toggle"><summary>정답 확인</summary><div class="problem-toggle-content"><div class="answer-code">int korean = 90, english = 85, math = 95;
+int total = korean + english + math;
+printf("--- 성적 ---\n");
+printf("국어: %d, 영어: %d, 수학: %d\n", korean, english, math);
+printf("합계: %d\n", total);</div></div></details>
+    </div>
+
+    <!-- SVG 6: \n 동작 원리 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 60" style="max-width:460px;width:100%">
+            <text x="230" y="14" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="700">\n 없을 때 vs 있을 때</text>
+            <rect x="5" y="20" width="200" height="35" rx="6" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="110" y="35" text-anchor="middle" font-family="monospace" font-size="10" fill="#dc2626">printf("AB"); printf("CD");</text>
+            <text x="110" y="50" text-anchor="middle" font-size="9" fill="#dc2626">출력: ABCD (한 줄)</text>
+            <rect x="255" y="20" width="200" height="35" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="355" y="35" text-anchor="middle" font-family="monospace" font-size="10" fill="#166534">printf("AB\n"); printf("CD");</text>
+            <text x="355" y="50" text-anchor="middle" font-size="9" fill="#166534">출력: AB / CD (두 줄)</text>
+        </svg>
+    </div>
+
+    <!-- SVG 7: 서식 지정자 흐름 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 55" style="max-width:460px;width:100%">
+            <text x="230" y="14" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="700">서식 지정자 → 변수값 대입 흐름</text>
+            <rect x="10" y="20" width="130" height="30" rx="6" fill="#0f172a"/>
+            <text x="75" y="40" text-anchor="middle" font-family="monospace" font-size="11" fill="#86efac">printf("%d", 42)</text>
+            <line x1="145" y1="35" x2="170" y2="35" stroke="#f59e0b" stroke-width="2" marker-end="url(#u10a)"/>
+            <rect x="175" y="20" width="80" height="30" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="215" y="38" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">%d → 42</text>
+            <line x1="260" y1="35" x2="285" y2="35" stroke="#3b82f6" stroke-width="2" marker-end="url(#u10b)"/>
+            <rect x="290" y="20" width="160" height="30" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="370" y="38" text-anchor="middle" font-family="monospace" font-size="13" fill="#0f172a">42</text>
+            <defs>
+                <marker id="u10a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#f59e0b"/></marker>
+                <marker id="u10b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#3b82f6"/></marker>
+            </defs>
+        </svg>
+    </div>
+
+    <!-- SVG 8: printf 두 가지 방법 비교 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 70" style="max-width:460px;width:100%">
+            <text x="105" y="14" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">방법 1: 하나의 printf</text>
+            <rect x="10" y="20" width="190" height="44" rx="6" fill="#0f172a"/>
+            <text x="105" y="38" text-anchor="middle" font-family="monospace" font-size="10" fill="#86efac">printf("1줄\n2줄\n3줄\n");</text>
+            <text x="105" y="56" text-anchor="middle" font-size="9" fill="#64748b">한 번에 모두 출력</text>
+            <text x="345" y="14" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">방법 2: 여러 printf</text>
+            <rect x="255" y="20" width="195" height="44" rx="6" fill="#0f172a"/>
+            <text x="352" y="36" text-anchor="middle" font-family="monospace" font-size="10" fill="#86efac">printf("1줄\n");</text>
+            <text x="352" y="50" text-anchor="middle" font-family="monospace" font-size="10" fill="#86efac">printf("2줄\n"); ...</text>
+        </svg>
+    </div>
+
+    <!-- SVG 9: 소수점 서식 비교 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 55" style="max-width:460px;width:100%">
+            <rect x="5" y="5" width="130" height="45" rx="6" fill="#fff7ed" stroke="#f97316" stroke-width="1.5"/>
+            <text x="70" y="24" text-anchor="middle" font-family="monospace" font-size="11" fill="#c2410c" font-weight="700">%f</text>
+            <text x="70" y="40" text-anchor="middle" font-family="monospace" font-size="11" fill="#7c2d12">3.140000</text>
+            <rect x="155" y="5" width="130" height="45" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="220" y="24" text-anchor="middle" font-family="monospace" font-size="11" fill="#92400e" font-weight="700">%.2f</text>
+            <text x="220" y="40" text-anchor="middle" font-family="monospace" font-size="11" fill="#78350f">3.14</text>
+            <rect x="305" y="5" width="150" height="45" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="380" y="24" text-anchor="middle" font-family="monospace" font-size="11" fill="#166534" font-weight="700">%.0f</text>
+            <text x="380" y="40" text-anchor="middle" font-family="monospace" font-size="11" fill="#14532d">3</text>
+        </svg>
+    </div>
+
+    <!-- SVG 10: 여러 변수 출력 패턴 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 50" style="max-width:460px;width:100%">
+            <rect x="5" y="5" width="450" height="40" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="20" y="22" font-family="monospace" font-size="11" fill="#1d4ed8">printf("%s는 %d살, 키 %.1f cm\n", name, age, height);</text>
+            <text x="20" y="38" font-size="10" fill="#1d4ed8">순서대로: %s → name, %d → age, %.1f → height</text>
+        </svg>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>핵심 요약</h3>
+        <ul>
+            <li><code>\n</code>은 줄바꿈 문자로 printf 안에서 다음 줄로 이동한다</li>
+            <li>하나의 printf에 <code>\n</code>을 여러 개 넣어 여러 줄을 출력할 수 있다</li>
+            <li>여러 printf를 연속으로 사용해도 같은 결과를 만들 수 있다</li>
+            <li><code>%d</code>=정수, <code>%f</code>=실수, <code>%s</code>=문자열, <code>%c</code>=문자</li>
+            <li><code>%.2f</code>는 소수점 아래 2자리까지만 출력한다</li>
+        </ul>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+
+
+
+<script>
+(function(){
+  var KEY = 'cs_ans_' + location.pathname.replace(/[^a-zA-Z0-9]/g,'_');
+  var pagePath = location.pathname;
+  var userId = null;
+  try {
+    userId = window.parent?.localStorage?.getItem('codingssok_user_id')
+      || localStorage.getItem('codingssok_user_id');
+  } catch(e) {}
+
+  function save(){
+    var areas = document.querySelectorAll('textarea');
+    var saved = 0;
+    areas.forEach(function(ta, i){
+      if(ta.value.trim()) {
+        localStorage.setItem(KEY + '_' + i, ta.value);
+        saved++;
+      } else {
+        localStorage.removeItem(KEY + '_' + i);
+      }
+    });
+    if(saved > 0) showSaveIndicator();
+  }
+
+  function load(){
+    var areas = document.querySelectorAll('textarea');
+    var restored = 0;
+    areas.forEach(function(ta, i){
+      var val = localStorage.getItem(KEY + '_' + i);
+      if(val && val.trim()) {
+        ta.value = val;
+        ta.style.borderColor = '#10b981';
+        ta.style.boxShadow = '0 0 0 2px rgba(16,185,129,0.15)';
+        setTimeout(function(){ ta.style.borderColor = ''; ta.style.boxShadow = ''; }, 2000);
+        restored++;
+      }
+    });
+    if(restored > 0) showRestoreIndicator(restored);
+  }
+
+  function saveToDb(){
+    if(!userId) return;
+    var areas = document.querySelectorAll('textarea');
+    var answers = [];
+    areas.forEach(function(ta, i){
+      if(ta.value.trim()) answers.push({ field_index: i, answer_text: ta.value });
+    });
+    if(answers.length === 0) return;
+    fetch('/api/answers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId, page_path: pagePath, answers: answers })
+    }).catch(function(){});
+  }
+
+  function loadFromDb(){
+    if(!userId) return;
+    fetch('/api/answers?user_id=' + encodeURIComponent(userId) + '&page_path=' + encodeURIComponent(pagePath))
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(!d.answers || !d.answers.length) return;
+        var areas = document.querySelectorAll('textarea');
+        d.answers.forEach(function(a){
+          if(areas[a.field_index] && a.answer_text) {
+            areas[a.field_index].value = a.answer_text;
+            localStorage.setItem(KEY + '_' + a.field_index, a.answer_text);
+          }
+        });
+      }).catch(function(){});
+  }
+
+  function showSaveIndicator(){
+    var el = document.getElementById('cs-save-ind');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'cs-save-ind';
+      el.style.cssText = 'position:fixed;bottom:16px;right:16px;padding:6px 14px;border-radius:8px;background:#0f172a;color:#22c55e;font-size:11px;font-weight:700;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+      document.body.appendChild(el);
+    }
+    el.textContent = '\u2713 \uB2F5\uC548 \uC800\uC7A5\uB428'; // ✓ 답안 저장됨
+    el.style.opacity = '1';
+    setTimeout(function(){ el.style.opacity = '0'; }, 1500);
+  }
+
+  function showRestoreIndicator(n){
+    var el = document.getElementById('cs-save-ind');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'cs-save-ind';
+      el.style.cssText = 'position:fixed;bottom:16px;right:16px;padding:6px 14px;border-radius:8px;background:#0f172a;color:#3b82f6;font-size:11px;font-weight:700;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+      document.body.appendChild(el);
+    }
+    el.textContent = '\u21BB ' + n + '\uAC1C \uB2F5\uC548 \uBCF5\uC6D0'; // ↻ n개 답안 복원
+    el.style.color = '#3b82f6';
+    el.style.opacity = '1';
+    setTimeout(function(){ el.style.opacity = '0'; }, 2500);
+  }
+
+  var t = null;
+  document.addEventListener('input', function(e){
+    if(e.target.tagName === 'TEXTAREA'){
+      clearTimeout(t);
+      t = setTimeout(function(){ save(); saveToDb(); }, 300);
+    }
+  });
+  document.addEventListener('change', function(e){
+    if(e.target.tagName === 'TEXTAREA'){ save(); saveToDb(); }
+  });
+  document.addEventListener('focusout', function(e){
+    if(e.target.tagName === 'TEXTAREA'){ save(); saveToDb(); }
+  });
+  window.addEventListener('beforeunload', function(){ save(); saveToDb(); });
+
+  // 즉시 로드
+  load();
+  loadFromDb();
+})();
+</script>
+</body>
+</html>

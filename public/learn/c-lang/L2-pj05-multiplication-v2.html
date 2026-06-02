@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 프로젝트: 구구단 카드</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '\2022'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 14px;
+    color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '\2192'; color: #94a3b8; font-weight: 700; }
+
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+.pj-badge { display: inline-block; background: #1e3a5f; color: #e6a817; font-size: 12px; font-weight: 800; padding: 3px 12px; border-radius: 99px; margin-bottom: 12px; }
+.output-box { background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 14px 18px; margin: 14px 0; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #1e3a5f; line-height: 2; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- 1페이지: 표지 -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">P5</div>
+        <div class="cover-label">Level 2a - Project 05</div>
+        <h1 class="cover-title">구구단 카드</h1>
+        <p class="cover-sub">원하는 단을 입력받아 구구단 카드를 출력하는 프로그램을 만듭니다. 반복문 없이 printf 9줄로 완성합니다.</p>
+
+        <!-- SVG 1: 구구단 카드 디자인 미리보기 -->
+        <div style="margin:20px 0;">
+            <svg viewBox="0 0 460 200" style="max-width:460px;width:100%">
+                <rect x="80" y="5" width="300" height="190" rx="12" fill="#f8fafc" stroke="#1e3a5f" stroke-width="2"/>
+                <rect x="80" y="5" width="300" height="40" rx="12" fill="#1e3a5f"/>
+                <rect x="80" y="32" width="300" height="13" fill="#1e3a5f"/>
+                <text x="230" y="30" text-anchor="middle" font-size="16" fill="#e6a817" font-weight="900">7단</text>
+                <text x="140" y="68" font-family="monospace" font-size="12" fill="#1e3a5f">7 x 1 = 7</text>
+                <text x="140" y="86" font-family="monospace" font-size="12" fill="#1e3a5f">7 x 2 = 14</text>
+                <text x="140" y="104" font-family="monospace" font-size="12" fill="#1e3a5f">7 x 3 = 21</text>
+                <text x="140" y="122" font-family="monospace" font-size="12" fill="#1e3a5f">7 x 4 = 28</text>
+                <text x="140" y="140" font-family="monospace" font-size="12" fill="#94a3b8">...</text>
+                <text x="140" y="158" font-family="monospace" font-size="12" fill="#1e3a5f">7 x 8 = 56</text>
+                <text x="140" y="176" font-family="monospace" font-size="12" fill="#1e3a5f">7 x 9 = 63</text>
+                <text x="340" y="100" font-size="40" fill="rgba(180,195,212,0.2)" font-weight="900">7</text>
+            </svg>
+        </div>
+
+        <!-- SVG 2: 프로그램 흐름 -->
+        <div style="margin:16px 0;">
+            <svg viewBox="0 0 460 60" style="max-width:460px;width:100%">
+                <rect x="5" y="10" width="120" height="40" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="65" y="35" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">단 입력 (scanf)</text>
+                <line x1="130" y1="30" x2="160" y2="30" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="165" y="10" width="130" height="40" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="230" y="35" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">n*1 ~ n*9 계산</text>
+                <line x1="300" y1="30" x2="330" y2="30" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="335" y="10" width="120" height="40" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="395" y="35" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">printf 9줄 출력</text>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/lightbulb.png" alt="아이디어" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>프로젝트 목표</h3>
+            <ul>
+                <li>입력받은 값을 여러 곱셈에 활용할 수 있습니다.</li>
+                <li>printf에서 %d를 여러 개 사용해 곱셈 결과를 출력합니다.</li>
+                <li>반복되는 패턴을 인식하고 코드를 작성합니다.</li>
+                <li>나중에 배울 반복문의 필요성을 느낍니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- 2페이지: 패턴 인식 + 따라하기 -->
+<div class="page">
+    <div class="pj-badge">PROJECT 05</div>
+    <h2>Step 1. 구구단의 패턴 파악하기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>구구단은 한 숫자에 1부터 9까지 차례로 곱하는 것입니다. 변수 <code>n</code>에 단을 저장하면, <code>n * 1</code>, <code>n * 2</code>, ... <code>n * 9</code>를 출력하면 됩니다.</p>
+
+    <!-- SVG 3: 구구단 패턴 시각화 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 100" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="90" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="22" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="800">n단의 패턴 (n=7일 때)</text>
+            <rect x="30" y="35" width="60" height="50" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="60" y="52" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">n x 1</text>
+            <text x="60" y="72" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="900">7</text>
+            <rect x="100" y="35" width="60" height="50" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="130" y="52" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">n x 2</text>
+            <text x="130" y="72" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="900">14</text>
+            <rect x="170" y="35" width="60" height="50" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="200" y="52" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">n x 3</text>
+            <text x="200" y="72" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="900">21</text>
+            <text x="250" y="65" text-anchor="middle" font-size="14" fill="#94a3b8">...</text>
+            <rect x="280" y="35" width="60" height="50" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1"/>
+            <text x="310" y="52" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">n x 8</text>
+            <text x="310" y="72" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="900">56</text>
+            <rect x="350" y="35" width="60" height="50" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1"/>
+            <text x="380" y="52" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">n x 9</text>
+            <text x="380" y="72" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="900">63</text>
+        </svg>
+    </div>
+
+    <!-- SVG 4: printf 패턴 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="70" rx="8" fill="#0f172a"/>
+            <text x="30" y="28" font-family="monospace" font-size="11" fill="#67e8f9">printf</text>
+            <text x="78" y="28" font-family="monospace" font-size="11" fill="#e2e8f0">(</text>
+            <text x="85" y="28" font-family="monospace" font-size="11" fill="#86efac">"%d x 1 = %d\n"</text>
+            <text x="230" y="28" font-family="monospace" font-size="11" fill="#e2e8f0">, n, n * </text>
+            <text x="295" y="28" font-family="monospace" font-size="11" fill="#7dd3fc">1</text>
+            <text x="304" y="28" font-family="monospace" font-size="11" fill="#e2e8f0">);</text>
+            <text x="30" y="50" font-family="monospace" font-size="11" fill="#67e8f9">printf</text>
+            <text x="78" y="50" font-family="monospace" font-size="11" fill="#e2e8f0">(</text>
+            <text x="85" y="50" font-family="monospace" font-size="11" fill="#86efac">"%d x 2 = %d\n"</text>
+            <text x="230" y="50" font-family="monospace" font-size="11" fill="#e2e8f0">, n, n * </text>
+            <text x="295" y="50" font-family="monospace" font-size="11" fill="#7dd3fc">2</text>
+            <text x="304" y="50" font-family="monospace" font-size="11" fill="#e2e8f0">);</text>
+            <text x="30" y="68" font-family="monospace" font-size="11" fill="#64748b">// 숫자만 1, 2, 3... 으로 바뀌는 패턴!</text>
+        </svg>
+    </div>
+
+    <p>모든 줄의 구조가 같고, 곱하는 숫자만 1씩 증가합니다. 이 패턴을 인식하는 것이 프로그래밍의 핵심입니다.</p>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/cpu.png" alt="CPU" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="완성" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">단을 입력받고 첫 3줄만 출력해보세요.</div>
+                <div class="code"><span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="kw">int</span> n;
+    <span class="fn">printf</span>(<span class="str">"몇 단? "</span>);
+    <span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;n);
+    <span class="fn">printf</span>(<span class="str">"%d x 1 = %d\n"</span>, n, n * <span class="num">1</span>);
+    <span class="fn">printf</span>(<span class="str">"%d x 2 = %d\n"</span>, n, n * <span class="num">2</span>);
+    <span class="fn">printf</span>(<span class="str">"%d x 3 = %d\n"</span>, n, n * <span class="num">3</span>);
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+                <div class="practice-result">7 입력 시: 7 x 1 = 7 / 7 x 2 = 14 / 7 x 3 = 21</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">나머지 6줄(4~9)도 같은 패턴으로 추가해보세요.</div>
+                <div class="code"><span class="fn">printf</span>(<span class="str">"%d x 4 = %d\n"</span>, n, n * <span class="num">4</span>);
+<span class="fn">printf</span>(<span class="str">"%d x 5 = %d\n"</span>, n, n * <span class="num">5</span>);
+<span class="cmt">// ... 6, 7, 8, 9도 같은 패턴</span></div>
+                <div class="practice-result">9줄의 구구단이 완성됩니다</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">제목과 구분선을 추가해서 카드처럼 꾸며보세요.</div>
+                <div class="code"><span class="fn">printf</span>(<span class="str">"==============\n"</span>);
+<span class="fn">printf</span>(<span class="str">"   %d단 카드\n"</span>, n);
+<span class="fn">printf</span>(<span class="str">"==============\n"</span>);</div>
+                <div class="practice-result">깔끔한 카드 형태로 출력됩니다</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SVG 5: 반복 패턴 강조 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 460 50" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="40" rx="8" fill="#eff6ff" stroke="#6366f1" stroke-width="1.5"/>
+            <text x="30" y="30" font-size="11" fill="#4338ca" font-weight="800">생각해보기:</text>
+            <text x="130" y="30" font-size="11" fill="#4338ca">같은 코드가 9번 반복된다. 나중에 "반복문"을 배우면 1줄로 줄일 수 있다!</text>
+        </svg>
+    </div>
+</div>
+
+<!-- 3페이지: 완성 코드 + 문제 -->
+<div class="page">
+    <div class="pj-badge">PROJECT 05</div>
+    <h2>Step 2. 완성 코드</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/monitor.png" alt="모니터" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>입력받은 단의 구구단 카드를 깔끔하게 출력하는 완성 프로그램입니다.</p>
+
+    <!-- SVG 6: 코드 구조 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 460 50" style="max-width:460px;width:100%">
+            <rect x="5" y="10" width="80" height="30" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="45" y="30" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">입력</text>
+            <line x1="90" y1="25" x2="110" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+            <rect x="115" y="10" width="80" height="30" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="155" y="30" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">제목 출력</text>
+            <line x1="200" y1="25" x2="220" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+            <rect x="225" y="10" width="120" height="30" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="285" y="30" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">printf x 9 (구구단)</text>
+            <line x1="350" y1="25" x2="370" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+            <rect x="375" y="10" width="80" height="30" rx="6" fill="#eff6ff" stroke="#6366f1" stroke-width="1.5"/>
+            <text x="415" y="30" text-anchor="middle" font-size="9" fill="#4338ca" font-weight="700">마무리</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="cmt">/* 구구단 카드 */</span>
+    <span class="kw">int</span> n;
+
+    <span class="fn">printf</span>(<span class="str">"몇 단을 출력할까요? "</span>);
+    <span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;n);
+
+    <span class="fn">printf</span>(<span class="str">"==================\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"    %d단 카드\n"</span>, n);
+    <span class="fn">printf</span>(<span class="str">"==================\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"%d x 1 = %d\n"</span>, n, n * <span class="num">1</span>);
+    <span class="fn">printf</span>(<span class="str">"%d x 2 = %d\n"</span>, n, n * <span class="num">2</span>);
+    <span class="fn">printf</span>(<span class="str">"%d x 3 = %d\n"</span>, n, n * <span class="num">3</span>);
+    <span class="fn">printf</span>(<span class="str">"%d x 4 = %d\n"</span>, n, n * <span class="num">4</span>);
+    <span class="fn">printf</span>(<span class="str">"%d x 5 = %d\n"</span>, n, n * <span class="num">5</span>);
+    <span class="fn">printf</span>(<span class="str">"%d x 6 = %d\n"</span>, n, n * <span class="num">6</span>);
+    <span class="fn">printf</span>(<span class="str">"%d x 7 = %d\n"</span>, n, n * <span class="num">7</span>);
+    <span class="fn">printf</span>(<span class="str">"%d x 8 = %d\n"</span>, n, n * <span class="num">8</span>);
+    <span class="fn">printf</span>(<span class="str">"%d x 9 = %d\n"</span>, n, n * <span class="num">9</span>);
+    <span class="fn">printf</span>(<span class="str">"==================\n"</span>);
+
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+
+    <div class="output-box">
+몇 단을 출력할까요? 7<br>
+==================<br>
+&nbsp;&nbsp;&nbsp;&nbsp;7단 카드<br>
+==================<br>
+7 x 1 = 7<br>
+7 x 2 = 14<br>
+7 x 3 = 21<br>
+7 x 4 = 28<br>
+7 x 5 = 35<br>
+7 x 6 = 42<br>
+7 x 7 = 49<br>
+7 x 8 = 56<br>
+7 x 9 = 63<br>
+==================
+    </div>
+
+    <!-- SVG 7: printf 안에서 계산이 일어나는 과정 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 60" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="200" height="50" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="110" y="25" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">printf 안에서 계산 가능</text>
+            <text x="110" y="42" text-anchor="middle" font-family="monospace" font-size="10" fill="#1e3a5f">n * 3 -> 즉시 계산됨</text>
+            <rect x="250" y="5" width="200" height="50" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="350" y="25" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">변수 저장 없이 바로 출력</text>
+            <text x="350" y="42" text-anchor="middle" font-family="monospace" font-size="10" fill="#1e3a5f">n=7: 7*3=21 출력</text>
+        </svg>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q1</div>
+            <div class="problem-label">출력 예측하기</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">n에 5를 입력했을 때, <code>printf("%d x 7 = %d\n", n, n * 7);</code>의 출력은?</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">____</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">첫 %d에 n(5), 둘째 %d에 n*7(35)이 들어갑니다.</div>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">5 x 7 = 35</div>
+            </div>
+        </details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q2</div>
+            <div class="problem-label">빈칸 채우기</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text"><code>printf("%d x 6 = %d\n", n, ____);</code>에서 빈칸에 들어갈 것은?</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">빈칸</span><span class="problem-example-value">____</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">n 곱하기 6의 결과가 나와야 합니다.</div>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">n * 6</div>
+            </div>
+        </details>
+    </div>
+</div>
+
+<!-- 4페이지: 응용 + 요약 -->
+<div class="page">
+    <div class="pj-badge">PROJECT 05</div>
+    <h2>Step 3. 응용하기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/keyboard.png" alt="키보드" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>구구단 카드를 역순으로 출력하거나, 두 단을 나란히 출력하는 응용을 해봅니다.</p>
+
+    <!-- SVG 8: 응용 아이디어 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+            <rect x="10" y="10" width="140" height="60" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="80" y="32" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="800">역순 구구단</text>
+            <text x="80" y="52" text-anchor="middle" font-size="10" fill="#64748b">9부터 1까지</text>
+            <rect x="165" y="10" width="140" height="60" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="235" y="32" text-anchor="middle" font-size="11" fill="#92400e" font-weight="800">두 단 나란히</text>
+            <text x="235" y="52" text-anchor="middle" font-size="10" fill="#64748b">3단 | 7단</text>
+            <rect x="320" y="10" width="130" height="60" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="385" y="32" text-anchor="middle" font-size="11" fill="#166534" font-weight="800">합계 계산</text>
+            <text x="385" y="52" text-anchor="middle" font-size="10" fill="#64748b">n*1+n*2+...+n*9</text>
+        </svg>
+    </div>
+
+    <div class="practice">
+        <div class="practice-head">응용 따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">4</div>
+                <div class="practice-desc">역순으로 출력해보세요 (9부터 1까지).</div>
+                <div class="code"><span class="fn">printf</span>(<span class="str">"%d x 9 = %d\n"</span>, n, n * <span class="num">9</span>);
+<span class="fn">printf</span>(<span class="str">"%d x 8 = %d\n"</span>, n, n * <span class="num">8</span>);
+<span class="fn">printf</span>(<span class="str">"%d x 7 = %d\n"</span>, n, n * <span class="num">7</span>);
+<span class="cmt">// ... 6, 5, 4, 3, 2, 1 순서로</span></div>
+                <div class="practice-result">9 x 9 = 81부터 역순으로 출력</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SVG 9: 두 단 나란히 출력 예시 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 120" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="110" rx="10" fill="#0f172a"/>
+            <text x="230" y="25" text-anchor="middle" font-size="12" fill="#e6a817" font-weight="800">두 단 나란히 출력</text>
+            <text x="80" y="45" font-family="monospace" font-size="11" fill="#86efac">3 x 1 = 3</text>
+            <text x="250" y="45" font-family="monospace" font-size="11" fill="#67e8f9">7 x 1 = 7</text>
+            <text x="80" y="63" font-family="monospace" font-size="11" fill="#86efac">3 x 2 = 6</text>
+            <text x="250" y="63" font-family="monospace" font-size="11" fill="#67e8f9">7 x 2 = 14</text>
+            <text x="80" y="81" font-family="monospace" font-size="11" fill="#86efac">3 x 3 = 9</text>
+            <text x="250" y="81" font-family="monospace" font-size="11" fill="#67e8f9">7 x 3 = 21</text>
+            <text x="165" y="100" font-family="monospace" font-size="11" fill="#64748b">...</text>
+            <line x1="220" y1="35" x2="220" y2="105" stroke="#334155" stroke-width="1" stroke-dasharray="3"/>
+        </svg>
+    </div>
+
+    <p>두 단을 나란히 출력하려면 <code>\t</code> 탭을 활용합니다: <code>printf("%d x 1 = %d\t\t%d x 1 = %d\n", a, a*1, b, b*1);</code></p>
+
+    <!-- SVG 10: %d 3개 사용하는 printf -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 50" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="40" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="30" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="700">printf 하나에 %d를 4개까지 쓸 수 있다 (쉼표로 구분)</text>
+        </svg>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q3</div>
+            <div class="problem-label">도전: 구구단 합계 계산</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">입력받은 단의 구구단 합계(n*1 + n*2 + ... + n*9)를 계산해서 마지막에 출력하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">입력</span><span class="problem-example-value">5</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">5단 합계: 225</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">n*(1+2+3+4+5+6+7+8+9) = n*45. 또는 sum = n*1 + n*2 + ... + n*9으로 직접 더하기.</div>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">int sum = n*1 + n*2 + n*3 + n*4 + n*5 + n*6 + n*7 + n*8 + n*9;
+printf("%d단 합계: %d\n", n, sum);
+// 또는 간단히: int sum = n * 45;</div>
+            </div>
+        </details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q4</div>
+            <div class="problem-label">도전: 두 단 나란히 출력</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">두 수 a, b를 입력받아 첫 번째 줄 <code>a x 1 = ?    b x 1 = ?</code>를 출력하는 printf 한 줄을 작성하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">입력</span><span class="problem-example-value">a=3, b=7</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">3 x 1 = 3    7 x 1 = 7</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">\t로 두 구구단 사이를 띄우고, %d를 4개 사용합니다.</div>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">printf("%d x 1 = %d\t\t%d x 1 = %d\n", a, a*1, b, b*1);</div>
+            </div>
+        </details>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>핵심 요약</h3>
+        <ul>
+            <li><code>printf("%d x 1 = %d\n", n, n * 1);</code> -- 변수와 계산 결과를 동시에 출력</li>
+            <li>printf 안에서 <code>n * 3</code>처럼 직접 계산할 수 있다</li>
+            <li>같은 패턴이 반복되면 나중에 반복문(for)으로 줄일 수 있다</li>
+            <li>%d를 여러 개 쓸 때 쉼표 뒤 변수 순서를 맞춰야 한다</li>
+            <li>구구단 합계 = n * 45 (1+2+...+9 = 45)</li>
+        </ul>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+
+
+
+<script>
+(function(){
+  var KEY = 'cs_ans_' + location.pathname.replace(/[^a-zA-Z0-9]/g,'_');
+  var pagePath = location.pathname;
+  var userId = null;
+  try {
+    userId = window.parent?.localStorage?.getItem('codingssok_user_id')
+      || localStorage.getItem('codingssok_user_id');
+  } catch(e) {}
+
+  function save(){
+    var areas = document.querySelectorAll('textarea');
+    var saved = 0;
+    areas.forEach(function(ta, i){
+      if(ta.value.trim()) {
+        localStorage.setItem(KEY + '_' + i, ta.value);
+        saved++;
+      } else {
+        localStorage.removeItem(KEY + '_' + i);
+      }
+    });
+    if(saved > 0) showSaveIndicator();
+  }
+
+  function load(){
+    var areas = document.querySelectorAll('textarea');
+    var restored = 0;
+    areas.forEach(function(ta, i){
+      var val = localStorage.getItem(KEY + '_' + i);
+      if(val && val.trim()) {
+        ta.value = val;
+        ta.style.borderColor = '#10b981';
+        ta.style.boxShadow = '0 0 0 2px rgba(16,185,129,0.15)';
+        setTimeout(function(){ ta.style.borderColor = ''; ta.style.boxShadow = ''; }, 2000);
+        restored++;
+      }
+    });
+    if(restored > 0) showRestoreIndicator(restored);
+  }
+
+  function saveToDb(){
+    if(!userId) return;
+    var areas = document.querySelectorAll('textarea');
+    var answers = [];
+    areas.forEach(function(ta, i){
+      if(ta.value.trim()) answers.push({ field_index: i, answer_text: ta.value });
+    });
+    if(answers.length === 0) return;
+    fetch('/api/answers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId, page_path: pagePath, answers: answers })
+    }).catch(function(){});
+  }
+
+  function loadFromDb(){
+    if(!userId) return;
+    fetch('/api/answers?user_id=' + encodeURIComponent(userId) + '&page_path=' + encodeURIComponent(pagePath))
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(!d.answers || !d.answers.length) return;
+        var areas = document.querySelectorAll('textarea');
+        d.answers.forEach(function(a){
+          if(areas[a.field_index] && a.answer_text) {
+            areas[a.field_index].value = a.answer_text;
+            localStorage.setItem(KEY + '_' + a.field_index, a.answer_text);
+          }
+        });
+      }).catch(function(){});
+  }
+
+  function showSaveIndicator(){
+    var el = document.getElementById('cs-save-ind');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'cs-save-ind';
+      el.style.cssText = 'position:fixed;bottom:16px;right:16px;padding:6px 14px;border-radius:8px;background:#0f172a;color:#22c55e;font-size:11px;font-weight:700;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+      document.body.appendChild(el);
+    }
+    el.textContent = '\u2713 \uB2F5\uC548 \uC800\uC7A5\uB428'; // ✓ 답안 저장됨
+    el.style.opacity = '1';
+    setTimeout(function(){ el.style.opacity = '0'; }, 1500);
+  }
+
+  function showRestoreIndicator(n){
+    var el = document.getElementById('cs-save-ind');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'cs-save-ind';
+      el.style.cssText = 'position:fixed;bottom:16px;right:16px;padding:6px 14px;border-radius:8px;background:#0f172a;color:#3b82f6;font-size:11px;font-weight:700;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+      document.body.appendChild(el);
+    }
+    el.textContent = '\u21BB ' + n + '\uAC1C \uB2F5\uC548 \uBCF5\uC6D0'; // ↻ n개 답안 복원
+    el.style.color = '#3b82f6';
+    el.style.opacity = '1';
+    setTimeout(function(){ el.style.opacity = '0'; }, 2500);
+  }
+
+  var t = null;
+  document.addEventListener('input', function(e){
+    if(e.target.tagName === 'TEXTAREA'){
+      clearTimeout(t);
+      t = setTimeout(function(){ save(); saveToDb(); }, 300);
+    }
+  });
+  document.addEventListener('change', function(e){
+    if(e.target.tagName === 'TEXTAREA'){ save(); saveToDb(); }
+  });
+  document.addEventListener('focusout', function(e){
+    if(e.target.tagName === 'TEXTAREA'){ save(); saveToDb(); }
+  });
+  window.addEventListener('beforeunload', function(){ save(); saveToDb(); });
+
+  // 즉시 로드
+  load();
+  loadFromDb();
+})();
+</script>
+</body>
+</html>

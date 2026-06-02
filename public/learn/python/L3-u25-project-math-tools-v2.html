@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 프로젝트: 수학 도구함</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+/* ── 페이지 ── */
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+/* ── 챕터 표지 ── */
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+
+/* ── 본문 ── */
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 16px; font-weight: 700; color: #1e3a5f; margin: 18px 0 10px; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+ul, ol { margin: 0 0 12px 20px; }
+li { font-size: 14px; color: #374151; line-height: 1.8; }
+
+/* ── 코드 블록 ── */
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13.5px;
+    color: #e2e8f0; line-height: 1.85; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.code .dec { color: #f9a8d4; }
+
+/* ── 따라해보세요 ── */
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+
+/* ── 문제 ── */
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+
+/* ── 요약 ── */
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+/* ── 단계 박스 ── */
+.step-box { border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 14px 18px; margin: 14px 0; background: #fff; }
+.step-label { font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+.step-title { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 8px; }
+
+/* ── 출력 박스 ── */
+.output-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #334155; line-height: 1.7; margin: 10px 0; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- ═══ 1페이지: 표지 ═══ -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">25</div>
+        <div class="cover-label">L3 — Unit 25 Project</div>
+        <h1 class="cover-title">프로젝트:<br>수학 도구함</h1>
+        <p class="cover-sub">L3a에서 배운 함수 심화 기법을 총동원해 실용적인 수학 라이브러리를 만듭니다.</p>
+
+        <!-- SVG: 프로젝트 전체 구조도 -->
+        <div style="margin:24px 0;">
+            <svg viewBox="0 0 480 120" style="max-width:480px;width:100%">
+                <defs>
+                    <marker id="arw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                    </marker>
+                </defs>
+                <!-- 중앙 math_tools.py -->
+                <rect x="165" y="40" width="150" height="40" rx="8" fill="#1e3a5f" stroke="#1e3a5f"/>
+                <text x="240" y="57" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">math_tools.py</text>
+                <text x="240" y="72" text-anchor="middle" font-size="9" fill="#93c5fd">완성 목표</text>
+                <!-- 왼쪽 위 -->
+                <rect x="5" y="5" width="110" height="32" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="60" y="18" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">gcd / lcm</text>
+                <text x="60" y="30" text-anchor="middle" font-size="8" fill="#64748b">기본값 매개변수</text>
+                <line x1="115" y1="21" x2="162" y2="52" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arw)"/>
+                <!-- 오른쪽 위 -->
+                <rect x="365" y="5" width="110" height="32" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="420" y="18" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">소수 판별</text>
+                <text x="420" y="30" text-anchor="middle" font-size="8" fill="#64748b">filter + lambda</text>
+                <line x1="365" y1="21" x2="320" y2="52" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arw)"/>
+                <!-- 왼쪽 아래 -->
+                <rect x="5" y="83" width="110" height="32" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="60" y="96" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">통계 함수</text>
+                <text x="60" y="108" text-anchor="middle" font-size="8" fill="#64748b">다중 반환</text>
+                <line x1="115" y1="99" x2="162" y2="72" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arw)"/>
+                <!-- 오른쪽 아래 -->
+                <rect x="365" y="83" width="110" height="32" rx="6" fill="#eff6ff" stroke="#6366f1" stroke-width="1.5"/>
+                <text x="420" y="96" text-anchor="middle" font-size="9" fill="#4338ca" font-weight="700">정렬 도구</text>
+                <text x="420" y="108" text-anchor="middle" font-size="8" fill="#64748b">sorted + key=lambda</text>
+                <line x1="365" y1="99" x2="320" y2="72" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arw)"/>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/puzzle.png" alt="모듈" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 유닛에서 만드는 것</h3>
+            <ul>
+                <li>최대공약수, 최소공배수 함수를 기본값 매개변수로 작성할 수 있습니다.</li>
+                <li>filter()와 lambda를 활용해 소수 목록을 뽑을 수 있습니다.</li>
+                <li>평균, 중앙값, 최대/최소를 한 번에 반환하는 함수를 만들 수 있습니다.</li>
+                <li>sorted()와 key=lambda로 절대값 기준 정렬을 구현할 수 있습니다.</li>
+                <li>네 기능을 하나의 math_tools.py로 통합할 수 있습니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ 2페이지: 프로젝트 준비 + Step 1 ═══ -->
+<div class="page">
+    <h2>프로젝트 준비 — L3a 복습</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/folder.png" alt="패키지" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>이 프로젝트는 L3a에서 배운 네 가지 기법을 사용합니다. 각각 어떤 역할을 하는지 짧게 정리합니다.</p>
+
+    <!-- SVG: L3a 기법 4가지 정리 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 480 90" style="max-width:480px;width:100%">
+            <rect x="5" y="10" width="108" height="60" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="59" y="30" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">기본값 매개변수</text>
+            <text x="59" y="46" text-anchor="middle" font-size="9" fill="#64748b">def f(x, n=2)</text>
+            <text x="59" y="60" text-anchor="middle" font-size="8" fill="#94a3b8">호출 시 생략 가능</text>
+
+            <rect x="125" y="10" width="108" height="60" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="179" y="30" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">여러 값 반환</text>
+            <text x="179" y="46" text-anchor="middle" font-size="9" fill="#64748b">return a, b, c</text>
+            <text x="179" y="60" text-anchor="middle" font-size="8" fill="#94a3b8">튜플로 묶여 반환</text>
+
+            <rect x="245" y="10" width="108" height="60" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="299" y="30" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">람다 함수</text>
+            <text x="299" y="46" text-anchor="middle" font-size="9" fill="#64748b">lambda x: x*2</text>
+            <text x="299" y="60" text-anchor="middle" font-size="8" fill="#94a3b8">한 줄 익명 함수</text>
+
+            <rect x="365" y="10" width="108" height="60" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="419" y="30" text-anchor="middle" font-size="10" fill="#4338ca" font-weight="700">map / filter</text>
+            <text x="419" y="46" text-anchor="middle" font-size="9" fill="#64748b">filter(fn, lst)</text>
+            <text x="419" y="60" text-anchor="middle" font-size="8" fill="#94a3b8">리스트 변환/선별</text>
+        </svg>
+    </div>
+
+    <h3>Step 1 — 최대공약수 / 최소공배수</h3>
+    <p>최대공약수(GCD)는 유클리드 호제법으로 구합니다. <code>b</code>가 0이 되면 <code>a</code>가 답입니다. 기본값 매개변수를 활용해 <code>verbose</code> 옵션을 만듭니다.</p>
+
+    <!-- SVG: 유클리드 호제법 시각화 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 70" style="max-width:460px;width:100%">
+            <defs>
+                <marker id="arw2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <text x="10" y="20" font-size="10" fill="#64748b" font-weight="600">gcd(48, 18)</text>
+            <!-- 단계들 -->
+            <rect x="5" y="28" width="68" height="30" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.2"/>
+            <text x="39" y="40" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">48 % 18 = 12</text>
+            <text x="39" y="53" text-anchor="middle" font-size="8" fill="#64748b">a=18, b=12</text>
+            <line x1="76" y1="43" x2="88" y2="43" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arw2)"/>
+            <rect x="91" y="28" width="68" height="30" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.2"/>
+            <text x="125" y="40" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">18 % 12 = 6</text>
+            <text x="125" y="53" text-anchor="middle" font-size="8" fill="#64748b">a=12, b=6</text>
+            <line x1="162" y1="43" x2="174" y2="43" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arw2)"/>
+            <rect x="177" y="28" width="68" height="30" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.2"/>
+            <text x="211" y="40" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">12 % 6 = 0</text>
+            <text x="211" y="53" text-anchor="middle" font-size="8" fill="#64748b">a=6, b=0</text>
+            <line x1="248" y1="43" x2="260" y2="43" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arw2)"/>
+            <rect x="263" y="28" width="80" height="30" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="303" y="40" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">b == 0 이면 종료</text>
+            <text x="303" y="53" text-anchor="middle" font-size="8" fill="#166534">GCD = 6</text>
+            <text x="360" y="43" font-size="9" fill="#1d4ed8" font-weight="600">  48 / 18 = 6</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># Step 1: 최대공약수 / 최소공배수</span>
+
+<span class="kw">def</span> <span class="fn">gcd</span>(a, b, verbose=<span class="dec">False</span>):
+    <span class="str">"""최대공약수 — 유클리드 호제법"""</span>
+    <span class="kw">while</span> b:
+        a, b = b, a % b
+        <span class="kw">if</span> verbose:
+            <span class="fn">print</span>(<span class="str">f"  a={a}, b={b}"</span>)
+    <span class="kw">return</span> a
+
+<span class="kw">def</span> <span class="fn">lcm</span>(a, b):
+    <span class="str">"""최소공배수 = a * b / gcd(a, b)"""</span>
+    <span class="kw">return</span> a * b // <span class="fn">gcd</span>(a, b)
+
+<span class="cmt"># 테스트</span>
+<span class="fn">print</span>(<span class="fn">gcd</span>(<span class="num">48</span>, <span class="num">18</span>))               <span class="cmt"># 6</span>
+<span class="fn">print</span>(<span class="fn">gcd</span>(<span class="num">48</span>, <span class="num">18</span>, verbose=<span class="dec">True</span>))  <span class="cmt"># 단계 출력</span>
+<span class="fn">print</span>(<span class="fn">lcm</span>(<span class="num">4</span>, <span class="num">6</span>))                  <span class="cmt"># 12</span></div>
+
+    <div class="output-box">6
+  a=18, b=12
+  a=12, b=6
+  a=6, b=0
+6
+12</div>
+
+    <p>기본값 매개변수 <code>verbose=False</code> 덕분에 평소에는 <code>gcd(48, 18)</code>처럼 간단히 호출하고, 디버깅 시에만 <code>verbose=True</code>를 붙입니다.</p>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/lightbulb.png" alt="아이디어" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+        <div class="practice-head">따라해보세요 — Step 1</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc"><code>gcd()</code>와 <code>lcm()</code>을 입력하고 아래 값을 확인하세요.</div>
+                <div class="code"><span class="fn">print</span>(<span class="fn">gcd</span>(<span class="num">24</span>, <span class="num">36</span>))   <span class="cmt"># 12</span>
+<span class="fn">print</span>(<span class="fn">lcm</span>(<span class="num">3</span>, <span class="num">7</span>))    <span class="cmt"># 21</span>
+<span class="fn">print</span>(<span class="fn">lcm</span>(<span class="num">12</span>, <span class="num">18</span>))  <span class="cmt"># 36</span></div>
+                <div class="practice-result">12, 21, 36 이 출력되면 성공</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc"><code>verbose=True</code>로 gcd(30, 12) 단계를 확인하세요.</div>
+                <div class="code"><span class="fn">print</span>(<span class="fn">gcd</span>(<span class="num">30</span>, <span class="num">12</span>, verbose=<span class="dec">True</span>))</div>
+                <div class="practice-result">단계가 출력되고 마지막에 6이 나오면 성공</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc"><code>input()</code>으로 두 수를 받아 GCD와 LCM을 출력하세요.</div>
+                <div class="code">a = <span class="fn">int</span>(<span class="fn">input</span>(<span class="str">"첫 번째 수: "</span>))
+b = <span class="fn">int</span>(<span class="fn">input</span>(<span class="str">"두 번째 수: "</span>))
+<span class="fn">print</span>(<span class="str">f"GCD={</span><span class="fn">gcd</span>(a,b)<span class="str">}, LCM={</span><span class="fn">lcm</span>(a,b)<span class="str">}"</span>)</div>
+                <div class="practice-result">12와 8을 입력하면 GCD=4, LCM=24</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ 3페이지: Step 2 소수 판별 ═══ -->
+<div class="page">
+    <h2>Step 2 — 소수 판별 (filter 활용)</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>소수(prime number)는 1과 자기 자신만을 약수로 갖는 수입니다. <code>filter()</code>와 <code>lambda</code>를 함께 써서 범위 안에서 소수만 골라냅니다.</p>
+
+    <!-- SVG: 소수 판별 흐름도 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 480 100" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="arw3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <!-- range(2, 20) -->
+            <rect x="5" y="30" width="90" height="40" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="50" y="48" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">range(2, 20)</text>
+            <text x="50" y="62" text-anchor="middle" font-size="9" fill="#64748b">2,3,4,...,19</text>
+            <line x1="98" y1="50" x2="115" y2="50" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arw3)"/>
+            <!-- is_prime 판별 -->
+            <rect x="118" y="20" width="140" height="60" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="188" y="40" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">is_prime(n) 판별</text>
+            <text x="188" y="55" text-anchor="middle" font-size="9" fill="#64748b">2 ~ sqrt(n) 범위</text>
+            <text x="188" y="70" text-anchor="middle" font-size="8" fill="#64748b">나누어지면 False</text>
+            <line x1="261" y1="50" x2="278" y2="50" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arw3)"/>
+            <!-- filter -->
+            <rect x="281" y="20" width="90" height="60" rx="8" fill="#eff6ff" stroke="#6366f1" stroke-width="1.5"/>
+            <text x="326" y="40" text-anchor="middle" font-size="10" fill="#4338ca" font-weight="700">filter()</text>
+            <text x="326" y="55" text-anchor="middle" font-size="9" fill="#64748b">True만 통과</text>
+            <text x="326" y="68" text-anchor="middle" font-size="8" fill="#64748b">False 제거</text>
+            <line x1="374" y1="50" x2="391" y2="50" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arw3)"/>
+            <!-- 결과 -->
+            <rect x="394" y="30" width="80" height="40" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="434" y="47" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">소수 목록</text>
+            <text x="434" y="61" text-anchor="middle" font-size="8" fill="#166534">2,3,5,7,11...</text>
+        </svg>
+    </div>
+
+    <p>소수 판별 함수는 <code>n</code>의 제곱근까지만 나눠보면 됩니다. <code>2</code>부터 <code>int(n**0.5)+1</code>까지 하나라도 나누어지면 소수가 아닙니다.</p>
+
+    <div class="code"><span class="cmt"># Step 2: 소수 판별</span>
+
+<span class="kw">def</span> <span class="fn">is_prime</span>(n):
+    <span class="str">"""n이 소수이면 True, 아니면 False"""</span>
+    <span class="kw">if</span> n &lt; <span class="num">2</span>:
+        <span class="kw">return</span> <span class="dec">False</span>
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">2</span>, <span class="fn">int</span>(n ** <span class="num">0.5</span>) + <span class="num">1</span>):
+        <span class="kw">if</span> n % i == <span class="num">0</span>:
+            <span class="kw">return</span> <span class="dec">False</span>
+    <span class="kw">return</span> <span class="dec">True</span>
+
+<span class="kw">def</span> <span class="fn">primes_in_range</span>(start, end):
+    <span class="str">"""start ~ end 범위의 소수 목록 반환"""</span>
+    <span class="kw">return</span> <span class="fn">list</span>(<span class="fn">filter</span>(<span class="fn">is_prime</span>, <span class="fn">range</span>(start, end + <span class="num">1</span>)))
+
+<span class="cmt"># 람다 버전 (한 줄)</span>
+<span class="fn">primes_lambda</span> = <span class="kw">lambda</span> s, e: <span class="fn">list</span>(<span class="fn">filter</span>(<span class="fn">is_prime</span>, <span class="fn">range</span>(s, e + <span class="num">1</span>)))
+
+<span class="cmt"># 테스트</span>
+<span class="fn">print</span>(<span class="fn">is_prime</span>(<span class="num">17</span>))               <span class="cmt"># True</span>
+<span class="fn">print</span>(<span class="fn">is_prime</span>(<span class="num">18</span>))               <span class="cmt"># False</span>
+<span class="fn">print</span>(<span class="fn">primes_in_range</span>(<span class="num">1</span>, <span class="num">30</span>))    <span class="cmt"># [2,3,5,7,11,13,17,19,23,29]</span></div>
+
+    <div class="output-box">True
+False
+[2, 3, 5, 7, 11, 13, 17, 19, 23, 29]</div>
+
+    <!-- SVG: filter 동작 원리 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 60" style="max-width:460px;width:100%">
+            <text x="5" y="15" font-size="9" fill="#64748b" font-weight="600">filter(is_prime, [2,3,4,5,6,7]) 동작:</text>
+            <!-- 각 수 -->
+            <rect x="5" y="22" width="30" height="28" rx="4" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.2"/>
+            <text x="20" y="40" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">2</text>
+            <rect x="43" y="22" width="30" height="28" rx="4" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.2"/>
+            <text x="58" y="40" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">3</text>
+            <rect x="81" y="22" width="30" height="28" rx="4" fill="#fee2e2" stroke="#ef4444" stroke-width="1.2"/>
+            <text x="96" y="40" text-anchor="middle" font-size="11" fill="#991b1b" font-weight="700">4</text>
+            <rect x="119" y="22" width="30" height="28" rx="4" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.2"/>
+            <text x="134" y="40" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">5</text>
+            <rect x="157" y="22" width="30" height="28" rx="4" fill="#fee2e2" stroke="#ef4444" stroke-width="1.2"/>
+            <text x="172" y="40" text-anchor="middle" font-size="11" fill="#991b1b" font-weight="700">6</text>
+            <rect x="195" y="22" width="30" height="28" rx="4" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.2"/>
+            <text x="210" y="40" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">7</text>
+            <!-- 화살표 -->
+            <text x="238" y="40" font-size="14" fill="#94a3b8">-&gt;</text>
+            <!-- 결과 -->
+            <rect x="258" y="22" width="30" height="28" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.2"/>
+            <text x="273" y="40" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">2</text>
+            <rect x="296" y="22" width="30" height="28" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.2"/>
+            <text x="311" y="40" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">3</text>
+            <rect x="334" y="22" width="30" height="28" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.2"/>
+            <text x="349" y="40" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">5</text>
+            <rect x="372" y="22" width="30" height="28" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.2"/>
+            <text x="387" y="40" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">7</text>
+            <text x="260" y="14" font-size="8" fill="#3b82f6">True만 통과</text>
+        </svg>
+    </div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요 — Step 2</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc"><code>is_prime()</code>을 작성하고 여러 수를 테스트하세요.</div>
+                <div class="code"><span class="kw">for</span> n <span class="kw">in</span> [<span class="num">1</span>, <span class="num">2</span>, <span class="num">4</span>, <span class="num">7</span>, <span class="num">9</span>, <span class="num">13</span>]:
+    <span class="fn">print</span>(n, <span class="fn">is_prime</span>(n))</div>
+                <div class="practice-result">False, True, False, True, False, True</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">1부터 50까지 소수를 <code>primes_in_range</code>로 출력하세요.</div>
+                <div class="code"><span class="fn">print</span>(<span class="fn">primes_in_range</span>(<span class="num">1</span>, <span class="num">50</span>))</div>
+                <div class="practice-result">[2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47]</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">람다 버전 <code>primes_lambda</code>를 사용해 100 ~ 120 사이 소수를 구하세요.</div>
+                <div class="code"><span class="fn">print</span>(<span class="fn">primes_lambda</span>(<span class="num">100</span>, <span class="num">120</span>))</div>
+                <div class="practice-result">[101, 103, 107, 109, 113]</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ 4페이지: Step 3 통계 함수 ═══ -->
+<div class="page">
+    <h2>Step 3 — 통계 함수 (여러 값 반환)</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="도구" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>평균, 중앙값, 최댓값, 최솟값을 <strong>한 번에</strong> 반환하는 함수를 만듭니다. <code>return</code>에 값을 여러 개 나열하면 튜플로 묶여서 돌아옵니다.</p>
+
+    <!-- SVG: 다중 반환 개념도 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 90" style="max-width:460px;width:100%">
+            <defs>
+                <marker id="arw4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <!-- 입력 -->
+            <rect x="5" y="25" width="110" height="40" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="60" y="42" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">data = [3,7,1,9,5]</text>
+            <text x="60" y="58" text-anchor="middle" font-size="9" fill="#64748b">입력 리스트</text>
+            <line x1="118" y1="45" x2="140" y2="45" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arw4)"/>
+            <!-- 함수 -->
+            <rect x="143" y="15" width="110" height="60" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="198" y="32" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">stats(data)</text>
+            <text x="198" y="47" text-anchor="middle" font-size="8" fill="#64748b">avg, median,</text>
+            <text x="198" y="60" text-anchor="middle" font-size="8" fill="#64748b">max, min 계산</text>
+            <line x1="256" y1="45" x2="278" y2="45" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arw4)"/>
+            <!-- 반환값 -->
+            <rect x="281" y="5" width="90" height="25" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.2"/>
+            <text x="326" y="22" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">avg = 5.0</text>
+            <rect x="281" y="35" width="90" height="25" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.2"/>
+            <text x="326" y="52" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">median = 5</text>
+            <rect x="281" y="65" width="90" height="25" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.2"/>
+            <text x="326" y="82" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">max=9 / min=1</text>
+            <!-- 괄호 표시 -->
+            <text x="380" y="48" font-size="28" fill="#94a3b8">}</text>
+            <text x="395" y="48" font-size="9" fill="#64748b">튜플로<br/>반환</text>
+        </svg>
+    </div>
+
+    <p>중앙값(median)은 데이터를 정렬한 뒤 가운데 값을 선택합니다. 개수가 짝수이면 가운데 두 값의 평균을 사용합니다.</p>
+
+    <div class="code"><span class="cmt"># Step 3: 통계 함수 (다중 반환)</span>
+
+<span class="kw">def</span> <span class="fn">stats</span>(data):
+    <span class="str">"""평균, 중앙값, 최대, 최소를 한 번에 반환"""</span>
+    n = <span class="fn">len</span>(data)
+    avg = <span class="fn">sum</span>(data) / n
+
+    <span class="cmt"># 중앙값: 정렬 후 가운데 선택</span>
+    sorted_data = <span class="fn">sorted</span>(data)
+    mid = n // <span class="num">2</span>
+    <span class="kw">if</span> n % <span class="num">2</span> == <span class="num">0</span>:
+        median = (sorted_data[mid - <span class="num">1</span>] + sorted_data[mid]) / <span class="num">2</span>
+    <span class="kw">else</span>:
+        median = sorted_data[mid]
+
+    <span class="kw">return</span> avg, median, <span class="fn">max</span>(data), <span class="fn">min</span>(data)
+
+<span class="cmt"># 튜플 언패킹으로 한 번에 받기</span>
+data = [<span class="num">4</span>, <span class="num">7</span>, <span class="num">2</span>, <span class="num">9</span>, <span class="num">1</span>, <span class="num">5</span>, <span class="num">8</span>]
+avg, median, maximum, minimum = <span class="fn">stats</span>(data)
+<span class="fn">print</span>(<span class="str">f"평균={avg:.1f}, 중앙값={median}, 최대={maximum}, 최소={minimum}"</span>)</div>
+
+    <div class="output-box">평균=5.1, 중앙값=5, 최대=9, 최소=1</div>
+
+    <!-- SVG: 중앙값 계산 시각화 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 65" style="max-width:460px;width:100%">
+            <text x="10" y="14" font-size="9" fill="#64748b" font-weight="600">sorted([4,7,2,9,1,5,8]) = [1,2,4,5,7,8,9]  — 7개 (홀수)</text>
+            <rect x="5" y="22" width="40" height="30" rx="4" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.2"/>
+            <text x="25" y="42" text-anchor="middle" font-size="13" fill="#64748b" font-weight="600">1</text>
+            <rect x="53" y="22" width="40" height="30" rx="4" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.2"/>
+            <text x="73" y="42" text-anchor="middle" font-size="13" fill="#64748b" font-weight="600">2</text>
+            <rect x="101" y="22" width="40" height="30" rx="4" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.2"/>
+            <text x="121" y="42" text-anchor="middle" font-size="13" fill="#64748b" font-weight="600">4</text>
+            <!-- 중앙값 강조 -->
+            <rect x="149" y="18" width="44" height="38" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+            <text x="171" y="42" text-anchor="middle" font-size="15" fill="#1d4ed8" font-weight="900">5</text>
+            <text x="171" y="60" text-anchor="middle" font-size="8" fill="#3b82f6" font-weight="700">중앙값</text>
+            <rect x="201" y="22" width="40" height="30" rx="4" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.2"/>
+            <text x="221" y="42" text-anchor="middle" font-size="13" fill="#64748b" font-weight="600">7</text>
+            <rect x="249" y="22" width="40" height="30" rx="4" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.2"/>
+            <text x="269" y="42" text-anchor="middle" font-size="13" fill="#64748b" font-weight="600">8</text>
+            <rect x="297" y="22" width="40" height="30" rx="4" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.2"/>
+            <text x="317" y="42" text-anchor="middle" font-size="13" fill="#64748b" font-weight="600">9</text>
+            <!-- 인덱스 -->
+            <text x="25" y="20" text-anchor="middle" font-size="7" fill="#94a3b8">[0]</text>
+            <text x="73" y="20" text-anchor="middle" font-size="7" fill="#94a3b8">[1]</text>
+            <text x="121" y="20" text-anchor="middle" font-size="7" fill="#94a3b8">[2]</text>
+            <text x="171" y="18" text-anchor="middle" font-size="7" fill="#3b82f6" font-weight="700">[3]=mid</text>
+            <text x="221" y="20" text-anchor="middle" font-size="7" fill="#94a3b8">[4]</text>
+            <text x="269" y="20" text-anchor="middle" font-size="7" fill="#94a3b8">[5]</text>
+            <text x="317" y="20" text-anchor="middle" font-size="7" fill="#94a3b8">[6]</text>
+        </svg>
+    </div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요 — Step 3</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc"><code>stats()</code>를 작성하고 짝수 개 데이터로 테스트하세요.</div>
+                <div class="code">scores = [<span class="num">80</span>, <span class="num">95</span>, <span class="num">72</span>, <span class="num">88</span>, <span class="num">91</span>, <span class="num">67</span>]
+avg, median, hi, lo = <span class="fn">stats</span>(scores)
+<span class="fn">print</span>(<span class="str">f"평균={avg:.1f}"</span>)
+<span class="fn">print</span>(<span class="str">f"중앙값={median}"</span>)</div>
+                <div class="practice-result">평균=82.2, 중앙값=84.0</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">반환값을 변수로 각각 받지 않고 튜플 전체로 받아보세요.</div>
+                <div class="code">result = <span class="fn">stats</span>([<span class="num">10</span>, <span class="num">20</span>, <span class="num">30</span>])
+<span class="fn">print</span>(result)
+<span class="fn">print</span>(<span class="fn">type</span>(result))</div>
+                <div class="practice-result">(20.0, 20, 30, 10) &lt;class 'tuple'&gt;</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">시험 점수 5개를 <code>input()</code>으로 받아 통계를 출력하세요.</div>
+                <div class="code">scores = [<span class="fn">int</span>(<span class="fn">input</span>(<span class="str">f"점수 {i+1}: "</span>)) <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">5</span>)]
+avg, median, hi, lo = <span class="fn">stats</span>(scores)
+<span class="fn">print</span>(<span class="str">f"평균={avg:.1f} 중앙값={median} 최대={hi} 최소={lo}"</span>)</div>
+                <div class="practice-result">입력한 점수에 맞는 결과가 출력되면 성공</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ 5페이지: Step 4 정렬 도구 ═══ -->
+<div class="page">
+    <h2>Step 4 — 정렬 도구 (sorted + key=lambda)</h2>
+    <p><code>sorted()</code>는 <code>key</code> 매개변수로 정렬 기준을 바꿀 수 있습니다. <code>key=lambda x: abs(x)</code>처럼 람다를 넣으면 절대값 기준으로 정렬됩니다.</p>
+
+    <!-- SVG: sorted key 동작 원리 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+            <defs>
+                <marker id="arw5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <text x="5" y="14" font-size="9" fill="#64748b" font-weight="600">sorted([-3, 1, -7, 2, 5], key=lambda x: abs(x))</text>
+            <!-- 원본 -->
+            <text x="5" y="30" font-size="9" fill="#94a3b8">원본값:</text>
+            <rect x="50" y="20" width="36" height="28" rx="4" fill="#fee2e2" stroke="#ef4444" stroke-width="1.2"/>
+            <text x="68" y="38" text-anchor="middle" font-size="12" fill="#991b1b" font-weight="700">-3</text>
+            <rect x="94" y="20" width="36" height="28" rx="4" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.2"/>
+            <text x="112" y="38" text-anchor="middle" font-size="12" fill="#334155" font-weight="700">1</text>
+            <rect x="138" y="20" width="36" height="28" rx="4" fill="#fee2e2" stroke="#ef4444" stroke-width="1.2"/>
+            <text x="156" y="38" text-anchor="middle" font-size="12" fill="#991b1b" font-weight="700">-7</text>
+            <rect x="182" y="20" width="36" height="28" rx="4" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.2"/>
+            <text x="200" y="38" text-anchor="middle" font-size="12" fill="#334155" font-weight="700">2</text>
+            <rect x="226" y="20" width="36" height="28" rx="4" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.2"/>
+            <text x="244" y="38" text-anchor="middle" font-size="12" fill="#334155" font-weight="700">5</text>
+
+            <!-- key 적용 -->
+            <text x="5" y="62" font-size="9" fill="#94a3b8">key값:</text>
+            <rect x="50" y="52" width="36" height="22" rx="4" fill="#fefce8" stroke="#f59e0b" stroke-width="1"/>
+            <text x="68" y="67" text-anchor="middle" font-size="11" fill="#92400e" font-weight="600">3</text>
+            <rect x="94" y="52" width="36" height="22" rx="4" fill="#fefce8" stroke="#f59e0b" stroke-width="1"/>
+            <text x="112" y="67" text-anchor="middle" font-size="11" fill="#92400e" font-weight="600">1</text>
+            <rect x="138" y="52" width="36" height="22" rx="4" fill="#fefce8" stroke="#f59e0b" stroke-width="1"/>
+            <text x="156" y="67" text-anchor="middle" font-size="11" fill="#92400e" font-weight="600">7</text>
+            <rect x="182" y="52" width="36" height="22" rx="4" fill="#fefce8" stroke="#f59e0b" stroke-width="1"/>
+            <text x="200" y="67" text-anchor="middle" font-size="11" fill="#92400e" font-weight="600">2</text>
+            <rect x="226" y="52" width="36" height="22" rx="4" fill="#fefce8" stroke="#f59e0b" stroke-width="1"/>
+            <text x="244" y="67" text-anchor="middle" font-size="11" fill="#92400e" font-weight="600">5</text>
+
+            <text x="278" y="40" font-size="14" fill="#94a3b8">-&gt;</text>
+            <!-- 결과 -->
+            <text x="300" y="30" font-size="9" fill="#3b82f6" font-weight="700">결과: [1, -3, 2, -7, 5]</text>
+            <text x="300" y="48" font-size="8" fill="#64748b">key=1, 3, 2, 7, 5 기준 정렬</text>
+            <text x="300" y="62" font-size="8" fill="#64748b">원본 부호는 유지</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># Step 4: 정렬 도구</span>
+
+<span class="kw">def</span> <span class="fn">sort_by_abs</span>(numbers, reverse=<span class="dec">False</span>):
+    <span class="str">"""절대값 기준 정렬 (기본: 오름차순)"""</span>
+    <span class="kw">return</span> <span class="fn">sorted</span>(numbers, key=<span class="kw">lambda</span> x: <span class="fn">abs</span>(x), reverse=reverse)
+
+<span class="kw">def</span> <span class="fn">sort_by_key</span>(items, key_func, reverse=<span class="dec">False</span>):
+    <span class="str">"""사용자 지정 key 함수로 정렬"""</span>
+    <span class="kw">return</span> <span class="fn">sorted</span>(items, key=key_func, reverse=reverse)
+
+<span class="cmt"># 테스트</span>
+nums = [-<span class="num">3</span>, <span class="num">1</span>, -<span class="num">7</span>, <span class="num">2</span>, <span class="num">5</span>]
+<span class="fn">print</span>(<span class="fn">sort_by_abs</span>(nums))              <span class="cmt"># [1, 2, -3, 5, -7]</span>
+<span class="fn">print</span>(<span class="fn">sort_by_abs</span>(nums, reverse=<span class="dec">True</span>)) <span class="cmt"># [-7, 5, -3, 2, 1]</span>
+
+<span class="cmt"># 문자열을 길이 기준으로 정렬</span>
+words = [<span class="str">"banana"</span>, <span class="str">"apple"</span>, <span class="str">"fig"</span>, <span class="str">"cherry"</span>]
+<span class="fn">print</span>(<span class="fn">sort_by_key</span>(words, <span class="kw">lambda</span> w: <span class="fn">len</span>(w)))  <span class="cmt"># ['fig','apple','banana','cherry']</span></div>
+
+    <div class="output-box">[1, 2, -3, 5, -7]
+[-7, 5, -3, 2, 1]
+['fig', 'apple', 'banana', 'cherry']</div>
+
+    <!-- SVG: key=lambda 다양한 사례 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 60" style="max-width:460px;width:100%">
+            <rect x="5" y="5" width="138" height="50" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.2"/>
+            <text x="74" y="22" text-anchor="middle" font-size="9" fill="#334155" font-weight="700">절대값 정렬</text>
+            <text x="74" y="36" text-anchor="middle" font-size="8" fill="#64748b">key=lambda x: abs(x)</text>
+            <text x="74" y="49" text-anchor="middle" font-size="8" fill="#94a3b8">음수 포함 숫자</text>
+
+            <rect x="161" y="5" width="138" height="50" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.2"/>
+            <text x="230" y="22" text-anchor="middle" font-size="9" fill="#334155" font-weight="700">길이 정렬</text>
+            <text x="230" y="36" text-anchor="middle" font-size="8" fill="#64748b">key=lambda s: len(s)</text>
+            <text x="230" y="49" text-anchor="middle" font-size="8" fill="#94a3b8">문자열 목록</text>
+
+            <rect x="317" y="5" width="138" height="50" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.2"/>
+            <text x="386" y="22" text-anchor="middle" font-size="9" fill="#334155" font-weight="700">마지막 글자</text>
+            <text x="386" y="36" text-anchor="middle" font-size="8" fill="#64748b">key=lambda s: s[-1]</text>
+            <text x="386" y="49" text-anchor="middle" font-size="8" fill="#94a3b8">알파벳 끝 기준</text>
+        </svg>
+    </div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요 — Step 4</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc"><code>sort_by_abs()</code>를 테스트하고 <code>reverse=True</code> 결과를 확인하세요.</div>
+                <div class="code">data = [-<span class="num">10</span>, <span class="num">3</span>, -<span class="num">2</span>, <span class="num">8</span>, -<span class="num">5</span>]
+<span class="fn">print</span>(<span class="fn">sort_by_abs</span>(data))
+<span class="fn">print</span>(<span class="fn">sort_by_abs</span>(data, reverse=<span class="dec">True</span>))</div>
+                <div class="practice-result">[3, -2, -5, 8, -10] / [-10, 8, -5, -2, 3]</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc"><code>sort_by_key</code>로 단어를 역순(z-a) 알파벳 기준 정렬하세요.</div>
+                <div class="code">words = [<span class="str">"python"</span>, <span class="str">"code"</span>, <span class="str">"math"</span>, <span class="str">"sort"</span>]
+<span class="fn">print</span>(<span class="fn">sort_by_key</span>(words, <span class="kw">lambda</span> w: w, reverse=<span class="dec">True</span>))</div>
+                <div class="practice-result">['sort', 'python', 'math', 'code']</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">딕셔너리 리스트를 점수 기준으로 정렬하세요.</div>
+                <div class="code">students = [
+    {<span class="str">"name"</span>: <span class="str">"Alice"</span>, <span class="str">"score"</span>: <span class="num">85</span>},
+    {<span class="str">"name"</span>: <span class="str">"Bob"</span>,   <span class="str">"score"</span>: <span class="num">92</span>},
+    {<span class="str">"name"</span>: <span class="str">"Carol"</span>, <span class="str">"score"</span>: <span class="num">78</span>},
+]
+ranked = <span class="fn">sort_by_key</span>(students, <span class="kw">lambda</span> s: s[<span class="str">"score"</span>], reverse=<span class="dec">True</span>)
+<span class="kw">for</span> r <span class="kw">in</span> ranked:
+    <span class="fn">print</span>(r[<span class="str">"name"</span>], r[<span class="str">"score"</span>])</div>
+                <div class="practice-result">Bob 92 / Alice 85 / Carol 78</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ 6페이지: 통합 및 문제 ═══ -->
+<div class="page">
+    <h2>최종 통합 — math_tools.py 완성</h2>
+    <p>네 단계에서 만든 함수들을 하나의 파일로 통합합니다. 실제 프로젝트에서는 이처럼 관련 함수들을 한 모듈에 모아 관리합니다.</p>
+
+    <!-- SVG: 모듈 구조도 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 110" style="max-width:460px;width:100%">
+            <!-- 외부 테두리 -->
+            <rect x="5" y="5" width="450" height="100" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="22" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="800">math_tools.py</text>
+            <!-- 4개 함수 박스 -->
+            <rect x="15" y="30" width="100" height="65" rx="6" fill="#fff" stroke="#3b82f6" stroke-width="1.2"/>
+            <text x="65" y="48" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">gcd(a, b,</text>
+            <text x="65" y="60" text-anchor="middle" font-size="9" fill="#1d4ed8">verbose=False)</text>
+            <text x="65" y="74" text-anchor="middle" font-size="8" fill="#64748b">lcm(a, b)</text>
+            <text x="65" y="87" text-anchor="middle" font-size="8" fill="#94a3b8">기본값 매개변수</text>
+
+            <rect x="125" y="30" width="100" height="65" rx="6" fill="#fff" stroke="#f59e0b" stroke-width="1.2"/>
+            <text x="175" y="48" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">is_prime(n)</text>
+            <text x="175" y="62" text-anchor="middle" font-size="9" fill="#92400e">primes_in_range</text>
+            <text x="175" y="75" text-anchor="middle" font-size="8" fill="#64748b">(start, end)</text>
+            <text x="175" y="87" text-anchor="middle" font-size="8" fill="#94a3b8">filter + lambda</text>
+
+            <rect x="235" y="30" width="100" height="65" rx="6" fill="#fff" stroke="#22c55e" stroke-width="1.2"/>
+            <text x="285" y="48" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">stats(data)</text>
+            <text x="285" y="62" text-anchor="middle" font-size="8" fill="#166534">avg, median,</text>
+            <text x="285" y="74" text-anchor="middle" font-size="8" fill="#166534">max, min</text>
+            <text x="285" y="87" text-anchor="middle" font-size="8" fill="#94a3b8">다중 반환</text>
+
+            <rect x="345" y="30" width="105" height="65" rx="6" fill="#fff" stroke="#6366f1" stroke-width="1.2"/>
+            <text x="397" y="48" text-anchor="middle" font-size="9" fill="#4338ca" font-weight="700">sort_by_abs</text>
+            <text x="397" y="62" text-anchor="middle" font-size="9" fill="#4338ca">(nums, reverse)</text>
+            <text x="397" y="74" text-anchor="middle" font-size="8" fill="#64748b">sort_by_key</text>
+            <text x="397" y="87" text-anchor="middle" font-size="8" fill="#94a3b8">sorted + lambda</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># math_tools.py — 최종 통합</span>
+<span class="cmt"># ───────────── 1. 약수 ─────────────</span>
+<span class="kw">def</span> <span class="fn">gcd</span>(a, b, verbose=<span class="dec">False</span>):
+    <span class="kw">while</span> b:
+        a, b = b, a % b
+        <span class="kw">if</span> verbose: <span class="fn">print</span>(<span class="str">f"  a={a}, b={b}"</span>)
+    <span class="kw">return</span> a
+
+<span class="kw">def</span> <span class="fn">lcm</span>(a, b): <span class="kw">return</span> a * b // <span class="fn">gcd</span>(a, b)
+
+<span class="cmt"># ───────────── 2. 소수 ─────────────</span>
+<span class="kw">def</span> <span class="fn">is_prime</span>(n):
+    <span class="kw">if</span> n &lt; <span class="num">2</span>: <span class="kw">return</span> <span class="dec">False</span>
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">2</span>, <span class="fn">int</span>(n**<span class="num">0.5</span>)+<span class="num">1</span>):
+        <span class="kw">if</span> n % i == <span class="num">0</span>: <span class="kw">return</span> <span class="dec">False</span>
+    <span class="kw">return</span> <span class="dec">True</span>
+
+<span class="kw">def</span> <span class="fn">primes_in_range</span>(start, end):
+    <span class="kw">return</span> <span class="fn">list</span>(<span class="fn">filter</span>(<span class="fn">is_prime</span>, <span class="fn">range</span>(start, end+<span class="num">1</span>)))
+
+<span class="cmt"># ───────────── 3. 통계 ─────────────</span>
+<span class="kw">def</span> <span class="fn">stats</span>(data):
+    n = <span class="fn">len</span>(data)
+    s = <span class="fn">sorted</span>(data)
+    mid = n // <span class="num">2</span>
+    median = (s[mid-<span class="num">1</span>]+s[mid])/<span class="num">2</span> <span class="kw">if</span> n%<span class="num">2</span>==<span class="num">0</span> <span class="kw">else</span> s[mid]
+    <span class="kw">return</span> <span class="fn">sum</span>(data)/n, median, <span class="fn">max</span>(data), <span class="fn">min</span>(data)
+
+<span class="cmt"># ───────────── 4. 정렬 ─────────────</span>
+<span class="kw">def</span> <span class="fn">sort_by_abs</span>(numbers, reverse=<span class="dec">False</span>):
+    <span class="kw">return</span> <span class="fn">sorted</span>(numbers, key=<span class="kw">lambda</span> x: <span class="fn">abs</span>(x), reverse=reverse)
+
+<span class="kw">def</span> <span class="fn">sort_by_key</span>(items, key_func, reverse=<span class="dec">False</span>):
+    <span class="kw">return</span> <span class="fn">sorted</span>(items, key=key_func, reverse=reverse)</div>
+
+    <!-- 문제 1 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q1</div>
+            <div class="problem-label">gcd와 lcm 활용</div>
+            <div class="problem-diff easy">쉬움</div>
+        </div>
+        <div class="problem-body">
+            <p class="problem-text">두 수 a와 b를 입력받아 최대공약수와 최소공배수를 출력하는 프로그램을 작성하세요. <code>verbose=True</code>도 사용해보세요.</p>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">입력</span>
+                    <span class="problem-example-value">24, 36</span>
+                </div>
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력</span>
+                    <span class="problem-example-value">GCD=12, LCM=72</span>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <p class="hint-text">gcd(a, b)와 lcm(a, b)를 호출하고 f-string으로 출력합니다. verbose=True 를 넣으면 단계가 보입니다.</p>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">a = int(input("첫 번째 수: "))
+b = int(input("두 번째 수: "))
+print(f"GCD={gcd(a,b)}, LCM={lcm(a,b)}")</div>
+            </div>
+        </details>
+    </div>
+</div>
+
+<!-- ═══ 7페이지: 문제 2, 3 + 요약 ═══ -->
+<div class="page">
+    <h2>문제 풀기</h2>
+
+    <!-- 문제 2 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q2</div>
+            <div class="problem-label">소수 필터링 + 통계</div>
+            <div class="problem-diff medium">보통</div>
+        </div>
+        <div class="problem-body">
+            <p class="problem-text">1부터 100까지 소수 목록을 구하고, 그 소수 목록에 <code>stats()</code>를 적용해 평균, 중앙값, 최대, 최소를 출력하세요.</p>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력 예</span>
+                    <span class="problem-example-value">소수 25개 / 평균=41.0 / 중앙값=41 / 최대=97 / 최소=2</span>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <p class="hint-text">primes_in_range(1, 100)으로 목록을 만들고, 바로 stats()에 넣어보세요. 결과를 언패킹해서 출력합니다.</p>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">primes = primes_in_range(1, 100)
+avg, median, hi, lo = stats(primes)
+print(f"소수 {len(primes)}개")
+print(f"평균={avg:.1f} / 중앙값={median} / 최대={hi} / 최소={lo}")</div>
+            </div>
+        </details>
+    </div>
+
+    <!-- SVG: 소수 분포 막대 (시각화) -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 460 70" style="max-width:460px;width:100%">
+            <text x="5" y="12" font-size="9" fill="#64748b" font-weight="600">1~100 구간별 소수 개수</text>
+            <!-- 막대 -->
+            <rect x="20" y="20" width="40" height="40" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="40" y="38" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">4</text>
+            <text x="40" y="62" text-anchor="middle" font-size="8" fill="#64748b">1-10</text>
+            <rect x="68" y="26" width="40" height="34" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="88" y="44" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">4</text>
+            <text x="88" y="62" text-anchor="middle" font-size="8" fill="#64748b">11-20</text>
+            <rect x="116" y="32" width="40" height="28" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="136" y="50" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">3</text>
+            <text x="136" y="62" text-anchor="middle" font-size="8" fill="#64748b">21-30</text>
+            <rect x="164" y="36" width="40" height="24" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="184" y="53" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">2</text>
+            <text x="184" y="62" text-anchor="middle" font-size="8" fill="#64748b">31-40</text>
+            <rect x="212" y="30" width="40" height="30" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="232" y="49" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">3</text>
+            <text x="232" y="62" text-anchor="middle" font-size="8" fill="#64748b">41-50</text>
+            <rect x="260" y="36" width="40" height="24" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="280" y="53" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">2</text>
+            <text x="280" y="62" text-anchor="middle" font-size="8" fill="#64748b">51-60</text>
+            <rect x="308" y="28" width="40" height="32" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="328" y="48" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">3</text>
+            <text x="328" y="62" text-anchor="middle" font-size="8" fill="#64748b">61-70</text>
+            <rect x="356" y="36" width="40" height="24" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="376" y="53" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">2</text>
+            <text x="376" y="62" text-anchor="middle" font-size="8" fill="#64748b">71-80</text>
+            <rect x="404" y="32" width="40" height="28" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="424" y="50" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">3</text>
+            <text x="424" y="62" text-anchor="middle" font-size="8" fill="#64748b">81-100</text>
+        </svg>
+    </div>
+
+    <!-- 문제 3 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q3</div>
+            <div class="problem-label">절대값 정렬 + 최솟값 찾기</div>
+            <div class="problem-diff hard">어려움</div>
+        </div>
+        <div class="problem-body">
+            <p class="problem-text"><code>sort_by_abs()</code>로 정렬한 뒤, 절대값이 가장 작은 수(0에 가장 가까운 수)를 출력하세요. <code>input()</code>으로 숫자들을 공백으로 구분해 받습니다.</p>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">입력</span>
+                    <span class="problem-example-value">-10 3 -2 8 -5 1</span>
+                </div>
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력</span>
+                    <span class="problem-example-value">0에 가장 가까운 수: 1</span>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <p class="hint-text">input().split()으로 받고 map(int, ...)으로 변환합니다. sort_by_abs()로 정렬하면 첫 번째 원소가 0에 가장 가까운 수입니다.</p>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">nums = list(map(int, input("숫자들 (공백 구분): ").split()))
+sorted_nums = sort_by_abs(nums)
+print(f"0에 가장 가까운 수: {sorted_nums[0]}")</div>
+            </div>
+        </details>
+    </div>
+
+    <!-- 핵심 요약 -->
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>핵심 요약 — 수학 도구함 프로젝트</h3>
+        <ul>
+            <li><strong>gcd / lcm</strong>: 유클리드 호제법 + 기본값 매개변수 <code>verbose=False</code>로 디버그 옵션 제공</li>
+            <li><strong>is_prime / primes_in_range</strong>: 제곱근까지만 검사, <code>filter(is_prime, range(...))</code>로 목록 생성</li>
+            <li><strong>stats</strong>: <code>return avg, median, max, min</code> — 튜플로 반환, 언패킹으로 사용</li>
+            <li><strong>sort_by_abs / sort_by_key</strong>: <code>sorted(items, key=lambda x: abs(x), reverse=False)</code> 패턴</li>
+            <li>네 기능을 <strong>math_tools.py</strong> 하나에 모아 재사용 가능한 모듈로 완성</li>
+        </ul>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

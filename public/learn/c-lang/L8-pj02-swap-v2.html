@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>L8-PJ02 포인터로 두 수 교환</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #e2e8f0; font-family: 'Noto Sans KR', sans-serif; }
+
+  .page {
+    width: 210mm;
+    min-height: 297mm;
+    background: white;
+    margin: 0 auto 12px;
+    padding: 18mm 20mm 15mm 22mm;
+    position: relative;
+    overflow: hidden;
+    page-break-after: always;
+    counter-increment: pagenum;
+  }
+
+  /* ── 커버 사이드바 ── */
+  .cover-sidebar {
+    position: absolute; left: 0; top: 0; bottom: 0;
+    width: 10px; background: #1e3a5f;
+  }
+  .cover-accent {
+    position: absolute; left: 10px; top: 0; bottom: 0;
+    width: 7px; background: #0891b2;
+  }
+
+  /* ── 페이지 번호 ── */
+  .page::after {
+    content: counter(pagenum);
+    position: absolute; bottom: 10mm; right: 15mm;
+    font-size: 10px; color: #94a3b8; font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* ── 워터마크 ── */
+  .page::before {
+    content: 'PJ';
+    position: absolute; right: 18mm; top: 12mm;
+    font-size: 72px; font-weight: 900;
+    color: rgba(8,145,178,0.04);
+    font-family: 'JetBrains Mono', monospace;
+    pointer-events: none;
+  }
+
+  /* ── 커버 페이지 ── */
+  .cover-header {
+    display: flex; gap: 6px; align-items: center;
+    margin-bottom: 8mm;
+  }
+  .cover-chapter-badge {
+    background: #0e7490; color: white;
+    font-size: 10px; font-weight: 700; padding: 3px 10px;
+    border-radius: 20px; letter-spacing: 0.5px;
+  }
+  .cover-unit-badge {
+    background: #ecfeff; color: #0891b2;
+    font-size: 10px; font-weight: 700; padding: 3px 10px;
+    border-radius: 20px; border: 1px solid #a5f3fc;
+  }
+  .cover-title {
+    font-size: 28px; font-weight: 900; color: #0c4a6e;
+    line-height: 1.25; margin-bottom: 4px;
+  }
+  .cover-subtitle {
+    font-size: 13px; color: #0891b2; font-weight: 500;
+    margin-bottom: 6mm;
+  }
+  .cover-desc {
+    font-size: 11.5px; color: #475569; line-height: 1.75;
+    background: #f0f9ff; padding: 10px 14px;
+    border-left: 3px solid #0891b2; border-radius: 0 6px 6px 0;
+    margin-bottom: 6mm;
+  }
+  .cover-meta {
+    display: flex; gap: 8px; flex-wrap: wrap;
+  }
+  .cover-meta span {
+    background: #f1f5f9; border: 1px solid #e2e8f0;
+    padding: 3px 10px; border-radius: 12px;
+    font-size: 10px; color: #64748b;
+  }
+
+  /* ── 섹션 헤더 ── */
+  .section-title {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 15px; font-weight: 800; color: #0c4a6e;
+    margin-bottom: 8px; padding-bottom: 5px;
+    border-bottom: 2px solid #e0f2fe;
+  }
+  .section-title .icon {
+    background: #0891b2; color: white;
+    width: 24px; height: 24px; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+  }
+
+  /* ── 코드 블록 ── */
+  .code {
+    background: #0f172a;
+    border-radius: 8px;
+    padding: 12px 15px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    line-height: 1.7;
+    color: #e2e8f0;
+    margin: 8px 0;
+    overflow-x: auto;
+    position: relative;
+  }
+  .code-label {
+    position: absolute; top: 6px; right: 10px;
+    font-size: 9px; color: #475569; font-family: 'JetBrains Mono', monospace;
+  }
+  .code .kw  { color: #c084fc; }
+  .code .fn  { color: #67e8f9; }
+  .code .str { color: #86efac; }
+  .code .num { color: #7dd3fc; }
+  .code .cmt { color: #64748b; font-style: italic; }
+  .code .ptr { color: #fbbf24; }
+  .code .addr{ color: #f472b6; }
+
+  /* ── 출력 박스 ── */
+  .output-box {
+    background: #0f172a;
+    border: 1px solid #1e3a5f;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: #86efac;
+    margin: 8px 0;
+  }
+  .output-box .prompt { color: #64748b; }
+  .output-box .label  { color: #7dd3fc; }
+
+  /* ── 단계 블록 ── */
+  .step {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin: 6px 0;
+    position: relative;
+  }
+  .step-num {
+    position: absolute; top: -10px; left: 12px;
+    background: #0891b2; color: white;
+    font-size: 10px; font-weight: 700;
+    padding: 2px 8px; border-radius: 10px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .step h4 {
+    font-size: 12px; font-weight: 700; color: #0c4a6e;
+    margin-bottom: 4px; margin-top: 4px;
+  }
+  .step p {
+    font-size: 11px; color: #475569; line-height: 1.6;
+  }
+
+  /* ── 비교 박스 ── */
+  .compare-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 8px; margin: 8px 0;
+  }
+  .compare-box {
+    border-radius: 8px; padding: 10px;
+    border: 2px solid transparent;
+  }
+  .compare-box.bad {
+    background: #fff1f2; border-color: #fca5a5;
+  }
+  .compare-box.good {
+    background: #f0fdf4; border-color: #86efac;
+  }
+  .compare-box .label {
+    font-size: 9px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+  .compare-box.bad .label { color: #ef4444; }
+  .compare-box.good .label { color: #22c55e; }
+
+  /* ── 도전 과제 ── */
+  .challenge {
+    background: linear-gradient(135deg, #ecfeff 0%, #f0f9ff 100%);
+    border: 1.5px solid #67e8f9;
+    border-radius: 10px;
+    padding: 12px 15px;
+    margin: 8px 0;
+  }
+  .challenge h3 {
+    font-size: 13px; font-weight: 800; color: #0891b2;
+    margin-bottom: 8px;
+  }
+  .challenge-item {
+    background: white;
+    border: 1px solid #e0f2fe;
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin: 5px 0;
+    font-size: 11px;
+  }
+  .challenge-item .num {
+    display: inline-block;
+    background: #0891b2; color: white;
+    width: 18px; height: 18px; border-radius: 50%;
+    font-size: 10px; font-weight: 700;
+    text-align: center; line-height: 18px;
+    margin-right: 6px;
+  }
+
+  /* ── 정보 박스 ── */
+  .info-box {
+    background: #f0f9ff;
+    border-left: 3px solid #0891b2;
+    border-radius: 0 6px 6px 0;
+    padding: 8px 12px;
+    margin: 6px 0;
+    font-size: 11px;
+    color: #0c4a6e;
+    line-height: 1.6;
+  }
+  .warn-box {
+    background: #fff7ed;
+    border-left: 3px solid #f97316;
+    border-radius: 0 6px 6px 0;
+    padding: 8px 12px;
+    margin: 6px 0;
+    font-size: 11px;
+    color: #7c2d12;
+    line-height: 1.6;
+  }
+
+  /* ── 문제 ── */
+  .problem {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin: 6px 0;
+  }
+  .problem summary {
+    font-size: 11.5px; font-weight: 700;
+    color: #0c4a6e; cursor: pointer; list-style: none;
+    display: flex; align-items: flex-start; gap: 6px;
+  }
+  .problem summary::marker { display: none; }
+  .problem .q-num {
+    background: #0891b2; color: white;
+    width: 20px; height: 20px; border-radius: 50%;
+    font-size: 10px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .answer {
+    margin-top: 8px;
+    padding: 8px 10px;
+    background: #ecfeff;
+    border-radius: 6px;
+    font-size: 11px;
+    color: #0c4a6e;
+    line-height: 1.6;
+    border: 1px solid #a5f3fc;
+  }
+
+  /* ── 요약 박스 ── */
+  .summary-box {
+    background: linear-gradient(135deg, #0c4a6e 0%, #0e7490 100%);
+    color: white;
+    border-radius: 10px;
+    padding: 12px 15px;
+    margin: 8px 0;
+  }
+  .summary-box h3 {
+    font-size: 13px; font-weight: 800; margin-bottom: 8px;
+    color: #7dd3fc;
+  }
+  .summary-box ul {
+    list-style: none; padding: 0;
+  }
+  .summary-box ul li {
+    font-size: 11px; line-height: 1.75;
+    padding-left: 12px; position: relative;
+  }
+  .summary-box ul li::before {
+    content: '→'; position: absolute; left: 0;
+    color: #67e8f9;
+  }
+
+  body { counter-reset: pagenum; }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════
+     PAGE 1: 커버
+════════════════════════════════════════ -->
+<div class="page">
+  <div class="cover-sidebar"></div>
+  <div class="cover-accent"></div>
+
+  <div class="cover-header">
+    <span class="cover-chapter-badge">CHAPTER 8</span>
+    <span class="cover-unit-badge">PROJECT 02</span>
+  </div>
+
+  <div class="cover-title">포인터로<br>두 수 교환</div>
+  <div class="cover-subtitle">Swap Two Numbers with Pointers</div>
+
+  <div class="cover-desc">
+    두 변수의 값을 바꾸는 swap 함수 — C에서 포인터가 필요한 가장 대표적인 상황이다.<br>
+    포인터 없이는 원본을 건드릴 수 없다. 이 프로젝트로 call by reference를 완전히 익힌다.
+  </div>
+
+  <!-- 커버 SVG: swap 전후 비교 -->
+  <svg width="100%" height="180" viewBox="0 0 520 180">
+    <defs>
+      <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+        <path d="M0,0 L0,6 L8,3 z" fill="#0891b2"/>
+      </marker>
+      <marker id="arrG" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+        <path d="M0,0 L0,6 L8,3 z" fill="#22c55e"/>
+      </marker>
+    </defs>
+
+    <!-- BEFORE -->
+    <text x="80" y="22" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#64748b" font-weight="700">BEFORE</text>
+
+    <rect x="30" y="34" width="60" height="44" rx="6" fill="#fee2e2" stroke="#fca5a5" stroke-width="1.5"/>
+    <text x="60" y="52" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#64748b">변수 a</text>
+    <text x="60" y="70" text-anchor="middle" font-family="JetBrains Mono" font-size="18" font-weight="700" fill="#dc2626">10</text>
+
+    <rect x="110" y="34" width="60" height="44" rx="6" fill="#dbeafe" stroke="#93c5fd" stroke-width="1.5"/>
+    <text x="140" y="52" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#64748b">변수 b</text>
+    <text x="140" y="70" text-anchor="middle" font-family="JetBrains Mono" font-size="18" font-weight="700" fill="#2563eb">20</text>
+
+    <!-- 화살표 교차 -->
+    <path d="M65,85 Q80,110 130,85" stroke="#0891b2" stroke-width="2" fill="none" marker-end="url(#arr)" stroke-dasharray="4,3"/>
+    <path d="M135,85 Q120,110 70,85" stroke="#22c55e" stroke-width="2" fill="none" marker-end="url(#arrG)" stroke-dasharray="4,3"/>
+    <text x="80" y="115" text-anchor="middle" font-family="Noto Sans KR" font-size="10" fill="#0891b2">값 교환!</text>
+
+    <!-- AFTER -->
+    <text x="80" y="140" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#64748b" font-weight="700">AFTER</text>
+
+    <rect x="30" y="148" width="60" height="28" rx="6" fill="#dcfce7" stroke="#86efac" stroke-width="1.5"/>
+    <text x="60" y="167" text-anchor="middle" font-family="JetBrains Mono" font-size="16" font-weight="700" fill="#16a34a">20</text>
+
+    <rect x="110" y="148" width="60" height="28" rx="6" fill="#fef9c3" stroke="#fde047" stroke-width="1.5"/>
+    <text x="140" y="167" text-anchor="middle" font-family="JetBrains Mono" font-size="16" font-weight="700" fill="#ca8a04">10</text>
+
+    <!-- 구분선 -->
+    <line x1="210" y1="20" x2="210" y2="175" stroke="#e2e8f0" stroke-width="1.5" stroke-dasharray="4,3"/>
+
+    <!-- 잘못된 방법 (포인터 없음) -->
+    <text x="340" y="22" text-anchor="middle" font-family="Noto Sans KR" font-size="11" fill="#ef4444" font-weight="700"> 포인터 없이</text>
+
+    <rect x="225" y="34" width="230" height="58" rx="6" fill="#0f172a"/>
+    <text x="237" y="52" font-family="JetBrains Mono" font-size="9.5" fill="#c084fc">void</text>
+    <text x="273" y="52" font-family="JetBrains Mono" font-size="9.5" fill="#67e8f9">bad_swap</text>
+    <text x="337" y="52" font-family="JetBrains Mono" font-size="9.5" fill="#e2e8f0">(</text>
+    <text x="344" y="52" font-family="JetBrains Mono" font-size="9.5" fill="#c084fc">int</text>
+    <text x="363" y="52" font-family="JetBrains Mono" font-size="9.5" fill="#e2e8f0"> x, </text>
+    <text x="383" y="52" font-family="JetBrains Mono" font-size="9.5" fill="#c084fc">int</text>
+    <text x="402" y="52" font-family="JetBrains Mono" font-size="9.5" fill="#e2e8f0"> y) {</text>
+    <text x="237" y="66" font-family="JetBrains Mono" font-size="9.5" fill="#e2e8f0">    tmp=x; x=y; y=tmp;</text>
+    <text x="237" y="80" font-family="JetBrains Mono" font-size="9.5" fill="#64748b">}  // 복사본만 바꿈!</text>
+
+    <rect x="225" y="100" width="230" height="16" rx="4" fill="#fef2f2" stroke="#fca5a5"/>
+    <text x="340" y="112" text-anchor="middle" font-family="Noto Sans KR" font-size="10" fill="#dc2626">원본 a, b 변화 없음</text>
+
+    <!-- 올바른 방법 (포인터 있음) -->
+    <text x="340" y="138" text-anchor="middle" font-family="Noto Sans KR" font-size="11" fill="#22c55e" font-weight="700"> 포인터 사용</text>
+
+    <rect x="225" y="148" width="230" height="30" rx="6" fill="#0f172a"/>
+    <text x="237" y="162" font-family="JetBrains Mono" font-size="9.5" fill="#c084fc">void</text>
+    <text x="273" y="162" font-family="JetBrains Mono" font-size="9.5" fill="#67e8f9"> swap</text>
+    <text x="305" y="162" font-family="JetBrains Mono" font-size="9.5" fill="#e2e8f0">(</text>
+    <text x="312" y="162" font-family="JetBrains Mono" font-size="9.5" fill="#c084fc">int</text>
+    <text x="331" y="162" font-family="JetBrains Mono" font-size="9.5" fill="#fbbf24"> *pa</text>
+    <text x="358" y="162" font-family="JetBrains Mono" font-size="9.5" fill="#e2e8f0">, </text>
+    <text x="368" y="162" font-family="JetBrains Mono" font-size="9.5" fill="#c084fc">int</text>
+    <text x="387" y="162" font-family="JetBrains Mono" font-size="9.5" fill="#fbbf24"> *pb</text>
+    <text x="414" y="162" font-family="JetBrains Mono" font-size="9.5" fill="#e2e8f0">)</text>
+    <text x="237" y="174" font-family="JetBrains Mono" font-size="9.5" fill="#64748b">    // 주소를 받아 원본 직접 수정</text>
+  </svg>
+
+  <div class="cover-meta">
+    <span>난이도 </span>
+    <span>핵심: call by reference</span>
+    <span>포인터 매개변수</span>
+    <span>tmp 변수 패턴</span>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     PAGE 2: 원리 설명 + 잘못된 방법 비교
+════════════════════════════════════════ -->
+<div class="page">
+  <div class="cover-sidebar"></div>
+  <div class="cover-accent"></div>
+
+  <div style="display:flex;align-items:center;gap:8px;margin:10px 0 6px;padding:6px 12px;background:#eff6ff;border-radius:6px;">
+    <img src="/images/learn/computer-basics/cpu.png" alt="CPU - 포인터와 메모리 처리" style="width:26px;height:26px;object-fit:contain;background:#fff;border-radius:8px;">
+</div>
+<div class="section-title">
+    <div class="icon"></div>
+    왜 포인터가 필요한가? — 스택 프레임 이해
+  </div>
+
+  <!-- 스택 프레임 SVG: 포인터 없는 경우 -->
+  <svg width="100%" height="158" viewBox="0 0 520 158">
+    <defs>
+      <marker id="arrR" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+        <path d="M0,0 L0,6 L8,3 z" fill="#ef4444"/>
+      </marker>
+    </defs>
+
+    <text x="10" y="16" font-family="Noto Sans KR" font-size="11" font-weight="700" fill="#ef4444"> bad_swap(a, b) — 복사본만 바뀜</text>
+
+    <!-- main 스택 프레임 -->
+    <rect x="10" y="24" width="110" height="80" rx="6" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5"/>
+    <text x="65" y="40" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#64748b">main 스택</text>
+    <rect x="20" y="48" width="90" height="22" rx="4" fill="#fee2e2" stroke="#fca5a5"/>
+    <text x="65" y="58" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#64748b">a</text>
+    <text x="65" y="68" text-anchor="middle" font-family="JetBrains Mono" font-size="12" font-weight="700" fill="#dc2626">10</text>
+    <rect x="20" y="76" width="90" height="22" rx="4" fill="#dbeafe" stroke="#93c5fd"/>
+    <text x="65" y="86" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#64748b">b</text>
+    <text x="65" y="96" text-anchor="middle" font-family="JetBrains Mono" font-size="12" font-weight="700" fill="#2563eb">20</text>
+    <text x="65" y="115" text-anchor="middle" font-family="Noto Sans KR" font-size="9" fill="#94a3b8">변화 없음</text>
+
+    <!-- 화살표 (복사) -->
+    <line x1="122" y1="59" x2="150" y2="59" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4,2"/>
+    <line x1="122" y1="87" x2="150" y2="87" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4,2"/>
+    <text x="136" y="77" text-anchor="middle" font-family="Noto Sans KR" font-size="8" fill="#ef4444">복사</text>
+
+    <!-- bad_swap 스택 프레임 -->
+    <rect x="150" y="24" width="110" height="80" rx="6" fill="#fff1f2" stroke="#fca5a5" stroke-width="1.5"/>
+    <text x="205" y="40" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#ef4444">bad_swap 스택</text>
+    <rect x="160" y="48" width="90" height="22" rx="4" fill="#fee2e2" stroke="#fca5a5"/>
+    <text x="205" y="58" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#64748b">x (복사본)</text>
+    <text x="205" y="68" text-anchor="middle" font-family="JetBrains Mono" font-size="12" font-weight="700" fill="#dc2626">20</text>
+    <rect x="160" y="76" width="90" height="22" rx="4" fill="#dbeafe" stroke="#93c5fd"/>
+    <text x="205" y="86" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#64748b">y (복사본)</text>
+    <text x="205" y="96" text-anchor="middle" font-family="JetBrains Mono" font-size="12" font-weight="700" fill="#2563eb">10</text>
+    <text x="205" y="115" text-anchor="middle" font-family="Noto Sans KR" font-size="9" fill="#ef4444">함수 종료 후 사라짐!</text>
+
+    <!-- 구분선 -->
+    <line x1="300" y1="15" x2="300" y2="150" stroke="#e2e8f0" stroke-width="1.5"/>
+
+    <!-- 올바른 방법 -->
+    <text x="310" y="16" font-family="Noto Sans KR" font-size="11" font-weight="700" fill="#22c55e"> swap(&a, &b) — 주소로 원본 수정</text>
+
+    <!-- main 스택 프레임 (올바른 방법) -->
+    <rect x="310" y="24" width="110" height="80" rx="6" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5"/>
+    <text x="365" y="40" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#64748b">main 스택</text>
+    <rect x="320" y="48" width="90" height="22" rx="4" fill="#dcfce7" stroke="#86efac"/>
+    <text x="365" y="58" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#64748b">a</text>
+    <text x="365" y="68" text-anchor="middle" font-family="JetBrains Mono" font-size="12" font-weight="700" fill="#16a34a">20 </text>
+    <rect x="320" y="76" width="90" height="22" rx="4" fill="#fef9c3" stroke="#fde047"/>
+    <text x="365" y="86" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#64748b">b</text>
+    <text x="365" y="96" text-anchor="middle" font-family="JetBrains Mono" font-size="12" font-weight="700" fill="#ca8a04">10 </text>
+    <text x="365" y="115" text-anchor="middle" font-family="Noto Sans KR" font-size="9" fill="#16a34a">값이 바뀜!</text>
+
+    <!-- 화살표 (주소 전달) -->
+    <line x1="422" y1="59" x2="450" y2="59" stroke="#0891b2" stroke-width="1.5"/>
+    <line x1="422" y1="87" x2="450" y2="87" stroke="#0891b2" stroke-width="1.5"/>
+    <text x="436" y="77" text-anchor="middle" font-family="Noto Sans KR" font-size="8" fill="#0891b2">주소</text>
+
+    <!-- swap 스택 프레임 -->
+    <rect x="450" y="24" width="62" height="80" rx="6" fill="#ecfeff" stroke="#67e8f9" stroke-width="1.5"/>
+    <text x="481" y="40" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#0891b2">swap 스택</text>
+    <rect x="457" y="48" width="48" height="22" rx="4" fill="#ecfeff" stroke="#a5f3fc"/>
+    <text x="481" y="58" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#64748b">pa(주소)</text>
+    <text x="481" y="68" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#0891b2">→ a</text>
+    <rect x="457" y="76" width="48" height="22" rx="4" fill="#ecfeff" stroke="#a5f3fc"/>
+    <text x="481" y="86" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#64748b">pb(주소)</text>
+    <text x="481" y="96" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#0891b2">→ b</text>
+    <text x="481" y="115" text-anchor="middle" font-family="Noto Sans KR" font-size="8" fill="#16a34a">원본 직접 수정</text>
+  </svg>
+
+  <div style="display:flex;align-items:center;gap:8px;margin:10px 0 6px;padding:6px 12px;background:#eff6ff;border-radius:6px;">
+    <img src="/images/learn/computer-basics/ram.png" alt="RAM - 포인터가 가리키는 메모리" style="width:26px;height:26px;object-fit:contain;background:#fff;border-radius:8px;">
+</div>
+<div class="section-title">
+    <div class="icon"></div>
+    swap 함수 작동 원리 — tmp 변수 3단계
+  </div>
+
+  <!-- tmp 변수 3단계 SVG -->
+  <svg width="100%" height="155" viewBox="0 0 520 155">
+    <defs>
+      <marker id="arrB" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto">
+        <path d="M0,0 L0,6 L7,3 z" fill="#0891b2"/>
+      </marker>
+    </defs>
+
+    <!-- 초기 상태 -->
+    <text x="60" y="14" text-anchor="middle" font-family="Noto Sans KR" font-size="10" fill="#0c4a6e" font-weight="700">초기 상태</text>
+
+    <rect x="10" y="24" width="46" height="34" rx="5" fill="#fee2e2" stroke="#fca5a5" stroke-width="1.5"/>
+    <text x="33" y="37" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#64748b">*pa</text>
+    <text x="33" y="51" text-anchor="middle" font-family="JetBrains Mono" font-size="14" font-weight="700" fill="#dc2626">10</text>
+
+    <rect x="66" y="24" width="46" height="34" rx="5" fill="#dbeafe" stroke="#93c5fd" stroke-width="1.5"/>
+    <text x="89" y="37" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#64748b">*pb</text>
+    <text x="89" y="51" text-anchor="middle" font-family="JetBrains Mono" font-size="14" font-weight="700" fill="#2563eb">20</text>
+
+    <rect x="122" y="24" width="46" height="34" rx="5" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1.5"/>
+    <text x="145" y="37" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#64748b">tmp</text>
+    <text x="145" y="51" text-anchor="middle" font-family="JetBrains Mono" font-size="14" font-weight="700" fill="#94a3b8">?</text>
+
+    <!-- STEP 1: tmp = *pa -->
+    <line x1="178" y1="75" x2="205" y2="75" stroke="#0891b2" stroke-width="1.5" marker-end="url(#arrB)"/>
+
+    <text x="265" y="14" text-anchor="middle" font-family="Noto Sans KR" font-size="10" fill="#0c4a6e" font-weight="700">STEP 1: tmp = *pa</text>
+
+    <rect x="208" y="24" width="46" height="34" rx="5" fill="#fee2e2" stroke="#fca5a5" stroke-width="1.5"/>
+    <text x="231" y="37" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#64748b">*pa</text>
+    <text x="231" y="51" text-anchor="middle" font-family="JetBrains Mono" font-size="14" font-weight="700" fill="#dc2626">10</text>
+
+    <rect x="262" y="24" width="46" height="34" rx="5" fill="#dbeafe" stroke="#93c5fd" stroke-width="1.5"/>
+    <text x="285" y="37" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#64748b">*pb</text>
+    <text x="285" y="51" text-anchor="middle" font-family="JetBrains Mono" font-size="14" font-weight="700" fill="#2563eb">20</text>
+
+    <rect x="318" y="24" width="46" height="34" rx="5" fill="#fef9c3" stroke="#fde047" stroke-width="2"/>
+    <text x="341" y="37" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#64748b">tmp</text>
+    <text x="341" y="51" text-anchor="middle" font-family="JetBrains Mono" font-size="14" font-weight="700" fill="#ca8a04">10</text>
+
+    <path d="M231,58 Q282,78 341,58" stroke="#fbbf24" stroke-width="1.5" fill="none" stroke-dasharray="3,2" marker-end="url(#arrB)"/>
+    <text x="286" y="80" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#ca8a04">복사</text>
+
+    <!-- STEP 2 화살표 -->
+    <line x1="375" y1="75" x2="400" y2="75" stroke="#0891b2" stroke-width="1.5" marker-end="url(#arrB)"/>
+
+    <!-- STEP 2: *pa = *pb -->
+    <text x="460" y="14" text-anchor="middle" font-family="Noto Sans KR" font-size="10" fill="#0c4a6e" font-weight="700">STEP 2: *pa = *pb</text>
+
+    <rect x="402" y="24" width="46" height="34" rx="5" fill="#dcfce7" stroke="#86efac" stroke-width="2"/>
+    <text x="425" y="37" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#64748b">*pa</text>
+    <text x="425" y="51" text-anchor="middle" font-family="JetBrains Mono" font-size="14" font-weight="700" fill="#16a34a">20</text>
+
+    <rect x="456" y="24" width="46" height="34" rx="5" fill="#dbeafe" stroke="#93c5fd" stroke-width="1.5"/>
+    <text x="479" y="37" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#64748b">*pb</text>
+    <text x="479" y="51" text-anchor="middle" font-family="JetBrains Mono" font-size="14" font-weight="700" fill="#2563eb">20</text>
+
+    <path d="M479,58 Q452,78 425,58" stroke="#22c55e" stroke-width="1.5" fill="none" stroke-dasharray="3,2" marker-end="url(#arrB)"/>
+    <text x="452" y="80" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#22c55e">복사</text>
+
+    <!-- STEP 3 -->
+    <line x1="180" y1="130" x2="205" y2="130" stroke="#0891b2" stroke-width="1.5" marker-end="url(#arrB)"/>
+
+    <text x="60" y="105" text-anchor="middle" font-family="Noto Sans KR" font-size="10" fill="#94a3b8">계속...</text>
+
+    <text x="265" y="105" text-anchor="middle" font-family="Noto Sans KR" font-size="10" fill="#0c4a6e" font-weight="700">STEP 3: *pb = tmp</text>
+
+    <rect x="208" y="113" width="46" height="34" rx="5" fill="#dcfce7" stroke="#86efac" stroke-width="2"/>
+    <text x="231" y="126" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#64748b">*pa</text>
+    <text x="231" y="140" text-anchor="middle" font-family="JetBrains Mono" font-size="14" font-weight="700" fill="#16a34a">20</text>
+
+    <rect x="262" y="113" width="46" height="34" rx="5" fill="#fef9c3" stroke="#fde047" stroke-width="2"/>
+    <text x="285" y="126" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#64748b">*pb</text>
+    <text x="285" y="140" text-anchor="middle" font-family="JetBrains Mono" font-size="14" font-weight="700" fill="#ca8a04">10 </text>
+
+    <rect x="318" y="113" width="46" height="34" rx="5" fill="#fef9c3" stroke="#fde047" stroke-width="1.5"/>
+    <text x="341" y="126" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#64748b">tmp</text>
+    <text x="341" y="140" text-anchor="middle" font-family="JetBrains Mono" font-size="14" font-weight="700" fill="#ca8a04">10</text>
+
+    <path d="M341,113 Q312,98 285,113" stroke="#fbbf24" stroke-width="1.5" fill="none" stroke-dasharray="3,2" marker-end="url(#arrB)"/>
+    <text x="313" y="100" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#ca8a04">복사</text>
+
+    <!-- 최종 결과 -->
+    <rect x="395" y="105" width="118" height="42" rx="6" fill="#dcfce7" stroke="#86efac" stroke-width="2"/>
+    <text x="454" y="122" text-anchor="middle" font-family="Noto Sans KR" font-size="10" fill="#0c4a6e" font-weight="700">완료!</text>
+    <text x="454" y="138" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#16a34a">a=20, b=10</text>
+  </svg>
+
+  <div class="info-box">
+    tmp 없이 바로 <code>*pa = *pb; *pb = *pa;</code> 하면? — 두 번째 줄 실행 시 *pa가 이미 *pb 값이라서 원래 a 값이 사라진다. tmp가 보관소 역할을 한다.
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     PAGE 3: 완성 코드 + 단계별 구현
+════════════════════════════════════════ -->
+<div class="page">
+  <div class="cover-sidebar"></div>
+  <div class="cover-accent"></div>
+
+  <div class="section-title">
+    <div class="icon"></div>
+    완성 코드
+  </div>
+
+  <div class="code">
+    <span class="code-label">swap.c</span>
+    <span class="cmt">/* 포인터로 두 수 교환 */</span><br>
+    <span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span><br>
+    <br>
+    <span class="cmt">/* swap 함수: 포인터로 원본 직접 수정 */</span><br>
+    <span class="kw">void</span> <span class="fn">swap</span>(<span class="kw">int</span> <span class="ptr">*pa</span>, <span class="kw">int</span> <span class="ptr">*pb</span>) {<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">int</span> tmp = <span class="ptr">*pa</span>;   <span class="cmt">// 1단계: tmp에 a 값 보관</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="ptr">*pa</span> = <span class="ptr">*pb</span>;       <span class="cmt">// 2단계: a 자리에 b 값 저장</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="ptr">*pb</span> = tmp;       <span class="cmt">// 3단계: b 자리에 보관된 값 저장</span><br>
+    }<br>
+    <br>
+    <span class="kw">int</span> <span class="fn">main</span>() {<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">int</span> a = <span class="num">10</span>, b = <span class="num">20</span>;<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">printf</span>(<span class="str">"교환 전: a=%d, b=%d\n"</span>, a, b);<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">swap</span>(&amp;a, &amp;b);   <span class="cmt">// 주소를 전달!</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">printf</span>(<span class="str">"교환 후: a=%d, b=%d\n"</span>, a, b);<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="cmt">/* 여러 번 swap */</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">int</span> x = <span class="num">100</span>, y = <span class="num">200</span>, z = <span class="num">300</span>;<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">printf</span>(<span class="str">"\n3개 변수: x=%d, y=%d, z=%d\n"</span>, x, y, z);<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">swap</span>(&amp;x, &amp;y);<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">swap</span>(&amp;y, &amp;z);<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">printf</span>(<span class="str">"x↔y 후 y↔z: x=%d, y=%d, z=%d\n"</span>, x, y, z);<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">return</span> <span class="num">0</span>;<br>
+    }
+  </div>
+
+  <div class="output-box">
+    <span class="prompt">$ gcc swap.c -o swap &amp;&amp; ./swap</span><br>
+    <span class="label">교환 전:</span> a=10, b=20<br>
+    <span class="label">교환 후:</span> a=20, b=10<br>
+    <br>
+    <span class="label">3개 변수:</span> x=100, y=200, z=300<br>
+    <span class="label">x↔y 후 y↔z:</span> x=200, y=300, z=100
+  </div>
+
+  <div class="section-title" style="margin-top:10px">
+    <div class="icon"></div>
+    단계별 구현 가이드
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+    <div style="display:flex;align-items:center;gap:8px;margin:10px 0 6px;padding:6px 12px;background:#f0fdf4;border-radius:6px;border-left:3px solid #22c55e;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드 화면 - 포인터 코드 예시" style="width:24px;height:24px;object-fit:contain;background:#fff;border-radius:8px;">
+</div>
+<div class="step">
+      <div class="step-num">STEP 1</div>
+      <h4>함수 시그니처 작성</h4>
+      <p><code style="font-family:'JetBrains Mono';font-size:10px;background:#1e293b;color:#c084fc;padding:2px 5px;border-radius:3px">void swap(int *pa, int *pb)</code><br>
+      반환값 없음. 포인터 두 개를 매개변수로 받음.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">STEP 2</div>
+      <h4>tmp 변수로 값 보관</h4>
+      <p><code style="font-family:'JetBrains Mono';font-size:10px;background:#1e293b;color:#fbbf24;padding:2px 5px;border-radius:3px">int tmp = *pa;</code><br>
+      역참조(*pa)로 a의 값을 tmp에 저장.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">STEP 3</div>
+      <h4>교환 수행</h4>
+      <p><code style="font-family:'JetBrains Mono';font-size:10px;background:#1e293b;color:#fbbf24;padding:2px 5px;border-radius:3px">*pa = *pb; *pb = tmp;</code><br>
+      포인터로 원본 메모리에 직접 씀.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">STEP 4</div>
+      <h4>주소 전달로 호출</h4>
+      <p><code style="font-family:'JetBrains Mono';font-size:10px;background:#1e293b;color:#67e8f9;padding:2px 5px;border-radius:3px">swap(&amp;a, &amp;b);</code><br>
+      &amp;연산자로 주소를 전달해야 한다.</p>
+    </div>
+  </div>
+
+  <!-- 잘못된 방법 vs 올바른 방법 비교 코드 -->
+  <div class="compare-grid" style="margin-top:8px">
+    <div class="compare-box bad">
+      <div class="label"> 잘못된 방법</div>
+      <div class="code" style="font-size:9.5px;padding:6px 10px;margin:0">
+        <span class="kw">void</span> <span class="fn">bad</span>(<span class="kw">int</span> x, <span class="kw">int</span> y) {<br>
+        &nbsp;&nbsp;<span class="kw">int</span> t = x;<br>
+        &nbsp;&nbsp;x = y; y = t;<br>
+        } <span class="cmt">// 복사본만 바꿈</span>
+      </div>
+    </div>
+    <div class="compare-box good">
+      <div class="label"> 올바른 방법</div>
+      <div class="code" style="font-size:9.5px;padding:6px 10px;margin:0">
+        <span class="kw">void</span> <span class="fn">good</span>(<span class="kw">int</span> <span class="ptr">*pa</span>, <span class="kw">int</span> <span class="ptr">*pb</span>) {<br>
+        &nbsp;&nbsp;<span class="kw">int</span> t = <span class="ptr">*pa</span>;<br>
+        &nbsp;&nbsp;<span class="ptr">*pa</span> = <span class="ptr">*pb</span>; <span class="ptr">*pb</span> = t;<br>
+        } <span class="cmt">// 원본 수정!</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 메모리 주소 시각화 SVG -->
+  <svg width="100%" height="70" viewBox="0 0 520 70" style="margin-top:6px">
+    <rect x="10" y="8" width="500" height="54" rx="8" fill="#0f172a"/>
+    <text x="30" y="26" font-family="JetBrains Mono" font-size="9.5" fill="#64748b">// swap(&amp;a, &amp;b) 호출 시 pa, pb의 실제 값</text>
+    <text x="30" y="42" font-family="JetBrains Mono" font-size="9.5" fill="#c084fc">int</text>
+    <text x="52" y="42" font-family="JetBrains Mono" font-size="9.5" fill="#e2e8f0"> a = 10;  </text>
+    <text x="130" y="42" font-family="JetBrains Mono" font-size="9.5" fill="#64748b">// a의 주소: 0x7fff1000</text>
+    <text x="30" y="57" font-family="JetBrains Mono" font-size="9.5" fill="#fbbf24">*pa</text>
+    <text x="55" y="57" font-family="JetBrains Mono" font-size="9.5" fill="#e2e8f0"> = pa가 가리키는 메모리 = a =</text>
+    <text x="310" y="57" font-family="JetBrains Mono" font-size="9.5" fill="#7dd3fc"> 10</text>
+    <text x="330" y="57" font-family="JetBrains Mono" font-size="9.5" fill="#64748b">  (주소 0x7fff1000의 내용)</text>
+  </svg>
+</div>
+
+<!-- ════════════════════════════════════════
+     PAGE 4: 도전 과제 + 연습문제
+════════════════════════════════════════ -->
+<div class="page">
+  <div class="cover-sidebar"></div>
+  <div class="cover-accent"></div>
+
+  <div style="display:flex;align-items:center;gap:8px;margin:12px 0 6px;padding:7px 12px;background:#fefce8;border-radius:6px;border-left:3px solid #f59e0b;">
+    <img src="/images/learn/c-lang/binary-code.png" alt="이진 코드 - 메모리 주소 표현" style="width:24px;height:24px;object-fit:contain;background:#fff;border-radius:8px;">
+    <span style="font-size:12px;color:#92400e;font-weight:600;">도전 과제</span>
+</div>
+<div class="challenge">
+    <h3>도전 과제</h3>
+
+    <div class="challenge-item">
+      <span class="num">1</span>
+      <strong>3개 변수 회전 (rotate):</strong>
+      a→b, b→c, c→a 순서로 값을 이동하는 <code>rotate(int *a, int *b, int *c)</code> 함수를 작성하라.
+      swap 2번으로 구현할 수 있다.
+    </div>
+
+    <div class="challenge-item">
+      <span class="num">2</span>
+      <strong>float 버전 swap:</strong>
+      int 대신 float를 교환하는 <code>swap_float(float *pa, float *pb)</code>를 작성하라.
+      구조는 동일하지만 타입만 바뀐다.
+    </div>
+
+    <div class="challenge-item">
+      <span class="num">3</span>
+      <strong>배열 최솟값/최댓값 위치 교환:</strong>
+      int 배열에서 최솟값과 최댓값을 찾아 swap으로 위치를 바꾸는 함수를 작성하라.
+    </div>
+  </div>
+
+  <!-- 연습문제 -->
+  <div class="section-title" style="margin-top:10px">
+    <div class="icon"></div>
+    연습문제
+  </div>
+
+  <details class="problem">
+    <summary><span class="q-num">1</span> swap 함수에서 매개변수를 <code>int *pa, int *pb</code>로 받는 이유는?</summary>
+    <div class="answer">
+      C는 함수에 값을 전달할 때 기본적으로 복사(call by value)를 한다. 복사본을 수정해도 원본에 영향이 없다. 포인터(주소)를 전달하면 함수 안에서 역참조(*)로 원본 메모리에 직접 쓸 수 있기 때문에 포인터 매개변수를 사용한다.
+    </div>
+  </details>
+
+  <details class="problem">
+    <summary><span class="q-num">2</span> <code>swap(a, b)</code>와 <code>swap(&amp;a, &amp;b)</code>의 차이는?</summary>
+    <div class="answer">
+      <code>swap(a, b)</code>: a와 b의 값(10, 20)이 복사되어 전달 → 함수 안에서 복사본만 수정됨, 원본 불변.<br>
+      <code>swap(&amp;a, &amp;b)</code>: a와 b의 주소가 전달 → 함수 안에서 역참조로 원본을 직접 수정 가능.
+    </div>
+  </details>
+
+  <details class="problem">
+    <summary><span class="q-num">3</span> tmp 없이 <code>*pa = *pb; *pb = *pa;</code>를 하면 결과가 어떻게 되는가?</summary>
+    <div class="answer">
+      a=10, b=20일 때: <code>*pa = *pb</code> 실행 후 a=20이 됨. 이후 <code>*pb = *pa</code>는 이미 20이 된 a를 b에 복사 → b=20. 결국 a=20, b=20이 되어 원래 a 값(10)이 사라진다. tmp가 반드시 필요하다.
+    </div>
+  </details>
+
+  <details class="problem">
+    <summary><span class="q-num">4</span> <code>swap(&amp;a, &amp;b)</code> 호출 시 pa에 저장되는 값은 무엇인가?</summary>
+    <div class="answer">
+      pa에는 변수 a의 메모리 주소가 저장된다. 예를 들어 a가 0x7fff1000 주소에 있다면 pa = 0x7fff1000. *pa는 "그 주소에 있는 값", 즉 a의 값이다.
+    </div>
+  </details>
+
+  <details class="problem">
+    <summary><span class="q-num">5</span> swap 함수를 이용해 배열을 오름차순으로 정렬하는 버블 정렬의 핵심 코드를 완성하라.</summary>
+    <div class="answer">
+      <code>if (arr[j] &gt; arr[j+1]) swap(&amp;arr[j], &amp;arr[j+1]);</code><br>
+      이웃한 두 원소를 비교해서 순서가 잘못되면 swap으로 교환. 이 과정을 반복하면 가장 큰 값이 뒤로 밀려 정렬된다.
+    </div>
+  </details>
+
+  <!-- 요약 -->
+  <div class="summary-box" style="margin-top:8px">
+    <h3>이번 프로젝트 핵심</h3>
+    <ul>
+      <li>swap은 포인터가 필요한 가장 대표적인 함수다</li>
+      <li>포인터 없이는 함수 안에서 원본 변수를 바꿀 수 없다</li>
+      <li>3단계: tmp = *pa → *pa = *pb → *pb = tmp</li>
+      <li>호출할 때 &amp;연산자로 주소를 전달해야 함 (<code>swap(&amp;a, &amp;b)</code>)</li>
+      <li>같은 패턴으로 float, char, 구조체도 교환 가능하다</li>
+    </ul>
+  </div>
+
+    <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:20px;padding-top:10px;border-top:1px solid #f1f5f9;">
+        <img src="/images/learn/c-lang/code-screen.png" alt="코드 화면 - 포인터 코드 예시" style="width:22px;height:22px;object-fit:contain;opacity:0.6;background:#fff;border-radius:8px;">
+        <span style="font-size:10px;color:#cbd5e1;">코딩쏙 C언어</span>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

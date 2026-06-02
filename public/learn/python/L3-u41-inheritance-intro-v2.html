@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 상속 맛보기: 코드를 물려받기</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+/* -- 페이지 -- */
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+/* -- 챕터 표지 -- */
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+
+/* -- 본문 -- */
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 16px; font-weight: 700; color: #1e3a5f; margin: 18px 0 10px; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+ul, ol { margin: 0 0 12px 20px; }
+li { font-size: 14px; color: #374151; line-height: 1.8; }
+
+/* -- 코드 블록 -- */
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13.5px;
+    color: #e2e8f0; line-height: 1.85; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.code .dec { color: #f9a8d4; }
+.code .cls { color: #fde68a; }
+
+/* -- 따라해보세요 -- */
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '->'; color: #94a3b8; font-weight: 700; }
+
+/* -- 문제 -- */
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+.answer-code .kw { color: #c084fc; }
+.answer-code .fn { color: #67e8f9; }
+.answer-code .str { color: #86efac; }
+.answer-code .num { color: #7dd3fc; }
+.answer-code .cmt { color: #64748b; }
+.answer-code .cls { color: #fde68a; }
+
+/* -- 요약 -- */
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+/* -- 출력 박스 -- */
+.output-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #334155; line-height: 1.7; margin: 10px 0; }
+
+/* -- 비교 테이블 -- */
+.compare-table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13px; }
+.compare-table th { background: #1e3a5f; color: #fff; padding: 8px 12px; text-align: left; font-weight: 700; }
+.compare-table td { padding: 7px 12px; border-bottom: 1px solid #e2e8f0; color: #374151; }
+.compare-table tr:nth-child(even) td { background: #f8fafc; }
+.compare-table code { background: #e0e7ff; padding: 1px 5px; border-radius: 3px; font-family: 'JetBrains Mono', monospace; color: #3730a3; font-size: 12px; }
+
+/* -- 키 포인트 박스 -- */
+.key-box { border: 1.5px solid #3b82f6; border-radius: 10px; padding: 12px 16px; margin: 14px 0; background: #fff; }
+.key-box-title { font-size: 12px; font-weight: 700; color: #2563eb; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+.key-box p { font-size: 14px; color: #1e3b5e; margin: 0; }
+
+/* -- 워닝 박스 -- */
+.warn-box { border: 1.5px solid #f59e0b; border-radius: 10px; padding: 12px 16px; margin: 14px 0; background: #fff; }
+.warn-box-title { font-size: 12px; font-weight: 700; color: #b45309; letter-spacing: 1px; margin-bottom: 6px; }
+.warn-box p { font-size: 14px; color: #374151; margin: 0; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- 1페이지: 표지 -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">41</div>
+        <div class="cover-label">L3 — Unit 41</div>
+        <h1 class="cover-title">상속 맛보기:<br>코드를 물려받기</h1>
+        <p class="cover-sub">부모 클래스가 만들어 놓은 코드를 자식 클래스가 그대로 물려받아 쓸 수 있습니다. 동물→개/고양이, 탈것→자동차/자전거 비유로 상속의 핵심을 감잡습니다.</p>
+
+        <!-- SVG: 상속 개요 다이어그램 -->
+        <div style="margin:28px 0 20px;">
+            <svg viewBox="0 0 480 160" style="max-width:480px;width:100%">
+                <defs>
+                    <marker id="arwCov" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                    </marker>
+                </defs>
+                <!-- 부모 클래스 -->
+                <rect x="160" y="10" width="160" height="48" rx="10" fill="#1e3a5f"/>
+                <text x="240" y="30" text-anchor="middle" font-size="12" fill="#fff" font-weight="800">Animal (부모)</text>
+                <text x="240" y="47" text-anchor="middle" font-size="10" fill="#93c5fd">name, sound, eat()</text>
+                <!-- 화살표 -->
+                <line x1="170" y1="58" x2="100" y2="100" stroke="#94a3b8" stroke-width="2" marker-end="url(#arwCov)"/>
+                <line x1="310" y1="58" x2="380" y2="100" stroke="#94a3b8" stroke-width="2" marker-end="url(#arwCov)"/>
+                <!-- Dog 자식 -->
+                <rect x="20" y="104" width="155" height="48" rx="10" fill="#1d4ed8"/>
+                <text x="97" y="124" text-anchor="middle" font-size="12" fill="#fff" font-weight="800">Dog (자식)</text>
+                <text x="97" y="141" text-anchor="middle" font-size="10" fill="#bfdbfe">Animal 상속 + fetch()</text>
+                <!-- Cat 자식 -->
+                <rect x="305" y="104" width="155" height="48" rx="10" fill="#7c3aed"/>
+                <text x="382" y="124" text-anchor="middle" font-size="12" fill="#fff" font-weight="800">Cat (자식)</text>
+                <text x="382" y="141" text-anchor="middle" font-size="10" fill="#ddd6fe">Animal 상속 + purr()</text>
+                <!-- 레이블 -->
+                <text x="120" y="90" text-anchor="middle" font-size="9" fill="#64748b">class Dog(Animal):</text>
+                <text x="360" y="90" text-anchor="middle" font-size="9" fill="#64748b">class Cat(Animal):</text>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/puzzle.png" alt="클래스" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 유닛에서 배울 것</h3>
+            <ul>
+                <li>상속이 무엇인지, 왜 쓰는지 설명할 수 있습니다.</li>
+                <li><code>class Dog(Animal):</code> 문법으로 부모 클래스를 지정할 수 있습니다.</li>
+                <li><code>super().__init__()</code>으로 부모의 초기화 코드를 불러올 수 있습니다.</li>
+                <li>자식 클래스에서 새 메서드를 추가하거나 기존 메서드를 바꿀 수 있습니다.</li>
+                <li>동물, 탈것 비유로 상속 구조를 이해할 수 있습니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- 2페이지: 상속이란? + 기본 문법 -->
+<div class="page">
+    <h2>상속이란? — 코드 물려받기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="메서드" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>클래스를 만들다 보면 비슷한 코드를 여러 번 쓰게 됩니다. 예를 들어 <code>Dog</code> 클래스와 <code>Cat</code> 클래스 모두 이름, 소리, 먹는 동작이 있습니다. 이런 공통 코드를 <strong>부모 클래스</strong>에 한 번만 작성하고, 자식 클래스가 물려받으면 됩니다. 이것이 <strong>상속</strong>입니다.</p>
+
+    <!-- SVG: 상속 vs 복사 비교 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 110" style="max-width:480px;width:100%">
+            <!-- 왼쪽: 복사 방식 (나쁜 예) -->
+            <rect x="5" y="5" width="220" height="100" rx="8" fill="#fff0f0" stroke="#fca5a5" stroke-width="1.5"/>
+            <text x="115" y="22" text-anchor="middle" font-size="10" fill="#dc2626" font-weight="700">복사 방식 (중복 코드)</text>
+            <text x="115" y="38" text-anchor="middle" font-size="8.5" fill="#64748b">Dog: name, eat() 직접 작성</text>
+            <text x="115" y="52" text-anchor="middle" font-size="8.5" fill="#64748b">Cat: name, eat() 직접 작성</text>
+            <text x="115" y="66" text-anchor="middle" font-size="8.5" fill="#64748b">Bird: name, eat() 직접 작성</text>
+            <text x="115" y="82" text-anchor="middle" font-size="8" fill="#ef4444">eat() 수정하면 3곳 모두 변경</text>
+            <text x="115" y="97" text-anchor="middle" font-size="8" fill="#ef4444">실수하기 쉬움</text>
+            <!-- 오른쪽: 상속 방식 (좋은 예) -->
+            <rect x="255" y="5" width="220" height="100" rx="8" fill="#f0fdf4" stroke="#86efac" stroke-width="1.5"/>
+            <text x="365" y="22" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">상속 방식 (코드 공유)</text>
+            <text x="365" y="38" text-anchor="middle" font-size="8.5" fill="#64748b">Animal: name, eat() 한 번만</text>
+            <text x="365" y="52" text-anchor="middle" font-size="8.5" fill="#64748b">Dog(Animal): fetch() 추가만</text>
+            <text x="365" y="66" text-anchor="middle" font-size="8.5" fill="#64748b">Cat(Animal): purr() 추가만</text>
+            <text x="365" y="82" text-anchor="middle" font-size="8" fill="#16a34a">eat() 수정하면 Animal만 변경</text>
+            <text x="365" y="97" text-anchor="middle" font-size="8" fill="#16a34a">깔끔하고 안전</text>
+        </svg>
+    </div>
+
+    <h3>기본 문법 — class 자식(부모):</h3>
+    <p>자식 클래스를 만들 때 괄호 안에 부모 클래스 이름을 씁니다. 자식은 부모의 모든 속성과 메서드를 그대로 씁니다.</p>
+
+    <div class="code"><span class="cmt"># 부모 클래스</span>
+<span class="kw">class</span> <span class="cls">Animal</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="kw">self</span>, name):
+        <span class="kw">self</span>.name = name
+
+    <span class="kw">def</span> <span class="fn">eat</span>(<span class="kw">self</span>):
+        <span class="fn">print</span>(<span class="kw">f</span><span class="str">"{self.name}이/가 밥을 먹습니다."</span>)
+
+
+<span class="cmt"># 자식 클래스 — Animal을 상속</span>
+<span class="kw">class</span> <span class="cls">Dog</span>(<span class="cls">Animal</span>):          <span class="cmt"># 괄호에 부모 클래스 이름</span>
+    <span class="kw">def</span> <span class="fn">bark</span>(<span class="kw">self</span>):
+        <span class="fn">print</span>(<span class="kw">f</span><span class="str">"{self.name}: 멍멍!"</span>)
+
+
+<span class="cmt"># Dog 인스턴스 생성</span>
+d = <span class="cls">Dog</span>(<span class="str">"바둑이"</span>)
+d.<span class="fn">eat</span>()       <span class="cmt"># Animal에서 물려받은 메서드</span>
+d.<span class="fn">bark</span>()      <span class="cmt"># Dog 자신의 메서드</span></div>
+
+    <div class="output-box">바둑이이/가 밥을 먹습니다.
+바둑이: 멍멍!</div>
+
+    <p><code>Dog</code>에는 <code>eat()</code>를 따로 쓰지 않았지만 부모 <code>Animal</code>에서 물려받아 그대로 씁니다. <code>Dog(Animal)</code>에서 괄호가 "이 클래스의 부모는 Animal"이라는 뜻입니다.</p>
+
+    <!-- SVG: 상속 흐름 단계 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 64" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="arwFlow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="5" y="12" width="100" height="40" rx="8" fill="#1e3a5f"/>
+            <text x="55" y="29" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">Animal 정의</text>
+            <text x="55" y="43" text-anchor="middle" font-size="8" fill="#93c5fd">name, eat()</text>
+            <line x1="108" y1="32" x2="130" y2="32" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwFlow)"/>
+            <rect x="133" y="12" width="100" height="40" rx="8" fill="#1d4ed8"/>
+            <text x="183" y="29" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">Dog(Animal)</text>
+            <text x="183" y="43" text-anchor="middle" font-size="8" fill="#bfdbfe">bark() 추가</text>
+            <line x1="236" y1="32" x2="258" y2="32" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwFlow)"/>
+            <rect x="261" y="12" width="100" height="40" rx="8" fill="#0f766e"/>
+            <text x="311" y="29" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">Dog("바둑이")</text>
+            <text x="311" y="43" text-anchor="middle" font-size="8" fill="#99f6e4">인스턴스 생성</text>
+            <line x1="364" y1="32" x2="386" y2="32" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwFlow)"/>
+            <rect x="389" y="12" width="86" height="40" rx="8" fill="#166534"/>
+            <text x="432" y="29" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">eat() / bark()</text>
+            <text x="432" y="43" text-anchor="middle" font-size="8" fill="#bbf7d0">모두 사용 가능</text>
+        </svg>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/lightbulb.png" alt="아이디어" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+        <div class="practice-head">따라해보세요 — 상속 기본</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc"><code>Animal</code>과 <code>Dog</code> 클래스를 입력하고, <code>Dog("초코")</code> 인스턴스를 만들어 <code>eat()</code>와 <code>bark()</code>를 실행하세요.</div>
+                <div class="practice-result">초코이/가 밥을 먹습니다. / 초코: 멍멍!</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc"><code>Cat(Animal)</code> 클래스를 추가해 <code>meow()</code> 메서드를 넣고, <code>Cat("나비")</code>로 <code>eat()</code>와 <code>meow()</code>를 불러보세요.</div>
+                <div class="practice-result">나비이/가 밥을 먹습니다. / 나비: 야옹!</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc"><code>Animal</code>의 <code>eat()</code> 출력 문구를 "~이/가 맛있게 먹습니다."로 바꾸면 <code>Dog</code>와 <code>Cat</code> 모두 바뀌는 것을 확인하세요.</div>
+                <div class="practice-result">한 곳만 수정해도 자식 클래스 모두 반영됩니다.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3페이지: super().__init__() -->
+<div class="page">
+    <h2>super().__init__() — 부모 초기화 호출</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/book.png" alt="설계" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>자식 클래스에 <code>__init__</code>을 직접 쓸 때가 있습니다. 예를 들어 <code>Dog</code>는 <code>Animal</code>의 <code>name</code>뿐 아니라 품종(<code>breed</code>)도 저장하고 싶습니다. 이때 <code>super().__init__()</code>으로 부모의 초기화 코드를 먼저 실행하고 추가 속성을 붙입니다.</p>
+
+    <!-- SVG: super() 동작 원리 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 120" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="arwSup" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <!-- Dog.__init__ 호출 -->
+            <rect x="5" y="10" width="175" height="95" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="92" y="28" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">Dog.__init__("바둑이","진돗개")</text>
+            <text x="92" y="44" text-anchor="middle" font-size="9" fill="#64748b">1. super().__init__(name) 호출</text>
+            <text x="92" y="58" text-anchor="middle" font-size="9" fill="#64748b">2. self.breed = breed</text>
+            <text x="92" y="73" text-anchor="middle" font-size="8" fill="#94a3b8">자식 클래스 초기화</text>
+            <!-- 화살표 -->
+            <line x1="183" y1="45" x2="220" y2="45" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwSup)"/>
+            <text x="201" y="40" text-anchor="middle" font-size="8" fill="#94a3b8">super()</text>
+            <!-- Animal.__init__ -->
+            <rect x="223" y="10" width="175" height="65" rx="8" fill="#1e3a5f"/>
+            <text x="310" y="28" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">Animal.__init__(name)</text>
+            <text x="310" y="44" text-anchor="middle" font-size="9" fill="#93c5fd">self.name = "바둑이"</text>
+            <text x="310" y="58" text-anchor="middle" font-size="8" fill="#6b93c5">부모 클래스 초기화</text>
+            <!-- 결과 -->
+            <rect x="223" y="85" width="175" height="30" rx="8" fill="#166534"/>
+            <text x="310" y="97" text-anchor="middle" font-size="9" fill="#fff">self.name = "바둑이"</text>
+            <text x="310" y="109" text-anchor="middle" font-size="9" fill="#bbf7d0">self.breed = "진돗개"</text>
+            <line x1="310" y1="76" x2="310" y2="83" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwSup)"/>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">class</span> <span class="cls">Animal</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="kw">self</span>, name):
+        <span class="kw">self</span>.name = name
+        <span class="fn">print</span>(<span class="kw">f</span><span class="str">"Animal 초기화: {self.name}"</span>)
+
+    <span class="kw">def</span> <span class="fn">eat</span>(<span class="kw">self</span>):
+        <span class="fn">print</span>(<span class="kw">f</span><span class="str">"{self.name}이/가 밥을 먹습니다."</span>)
+
+
+<span class="kw">class</span> <span class="cls">Dog</span>(<span class="cls">Animal</span>):
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="kw">self</span>, name, breed):
+        <span class="fn">super</span>().<span class="fn">__init__</span>(name)   <span class="cmt"># 부모 초기화 먼저!</span>
+        <span class="kw">self</span>.breed = breed       <span class="cmt"># 자식 추가 속성</span>
+
+    <span class="kw">def</span> <span class="fn">bark</span>(<span class="kw">self</span>):
+        <span class="fn">print</span>(<span class="kw">f</span><span class="str">"{self.name}({self.breed}): 멍멍!"</span>)
+
+
+d = <span class="cls">Dog</span>(<span class="str">"바둑이"</span>, <span class="str">"진돗개"</span>)
+d.<span class="fn">eat</span>()
+d.<span class="fn">bark</span>()</div>
+
+    <div class="output-box">Animal 초기화: 바둑이
+바둑이이/가 밥을 먹습니다.
+바둑이(진돗개): 멍멍!</div>
+
+    <div class="key-box">
+        <div class="key-box-title">핵심 포인트</div>
+        <p><code>super().__init__()</code>을 빠뜨리면 <code>self.name</code>이 설정되지 않아 <code>eat()</code>에서 오류가 납니다. 자식 <code>__init__</code>을 쓸 때는 첫 줄에 <code>super().__init__()</code>을 쓰는 습관을 들이세요.</p>
+    </div>
+
+    <!-- SVG: super() 빠뜨리면 어떻게 되나 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 480 72" style="max-width:480px;width:100%">
+            <!-- 올바른 -->
+            <rect x="5" y="8" width="225" height="56" rx="8" fill="#f0fdf4" stroke="#86efac" stroke-width="1.5"/>
+            <text x="117" y="25" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">super() 있음 (올바름)</text>
+            <text x="117" y="41" text-anchor="middle" font-size="8.5" fill="#374151">super().__init__(name)  # 첫 줄</text>
+            <text x="117" y="56" text-anchor="middle" font-size="8.5" fill="#374151">self.name 정상 설정됨</text>
+            <!-- 잘못됨 -->
+            <rect x="250" y="8" width="225" height="56" rx="8" fill="#fff0f0" stroke="#fca5a5" stroke-width="1.5"/>
+            <text x="362" y="25" text-anchor="middle" font-size="10" fill="#dc2626" font-weight="700">super() 없음 (오류)</text>
+            <text x="362" y="41" text-anchor="middle" font-size="8.5" fill="#374151">self.breed = breed  # 첫 줄</text>
+            <text x="362" y="56" text-anchor="middle" font-size="8.5" fill="#dc2626">AttributeError: no name</text>
+        </svg>
+    </div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요 — super().__init__()</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">위 코드를 입력하고 <code>Dog("코코", "말티즈")</code>를 만들어 <code>eat()</code>와 <code>bark()</code>를 실행하세요.</div>
+                <div class="practice-result">Animal 초기화: 코코 / 코코이/가 밥을 먹습니다. / 코코(말티즈): 멍멍!</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc"><code>Cat(Animal)</code>을 만들고 <code>color</code> 속성을 추가하세요. <code>super().__init__(name)</code>을 꼭 호출하고 <code>meow()</code>에서 이름과 색을 출력하세요.</div>
+                <div class="practice-result">Animal 초기화: 나비 / 나비(흰색): 야옹!</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc"><code>super().__init__()</code>을 지워보고 어떤 오류가 나는지 확인한 뒤 다시 복구하세요.</div>
+                <div class="practice-result">AttributeError 오류 확인 후 복구</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 4페이지: 탈것 비유 + 메서드 오버라이딩 맛보기 -->
+<div class="page">
+    <h2>비유로 이해하기 — 탈것, 동물</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>상속은 현실 세계의 분류 체계와 똑같습니다. "탈것"에는 자동차도 있고 자전거도 있습니다. 둘 다 바퀴가 있고 이동하는 공통 기능이 있습니다. 이 공통 부분을 <code>Vehicle</code> 부모 클래스에 넣고 <code>Car</code>와 <code>Bicycle</code>이 상속받으면 코드가 깔끔해집니다.</p>
+
+    <!-- SVG: 탈것 상속 트리 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 130" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="arwVeh" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <!-- Vehicle 부모 -->
+            <rect x="140" y="8" width="200" height="44" rx="10" fill="#0f766e"/>
+            <text x="240" y="26" text-anchor="middle" font-size="12" fill="#fff" font-weight="800">Vehicle (부모)</text>
+            <text x="240" y="42" text-anchor="middle" font-size="9" fill="#99f6e4">speed, move(), stop()</text>
+            <!-- 화살표 -->
+            <line x1="190" y1="52" x2="120" y2="90" stroke="#94a3b8" stroke-width="2" marker-end="url(#arwVeh)"/>
+            <line x1="290" y1="52" x2="360" y2="90" stroke="#94a3b8" stroke-width="2" marker-end="url(#arwVeh)"/>
+            <!-- Car -->
+            <rect x="25" y="94" width="185" height="30" rx="8" fill="#b45309"/>
+            <text x="117" y="108" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">Car (자동차)</text>
+            <text x="117" y="120" text-anchor="middle" font-size="9" fill="#fde68a">fuel, honk()</text>
+            <!-- Bicycle -->
+            <rect x="270" y="94" width="185" height="30" rx="8" fill="#7c3aed"/>
+            <text x="362" y="108" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">Bicycle (자전거)</text>
+            <text x="362" y="120" text-anchor="middle" font-size="9" fill="#ddd6fe">gear, ring()</text>
+            <!-- 레이블 -->
+            <text x="135" y="83" text-anchor="middle" font-size="8" fill="#64748b">class Car(Vehicle):</text>
+            <text x="345" y="83" text-anchor="middle" font-size="8" fill="#64748b">class Bicycle(Vehicle):</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">class</span> <span class="cls">Vehicle</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="kw">self</span>, name, speed):
+        <span class="kw">self</span>.name = name
+        <span class="kw">self</span>.speed = speed
+
+    <span class="kw">def</span> <span class="fn">move</span>(<span class="kw">self</span>):
+        <span class="fn">print</span>(<span class="kw">f</span><span class="str">"{self.name} 이동 중 (시속 {self.speed}km)"</span>)
+
+
+<span class="kw">class</span> <span class="cls">Car</span>(<span class="cls">Vehicle</span>):
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="kw">self</span>, name, speed, fuel):
+        <span class="fn">super</span>().<span class="fn">__init__</span>(name, speed)
+        <span class="kw">self</span>.fuel = fuel
+
+    <span class="kw">def</span> <span class="fn">honk</span>(<span class="kw">self</span>):
+        <span class="fn">print</span>(<span class="kw">f</span><span class="str">"{self.name}: 빵빵! (연료: {self.fuel}L)"</span>)
+
+
+<span class="kw">class</span> <span class="cls">Bicycle</span>(<span class="cls">Vehicle</span>):
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="kw">self</span>, name, speed, gear):
+        <span class="fn">super</span>().<span class="fn">__init__</span>(name, speed)
+        <span class="kw">self</span>.gear = gear
+
+    <span class="kw">def</span> <span class="fn">ring</span>(<span class="kw">self</span>):
+        <span class="fn">print</span>(<span class="kw">f</span><span class="str">"{self.name}: 따르릉! ({self.gear}단 기어)"</span>)
+
+
+car = <span class="cls">Car</span>(<span class="str">"소나타"</span>, <span class="num">120</span>, <span class="num">50</span>)
+bike = <span class="cls">Bicycle</span>(<span class="str">"삼천리"</span>, <span class="num">25</span>, <span class="num">7</span>)
+car.<span class="fn">move</span>()
+car.<span class="fn">honk</span>()
+bike.<span class="fn">move</span>()
+bike.<span class="fn">ring</span>()</div>
+
+    <div class="output-box">소나타 이동 중 (시속 120km)
+소나타: 빵빵! (연료: 50L)
+삼천리 이동 중 (시속 25km)
+삼천리: 따르릉! (7단 기어)</div>
+
+    <p><code>Car</code>와 <code>Bicycle</code> 모두 <code>move()</code>를 따로 쓰지 않았습니다. <code>Vehicle</code>에서 물려받아 그대로 씁니다. 각자 고유한 <code>honk()</code>와 <code>ring()</code>만 추가했습니다.</p>
+
+    <!-- SVG: 상속 전/후 코드 라인 수 비교 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 480 80" style="max-width:480px;width:100%">
+            <text x="240" y="14" text-anchor="middle" font-size="10" fill="#64748b" font-weight="700">상속 없을 때 vs 상속 사용 — 코드 중복 비교</text>
+            <!-- 상속 없을 때 -->
+            <rect x="5" y="22" width="220" height="50" rx="8" fill="#fff0f0" stroke="#fca5a5" stroke-width="1.5"/>
+            <text x="115" y="38" text-anchor="middle" font-size="9" fill="#dc2626" font-weight="700">상속 없이 직접 작성</text>
+            <text x="115" y="52" text-anchor="middle" font-size="8" fill="#64748b">Car: name, speed, move(), honk()</text>
+            <text x="115" y="64" text-anchor="middle" font-size="8" fill="#64748b">Bicycle: name, speed, move(), ring()</text>
+            <text x="115" y="75" text-anchor="middle" font-size="8" fill="#ef4444">name/speed/move 3번 중복</text>
+            <!-- 상속 사용 -->
+            <rect x="255" y="22" width="220" height="50" rx="8" fill="#f0fdf4" stroke="#86efac" stroke-width="1.5"/>
+            <text x="365" y="38" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">상속 사용</text>
+            <text x="365" y="52" text-anchor="middle" font-size="8" fill="#64748b">Vehicle: name, speed, move() — 1번</text>
+            <text x="365" y="64" text-anchor="middle" font-size="8" fill="#64748b">Car: honk() / Bicycle: ring() — 추가만</text>
+            <text x="365" y="75" text-anchor="middle" font-size="8" fill="#16a34a">중복 없음, 수정도 한 곳에서</text>
+        </svg>
+    </div>
+</div>
+
+<!-- 5페이지: 메서드 오버라이딩 맛보기 + 비교 표 -->
+<div class="page">
+    <h2>메서드 오버라이딩 맛보기 — 덮어쓰기</h2>
+    <p>부모에서 물려받은 메서드를 자식 클래스에서 <strong>같은 이름으로 다시 정의</strong>하면, 자식은 자신의 버전을 씁니다. 이것을 <strong>오버라이딩(overriding)</strong>이라 합니다. 예를 들어 <code>Animal</code>의 <code>speak()</code>를 <code>Dog</code>와 <code>Cat</code>이 각자 덮어쓸 수 있습니다.</p>
+
+    <!-- SVG: 오버라이딩 개념도 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 100" style="max-width:480px;width:100%">
+            <!-- Animal -->
+            <rect x="165" y="5" width="150" height="40" rx="8" fill="#1e3a5f"/>
+            <text x="240" y="21" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">Animal</text>
+            <text x="240" y="36" text-anchor="middle" font-size="9" fill="#93c5fd">speak() "..."</text>
+            <!-- 화살표 -->
+            <line x1="210" y1="45" x2="150" y2="70" stroke="#94a3b8" stroke-width="1.5"/>
+            <line x1="270" y1="45" x2="330" y2="70" stroke="#94a3b8" stroke-width="1.5"/>
+            <!-- Dog 오버라이드 -->
+            <rect x="40" y="72" width="220" height="24" rx="6" fill="#1d4ed8"/>
+            <text x="150" y="84" text-anchor="middle" font-size="9" fill="#fff">Dog.speak() "멍멍!" (덮어씀)</text>
+            <text x="150" y="93" text-anchor="middle" font-size="7.5" fill="#bfdbfe">Animal.speak() 대신 이 버전 실행</text>
+            <!-- Cat 오버라이드 -->
+            <rect x="270" y="72" width="200" height="24" rx="6" fill="#7c3aed"/>
+            <text x="370" y="84" text-anchor="middle" font-size="9" fill="#fff">Cat.speak() "야옹!" (덮어씀)</text>
+            <text x="370" y="93" text-anchor="middle" font-size="7.5" fill="#ddd6fe">Animal.speak() 대신 이 버전 실행</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">class</span> <span class="cls">Animal</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="kw">self</span>, name):
+        <span class="kw">self</span>.name = name
+
+    <span class="kw">def</span> <span class="fn">speak</span>(<span class="kw">self</span>):
+        <span class="fn">print</span>(<span class="kw">f</span><span class="str">"{self.name}: ..."</span>)  <span class="cmt"># 기본 버전</span>
+
+
+<span class="kw">class</span> <span class="cls">Dog</span>(<span class="cls">Animal</span>):
+    <span class="kw">def</span> <span class="fn">speak</span>(<span class="kw">self</span>):           <span class="cmt"># 오버라이딩!</span>
+        <span class="fn">print</span>(<span class="kw">f</span><span class="str">"{self.name}: 멍멍!"</span>)
+
+
+<span class="kw">class</span> <span class="cls">Cat</span>(<span class="cls">Animal</span>):
+    <span class="kw">def</span> <span class="fn">speak</span>(<span class="kw">self</span>):           <span class="cmt"># 오버라이딩!</span>
+        <span class="fn">print</span>(<span class="kw">f</span><span class="str">"{self.name}: 야옹!"</span>)
+
+
+animals = [<span class="cls">Animal</span>(<span class="str">"동물"</span>), <span class="cls">Dog</span>(<span class="str">"바둑이"</span>), <span class="cls">Cat</span>(<span class="str">"나비"</span>)]
+<span class="kw">for</span> a <span class="kw">in</span> animals:
+    a.<span class="fn">speak</span>()          <span class="cmt"># 각자 자신의 버전 실행</span></div>
+
+    <div class="output-box">동물: ...
+바둑이: 멍멍!
+나비: 야옹!</div>
+
+    <p>같은 <code>speak()</code> 호출이지만 <code>Dog</code>는 "멍멍!", <code>Cat</code>은 "야옹!"을 출력합니다. 각 클래스가 자신의 버전을 쓰기 때문입니다. 이런 특성을 <strong>다형성</strong>이라 부르는데, 지금은 "오버라이딩으로 각자 다르게 동작할 수 있다"는 것만 기억하면 됩니다.</p>
+
+    <!-- 상속 개념 비교 표 -->
+    <h3>상속 핵심 개념 정리</h3>
+    <table class="compare-table">
+        <tr>
+            <th>개념</th>
+            <th>설명</th>
+            <th>예시</th>
+        </tr>
+        <tr>
+            <td>부모 클래스</td>
+            <td>공통 속성/메서드를 가진 기본 클래스</td>
+            <td><code>class Animal:</code></td>
+        </tr>
+        <tr>
+            <td>자식 클래스</td>
+            <td>부모를 상속받아 확장한 클래스</td>
+            <td><code>class Dog(Animal):</code></td>
+        </tr>
+        <tr>
+            <td>상속</td>
+            <td>부모 코드를 자동으로 물려받음</td>
+            <td><code>d.eat()</code> — Dog에 없어도 됨</td>
+        </tr>
+        <tr>
+            <td>super()</td>
+            <td>부모 클래스를 가리키는 키워드</td>
+            <td><code>super().__init__(name)</code></td>
+        </tr>
+        <tr>
+            <td>오버라이딩</td>
+            <td>부모 메서드를 자식이 덮어씀</td>
+            <td><code>def speak(self):</code> 재정의</td>
+        </tr>
+    </table>
+
+    <!-- SVG: 상속 관계 요약 다이어그램 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 480 80" style="max-width:480px;width:100%">
+            <rect x="5" y="5" width="80" height="70" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="45" y="22" text-anchor="middle" font-size="9" fill="#1e3a5f" font-weight="700">부모</text>
+            <text x="45" y="37" text-anchor="middle" font-size="8" fill="#64748b">공통 코드</text>
+            <text x="45" y="51" text-anchor="middle" font-size="8" fill="#64748b">한 번만 작성</text>
+            <text x="45" y="65" text-anchor="middle" font-size="8" fill="#94a3b8">Animal</text>
+            <!-- 화살표 -->
+            <text x="115" y="45" text-anchor="middle" font-size="20" fill="#94a3b8">-></text>
+            <rect x="150" y="5" width="80" height="70" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="190" y="22" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">자식 A</text>
+            <text x="190" y="37" text-anchor="middle" font-size="8" fill="#64748b">부모 코드 +</text>
+            <text x="190" y="51" text-anchor="middle" font-size="8" fill="#64748b">고유 기능 추가</text>
+            <text x="190" y="65" text-anchor="middle" font-size="8" fill="#1d4ed8">Dog</text>
+            <rect x="255" y="5" width="80" height="70" rx="8" fill="#ede9fe" stroke="#8b5cf6" stroke-width="1.5"/>
+            <text x="295" y="22" text-anchor="middle" font-size="9" fill="#7c3aed" font-weight="700">자식 B</text>
+            <text x="295" y="37" text-anchor="middle" font-size="8" fill="#64748b">부모 코드 +</text>
+            <text x="295" y="51" text-anchor="middle" font-size="8" fill="#64748b">다른 기능 추가</text>
+            <text x="295" y="65" text-anchor="middle" font-size="8" fill="#7c3aed">Cat</text>
+            <rect x="360" y="5" width="115" height="70" rx="8" fill="#f0fdf4" stroke="#86efac" stroke-width="1.5"/>
+            <text x="417" y="22" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">장점</text>
+            <text x="417" y="37" text-anchor="middle" font-size="8" fill="#64748b">코드 중복 없음</text>
+            <text x="417" y="51" text-anchor="middle" font-size="8" fill="#64748b">수정이 쉬움</text>
+            <text x="417" y="65" text-anchor="middle" font-size="8" fill="#64748b">구조가 명확</text>
+        </svg>
+    </div>
+
+    <p>자식 클래스는 부모 속성 외에 자신만의 속성을 얼마든지 추가할 수 있습니다. 예를 들어 새(<code>Bird</code>)라면 <code>wing_span</code>(날개폭) 속성을 추가하고, <code>ElectricCar</code>(전기차)라면 <code>battery</code>(배터리 잔량) 속성을 붙이는 식입니다. <code>super().__init__()</code>으로 부모 속성을 먼저 초기화한 뒤 자식 속성을 추가합니다.</p>
+
+    <!-- SVG: 자식 속성 확장 패턴 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 480 70" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="arwExt" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="5" y="10" width="130" height="50" rx="8" fill="#1e3a5f"/>
+            <text x="70" y="28" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">Animal(name)</text>
+            <text x="70" y="44" text-anchor="middle" font-size="8" fill="#93c5fd">self.name</text>
+            <line x1="138" y1="35" x2="158" y2="35" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwExt)"/>
+            <text x="195" y="25" text-anchor="middle" font-size="8" fill="#64748b">super().__init__(name)</text>
+            <rect x="162" y="10" width="150" height="50" rx="8" fill="#1d4ed8"/>
+            <text x="237" y="28" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">Bird(Animal)</text>
+            <text x="237" y="44" text-anchor="middle" font-size="8" fill="#bfdbfe">self.name + self.wing_span</text>
+            <line x1="315" y1="35" x2="335" y2="35" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwExt)"/>
+            <rect x="339" y="10" width="136" height="50" rx="8" fill="#166534"/>
+            <text x="407" y="28" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">b = Bird("독수리", 150)</text>
+            <text x="407" y="44" text-anchor="middle" font-size="8" fill="#bbf7d0">b.name / b.wing_span 사용</text>
+        </svg>
+    </div>
+</div>
+
+<!-- 6페이지: 문제 + 핵심 요약 -->
+<div class="page">
+    <h2>확인 문제</h2>
+
+    <!-- 문제 1 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">1</div>
+            <div class="problem-label">Animal을 상속받는 Bird 클래스 만들기</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">
+                <code>Animal(name)</code> 클래스를 만들고, 이를 상속받는 <code>Bird</code> 클래스를 작성하세요.<br>
+                <code>Bird</code>에는 <code>wing_span</code> 속성(날개 길이)과 <code>fly()</code> 메서드를 추가합니다.<br>
+                <code>fly()</code>는 "이름이 날개폭cm 날개로 날아갑니다."를 출력합니다.
+            </div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">입력</span>
+                    <span class="problem-example-value">Bird("독수리", 150)</span>
+                </div>
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력</span>
+                    <span class="problem-example-value">독수리이/가 밥을 먹습니다.<br>독수리이 150cm 날개로 날아갑니다.</span>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">class Bird(Animal): 으로 상속. __init__에서 super().__init__(name)을 먼저 호출하고 self.wing_span = wing_span을 추가하세요.</div>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code"><span class="kw">class</span> <span class="cls">Animal</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="kw">self</span>, name):
+        <span class="kw">self</span>.name = name
+    <span class="kw">def</span> <span class="fn">eat</span>(<span class="kw">self</span>):
+        <span class="fn">print</span>(<span class="kw">f</span><span class="str">"{self.name}이/가 밥을 먹습니다."</span>)
+
+<span class="kw">class</span> <span class="cls">Bird</span>(<span class="cls">Animal</span>):
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="kw">self</span>, name, wing_span):
+        <span class="fn">super</span>().<span class="fn">__init__</span>(name)
+        <span class="kw">self</span>.wing_span = wing_span
+    <span class="kw">def</span> <span class="fn">fly</span>(<span class="kw">self</span>):
+        <span class="fn">print</span>(<span class="kw">f</span><span class="str">"{self.name}이 {self.wing_span}cm 날개로 날아갑니다."</span>)
+
+b = <span class="cls">Bird</span>(<span class="str">"독수리"</span>, <span class="num">150</span>)
+b.<span class="fn">eat</span>()
+b.<span class="fn">fly</span>()</div>
+            </div>
+        </details>
+    </div>
+
+    <!-- 문제 2 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">2</div>
+            <div class="problem-label">speak() 오버라이딩 — Dog와 Cat 각자 다르게</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">
+                <code>Animal</code>의 <code>speak()</code>는 "이름: ..."을 출력합니다.<br>
+                <code>Dog</code>는 <code>speak()</code>를 오버라이딩해 "이름: 멍멍멍!"을,<br>
+                <code>Cat</code>은 "이름: 냐옹~"을 출력하도록 하세요.<br>
+                세 동물을 리스트에 넣고 <code>for</code>문으로 모두 <code>speak()</code>를 호출하세요.
+            </div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력</span>
+                    <span class="problem-example-value">동물: ...<br>바둑이: 멍멍멍!<br>나비: 냐옹~</span>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">Dog와 Cat 클래스에 def speak(self):를 각각 정의하면 부모의 speak()가 덮어써집니다. 리스트에 넣을 때 Animal("동물"), Dog("바둑이"), Cat("나비")처럼 섞어도 됩니다.</div>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code"><span class="kw">class</span> <span class="cls">Animal</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="kw">self</span>, name):
+        <span class="kw">self</span>.name = name
+    <span class="kw">def</span> <span class="fn">speak</span>(<span class="kw">self</span>):
+        <span class="fn">print</span>(<span class="kw">f</span><span class="str">"{self.name}: ..."</span>)
+
+<span class="kw">class</span> <span class="cls">Dog</span>(<span class="cls">Animal</span>):
+    <span class="kw">def</span> <span class="fn">speak</span>(<span class="kw">self</span>):
+        <span class="fn">print</span>(<span class="kw">f</span><span class="str">"{self.name}: 멍멍멍!"</span>)
+
+<span class="kw">class</span> <span class="cls">Cat</span>(<span class="cls">Animal</span>):
+    <span class="kw">def</span> <span class="fn">speak</span>(<span class="kw">self</span>):
+        <span class="fn">print</span>(<span class="kw">f</span><span class="str">"{self.name}: 냐옹~"</span>)
+
+animals = [<span class="cls">Animal</span>(<span class="str">"동물"</span>), <span class="cls">Dog</span>(<span class="str">"바둑이"</span>), <span class="cls">Cat</span>(<span class="str">"나비"</span>)]
+<span class="kw">for</span> a <span class="kw">in</span> animals:
+    a.<span class="fn">speak</span>()</div>
+            </div>
+        </details>
+    </div>
+
+    <!-- 문제 3 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">3</div>
+            <div class="problem-label">Vehicle 상속 — ElectricCar 클래스 추가</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">
+                <code>Vehicle(name, speed)</code>를 상속받는 <code>ElectricCar</code>를 만드세요.<br>
+                <code>ElectricCar</code>는 <code>battery</code>(배터리 잔량 %) 속성을 추가하고,<br>
+                <code>charge()</code> 메서드로 "이름 충전 중... 잔량: battery%"를 출력합니다.<br>
+                <code>move()</code>는 부모 버전을 그대로 쓰세요.
+            </div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">입력</span>
+                    <span class="problem-example-value">ElectricCar("테슬라", 200, 80)</span>
+                </div>
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력</span>
+                    <span class="problem-example-value">테슬라 이동 중 (시속 200km)<br>테슬라 충전 중... 잔량: 80%</span>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">super().__init__(name, speed)로 부모 초기화. battery는 자식에서만 쓰므로 super() 이후에 self.battery = battery로 설정하세요.</div>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code"><span class="kw">class</span> <span class="cls">Vehicle</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="kw">self</span>, name, speed):
+        <span class="kw">self</span>.name = name
+        <span class="kw">self</span>.speed = speed
+    <span class="kw">def</span> <span class="fn">move</span>(<span class="kw">self</span>):
+        <span class="fn">print</span>(<span class="kw">f</span><span class="str">"{self.name} 이동 중 (시속 {self.speed}km)"</span>)
+
+<span class="kw">class</span> <span class="cls">ElectricCar</span>(<span class="cls">Vehicle</span>):
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="kw">self</span>, name, speed, battery):
+        <span class="fn">super</span>().<span class="fn">__init__</span>(name, speed)
+        <span class="kw">self</span>.battery = battery
+    <span class="kw">def</span> <span class="fn">charge</span>(<span class="kw">self</span>):
+        <span class="fn">print</span>(<span class="kw">f</span><span class="str">"{self.name} 충전 중... 잔량: {self.battery}%"</span>)
+
+ec = <span class="cls">ElectricCar</span>(<span class="str">"테슬라"</span>, <span class="num">200</span>, <span class="num">80</span>)
+ec.<span class="fn">move</span>()
+ec.<span class="fn">charge</span>()</div>
+            </div>
+        </details>
+    </div>
+
+    <!-- 핵심 요약 -->
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>핵심 요약</h3>
+        <ul>
+            <li><strong>상속</strong>: 자식 클래스가 부모 클래스의 속성과 메서드를 물려받는 것</li>
+            <li><strong>문법</strong>: <code>class Dog(Animal):</code> — 괄호 안에 부모 클래스 이름</li>
+            <li><strong>super().__init__()</strong>: 자식에서 __init__을 쓸 때 부모 초기화를 먼저 호출</li>
+            <li><strong>오버라이딩</strong>: 부모 메서드를 자식에서 같은 이름으로 다시 정의하면 자식 버전이 실행됨</li>
+            <li><strong>장점</strong>: 코드 중복 제거, 수정이 한 곳에서 반영, 구조가 명확해짐</li>
+            <li><strong>비유</strong>: Animal-Dog/Cat, Vehicle-Car/Bicycle 처럼 "공통 부모 + 고유 자식"</li>
+        </ul>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

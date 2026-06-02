@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 프로젝트 05: 합계 계산기</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 14px;
+    color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fce7f3; color: #9d174d; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+.callout { border-radius: 8px; padding: 12px 16px; margin: 12px 0; font-size: 14px; line-height: 1.7; }
+.callout-info { background: #eff6ff; border-left: 4px solid #3b82f6; color: #1e40af; }
+.callout-warn { background: #fffbeb; border-left: 4px solid #f59e0b; color: #92400e; }
+.callout-tip { background: #f0fdf4; border-left: 4px solid #22c55e; color: #166534; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- ========== PAGE 1: COVER ========== -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">P5</div>
+        <div class="cover-label">Project 05 · Level 4</div>
+        <h1 class="cover-title">합계 계산기</h1>
+        <p class="cover-sub">0을 입력할 때까지 숫자를 반복 입력받아 합계, 평균, 최대값, 최소값을 한꺼번에 출력하는 통계 계산기를 만들어봅니다.</p>
+
+        <!-- SVG 1: 숫자 누적 시각화 -->
+        <div style="text-align:center;margin:20px 0 14px;">
+            <svg viewBox="0 0 500 140" style="max-width:500px;width:100%">
+                <defs>
+                    <marker id="arrs" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                    </marker>
+                </defs>
+                <!-- 입력 숫자들 -->
+                <text x="250" y="16" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="800">입력: 5, 10, 3, 8, 0 (0으로 종료)</text>
+
+                <rect x="20" y="28" width="44" height="44" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+                <text x="42" y="54" text-anchor="middle" font-size="20" fill="#1d4ed8" font-weight="900" font-family="JetBrains Mono">5</text>
+                <line x1="66" y1="50" x2="80" y2="50" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrs)"/>
+
+                <rect x="82" y="28" width="44" height="44" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+                <text x="104" y="54" text-anchor="middle" font-size="20" fill="#1d4ed8" font-weight="900" font-family="JetBrains Mono">10</text>
+                <line x1="128" y1="50" x2="142" y2="50" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrs)"/>
+
+                <rect x="144" y="28" width="44" height="44" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+                <text x="166" y="54" text-anchor="middle" font-size="20" fill="#1d4ed8" font-weight="900" font-family="JetBrains Mono">3</text>
+                <line x1="190" y1="50" x2="204" y2="50" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrs)"/>
+
+                <rect x="206" y="28" width="44" height="44" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+                <text x="228" y="54" text-anchor="middle" font-size="20" fill="#1d4ed8" font-weight="900" font-family="JetBrains Mono">8</text>
+                <line x1="252" y1="50" x2="266" y2="50" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrs)"/>
+
+                <rect x="268" y="28" width="44" height="44" rx="6" fill="#fef2f2" stroke="#ef4444" stroke-width="2"/>
+                <text x="290" y="54" text-anchor="middle" font-size="20" fill="#dc2626" font-weight="900" font-family="JetBrains Mono">0</text>
+                <text x="290" y="82" text-anchor="middle" font-size="9" fill="#ef4444" font-weight="700">종료!</text>
+
+                <!-- 결과 -->
+                <rect x="340" y="18" width="150" height="60" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="415" y="35" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">합계: 26</text>
+                <text x="415" y="51" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">평균: 6.5</text>
+                <text x="415" y="67" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">최대: 10 / 최소: 3</text>
+
+                <!-- sum 누적 표시 -->
+                <text x="250" y="105" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">sum 누적 과정</text>
+                <text x="42" y="122" text-anchor="middle" font-size="10" fill="#3b82f6" font-family="JetBrains Mono">0+5=5</text>
+                <text x="104" y="122" text-anchor="middle" font-size="10" fill="#3b82f6" font-family="JetBrains Mono">5+10=15</text>
+                <text x="166" y="122" text-anchor="middle" font-size="10" fill="#3b82f6" font-family="JetBrains Mono">15+3=18</text>
+                <text x="228" y="122" text-anchor="middle" font-size="10" fill="#3b82f6" font-family="JetBrains Mono">18+8=26</text>
+                <text x="290" y="122" text-anchor="middle" font-size="10" fill="#ef4444" font-family="JetBrains Mono">종료</text>
+                <text x="415" y="105" text-anchor="middle" font-size="10" fill="#22c55e" font-weight="700">count=4</text>
+            </svg>
+        </div>
+
+        <!-- SVG 2: 처리 흐름 -->
+        <div style="text-align:center;margin:10px 0;">
+            <svg viewBox="0 0 500 50" style="max-width:500px;width:100%">
+                <defs>
+                    <marker id="arrs2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+                    </marker>
+                </defs>
+                <rect x="10" y="12" width="80" height="26" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="50" y="29" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">숫자 입력</text>
+                <line x1="93" y1="25" x2="108" y2="25" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrs2)"/>
+                <rect x="110" y="12" width="80" height="26" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="150" y="29" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">0이면 종료</text>
+                <line x1="193" y1="25" x2="208" y2="25" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrs2)"/>
+                <rect x="210" y="12" width="90" height="26" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="255" y="29" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">sum += n</text>
+                <line x1="303" y1="25" x2="318" y2="25" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrs2)"/>
+                <rect x="320" y="12" width="80" height="26" rx="6" fill="#eff6ff" stroke="#6366f1" stroke-width="1.5"/>
+                <text x="360" y="29" text-anchor="middle" font-size="10" fill="#4338ca" font-weight="700">max/min 갱신</text>
+                <line x1="403" y1="25" x2="418" y2="25" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrs2)"/>
+                <rect x="420" y="12" width="70" height="26" rx="6" fill="#1e3a5f"/>
+                <text x="455" y="29" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">결과 출력</text>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/calculator.png" alt="계산기" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 프로젝트에서 배우는 것</h3>
+            <ul>
+                <li>0 입력 시 반복을 종료하는 sentinel 값 패턴을 이해합니다.</li>
+                <li>sum += n 으로 숫자를 누적하는 방법을 익힙니다.</li>
+                <li>count 변수로 입력 개수를 세어 평균을 계산합니다.</li>
+                <li>최대값·최소값을 갱신하는 조건 로직을 구현합니다.</li>
+                <li>continue로 특정 값(음수, 홀수)을 건너뛰는 방법을 익힙니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- ========== PAGE 2: 기본 구현 ========== -->
+<div class="page">
+    <h2>합계 계산기 — 기본 구현</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="연산" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>0이 입력될 때까지 계속 숫자를 받아서, 마지막에 합계·평균·최대값·최소값을 한꺼번에 출력합니다.</p>
+
+    <!-- SVG 3: max/min 갱신 로직 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 100" style="max-width:460px;width:100%">
+            <text x="230" y="13" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="800">최대값 갱신 원리 — 입력값이 현재 최대보다 크면 교체</text>
+            <!-- 단계 1 -->
+            <rect x="10" y="22" width="90" height="68" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="55" y="38" text-anchor="middle" font-size="10" fill="#94a3b8" font-weight="700">처음</text>
+            <text x="55" y="55" text-anchor="middle" font-size="10" fill="#64748b" font-family="JetBrains Mono">max=5</text>
+            <text x="55" y="70" text-anchor="middle" font-size="10" fill="#64748b" font-family="JetBrains Mono">입력=5</text>
+            <text x="55" y="84" text-anchor="middle" font-size="9" fill="#94a3b8">max=첫 번째 값</text>
+
+            <!-- 단계 2 -->
+            <rect x="116" y="22" width="100" height="68" rx="6" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="166" y="38" text-anchor="middle" font-size="10" fill="#ef4444" font-weight="700">입력=10 &gt; max=5</text>
+            <text x="166" y="55" text-anchor="middle" font-size="12" fill="#dc2626" font-weight="900" font-family="JetBrains Mono">max=10</text>
+            <text x="166" y="70" text-anchor="middle" font-size="10" fill="#dc2626">갱신!</text>
+            <text x="166" y="84" text-anchor="middle" font-size="9" fill="#94a3b8">10 &gt; 5 → 교체</text>
+
+            <!-- 단계 3 -->
+            <rect x="232" y="22" width="100" height="68" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="282" y="38" text-anchor="middle" font-size="10" fill="#22c55e" font-weight="700">입력=3 &lt; max=10</text>
+            <text x="282" y="55" text-anchor="middle" font-size="12" fill="#166534" font-weight="900" font-family="JetBrains Mono">max=10</text>
+            <text x="282" y="70" text-anchor="middle" font-size="10" fill="#166534">유지</text>
+            <text x="282" y="84" text-anchor="middle" font-size="9" fill="#94a3b8">3 &lt; 10 → 그대로</text>
+
+            <!-- 단계 4 -->
+            <rect x="348" y="22" width="102" height="68" rx="6" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="399" y="38" text-anchor="middle" font-size="10" fill="#ef4444" font-weight="700">입력=8 &lt; max=10</text>
+            <text x="399" y="55" text-anchor="middle" font-size="12" fill="#dc2626" font-weight="900" font-family="JetBrains Mono">max=10</text>
+            <text x="399" y="70" text-anchor="middle" font-size="10" fill="#dc2626">유지</text>
+            <text x="399" y="84" text-anchor="middle" font-size="9" fill="#94a3b8">최종 최대값</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt">// 합계 계산기 — 기본 버전</span>
+<span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="kw">int</span> n, sum = <span class="num">0</span>, count = <span class="num">0</span>;
+    <span class="kw">int</span> max, min;
+    <span class="kw">int</span> first = <span class="num">1</span>;    <span class="cmt">// 첫 번째 입력인지 확인하는 플래그</span>
+
+    <span class="fn">printf</span>(<span class="str">"숫자를 입력하세요 (0을 입력하면 종료):\n"</span>);
+
+    <span class="kw">while</span> (<span class="num">1</span>) {
+        <span class="fn">printf</span>(<span class="str">"입력: "</span>);
+        <span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;n);
+
+        <span class="kw">if</span> (n == <span class="num">0</span>) <span class="kw">break</span>;   <span class="cmt">// 0 입력 시 종료</span>
+
+        sum += n;             <span class="cmt">// 합계 누적</span>
+        count++;              <span class="cmt">// 개수 카운트</span>
+
+        <span class="kw">if</span> (first) {
+            max = min = n;    <span class="cmt">// 첫 번째 값으로 초기화</span>
+            first = <span class="num">0</span>;
+        } <span class="kw">else</span> {
+            <span class="kw">if</span> (n &gt; max) max = n;   <span class="cmt">// 최대값 갱신</span>
+            <span class="kw">if</span> (n &lt; min) min = n;   <span class="cmt">// 최소값 갱신</span>
+        }
+    }
+
+    <span class="kw">if</span> (count == <span class="num">0</span>) {
+        <span class="fn">printf</span>(<span class="str">"입력된 숫자가 없습니다.\n"</span>);
+    } <span class="kw">else</span> {
+        <span class="fn">printf</span>(<span class="str">"\n--- 통계 결과 ---\n"</span>);
+        <span class="fn">printf</span>(<span class="str">"입력 개수: %d개\n"</span>, count);
+        <span class="fn">printf</span>(<span class="str">"합계: %d\n"</span>, sum);
+        <span class="fn">printf</span>(<span class="str">"평균: %.1f\n"</span>, (<span class="kw">float</span>)sum / count);
+        <span class="fn">printf</span>(<span class="str">"최대값: %d\n"</span>, max);
+        <span class="fn">printf</span>(<span class="str">"최소값: %d\n"</span>, min);
+    }
+
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/clock.png" alt="시계" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/lightbulb.png" alt="아이디어" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">위 코드를 입력하고 5, 10, 3, 8, 0을 차례로 입력해보세요.</div>
+                <div class="practice-result">합계: 26, 평균: 6.5, 최대: 10, 최소: 3</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc"><code>sum += n</code>이 왜 <code>sum = sum + n</code>과 같은지 설명해보세요.</div>
+                <div class="practice-result">복합 대입 연산자 += 는 sum = sum + n 의 줄임말입니다</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc"><code>(float)sum / count</code>에서 <code>(float)</code>을 빼면 어떻게 될까요? 5와 2를 입력해보세요.</div>
+                <div class="practice-result">(float) 없으면 정수 나눗셈 → 2 (소수점 버림). (float) 있으면 2.5</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SVG 4: (float) 캐스팅 설명 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 460 60" style="max-width:460px;width:100%">
+            <text x="230" y="13" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="800">(float) 형변환 — 정수 나눗셈 vs 실수 나눗셈</text>
+            <rect x="10" y="20" width="200" height="34" rx="6" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="110" y="37" text-anchor="middle" font-size="11" fill="#dc2626" font-weight="700" font-family="JetBrains Mono">26 / 4 = 6</text>
+            <text x="110" y="50" text-anchor="middle" font-size="9" fill="#dc2626">정수 나눗셈 → 소수점 버림</text>
+            <rect x="250" y="20" width="200" height="34" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="350" y="37" text-anchor="middle" font-size="11" fill="#166534" font-weight="700" font-family="JetBrains Mono">(float)26 / 4 = 6.5</text>
+            <text x="350" y="50" text-anchor="middle" font-size="9" fill="#166534">실수 나눗셈 → 소수점 유지</text>
+        </svg>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">1</div>
+            <div class="problem-label">0만 입력했을 때 예외 처리 확인</div>
+            <div class="problem-diff easy">쉬움</div>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">프로그램을 실행하자마자 0을 입력하면 어떤 메시지가 출력되는지 확인해보세요. <code>count == 0</code> 조건이 왜 필요한지 생각해보세요.</div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 / 정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">바로 0을 입력하면 count=0이라서 "입력된 숫자가 없습니다."가 출력됩니다. count==0 체크 없이 sum/count를 하면 0으로 나누기(런타임 오류)가 발생합니다.</div>
+            </div>
+        </details>
+    </div>
+</div>
+
+<!-- ========== PAGE 3: 확장 구현 ========== -->
+<div class="page">
+    <h2>확장 1 — 양수만 합산 &amp; continue 활용</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p><code>continue</code>는 현재 반복을 건너뛰고 다음 반복으로 넘어갑니다. 음수나 홀수를 무시하고 싶을 때 사용합니다.</p>
+
+    <!-- SVG 5: continue 동작 원리 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 120" style="max-width:460px;width:100%">
+            <defs>
+                <marker id="arrc2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+                </marker>
+                <marker id="arrc2r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#f59e0b"/>
+                </marker>
+            </defs>
+            <text x="230" y="13" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="800">continue — 건너뛰고 다음 반복으로</text>
+            <!-- 입력 -->
+            <rect x="10" y="22" width="80" height="26" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="50" y="39" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">n 입력</text>
+            <line x1="93" y1="35" x2="108" y2="35" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrc2)"/>
+            <!-- 조건 -->
+            <polygon points="160,22 220,48 160,74 100,48" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+            <text x="160" y="45" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">n &lt; 0</text>
+            <text x="160" y="58" text-anchor="middle" font-size="9" fill="#92400e">?</text>
+            <!-- 참 → continue -->
+            <line x1="160" y1="74" x2="160" y2="95" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#arrc2r)"/>
+            <text x="138" y="88" font-size="9" fill="#f59e0b" font-weight="700">참</text>
+            <rect x="100" y="97" width="120" height="20" rx="6" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="160" y="111" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">continue → 건너뜀</text>
+            <!-- 화살표가 위로 -->
+            <path d="M160,117 L160,130 L30,130 L30,35 L10,35" stroke="#f59e0b" stroke-width="1.5" fill="none"/>
+
+            <!-- 거짓 → sum 누적 -->
+            <line x1="220" y1="48" x2="260" y2="48" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrc2)"/>
+            <text x="242" y="40" font-size="9" fill="#22c55e" font-weight="700">거짓</text>
+            <rect x="262" y="34" width="90" height="28" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="307" y="47" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">sum += n</text>
+            <text x="307" y="58" text-anchor="middle" font-size="9" fill="#166534">count++</text>
+            <text x="390" y="48" font-size="11" fill="#64748b">← 누적</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt">// 확장 1: 양수만 합산 (continue 사용)</span>
+<span class="kw">while</span> (<span class="num">1</span>) {
+    <span class="fn">printf</span>(<span class="str">"입력 (0: 종료): "</span>);
+    <span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;n);
+    <span class="kw">if</span> (n == <span class="num">0</span>) <span class="kw">break</span>;
+    <span class="kw">if</span> (n &lt; <span class="num">0</span>) {
+        <span class="fn">printf</span>(<span class="str">"음수는 건너뜁니다.\n"</span>);
+        <span class="kw">continue</span>;  <span class="cmt">// 아래 코드 실행 안 하고 while 처음으로</span>
+    }
+    sum += n;
+    count++;
+}
+
+<span class="cmt">// 확장 2: 짝수만 합산 (% 연산 활용)</span>
+<span class="kw">while</span> (<span class="num">1</span>) {
+    <span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;n);
+    <span class="kw">if</span> (n == <span class="num">0</span>) <span class="kw">break</span>;
+    <span class="kw">if</span> (n % <span class="num">2</span> != <span class="num">0</span>) {       <span class="cmt">// 홀수면 건너뜀</span>
+        <span class="fn">printf</span>(<span class="str">"%d는 홀수, 건너뜁니다.\n"</span>, n);
+        <span class="kw">continue</span>;
+    }
+    sum += n;
+    count++;
+    <span class="fn">printf</span>(<span class="str">"%d 누적됨 (현재 합계: %d)\n"</span>, n, sum);
+}</div>
+
+    <!-- SVG 6: break vs continue 비교 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+            <text x="230" y="13" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="800">break vs continue 차이</text>
+            <rect x="10" y="20" width="200" height="54" rx="8" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="110" y="38" text-anchor="middle" font-size="12" fill="#dc2626" font-weight="900" font-family="JetBrains Mono">break</text>
+            <text x="110" y="54" text-anchor="middle" font-size="10" fill="#dc2626">반복문 전체를 즉시 탈출</text>
+            <text x="110" y="68" text-anchor="middle" font-size="9" fill="#64748b">반복 완전 종료</text>
+
+            <rect x="250" y="20" width="200" height="54" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="350" y="38" text-anchor="middle" font-size="12" fill="#92400e" font-weight="900" font-family="JetBrains Mono">continue</text>
+            <text x="350" y="54" text-anchor="middle" font-size="10" fill="#92400e">이번 반복만 건너뜀</text>
+            <text x="350" y="68" text-anchor="middle" font-size="9" fill="#64748b">다음 반복은 정상 실행</text>
+        </svg>
+    </div>
+
+    <div class="callout callout-info">
+        <strong>continue 주의사항</strong><br>
+        for문에서 <code>continue</code>를 쓰면 for의 증감 부분(<code>i++</code>)은 실행됩니다. while문에서는 continue 전에 카운터를 증가시키지 않으면 무한루프가 될 수 있습니다.
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">2</div>
+            <div class="problem-label">100 이하의 숫자만 합산하기</div>
+            <div class="problem-diff medium">보통</div>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">100보다 큰 숫자를 입력하면 "100 이하만 입력하세요."를 출력하고 continue로 건너뛰는 코드를 추가해보세요.</div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 / 정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code"><span style="color:#c084fc">if</span> (n &gt; <span style="color:#7dd3fc">100</span>) {
+    <span style="color:#67e8f9">printf</span>(<span style="color:#86efac">"100 이하만 입력하세요.\n"</span>);
+    <span style="color:#c084fc">continue</span>;
+}</div>
+            </div>
+        </details>
+    </div>
+</div>
+
+<!-- ========== PAGE 4: 정리 + 연습 문제 ========== -->
+<div class="page">
+    <h2>핵심 정리</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/cpu.png" alt="CPU" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+    <!-- SVG 7: sum += n 동작 원리 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+            <text x="230" y="13" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="800">복합 대입 연산자 정리</text>
+            <rect x="10" y="20" width="430" height="54" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="110" y="38" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700" font-family="JetBrains Mono">sum += n</text>
+            <text x="230" y="38" font-size="11" fill="#94a3b8">=</text>
+            <text x="330" y="38" text-anchor="middle" font-size="11" fill="#64748b" font-family="JetBrains Mono">sum = sum + n</text>
+            <text x="110" y="58" text-anchor="middle" font-size="11" fill="#166534" font-weight="700" font-family="JetBrains Mono">max = n</text>
+            <text x="230" y="58" font-size="10" fill="#94a3b8">n &gt; max 이면</text>
+            <text x="330" y="58" text-anchor="middle" font-size="10" fill="#64748b">최대값 교체</text>
+            <text x="110" y="68" text-anchor="middle" font-size="10" fill="#92400e" font-family="JetBrains Mono">avg = (float)sum/count</text>
+            <text x="330" y="68" text-anchor="middle" font-size="10" fill="#64748b">소수점 평균</text>
+        </svg>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>합계 계산기 핵심 요약</h3>
+        <ul>
+            <li><code>sum += n</code> — 매 반복마다 n을 sum에 누적합니다.</li>
+            <li><code>if (n == 0) break</code> — 0 입력 시 반복을 종료합니다 (sentinel 패턴).</li>
+            <li><code>if (n &gt; max) max = n</code> — 더 큰 값이 들어오면 최대값을 갱신합니다.</li>
+            <li><code>(float)sum / count</code> — 정수를 실수로 변환해 소수점 평균을 구합니다.</li>
+            <li><code>continue</code> — 현재 반복을 건너뛰고 다음으로 넘어갑니다.</li>
+        </ul>
+    </div>
+
+    <!-- SVG 8: 통계값 4종 한눈에 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 90" style="max-width:460px;width:100%">
+            <text x="230" y="13" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="800">통계값 4종 — 입력: 5, 10, 3, 8</text>
+            <rect x="10" y="20" width="96" height="62" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+            <text x="58" y="40" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">합계</text>
+            <text x="58" y="60" text-anchor="middle" font-size="22" fill="#1d4ed8" font-weight="900" font-family="JetBrains Mono">26</text>
+            <text x="58" y="78" text-anchor="middle" font-size="9" fill="#64748b">5+10+3+8</text>
+
+            <rect x="120" y="20" width="96" height="62" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="2"/>
+            <text x="168" y="40" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">평균</text>
+            <text x="168" y="60" text-anchor="middle" font-size="22" fill="#166534" font-weight="900" font-family="JetBrains Mono">6.5</text>
+            <text x="168" y="78" text-anchor="middle" font-size="9" fill="#64748b">26 ÷ 4</text>
+
+            <rect x="230" y="20" width="96" height="62" rx="8" fill="#fef2f2" stroke="#ef4444" stroke-width="2"/>
+            <text x="278" y="40" text-anchor="middle" font-size="11" fill="#dc2626" font-weight="700">최대값</text>
+            <text x="278" y="60" text-anchor="middle" font-size="22" fill="#dc2626" font-weight="900" font-family="JetBrains Mono">10</text>
+            <text x="278" y="78" text-anchor="middle" font-size="9" fill="#64748b">가장 큰 수</text>
+
+            <rect x="340" y="20" width="110" height="62" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+            <text x="395" y="40" text-anchor="middle" font-size="11" fill="#92400e" font-weight="700">최소값</text>
+            <text x="395" y="60" text-anchor="middle" font-size="22" fill="#92400e" font-weight="900" font-family="JetBrains Mono">3</text>
+            <text x="395" y="78" text-anchor="middle" font-size="9" fill="#64748b">가장 작은 수</text>
+        </svg>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">3</div>
+            <div class="problem-label">합계가 100을 넘으면 "초과!" 출력하고 즉시 종료</div>
+            <div class="problem-diff medium">보통</div>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">숫자를 누적하다가 합계가 100을 초과하면 "합계 초과! 현재 합계: ___"를 출력하고 break로 즉시 종료하는 코드를 추가해보세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">입력</span>
+                    <span class="problem-example-value">40, 50, 30 입력 시 → 셋째 입력 후 초과!</span>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 / 정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">sum += n;
+<span style="color:#c084fc">if</span> (sum &gt; <span style="color:#7dd3fc">100</span>) {
+    <span style="color:#67e8f9">printf</span>(<span style="color:#86efac">"합계 초과! 현재 합계: %d\n"</span>, sum);
+    <span style="color:#c084fc">break</span>;
+}</div>
+            </div>
+        </details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">4</div>
+            <div class="problem-label">중앙값(정렬 없이 근사) 대신 범위 통계 추가</div>
+            <div class="problem-diff hard">도전</div>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">최대값 - 최소값 = "범위"를 계산해서 결과에 추가로 출력해보세요. 또한 평균보다 큰 수의 개수도 세어 출력해보세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력</span>
+                    <span class="problem-example-value">범위: 7, 평균(6.5)보다 큰 수: 2개</span>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 / 정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">범위는 반복문이 끝난 후 max - min 으로 바로 계산 가능합니다. 평균보다 큰 수의 개수는 반복 중에 세거나, 결과를 배열에 저장(심화)해서 한 번 더 반복합니다.</div>
+                <div class="answer-code"><span style="color:#67e8f9">printf</span>(<span style="color:#86efac">"범위: %d\n"</span>, max - min);
+<span style="color:#64748b">// 평균보다 큰 수는 배열 없이는 두 번 입력이 필요 (심화)</span></div>
+            </div>
+        </details>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+
+
+
+<script>
+(function(){
+  var KEY = 'cs_ans_' + location.pathname.replace(/[^a-zA-Z0-9]/g,'_');
+  var pagePath = location.pathname;
+  var userId = null;
+  try {
+    userId = window.parent?.localStorage?.getItem('codingssok_user_id')
+      || localStorage.getItem('codingssok_user_id');
+  } catch(e) {}
+
+  function save(){
+    var areas = document.querySelectorAll('textarea');
+    var saved = 0;
+    areas.forEach(function(ta, i){
+      if(ta.value.trim()) {
+        localStorage.setItem(KEY + '_' + i, ta.value);
+        saved++;
+      } else {
+        localStorage.removeItem(KEY + '_' + i);
+      }
+    });
+    if(saved > 0) showSaveIndicator();
+  }
+
+  function load(){
+    var areas = document.querySelectorAll('textarea');
+    var restored = 0;
+    areas.forEach(function(ta, i){
+      var val = localStorage.getItem(KEY + '_' + i);
+      if(val && val.trim()) {
+        ta.value = val;
+        ta.style.borderColor = '#10b981';
+        ta.style.boxShadow = '0 0 0 2px rgba(16,185,129,0.15)';
+        setTimeout(function(){ ta.style.borderColor = ''; ta.style.boxShadow = ''; }, 2000);
+        restored++;
+      }
+    });
+    if(restored > 0) showRestoreIndicator(restored);
+  }
+
+  function saveToDb(){
+    if(!userId) return;
+    var areas = document.querySelectorAll('textarea');
+    var answers = [];
+    areas.forEach(function(ta, i){
+      if(ta.value.trim()) answers.push({ field_index: i, answer_text: ta.value });
+    });
+    if(answers.length === 0) return;
+    fetch('/api/answers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId, page_path: pagePath, answers: answers })
+    }).catch(function(){});
+  }
+
+  function loadFromDb(){
+    if(!userId) return;
+    fetch('/api/answers?user_id=' + encodeURIComponent(userId) + '&page_path=' + encodeURIComponent(pagePath))
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(!d.answers || !d.answers.length) return;
+        var areas = document.querySelectorAll('textarea');
+        d.answers.forEach(function(a){
+          if(areas[a.field_index] && a.answer_text) {
+            areas[a.field_index].value = a.answer_text;
+            localStorage.setItem(KEY + '_' + a.field_index, a.answer_text);
+          }
+        });
+      }).catch(function(){});
+  }
+
+  function showSaveIndicator(){
+    var el = document.getElementById('cs-save-ind');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'cs-save-ind';
+      el.style.cssText = 'position:fixed;bottom:16px;right:16px;padding:6px 14px;border-radius:8px;background:#0f172a;color:#22c55e;font-size:11px;font-weight:700;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+      document.body.appendChild(el);
+    }
+    el.textContent = '\u2713 \uB2F5\uC548 \uC800\uC7A5\uB428'; // ✓ 답안 저장됨
+    el.style.opacity = '1';
+    setTimeout(function(){ el.style.opacity = '0'; }, 1500);
+  }
+
+  function showRestoreIndicator(n){
+    var el = document.getElementById('cs-save-ind');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'cs-save-ind';
+      el.style.cssText = 'position:fixed;bottom:16px;right:16px;padding:6px 14px;border-radius:8px;background:#0f172a;color:#3b82f6;font-size:11px;font-weight:700;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+      document.body.appendChild(el);
+    }
+    el.textContent = '\u21BB ' + n + '\uAC1C \uB2F5\uC548 \uBCF5\uC6D0'; // ↻ n개 답안 복원
+    el.style.color = '#3b82f6';
+    el.style.opacity = '1';
+    setTimeout(function(){ el.style.opacity = '0'; }, 2500);
+  }
+
+  var t = null;
+  document.addEventListener('input', function(e){
+    if(e.target.tagName === 'TEXTAREA'){
+      clearTimeout(t);
+      t = setTimeout(function(){ save(); saveToDb(); }, 300);
+    }
+  });
+  document.addEventListener('change', function(e){
+    if(e.target.tagName === 'TEXTAREA'){ save(); saveToDb(); }
+  });
+  document.addEventListener('focusout', function(e){
+    if(e.target.tagName === 'TEXTAREA'){ save(); saveToDb(); }
+  });
+  window.addEventListener('beforeunload', function(){ save(); saveToDb(); });
+
+  // 즉시 로드
+  load();
+  loadFromDb();
+})();
+</script>
+</body>
+</html>

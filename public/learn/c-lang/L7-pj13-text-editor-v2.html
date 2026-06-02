@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>L7-PJ13 미니 텍스트 에디터</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:#e8edf2;font-family:'Noto Sans KR',sans-serif;counter-reset:page;}
+  .page{width:210mm;min-height:297mm;margin:16px auto;padding:18mm 20mm 15mm 22mm;background:#fff;box-shadow:0 2px 12px rgba(0,0,0,.12);position:relative;overflow:hidden;}
+  .page::after{content:counter(page);counter-increment:page;position:absolute;bottom:10mm;right:20mm;font-size:9pt;color:#94a3b8;}
+
+  .cover{display:flex;height:100%;gap:0;}
+  .cover-sidebar{width:10px;background:#1e3a5f;border-radius:3px 0 0 3px;flex-shrink:0;}
+  .cover-accent{width:7px;background:#e6a817;flex-shrink:0;}
+  .cover-body{flex:1;padding:0 0 0 28px;display:flex;flex-direction:column;justify-content:space-between;}
+  .cover-top{padding-top:20px;}
+  .badge-row{display:flex;gap:8px;align-items:center;margin-bottom:16px;}
+  .badge{padding:4px 12px;border-radius:20px;font-size:9pt;font-weight:700;}
+  .badge-chapter{background:#1e3a5f;color:#fff;}
+  .badge-project{background:#e6a817;color:#1e3a5f;}
+  .badge-level{background:#f0f4f8;color:#475569;border:1px solid #cbd5e1;}
+  .cover-title{font-size:24pt;font-weight:900;color:#1e3a5f;line-height:1.15;margin-bottom:8px;}
+  .cover-subtitle{font-size:13pt;color:#e6a817;font-weight:700;margin-bottom:20px;}
+  .cover-desc{font-size:10.5pt;color:#475569;line-height:1.8;background:#f8fafc;padding:14px 18px;border-left:4px solid #1e3a5f;border-radius:0 6px 6px 0;}
+  .cover-svg{margin:18px 0;}
+  .cover-goals{margin-top:14px;}
+  .cover-goals h3{font-size:10pt;font-weight:700;color:#1e3a5f;margin-bottom:10px;}
+  .goal-item{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:9.5pt;color:#334155;}
+  .goal-dot{width:8px;height:8px;border-radius:50%;background:#e6a817;flex-shrink:0;}
+  .cover-bottom{border-top:2px solid #f1f5f9;padding-top:14px;display:flex;justify-content:space-between;align-items:center;}
+  .cover-meta{font-size:8.5pt;color:#94a3b8;}
+
+  .section-title{font-size:15pt;font-weight:900;color:#1e3a5f;border-bottom:3px solid #e6a817;padding-bottom:6px;margin-bottom:18px;}
+  .sub-title{font-size:11.5pt;font-weight:700;color:#1e3a5f;margin:18px 0 10px;}
+  p{font-size:9.5pt;color:#334155;line-height:1.9;margin-bottom:10px;}
+
+  .code{background:#0f172a;border-radius:8px;padding:14px 18px;margin:12px 0;font-family:'JetBrains Mono',monospace;font-size:8.5pt;line-height:1.8;overflow-x:auto;}
+  .code .kw{color:#c084fc;}.code .fn{color:#67e8f9;}.code .str{color:#86efac;}
+  .code .num{color:#7dd3fc;}.code .cmt{color:#64748b;}.code .var{color:#fbbf24;}
+  .code .op{color:#f472b6;}.code .pp{color:#fb923c;}
+
+  .tip{background:#fffbeb;border:1px solid #fcd34d;border-left:4px solid #e6a817;border-radius:6px;padding:12px 16px;margin:12px 0;font-size:9pt;color:#78350f;}
+  .info{background:#eff6ff;border:1px solid #93c5fd;border-left:4px solid #3b82f6;border-radius:6px;padding:12px 16px;margin:12px 0;font-size:9pt;color:#1e3a8a;}
+
+  .problem-box{border:2px solid #1e3a5f;border-radius:8px;margin:14px 0;overflow:hidden;}
+  .problem-head{background:#1e3a5f;color:#fff;padding:8px 16px;font-size:9.5pt;font-weight:700;display:flex;justify-content:space-between;align-items:center;}
+  .problem-body{padding:14px 16px;}
+  .problem-body p{margin:0 0 8px;font-size:9.5pt;}
+  details summary{cursor:pointer;font-size:9pt;color:#1e3a5f;font-weight:700;margin-top:10px;padding:6px 10px;background:#f0f4f8;border-radius:4px;}
+  details[open] summary{background:#dbeafe;}
+  .answer{padding:10px 12px;background:#f8fafc;border-radius:4px;margin-top:6px;font-size:9pt;color:#334155;}
+  .answer .code{margin:6px 0;font-size:8pt;}
+
+  .svg-wrap{margin:14px 0;text-align:center;}
+  .summary-box{background:#f0f4f8;border-radius:8px;padding:16px 20px;margin:14px 0;}
+  .summary-box h3{font-size:10pt;font-weight:700;color:#1e3a5f;margin-bottom:10px;}
+  .summary-item{display:flex;gap:10px;margin-bottom:7px;font-size:9pt;color:#334155;}
+  .summary-label{background:#1e3a5f;color:#fff;padding:2px 8px;border-radius:3px;font-size:8pt;font-weight:700;white-space:nowrap;}
+
+  @media print{body{background:#fff;}.page{margin:0;box-shadow:none;page-break-after:always;}}
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- PAGE 1: COVER -->
+<div class="page">
+  <div class="cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+      <div class="cover-top">
+        <div class="badge-row">
+          <span class="badge badge-chapter">L7 문자열</span>
+          <span class="badge badge-project">PROJECT 13</span>
+          <span class="badge badge-level">고급</span>
+        </div>
+        <div class="cover-title">미니 텍스트<br>에디터</div>
+        <div class="cover-subtitle">삽입 / 삭제 / 검색 — 3가지 편집 기능</div>
+        <div class="cover-desc">
+          텍스트 에디터의 핵심은 <b>삽입(insert), 삭제(delete), 검색(search)</b>이다.<br>
+          배열 내 특정 위치에 글자를 끼워 넣거나 빼려면, 나머지 요소들을 앞뒤로 밀어야 한다.<br>
+          이 프로젝트에서는 문자열을 직접 조작하며 메모리 이동 패턴을 익힌다.
+        </div>
+
+        <div class="cover-svg">
+          <svg width="420" height="100" viewBox="0 0 420 100">
+            <!-- Insert illustration -->
+            <text x="10" y="14" font-size="9" fill="#94a3b8" font-family="'Noto Sans KR'">삽입: "hlllo" → 2번 인덱스에 'e' 삽입</text>
+            <rect x="10" y="20" width="28" height="26" rx="3" fill="#dbeafe" stroke="#93c5fd"/>
+            <text x="24" y="37" text-anchor="middle" font-size="13" fill="#1e40af" font-family="'JetBrains Mono'" font-weight="700">h</text>
+            <rect x="42" y="20" width="28" height="26" rx="3" fill="#dbeafe" stroke="#93c5fd"/>
+            <text x="56" y="37" text-anchor="middle" font-size="13" fill="#1e40af" font-family="'JetBrains Mono'" font-weight="700">l</text>
+            <!-- insert point -->
+            <rect x="74" y="20" width="28" height="26" rx="3" fill="#fef3c7" stroke="#fcd34d" stroke-width="2"/>
+            <text x="88" y="37" text-anchor="middle" font-size="13" fill="#e6a817" font-family="'JetBrains Mono'" font-weight="700">e</text>
+            <text x="88" y="55" text-anchor="middle" font-size="7.5" fill="#e6a817" font-family="'Noto Sans KR'">삽입!</text>
+            <rect x="106" y="20" width="28" height="26" rx="3" fill="#dbeafe" stroke="#93c5fd"/>
+            <text x="120" y="37" text-anchor="middle" font-size="13" fill="#1e40af" font-family="'JetBrains Mono'" font-weight="700">l</text>
+            <rect x="138" y="20" width="28" height="26" rx="3" fill="#dbeafe" stroke="#93c5fd"/>
+            <text x="152" y="37" text-anchor="middle" font-size="13" fill="#1e40af" font-family="'JetBrains Mono'" font-weight="700">l</text>
+            <rect x="170" y="20" width="28" height="26" rx="3" fill="#dbeafe" stroke="#93c5fd"/>
+            <text x="184" y="37" text-anchor="middle" font-size="13" fill="#1e40af" font-family="'JetBrains Mono'" font-weight="700">o</text>
+            <!-- Result -->
+            <text x="220" y="34" font-size="14" fill="#10b981">→</text>
+            <text x="248" y="37" font-size="15" font-weight="700" fill="#15803d" font-family="'JetBrains Mono'">"hello"</text>
+            <!-- Delete illustration -->
+            <text x="10" y="74" font-size="9" fill="#94a3b8" font-family="'Noto Sans KR'">삭제: "hellxo" → 4번 인덱스 'x' 삭제</text>
+            <text x="10" y="96" font-size="13" font-weight="700" fill="#334155" font-family="'JetBrains Mono'">"hellxo"</text>
+            <text x="100" y="96" font-size="14" fill="#e6a817">→</text>
+            <text x="120" y="96" font-size="13" font-weight="700" fill="#15803d" font-family="'JetBrains Mono'">"hello"</text>
+          </svg>
+        </div>
+
+        <div class="cover-goals">
+          <h3>학습 목표</h3>
+          <div class="goal-item"><div class="goal-dot"></div><span>특정 위치에 문자를 삽입하는 알고리즘 (오른쪽 이동)</span></div>
+          <div class="goal-item"><div class="goal-dot"></div><span>특정 위치의 문자를 삭제하는 알고리즘 (왼쪽 이동)</span></div>
+          <div class="goal-item"><div class="goal-dot"></div><span>strstr 검색 + 커서 위치 표시</span></div>
+          <div class="goal-item"><div class="goal-dot"></div><span>메뉴 기반 인터랙티브 에디터 완성</span></div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;margin:12px 0 8px;">
+            <img src="/images/learn/computer-basics/keyboard.png" alt="키보드 - 문자열 입력" style="width:36px;height:36px;object-fit:contain;background:#fff;border-radius:8px;">
+            <img src="/images/learn/c-lang/book.png" alt="교재 - 문자열 개념 학습" style="width:36px;height:36px;object-fit:contain;background:#fff;border-radius:8px;">
+            <img src="/images/learn/c-lang/notebook.png" alt="노트북 - 문자열 기록" style="width:36px;height:36px;object-fit:contain;background:#fff;border-radius:8px;">
+            <img src="/images/learn/c-lang/lock.png" alt="자물쇠 - 문자열 보안 처리" style="width:36px;height:36px;object-fit:contain;background:#fff;border-radius:8px;">
+        </div>
+<div class="cover-bottom">
+        <div class="cover-meta">코딩쏙 C언어 · L7 문자열 · PJ-13</div>
+        <div class="cover-meta">String Insert / Delete / Search</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 2: 삽입 + 삭제 구현 -->
+<div class="page">
+  <div style="display:flex;align-items:center;gap:8px;margin:10px 0 6px;padding:6px 12px;background:#eff6ff;border-radius:6px;">
+    <img src="/images/learn/computer-basics/keyboard.png" alt="키보드 - 문자열 입력" style="width:26px;height:26px;object-fit:contain;background:#fff;border-radius:8px;">
+</div>
+<div class="section-title">삽입과 삭제 알고리즘</div>
+
+  <div style="display:flex;align-items:center;gap:8px;margin:8px 0 4px;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트북 - 문자열 기록" style="width:22px;height:22px;object-fit:contain;opacity:0.85;background:#fff;border-radius:8px;">
+</div>
+<div class="sub-title">삽입 — 오른쪽으로 밀고 끼워 넣기</div>
+
+  <div class="svg-wrap">
+    <svg width="480" height="70" viewBox="0 0 480 70">
+      <text x="10" y="13" font-size="9" fill="#94a3b8" font-family="'Noto Sans KR'">pos=2에 'e' 삽입: "hlllo" → "hello"</text>
+      <!-- Before -->
+      <rect x="10" y="18" width="28" height="28" rx="3" fill="#f8fafc" stroke="#e2e8f0"/>
+      <text x="24" y="36" text-anchor="middle" font-size="14" fill="#334155" font-family="'JetBrains Mono'" font-weight="700">h</text>
+      <rect x="42" y="18" width="28" height="28" rx="3" fill="#f8fafc" stroke="#e2e8f0"/>
+      <text x="56" y="36" text-anchor="middle" font-size="14" fill="#334155" font-family="'JetBrains Mono'" font-weight="700">l</text>
+      <rect x="74" y="18" width="28" height="28" rx="3" fill="#f8fafc" stroke="#e2e8f0"/>
+      <text x="88" y="36" text-anchor="middle" font-size="14" fill="#334155" font-family="'JetBrains Mono'" font-weight="700">l</text>
+      <rect x="106" y="18" width="28" height="28" rx="3" fill="#f8fafc" stroke="#e2e8f0"/>
+      <text x="120" y="36" text-anchor="middle" font-size="14" fill="#334155" font-family="'JetBrains Mono'" font-weight="700">l</text>
+      <rect x="138" y="18" width="28" height="28" rx="3" fill="#f8fafc" stroke="#e2e8f0"/>
+      <text x="152" y="36" text-anchor="middle" font-size="14" fill="#334155" font-family="'JetBrains Mono'" font-weight="700">o</text>
+      <!-- arrows showing right shift -->
+      <path d="M88 50 L120 50" fill="none" stroke="#e6a817" stroke-width="1.5" marker-end="url(#ia)"/>
+      <path d="M120 50 L152 50" fill="none" stroke="#e6a817" stroke-width="1.5" marker-end="url(#ia)"/>
+      <path d="M152 50 L190 50" fill="none" stroke="#e6a817" stroke-width="1.5" marker-end="url(#ia)"/>
+      <text x="90" y="66" font-size="7.5" fill="#e6a817" font-family="'Noto Sans KR'">오른쪽으로 한 칸씩 이동 (뒤부터!)</text>
+      <rect x="248" y="18" width="28" height="28" rx="3" fill="#fef3c7" stroke="#fcd34d" stroke-width="2"/>
+      <text x="262" y="36" text-anchor="middle" font-size="14" fill="#e6a817" font-family="'JetBrains Mono'" font-weight="700">e</text>
+      <text x="262" y="55" text-anchor="middle" font-size="7.5" fill="#e6a817" font-family="'Noto Sans KR'">삽입</text>
+      <defs><marker id="ia" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#e6a817"/></marker></defs>
+    </svg>
+  </div>
+
+  <div class="code">
+<span class="kw">void</span> <span class="fn">insert_char</span>(<span class="kw">char</span> <span class="var">str</span>[], <span class="kw">int</span> <span class="var">pos</span>, <span class="kw">char</span> <span class="var">c</span>) {
+    <span class="kw">int</span> <span class="var">len</span> = <span class="fn">strlen</span>(<span class="var">str</span>);
+    <span class="cmt">// 뒤부터 한 칸씩 오른쪽으로 이동</span>
+    <span class="kw">for</span> (<span class="kw">int</span> <span class="var">i</span> = <span class="var">len</span>; <span class="var">i</span> <span class="op">&gt;=</span> <span class="var">pos</span>; <span class="var">i</span><span class="op">--</span>)
+        <span class="var">str</span>[<span class="var">i</span> <span class="op">+</span> <span class="num">1</span>] = <span class="var">str</span>[<span class="var">i</span>];    <span class="cmt">// \0 포함 이동</span>
+    <span class="var">str</span>[<span class="var">pos</span>] = <span class="var">c</span>;              <span class="cmt">// 원하는 위치에 삽입</span>
+}
+
+<span class="kw">void</span> <span class="fn">delete_char</span>(<span class="kw">char</span> <span class="var">str</span>[], <span class="kw">int</span> <span class="var">pos</span>) {
+    <span class="kw">int</span> <span class="var">len</span> = <span class="fn">strlen</span>(<span class="var">str</span>);
+    <span class="cmt">// pos 위치부터 왼쪽으로 한 칸씩 이동</span>
+    <span class="kw">for</span> (<span class="kw">int</span> <span class="var">i</span> = <span class="var">pos</span>; <span class="var">i</span> <span class="op">&lt;</span> <span class="var">len</span>; <span class="var">i</span><span class="op">++</span>)
+        <span class="var">str</span>[<span class="var">i</span>] = <span class="var">str</span>[<span class="var">i</span> <span class="op">+</span> <span class="num">1</span>];    <span class="cmt">// \0도 자동으로 당겨짐</span>
+}
+  </div>
+
+  <div class="tip"><b>삽입 시 뒤부터 이동하는 이유:</b> 앞부터 이동하면 기존 값이 덮어써진다. 예: "abc"에서 [1]을 [2]에 복사하면 'b'가 [1],[2] 모두 'b'가 돼버린다. 뒤부터 해야 기존 값을 보존한다.</div>
+</div>
+
+<!-- PAGE 3: 완전한 에디터 -->
+<div class="page">
+  <div style="display:flex;align-items:center;gap:8px;margin:10px 0 6px;padding:6px 12px;background:#eff6ff;border-radius:6px;">
+    <img src="/images/learn/c-lang/book.png" alt="교재 - 문자열 개념 학습" style="width:26px;height:26px;object-fit:contain;background:#fff;border-radius:8px;">
+</div>
+<div class="section-title">미니 에디터 완전 구현</div>
+
+  <div class="code">
+<span class="pp">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="pp">#include</span> <span class="str">&lt;string.h&gt;</span>
+
+<span class="kw">void</span> <span class="fn">show</span>(<span class="kw">char</span> <span class="var">s</span>[]) { <span class="fn">printf</span>(<span class="str">"[현재]: \"%s\" (길이:%d)\n"</span>,<span class="var">s</span>,(<span class="kw">int</span>)<span class="fn">strlen</span>(<span class="var">s</span>)); }
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="kw">char</span> <span class="var">text</span>[<span class="num">500</span>] = <span class="str">""</span>;
+    <span class="kw">int</span> <span class="var">choice</span>, <span class="var">pos</span>; <span class="kw">char</span> <span class="var">c</span>; <span class="kw">char</span> <span class="var">keyword</span>[<span class="num">100</span>];
+
+    <span class="kw">while</span> (<span class="num">1</span>) {
+        <span class="fn">show</span>(<span class="var">text</span>);
+        <span class="fn">printf</span>(<span class="str">"1.입력 2.삽입 3.삭제 4.검색 5.초기화 6.종료\n선택: "</span>);
+        <span class="fn">scanf</span>(<span class="str">"%d"</span>, <span class="op">&amp;</span><span class="var">choice</span>);
+        <span class="kw">if</span> (<span class="var">choice</span> == <span class="num">6</span>) <span class="kw">break</span>;
+
+        <span class="kw">switch</span> (<span class="var">choice</span>) {
+        <span class="kw">case</span> <span class="num">1</span>:
+            <span class="fn">printf</span>(<span class="str">"텍스트: "</span>); <span class="fn">getchar</span>();
+            <span class="fn">fgets</span>(<span class="var">text</span>, <span class="kw">sizeof</span>(<span class="var">text</span>), <span class="var">stdin</span>);
+            <span class="var">text</span>[<span class="fn">strcspn</span>(<span class="var">text</span>,<span class="str">"\n"</span>)]=<span class="str">'\0'</span>;
+            <span class="kw">break</span>;
+        <span class="kw">case</span> <span class="num">2</span>:
+            <span class="fn">printf</span>(<span class="str">"위치(0~%d): "</span>,(<span class="kw">int</span>)<span class="fn">strlen</span>(<span class="var">text</span>)); <span class="fn">scanf</span>(<span class="str">"%d"</span>,<span class="op">&amp;</span><span class="var">pos</span>);
+            <span class="fn">printf</span>(<span class="str">"문자: "</span>); <span class="fn">scanf</span>(<span class="str">" %c"</span>,<span class="op">&amp;</span><span class="var">c</span>);
+            <span class="fn">insert_char</span>(<span class="var">text</span>, <span class="var">pos</span>, <span class="var">c</span>);
+            <span class="kw">break</span>;
+        <span class="kw">case</span> <span class="num">3</span>:
+            <span class="fn">printf</span>(<span class="str">"위치(0~%d): "</span>,(<span class="kw">int</span>)<span class="fn">strlen</span>(<span class="var">text</span>)<span class="op">-</span><span class="num">1</span>); <span class="fn">scanf</span>(<span class="str">"%d"</span>,<span class="op">&amp;</span><span class="var">pos</span>);
+            <span class="fn">delete_char</span>(<span class="var">text</span>, <span class="var">pos</span>);
+            <span class="kw">break</span>;
+        <span class="kw">case</span> <span class="num">4</span>:
+            <span class="fn">printf</span>(<span class="str">"검색어: "</span>); <span class="fn">scanf</span>(<span class="str">"%s"</span>,<span class="var">keyword</span>);
+            { <span class="kw">char</span> <span class="op">*</span><span class="var">f</span>=<span class="fn">strstr</span>(<span class="var">text</span>,<span class="var">keyword</span>);
+              <span class="kw">if</span>(<span class="var">f</span>) <span class="fn">printf</span>(<span class="str">"위치 %d에서 발견\n"</span>,(<span class="kw">int</span>)(<span class="var">f</span><span class="op">-</span><span class="var">text</span>));
+              <span class="kw">else</span>  <span class="fn">printf</span>(<span class="str">"없음\n"</span>); }
+            <span class="kw">break</span>;
+        <span class="kw">case</span> <span class="num">5</span>:
+            <span class="var">text</span>[<span class="num">0</span>]=<span class="str">'\0'</span>; <span class="fn">printf</span>(<span class="str">"초기화됨\n"</span>);
+            <span class="kw">break</span>;
+        }
+    }
+    <span class="kw">return</span> <span class="num">0</span>;
+}
+  </div>
+
+  <div class="info"><b>scanf(" %c") 의 공백:</b> scanf("%c")는 이전 입력의 개행(\n)을 글자로 읽어버린다. " %c" (공백 추가)로 개행을 먼저 무시하고 실제 문자를 읽는다.</div>
+</div>
+
+<!-- PAGE 4: 연습 문제 -->
+<div class="page">
+  <div class="section-title">연습 문제</div>
+
+  <div class="problem-box">
+    <div class="problem-head"><span>Q1. 추적</span><span style="font-weight:400;font-size:8.5pt;"></span></div>
+    <div class="problem-body">
+      <p>insert_char("abc", 1, 'X')의 결과는? 단계별로 추적하시오.</p>
+      <details><summary>정답 보기</summary><div class="answer">len=3. i=3→str[4]=str[3]='\0'. i=2→str[3]=str[2]='c'. i=1→str[2]=str[1]='b'. str[1]='X'. 결과: "aXbc"</div></details>
+    </div>
+  </div>
+
+  <div class="problem-box">
+    <div class="problem-head"><span>Q2. 오류 분석</span><span style="font-weight:400;font-size:8.5pt;"></span></div>
+    <div class="problem-body">
+      <p>insert_char에서 루프를 i = pos부터 (앞부터) 실행하면 어떤 문제가 발생하는가?</p>
+      <details><summary>정답 보기</summary><div class="answer">"abc"에서 pos=1 삽입 시: str[2]=str[1]='b' 후 str[3]=str[2]='b' (이미 덮어쓴 값). 'c'가 사라지고 "aXbb" 같은 잘못된 결과.</div></details>
+    </div>
+  </div>
+
+  <div class="problem-box">
+    <div class="problem-head"><span>Q3. 구현</span><span style="font-weight:400;font-size:8.5pt;"></span></div>
+    <div class="problem-body">
+      <p>문자열에서 특정 문자를 모두 삭제하는 delete_all(str, c) 함수를 작성하시오.<br>예) delete_all("hello world", 'l') → "heo word"</p>
+      <details><summary>정답 보기</summary><div class="answer">
+        <div class="code">
+<span class="kw">void</span> <span class="fn">delete_all</span>(<span class="kw">char</span> <span class="var">s</span>[], <span class="kw">char</span> <span class="var">c</span>) {
+    <span class="kw">int</span> <span class="var">j</span>=<span class="num">0</span>;
+    <span class="kw">for</span>(<span class="kw">int</span> <span class="var">i</span>=<span class="num">0</span>;<span class="var">s</span>[<span class="var">i</span>];<span class="var">i</span><span class="op">++</span>)
+        <span class="kw">if</span>(<span class="var">s</span>[<span class="var">i</span>]<span class="op">!=</span><span class="var">c</span>) <span class="var">s</span>[<span class="var">j</span><span class="op">++</span>]=<span class="var">s</span>[<span class="var">i</span>];
+    <span class="var">s</span>[<span class="var">j</span>]=<span class="str">'\0'</span>;
+}
+        </div>
+      </div></details>
+    </div>
+  </div>
+
+  <div class="problem-box">
+    <div class="problem-head"><span>Q4. 응용</span><span style="font-weight:400;font-size:8.5pt;"></span></div>
+    <div class="problem-body">
+      <p>문자열에서 특정 단어를 찾아 다른 단어로 교체하는 replace(str, find, rep) 함수를 작성하시오.</p>
+      <details><summary>정답 보기</summary><div class="answer">PJ08의 str_replace() 패턴 활용. strstr로 위치 찾고 → 삭제 후 삽입하거나, 앞부분+새단어+뒷부분 방식으로 새 문자열 조립.</div></details>
+    </div>
+  </div>
+
+  <div class="problem-box">
+    <div class="problem-head"><span>Q5. 도전</span><span style="font-weight:400;font-size:8.5pt;"></span></div>
+    <div class="problem-body">
+      <p>실행 취소(Undo) 기능을 추가하시오: 편집 전 상태를 별도 배열에 저장하고, 'U'를 선택하면 이전 상태로 복원.</p>
+      <details><summary>정답 보기</summary><div class="answer">char backup[500]; 배열 추가. 편집 전 strcpy(backup, text) 호출. Undo 메뉴에서 strcpy(text, backup).</div></details>
+    </div>
+  </div>
+
+  <div class="summary-box">
+    <h3>핵심 정리</h3>
+    <div class="summary-item"><span class="summary-label">삽입</span><span>뒤부터 앞으로 한 칸씩 오른쪽 이동 → 원하는 위치에 문자 배치</span></div>
+    <div class="summary-item"><span class="summary-label">삭제</span><span>해당 위치부터 앞으로 한 칸씩 왼쪽 이동 → \0 자동 처리</span></div>
+    <div class="summary-item"><span class="summary-label">방향</span><span>삽입=뒤부터(덮어쓰기 방지), 삭제=앞부터(순서 유지)</span></div>
+    <div class="summary-item"><span class="summary-label">scanf</span><span>scanf(" %c") — 앞의 공백이 개행 문자를 먹어줌</span></div>
+  </div>
+
+    <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:20px;padding-top:10px;border-top:1px solid #f1f5f9;">
+        <img src="/images/learn/c-lang/code-screen.png" alt="코드 화면 - 문자열 처리 코드" style="width:22px;height:22px;object-fit:contain;opacity:0.6;background:#fff;border-radius:8px;">
+        <span style="font-size:10px;color:#cbd5e1;">코딩쏙 C언어</span>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

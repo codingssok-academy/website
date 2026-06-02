@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Unit 31. goto 문 — C 언어 코딩 도장</title>
+    <link rel="stylesheet" href="../common.css">
+</head>
+
+<body>
+    <div class="wrap">
+        <div class="hdr">
+            <h1>Unit 31. goto 사용하기</h1>
+            <div class="sub">goto · 레이블 · 에러 처리 · 이중 루프 탈출</div>
+            <span class="unit-badge">Chapter 07 · 반복문</span>
+            <div class="level-bar"><span class="on"></span><span class="on"></span><span></span></div>
+            <div class="meta"><span class="tag pri">🖥️ C언어</span><span class="tag acc">📝 10문제</span><span
+                    class="tag">⏱ 15~20분</span></div>
+        </div>
+        <div class="stu-bar"><label>👤 이름 <input type="text" id="stu-name" placeholder="이름"></label><label>📅 날짜 <input
+                    type="date" id="stu-date"></label></div>
+        <div class="learn">
+            <h2><span class="ico" style="background:rgba(245,158,11,.15)">⚡</span> goto</h2>
+            <p>레이블 위치로 무조건 점프! 남용하면 스파게티 코드. <strong>에러 처리</strong>와 <strong>이중 루프 탈출</strong>에만 제한적 사용.</p>
+        </div>
+        <div id="problems"></div>
+        <div class="submit-section">
+            <p>모든 문제를 풀었나요? 📨</p><button class="btn-submit" id="btn-submit">📄 제출하기</button>
+        </div>
+        <div class="modal-overlay" id="submit-modal">
+            <div class="modal-box">
+                <div class="modal-icon">✅</div>
+                <h3>제출 완료!</h3>
+                <p>학습지가 저장되었습니다.</p>
+                <div style="margin:12px 0"><span class="info-tag" id="modal-name"></span> <span class="info-tag"
+                        id="modal-date"></span> <span class="info-tag" id="modal-count"></span></div>
+                <p style="font-size:.78rem;color:var(--dim)">📁 <strong id="modal-filename"></strong></p><button
+                    class="btn-close-modal" id="btn-close-modal">확인</button>
+            </div>
+        </div>
+        <div class="pg"><a href="Unit30_break.html">← Unit 30</a><span class="tag active">Unit 31</span><a
+                href="Unit32_중첩루프.html">Unit 32 →</a></div>
+        <div class="ft">🖥️ C 언어 코딩 도장 · Unit 31 · goto</div>
+    </div>
+    <script>
+        const P = [
+            {
+                n: 1, t: "goto 기본 문법", d: 1,
+                q: `다음 코드의 출력을 쓰세요.<pre class="code-c">printf("A\\n");
+goto skip;
+printf("B\\n");
+skip:
+printf("C\\n");</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">A<br>C</div><div class="trace">goto skip → "B" 건너뛰고 skip: 레이블로 점프!</div>`
+            },
+
+            {
+                n: 2, t: "goto를 쓰면 안 되는 이유", d: 1,
+                q: `goto를 남용하면 어떤 문제가 생기나요?`,
+                a: `<span class="key">정답</span><div class="trace"><span class="err">스파게티 코드!</span><br>코드의 흐름이 위아래로 뒤섞여서 읽기 어려움.<br>디버깅, 유지보수가 매우 힘들어짐.<br><br><span class="ok">대안: if-else, 반복문, 함수, break</span></div>`
+            },
+
+            {
+                n: 3, t: "이중 루프 탈출 (goto의 적절한 사용)", d: 2,
+                q: `이중 for에서 goto로 완전 탈출하세요.<pre class="code-c">for (int i = 0; i < 10; i++)
+    for (int j = 0; j < 10; j++)
+        if (i * j > 20) goto done;
+done:
+printf("탈출!\\n");</pre>`,
+                a: `<span class="key">정답</span><div class="trace">i=3, j=7일 때 3*7=21>20 → goto done<br>이중 루프 완전 탈출!<br><br>break는 안쪽 루프만 탈출하므로 goto가 유용.</div>`
+            },
+
+            {
+                n: 4, t: "에러 처리 패턴 (Linux커널 스타일)", d: 3,
+                q: `goto를 활용한 에러 처리 패턴을 설명하세요.<pre class="code-c">int process() {
+    FILE *f = fopen("data.txt", "r");
+    if (!f) goto error;
+    
+    int *buf = malloc(100);
+    if (!buf) goto close_file;
+    
+    <span class="cm">// 처리...</span>
+    free(buf);
+    fclose(f);
+    return 0;
+
+close_file:
+    fclose(f);
+error:
+    return -1;
+}</pre>`,
+                a: `<span class="key">정답</span><div class="trace">리소스 정리를 깔끔하게 하는 패턴!<br>malloc 실패 → fclose 후 에러 반환<br>fopen 실패 → 바로 에러 반환<br><br><span class="ok">리눅스 커널에서 자주 사용하는 합법적 goto!</span></div>`
+            },
+
+            {
+                n: 5, t: "goto vs break", d: 2,
+                q: `다음 코드를 goto 없이 변환하세요.<pre class="code-c">for (int i = 0; i < 5; i++) {
+    if (i == 3) goto end;
+    printf("%d ", i);
+}
+end:
+printf("끝\\n");</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">for (int i = 0; i < 5; i++) {
+    if (i == 3) break;
+    printf("%d ", i);
+}
+printf("끝\\n");</pre><div class="output-box">0 1 2 끝</div>`},
+
+            {
+                n: 6, t: "goto로 루프 구현?", d: 2,
+                q: `goto로 반복문을 구현하면?<pre class="code-c">int i = 0;
+loop:
+if (i >= 5) goto end;
+printf("%d ", i);
+i++;
+goto loop;
+end:;</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">0 1 2 3 4 </div><div class="trace">while과 동일한 동작이지만...<br><span class="err">절대 이렇게 쓰지 마세요!</span> while을 쓰세요.</div>`
+            },
+
+            {
+                n: 7, t: "심사: goto 추적", d: 2,
+                q: `다음 코드의 출력을 쓰세요.<pre class="code-c">int x = 1;
+start:
+printf("%d ", x);
+x *= 2;
+if (x <= 16) goto start;
+printf("끝\\n");</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">1 2 4 8 16 끝</div>`
+            },
+
+            {
+                n: 8, t: "심사: 조건부 goto", d: 2,
+                q: `다음 코드의 출력을 쓰세요.<pre class="code-c">int n = 5;
+if (n > 10) goto big;
+printf("작은 수\\n");
+goto end;
+big:
+printf("큰 수\\n");
+end:
+printf("종료\\n");</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">작은 수<br>종료</div>`
+            },
+
+            {
+                n: 9, t: "goto의 안 되는 것들", d: 2,
+                q: `goto에서 불가능하거나 위험한 것을 고르세요.<div class="example-box">① 다른 함수로 goto<br>② 변수 선언 건너뛰기<br>③ 같은 함수 내 이동<br>④ 뒤로 이동</div>`,
+                a: `<span class="key">정답</span><div class="trace">① <span class="err">불가능!</span> goto는 같은 함수 안에서만.<br>② <span class="err">위험!</span> 초기화 건너뛸 수 있음 (컴파일러 경고).<br>③ <span class="ok">가능</span><br>④ <span class="ok">가능</span> (하지만 루프로 쓰지 마세요)</div>`
+            },
+
+            {
+                n: 10, t: "🏆 Unit 31 종합", d: 2,
+                q: `goto를 사용해도 괜찮은 두 가지 경우를 쓰세요.`,
+                a: `<span class="key">정답</span><div class="trace">1. <span class="val">이중(다중) 루프 탈출</span><br>2. <span class="val">에러 처리 시 리소스 정리</span> (cleanup 패턴)<br><br>그 외에는 if/while/for/break/continue로 대체!</div>`
+            }
+        ];
+        const c = document.getElementById('problems'); P.forEach(p => { const dc = p.d <= 1 ? 'ez' : p.d <= 2 ? 'md' : 'hd'; const dots = Array.from({ length: 5 }, (_, i) => `<span${i < p.d ? ' class="on"' : ''}>​</span>`).join(''); c.innerHTML += `<div class="prob"><div class="prob-top"><div class="prob-num ${dc}">${p.n}</div><div class="prob-title">${p.t}</div><div class="diff-dots">${dots}</div></div><div class="prob-body"><div class="q">${p.q}</div><textarea class="write" placeholder="✍️ 답을 작성하세요"></textarea><details class="ans"><summary>정답 및 해설 보기</summary><div class="ans-body">${p.a}</div></details></div></div>`; });
+    </script>
+    <script src="../submit.js"></script>
+    <script src="../../platform.js"></script>
+</body>
+
+</html>

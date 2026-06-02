@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 프로젝트: 펫 시뮬레이터</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 16px; font-weight: 700; color: #1e3a5f; margin: 18px 0 10px; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+ul, ol { margin: 0 0 12px 20px; }
+li { font-size: 14px; color: #374151; line-height: 1.8; }
+
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13.5px;
+    color: #e2e8f0; line-height: 1.85; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.code .dec { color: #f9a8d4; }
+
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+.step-box { border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 14px 18px; margin: 14px 0; background: #fff; }
+.step-label { font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+.step-title { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 8px; }
+
+.output-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #334155; line-height: 1.7; margin: 10px 0; }
+
+.compare-table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13px; }
+.compare-table th { background: #1e3a5f; color: #fff; padding: 8px 12px; text-align: left; font-weight: 700; }
+.compare-table td { padding: 7px 12px; border-bottom: 1px solid #e2e8f0; color: #374151; }
+.compare-table tr:nth-child(even) td { background: #f8fafc; }
+.compare-table code { background: #e0e7ff; padding: 1px 5px; border-radius: 3px; font-family: 'JetBrains Mono', monospace; color: #3730a3; font-size: 12px; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- 1페이지: 표지 -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">43</div>
+        <div class="cover-label">L3 — Unit 43 Project R1</div>
+        <h1 class="cover-title">프로젝트:<br>펫 시뮬레이터</h1>
+        <p class="cover-sub">Pet 클래스(이름, 배고픔, 행복, 에너지)를 설계하고, 먹기/놀기/자기 메서드와 시간 경과 시스템을 구현합니다. 속성과 메서드, 상태 변화 흐름을 실전에서 완성합니다.</p>
+
+        <!-- SVG: Pet 클래스 전체 구조도 -->
+        <div style="margin:24px 0;">
+            <svg viewBox="0 0 500 160" style="max-width:500px;width:100%">
+                <defs>
+                    <marker id="arwCov" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                    </marker>
+                </defs>
+                <!-- Pet 클래스 박스 -->
+                <rect x="10" y="10" width="160" height="80" rx="8" fill="#1e3a5f"/>
+                <text x="90" y="30" text-anchor="middle" font-size="12" fill="#fff" font-weight="700">class Pet</text>
+                <text x="90" y="48" text-anchor="middle" font-size="9" fill="#93c5fd">name, hunger, happy, energy</text>
+                <text x="90" y="64" text-anchor="middle" font-size="9" fill="#93c5fd">eat() / play() / sleep()</text>
+                <text x="90" y="78" text-anchor="middle" font-size="9" fill="#93c5fd">tick() / status()</text>
+                <!-- 화살표 -->
+                <line x1="173" y1="50" x2="210" y2="50" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+                <!-- 상태 박스 -->
+                <rect x="213" y="10" width="140" height="80" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="283" y="30" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">상태 속성</text>
+                <text x="283" y="46" text-anchor="middle" font-size="9" fill="#374151">hunger: 0~100 (낮을수록 좋음)</text>
+                <text x="283" y="60" text-anchor="middle" font-size="9" fill="#374151">happy: 0~100 (높을수록 좋음)</text>
+                <text x="283" y="74" text-anchor="middle" font-size="9" fill="#374151">energy: 0~100 (높을수록 좋음)</text>
+                <!-- 시간 경과 박스 -->
+                <rect x="130" y="110" width="240" height="40" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="250" y="126" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">tick() — 시간 경과</text>
+                <text x="250" y="142" text-anchor="middle" font-size="9" fill="#64748b">hunger +5, happy -3, energy -2</text>
+                <line x1="250" y1="93" x2="250" y2="108" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/puzzle.png" alt="고급 기능" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 유닛에서 만드는 것</h3>
+            <ul>
+                <li><code>Pet</code> 클래스에 이름, 배고픔, 행복, 에너지 속성을 정의할 수 있습니다.</li>
+                <li><code>eat()</code> 메서드로 배고픔을 줄이고 에너지를 회복할 수 있습니다.</li>
+                <li><code>play()</code> 메서드로 행복을 높이되 에너지와 배고픔이 변하는 관계를 구현합니다.</li>
+                <li><code>sleep()</code> 메서드로 에너지를 완전히 회복하고 배고픔이 증가하는 구조를 만듭니다.</li>
+                <li><code>tick()</code>으로 시간 경과에 따른 상태 자동 변화를 구현합니다.</li>
+                <li><code>status()</code>로 현재 펫 상태를 요약 출력합니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- 2페이지: Pet 클래스 기본 설계 -->
+<div class="page">
+    <h2>Step 1 — Pet 클래스 기본 설계</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="처리" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p><code>Pet</code> 클래스는 이름(name), 배고픔(hunger), 행복(happy), 에너지(energy) 네 가지 속성을 가집니다. 숫자는 모두 0~100 범위를 유지합니다.</p>
+
+    <!-- SVG: 속성 범위 설명 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 90" style="max-width:480px;width:100%">
+            <!-- hunger 게이지 -->
+            <rect x="5" y="10" width="220" height="34" rx="6" fill="#fff7ed" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="15" y="26" font-size="9" fill="#92400e" font-weight="700">hunger (배고픔)</text>
+            <rect x="15" y="32" width="190" height="6" rx="3" fill="#fde68a"/>
+            <rect x="15" y="32" width="80" height="6" rx="3" fill="#f59e0b"/>
+            <text x="110" y="42" font-size="8" fill="#64748b">현재: 40</text>
+            <text x="15" y="52" font-size="8" fill="#64748b">0=배부름 / 100=매우 배고픔</text>
+            <!-- happy 게이지 -->
+            <rect x="255" y="10" width="220" height="34" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="265" y="26" font-size="9" fill="#166534" font-weight="700">happy (행복)</text>
+            <rect x="265" y="32" width="190" height="6" rx="3" fill="#bbf7d0"/>
+            <rect x="265" y="32" width="130" height="6" rx="3" fill="#22c55e"/>
+            <text x="400" y="42" font-size="8" fill="#64748b">현재: 65</text>
+            <text x="265" y="52" font-size="8" fill="#64748b">0=매우 슬픔 / 100=매우 행복</text>
+            <!-- energy 게이지 -->
+            <rect x="130" y="60" width="220" height="24" rx="6" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="140" y="74" font-size="9" fill="#1d4ed8" font-weight="700">energy: 0~100 (높을수록 활발)</text>
+            <text x="140" y="84" font-size="8" fill="#64748b">초기값: 80</text>
+        </svg>
+    </div>
+
+    <!-- SVG: __init__ 초기화 구조 -->
+    <div style="text-align:center;margin:10px 0;">
+        <svg viewBox="0 0 480 56" style="max-width:480px;width:100%">
+            <rect x="5" y="5" width="470" height="46" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <rect x="5" y="5" width="470" height="20" rx="8" fill="#1e3a5f"/>
+            <text x="240" y="19" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">__init__(self, name) — 초기화</text>
+            <text x="20" y="38" font-size="9" fill="#374151">name=name  hunger=20  happy=70  energy=80</text>
+            <text x="280" y="38" font-size="9" fill="#64748b">| 클램프: max(0, min(100, v))</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># Step 1: Pet 클래스 — 속성 초기화</span>
+
+<span class="kw">class</span> <span class="fn">Pet</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="dec">self</span>, name):
+        <span class="dec">self</span>.name   = name
+        <span class="dec">self</span>.hunger = <span class="num">20</span>   <span class="cmt"># 0=배부름, 100=매우 배고픔</span>
+        <span class="dec">self</span>.happy  = <span class="num">70</span>   <span class="cmt"># 0=슬픔, 100=최고 행복</span>
+        <span class="dec">self</span>.energy = <span class="num">80</span>   <span class="cmt"># 0=지침, 100=활발</span>
+
+    <span class="kw">def</span> <span class="fn">_clamp</span>(<span class="dec">self</span>, v):
+        <span class="str">"""값을 0~100 범위로 제한"""</span>
+        <span class="kw">return</span> <span class="fn">max</span>(<span class="num">0</span>, <span class="fn">min</span>(<span class="num">100</span>, v))
+
+    <span class="kw">def</span> <span class="fn">status</span>(<span class="dec">self</span>):
+        <span class="str">"""현재 상태 출력"""</span>
+        <span class="fn">print</span>(<span class="str">f"[{self.name}] hunger={self.hunger} happy={self.happy} energy={self.energy}"</span>)
+
+<span class="cmt"># 테스트</span>
+pet = <span class="fn">Pet</span>(<span class="str">"뽀삐"</span>)
+pet.<span class="fn">status</span>()</div>
+
+    <div class="output-box">[뽀삐] hunger=20 happy=70 energy=80</div>
+
+    <!-- SVG: clamp 동작 시각화 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 480 54" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="arwClamp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="5" y="12" width="100" height="32" rx="6" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="55" y="26" text-anchor="middle" font-size="9" fill="#991b1b" font-weight="700">v = 130 (초과)</text>
+            <text x="55" y="40" text-anchor="middle" font-size="8" fill="#64748b">범위 밖</text>
+            <line x1="108" y1="28" x2="148" y2="28" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwClamp)"/>
+            <rect x="151" y="8" width="160" height="40" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="231" y="24" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">max(0, min(100, v))</text>
+            <text x="231" y="40" text-anchor="middle" font-size="8" fill="#64748b">min(100,130)=100 → max(0,100)=100</text>
+            <line x1="314" y1="28" x2="354" y2="28" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwClamp)"/>
+            <rect x="357" y="12" width="118" height="32" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="416" y="26" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">결과: 100</text>
+            <text x="416" y="40" text-anchor="middle" font-size="8" fill="#64748b">범위 내로 제한됨</text>
+        </svg>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="완성" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+        <div class="practice-head">따라해보세요 — Step 1</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc"><code>Pet("뽀삐")</code>를 생성하고 <code>status()</code>로 초기 상태를 출력하세요.</div>
+                <div class="code">pet = <span class="fn">Pet</span>(<span class="str">"뽀삐"</span>)
+pet.<span class="fn">status</span>()</div>
+                <div class="practice-result">[뽀삐] hunger=20 happy=70 energy=80 출력</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc"><code>_clamp()</code>에 0 미만과 100 초과 값을 넣어 결과를 확인하세요.</div>
+                <div class="code">pet = <span class="fn">Pet</span>(<span class="str">"테스트"</span>)
+<span class="fn">print</span>(pet.<span class="fn">_clamp</span>(-<span class="num">10</span>))
+<span class="fn">print</span>(pet.<span class="fn">_clamp</span>(<span class="num">150</span>))</div>
+                <div class="practice-result">0 / 100 — 경계값 제한 확인</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">pet.name, pet.hunger, pet.happy, pet.energy를 직접 출력해 속성 접근을 확인하세요.</div>
+                <div class="code">pet = <span class="fn">Pet</span>(<span class="str">"코코"</span>)
+<span class="fn">print</span>(pet.name, pet.hunger, pet.happy, pet.energy)</div>
+                <div class="practice-result">코코 20 70 80</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3페이지: eat / play / sleep 메서드 -->
+<div class="page">
+    <h2>Step 2 — eat / play / sleep 메서드</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/database.png" alt="데이터" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>펫의 행동 메서드 세 가지를 구현합니다. 각 메서드는 속성을 변화시키고, 항상 <code>_clamp()</code>로 범위를 보정합니다.</p>
+
+    <!-- SVG: 세 메서드 효과 비교 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 88" style="max-width:480px;width:100%">
+            <!-- eat -->
+            <rect x="5" y="10" width="142" height="70" rx="8" fill="#fff7ed" stroke="#f59e0b" stroke-width="1.5"/>
+            <rect x="5" y="10" width="142" height="24" rx="8" fill="#f59e0b"/>
+            <text x="76" y="27" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">eat(amount=20)</text>
+            <text x="76" y="48" text-anchor="middle" font-size="9" fill="#374151">hunger  -amount</text>
+            <text x="76" y="62" text-anchor="middle" font-size="9" fill="#374151">energy  +10</text>
+            <text x="76" y="76" text-anchor="middle" font-size="8" fill="#64748b">밥을 먹으면 배고픔 해소</text>
+            <!-- play -->
+            <rect x="168" y="10" width="142" height="70" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <rect x="168" y="10" width="142" height="24" rx="8" fill="#22c55e"/>
+            <text x="239" y="27" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">play(mins=30)</text>
+            <text x="239" y="48" text-anchor="middle" font-size="9" fill="#374151">happy  +mins//2</text>
+            <text x="239" y="62" text-anchor="middle" font-size="9" fill="#374151">energy  -mins//3  hunger  +5</text>
+            <text x="239" y="76" text-anchor="middle" font-size="8" fill="#64748b">놀면 행복 상승, 에너지 소모</text>
+            <!-- sleep -->
+            <rect x="331" y="10" width="144" height="70" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+            <rect x="331" y="10" width="144" height="24" rx="8" fill="#3b82f6"/>
+            <text x="403" y="27" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">sleep(hrs=8)</text>
+            <text x="403" y="48" text-anchor="middle" font-size="9" fill="#374151">energy  +hrs*10</text>
+            <text x="403" y="62" text-anchor="middle" font-size="9" fill="#374151">hunger  +hrs*3</text>
+            <text x="403" y="76" text-anchor="middle" font-size="8" fill="#64748b">자면 에너지 회복, 배고파짐</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># Step 2: 행동 메서드 3개</span>
+
+    <span class="kw">def</span> <span class="fn">eat</span>(<span class="dec">self</span>, amount=<span class="num">20</span>):
+        <span class="str">"""밥 먹기: 배고픔 감소, 에너지 소폭 회복"""</span>
+        <span class="dec">self</span>.hunger = <span class="dec">self</span>.<span class="fn">_clamp</span>(<span class="dec">self</span>.hunger - amount)
+        <span class="dec">self</span>.energy = <span class="dec">self</span>.<span class="fn">_clamp</span>(<span class="dec">self</span>.energy + <span class="num">10</span>)
+        <span class="fn">print</span>(<span class="str">f"{self.name}이(가) 밥을 먹었습니다. 배고픔: {self.hunger}"</span>)
+
+    <span class="kw">def</span> <span class="fn">play</span>(<span class="dec">self</span>, mins=<span class="num">30</span>):
+        <span class="str">"""놀기: 행복 상승, 에너지 감소, 배고픔 소폭 증가"""</span>
+        <span class="dec">self</span>.happy  = <span class="dec">self</span>.<span class="fn">_clamp</span>(<span class="dec">self</span>.happy  + mins // <span class="num">2</span>)
+        <span class="dec">self</span>.energy = <span class="dec">self</span>.<span class="fn">_clamp</span>(<span class="dec">self</span>.energy - mins // <span class="num">3</span>)
+        <span class="dec">self</span>.hunger = <span class="dec">self</span>.<span class="fn">_clamp</span>(<span class="dec">self</span>.hunger + <span class="num">5</span>)
+        <span class="fn">print</span>(<span class="str">f"{self.name}이(가) 놀았습니다. 행복: {self.happy} 에너지: {self.energy}"</span>)
+
+    <span class="kw">def</span> <span class="fn">sleep</span>(<span class="dec">self</span>, hrs=<span class="num">8</span>):
+        <span class="str">"""자기: 에너지 완전 회복, 배고픔 증가"""</span>
+        <span class="dec">self</span>.energy = <span class="dec">self</span>.<span class="fn">_clamp</span>(<span class="dec">self</span>.energy + hrs * <span class="num">10</span>)
+        <span class="dec">self</span>.hunger = <span class="dec">self</span>.<span class="fn">_clamp</span>(<span class="dec">self</span>.hunger + hrs * <span class="num">3</span>)
+        <span class="fn">print</span>(<span class="str">f"{self.name}이(가) 잠을 잤습니다. 에너지: {self.energy}"</span>)
+
+<span class="cmt"># 테스트</span>
+pet = <span class="fn">Pet</span>(<span class="str">"뽀삐"</span>)
+pet.<span class="fn">eat</span>()
+pet.<span class="fn">play</span>(<span class="num">60</span>)
+pet.<span class="fn">sleep</span>(<span class="num">4</span>)
+pet.<span class="fn">status</span>()</div>
+
+    <div class="output-box">뽀삐이(가) 밥을 먹었습니다. 배고픔: 0
+뽀삐이(가) 놀았습니다. 행복: 100 에너지: 70
+뽀삐이(가) 잠을 잤습니다. 에너지: 100
+[뽀삐] hunger=29 happy=100 energy=100</div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요 — Step 2</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">펫을 만들고 <code>eat(30)</code>을 호출해 hunger가 감소하는지 확인하세요.</div>
+                <div class="code">pet = <span class="fn">Pet</span>(<span class="str">"코코"</span>)
+pet.<span class="fn">eat</span>(<span class="num">30</span>)
+pet.<span class="fn">status</span>()</div>
+                <div class="practice-result">hunger=0 (20-30=-10 → clamp → 0)</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc"><code>play(90)</code>으로 45분 놀기를 시뮬레이트하고 에너지가 떨어지는지 확인하세요.</div>
+                <div class="code">pet = <span class="fn">Pet</span>(<span class="str">"뽀삐"</span>)
+pet.<span class="fn">play</span>(<span class="num">90</span>)
+pet.<span class="fn">status</span>()</div>
+                <div class="practice-result">energy 감소, happy 증가 확인</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc"><code>sleep(10)</code>으로 에너지가 100을 넘지 않고 clamp됨을 확인하세요.</div>
+                <div class="code">pet = <span class="fn">Pet</span>(<span class="str">"몽이"</span>)
+pet.<span class="fn">sleep</span>(<span class="num">10</span>)
+pet.<span class="fn">status</span>()</div>
+                <div class="practice-result">energy=100 (80+100=180 → clamp)</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 4페이지: tick() 시간 경과 시스템 -->
+<div class="page">
+    <h2>Step 3 — tick() 시간 경과 시스템</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p><code>tick()</code>은 시간 한 단위가 지남을 의미합니다. 호출할 때마다 hunger가 증가하고, happy와 energy가 감소합니다. 방치하면 펫 상태가 악화됩니다.</p>
+
+    <!-- SVG: tick() 한 번 효과 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 72" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="arwTick" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <!-- 시간 전 -->
+            <rect x="5" y="12" width="130" height="50" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="70" y="28" text-anchor="middle" font-size="9" fill="#374151" font-weight="700">tick() 호출 전</text>
+            <text x="70" y="42" text-anchor="middle" font-size="8" fill="#64748b">hunger=20 happy=70</text>
+            <text x="70" y="56" text-anchor="middle" font-size="8" fill="#64748b">energy=80</text>
+            <line x1="138" y1="37" x2="175" y2="37" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwTick)"/>
+            <text x="156" y="30" text-anchor="middle" font-size="8" fill="#6366f1" font-weight="700">tick()</text>
+            <!-- tick 변화량 -->
+            <rect x="178" y="8" width="128" height="58" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="242" y="24" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">변화량</text>
+            <text x="242" y="38" text-anchor="middle" font-size="8" fill="#374151">hunger +5</text>
+            <text x="242" y="50" text-anchor="middle" font-size="8" fill="#374151">happy  -3</text>
+            <text x="242" y="62" text-anchor="middle" font-size="8" fill="#374151">energy -2</text>
+            <line x1="309" y1="37" x2="346" y2="37" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwTick)"/>
+            <!-- 시간 후 -->
+            <rect x="349" y="12" width="126" height="50" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="412" y="28" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">tick() 후</text>
+            <text x="412" y="42" text-anchor="middle" font-size="8" fill="#64748b">hunger=25 happy=67</text>
+            <text x="412" y="56" text-anchor="middle" font-size="8" fill="#64748b">energy=78</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># Step 3: tick() — 시간 경과 + 위험 알림</span>
+
+    <span class="kw">def</span> <span class="fn">tick</span>(<span class="dec">self</span>, steps=<span class="num">1</span>):
+        <span class="str">"""시간 경과: hunger 증가, happy/energy 감소"""</span>
+        <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(steps):
+            <span class="dec">self</span>.hunger = <span class="dec">self</span>.<span class="fn">_clamp</span>(<span class="dec">self</span>.hunger + <span class="num">5</span>)
+            <span class="dec">self</span>.happy  = <span class="dec">self</span>.<span class="fn">_clamp</span>(<span class="dec">self</span>.happy  - <span class="num">3</span>)
+            <span class="dec">self</span>.energy = <span class="dec">self</span>.<span class="fn">_clamp</span>(<span class="dec">self</span>.energy - <span class="num">2</span>)
+        <span class="dec">self</span>.<span class="fn">_warn</span>()
+
+    <span class="kw">def</span> <span class="fn">_warn</span>(<span class="dec">self</span>):
+        <span class="str">"""위험 상태 경고"""</span>
+        <span class="kw">if</span> <span class="dec">self</span>.hunger >= <span class="num">80</span>:
+            <span class="fn">print</span>(<span class="str">f"  [경고] {self.name}이(가) 매우 배고픕니다!"</span>)
+        <span class="kw">if</span> <span class="dec">self</span>.happy <= <span class="num">20</span>:
+            <span class="fn">print</span>(<span class="str">f"  [경고] {self.name}이(가) 매우 슬픕니다!"</span>)
+        <span class="kw">if</span> <span class="dec">self</span>.energy <= <span class="num">10</span>:
+            <span class="fn">print</span>(<span class="str">f"  [경고] {self.name}이(가) 지쳐있습니다!"</span>)
+
+<span class="cmt"># 시뮬레이션: 20 tick 경과</span>
+pet = <span class="fn">Pet</span>(<span class="str">"뽀삐"</span>)
+pet.<span class="fn">tick</span>(<span class="num">10</span>)
+pet.<span class="fn">status</span>()
+pet.<span class="fn">tick</span>(<span class="num">10</span>)
+pet.<span class="fn">status</span>()</div>
+
+    <div class="output-box">[뽀삐] hunger=70 happy=40 energy=60
+  [경고] 뽀삐이(가) 매우 배고픕니다!
+[뽀삐] hunger=100 happy=10 energy=40
+  [경고] 뽀삐이(가) 매우 슬픕니다!</div>
+
+    <!-- SVG: 시간 경과에 따른 상태 변화 그래프 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 480 80" style="max-width:480px;width:100%">
+            <!-- 축 -->
+            <line x1="40" y1="10" x2="40" y2="66" stroke="#94a3b8" stroke-width="1.5"/>
+            <line x1="40" y1="66" x2="460" y2="66" stroke="#94a3b8" stroke-width="1.5"/>
+            <text x="20" y="14" font-size="8" fill="#64748b">100</text>
+            <text x="20" y="66" font-size="8" fill="#64748b">0</text>
+            <text x="240" y="78" text-anchor="middle" font-size="8" fill="#64748b">tick() 횟수 (0 → 20)</text>
+            <!-- hunger 상승 선 (빨강) -->
+            <polyline points="40,58 120,42 200,26 280,14 360,10 440,10" fill="none" stroke="#ef4444" stroke-width="2"/>
+            <text x="445" y="12" font-size="8" fill="#ef4444">hunger</text>
+            <!-- happy 하강 선 (녹색) -->
+            <polyline points="40,20 120,30 200,42 280,54 360,62 440,64" fill="none" stroke="#22c55e" stroke-width="2"/>
+            <text x="445" y="66" font-size="8" fill="#22c55e">happy</text>
+            <!-- energy 하강 선 (파랑) -->
+            <polyline points="40,14 120,22 200,32 280,42 360,52 440,60" fill="none" stroke="#3b82f6" stroke-width="2" stroke-dasharray="4,2"/>
+            <text x="445" y="42" font-size="8" fill="#3b82f6">energy</text>
+        </svg>
+    </div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요 — Step 3</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc"><code>tick(5)</code>를 호출하고 각 속성이 어떻게 변하는지 확인하세요.</div>
+                <div class="code">pet = <span class="fn">Pet</span>(<span class="str">"뽀삐"</span>)
+pet.<span class="fn">tick</span>(<span class="num">5</span>)
+pet.<span class="fn">status</span>()</div>
+                <div class="practice-result">hunger=45 happy=55 energy=70</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">hunger가 80 이상이 될 때까지 tick()을 반복하고 경고 메시지를 확인하세요.</div>
+                <div class="code">pet = <span class="fn">Pet</span>(<span class="str">"몽이"</span>)
+pet.<span class="fn">tick</span>(<span class="num">15</span>)
+pet.<span class="fn">status</span>()</div>
+                <div class="practice-result">[경고] 몽이이(가) 매우 배고픕니다!</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">tick 후 eat()을 호출해 hunger가 내려가는지 확인하세요.</div>
+                <div class="code">pet = <span class="fn">Pet</span>(<span class="str">"코코"</span>)
+pet.<span class="fn">tick</span>(<span class="num">10</span>)
+pet.<span class="fn">eat</span>(<span class="num">50</span>)
+pet.<span class="fn">status</span>()</div>
+                <div class="practice-result">hunger 감소 확인 (tick+eat 연동)</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 5페이지: 완성 시뮬레이터 -->
+<div class="page">
+    <h2>Step 4 — 완성 펫 시뮬레이터</h2>
+    <p>하루 루틴(아침-낮-저녁-밤)을 시뮬레이트합니다. 각 시간대마다 tick()과 행동 메서드를 조합해 펫이 최적 상태를 유지하도록 합니다.</p>
+
+    <!-- SVG: 하루 루틴 흐름 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 60" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="arwDay" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="5" y="14" width="90" height="32" rx="6" fill="#fff7ed" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="50" y="28" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">아침</text>
+            <text x="50" y="42" text-anchor="middle" font-size="8" fill="#64748b">eat() / tick(2)</text>
+            <line x1="98" y1="30" x2="115" y2="30" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwDay)"/>
+            <rect x="118" y="14" width="90" height="32" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="163" y="28" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">낮</text>
+            <text x="163" y="42" text-anchor="middle" font-size="8" fill="#64748b">play() / tick(4)</text>
+            <line x1="211" y1="30" x2="228" y2="30" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwDay)"/>
+            <rect x="231" y="14" width="90" height="32" rx="6" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="276" y="28" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">저녁</text>
+            <text x="276" y="42" text-anchor="middle" font-size="8" fill="#64748b">eat() / tick(3)</text>
+            <line x1="324" y1="30" x2="341" y2="30" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwDay)"/>
+            <rect x="344" y="14" width="90" height="32" rx="6" fill="#1e3a5f"/>
+            <text x="389" y="28" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">밤</text>
+            <text x="389" y="42" text-anchor="middle" font-size="8" fill="#93c5fd">sleep(8)</text>
+            <line x1="437" y1="30" x2="454" y2="30" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwDay)"/>
+            <text x="462" y="34" font-size="9" fill="#64748b">반복</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># Step 4: 하루 루틴 시뮬레이터</span>
+
+<span class="kw">def</span> <span class="fn">simulate_day</span>(pet, day):
+    <span class="fn">print</span>(<span class="str">f"\n--- {day}일차 ---"</span>)
+
+    <span class="cmt"># 아침: 밥 먹기 + 2시간 경과</span>
+    pet.<span class="fn">eat</span>(<span class="num">30</span>)
+    pet.<span class="fn">tick</span>(<span class="num">2</span>)
+
+    <span class="cmt"># 낮: 놀기 + 4시간 경과</span>
+    pet.<span class="fn">play</span>(<span class="num">60</span>)
+    pet.<span class="fn">tick</span>(<span class="num">4</span>)
+
+    <span class="cmt"># 저녁: 밥 먹기 + 3시간 경과</span>
+    pet.<span class="fn">eat</span>(<span class="num">25</span>)
+    pet.<span class="fn">tick</span>(<span class="num">3</span>)
+
+    <span class="cmt"># 밤: 자기</span>
+    pet.<span class="fn">sleep</span>(<span class="num">8</span>)
+
+    <span class="fn">print</span>(<span class="str">f"하루 끝 상태:"</span>)
+    pet.<span class="fn">status</span>()
+
+<span class="cmt"># 3일 시뮬레이션</span>
+my_pet = <span class="fn">Pet</span>(<span class="str">"뽀삐"</span>)
+<span class="kw">for</span> day <span class="kw">in</span> <span class="fn">range</span>(<span class="num">1</span>, <span class="num">4</span>):
+    <span class="fn">simulate_day</span>(my_pet, day)</div>
+
+    <div class="output-box">--- 1일차 ---
+뽀삐이(가) 밥을 먹었습니다. 배고픔: 0
+뽀삐이(가) 놀았습니다. 행복: 100 에너지: 60
+뽀삐이(가) 밥을 먹었습니다. 배고픔: 11
+뽀삐이(가) 잠을 잤습니다. 에너지: 100
+하루 끝 상태:
+[뽀삐] hunger=35 happy=88 energy=100</div>
+
+    <!-- SVG: 상태 점수 판정표 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 480 54" style="max-width:480px;width:100%">
+            <rect x="5" y="5" width="470" height="44" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="20" y="20" font-size="9" fill="#1e3a5f" font-weight="700">상태 판정 기준</text>
+            <text x="20" y="36" font-size="8" fill="#22c55e">hunger&lt;30  </text>
+            <text x="80" y="36" font-size="8" fill="#374151">+ </text>
+            <text x="95" y="36" font-size="8" fill="#22c55e">happy&gt;60  </text>
+            <text x="155" y="36" font-size="8" fill="#374151">+ </text>
+            <text x="170" y="36" font-size="8" fill="#22c55e">energy&gt;50  </text>
+            <text x="240" y="36" font-size="8" fill="#374151">→ "건강한 상태"</text>
+            <text x="20" y="46" font-size="8" fill="#ef4444">hunger&gt;=80 또는 happy&lt;=20 또는 energy&lt;=10 → 위험 상태 경고 발령</text>
+        </svg>
+    </div>
+</div>
+
+<!-- 6페이지: 완성 코드 + 문제 -->
+<div class="page">
+    <h2>완성 코드 — pet_simulator.py</h2>
+    <p>Pet 클래스 전체를 하나로 통합합니다. 모든 메서드가 <code>_clamp()</code>를 통해 속성 범위를 보장합니다.</p>
+
+    <!-- SVG: 완성 클래스 다이어그램 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 480 66" style="max-width:480px;width:100%">
+            <rect x="5" y="5" width="470" height="56" rx="8" fill="#f8fafc" stroke="#1e3a5f" stroke-width="1.5"/>
+            <rect x="5" y="5" width="470" height="22" rx="8" fill="#1e3a5f"/>
+            <text x="240" y="21" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">class Pet</text>
+            <text x="20" y="40" font-size="9" fill="#374151">속성: name  hunger(20)  happy(70)  energy(80)</text>
+            <text x="20" y="54" font-size="9" fill="#64748b">메서드: __init__  _clamp  status  eat  play  sleep  tick  _warn</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># pet_simulator.py — 완성 코드</span>
+<span class="kw">class</span> <span class="fn">Pet</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="dec">self</span>, name):
+        <span class="dec">self</span>.name=name; <span class="dec">self</span>.hunger=<span class="num">20</span>; <span class="dec">self</span>.happy=<span class="num">70</span>; <span class="dec">self</span>.energy=<span class="num">80</span>
+    <span class="kw">def</span> <span class="fn">_clamp</span>(<span class="dec">self</span>, v): <span class="kw">return</span> <span class="fn">max</span>(<span class="num">0</span>, <span class="fn">min</span>(<span class="num">100</span>, v))
+    <span class="kw">def</span> <span class="fn">status</span>(<span class="dec">self</span>):
+        <span class="fn">print</span>(<span class="str">f"[{self.name}] hunger={self.hunger} happy={self.happy} energy={self.energy}"</span>)
+    <span class="kw">def</span> <span class="fn">eat</span>(<span class="dec">self</span>, amount=<span class="num">20</span>):
+        <span class="dec">self</span>.hunger=<span class="dec">self</span>.<span class="fn">_clamp</span>(<span class="dec">self</span>.hunger-amount)
+        <span class="dec">self</span>.energy=<span class="dec">self</span>.<span class="fn">_clamp</span>(<span class="dec">self</span>.energy+<span class="num">10</span>)
+    <span class="kw">def</span> <span class="fn">play</span>(<span class="dec">self</span>, mins=<span class="num">30</span>):
+        <span class="dec">self</span>.happy=<span class="dec">self</span>.<span class="fn">_clamp</span>(<span class="dec">self</span>.happy+mins//<span class="num">2</span>)
+        <span class="dec">self</span>.energy=<span class="dec">self</span>.<span class="fn">_clamp</span>(<span class="dec">self</span>.energy-mins//<span class="num">3</span>)
+        <span class="dec">self</span>.hunger=<span class="dec">self</span>.<span class="fn">_clamp</span>(<span class="dec">self</span>.hunger+<span class="num">5</span>)
+    <span class="kw">def</span> <span class="fn">sleep</span>(<span class="dec">self</span>, hrs=<span class="num">8</span>):
+        <span class="dec">self</span>.energy=<span class="dec">self</span>.<span class="fn">_clamp</span>(<span class="dec">self</span>.energy+hrs*<span class="num">10</span>)
+        <span class="dec">self</span>.hunger=<span class="dec">self</span>.<span class="fn">_clamp</span>(<span class="dec">self</span>.hunger+hrs*<span class="num">3</span>)
+    <span class="kw">def</span> <span class="fn">tick</span>(<span class="dec">self</span>, steps=<span class="num">1</span>):
+        <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(steps):
+            <span class="dec">self</span>.hunger=<span class="dec">self</span>.<span class="fn">_clamp</span>(<span class="dec">self</span>.hunger+<span class="num">5</span>)
+            <span class="dec">self</span>.happy=<span class="dec">self</span>.<span class="fn">_clamp</span>(<span class="dec">self</span>.happy-<span class="num">3</span>)
+            <span class="dec">self</span>.energy=<span class="dec">self</span>.<span class="fn">_clamp</span>(<span class="dec">self</span>.energy-<span class="num">2</span>)</div>
+
+    <!-- 문제 1 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">1</div>
+            <div class="problem-label">eat() 연속 호출 — hunger 경계값</div>
+            <span class="problem-diff easy">기초</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text"><code>Pet("테스트")</code>를 만들고 <code>eat(50)</code>을 두 번 호출했을 때 hunger가 0이 되는지 확인하세요. _clamp() 덕분에 음수가 되지 않아야 합니다.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력</span>
+                    <span class="problem-example-value">hunger=0</span>
+                </div>
+            </div>
+            <details class="problem-toggle">
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">초기 hunger=20. eat(50) 호출 시 20-50=-30 → _clamp(-30) = 0. 두 번째 eat(50)도 0-50=-50 → 0.</div>
+                </div>
+            </details>
+            <details class="problem-toggle">
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code">pet = Pet("테스트")
+pet.eat(50)
+pet.eat(50)
+pet.status()  # hunger=0</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <!-- 문제 2 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">2</div>
+            <div class="problem-label">tick() 반복 — 위험 상태 감지</div>
+            <span class="problem-diff medium">심화</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">while 루프로 hunger가 80 이상이 될 때까지 <code>tick()</code>을 반복하고, 총 몇 번 호출됐는지 출력하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력</span>
+                    <span class="problem-example-value">위험까지 tick 횟수: 12</span>
+                </div>
+            </div>
+            <details class="problem-toggle">
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">hunger 초기값 20. tick()마다 +5. (80-20)/5 = 12번에 hunger=80 도달.</div>
+                </div>
+            </details>
+            <details class="problem-toggle">
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code">pet = Pet("몽이")
+count = 0
+while pet.hunger < 80:
+    pet.tick()
+    count += 1
+print(f"위험까지 tick 횟수: {count}")</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <!-- 문제 3 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">3</div>
+            <div class="problem-label">하루 시뮬레이션 개선 — 최적 루틴</div>
+            <span class="problem-diff hard">도전</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">5일 시뮬레이션을 돌리면서 매 하루가 끝날 때 "건강" / "주의" / "위험" 상태를 판정해 출력하는 함수를 작성하세요. (hunger&lt;40 AND happy&gt;50 AND energy&gt;40 = 건강)</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력</span>
+                    <span class="problem-example-value">1일차: 건강 / 2일차: 건강 / ...</span>
+                </div>
+            </div>
+            <details class="problem-toggle">
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">simulate_day() 함수 호출 후 pet.hunger, pet.happy, pet.energy를 조건문으로 판정합니다.</div>
+                </div>
+            </details>
+            <details class="problem-toggle">
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code">def check_health(pet):
+    if pet.hunger < 40 and pet.happy > 50 and pet.energy > 40:
+        return "건강"
+    elif pet.hunger >= 80 or pet.happy <= 20 or pet.energy <= 10:
+        return "위험"
+    else:
+        return "주의"
+
+my_pet = Pet("뽀삐")
+for day in range(1, 6):
+    simulate_day(my_pet, day)
+    print(f"  => {day}일차 판정: {check_health(my_pet)}")</div>
+                </div>
+            </details>
+        </div>
+    </div>
+</div>
+
+<!-- 7페이지: 핵심 요약 -->
+<div class="page">
+    <h2>핵심 요약</h2>
+
+    <!-- SVG: 요약 관계도 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 80" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="arwSum" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="5" y="20" width="100" height="40" rx="8" fill="#1e3a5f"/>
+            <text x="55" y="38" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">__init__</text>
+            <text x="55" y="52" text-anchor="middle" font-size="8" fill="#93c5fd">속성 초기화</text>
+            <line x1="108" y1="40" x2="130" y2="40" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwSum)"/>
+            <rect x="133" y="10" width="100" height="60" rx="8" fill="#fff7ed" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="183" y="28" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">행동 메서드</text>
+            <text x="183" y="42" text-anchor="middle" font-size="8" fill="#374151">eat / play / sleep</text>
+            <text x="183" y="56" text-anchor="middle" font-size="8" fill="#64748b">속성 변경</text>
+            <line x1="236" y1="40" x2="258" y2="40" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwSum)"/>
+            <rect x="261" y="20" width="100" height="40" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="311" y="38" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">_clamp</text>
+            <text x="311" y="52" text-anchor="middle" font-size="8" fill="#64748b">0~100 범위 보정</text>
+            <line x1="364" y1="40" x2="386" y2="40" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwSum)"/>
+            <rect x="389" y="20" width="86" height="40" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="432" y="38" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">tick</text>
+            <text x="432" y="52" text-anchor="middle" font-size="8" fill="#64748b">시간 경과</text>
+        </svg>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>이 유닛에서 배운 것</h3>
+        <ul>
+            <li><code>__init__</code> 메서드로 객체 속성 초기화 — hunger, happy, energy를 초기값으로 설정합니다.</li>
+            <li><code>_clamp(v)</code> — <code>max(0, min(100, v))</code>로 속성값이 범위를 벗어나지 않도록 보장합니다.</li>
+            <li><code>eat()</code> — 배고픔 감소, 에너지 소폭 회복. 속성 간 연동 관계의 핵심 예시입니다.</li>
+            <li><code>play()</code> — 행복 상승, 에너지 소모, 배고픔 증가. 트레이드오프(trade-off) 관계를 구현합니다.</li>
+            <li><code>sleep()</code> — 에너지 대폭 회복, 배고픔 증가. 자원 회복 패턴의 전형입니다.</li>
+            <li><code>tick(steps)</code> — 시간 단위 경과 시스템. 게임/시뮬레이션의 기본 패턴입니다.</li>
+            <li>상태 판정 로직 — 조건문으로 "건강/주의/위험" 판정. 객체 속성 기반 의사결정의 예시입니다.</li>
+        </ul>
+    </div>
+
+    <!-- SVG: 메서드별 속성 변화 요약표 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 480 110" style="max-width:480px;width:100%">
+            <!-- 헤더 -->
+            <rect x="5" y="5" width="470" height="22" rx="4" fill="#1e3a5f"/>
+            <text x="80" y="20" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">메서드</text>
+            <text x="210" y="20" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">hunger</text>
+            <text x="310" y="20" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">happy</text>
+            <text x="410" y="20" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">energy</text>
+            <!-- eat -->
+            <rect x="5" y="29" width="470" height="18" rx="0" fill="#fff7ed"/>
+            <text x="80" y="41" text-anchor="middle" font-size="9" fill="#92400e">eat(amount)</text>
+            <text x="210" y="41" text-anchor="middle" font-size="9" fill="#ef4444">-amount</text>
+            <text x="310" y="41" text-anchor="middle" font-size="9" fill="#94a3b8">변화 없음</text>
+            <text x="410" y="41" text-anchor="middle" font-size="9" fill="#22c55e">+10</text>
+            <!-- play -->
+            <rect x="5" y="49" width="470" height="18" rx="0" fill="#f0fdf4"/>
+            <text x="80" y="61" text-anchor="middle" font-size="9" fill="#166534">play(mins)</text>
+            <text x="210" y="61" text-anchor="middle" font-size="9" fill="#ef4444">+5</text>
+            <text x="310" y="61" text-anchor="middle" font-size="9" fill="#22c55e">+mins//2</text>
+            <text x="410" y="61" text-anchor="middle" font-size="9" fill="#ef4444">-mins//3</text>
+            <!-- sleep -->
+            <rect x="5" y="69" width="470" height="18" rx="0" fill="#eff6ff"/>
+            <text x="80" y="81" text-anchor="middle" font-size="9" fill="#1d4ed8">sleep(hrs)</text>
+            <text x="210" y="81" text-anchor="middle" font-size="9" fill="#ef4444">+hrs*3</text>
+            <text x="310" y="81" text-anchor="middle" font-size="9" fill="#94a3b8">변화 없음</text>
+            <text x="410" y="81" text-anchor="middle" font-size="9" fill="#22c55e">+hrs*10</text>
+            <!-- tick -->
+            <rect x="5" y="89" width="470" height="18" rx="0" fill="#f8fafc"/>
+            <text x="80" y="101" text-anchor="middle" font-size="9" fill="#374151">tick(steps)</text>
+            <text x="210" y="101" text-anchor="middle" font-size="9" fill="#ef4444">+5/step</text>
+            <text x="310" y="101" text-anchor="middle" font-size="9" fill="#ef4444">-3/step</text>
+            <text x="410" y="101" text-anchor="middle" font-size="9" fill="#ef4444">-2/step</text>
+            <rect x="5" y="29" width="470" height="78" rx="0" fill="none" stroke="#e2e8f0" stroke-width="1"/>
+        </svg>
+    </div>
+
+    <!-- SVG: OOP 핵심 개념 연결 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 56" style="max-width:480px;width:100%">
+            <rect x="5" y="5" width="470" height="46" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="240" y="20" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">OOP 핵심 개념 연결</text>
+            <text x="20" y="36" font-size="9" fill="#374151">캡슐화: 속성(hunger/happy/energy)을 메서드로만 안전하게 변경</text>
+            <text x="20" y="48" font-size="9" fill="#374151">단일 책임: eat=식사, play=놀기, sleep=수면, tick=시간 — 각 메서드가 하나만 담당</text>
+        </svg>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

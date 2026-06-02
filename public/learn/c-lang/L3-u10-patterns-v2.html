@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 조건문 패턴: 범위, 윤년, 최대값</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+/* ── 페이지 ── */
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+/* ── 챕터 표지 ── */
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 36px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+
+/* ── 본문 ── */
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 16px; font-weight: 700; color: #1e3a5f; margin: 16px 0 8px; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+strong { color: #1e3a5f; }
+
+/* ── 코드 블록 ── */
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13.5px;
+    color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.code .op  { color: #f9a8d4; }
+
+/* ── 따라해보세요 ── */
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+
+/* ── 문제 ── */
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+
+/* ── 요약 ── */
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+/* ── 패턴 카드 ── */
+.pattern-cards { display: flex; gap: 14px; margin: 20px 0; }
+.pattern-card { flex: 1; border-radius: 10px; padding: 16px; text-align: center; }
+.pattern-card.blue  { background: #eff6ff; border: 1.5px solid #bfdbfe; }
+.pattern-card.green { background: #f0fdf4; border: 1.5px solid #bbf7d0; }
+.pattern-card.amber { background: #fffbeb; border: 1.5px solid #fde68a; }
+.pattern-card h4 { font-size: 13px; font-weight: 800; margin-top: 10px; margin-bottom: 4px; }
+.pattern-card.blue  h4 { color: #1d4ed8; }
+.pattern-card.green h4 { color: #166534; }
+.pattern-card.amber h4 { color: #92400e; }
+.pattern-card p { font-size: 12px; color: #64748b; margin: 0; }
+
+/* ── 비교 박스 ── */
+.compare { display: flex; gap: 12px; margin: 14px 0; }
+.compare-box { flex: 1; border-radius: 8px; padding: 12px 14px; }
+.compare-box.left  { background: #f8fafc; border: 1px solid #e2e8f0; }
+.compare-box.right { background: #f0fdf4; border: 1px solid #bbf7d0; }
+.compare-box h4 { font-size: 12px; font-weight: 800; margin-bottom: 8px; }
+.compare-box.left  h4 { color: #64748b; }
+.compare-box.right h4 { color: #166534; }
+
+/* ── 규칙 박스 ── */
+.rule-box { background: #fff7ed; border: 1.5px solid #fed7aa; border-radius: 8px; padding: 12px 16px; margin: 12px 0; }
+.rule-box p { font-size: 14px; color: #9a3412; margin: 0; }
+
+/* ── 흐름도 강조 ── */
+.flow-label { font-size: 11px; font-weight: 700; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+
+<!-- ════════════════════════════════════ PAGE 1: 커버 ════════════════════════════════════ -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">10</div>
+        <div class="cover-label">Unit 10 · Level 3</div>
+        <h1 class="cover-title">조건문 패턴<br>— 범위, 윤년, 최대값</h1>
+        <p class="cover-sub">if/else를 실전에서 쓰는 3가지 핵심 패턴을 익힙니다. 실제 프로그램에서 가장 자주 나오는 구조입니다.</p>
+
+        <!-- 3가지 패턴 카드 SVG -->
+        <div style="margin:24px 0;">
+            <svg viewBox="0 0 500 160" style="max-width:500px;width:100%">
+                <defs>
+                    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                    </marker>
+                </defs>
+                <!-- 카드 1: 범위 -->
+                <rect x="10" y="10" width="140" height="140" rx="10" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1.5"/>
+                <rect x="30" y="28" width="100" height="32" rx="6" fill="#3b82f6"/>
+                <text x="80" y="48" text-anchor="middle" font-size="12" fill="#fff" font-weight="800" font-family="Noto Sans KR">범위 판별</text>
+                <!-- 수직선 미니 -->
+                <line x1="25" y1="100" x2="135" y2="100" stroke="#94a3b8" stroke-width="2"/>
+                <circle cx="25"  cy="100" r="3" fill="#94a3b8"/>
+                <circle cx="60"  cy="100" r="3" fill="#3b82f6"/>
+                <circle cx="95"  cy="100" r="3" fill="#22c55e"/>
+                <circle cx="135" cy="100" r="3" fill="#94a3b8"/>
+                <text x="42"  y="92" text-anchor="middle" font-size="9" fill="#3b82f6" font-weight="700">60~69</text>
+                <text x="77"  y="92" text-anchor="middle" font-size="9" fill="#22c55e" font-weight="700">70~79</text>
+                <text x="25"  y="116" text-anchor="middle" font-size="8" fill="#94a3b8">0</text>
+                <text x="135" y="116" text-anchor="middle" font-size="8" fill="#94a3b8">100</text>
+                <text x="80" y="142" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">&&amp; 연산</text>
+
+                <!-- 카드 2: 윤년 -->
+                <rect x="180" y="10" width="140" height="140" rx="10" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1.5"/>
+                <rect x="200" y="28" width="100" height="32" rx="6" fill="#22c55e"/>
+                <text x="250" y="48" text-anchor="middle" font-size="12" fill="#fff" font-weight="800" font-family="Noto Sans KR">윤년 판별</text>
+                <!-- 달력 미니 -->
+                <rect x="205" y="72" width="90" height="54" rx="4" fill="#fff" stroke="#bbf7d0" stroke-width="1"/>
+                <rect x="205" y="72" width="90" height="16" rx="4" fill="#dcfce7"/>
+                <text x="250" y="83" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">2024년 2월</text>
+                <text x="219" y="100" text-anchor="middle" font-size="8" fill="#6b7280">28</text>
+                <text x="233" y="100" text-anchor="middle" font-size="8" fill="#6b7280">29</text>
+                <text x="247" y="100" text-anchor="middle" font-size="8" fill="#22c55e" font-weight="700">30?</text>
+                <line x1="238" y1="105" x2="258" y2="105" stroke="#fca5a5" stroke-width="1"/>
+                <text x="250" y="115" text-anchor="middle" font-size="8" fill="#ef4444">X 없는 날</text>
+                <text x="250" y="142" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">|| 연산</text>
+
+                <!-- 카드 3: 최대값 -->
+                <rect x="350" y="10" width="140" height="140" rx="10" fill="#fffbeb" stroke="#fde68a" stroke-width="1.5"/>
+                <rect x="370" y="28" width="100" height="32" rx="6" fill="#f59e0b"/>
+                <text x="420" y="48" text-anchor="middle" font-size="12" fill="#fff" font-weight="800" font-family="Noto Sans KR">최대값</text>
+                <!-- 막대 미니 -->
+                <rect x="375" y="108" width="20" height="30" rx="2" fill="#fbbf24" opacity="0.7"/>
+                <rect x="402" y="88"  width="20" height="50" rx="2" fill="#f59e0b"/>
+                <rect x="429" y="100" width="20" height="38" rx="2" fill="#fbbf24" opacity="0.7"/>
+                <text x="412" y="84" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">MAX</text>
+                <line x1="375" y1="138" x2="450" y2="138" stroke="#e5e7eb" stroke-width="1"/>
+                <text x="420" y="142" text-anchor="middle" font-size="11" fill="#92400e" font-weight="700">변수 갱신</text>
+            </svg>
+        </div>
+
+        <div class="pattern-cards">
+            <div class="pattern-card blue">
+                <svg viewBox="0 0 40 40" style="width:36px;height:36px">
+                    <rect x="5" y="18" width="30" height="3" rx="1" fill="#93c5fd"/>
+                    <rect x="12" y="10" width="8" height="18" rx="2" fill="#3b82f6" opacity="0.4"/>
+                    <circle cx="12" cy="19" r="4" fill="#3b82f6"/>
+                    <circle cx="28" cy="19" r="4" fill="#3b82f6"/>
+                </svg>
+                <h4>범위 판별</h4>
+                <p>&&amp;로 상한·하한 동시 검사</p>
+            </div>
+            <div class="pattern-card green">
+                <svg viewBox="0 0 40 40" style="width:36px;height:36px">
+                    <circle cx="20" cy="20" r="14" fill="none" stroke="#86efac" stroke-width="2"/>
+                    <text x="20" y="25" text-anchor="middle" font-size="14" fill="#22c55e" font-weight="900">?</text>
+                </svg>
+                <h4>윤년 판별</h4>
+                <p>복합 논리식 ( &amp;&amp; + || )</p>
+            </div>
+            <div class="pattern-card amber">
+                <svg viewBox="0 0 40 40" style="width:36px;height:36px">
+                    <rect x="8"  y="24" width="8" height="10" rx="1" fill="#fcd34d"/>
+                    <rect x="18" y="16" width="8" height="18" rx="1" fill="#f59e0b"/>
+                    <rect x="28" y="20" width="8" height="14" rx="1" fill="#fcd34d"/>
+                    <line x1="6" y1="34" x2="38" y2="34" stroke="#e5e7eb" stroke-width="1"/>
+                </svg>
+                <h4>최대값/최소값</h4>
+                <p>변수 갱신 패턴</p>
+            </div>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="반복" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 유닛에서 배우는 것</h3>
+            <ul>
+                <li><code>&&</code>를 사용해 범위를 올바르게 표현할 수 있습니다.</li>
+                <li>윤년 조건식을 논리 연산자로 완성할 수 있습니다.</li>
+                <li>두 수, 세 수 중 최대·최소값을 구하는 패턴을 쓸 수 있습니다.</li>
+                <li>변수 갱신 패턴이 왜 유용한지 설명할 수 있습니다.</li>
+                <li>실전 문제에서 세 패턴을 올바르게 선택해 적용할 수 있습니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+
+<!-- ════════════════════════════════════ PAGE 2: 범위 판별 패턴 ════════════════════════════════════ -->
+<div class="page">
+    <h2>범위 판별 패턴 — &&amp;로 범위 묶기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/clock.png" alt="반복 시간" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+    <p>점수가 60점 이상 70점 미만인지 검사할 때 수학에서는 60 ≤ n &lt; 70 이라고 씁니다. C언어에서는 이 표현을 <strong>두 조건을 &&amp;로 연결</strong>해서 나타냅니다.</p>
+
+    <!-- 수직선 SVG -->
+    <div style="text-align:center;margin:18px 0;">
+        <svg viewBox="0 0 500 130" style="max-width:500px;width:100%">
+            <defs>
+                <marker id="ax" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+                </marker>
+            </defs>
+            <!-- 수직선 -->
+            <line x1="20" y1="65" x2="480" y2="65" stroke="#94a3b8" stroke-width="2" marker-end="url(#ax)"/>
+            <!-- 눈금 -->
+            <line x1="40"  y1="58" x2="40"  y2="72" stroke="#94a3b8" stroke-width="1.5"/>
+            <line x1="120" y1="58" x2="120" y2="72" stroke="#94a3b8" stroke-width="1.5"/>
+            <line x1="200" y1="58" x2="200" y2="72" stroke="#94a3b8" stroke-width="1.5"/>
+            <line x1="280" y1="58" x2="280" y2="72" stroke="#94a3b8" stroke-width="1.5"/>
+            <line x1="360" y1="58" x2="360" y2="72" stroke="#94a3b8" stroke-width="1.5"/>
+            <line x1="440" y1="58" x2="440" y2="72" stroke="#94a3b8" stroke-width="1.5"/>
+            <!-- 숫자 레이블 -->
+            <text x="40"  y="85" text-anchor="middle" font-size="11" fill="#475569" font-weight="600">0</text>
+            <text x="120" y="85" text-anchor="middle" font-size="11" fill="#475569" font-weight="600">60</text>
+            <text x="200" y="85" text-anchor="middle" font-size="11" fill="#475569" font-weight="600">70</text>
+            <text x="280" y="85" text-anchor="middle" font-size="11" fill="#475569" font-weight="600">80</text>
+            <text x="360" y="85" text-anchor="middle" font-size="11" fill="#475569" font-weight="600">90</text>
+            <text x="440" y="85" text-anchor="middle" font-size="11" fill="#475569" font-weight="600">100</text>
+            <!-- 범위 색칠 -->
+            <rect x="40"  y="42" width="80"  height="20" rx="2" fill="#fca5a5" opacity="0.7"/>
+            <rect x="120" y="42" width="80"  height="20" rx="2" fill="#fde68a" opacity="0.8"/>
+            <rect x="200" y="42" width="80"  height="20" rx="2" fill="#a7f3d0" opacity="0.8"/>
+            <rect x="280" y="42" width="80"  height="20" rx="2" fill="#93c5fd" opacity="0.8"/>
+            <rect x="360" y="42" width="80"  height="20" rx="2" fill="#c4b5fd" opacity="0.8"/>
+            <!-- 등급 텍스트 -->
+            <text x="80"  y="56" text-anchor="middle" font-size="10" fill="#991b1b" font-weight="800">F</text>
+            <text x="160" y="56" text-anchor="middle" font-size="10" fill="#92400e" font-weight="800">D</text>
+            <text x="240" y="56" text-anchor="middle" font-size="10" fill="#065f46" font-weight="800">C</text>
+            <text x="320" y="56" text-anchor="middle" font-size="10" fill="#1e40af" font-weight="800">B</text>
+            <text x="400" y="56" text-anchor="middle" font-size="10" fill="#5b21b6" font-weight="800">A</text>
+            <!-- 범례 -->
+            <text x="40"  y="112" font-size="9" fill="#991b1b">0~59: F</text>
+            <text x="110" y="112" font-size="9" fill="#92400e">60~69: D</text>
+            <text x="185" y="112" font-size="9" fill="#065f46">70~79: C</text>
+            <text x="258" y="112" font-size="9" fill="#1e40af">80~89: B</text>
+            <text x="330" y="112" font-size="9" fill="#5b21b6">90~100: A</text>
+        </svg>
+    </div>
+
+    <p><strong>핵심 규칙</strong>: C언어에서 <code>60 &lt;= n &lt; 70</code> 처럼 쓰면 작동하지 않습니다. 반드시 <code>n &gt;= 60 &amp;&amp; n &lt; 70</code> 형태로 써야 합니다.</p>
+
+    <div class="code"><span class="kw">int</span> score = <span class="num">75</span>;
+
+<span class="kw">if</span> (score &gt;= <span class="num">90</span>)             <span class="cmt">// 90 이상</span>
+    <span class="fn">printf</span>(<span class="str">"A\n"</span>);
+<span class="kw">else if</span> (score &gt;= <span class="num">80</span>)        <span class="cmt">// 80 이상 90 미만</span>
+    <span class="fn">printf</span>(<span class="str">"B\n"</span>);
+<span class="kw">else if</span> (score &gt;= <span class="num">70</span>)        <span class="cmt">// 70 이상 80 미만</span>
+    <span class="fn">printf</span>(<span class="str">"C\n"</span>);
+<span class="kw">else if</span> (score &gt;= <span class="num">60</span>)        <span class="cmt">// 60 이상 70 미만</span>
+    <span class="fn">printf</span>(<span class="str">"D\n"</span>);
+<span class="kw">else</span>                          <span class="cmt">// 60 미만</span>
+    <span class="fn">printf</span>(<span class="str">"F\n"</span>);</div>
+
+    <h3>범위 표현의 두 가지 방법 비교</h3>
+
+    <!-- 비교 SVG -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 100" style="max-width:500px;width:100%">
+            <!-- 방법 1 박스 -->
+            <rect x="10" y="8" width="220" height="84" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="120" y="28" text-anchor="middle" font-size="12" fill="#475569" font-weight="800">방법 1 — &amp;&amp; 사용</text>
+            <text x="120" y="50" text-anchor="middle" font-size="11" fill="#2563eb" font-weight="600" font-family="JetBrains Mono">n &gt;= 60 &amp;&amp; n &lt; 70</text>
+            <text x="120" y="70" text-anchor="middle" font-size="10" fill="#64748b">어느 위치에서든 정확히 범위 지정</text>
+            <text x="120" y="86" text-anchor="middle" font-size="10" fill="#64748b">조건이 복잡해도 명확함</text>
+            <!-- 방법 2 박스 -->
+            <rect x="270" y="8" width="220" height="84" rx="8" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1.5"/>
+            <text x="380" y="28" text-anchor="middle" font-size="12" fill="#166534" font-weight="800">방법 2 — else if 순서 활용</text>
+            <text x="380" y="50" text-anchor="middle" font-size="11" fill="#166534" font-weight="600" font-family="JetBrains Mono">else if (n &gt;= 60)</text>
+            <text x="380" y="70" text-anchor="middle" font-size="10" fill="#64748b">위 else if 에서 &lt;70 이미 걸러짐</text>
+            <text x="380" y="86" text-anchor="middle" font-size="10" fill="#64748b">else if 순서를 정확히 지켜야 함</text>
+        </svg>
+    </div>
+
+    <div class="rule-box">
+        <p><strong>주의:</strong> 방법 2는 else if 순서가 틀리면 버그가 납니다. 처음에는 방법 1(&&amp;)을 쓰는 게 안전합니다.</p>
+    </div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/calculator.png" alt="계산" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc"><code>temp</code>가 36 이상 37.5 미만이면 "정상", 37.5 이상이면 "발열"을 출력해보세요.</div>
+                <div class="code"><span class="kw">float</span> temp = <span class="num">37.2f</span>;
+<span class="kw">if</span> (temp &gt;= <span class="num">36.0f</span> <span class="op">&amp;&amp;</span> temp &lt; <span class="num">37.5f</span>)
+    <span class="fn">printf</span>(<span class="str">"정상\n"</span>);
+<span class="kw">else if</span> (temp &gt;= <span class="num">37.5f</span>)
+    <span class="fn">printf</span>(<span class="str">"발열\n"</span>);</div>
+                <div class="practice-result">정상 이 출력됩니다</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc"><code>age</code>가 13 이상 18 이하면 "청소년"을 출력해보세요. (<code>&lt;= 18</code>으로 끝 범위 포함)</div>
+                <div class="code"><span class="kw">int</span> age = <span class="num">16</span>;
+<span class="kw">if</span> (age &gt;= <span class="num">13</span> <span class="op">&amp;&amp;</span> age &lt;= <span class="num">18</span>)
+    <span class="fn">printf</span>(<span class="str">"청소년\n"</span>);</div>
+                <div class="practice-result">청소년 이 출력됩니다</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">점수에 따라 S/A/B/C/F 등급을 모두 출력하는 else-if 체인을 &&amp; 없이, 순서만으로 작성해보세요.</div>
+                <div class="code"><span class="kw">int</span> score = <span class="num">83</span>;
+<span class="kw">if</span>      (score &gt;= <span class="num">95</span>) <span class="fn">printf</span>(<span class="str">"S\n"</span>);
+<span class="kw">else if</span> (score &gt;= <span class="num">80</span>) <span class="fn">printf</span>(<span class="str">"A\n"</span>);
+<span class="kw">else if</span> (score &gt;= <span class="num">70</span>) <span class="fn">printf</span>(<span class="str">"B\n"</span>);
+<span class="kw">else if</span> (score &gt;= <span class="num">60</span>) <span class="fn">printf</span>(<span class="str">"C\n"</span>);
+<span class="kw">else</span>                 <span class="fn">printf</span>(<span class="str">"F\n"</span>);</div>
+                <div class="practice-result">A 가 출력됩니다</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ════════════════════════════════════ PAGE 3: 윤년 판별 패턴 ════════════════════════════════════ -->
+<div class="page">
+    <h2>윤년 판별 패턴 — 복합 논리식</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/flowchart.png" alt="흐름도" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+    <p>윤년은 달력에서 2월이 29일이 되는 해입니다. 4년에 한 번이지만, 100의 배수인 해는 건너뛰고, 400의 배수인 해는 다시 윤년이 됩니다.</p>
+
+    <!-- 윤년 규칙 흐름도 SVG -->
+    <div style="text-align:center;margin:18px 0;">
+        <svg viewBox="0 0 500 220" style="max-width:500px;width:100%">
+            <defs>
+                <marker id="farr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+                </marker>
+                <marker id="garr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#22c55e"/>
+                </marker>
+                <marker id="rarr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#ef4444"/>
+                </marker>
+            </defs>
+            <!-- 시작: 연도 입력 -->
+            <rect x="185" y="5" width="130" height="30" rx="6" fill="#1e3a5f"/>
+            <text x="250" y="24" text-anchor="middle" font-size="12" fill="#fff" font-weight="700">연도 y 입력</text>
+            <line x1="250" y1="35" x2="250" y2="52" stroke="#64748b" stroke-width="1.5" marker-end="url(#farr)"/>
+
+            <!-- 조건 1: 4로 나눠지는가 -->
+            <polygon points="250,55 360,80 250,105 140,80" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="250" y="77" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">y % 4 == 0</text>
+            <text x="250" y="91" text-anchor="middle" font-size="10" fill="#3b82f6">4로 나눠지나?</text>
+            <!-- No → 평년 -->
+            <line x1="140" y1="80" x2="60" y2="80" stroke="#ef4444" stroke-width="1.5" marker-end="url(#rarr)"/>
+            <text x="100" y="72" text-anchor="middle" font-size="10" fill="#ef4444" font-weight="700">No</text>
+            <rect x="10" y="66" width="50" height="28" rx="5" fill="#fef2f2" stroke="#fca5a5" stroke-width="1"/>
+            <text x="35" y="83" text-anchor="middle" font-size="10" fill="#dc2626" font-weight="700">평년</text>
+            <!-- Yes ↓ -->
+            <line x1="250" y1="105" x2="250" y2="122" stroke="#22c55e" stroke-width="1.5" marker-end="url(#garr)"/>
+            <text x="264" y="118" font-size="10" fill="#22c55e" font-weight="700">Yes</text>
+
+            <!-- 조건 2: 100으로 나눠지는가 -->
+            <polygon points="250,125 360,150 250,175 140,150" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="250" y="147" text-anchor="middle" font-size="11" fill="#92400e" font-weight="700">y % 100 == 0</text>
+            <text x="250" y="161" text-anchor="middle" font-size="10" fill="#b45309">100으로 나눠지나?</text>
+            <!-- No → 윤년 -->
+            <line x1="140" y1="150" x2="60" y2="150" stroke="#22c55e" stroke-width="1.5" marker-end="url(#garr)"/>
+            <text x="100" y="142" text-anchor="middle" font-size="10" fill="#22c55e" font-weight="700">No</text>
+            <rect x="10" y="136" width="50" height="28" rx="5" fill="#f0fdf4" stroke="#86efac" stroke-width="1"/>
+            <text x="35" y="153" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">윤년</text>
+            <!-- Yes ↓ -->
+            <line x1="250" y1="175" x2="250" y2="192" stroke="#64748b" stroke-width="1.5" marker-end="url(#farr)"/>
+            <text x="264" y="188" font-size="10" fill="#92400e" font-weight="700">Yes</text>
+
+            <!-- 조건 3: 400으로 나눠지는가 -->
+            <polygon points="250,195 360,210 250,220 140,210" fill="#f5f3ff" stroke="#8b5cf6" stroke-width="1.5"/>
+            <text x="250" y="210" text-anchor="middle" font-size="10" fill="#5b21b6" font-weight="700">y % 400 == 0?</text>
+            <!-- No → 평년 -->
+            <line x1="360" y1="210" x2="430" y2="210" stroke="#ef4444" stroke-width="1.5" marker-end="url(#rarr)"/>
+            <text x="395" y="202" text-anchor="middle" font-size="10" fill="#ef4444" font-weight="700">No</text>
+            <rect x="432" y="196" width="50" height="28" rx="5" fill="#fef2f2" stroke="#fca5a5" stroke-width="1"/>
+            <text x="457" y="213" text-anchor="middle" font-size="10" fill="#dc2626" font-weight="700">평년</text>
+            <!-- Yes → 윤년 -->
+            <line x1="140" y1="210" x2="70" y2="210" stroke="#22c55e" stroke-width="1.5" marker-end="url(#garr)"/>
+            <text x="105" y="202" text-anchor="middle" font-size="10" fill="#22c55e" font-weight="700">Yes</text>
+            <rect x="10" y="196" width="50" height="28" rx="5" fill="#f0fdf4" stroke="#86efac" stroke-width="1"/>
+            <text x="35" y="213" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">윤년</text>
+        </svg>
+    </div>
+
+    <h3>조건식 단계별 분해</h3>
+
+    <!-- 분해 SVG -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 500 90" style="max-width:500px;width:100%">
+            <!-- 조각 1 -->
+            <rect x="10"  y="15" width="130" height="36" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="75"  y="36" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700" font-family="JetBrains Mono">y%4==0</text>
+            <text x="75"  y="49" text-anchor="middle" font-size="9"  fill="#3b82f6">4의 배수</text>
+            <!-- && -->
+            <text x="155" y="38" text-anchor="middle" font-size="14" fill="#7c3aed" font-weight="900">&amp;&amp;</text>
+            <!-- 조각 2 -->
+            <rect x="175" y="15" width="140" height="36" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="245" y="36" text-anchor="middle" font-size="11" fill="#92400e" font-weight="700" font-family="JetBrains Mono">y%100!=0</text>
+            <text x="245" y="49" text-anchor="middle" font-size="9"  fill="#b45309">100의 배수 아님</text>
+            <!-- || -->
+            <text x="330" y="38" text-anchor="middle" font-size="14" fill="#7c3aed" font-weight="900">||</text>
+            <!-- 조각 3 -->
+            <rect x="350" y="15" width="140" height="36" rx="6" fill="#f5f3ff" stroke="#8b5cf6" stroke-width="1.5"/>
+            <text x="420" y="36" text-anchor="middle" font-size="11" fill="#5b21b6" font-weight="700" font-family="JetBrains Mono">y%400==0</text>
+            <text x="420" y="49" text-anchor="middle" font-size="9"  fill="#6d28d9">400의 배수</text>
+            <!-- 화살표 아래 -->
+            <line x1="250" y1="55" x2="250" y2="72" stroke="#94a3b8" stroke-width="1.5"/>
+            <rect x="155" y="72" width="190" height="18" rx="4" fill="#1e3a5f"/>
+            <text x="250" y="84" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">(y%4==0 &amp;&amp; y%100!=0) || y%400==0</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">int</span> y = <span class="num">2024</span>;
+
+<span class="kw">if</span> ((y <span class="op">%</span> <span class="num">4</span> == <span class="num">0</span> <span class="op">&amp;&amp;</span> y <span class="op">%</span> <span class="num">100</span> != <span class="num">0</span>) <span class="op">||</span> (y <span class="op">%</span> <span class="num">400</span> == <span class="num">0</span>))
+    <span class="fn">printf</span>(<span class="str">"%d년은 윤년\n"</span>, y);
+<span class="kw">else</span>
+    <span class="fn">printf</span>(<span class="str">"%d년은 평년\n"</span>, y);</div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">2000년이 윤년인지 확인해보세요. (400의 배수 → 윤년)</div>
+                <div class="code"><span class="kw">int</span> y = <span class="num">2000</span>;
+<span class="kw">if</span> ((y <span class="op">%</span> <span class="num">4</span> == <span class="num">0</span> <span class="op">&amp;&amp;</span> y <span class="op">%</span> <span class="num">100</span> != <span class="num">0</span>) <span class="op">||</span> (y <span class="op">%</span> <span class="num">400</span> == <span class="num">0</span>))
+    <span class="fn">printf</span>(<span class="str">"윤년\n"</span>);
+<span class="kw">else</span>
+    <span class="fn">printf</span>(<span class="str">"평년\n"</span>);</div>
+                <div class="practice-result">윤년 — 400의 배수라 세 번째 조건에서 통과</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">1900년이 평년인지 확인해보세요. (100의 배수, 400의 배수 아님 → 평년)</div>
+                <div class="code"><span class="kw">int</span> y = <span class="num">1900</span>;
+<span class="cmt">// y%4==0 → 참, y%100!=0 → 거짓 → 첫 조건 거짓</span>
+<span class="cmt">// y%400==0 → 거짓 → 전체 거짓 → 평년</span>
+<span class="kw">if</span> ((y <span class="op">%</span> <span class="num">4</span> == <span class="num">0</span> <span class="op">&amp;&amp;</span> y <span class="op">%</span> <span class="num">100</span> != <span class="num">0</span>) <span class="op">||</span> (y <span class="op">%</span> <span class="num">400</span> == <span class="num">0</span>))
+    <span class="fn">printf</span>(<span class="str">"윤년\n"</span>);
+<span class="kw">else</span>
+    <span class="fn">printf</span>(<span class="str">"평년\n"</span>);</div>
+                <div class="practice-result">평년 이 출력됩니다</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc"><code>scanf</code>로 연도를 입력받아 윤년/평년을 판단하는 완성 코드를 작성해보세요.</div>
+                <div class="code"><span class="kw">int</span> y;
+<span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;y);
+<span class="kw">if</span> ((y <span class="op">%</span> <span class="num">4</span> == <span class="num">0</span> <span class="op">&amp;&amp;</span> y <span class="op">%</span> <span class="num">100</span> != <span class="num">0</span>) <span class="op">||</span> (y <span class="op">%</span> <span class="num">400</span> == <span class="num">0</span>))
+    <span class="fn">printf</span>(<span class="str">"%d년: 윤년\n"</span>, y);
+<span class="kw">else</span>
+    <span class="fn">printf</span>(<span class="str">"%d년: 평년\n"</span>, y);</div>
+                <div class="practice-result">입력값에 따라 윤년 또는 평년 출력</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ════════════════════════════════════ PAGE 4: 최대값/최소값 패턴 ════════════════════════════════════ -->
+<div class="page">
+    <h2>최대값/최소값 패턴 — 변수 갱신</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+    <p>두 수 또는 세 수 중 가장 큰 값을 찾는 패턴입니다. <strong>변수 갱신 패턴</strong>은 초기값을 먼저 대입하고, 더 큰 값이 나오면 그 값으로 교체하는 방식입니다.</p>
+
+    <h3>2개 중 최대값 — if-else</h3>
+
+    <!-- 2개 최대값 SVG -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 110" style="max-width:500px;width:100%">
+            <defs>
+                <marker id="marr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+                </marker>
+            </defs>
+            <!-- a 박스 -->
+            <rect x="20" y="20" width="80" height="50" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+            <text x="60" y="40" text-anchor="middle" font-size="12" fill="#1d4ed8" font-weight="700">a = 42</text>
+            <text x="60" y="60" text-anchor="middle" font-size="22" fill="#1d4ed8" font-weight="900">42</text>
+            <!-- b 박스 -->
+            <rect x="120" y="20" width="80" height="50" rx="8" fill="#fce7f3" stroke="#ec4899" stroke-width="2"/>
+            <text x="160" y="40" text-anchor="middle" font-size="12" fill="#9d174d" font-weight="700">b = 57</text>
+            <text x="160" y="60" text-anchor="middle" font-size="22" fill="#9d174d" font-weight="900">57</text>
+            <!-- 화살표 -->
+            <line x1="210" y1="45" x2="260" y2="45" stroke="#64748b" stroke-width="1.5" marker-end="url(#marr)"/>
+            <!-- 마름모 -->
+            <polygon points="300,20 380,45 300,70 220,45" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="300" y="40" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">a &gt; b?</text>
+            <text x="300" y="53" text-anchor="middle" font-size="10" fill="#92400e">비교</text>
+            <!-- Yes → max=a -->
+            <line x1="300" y1="20" x2="300" y2="5" stroke="#22c55e" stroke-width="1.5" marker-end="url(#marr)"/>
+            <text x="315" y="13" font-size="9" fill="#22c55e" font-weight="700">Yes</text>
+            <rect x="260" y="88" width="80" height="20" rx="4" fill="#f0fdf4" stroke="#86efac" stroke-width="1"/>
+            <text x="300" y="102" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">max = a</text>
+            <!-- No → max=b -->
+            <line x1="380" y1="45" x2="430" y2="45" stroke="#ef4444" stroke-width="1.5" marker-end="url(#marr)"/>
+            <text x="405" y="37" font-size="9" fill="#ef4444" font-weight="700">No</text>
+            <rect x="430" y="30" width="60" height="28" rx="5" fill="#fef2f2" stroke="#fca5a5" stroke-width="1"/>
+            <text x="460" y="47" text-anchor="middle" font-size="10" fill="#dc2626" font-weight="700">max = b</text>
+            <!-- result -->
+            <text x="300" y="82" text-anchor="middle" font-size="10" fill="#22c55e" font-weight="700">max = 57</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">int</span> a = <span class="num">42</span>, b = <span class="num">57</span>;
+<span class="kw">int</span> max;
+
+<span class="kw">if</span> (a &gt; b)
+    max = a;
+<span class="kw">else</span>
+    max = b;
+
+<span class="fn">printf</span>(<span class="str">"최대값: %d\n"</span>, max);  <span class="cmt">// 최대값: 57</span></div>
+
+    <h3>3개 중 최대값 — 변수 갱신 패턴</h3>
+
+    <!-- 3개 변수 갱신 SVG -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 100" style="max-width:500px;width:100%">
+            <defs>
+                <marker id="sarr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+                </marker>
+            </defs>
+            <!-- Step 1 -->
+            <rect x="10" y="25" width="90" height="50" rx="7" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="55" y="44" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">max = a</text>
+            <text x="55" y="58" text-anchor="middle" font-size="10" fill="#64748b">초기값 설정</text>
+            <text x="55" y="70" text-anchor="middle" font-size="14" fill="#1d4ed8" font-weight="900">20</text>
+            <!-- 화살표 -->
+            <line x1="103" y1="50" x2="118" y2="50" stroke="#64748b" stroke-width="1.5" marker-end="url(#sarr)"/>
+            <!-- Step 2 -->
+            <rect x="120" y="25" width="110" height="50" rx="7" fill="#fce7f3" stroke="#ec4899" stroke-width="1.5"/>
+            <text x="175" y="44" text-anchor="middle" font-size="10" fill="#9d174d" font-weight="700">b(35) &gt; max(20)?</text>
+            <text x="175" y="58" text-anchor="middle" font-size="10" fill="#64748b">Yes → max = b</text>
+            <text x="175" y="70" text-anchor="middle" font-size="14" fill="#ec4899" font-weight="900">35</text>
+            <!-- 화살표 -->
+            <line x1="233" y1="50" x2="248" y2="50" stroke="#64748b" stroke-width="1.5" marker-end="url(#sarr)"/>
+            <!-- Step 3 -->
+            <rect x="250" y="25" width="110" height="50" rx="7" fill="#f5f3ff" stroke="#8b5cf6" stroke-width="1.5"/>
+            <text x="305" y="44" text-anchor="middle" font-size="10" fill="#5b21b6" font-weight="700">c(28) &gt; max(35)?</text>
+            <text x="305" y="58" text-anchor="middle" font-size="10" fill="#64748b">No → max 유지</text>
+            <text x="305" y="70" text-anchor="middle" font-size="14" fill="#8b5cf6" font-weight="900">35</text>
+            <!-- 화살표 -->
+            <line x1="363" y1="50" x2="378" y2="50" stroke="#64748b" stroke-width="1.5" marker-end="url(#sarr)"/>
+            <!-- 결과 -->
+            <rect x="380" y="25" width="110" height="50" rx="7" fill="#f0fdf4" stroke="#22c55e" stroke-width="2"/>
+            <text x="435" y="44" text-anchor="middle" font-size="11" fill="#166534" font-weight="800">최대값</text>
+            <text x="435" y="62" text-anchor="middle" font-size="22" fill="#166534" font-weight="900">35</text>
+            <!-- 레이블 -->
+            <text x="55"  y="90" text-anchor="middle" font-size="9" fill="#94a3b8">a=20</text>
+            <text x="175" y="90" text-anchor="middle" font-size="9" fill="#94a3b8">b=35</text>
+            <text x="305" y="90" text-anchor="middle" font-size="9" fill="#94a3b8">c=28</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">int</span> a = <span class="num">20</span>, b = <span class="num">35</span>, c = <span class="num">28</span>;
+<span class="kw">int</span> max = a;           <span class="cmt">// 1단계: 첫 번째 값으로 초기화</span>
+
+<span class="kw">if</span> (b &gt; max) max = b;  <span class="cmt">// 2단계: b가 더 크면 갱신</span>
+<span class="kw">if</span> (c &gt; max) max = c;  <span class="cmt">// 3단계: c가 더 크면 갱신</span>
+
+<span class="fn">printf</span>(<span class="str">"최대값: %d\n"</span>, max);  <span class="cmt">// 최대값: 35</span></div>
+
+    <div class="rule-box">
+        <p><strong>변수 갱신 패턴의 장점:</strong> 값이 4개, 5개로 늘어도 <code>if (n &gt; max) max = n;</code> 한 줄씩 추가하면 됩니다. 배열과 반복문을 쓰면 100개도 같은 패턴으로 처리됩니다.</p>
+    </div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc"><code>x = 8</code>, <code>y = 3</code> 중 최소값을 구해보세요. (부등호 방향만 반대)</div>
+                <div class="code"><span class="kw">int</span> x = <span class="num">8</span>, y = <span class="num">3</span>;
+<span class="kw">int</span> min;
+<span class="kw">if</span> (x &lt; y) min = x;
+<span class="kw">else</span>       min = y;
+<span class="fn">printf</span>(<span class="str">"최소값: %d\n"</span>, min);</div>
+                <div class="practice-result">최소값: 3 이 출력됩니다</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc"><code>a=50, b=30, c=70</code> 세 수의 최대값을 변수 갱신 패턴으로 구해보세요.</div>
+                <div class="code"><span class="kw">int</span> a = <span class="num">50</span>, b = <span class="num">30</span>, c = <span class="num">70</span>;
+<span class="kw">int</span> max = a;
+<span class="kw">if</span> (b &gt; max) max = b;
+<span class="kw">if</span> (c &gt; max) max = c;
+<span class="fn">printf</span>(<span class="str">"최대값: %d\n"</span>, max);</div>
+                <div class="practice-result">최대값: 70 이 출력됩니다</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">세 과목 점수 <code>kor=88, eng=72, math=95</code> 중 가장 높은 점수를 출력해보세요.</div>
+                <div class="code"><span class="kw">int</span> kor = <span class="num">88</span>, eng = <span class="num">72</span>, math = <span class="num">95</span>;
+<span class="kw">int</span> best = kor;
+<span class="kw">if</span> (eng  &gt; best) best = eng;
+<span class="kw">if</span> (math &gt; best) best = math;
+<span class="fn">printf</span>(<span class="str">"최고점: %d\n"</span>, best);</div>
+                <div class="practice-result">최고점: 95 이 출력됩니다</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ════════════════════════════════════ PAGE 5: 문제 5개 + 요약 ════════════════════════════════════ -->
+<div class="page">
+    <h2>연습 문제</h2>
+
+    <!-- 문제 1 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">1</div>
+            <div class="problem-label">등급 판별기 — 범위 패턴</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <p class="problem-text"><code>int score</code>를 입력받아, 90 이상 A, 80 이상 B, 70 이상 C, 60 이상 D, 그 미만 F를 출력하는 프로그램을 작성하세요. else-if 순서 활용 방식을 사용하세요.</p>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">입력</span><span class="problem-example-value">83</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">등급: B</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 / 정답 보기</summary>
+            <div class="problem-toggle-content">
+                <p class="hint-text">힌트: 가장 높은 조건부터 내려오면 &&amp; 없이도 범위가 자연스럽게 분리됩니다.</p>
+                <div class="answer-code"><span style="color:#c084fc">int</span> score;
+<span style="color:#67e8f9">scanf</span>(<span style="color:#86efac">"%d"</span>, &amp;score);
+<span style="color:#c084fc">if</span>      (score &gt;= 90) <span style="color:#67e8f9">printf</span>(<span style="color:#86efac">"등급: A\n"</span>);
+<span style="color:#c084fc">else if</span> (score &gt;= 80) <span style="color:#67e8f9">printf</span>(<span style="color:#86efac">"등급: B\n"</span>);
+<span style="color:#c084fc">else if</span> (score &gt;= 70) <span style="color:#67e8f9">printf</span>(<span style="color:#86efac">"등급: C\n"</span>);
+<span style="color:#c084fc">else if</span> (score &gt;= 60) <span style="color:#67e8f9">printf</span>(<span style="color:#86efac">"등급: D\n"</span>);
+<span style="color:#c084fc">else</span>                  <span style="color:#67e8f9">printf</span>(<span style="color:#86efac">"등급: F\n"</span>);</div>
+            </div>
+        </details>
+    </div>
+
+    <!-- 문제 2 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">2</div>
+            <div class="problem-label">윤년 완성 — 빈칸 채우기</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <p class="problem-text">아래 코드의 빈칸 <code>___</code>을 채워 윤년 판별을 완성하세요.</p>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-value">if ((y % ___ == 0 &amp;&amp; y % ___ != 0) || (y % ___ == 0))</span>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">if ((y % <span style="color:#7dd3fc">4</span> == 0 &amp;&amp; y % <span style="color:#7dd3fc">100</span> != 0) || (y % <span style="color:#7dd3fc">400</span> == 0))</div>
+            </div>
+        </details>
+    </div>
+
+    <!-- 문제 3 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">3</div>
+            <div class="problem-label">세 수 중 최소값</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <p class="problem-text">정수 세 개 <code>a, b, c</code>를 입력받아 가장 작은 값을 출력하세요. 변수 갱신 패턴을 사용하세요.</p>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">입력</span><span class="problem-example-value">44 17 82</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">최소값: 17</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 / 정답 보기</summary>
+            <div class="problem-toggle-content">
+                <p class="hint-text">힌트: max = a; if (b > max) max = b; 에서 &gt;를 &lt;로, max를 min으로 바꾸면 됩니다.</p>
+                <div class="answer-code"><span style="color:#c084fc">int</span> a, b, c;
+<span style="color:#67e8f9">scanf</span>(<span style="color:#86efac">"%d %d %d"</span>, &amp;a, &amp;b, &amp;c);
+<span style="color:#c084fc">int</span> min = a;
+<span style="color:#c084fc">if</span> (b &lt; min) min = b;
+<span style="color:#c084fc">if</span> (c &lt; min) min = c;
+<span style="color:#67e8f9">printf</span>(<span style="color:#86efac">"최소값: %d\n"</span>, min);</div>
+            </div>
+        </details>
+    </div>
+
+    <!-- 문제 4 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">4</div>
+            <div class="problem-label">BMI 범위 판별</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <p class="problem-text"><code>float bmi</code>를 입력받아 아래 기준으로 분류를 출력하세요. &&amp;를 사용해 범위를 명확히 표현하세요.</p>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">기준</span><span class="problem-example-value">~18.5 저체중 / 18.5~23 정상 / 23~25 과체중 / 25~ 비만</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">입력</span><span class="problem-example-value">22.0</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">정상</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 / 정답 보기</summary>
+            <div class="problem-toggle-content">
+                <p class="hint-text">힌트: float 비교이므로 리터럴에 f를 붙이거나 double로 선언하세요.</p>
+                <div class="answer-code"><span style="color:#c084fc">float</span> bmi;
+<span style="color:#67e8f9">scanf</span>(<span style="color:#86efac">"%f"</span>, &amp;bmi);
+<span style="color:#c084fc">if</span> (bmi &lt; 18.5f)
+    <span style="color:#67e8f9">printf</span>(<span style="color:#86efac">"저체중\n"</span>);
+<span style="color:#c084fc">else if</span> (bmi &gt;= 18.5f &amp;&amp; bmi &lt; 23.0f)
+    <span style="color:#67e8f9">printf</span>(<span style="color:#86efac">"정상\n"</span>);
+<span style="color:#c084fc">else if</span> (bmi &gt;= 23.0f &amp;&amp; bmi &lt; 25.0f)
+    <span style="color:#67e8f9">printf</span>(<span style="color:#86efac">"과체중\n"</span>);
+<span style="color:#c084fc">else</span>
+    <span style="color:#67e8f9">printf</span>(<span style="color:#86efac">"비만\n"</span>);</div>
+            </div>
+        </details>
+    </div>
+
+    <!-- 문제 5 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">5</div>
+            <div class="problem-label">최대값 + 등급 복합</div>
+            <span class="problem-diff hard">어려움</span>
+        </div>
+        <div class="problem-body">
+            <p class="problem-text">세 과목 점수 <code>kor, eng, math</code>를 입력받아 최고점을 구하고, 그 점수에 해당하는 등급(A/B/C/D/F)을 함께 출력하세요.</p>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">입력</span><span class="problem-example-value">72 88 65</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">최고점: 88점 (B등급)</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 / 정답 보기</summary>
+            <div class="problem-toggle-content">
+                <p class="hint-text">힌트: 먼저 최대값을 구한 뒤, 같은 변수로 등급 판별 else-if를 이어서 쓰세요.</p>
+                <div class="answer-code"><span style="color:#c084fc">int</span> kor, eng, math;
+<span style="color:#67e8f9">scanf</span>(<span style="color:#86efac">"%d %d %d"</span>, &amp;kor, &amp;eng, &amp;math);
+<span style="color:#c084fc">int</span> best = kor;
+<span style="color:#c084fc">if</span> (eng  &gt; best) best = eng;
+<span style="color:#c084fc">if</span> (math &gt; best) best = math;
+
+<span style="color:#64748b">// 등급 판별</span>
+<span style="color:#c084fc">char</span> grade;
+<span style="color:#c084fc">if</span>      (best &gt;= 90) grade = <span style="color:#86efac">'A'</span>;
+<span style="color:#c084fc">else if</span> (best &gt;= 80) grade = <span style="color:#86efac">'B'</span>;
+<span style="color:#c084fc">else if</span> (best &gt;= 70) grade = <span style="color:#86efac">'C'</span>;
+<span style="color:#c084fc">else if</span> (best &gt;= 60) grade = <span style="color:#86efac">'D'</span>;
+<span style="color:#c084fc">else</span>                 grade = <span style="color:#86efac">'F'</span>;
+
+<span style="color:#67e8f9">printf</span>(<span style="color:#86efac">"최고점: %d점 (%c등급)\n"</span>, best, grade);</div>
+            </div>
+        </details>
+    </div>
+
+    <!-- 요약 -->
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>Unit 10 핵심 정리</h3>
+        <ul>
+            <li><strong>범위 판별</strong>: <code>n &gt;= 60 &amp;&amp; n &lt; 70</code> — 하한과 상한을 &&amp;로 연결. 수학 표기 60 ≤ n &lt; 70 과 동일한 의미.</li>
+            <li><strong>else-if 순서 활용</strong>: 높은 쪽부터 내려오면 위 조건에서 이미 걸러지므로 &&amp; 없이도 범위 분리 가능. 순서 실수 주의.</li>
+            <li><strong>윤년 공식</strong>: <code>(y%4==0 &amp;&amp; y%100!=0) || y%400==0</code> — 괄호 위치 주의.</li>
+            <li><strong>최대값 패턴</strong>: <code>max = a;</code>로 초기화 후 <code>if (b &gt; max) max = b;</code> 반복. 값이 늘어도 같은 패턴으로 확장.</li>
+            <li><strong>최소값 패턴</strong>: 부등호만 반대(<code>&lt;</code>)로 바꾸면 동일하게 적용.</li>
+        </ul>
+    </div>
+</div>
+
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+
+
+
+<script>
+(function(){
+  var KEY = 'cs_ans_' + location.pathname.replace(/[^a-zA-Z0-9]/g,'_');
+  var pagePath = location.pathname;
+  var userId = null;
+  try {
+    userId = window.parent?.localStorage?.getItem('codingssok_user_id')
+      || localStorage.getItem('codingssok_user_id');
+  } catch(e) {}
+
+  function save(){
+    var areas = document.querySelectorAll('textarea');
+    var saved = 0;
+    areas.forEach(function(ta, i){
+      if(ta.value.trim()) {
+        localStorage.setItem(KEY + '_' + i, ta.value);
+        saved++;
+      } else {
+        localStorage.removeItem(KEY + '_' + i);
+      }
+    });
+    if(saved > 0) showSaveIndicator();
+  }
+
+  function load(){
+    var areas = document.querySelectorAll('textarea');
+    var restored = 0;
+    areas.forEach(function(ta, i){
+      var val = localStorage.getItem(KEY + '_' + i);
+      if(val && val.trim()) {
+        ta.value = val;
+        ta.style.borderColor = '#10b981';
+        ta.style.boxShadow = '0 0 0 2px rgba(16,185,129,0.15)';
+        setTimeout(function(){ ta.style.borderColor = ''; ta.style.boxShadow = ''; }, 2000);
+        restored++;
+      }
+    });
+    if(restored > 0) showRestoreIndicator(restored);
+  }
+
+  function saveToDb(){
+    if(!userId) return;
+    var areas = document.querySelectorAll('textarea');
+    var answers = [];
+    areas.forEach(function(ta, i){
+      if(ta.value.trim()) answers.push({ field_index: i, answer_text: ta.value });
+    });
+    if(answers.length === 0) return;
+    fetch('/api/answers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId, page_path: pagePath, answers: answers })
+    }).catch(function(){});
+  }
+
+  function loadFromDb(){
+    if(!userId) return;
+    fetch('/api/answers?user_id=' + encodeURIComponent(userId) + '&page_path=' + encodeURIComponent(pagePath))
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(!d.answers || !d.answers.length) return;
+        var areas = document.querySelectorAll('textarea');
+        d.answers.forEach(function(a){
+          if(areas[a.field_index] && a.answer_text) {
+            areas[a.field_index].value = a.answer_text;
+            localStorage.setItem(KEY + '_' + a.field_index, a.answer_text);
+          }
+        });
+      }).catch(function(){});
+  }
+
+  function showSaveIndicator(){
+    var el = document.getElementById('cs-save-ind');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'cs-save-ind';
+      el.style.cssText = 'position:fixed;bottom:16px;right:16px;padding:6px 14px;border-radius:8px;background:#0f172a;color:#22c55e;font-size:11px;font-weight:700;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+      document.body.appendChild(el);
+    }
+    el.textContent = '\u2713 \uB2F5\uC548 \uC800\uC7A5\uB428'; // ✓ 답안 저장됨
+    el.style.opacity = '1';
+    setTimeout(function(){ el.style.opacity = '0'; }, 1500);
+  }
+
+  function showRestoreIndicator(n){
+    var el = document.getElementById('cs-save-ind');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'cs-save-ind';
+      el.style.cssText = 'position:fixed;bottom:16px;right:16px;padding:6px 14px;border-radius:8px;background:#0f172a;color:#3b82f6;font-size:11px;font-weight:700;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+      document.body.appendChild(el);
+    }
+    el.textContent = '\u21BB ' + n + '\uAC1C \uB2F5\uC548 \uBCF5\uC6D0'; // ↻ n개 답안 복원
+    el.style.color = '#3b82f6';
+    el.style.opacity = '1';
+    setTimeout(function(){ el.style.opacity = '0'; }, 2500);
+  }
+
+  var t = null;
+  document.addEventListener('input', function(e){
+    if(e.target.tagName === 'TEXTAREA'){
+      clearTimeout(t);
+      t = setTimeout(function(){ save(); saveToDb(); }, 300);
+    }
+  });
+  document.addEventListener('change', function(e){
+    if(e.target.tagName === 'TEXTAREA'){ save(); saveToDb(); }
+  });
+  document.addEventListener('focusout', function(e){
+    if(e.target.tagName === 'TEXTAREA'){ save(); saveToDb(); }
+  });
+  window.addEventListener('beforeunload', function(){ save(); saveToDb(); });
+
+  // 즉시 로드
+  load();
+  loadFromDb();
+})();
+</script>
+</body>
+</html>

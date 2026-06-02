@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 문자 배열 기초</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 14px;
+    color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.code .ch { color: #fbbf24; }
+
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- ══ 페이지 1: 표지 ══ -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">11</div>
+        <div class="cover-label">Unit 11 · L5 배열 심화</div>
+        <h1 class="cover-title">문자 배열 기초 — 문자열의 정체</h1>
+        <p class="cover-sub">C언어에는 string 타입이 없습니다. 문자 하나하나를 char 배열에 담고, 끝에 '\0'을 붙여 문자열을 만듭니다. 이 원리를 이해하면 문자열의 모든 것이 보입니다.</p>
+        <div style="margin:24px 0;">
+            <!-- Hello + null 시각화 SVG -->
+            <svg viewBox="0 0 500 130" style="max-width:500px;width:100%">
+                <!-- 선언 -->
+                <rect x="10" y="10" width="480" height="28" rx="5" fill="#0f172a"/>
+                <text x="24" y="29" font-size="13" fill="#c084fc" font-family="JetBrains Mono">char</text>
+                <text x="66" y="29" font-size="13" fill="#e2e8f0" font-family="JetBrains Mono"> name[10] = </text>
+                <text x="202" y="29" font-size="13" fill="#86efac" font-family="JetBrains Mono">"Hello"</text>
+                <text x="264" y="29" font-size="13" fill="#e2e8f0" font-family="JetBrains Mono">;</text>
+                <!-- 셀 -->
+                <rect x="10" y="50" width="50" height="44" rx="5" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+                <text x="35" y="68" text-anchor="middle" font-size="18" fill="#1d4ed8" font-weight="900" font-family="JetBrains Mono">H</text>
+                <text x="35" y="90" text-anchor="middle" font-size="9" fill="#3b82f6">[0] 72</text>
+                <rect x="62" y="50" width="50" height="44" rx="5" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+                <text x="87" y="68" text-anchor="middle" font-size="18" fill="#1d4ed8" font-weight="900" font-family="JetBrains Mono">e</text>
+                <text x="87" y="90" text-anchor="middle" font-size="9" fill="#3b82f6">[1] 101</text>
+                <rect x="114" y="50" width="50" height="44" rx="5" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+                <text x="139" y="68" text-anchor="middle" font-size="18" fill="#1d4ed8" font-weight="900" font-family="JetBrains Mono">l</text>
+                <text x="139" y="90" text-anchor="middle" font-size="9" fill="#3b82f6">[2] 108</text>
+                <rect x="166" y="50" width="50" height="44" rx="5" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+                <text x="191" y="68" text-anchor="middle" font-size="18" fill="#1d4ed8" font-weight="900" font-family="JetBrains Mono">l</text>
+                <text x="191" y="90" text-anchor="middle" font-size="9" fill="#3b82f6">[3] 108</text>
+                <rect x="218" y="50" width="50" height="44" rx="5" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+                <text x="243" y="68" text-anchor="middle" font-size="18" fill="#1d4ed8" font-weight="900" font-family="JetBrains Mono">o</text>
+                <text x="243" y="90" text-anchor="middle" font-size="9" fill="#3b82f6">[4] 111</text>
+                <!-- null 셀 -->
+                <rect x="270" y="50" width="50" height="44" rx="5" fill="#fef2f2" stroke="#ef4444" stroke-width="2.5"/>
+                <text x="295" y="68" text-anchor="middle" font-size="14" fill="#dc2626" font-weight="900" font-family="JetBrains Mono">\0</text>
+                <text x="295" y="90" text-anchor="middle" font-size="9" fill="#ef4444" font-weight="700">[5] 0</text>
+                <!-- 빈 셀 -->
+                <rect x="322" y="50" width="50" height="44" rx="5" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+                <text x="347" y="75" text-anchor="middle" font-size="9" fill="#e2e8f0">[6]</text>
+                <rect x="374" y="50" width="50" height="44" rx="5" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+                <text x="399" y="75" text-anchor="middle" font-size="9" fill="#e2e8f0">[7]</text>
+                <rect x="426" y="50" width="50" height="44" rx="5" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+                <text x="451" y="75" text-anchor="middle" font-size="9" fill="#e2e8f0">[8~9]</text>
+                <!-- null 설명 -->
+                <line x1="295" y1="96" x2="295" y2="115" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="3,2"/>
+                <rect x="232" y="116" width="128" height="14" rx="3" fill="#fef2f2"/>
+                <text x="296" y="127" text-anchor="middle" font-size="10" fill="#dc2626" font-weight="700">문자열 끝 표시 '\0'</text>
+            </svg>
+        </div>
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/cpu.png" alt="CPU" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 유닛에서 배우는 것</h3>
+            <ul>
+                <li>char 배열과 '\0'(null terminator)의 관계를 설명할 수 있습니다.</li>
+                <li>문자열을 선언하고 초기화하는 3가지 방법을 씁니다.</li>
+                <li>scanf로 문자열을 입력받을 수 있습니다.</li>
+                <li>printf로 문자열을 출력할 수 있습니다.</li>
+                <li>for문으로 문자 하나씩 접근하고 처리합니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- ══ 페이지 2: char 배열과 문자열 ══ -->
+<div class="page">
+    <h2>char 배열 = 문자들의 모음</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/ram.png" alt="메모리" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>C언어에서 문자열은 <code>char</code> 배열에 저장됩니다. 각 칸에 문자 하나씩 들어가고, 마지막 칸에는 반드시 <strong>문자열 끝을 알리는 '\0'(null 문자)</strong>이 들어갑니다.</p>
+
+    <!-- char vs string 비교 SVG -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 480 105" style="max-width:480px;width:100%">
+            <!-- int 배열 (비교용) -->
+            <text x="105" y="16" text-anchor="middle" font-size="11" fill="#22c55e" font-weight="800">int 배열 — 숫자</text>
+            <rect x="10" y="24" width="42" height="32" rx="4" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="31" y="45" text-anchor="middle" font-size="14" fill="#166534" font-weight="700">10</text>
+            <rect x="54" y="24" width="42" height="32" rx="4" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="75" y="45" text-anchor="middle" font-size="14" fill="#166534" font-weight="700">20</text>
+            <rect x="98" y="24" width="42" height="32" rx="4" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="119" y="45" text-anchor="middle" font-size="14" fill="#166534" font-weight="700">30</text>
+            <text x="160" y="40" font-size="12" fill="#64748b">← 각 칸에 정수</text>
+            <!-- char 배열 -->
+            <text x="105" y="73" text-anchor="middle" font-size="11" fill="#3b82f6" font-weight="800">char 배열 — 문자+'\0'</text>
+            <rect x="10" y="80" width="42" height="32" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="31" y="101" text-anchor="middle" font-size="16" fill="#1d4ed8" font-weight="700" font-family="JetBrains Mono">H</text>
+            <rect x="54" y="80" width="42" height="32" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="75" y="101" text-anchor="middle" font-size="16" fill="#1d4ed8" font-weight="700" font-family="JetBrains Mono">i</text>
+            <rect x="98" y="80" width="42" height="32" rx="4" fill="#fef2f2" stroke="#ef4444" stroke-width="2"/>
+            <text x="119" y="101" text-anchor="middle" font-size="14" fill="#dc2626" font-weight="900" font-family="JetBrains Mono">\0</text>
+            <text x="160" y="96" font-size="12" fill="#64748b">← 문자 후 반드시 \0</text>
+        </svg>
+    </div>
+
+    <h2>문자열 선언과 초기화 3가지</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/database.png" alt="데이터" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+    <!-- 3가지 선언 방법 SVG -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 480 170" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="ca" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <!-- 방법 1: 문자열 리터럴 -->
+            <rect x="10" y="10" width="460" height="46" rx="6" fill="#0f172a"/>
+            <text x="24" y="28" font-size="12" fill="#64748b" font-family="JetBrains Mono">// 방법 1: 문자열 리터럴 (가장 흔함)</text>
+            <text x="24" y="46" font-size="12" fill="#c084fc" font-family="JetBrains Mono">char<tspan fill="#e2e8f0"> name[10] = </tspan><tspan fill="#86efac">"Hello"</tspan><tspan fill="#e2e8f0">;</tspan></text>
+            <text x="390" y="46" font-size="10" fill="#7dd3fc" font-family="JetBrains Mono">\0 자동</text>
+
+            <!-- 방법 2: 문자 배열 나열 -->
+            <rect x="10" y="62" width="460" height="46" rx="6" fill="#0f172a"/>
+            <text x="24" y="80" font-size="12" fill="#64748b" font-family="JetBrains Mono">// 방법 2: 문자 하나씩 나열 (\0 직접 씀)</text>
+            <text x="24" y="98" font-size="12" fill="#c084fc" font-family="JetBrains Mono">char<tspan fill="#e2e8f0"> name[] = {</tspan><tspan fill="#fbbf24">'H','e','l','l','o','\0'</tspan><tspan fill="#e2e8f0">};</tspan></text>
+
+            <!-- 방법 3: 크기 없이 -->
+            <rect x="10" y="114" width="460" height="46" rx="6" fill="#0f172a"/>
+            <text x="24" y="132" font-size="12" fill="#64748b" font-family="JetBrains Mono">// 방법 3: 크기 생략 (컴파일러가 계산)</text>
+            <text x="24" y="150" font-size="12" fill="#c084fc" font-family="JetBrains Mono">char<tspan fill="#e2e8f0"> name[] = </tspan><tspan fill="#86efac">"Hello"</tspan><tspan fill="#e2e8f0">;</tspan><tspan fill="#64748b">  // 크기=6 자동</tspan></text>
+        </svg>
+    </div>
+
+    <p>주의: <code>char name[5] = "Hello";</code>는 잘못된 선언입니다. "Hello"는 H-e-l-l-o-\0 총 6칸이 필요하므로 배열 크기를 6 이상으로 선언해야 합니다.</p>
+
+    <!-- '\0' 중요성 SVG -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 480 90" style="max-width:480px;width:100%">
+            <text x="10" y="16" font-size="11" fill="#1e3a5f" font-weight="800">'\0' 없으면 어떻게 될까?</text>
+            <!-- 정상 -->
+            <rect x="10" y="24" width="36" height="28" rx="3" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="28" y="43" text-anchor="middle" font-size="13" fill="#1d4ed8" font-weight="700" font-family="JetBrains Mono">H</text>
+            <rect x="48" y="24" width="36" height="28" rx="3" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="66" y="43" text-anchor="middle" font-size="13" fill="#1d4ed8" font-weight="700" font-family="JetBrains Mono">i</text>
+            <rect x="86" y="24" width="36" height="28" rx="3" fill="#fef2f2" stroke="#ef4444" stroke-width="2"/>
+            <text x="104" y="43" text-anchor="middle" font-size="11" fill="#dc2626" font-weight="700" font-family="JetBrains Mono">\0</text>
+            <text x="140" y="43" font-size="10" fill="#22c55e" font-weight="700">→ printf: "Hi" 정상 출력</text>
+            <!-- 비정상 -->
+            <rect x="10" y="58" width="36" height="28" rx="3" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="28" y="77" text-anchor="middle" font-size="13" fill="#1d4ed8" font-weight="700" font-family="JetBrains Mono">H</text>
+            <rect x="48" y="58" width="36" height="28" rx="3" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="66" y="77" text-anchor="middle" font-size="13" fill="#1d4ed8" font-weight="700" font-family="JetBrains Mono">i</text>
+            <rect x="86" y="58" width="36" height="28" rx="3" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="104" y="77" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">???</text>
+            <rect x="124" y="58" width="36" height="28" rx="3" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="142" y="77" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">???</text>
+            <text x="175" y="77" font-size="10" fill="#ef4444" font-weight="700">→ printf: "Hi@#!..." 쓰레기값 출력</text>
+        </svg>
+    </div>
+</div>
+
+<!-- ══ 페이지 3: scanf 입력 + printf 출력 ══ -->
+<div class="page">
+    <h2>scanf로 문자열 입력받기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/folder.png" alt="저장" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>문자열을 키보드로 입력받을 때는 <code>scanf("%s", 배열이름)</code>을 씁니다. 배열 이름 앞에 <code>&amp;</code>를 붙이지 않는다는 점에 주의하세요.</p>
+
+    <!-- scanf 문자열 입력 SVG -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 480 120" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="sa" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#3b82f6"/>
+                </marker>
+            </defs>
+            <!-- 키보드 입력 -->
+            <rect x="10" y="20" width="120" height="40" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="70" y="37" text-anchor="middle" font-size="10" fill="#64748b" font-weight="700">키보드 입력</text>
+            <text x="70" y="53" text-anchor="middle" font-size="14" fill="#1e3a5f" font-weight="800" font-family="JetBrains Mono">Alice</text>
+            <!-- 화살표 -->
+            <path d="M132,40 L168,40" stroke="#3b82f6" stroke-width="2" marker-end="url(#sa)"/>
+            <text x="150" y="34" text-anchor="middle" font-size="9" fill="#3b82f6">scanf</text>
+            <!-- 배열 -->
+            <rect x="170" y="24" width="32" height="32" rx="3" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="186" y="44" text-anchor="middle" font-size="13" fill="#1d4ed8" font-weight="700" font-family="JetBrains Mono">A</text>
+            <rect x="204" y="24" width="32" height="32" rx="3" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="220" y="44" text-anchor="middle" font-size="13" fill="#1d4ed8" font-weight="700" font-family="JetBrains Mono">l</text>
+            <rect x="238" y="24" width="32" height="32" rx="3" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="254" y="44" text-anchor="middle" font-size="13" fill="#1d4ed8" font-weight="700" font-family="JetBrains Mono">i</text>
+            <rect x="272" y="24" width="32" height="32" rx="3" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="288" y="44" text-anchor="middle" font-size="13" fill="#1d4ed8" font-weight="700" font-family="JetBrains Mono">c</text>
+            <rect x="306" y="24" width="32" height="32" rx="3" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="322" y="44" text-anchor="middle" font-size="13" fill="#1d4ed8" font-weight="700" font-family="JetBrains Mono">e</text>
+            <rect x="340" y="24" width="32" height="32" rx="3" fill="#fef2f2" stroke="#ef4444" stroke-width="2"/>
+            <text x="356" y="44" text-anchor="middle" font-size="11" fill="#dc2626" font-weight="700" font-family="JetBrains Mono">\0</text>
+            <!-- 인덱스 -->
+            <text x="186" y="65" text-anchor="middle" font-size="8" fill="#94a3b8">[0]</text>
+            <text x="220" y="65" text-anchor="middle" font-size="8" fill="#94a3b8">[1]</text>
+            <text x="254" y="65" text-anchor="middle" font-size="8" fill="#94a3b8">[2]</text>
+            <text x="288" y="65" text-anchor="middle" font-size="8" fill="#94a3b8">[3]</text>
+            <text x="322" y="65" text-anchor="middle" font-size="8" fill="#94a3b8">[4]</text>
+            <text x="356" y="65" text-anchor="middle" font-size="8" fill="#ef4444">[5]</text>
+            <!-- 경고 박스 -->
+            <rect x="10" y="82" width="460" height="32" rx="6" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="240" y="96" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">주의 1: scanf("%s", name) — &amp;name 아님! 배열 이름 자체가 주소</text>
+            <text x="240" y="110" text-anchor="middle" font-size="10" fill="#92400e">주의 2: %s는 공백 만나면 입력 중단 → "Hong Gildong" 전체 입력 불가 (fgets 사용)</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">char</span> name[<span class="num">20</span>];
+
+<span class="fn">printf</span>(<span class="str">"이름 입력: "</span>);
+<span class="fn">scanf</span>(<span class="str">"%s"</span>, name);    <span class="cmt">// &amp; 없음! 배열 이름이 곧 주소</span>
+<span class="fn">printf</span>(<span class="str">"안녕, %s!\n"</span>, name);  <span class="cmt">// %s로 문자열 출력</span>
+
+<span class="cmt">// 공백 포함 입력은 fgets 사용</span>
+<span class="fn">fgets</span>(name, <span class="kw">sizeof</span>(name), stdin);  <span class="cmt">// 한 줄 전체 읽기</span></div>
+
+    <h2>printf로 문자열 출력하기</h2>
+    <p>문자열은 <code>printf("%s", 배열이름)</code>으로 출력합니다. <code>%s</code>는 '\0'을 만날 때까지 문자를 순서대로 출력합니다.</p>
+
+    <!-- printf 출력 과정 SVG -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 480 90" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="pa" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#22c55e"/>
+                </marker>
+            </defs>
+            <!-- 배열 -->
+            <rect x="10" y="20" width="34" height="28" rx="3" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="27" y="39" text-anchor="middle" font-size="13" fill="#1d4ed8" font-weight="700" font-family="JetBrains Mono">H</text>
+            <rect x="46" y="20" width="34" height="28" rx="3" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="63" y="39" text-anchor="middle" font-size="13" fill="#1d4ed8" font-weight="700" font-family="JetBrains Mono">i</text>
+            <rect x="82" y="20" width="34" height="28" rx="3" fill="#fef2f2" stroke="#ef4444" stroke-width="2"/>
+            <text x="99" y="39" text-anchor="middle" font-size="11" fill="#dc2626" font-weight="700" font-family="JetBrains Mono">\0</text>
+            <!-- 각 문자 화살표 -->
+            <path d="M27,50 L27,68" stroke="#22c55e" stroke-width="1.5" marker-end="url(#pa)"/>
+            <path d="M63,50 L63,68" stroke="#22c55e" stroke-width="1.5" marker-end="url(#pa)"/>
+            <line x1="99" y1="50" x2="99" y2="62" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="3,2"/>
+            <!-- 출력 결과 -->
+            <text x="27" y="80" text-anchor="middle" font-size="14" fill="#166534" font-weight="700">H</text>
+            <text x="63" y="80" text-anchor="middle" font-size="14" fill="#166534" font-weight="700">i</text>
+            <text x="99" y="78" text-anchor="middle" font-size="9" fill="#ef4444" font-weight="700">STOP</text>
+            <!-- 화면 -->
+            <rect x="140" y="14" width="160" height="44" rx="6" fill="#1e3a5f"/>
+            <text x="220" y="32" text-anchor="middle" font-size="10" fill="#64748b">화면 출력</text>
+            <text x="220" y="50" text-anchor="middle" font-size="18" fill="#86efac" font-weight="700" font-family="JetBrains Mono">Hi</text>
+            <!-- 코드 힌트 -->
+            <rect x="340" y="14" width="135" height="44" rx="6" fill="#0f172a"/>
+            <text x="408" y="32" text-anchor="middle" font-size="11" fill="#c084fc" font-family="JetBrains Mono">printf(</text>
+            <text x="408" y="48" text-anchor="middle" font-size="11" fill="#86efac" font-family="JetBrains Mono">"%s", name)</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">char</span> greeting[<span class="num">20</span>] = <span class="str">"Hello World"</span>;
+
+<span class="fn">printf</span>(<span class="str">"%s\n"</span>, greeting);         <span class="cmt">// Hello World</span>
+<span class="fn">printf</span>(<span class="str">"길이=%lu\n"</span>, <span class="fn">strlen</span>(greeting)); <span class="cmt">// 11 (\0 제외)</span>
+
+<span class="cmt">// 글자 수 세기</span>
+<span class="kw">int</span> i = <span class="num">0</span>;
+<span class="kw">while</span>(greeting[i] != <span class="ch">'\0'</span>) i++;
+<span class="fn">printf</span>(<span class="str">"직접 센 길이: %d\n"</span>, i);   <span class="cmt">// 11</span></div>
+</div>
+
+<!-- ══ 페이지 4: 문자 하나씩 접근 ══ -->
+<div class="page">
+    <h2>문자 하나씩 접근하기</h2>
+    <p>char 배열의 각 원소는 문자 하나입니다. 인덱스로 접근하거나 for문으로 순회하면서 각 문자를 읽거나 바꿀 수 있습니다.</p>
+
+    <!-- 문자별 처리 SVG -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 480 140" style="max-width:480px;width:100%">
+            <text x="10" y="16" font-size="11" fill="#1e3a5f" font-weight="800">소문자 → 대문자 변환 과정</text>
+            <!-- 소문자 배열 -->
+            <text x="10" y="38" font-size="10" fill="#64748b">입력</text>
+            <rect x="36" y="26" width="38" height="28" rx="4" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="55" y="45" text-anchor="middle" font-size="16" fill="#166534" font-weight="700" font-family="JetBrains Mono">h</text>
+            <rect x="76" y="26" width="38" height="28" rx="4" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="95" y="45" text-anchor="middle" font-size="16" fill="#166534" font-weight="700" font-family="JetBrains Mono">e</text>
+            <rect x="116" y="26" width="38" height="28" rx="4" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="135" y="45" text-anchor="middle" font-size="16" fill="#166534" font-weight="700" font-family="JetBrains Mono">l</text>
+            <rect x="156" y="26" width="38" height="28" rx="4" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="175" y="45" text-anchor="middle" font-size="16" fill="#166534" font-weight="700" font-family="JetBrains Mono">l</text>
+            <rect x="196" y="26" width="38" height="28" rx="4" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="215" y="45" text-anchor="middle" font-size="16" fill="#166534" font-weight="700" font-family="JetBrains Mono">o</text>
+            <rect x="236" y="26" width="38" height="28" rx="4" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="255" y="45" text-anchor="middle" font-size="12" fill="#dc2626" font-weight="700" font-family="JetBrains Mono">\0</text>
+            <!-- ASCII 힌트 -->
+            <text x="55" y="65" text-anchor="middle" font-size="9" fill="#94a3b8">104</text>
+            <text x="95" y="65" text-anchor="middle" font-size="9" fill="#94a3b8">101</text>
+            <text x="135" y="65" text-anchor="middle" font-size="9" fill="#94a3b8">108</text>
+            <text x="175" y="65" text-anchor="middle" font-size="9" fill="#94a3b8">108</text>
+            <text x="215" y="65" text-anchor="middle" font-size="9" fill="#94a3b8">111</text>
+            <!-- 변환 화살표 -->
+            <text x="240" y="80" font-size="10" fill="#64748b" font-family="JetBrains Mono">str[i] -= 32; (소문자-32=대문자)</text>
+            <!-- 대문자 배열 -->
+            <text x="10" y="106" font-size="10" fill="#64748b">결과</text>
+            <rect x="36" y="92" width="38" height="28" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="55" y="111" text-anchor="middle" font-size="16" fill="#1d4ed8" font-weight="700" font-family="JetBrains Mono">H</text>
+            <rect x="76" y="92" width="38" height="28" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="95" y="111" text-anchor="middle" font-size="16" fill="#1d4ed8" font-weight="700" font-family="JetBrains Mono">E</text>
+            <rect x="116" y="92" width="38" height="28" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="135" y="111" text-anchor="middle" font-size="16" fill="#1d4ed8" font-weight="700" font-family="JetBrains Mono">L</text>
+            <rect x="156" y="92" width="38" height="28" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="175" y="111" text-anchor="middle" font-size="16" fill="#1d4ed8" font-weight="700" font-family="JetBrains Mono">L</text>
+            <rect x="196" y="92" width="38" height="28" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="215" y="111" text-anchor="middle" font-size="16" fill="#1d4ed8" font-weight="700" font-family="JetBrains Mono">O</text>
+            <rect x="236" y="92" width="38" height="28" rx="4" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="255" y="111" text-anchor="middle" font-size="12" fill="#dc2626" font-weight="700" font-family="JetBrains Mono">\0</text>
+            <text x="55" y="131" text-anchor="middle" font-size="9" fill="#94a3b8">72</text>
+            <text x="95" y="131" text-anchor="middle" font-size="9" fill="#94a3b8">69</text>
+            <text x="135" y="131" text-anchor="middle" font-size="9" fill="#94a3b8">76</text>
+            <text x="175" y="131" text-anchor="middle" font-size="9" fill="#94a3b8">76</text>
+            <text x="215" y="131" text-anchor="middle" font-size="9" fill="#94a3b8">79</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">char</span> str[] = <span class="str">"hello"</span>;
+<span class="kw">int</span> i;
+
+<span class="cmt">// 방법1: 인덱스로 개별 접근</span>
+<span class="fn">printf</span>(<span class="str">"%c\n"</span>, str[<span class="num">0</span>]);  <span class="cmt">// h 출력 (%c: 문자 하나)</span>
+str[<span class="num">0</span>] = <span class="ch">'H'</span>;         <span class="cmt">// 첫 글자를 H로 변경</span>
+
+<span class="cmt">// 방법2: for문으로 전체 순회 (\0 만날 때까지)</span>
+<span class="kw">for</span>(i = <span class="num">0</span>; str[i] != <span class="ch">'\0'</span>; i++) {
+    <span class="kw">if</span>(str[i] >= <span class="ch">'a'</span> &amp;&amp; str[i] <= <span class="ch">'z'</span>)
+        str[i] -= <span class="num">32</span>;    <span class="cmt">// 소문자 → 대문자 (ASCII 차이 32)</span>
+}
+<span class="fn">printf</span>(<span class="str">"%s\n"</span>, str);  <span class="cmt">// HELLO</span></div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">문자열 "coding"의 길이를 '\0' 판별로 직접 구해보세요.</div>
+                <div class="code"><span class="kw">char</span> s[] = <span class="str">"coding"</span>;
+<span class="kw">int</span> len = <span class="num">0</span>;
+<span class="kw">while</span>(s[len] != <span class="ch">'\0'</span>) len++;
+<span class="fn">printf</span>(<span class="str">"길이: %d\n"</span>, len);</div>
+                <div class="practice-result">길이: 6 이 출력됩니다 ('\0' 제외)</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">이름을 입력받고 첫 글자만 대문자로 바꿔 출력해보세요.</div>
+                <div class="code"><span class="kw">char</span> name[<span class="num">20</span>];
+<span class="fn">scanf</span>(<span class="str">"%s"</span>, name);
+<span class="kw">if</span>(name[<span class="num">0</span>] >= <span class="ch">'a'</span>) name[<span class="num">0</span>] -= <span class="num">32</span>;
+<span class="fn">printf</span>(<span class="str">"%s\n"</span>, name);</div>
+                <div class="practice-result">"alice" 입력 시 "Alice" 출력</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══ 페이지 5: 문제 ══ -->
+<div class="page">
+    <h2>확인 문제</h2>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">1</div>
+            <div class="problem-label">배열 크기 계산 — "Hello"를 담으려면?</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">문자열 "Hello"를 저장하는 char 배열의 최소 크기는?<br>
+            ① 4 &nbsp; ② 5 &nbsp; ③ 6 &nbsp; ④ 7</div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 / 정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">H, e, l, l, o = 5글자 + '\0' 1개</div>
+                <div class="answer-code">정답: ③ 6
+"Hello" = 5글자 + '\0' = 최소 6칸 필요</div>
+            </div>
+        </details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">2</div>
+            <div class="problem-label">scanf 문자열 입력 — 올바른 것은?</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">char name[20]; 선언 후 올바른 scanf 코드는?<br>
+            ① <code>scanf("%s", &amp;name);</code> &nbsp; ② <code>scanf("%s", name);</code> &nbsp; ③ <code>scanf("%c", name);</code></div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 / 정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">정답: ② scanf("%s", name);
+배열 이름 자체가 주소이므로 &amp; 불필요.
+%c는 문자 하나, %s는 문자열에 사용.</div>
+            </div>
+        </details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">3</div>
+            <div class="problem-label">'\0' 위치 파악</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text"><code>char s[8] = "Hi";</code> 선언 후 s[2]의 값은?</div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 / 정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">s[0]='H', s[1]='i', 그 다음은?</div>
+                <div class="answer-code">s[2] = '\0' (값은 0)
+"Hi"는 H, i, \0 순서로 저장됩니다.</div>
+            </div>
+        </details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">4</div>
+            <div class="problem-label">문자열 길이 직접 구하기</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">아래 코드 실행 후 len의 값은?</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-value">char s[] = "Korea"; int len=0; while(s[len]!='\0') len++;</span>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 / 정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">len = 5
+K-o-r-e-a = 5글자, \0 만날 때 반복 종료</div>
+            </div>
+        </details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">5</div>
+            <div class="problem-label">모음 개수 세기 프로그램</div>
+            <span class="problem-diff hard">어려움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">입력받은 문자열에서 모음(a, e, i, o, u)의 개수를 출력하는 코드를 작성하세요.</div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 / 정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">for문으로 각 문자를 확인하면서 모음이면 count++</div>
+                <div class="answer-code">char s[50]; int i, count=0;
+scanf("%s", s);
+for(i=0; s[i]!='\0'; i++) {
+    char c = s[i];
+    if(c=='a'||c=='e'||c=='i'||c=='o'||c=='u')
+        count++;
+}
+printf("모음 개수: %d\n", count);</div>
+            </div>
+        </details>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/calculator.png" alt="계산기" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>핵심 정리</h3>
+        <ul>
+            <li><strong>문자열 = char 배열 + '\0':</strong> 문자열 끝에 반드시 null 문자(값 0) 필요</li>
+            <li><strong>크기:</strong> "Hello" 저장 시 최소 6칸 — 글자수 + 1('\0'용)</li>
+            <li><strong>초기화:</strong> <code>"Hello"</code> 리터럴 / <code>{'H','e','\0'}</code> 나열 / 크기 생략 3가지</li>
+            <li><strong>입력:</strong> <code>scanf("%s", name)</code> — &amp; 없음, 공백 전까지만 입력</li>
+            <li><strong>출력:</strong> <code>printf("%s", name)</code> — '\0' 만날 때까지 자동 출력</li>
+            <li><strong>개별 접근:</strong> <code>name[i]</code> — %c 형식, <code>!= '\0'</code>로 순회 종료 판별</li>
+        </ul>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+
+
+
+<script>
+(function(){
+  var KEY = 'cs_ans_' + location.pathname.replace(/[^a-zA-Z0-9]/g,'_');
+  var pagePath = location.pathname;
+  var userId = null;
+  try {
+    userId = window.parent?.localStorage?.getItem('codingssok_user_id')
+      || localStorage.getItem('codingssok_user_id');
+  } catch(e) {}
+
+  function save(){
+    var areas = document.querySelectorAll('textarea');
+    var saved = 0;
+    areas.forEach(function(ta, i){
+      if(ta.value.trim()) {
+        localStorage.setItem(KEY + '_' + i, ta.value);
+        saved++;
+      } else {
+        localStorage.removeItem(KEY + '_' + i);
+      }
+    });
+    if(saved > 0) showSaveIndicator();
+  }
+
+  function load(){
+    var areas = document.querySelectorAll('textarea');
+    var restored = 0;
+    areas.forEach(function(ta, i){
+      var val = localStorage.getItem(KEY + '_' + i);
+      if(val && val.trim()) {
+        ta.value = val;
+        ta.style.borderColor = '#10b981';
+        ta.style.boxShadow = '0 0 0 2px rgba(16,185,129,0.15)';
+        setTimeout(function(){ ta.style.borderColor = ''; ta.style.boxShadow = ''; }, 2000);
+        restored++;
+      }
+    });
+    if(restored > 0) showRestoreIndicator(restored);
+  }
+
+  function saveToDb(){
+    if(!userId) return;
+    var areas = document.querySelectorAll('textarea');
+    var answers = [];
+    areas.forEach(function(ta, i){
+      if(ta.value.trim()) answers.push({ field_index: i, answer_text: ta.value });
+    });
+    if(answers.length === 0) return;
+    fetch('/api/answers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId, page_path: pagePath, answers: answers })
+    }).catch(function(){});
+  }
+
+  function loadFromDb(){
+    if(!userId) return;
+    fetch('/api/answers?user_id=' + encodeURIComponent(userId) + '&page_path=' + encodeURIComponent(pagePath))
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(!d.answers || !d.answers.length) return;
+        var areas = document.querySelectorAll('textarea');
+        d.answers.forEach(function(a){
+          if(areas[a.field_index] && a.answer_text) {
+            areas[a.field_index].value = a.answer_text;
+            localStorage.setItem(KEY + '_' + a.field_index, a.answer_text);
+          }
+        });
+      }).catch(function(){});
+  }
+
+  function showSaveIndicator(){
+    var el = document.getElementById('cs-save-ind');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'cs-save-ind';
+      el.style.cssText = 'position:fixed;bottom:16px;right:16px;padding:6px 14px;border-radius:8px;background:#0f172a;color:#22c55e;font-size:11px;font-weight:700;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+      document.body.appendChild(el);
+    }
+    el.textContent = '\u2713 \uB2F5\uC548 \uC800\uC7A5\uB428'; // ✓ 답안 저장됨
+    el.style.opacity = '1';
+    setTimeout(function(){ el.style.opacity = '0'; }, 1500);
+  }
+
+  function showRestoreIndicator(n){
+    var el = document.getElementById('cs-save-ind');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'cs-save-ind';
+      el.style.cssText = 'position:fixed;bottom:16px;right:16px;padding:6px 14px;border-radius:8px;background:#0f172a;color:#3b82f6;font-size:11px;font-weight:700;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+      document.body.appendChild(el);
+    }
+    el.textContent = '\u21BB ' + n + '\uAC1C \uB2F5\uC548 \uBCF5\uC6D0'; // ↻ n개 답안 복원
+    el.style.color = '#3b82f6';
+    el.style.opacity = '1';
+    setTimeout(function(){ el.style.opacity = '0'; }, 2500);
+  }
+
+  var t = null;
+  document.addEventListener('input', function(e){
+    if(e.target.tagName === 'TEXTAREA'){
+      clearTimeout(t);
+      t = setTimeout(function(){ save(); saveToDb(); }, 300);
+    }
+  });
+  document.addEventListener('change', function(e){
+    if(e.target.tagName === 'TEXTAREA'){ save(); saveToDb(); }
+  });
+  document.addEventListener('focusout', function(e){
+    if(e.target.tagName === 'TEXTAREA'){ save(); saveToDb(); }
+  });
+  window.addEventListener('beforeunload', function(){ save(); saveToDb(); });
+
+  // 즉시 로드
+  load();
+  loadFromDb();
+})();
+</script>
+</body>
+</html>

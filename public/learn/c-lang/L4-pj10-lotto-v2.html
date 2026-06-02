@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 로또 번호 생성기</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 14px;
+    color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; margin-bottom: 8px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+.tip-box { background: #eff6ff; border: 1.5px solid #bfdbfe; border-radius: 10px; padding: 14px 18px; margin: 14px 0; }
+.tip-box .tip-title { font-size: 13px; font-weight: 800; color: #1d4ed8; margin-bottom: 6px; }
+.tip-box p { font-size: 13px; color: #1e40af; margin: 0; }
+
+.warn-box { background: #fffbeb; border: 1.5px solid #fde68a; border-radius: 10px; padding: 14px 18px; margin: 14px 0; }
+.warn-box .warn-title { font-size: 13px; font-weight: 800; color: #92400e; margin-bottom: 6px; }
+.warn-box p { font-size: 13px; color: #78350f; margin: 0; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- 페이지 1: 표지 -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">10</div>
+        <div class="cover-label">Project 10</div>
+        <h1 class="cover-title">로또 번호 생성기</h1>
+        <p class="cover-sub">rand() 함수로 1~45 사이 숫자를 6개 뽑습니다. 중복 제거, 오름차순 정렬, 보너스 번호까지 단계별로 만들어봅니다.</p>
+
+        <div style="margin:24px 0;">
+            <svg viewBox="0 0 500 160" style="max-width:500px;width:100%">
+                <defs>
+                    <marker id="arL" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                    </marker>
+                </defs>
+                <!-- 로또 공 6개 -->
+                <circle cx="46" cy="60" r="30" fill="#dc2626"/>
+                <text x="46" y="65" text-anchor="middle" font-size="16" fill="#fff" font-weight="900">3</text>
+                <circle cx="118" cy="60" r="30" fill="#f59e0b"/>
+                <text x="118" y="65" text-anchor="middle" font-size="16" fill="#fff" font-weight="900">12</text>
+                <circle cx="190" cy="60" r="30" fill="#22c55e"/>
+                <text x="190" y="65" text-anchor="middle" font-size="16" fill="#fff" font-weight="900">24</text>
+                <circle cx="262" cy="60" r="30" fill="#3b82f6"/>
+                <text x="262" y="65" text-anchor="middle" font-size="16" fill="#fff" font-weight="900">31</text>
+                <circle cx="334" cy="60" r="30" fill="#8b5cf6"/>
+                <text x="334" y="65" text-anchor="middle" font-size="16" fill="#fff" font-weight="900">38</text>
+                <circle cx="406" cy="60" r="30" fill="#64748b"/>
+                <text x="406" y="65" text-anchor="middle" font-size="16" fill="#fff" font-weight="900">42</text>
+                <!-- 레이블 -->
+                <text x="46" y="105" text-anchor="middle" font-size="10" fill="#94a3b8">1번</text>
+                <text x="118" y="105" text-anchor="middle" font-size="10" fill="#94a3b8">2번</text>
+                <text x="190" y="105" text-anchor="middle" font-size="10" fill="#94a3b8">3번</text>
+                <text x="262" y="105" text-anchor="middle" font-size="10" fill="#94a3b8">4번</text>
+                <text x="334" y="105" text-anchor="middle" font-size="10" fill="#94a3b8">5번</text>
+                <text x="406" y="105" text-anchor="middle" font-size="10" fill="#94a3b8">6번</text>
+                <!-- 보너스 -->
+                <rect x="10" y="118" width="480" height="34" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="250" y="140" text-anchor="middle" font-size="12" fill="#92400e" font-weight="700">단계: 기본 6개 뽑기 → 중복 제거 → 오름차순 정렬 → 보너스 번호 추가</text>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/gamepad.png" alt="게임" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 프로젝트에서 배우는 것</h3>
+            <ul>
+                <li>rand()와 srand()로 난수를 생성하는 방법을 배웁니다.</li>
+                <li>배열을 사용해 여러 숫자를 저장하고 관리할 수 있습니다.</li>
+                <li>중첩 for + if로 중복 번호를 검사하고 다시 뽑는 로직을 구현합니다.</li>
+                <li>버블 정렬로 숫자를 오름차순으로 정렬하는 방법을 익힙니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- 페이지 2: rand() 기초 + 기본 로또 -->
+<div class="page">
+    <h2>rand() — 난수 생성 함수</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="우승" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p><code>rand()</code>는 임의의 정수를 반환하는 함수입니다. <code>stdlib.h</code>를 포함해야 합니다. <strong>나머지 연산(%)</strong>을 이용해 원하는 범위로 조절합니다.</p>
+
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 110" style="max-width:460px;width:100%">
+            <defs>
+                <marker id="arR" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#3b82f6"/>
+                </marker>
+            </defs>
+            <rect x="10" y="20" width="100" height="70" rx="8" fill="#faf5ff" stroke="#a855f7" stroke-width="1.5"/>
+            <text x="60" y="46" text-anchor="middle" font-size="11" fill="#7e22ce" font-weight="700">rand()</text>
+            <text x="60" y="62" text-anchor="middle" font-size="10" fill="#64748b">0 ~</text>
+            <text x="60" y="76" text-anchor="middle" font-size="10" fill="#64748b">RAND_MAX</text>
+            <line x1="114" y1="55" x2="148" y2="55" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#arR)"/>
+            <text x="131" y="48" text-anchor="middle" font-size="9" fill="#3b82f6">% 45</text>
+            <rect x="152" y="20" width="100" height="70" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="202" y="46" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">rand() % 45</text>
+            <text x="202" y="62" text-anchor="middle" font-size="10" fill="#64748b">0 ~ 44</text>
+            <text x="202" y="76" text-anchor="middle" font-size="10" fill="#ef4444">0 포함 (X)</text>
+            <line x1="256" y1="55" x2="290" y2="55" stroke="#22c55e" stroke-width="1.5" marker-end="url(#arR)"/>
+            <text x="273" y="48" text-anchor="middle" font-size="9" fill="#22c55e">+1</text>
+            <rect x="294" y="20" width="100" height="70" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="344" y="40" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">rand() % 45 + 1</text>
+            <text x="344" y="58" text-anchor="middle" font-size="10" fill="#166534">1 ~ 45</text>
+            <text x="344" y="74" text-anchor="middle" font-size="10" fill="#22c55e" font-weight="700">로또 범위 (O)</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt">// 기본 로또 번호 6개 생성 (중복 있음)</span>
+<span class="kw">#include</span> &lt;stdio.h&gt;
+<span class="kw">#include</span> &lt;stdlib.h&gt;   <span class="cmt">// rand(), srand()</span>
+<span class="kw">#include</span> &lt;time.h&gt;     <span class="cmt">// time()</span>
+
+<span class="kw">int</span> main() {
+    <span class="fn">srand</span>(<span class="fn">time</span>(<span class="num">NULL</span>));   <span class="cmt">// 시드 설정 (실행마다 다른 결과)</span>
+    <span class="kw">int</span> i;
+    <span class="fn">printf</span>(<span class="str">"로또 번호: "</span>);
+    <span class="kw">for</span> (i = <span class="num">0</span>; i &lt; <span class="num">6</span>; i++) {
+        <span class="kw">int</span> num = <span class="fn">rand</span>() % <span class="num">45</span> + <span class="num">1</span>;   <span class="cmt">// 1~45</span>
+        <span class="fn">printf</span>(<span class="str">"%d "</span>, num);
+    }
+    <span class="fn">printf</span>(<span class="str">"\n"</span>);
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+
+    <div class="tip-box">
+        <div class="tip-title">srand(time(NULL)) 이란?</div>
+        <p>srand()는 rand()의 시작점(씨앗, seed)을 설정합니다. time(NULL)은 현재 시각을 숫자로 돌려주므로, 매 실행마다 다른 난수열이 생성됩니다. srand 없이 rand()만 쓰면 항상 같은 번호가 나옵니다.</p>
+    </div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/clock.png" alt="시계" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/lightbulb.png" alt="아이디어" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">위 코드를 입력하고 여러 번 실행해보세요. 매번 다른 번호가 나오나요?</div>
+                <div class="practice-result">srand(time(NULL)) 덕분에 매 실행마다 다른 번호가 생성됩니다</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">srand(time(NULL))를 srand(1)로 바꿔보세요. 몇 번 실행해도 같은 번호가 나오나요?</div>
+                <div class="practice-result">씨앗이 고정되면 항상 같은 난수열이 나옵니다 — 디버깅에 유용</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 페이지 3: 중복 제거 + 오름차순 정렬 -->
+<div class="page">
+    <h2>확장 1 — 중복 제거</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/flowchart.png" alt="게임 흐름" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>이미 뽑은 번호가 또 나오면 다시 뽑습니다. <strong>배열</strong>에 번호를 저장하고, 새로 뽑을 때마다 배열 전체와 비교해 중복이면 <code>i--</code>로 되돌려 다시 시도합니다.</p>
+
+    <div class="code"><span class="cmt">// 중복 없는 로또 번호 6개</span>
+<span class="kw">int</span> lotto[<span class="num">6</span>];    <span class="cmt">// 번호 저장 배열</span>
+<span class="kw">int</span> i, j, num, dup;
+
+<span class="kw">for</span> (i = <span class="num">0</span>; i &lt; <span class="num">6</span>; i++) {
+    <span class="kw">do</span> {
+        num = <span class="fn">rand</span>() % <span class="num">45</span> + <span class="num">1</span>;
+        dup = <span class="num">0</span>;                       <span class="cmt">// 중복 플래그 초기화</span>
+        <span class="kw">for</span> (j = <span class="num">0</span>; j &lt; i; j++) {    <span class="cmt">// 이미 뽑은 것과 비교</span>
+            <span class="kw">if</span> (lotto[j] == num) {
+                dup = <span class="num">1</span>;              <span class="cmt">// 중복 발견!</span>
+                <span class="kw">break</span>;
+            }
+        }
+    } <span class="kw">while</span> (dup);                   <span class="cmt">// 중복이면 다시 뽑기</span>
+    lotto[i] = num;
+}
+
+<span class="fn">printf</span>(<span class="str">"번호: "</span>);
+<span class="kw">for</span> (i = <span class="num">0</span>; i &lt; <span class="num">6</span>; i++) {
+    <span class="fn">printf</span>(<span class="str">"%d "</span>, lotto[i]);
+}</div>
+
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 110" style="max-width:460px;width:100%">
+            <defs>
+                <marker id="arD" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#6366f1"/>
+                </marker>
+            </defs>
+            <!-- do-while 흐름 -->
+            <rect x="10" y="20" width="100" height="30" rx="6" fill="#faf5ff" stroke="#a855f7" stroke-width="1.5"/>
+            <text x="60" y="39" text-anchor="middle" font-size="11" fill="#7e22ce" font-weight="700">rand() 뽑기</text>
+            <line x1="114" y1="35" x2="148" y2="35" stroke="#6366f1" stroke-width="1.5" marker-end="url(#arD)"/>
+            <rect x="152" y="20" width="120" height="30" rx="6" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="212" y="39" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">중복 검사</text>
+            <!-- 중복 아님 -->
+            <line x1="276" y1="35" x2="310" y2="35" stroke="#22c55e" stroke-width="1.5" marker-end="url(#arD)"/>
+            <text x="293" y="28" text-anchor="middle" font-size="9" fill="#22c55e">중복 아님</text>
+            <rect x="314" y="20" width="100" height="30" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="364" y="39" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">배열에 저장</text>
+            <!-- 중복 -->
+            <path d="M212,54 C 212,80 60,80 60,54" stroke="#ef4444" stroke-width="1.5" fill="none" marker-end="url(#arD)" stroke-dasharray="4,3"/>
+            <text x="136" y="90" text-anchor="middle" font-size="10" fill="#ef4444" font-weight="700">중복이면 다시 뽑기 (do-while)</text>
+        </svg>
+    </div>
+
+    <h2>확장 2 — 오름차순 정렬 (버블 정렬)</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>6개 번호를 작은 수부터 큰 수 순서로 정렬합니다. <strong>버블 정렬</strong>은 옆 두 수를 비교해 순서가 틀리면 교환하는 방식입니다.</p>
+
+    <div class="code"><span class="cmt">// 오름차순 정렬 (버블 정렬)</span>
+<span class="kw">int</span> i, j, temp;
+<span class="kw">for</span> (i = <span class="num">0</span>; i &lt; <span class="num">5</span>; i++) {
+    <span class="kw">for</span> (j = <span class="num">0</span>; j &lt; <span class="num">5</span> - i; j++) {
+        <span class="kw">if</span> (lotto[j] &gt; lotto[j + <span class="num">1</span>]) {   <span class="cmt">// 앞이 크면</span>
+            temp = lotto[j];               <span class="cmt">// 교환</span>
+            lotto[j] = lotto[j + <span class="num">1</span>];
+            lotto[j + <span class="num">1</span>] = temp;
+        }
+    }
+}
+<span class="fn">printf</span>(<span class="str">"정렬된 번호: "</span>);
+<span class="kw">for</span> (i = <span class="num">0</span>; i &lt; <span class="num">6</span>; i++) {
+    <span class="fn">printf</span>(<span class="str">"%2d "</span>, lotto[i]);
+}</div>
+
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 100" style="max-width:460px;width:100%">
+            <rect x="10" y="10" width="440" height="80" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="30" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="800">버블 정렬 한 패스 (38, 12, 3 예시)</text>
+            <!-- 원래 배열 -->
+            <rect x="30" y="44" width="36" height="28" rx="4" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="48" y="62" text-anchor="middle" font-size="14" fill="#dc2626" font-weight="800">38</text>
+            <rect x="72" y="44" width="36" height="28" rx="4" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="90" y="62" text-anchor="middle" font-size="14" fill="#dc2626" font-weight="800">12</text>
+            <rect x="114" y="44" width="36" height="28" rx="4" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="132" y="62" text-anchor="middle" font-size="14" fill="#166534" font-weight="800">3</text>
+            <text x="175" y="62" text-anchor="middle" font-size="20" fill="#94a3b8">→</text>
+            <!-- 1번 교환 후 -->
+            <rect x="200" y="44" width="36" height="28" rx="4" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="218" y="62" text-anchor="middle" font-size="14" fill="#166534" font-weight="800">12</text>
+            <rect x="242" y="44" width="36" height="28" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="260" y="62" text-anchor="middle" font-size="14" fill="#1d4ed8" font-weight="800">38</text>
+            <rect x="284" y="44" width="36" height="28" rx="4" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="302" y="62" text-anchor="middle" font-size="14" fill="#166534" font-weight="800">3</text>
+            <text x="345" y="62" text-anchor="middle" font-size="20" fill="#94a3b8">→</text>
+            <!-- 2번 교환 후 -->
+            <rect x="370" y="44" width="36" height="28" rx="4" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="388" y="62" text-anchor="middle" font-size="14" fill="#166534" font-weight="800">12</text>
+            <rect x="412" y="44" width="36" height="28" rx="4" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="430" y="62" text-anchor="middle" font-size="14" fill="#166534" font-weight="800">3</text>
+            <text x="48" y="88" text-anchor="middle" font-size="9" fill="#ef4444">38>12 교환</text>
+            <text x="260" y="88" text-anchor="middle" font-size="9" fill="#3b82f6">38>3 교환</text>
+            <text x="400" y="88" text-anchor="middle" font-size="9" fill="#22c55e">한 패스 완료</text>
+        </svg>
+    </div>
+</div>
+
+<!-- 페이지 4: 보너스 번호 + 문제 풀기 + 요약 -->
+<div class="page">
+    <h2>확장 3 — 보너스 번호</h2>
+    <p>6개 번호와 겹치지 않는 보너스 번호를 하나 더 뽑습니다. 중복 제거 로직을 한 번 더 적용하면 됩니다.</p>
+
+    <div class="code"><span class="cmt">// 보너스 번호 뽑기 (6개와 중복 없이)</span>
+<span class="kw">int</span> bonus, dup;
+<span class="kw">do</span> {
+    bonus = <span class="fn">rand</span>() % <span class="num">45</span> + <span class="num">1</span>;
+    dup = <span class="num">0</span>;
+    <span class="kw">for</span> (i = <span class="num">0</span>; i &lt; <span class="num">6</span>; i++) {
+        <span class="kw">if</span> (lotto[i] == bonus) {
+            dup = <span class="num">1</span>;
+            <span class="kw">break</span>;
+        }
+    }
+} <span class="kw">while</span> (dup);
+
+<span class="fn">printf</span>(<span class="str">"번호: %2d %2d %2d %2d %2d %2d + 보너스: %2d\n"</span>,
+       lotto[<span class="num">0</span>], lotto[<span class="num">1</span>], lotto[<span class="num">2</span>],
+       lotto[<span class="num">3</span>], lotto[<span class="num">4</span>], lotto[<span class="num">5</span>], bonus);</div>
+
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+            <!-- 로또 공 6개 + 보너스 -->
+            <circle cx="35" cy="40" r="26" fill="#dc2626"/>
+            <text x="35" y="45" text-anchor="middle" font-size="13" fill="#fff" font-weight="900">3</text>
+            <circle cx="95" cy="40" r="26" fill="#f59e0b"/>
+            <text x="95" y="45" text-anchor="middle" font-size="13" fill="#fff" font-weight="900">12</text>
+            <circle cx="155" cy="40" r="26" fill="#22c55e"/>
+            <text x="155" y="45" text-anchor="middle" font-size="13" fill="#fff" font-weight="900">24</text>
+            <circle cx="215" cy="40" r="26" fill="#3b82f6"/>
+            <text x="215" y="45" text-anchor="middle" font-size="13" fill="#fff" font-weight="900">31</text>
+            <circle cx="275" cy="40" r="26" fill="#8b5cf6"/>
+            <text x="275" y="45" text-anchor="middle" font-size="13" fill="#fff" font-weight="900">38</text>
+            <circle cx="335" cy="40" r="26" fill="#64748b"/>
+            <text x="335" y="45" text-anchor="middle" font-size="13" fill="#fff" font-weight="900">42</text>
+            <!-- 구분선 -->
+            <line x1="370" y1="14" x2="370" y2="66" stroke="#e2e8f0" stroke-width="2" stroke-dasharray="4,3"/>
+            <text x="375" y="34" font-size="10" fill="#94a3b8" font-weight="600">보너스</text>
+            <circle cx="420" cy="40" r="26" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+            <text x="420" y="45" text-anchor="middle" font-size="13" fill="#fff" font-weight="900">7</text>
+        </svg>
+    </div>
+
+    <h2>문제 풀기</h2>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">1</div>
+            <div class="problem-label">기본 로또 번호 생성</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">srand(time(NULL))와 rand()를 사용해 1~45 사이 숫자 6개를 출력하는 프로그램을 작성하세요. 중복이 있어도 됩니다.</div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 / 정답 보기</summary>
+            <div class="problem-toggle-content">
+                <p class="hint-text">힌트: srand(time(NULL)); for(i=0; i&lt;6; i++) printf("%d ", rand()%45+1);</p>
+                <div class="answer-code"><span style="color:#c084fc">#include</span> &lt;stdio.h&gt;
+<span style="color:#c084fc">#include</span> &lt;stdlib.h&gt;
+<span style="color:#c084fc">#include</span> &lt;time.h&gt;
+<span style="color:#c084fc">int</span> main() {
+    <span style="color:#67e8f9">srand</span>(<span style="color:#67e8f9">time</span>(NULL));
+    <span style="color:#c084fc">int</span> i;
+    <span style="color:#c084fc">for</span> (i = 0; i &lt; 6; i++)
+        <span style="color:#67e8f9">printf</span>(<span style="color:#86efac">"%d "</span>, <span style="color:#67e8f9">rand</span>() % 45 + 1);
+    <span style="color:#c084fc">return</span> 0;
+}</div>
+            </div>
+        </details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">2</div>
+            <div class="problem-label">중복 제거 추가</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">문제 1의 코드에 중복 제거 기능을 추가하세요. 이미 뽑힌 번호가 나오면 다시 뽑아야 합니다. 배열 <code>int lotto[6]</code>을 사용하세요.</div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 / 정답 보기</summary>
+            <div class="problem-toggle-content">
+                <p class="hint-text">힌트: do-while + 안쪽 for로 lotto[0]~lotto[i-1]과 비교, dup 플래그 활용</p>
+                <div class="answer-code"><span style="color:#64748b">// 핵심 부분</span>
+<span style="color:#c084fc">do</span> {
+    num = <span style="color:#67e8f9">rand</span>() % 45 + 1;
+    dup = 0;
+    <span style="color:#c084fc">for</span> (j = 0; j &lt; i; j++)
+        <span style="color:#c084fc">if</span> (lotto[j] == num) { dup = 1; <span style="color:#c084fc">break</span>; }
+} <span style="color:#c084fc">while</span> (dup);
+lotto[i] = num;</div>
+            </div>
+        </details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">3</div>
+            <div class="problem-label">정렬 + 보너스 번호</div>
+            <span class="problem-diff hard">도전</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">중복 없는 6개 번호를 오름차순으로 정렬하고, 6개와 겹치지 않는 보너스 번호 1개를 추가로 출력하는 완성형 로또 프로그램을 작성하세요.</div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 / 정답 보기</summary>
+            <div class="problem-toggle-content">
+                <p class="hint-text">힌트: ① 중복 없이 6개 뽑기 → ② 버블 정렬 → ③ 보너스 번호(do-while 중복 검사)</p>
+                <div class="answer-code"><span style="color:#64748b">// 정렬: 버블 정렬</span>
+<span style="color:#c084fc">for</span> (i = 0; i &lt; 5; i++)
+    <span style="color:#c084fc">for</span> (j = 0; j &lt; 5 - i; j++)
+        <span style="color:#c084fc">if</span> (lotto[j] &gt; lotto[j+1]) {
+            temp = lotto[j];
+            lotto[j] = lotto[j+1];
+            lotto[j+1] = temp;
+        }
+<span style="color:#64748b">// 보너스: 6개와 중복 없이 뽑기</span></div>
+            </div>
+        </details>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>핵심 정리</h3>
+        <ul>
+            <li>rand() % N + 1 → 1~N 사이 난수 생성</li>
+            <li>srand(time(NULL)): 매 실행마다 다른 씨앗 → 다른 난수열</li>
+            <li>중복 제거: do-while + 안쪽 for로 기존 배열과 비교, dup 플래그 사용</li>
+            <li>버블 정렬: 인접 두 수 비교 후 교환, 큰 수가 오른쪽으로 이동</li>
+            <li>보너스 번호: 6개 뽑기와 동일한 중복 제거 로직 한 번 더 적용</li>
+            <li>배열 선언: int lotto[6] → 6개 정수를 연속된 메모리에 저장</li>
+        </ul>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+
+
+
+<script>
+(function(){
+  var KEY = 'cs_ans_' + location.pathname.replace(/[^a-zA-Z0-9]/g,'_');
+  var pagePath = location.pathname;
+  var userId = null;
+  try {
+    userId = window.parent?.localStorage?.getItem('codingssok_user_id')
+      || localStorage.getItem('codingssok_user_id');
+  } catch(e) {}
+
+  function save(){
+    var areas = document.querySelectorAll('textarea');
+    var saved = 0;
+    areas.forEach(function(ta, i){
+      if(ta.value.trim()) {
+        localStorage.setItem(KEY + '_' + i, ta.value);
+        saved++;
+      } else {
+        localStorage.removeItem(KEY + '_' + i);
+      }
+    });
+    if(saved > 0) showSaveIndicator();
+  }
+
+  function load(){
+    var areas = document.querySelectorAll('textarea');
+    var restored = 0;
+    areas.forEach(function(ta, i){
+      var val = localStorage.getItem(KEY + '_' + i);
+      if(val && val.trim()) {
+        ta.value = val;
+        ta.style.borderColor = '#10b981';
+        ta.style.boxShadow = '0 0 0 2px rgba(16,185,129,0.15)';
+        setTimeout(function(){ ta.style.borderColor = ''; ta.style.boxShadow = ''; }, 2000);
+        restored++;
+      }
+    });
+    if(restored > 0) showRestoreIndicator(restored);
+  }
+
+  function saveToDb(){
+    if(!userId) return;
+    var areas = document.querySelectorAll('textarea');
+    var answers = [];
+    areas.forEach(function(ta, i){
+      if(ta.value.trim()) answers.push({ field_index: i, answer_text: ta.value });
+    });
+    if(answers.length === 0) return;
+    fetch('/api/answers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId, page_path: pagePath, answers: answers })
+    }).catch(function(){});
+  }
+
+  function loadFromDb(){
+    if(!userId) return;
+    fetch('/api/answers?user_id=' + encodeURIComponent(userId) + '&page_path=' + encodeURIComponent(pagePath))
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(!d.answers || !d.answers.length) return;
+        var areas = document.querySelectorAll('textarea');
+        d.answers.forEach(function(a){
+          if(areas[a.field_index] && a.answer_text) {
+            areas[a.field_index].value = a.answer_text;
+            localStorage.setItem(KEY + '_' + a.field_index, a.answer_text);
+          }
+        });
+      }).catch(function(){});
+  }
+
+  function showSaveIndicator(){
+    var el = document.getElementById('cs-save-ind');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'cs-save-ind';
+      el.style.cssText = 'position:fixed;bottom:16px;right:16px;padding:6px 14px;border-radius:8px;background:#0f172a;color:#22c55e;font-size:11px;font-weight:700;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+      document.body.appendChild(el);
+    }
+    el.textContent = '\u2713 \uB2F5\uC548 \uC800\uC7A5\uB428'; // ✓ 답안 저장됨
+    el.style.opacity = '1';
+    setTimeout(function(){ el.style.opacity = '0'; }, 1500);
+  }
+
+  function showRestoreIndicator(n){
+    var el = document.getElementById('cs-save-ind');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'cs-save-ind';
+      el.style.cssText = 'position:fixed;bottom:16px;right:16px;padding:6px 14px;border-radius:8px;background:#0f172a;color:#3b82f6;font-size:11px;font-weight:700;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+      document.body.appendChild(el);
+    }
+    el.textContent = '\u21BB ' + n + '\uAC1C \uB2F5\uC548 \uBCF5\uC6D0'; // ↻ n개 답안 복원
+    el.style.color = '#3b82f6';
+    el.style.opacity = '1';
+    setTimeout(function(){ el.style.opacity = '0'; }, 2500);
+  }
+
+  var t = null;
+  document.addEventListener('input', function(e){
+    if(e.target.tagName === 'TEXTAREA'){
+      clearTimeout(t);
+      t = setTimeout(function(){ save(); saveToDb(); }, 300);
+    }
+  });
+  document.addEventListener('change', function(e){
+    if(e.target.tagName === 'TEXTAREA'){ save(); saveToDb(); }
+  });
+  document.addEventListener('focusout', function(e){
+    if(e.target.tagName === 'TEXTAREA'){ save(); saveToDb(); }
+  });
+  window.addEventListener('beforeunload', function(){ save(); saveToDb(); });
+
+  // 즉시 로드
+  load();
+  loadFromDb();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 슬라이싱 심화 L3-u26</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 14px;
+    color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+.info-box { border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 12px 16px; margin: 14px 0; background: #fff; }
+.info-box-title { font-size: 13px; font-weight: 800; color: #1e3a5f; margin-bottom: 6px; }
+.info-box p { font-size: 13px; margin: 0; }
+.warn-box { border: 1.5px solid #fbbf24; border-radius: 8px; padding: 12px 16px; margin: 14px 0; background: #fff; }
+.warn-box-title { font-size: 13px; font-weight: 800; color: #92400e; margin-bottom: 6px; }
+.warn-box p { font-size: 13px; margin: 0; color: #374151; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- ═══ 1페이지: 표지 ═══ -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">26</div>
+        <div class="cover-label">Chapter 26 · L3b 문자열 &amp; 리스트 심화</div>
+        <h1 class="cover-title">슬라이싱 심화<br>문자열과 리스트 자르기</h1>
+        <p class="cover-sub">start, stop, step으로 원하는 부분만 정밀하게 잘라내는 기술을 배웁니다.</p>
+
+        <!-- SVG: 슬라이싱 인덱스 시각화 -->
+        <div style="margin:24px 0;">
+            <svg viewBox="0 0 500 90" style="max-width:500px;width:100%">
+                <!-- 문자열 박스들 -->
+                <rect x="10" y="20" width="44" height="36" rx="5" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="32" y="43" text-anchor="middle" font-family="monospace" font-size="16" fill="#1d4ed8" font-weight="700">P</text>
+                <rect x="60" y="20" width="44" height="36" rx="5" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="82" y="43" text-anchor="middle" font-family="monospace" font-size="16" fill="#1d4ed8" font-weight="700">y</text>
+                <rect x="110" y="20" width="44" height="36" rx="5" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="132" y="43" text-anchor="middle" font-family="monospace" font-size="16" fill="#92400e" font-weight="700">t</text>
+                <rect x="160" y="20" width="44" height="36" rx="5" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="182" y="43" text-anchor="middle" font-family="monospace" font-size="16" fill="#92400e" font-weight="700">h</text>
+                <rect x="210" y="20" width="44" height="36" rx="5" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="232" y="43" text-anchor="middle" font-family="monospace" font-size="16" fill="#92400e" font-weight="700">o</text>
+                <rect x="260" y="20" width="44" height="36" rx="5" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="282" y="43" text-anchor="middle" font-family="monospace" font-size="16" fill="#92400e" font-weight="700">n</text>
+                <!-- 양수 인덱스 -->
+                <text x="32" y="15" text-anchor="middle" font-size="9" fill="#64748b">0</text>
+                <text x="82" y="15" text-anchor="middle" font-size="9" fill="#64748b">1</text>
+                <text x="132" y="15" text-anchor="middle" font-size="9" fill="#64748b">2</text>
+                <text x="182" y="15" text-anchor="middle" font-size="9" fill="#64748b">3</text>
+                <text x="232" y="15" text-anchor="middle" font-size="9" fill="#64748b">4</text>
+                <text x="282" y="15" text-anchor="middle" font-size="9" fill="#64748b">5</text>
+                <!-- 음수 인덱스 -->
+                <text x="32" y="68" text-anchor="middle" font-size="9" fill="#ef4444">-6</text>
+                <text x="82" y="68" text-anchor="middle" font-size="9" fill="#ef4444">-5</text>
+                <text x="132" y="68" text-anchor="middle" font-size="9" fill="#ef4444">-4</text>
+                <text x="182" y="68" text-anchor="middle" font-size="9" fill="#ef4444">-3</text>
+                <text x="232" y="68" text-anchor="middle" font-size="9" fill="#ef4444">-2</text>
+                <text x="282" y="68" text-anchor="middle" font-size="9" fill="#ef4444">-1</text>
+                <!-- 설명 -->
+                <text x="350" y="30" font-size="10" fill="#64748b">■ [2:6] = "thon"</text>
+                <text x="350" y="48" font-size="10" fill="#ef4444">■ [-4:] = "thon"</text>
+                <text x="350" y="66" font-size="10" fill="#94a3b8">노란색 = 슬라이스 결과</text>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/database.png" alt="데이터" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 유닛에서 배우는 것</h3>
+            <ul>
+                <li>슬라이싱의 start, stop, step 세 매개변수를 모두 사용할 수 있습니다.</li>
+                <li>음수 인덱스로 뒤에서부터 자를 수 있습니다.</li>
+                <li>step을 이용해 문자열/리스트를 건너뛰며 추출할 수 있습니다.</li>
+                <li>step=-1로 문자열/리스트를 뒤집을 수 있습니다.</li>
+                <li>리스트 슬라이싱으로 일부를 교체하거나 삭제할 수 있습니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ 2페이지: 슬라이싱 기본 복습 + step ═══ -->
+<div class="page">
+    <h2>슬라이싱 문법 — [start:stop:step]</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/folder.png" alt="구조" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>슬라이싱은 <code>[시작:끝:간격]</code> 형식으로 씁니다. 각 값을 생략하면 기본값이 적용됩니다.</p>
+
+    <!-- SVG: start/stop/step 기본값 표 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 80" style="max-width:480px;width:100%">
+            <rect x="5" y="5" width="150" height="70" rx="6" fill="#f0f9ff" stroke="#0ea5e9" stroke-width="1.5"/>
+            <text x="80" y="24" text-anchor="middle" font-size="11" fill="#0369a1" font-weight="700">start</text>
+            <text x="80" y="42" text-anchor="middle" font-family="monospace" font-size="13" fill="#0f172a">기본값: 0</text>
+            <text x="80" y="60" text-anchor="middle" font-size="10" fill="#64748b">처음부터</text>
+
+            <rect x="165" y="5" width="150" height="70" rx="6" fill="#fdf4ff" stroke="#a855f7" stroke-width="1.5"/>
+            <text x="240" y="24" text-anchor="middle" font-size="11" fill="#7e22ce" font-weight="700">stop</text>
+            <text x="240" y="42" text-anchor="middle" font-family="monospace" font-size="13" fill="#0f172a">기본값: 끝+1</text>
+            <text x="240" y="60" text-anchor="middle" font-size="10" fill="#64748b">끝까지 (포함 안 됨)</text>
+
+            <rect x="325" y="5" width="150" height="70" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="400" y="24" text-anchor="middle" font-size="11" fill="#92400e" font-weight="700">step</text>
+            <text x="400" y="42" text-anchor="middle" font-family="monospace" font-size="13" fill="#0f172a">기본값: 1</text>
+            <text x="400" y="60" text-anchor="middle" font-size="10" fill="#64748b">하나씩 (건너뛰기)</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># 문자열 슬라이싱</span>
+s = <span class="str">"Python"</span>
+
+<span class="fn">print</span>(s[<span class="num">0</span>:<span class="num">6</span>])    <span class="cmt"># Python  (전체)</span>
+<span class="fn">print</span>(s[<span class="num">2</span>:<span class="num">5</span>])    <span class="cmt"># tho</span>
+<span class="fn">print</span>(s[:<span class="num">3</span>])     <span class="cmt"># Pyt  (처음부터 3개)</span>
+<span class="fn">print</span>(s[<span class="num">3</span>:])     <span class="cmt"># hon  (3번째부터 끝까지)</span>
+<span class="fn">print</span>(s[::])     <span class="cmt"># Python  (전체 복사)</span>
+
+<span class="cmt"># step 사용</span>
+<span class="fn">print</span>(s[::<span class="num">2</span>])    <span class="cmt"># Pto  (한 칸씩 건너뛰기)</span>
+<span class="fn">print</span>(s[::<span class="num">-1</span>])   <span class="cmt"># nohtyP  (뒤집기!)</span></div>
+
+    <p>step이 양수면 왼쪽→오른쪽, <strong>음수면 오른쪽→왼쪽</strong>으로 이동합니다. <code>[::-1]</code>은 문자열/리스트를 뒤집는 관용 표현이에요.</p>
+
+    <!-- SVG: step 동작 시각화 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 110" style="max-width:480px;width:100%">
+            <!-- step=2 -->
+            <text x="10" y="18" font-size="10" fill="#64748b" font-weight="700">s[::2] = "Pto"</text>
+            <rect x="10" y="24" width="36" height="28" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+            <text x="28" y="43" text-anchor="middle" font-family="monospace" font-size="14" fill="#1d4ed8" font-weight="700">P</text>
+            <rect x="50" y="24" width="36" height="28" rx="4" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1"/>
+            <text x="68" y="43" text-anchor="middle" font-family="monospace" font-size="14" fill="#94a3b8">y</text>
+            <rect x="90" y="24" width="36" height="28" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+            <text x="108" y="43" text-anchor="middle" font-family="monospace" font-size="14" fill="#1d4ed8" font-weight="700">t</text>
+            <rect x="130" y="24" width="36" height="28" rx="4" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1"/>
+            <text x="148" y="43" text-anchor="middle" font-family="monospace" font-size="14" fill="#94a3b8">h</text>
+            <rect x="170" y="24" width="36" height="28" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+            <text x="188" y="43" text-anchor="middle" font-family="monospace" font-size="14" fill="#1d4ed8" font-weight="700">o</text>
+            <rect x="210" y="24" width="36" height="28" rx="4" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1"/>
+            <text x="228" y="43" text-anchor="middle" font-family="monospace" font-size="14" fill="#94a3b8">n</text>
+            <text x="270" y="43" font-family="monospace" font-size="13" fill="#64748b">→ "Pto"</text>
+
+            <!-- step=-1 (뒤집기) -->
+            <text x="10" y="76" font-size="10" fill="#64748b" font-weight="700">s[::-1] = "nohtyP"</text>
+            <rect x="210" y="82" width="36" height="28" rx="4" fill="#fdf4ff" stroke="#a855f7" stroke-width="2"/>
+            <text x="228" y="101" text-anchor="middle" font-family="monospace" font-size="14" fill="#7e22ce" font-weight="700">P</text>
+            <rect x="170" y="82" width="36" height="28" rx="4" fill="#fdf4ff" stroke="#a855f7" stroke-width="2"/>
+            <text x="188" y="101" text-anchor="middle" font-family="monospace" font-size="14" fill="#7e22ce" font-weight="700">y</text>
+            <rect x="130" y="82" width="36" height="28" rx="4" fill="#fdf4ff" stroke="#a855f7" stroke-width="2"/>
+            <text x="148" y="101" text-anchor="middle" font-family="monospace" font-size="14" fill="#7e22ce" font-weight="700">t</text>
+            <rect x="90" y="82" width="36" height="28" rx="4" fill="#fdf4ff" stroke="#a855f7" stroke-width="2"/>
+            <text x="108" y="101" text-anchor="middle" font-family="monospace" font-size="14" fill="#7e22ce" font-weight="700">h</text>
+            <rect x="50" y="82" width="36" height="28" rx="4" fill="#fdf4ff" stroke="#a855f7" stroke-width="2"/>
+            <text x="68" y="101" text-anchor="middle" font-family="monospace" font-size="14" fill="#7e22ce" font-weight="700">o</text>
+            <rect x="10" y="82" width="36" height="28" rx="4" fill="#fdf4ff" stroke="#a855f7" stroke-width="2"/>
+            <text x="28" y="101" text-anchor="middle" font-family="monospace" font-size="14" fill="#7e22ce" font-weight="700">n</text>
+            <text x="270" y="101" font-family="monospace" font-size="13" fill="#64748b">→ "nohtyP"</text>
+        </svg>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="처리" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">다양한 step으로 리스트를 잘라 보세요.</div>
+                <div class="code">nums = [<span class="num">0</span>, <span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>, <span class="num">5</span>, <span class="num">6</span>, <span class="num">7</span>, <span class="num">8</span>, <span class="num">9</span>]
+<span class="fn">print</span>(nums[<span class="num">1</span>:<span class="num">8</span>:<span class="num">2</span>])   <span class="cmt"># [1, 3, 5, 7]</span>
+<span class="fn">print</span>(nums[::<span class="num">3</span>])     <span class="cmt"># [0, 3, 6, 9]</span>
+<span class="fn">print</span>(nums[::<span class="num">-1</span>])    <span class="cmt"># [9, 8, 7, ..., 0]</span>
+<span class="fn">print</span>(nums[<span class="num">7</span>:<span class="num">2</span>:<span class="num">-1</span>])  <span class="cmt"># [7, 6, 5, 4, 3]</span></div>
+                <div class="practice-result">[1, 3, 5, 7] / [0, 3, 6, 9] / [9, 8, 7, 6, 5, 4, 3, 2, 1, 0] / [7, 6, 5, 4, 3]</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ 3페이지: 음수 인덱스 + 리스트 슬라이스 수정 ═══ -->
+<div class="page">
+    <h2>음수 인덱스와 리스트 슬라이스 수정</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/hard-drive.png" alt="저장소" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>음수 인덱스는 뒤에서부터 세는 방법입니다. <code>-1</code>이 마지막, <code>-2</code>가 뒤에서 두 번째예요. 문자열이나 리스트가 길 때 뒤쪽 요소를 쉽게 꺼낼 수 있습니다.</p>
+
+    <!-- SVG: 음수 인덱스 전체 대조 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 95" style="max-width:480px;width:100%">
+            <text x="10" y="14" font-size="11" fill="#475569">양수 인덱스(위) vs 음수 인덱스(아래) — s = "Python"</text>
+            <rect x="15" y="20" width="48" height="36" rx="4" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+            <text x="39" y="44" text-anchor="middle" font-family="monospace" font-size="16" fill="#0f172a" font-weight="700">P</text>
+            <rect x="71" y="20" width="48" height="36" rx="4" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+            <text x="95" y="44" text-anchor="middle" font-family="monospace" font-size="16" fill="#0f172a" font-weight="700">y</text>
+            <rect x="127" y="20" width="48" height="36" rx="4" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+            <text x="151" y="44" text-anchor="middle" font-family="monospace" font-size="16" fill="#0f172a" font-weight="700">t</text>
+            <rect x="183" y="20" width="48" height="36" rx="4" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+            <text x="207" y="44" text-anchor="middle" font-family="monospace" font-size="16" fill="#0f172a" font-weight="700">h</text>
+            <rect x="239" y="20" width="48" height="36" rx="4" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+            <text x="263" y="44" text-anchor="middle" font-family="monospace" font-size="16" fill="#0f172a" font-weight="700">o</text>
+            <rect x="295" y="20" width="48" height="36" rx="4" fill="#fce7f3" stroke="#db2777" stroke-width="2"/>
+            <text x="319" y="44" text-anchor="middle" font-family="monospace" font-size="16" fill="#831843" font-weight="700">n</text>
+            <text x="39" y="16" text-anchor="middle" font-size="10" fill="#3b82f6" font-weight="700">0</text>
+            <text x="95" y="16" text-anchor="middle" font-size="10" fill="#3b82f6" font-weight="700">1</text>
+            <text x="151" y="16" text-anchor="middle" font-size="10" fill="#3b82f6" font-weight="700">2</text>
+            <text x="207" y="16" text-anchor="middle" font-size="10" fill="#3b82f6" font-weight="700">3</text>
+            <text x="263" y="16" text-anchor="middle" font-size="10" fill="#3b82f6" font-weight="700">4</text>
+            <text x="319" y="16" text-anchor="middle" font-size="10" fill="#3b82f6" font-weight="700">5</text>
+            <text x="39" y="70" text-anchor="middle" font-size="10" fill="#db2777" font-weight="700">-6</text>
+            <text x="95" y="70" text-anchor="middle" font-size="10" fill="#db2777" font-weight="700">-5</text>
+            <text x="151" y="70" text-anchor="middle" font-size="10" fill="#db2777" font-weight="700">-4</text>
+            <text x="207" y="70" text-anchor="middle" font-size="10" fill="#db2777" font-weight="700">-3</text>
+            <text x="263" y="70" text-anchor="middle" font-size="10" fill="#db2777" font-weight="700">-2</text>
+            <text x="319" y="70" text-anchor="middle" font-size="10" fill="#db2777" font-weight="700">-1</text>
+            <text x="380" y="16" font-size="10" fill="#3b82f6">양수 인덱스</text>
+            <text x="380" y="70" font-size="10" fill="#db2777">음수 인덱스</text>
+        </svg>
+    </div>
+
+    <!-- SVG: s[-3:] 범위 시각화 -->
+    <div style="text-align:center;margin:10px 0 14px;">
+        <svg viewBox="0 0 420 75" style="max-width:420px;width:100%">
+            <text x="10" y="14" font-size="11" fill="#475569">s[-3:] — 뒤에서 3번째부터 끝까지</text>
+            <rect x="10" y="20" width="44" height="32" rx="3" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1"/>
+            <text x="32" y="42" text-anchor="middle" font-family="monospace" font-size="14" fill="#94a3b8">P</text>
+            <rect x="60" y="20" width="44" height="32" rx="3" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1"/>
+            <text x="82" y="42" text-anchor="middle" font-family="monospace" font-size="14" fill="#94a3b8">y</text>
+            <rect x="110" y="20" width="44" height="32" rx="3" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1"/>
+            <text x="132" y="42" text-anchor="middle" font-family="monospace" font-size="14" fill="#94a3b8">t</text>
+            <rect x="160" y="20" width="44" height="32" rx="3" fill="#fce7f3" stroke="#db2777" stroke-width="2"/>
+            <text x="182" y="42" text-anchor="middle" font-family="monospace" font-size="14" fill="#831843" font-weight="700">h</text>
+            <rect x="210" y="20" width="44" height="32" rx="3" fill="#fce7f3" stroke="#db2777" stroke-width="2"/>
+            <text x="232" y="42" text-anchor="middle" font-family="monospace" font-size="14" fill="#831843" font-weight="700">o</text>
+            <rect x="260" y="20" width="44" height="32" rx="3" fill="#fce7f3" stroke="#db2777" stroke-width="2"/>
+            <text x="282" y="42" text-anchor="middle" font-family="monospace" font-size="14" fill="#831843" font-weight="700">n</text>
+            <text x="32" y="65" text-anchor="middle" font-size="10" fill="#94a3b8">-6</text>
+            <text x="82" y="65" text-anchor="middle" font-size="10" fill="#94a3b8">-5</text>
+            <text x="132" y="65" text-anchor="middle" font-size="10" fill="#94a3b8">-4</text>
+            <text x="182" y="65" text-anchor="middle" font-size="10" fill="#db2777" font-weight="700">-3</text>
+            <text x="232" y="65" text-anchor="middle" font-size="10" fill="#db2777" font-weight="700">-2</text>
+            <text x="282" y="65" text-anchor="middle" font-size="10" fill="#db2777" font-weight="700">-1</text>
+            <text x="345" y="38" font-family="monospace" font-size="13" fill="#db2777" font-weight="700">= "hon"</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># 음수 인덱스 활용</span>
+s = <span class="str">"Hello, World!"</span>
+<span class="fn">print</span>(s[-<span class="num">6</span>:])       <span class="cmt"># orld!</span>
+<span class="fn">print</span>(s[-<span class="num">6</span>:-<span class="num">1</span>])     <span class="cmt"># orld</span>
+<span class="fn">print</span>(s[:-<span class="num">7</span>])       <span class="cmt"># Hello,</span>
+
+<span class="cmt"># 리스트 슬라이스로 수정/삭제</span>
+fruits = [<span class="str">"사과"</span>, <span class="str">"바나나"</span>, <span class="str">"체리"</span>, <span class="str">"딸기"</span>, <span class="str">"포도"</span>]
+
+fruits[<span class="num">1</span>:<span class="num">3</span>] = [<span class="str">"망고"</span>, <span class="str">"키위"</span>]   <span class="cmt"># 교체</span>
+<span class="fn">print</span>(fruits)    <span class="cmt"># ['사과', '망고', '키위', '딸기', '포도']</span>
+
+fruits[<span class="num">2</span>:<span class="num">4</span>] = []              <span class="cmt"># 삭제</span>
+<span class="fn">print</span>(fruits)    <span class="cmt"># ['사과', '망고', '포도']</span>
+
+fruits[<span class="num">1</span>:<span class="num">1</span>] = [<span class="str">"레몬"</span>, <span class="str">"라임"</span>]   <span class="cmt"># 삽입</span>
+<span class="fn">print</span>(fruits)    <span class="cmt"># ['사과', '레몬', '라임', '망고', '포도']</span></div>
+
+    <div class="info-box">
+        <div class="info-box-title">슬라이스 수정은 리스트만 가능</div>
+        <p>문자열은 <strong>불변(immutable)</strong>이라 슬라이스로 내용을 바꿀 수 없어요. 리스트만 <code>fruits[1:3] = [...]</code> 처럼 수정할 수 있습니다.</p>
+    </div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">파일명에서 확장자를 음수 슬라이싱으로 추출하세요.</div>
+                <div class="code">filename = <span class="str">"report_2025.pdf"</span>
+ext = filename[-<span class="num">3</span>:]     <span class="cmt"># 확장자</span>
+name = filename[:-<span class="num">4</span>]    <span class="cmt"># 확장자 제외 이름</span>
+<span class="fn">print</span>(ext)   <span class="cmt"># pdf</span>
+<span class="fn">print</span>(name)  <span class="cmt"># report_2025</span></div>
+                <div class="practice-result">pdf / report_2025</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">리스트 슬라이스로 중간 구간을 새 값으로 교체하세요.</div>
+                <div class="code">scores = [<span class="num">70</span>, <span class="num">85</span>, <span class="num">60</span>, <span class="num">90</span>, <span class="num">75</span>]
+scores[<span class="num">1</span>:<span class="num">4</span>] = [<span class="num">95</span>, <span class="num">95</span>, <span class="num">95</span>]  <span class="cmt"># 2~4번째 점수 수정</span>
+<span class="fn">print</span>(scores)   <span class="cmt"># [70, 95, 95, 95, 75]</span></div>
+                <div class="practice-result">[70, 95, 95, 95, 75]</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q1</div>
+            <span class="problem-label">문자열 뒤집기 판별기</span>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">단어를 입력받아 팰린드롬(앞뒤가 같은 단어)인지 판별하는 프로그램을 작성하세요. 슬라이싱 <code>[::-1]</code>을 활용합니다.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">입력</span>
+                    <span class="problem-example-value">level</span>
+                </div>
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력</span>
+                    <span class="problem-example-value">팰린드롬입니다!</span>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기 / 정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">word == word[::-1] 로 비교하면 됩니다.</div>
+                <div style="height:8px;"></div>
+                <div class="answer-code">word = <span style="color:#86efac">input</span>(<span style="color:#86efac">"단어 입력: "</span>)
+<span style="color:#c084fc">if</span> word == word[::<span style="color:#7dd3fc">-1</span>]:
+    <span style="color:#86efac">print</span>(<span style="color:#86efac">"팰린드롬입니다!"</span>)
+<span style="color:#c084fc">else</span>:
+    <span style="color:#86efac">print</span>(<span style="color:#86efac">"팰린드롬이 아닙니다."</span>)</div>
+            </div>
+        </details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q2</div>
+            <span class="problem-label">홀수 번째 요소만 추출</span>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">리스트 <code>[10, 20, 30, 40, 50, 60, 70, 80]</code>에서 인덱스가 홀수인 요소만 슬라이싱으로 추출하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력</span>
+                    <span class="problem-example-value">[20, 40, 60, 80]</span>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기 / 정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">인덱스 1부터 시작해서 step=2로 가져오면 됩니다.</div>
+                <div style="height:8px;"></div>
+                <div class="answer-code">nums = [<span style="color:#7dd3fc">10</span>, <span style="color:#7dd3fc">20</span>, <span style="color:#7dd3fc">30</span>, <span style="color:#7dd3fc">40</span>, <span style="color:#7dd3fc">50</span>, <span style="color:#7dd3fc">60</span>, <span style="color:#7dd3fc">70</span>, <span style="color:#7dd3fc">80</span>]
+<span style="color:#86efac">print</span>(nums[<span style="color:#7dd3fc">1</span>::<span style="color:#7dd3fc">2</span>])  <span style="color:#64748b"># [20, 40, 60, 80]</span></div>
+            </div>
+        </details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q3</div>
+            <span class="problem-label">전화번호 마스킹</span>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">전화번호 문자열 <code>phone = "010-9876-5432"</code>에서 중간 4자리를 <code>****</code>로 바꿔서 출력하세요. 슬라이싱과 문자열 연결(+)을 사용하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">입력</span>
+                    <span class="problem-example-value">phone = "010-9876-5432"</span>
+                </div>
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력</span>
+                    <span class="problem-example-value">010-****-5432</span>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text"><code>phone[:4]</code>로 앞부분, <code>phone[-4:]</code>로 뒷부분을 가져온 뒤 <code>"****"</code>와 연결하세요.</div>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">phone = <span style="color:#86efac">"010-9876-5432"</span>
+masked = phone[:<span style="color:#7dd3fc">4</span>] + <span style="color:#86efac">"****"</span> + phone[-<span style="color:#7dd3fc">4</span>:]
+<span style="color:#67e8f9">print</span>(masked)  <span style="color:#64748b"># 010-****-5432</span></div>
+            </div>
+        </details>
+    </div>
+</div>
+
+<!-- ═══ 4페이지: 실전 활용 + 정리 ═══ -->
+<div class="page">
+    <h2>실전 활용 — 슬라이싱으로 문제 풀기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>슬라이싱은 실무에서도 자주 씁니다. 특히 문자열 파싱, 데이터 전처리, 알고리즘 문제에서 핵심 기술이에요.</p>
+
+    <!-- SVG: 날짜 파싱 시각화 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 460 70" style="max-width:460px;width:100%">
+            <text x="10" y="14" font-size="11" fill="#475569">날짜 문자열 슬라이싱 — date = "2025-03-21"</text>
+            <rect x="10" y="22" width="44" height="30" rx="3" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+            <text x="32" y="43" text-anchor="middle" font-family="monospace" font-size="11" fill="#1d4ed8" font-weight="700">2025</text>
+            <rect x="60" y="22" width="12" height="30" rx="3" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1"/>
+            <text x="66" y="43" text-anchor="middle" font-family="monospace" font-size="11" fill="#94a3b8">-</text>
+            <rect x="78" y="22" width="32" height="30" rx="3" fill="#fef9c3" stroke="#eab308" stroke-width="2"/>
+            <text x="94" y="43" text-anchor="middle" font-family="monospace" font-size="11" fill="#713f12" font-weight="700">03</text>
+            <rect x="116" y="22" width="12" height="30" rx="3" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1"/>
+            <text x="122" y="43" text-anchor="middle" font-family="monospace" font-size="11" fill="#94a3b8">-</text>
+            <rect x="134" y="22" width="32" height="30" rx="3" fill="#dcfce7" stroke="#22c55e" stroke-width="2"/>
+            <text x="150" y="43" text-anchor="middle" font-family="monospace" font-size="11" fill="#166534" font-weight="700">21</text>
+            <text x="32" y="65" text-anchor="middle" font-size="10" fill="#3b82f6">[:4]</text>
+            <text x="94" y="65" text-anchor="middle" font-size="10" fill="#eab308">[5:7]</text>
+            <text x="150" y="65" text-anchor="middle" font-size="10" fill="#22c55e">[8:]</text>
+            <text x="220" y="43" font-size="11" fill="#475569">year = date[:4]  = "2025"</text>
+            <text x="220" y="58" font-size="11" fill="#475569">month = date[5:7] = "03"</text>
+        </svg>
+    </div>
+
+    <!-- SVG: 리스트 반반 나누기 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 420 65" style="max-width:420px;width:100%">
+            <text x="10" y="14" font-size="11" fill="#475569">리스트 반반 나누기 — data[:mid] + data[mid:]</text>
+            <rect x="10" y="22" width="36" height="28" rx="3" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="28" y="42" text-anchor="middle" font-family="monospace" font-size="13" fill="#1d4ed8">1</text>
+            <rect x="50" y="22" width="36" height="28" rx="3" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="68" y="42" text-anchor="middle" font-family="monospace" font-size="13" fill="#1d4ed8">2</text>
+            <rect x="90" y="22" width="36" height="28" rx="3" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="108" y="42" text-anchor="middle" font-family="monospace" font-size="13" fill="#1d4ed8">3</text>
+            <line x1="132" y1="22" x2="132" y2="50" stroke="#ef4444" stroke-width="2" stroke-dasharray="4,2"/>
+            <text x="136" y="20" font-size="9" fill="#ef4444">mid=3</text>
+            <rect x="140" y="22" width="36" height="28" rx="3" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="158" y="42" text-anchor="middle" font-family="monospace" font-size="13" fill="#166534">4</text>
+            <rect x="180" y="22" width="36" height="28" rx="3" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="198" y="42" text-anchor="middle" font-family="monospace" font-size="13" fill="#166534">5</text>
+            <rect x="220" y="22" width="36" height="28" rx="3" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="238" y="42" text-anchor="middle" font-family="monospace" font-size="13" fill="#166534">6</text>
+            <text x="68" y="62" text-anchor="middle" font-size="10" fill="#3b82f6">left = data[:3]</text>
+            <text x="198" y="62" text-anchor="middle" font-size="10" fill="#22c55e">right = data[3:]</text>
+        </svg>
+    </div>
+
+    <!-- SVG: 전화번호 마스킹 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 440 65" style="max-width:440px;width:100%">
+            <text x="10" y="14" font-size="11" fill="#475569">전화번호 마스킹 — phone[:4] + "****" + phone[-4:]</text>
+            <rect x="10" y="22" width="180" height="28" rx="4" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+            <text x="100" y="42" text-anchor="middle" font-family="monospace" font-size="13" fill="#0f172a">010-1234-5678</text>
+            <line x1="194" y1="36" x2="214" y2="36" stroke="#3b82f6" stroke-width="2"/>
+            <polygon points="214,32 222,36 214,40" fill="#3b82f6"/>
+            <rect x="226" y="22" width="190" height="28" rx="4" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="321" y="42" text-anchor="middle" font-family="monospace" font-size="13" fill="#1d4ed8">010-****-5678</text>
+            <text x="321" y="60" text-anchor="middle" font-size="10" fill="#64748b">중간 4자리 마스킹 완료</text>
+        </svg>
+    </div>
+
+    <!-- SVG: 회문 판별 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 380 65" style="max-width:380px;width:100%">
+            <text x="10" y="14" font-size="11" fill="#475569">회문(palindrome) 판별 — s == s[::-1]</text>
+            <rect x="10" y="22" width="78" height="28" rx="4" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="49" y="42" text-anchor="middle" font-family="monospace" font-size="13" fill="#166534" font-weight="700">racecar</text>
+            <line x1="92" y1="36" x2="112" y2="36" stroke="#22c55e" stroke-width="2"/>
+            <rect x="116" y="22" width="78" height="28" rx="4" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="155" y="42" text-anchor="middle" font-family="monospace" font-size="13" fill="#166534" font-weight="700">racecar</text>
+            <text x="105" y="60" text-anchor="middle" font-size="11" fill="#166534">True</text>
+            <rect x="216" y="22" width="60" height="28" rx="4" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="246" y="42" text-anchor="middle" font-family="monospace" font-size="13" fill="#991b1b" font-weight="700">hello</text>
+            <line x1="280" y1="36" x2="300" y2="36" stroke="#ef4444" stroke-width="2"/>
+            <rect x="304" y="22" width="60" height="28" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5"/>
+            <text x="334" y="42" text-anchor="middle" font-family="monospace" font-size="13" fill="#64748b">olleh</text>
+            <text x="324" y="60" text-anchor="middle" font-size="11" fill="#ef4444">False</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># 실전 예시 1: 날짜 파싱</span>
+date = <span class="str">"2025-03-21"</span>
+year  = date[:<span class="num">4</span>]      <span class="cmt"># 2025</span>
+month = date[<span class="num">5</span>:<span class="num">7</span>]    <span class="cmt"># 03</span>
+day   = date[<span class="num">8</span>:]      <span class="cmt"># 21</span>
+<span class="fn">print</span>(<span class="str">f"{year}년 {month}월 {day}일"</span>)
+
+<span class="cmt"># 실전 예시 2: 리스트 반반 나누기</span>
+data = [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>, <span class="num">5</span>, <span class="num">6</span>]
+mid = <span class="fn">len</span>(data) // <span class="num">2</span>
+left  = data[:mid]     <span class="cmt"># [1, 2, 3]</span>
+right = data[mid:]     <span class="cmt"># [4, 5, 6]</span>
+
+<span class="cmt"># 실전 예시 3: 마지막 n개 제거</span>
+path = <span class="str">"/home/user/documents/file.txt"</span>
+folder = path[:path.rfind(<span class="str">"/"</span>)]
+<span class="fn">print</span>(folder)     <span class="cmt"># /home/user/documents</span></div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">이메일에서 아이디와 도메인을 분리하세요.</div>
+                <div class="code">email = <span class="str">"student@codingssok.com"</span>
+at_idx = email.index(<span class="str">"@"</span>)
+user_id = email[:at_idx]
+domain = email[at_idx+<span class="num">1</span>:]
+<span class="fn">print</span>(<span class="str">f"아이디: {user_id}"</span>)
+<span class="fn">print</span>(<span class="str">f"도메인: {domain}"</span>)</div>
+                <div class="practice-result">아이디: student / 도메인: codingssok.com</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">리스트에서 앞 3개, 뒤 3개를 뽑아서 합치세요.</div>
+                <div class="code">numbers = [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>, <span class="num">5</span>, <span class="num">6</span>, <span class="num">7</span>, <span class="num">8</span>, <span class="num">9</span>, <span class="num">10</span>]
+result = numbers[:<span class="num">3</span>] + numbers[-<span class="num">3</span>:]
+<span class="fn">print</span>(result)  <span class="cmt"># [1, 2, 3, 8, 9, 10]</span></div>
+                <div class="practice-result">[1, 2, 3, 8, 9, 10]</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SVG: 슬라이싱 치트시트 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 140" style="max-width:480px;width:100%">
+            <text x="240" y="14" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="800">슬라이싱 한눈에 보기 (s = "Python")</text>
+            <rect x="10" y="22" width="100" height="24" rx="4" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="60" y="39" text-anchor="middle" font-family="monospace" font-size="11" fill="#1d4ed8">s[:3]</text>
+            <text x="115" y="39" font-size="11" fill="#374151">= "Pyt"</text>
+            <rect x="250" y="22" width="100" height="24" rx="4" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="300" y="39" text-anchor="middle" font-family="monospace" font-size="11" fill="#1d4ed8">s[3:]</text>
+            <text x="355" y="39" font-size="11" fill="#374151">= "hon"</text>
+            <rect x="10" y="54" width="100" height="24" rx="4" fill="#fef9c3" stroke="#eab308" stroke-width="1.5"/>
+            <text x="60" y="71" text-anchor="middle" font-family="monospace" font-size="11" fill="#713f12">s[::2]</text>
+            <text x="115" y="71" font-size="11" fill="#374151">= "Pto"</text>
+            <rect x="250" y="54" width="100" height="24" rx="4" fill="#fef9c3" stroke="#eab308" stroke-width="1.5"/>
+            <text x="300" y="71" text-anchor="middle" font-family="monospace" font-size="11" fill="#713f12">s[::-1]</text>
+            <text x="355" y="71" font-size="11" fill="#374151">= "nohtyP"</text>
+            <rect x="10" y="86" width="100" height="24" rx="4" fill="#fce7f3" stroke="#db2777" stroke-width="1.5"/>
+            <text x="60" y="103" text-anchor="middle" font-family="monospace" font-size="11" fill="#831843">s[-3:]</text>
+            <text x="115" y="103" font-size="11" fill="#374151">= "hon"</text>
+            <rect x="250" y="86" width="100" height="24" rx="4" fill="#fce7f3" stroke="#db2777" stroke-width="1.5"/>
+            <text x="300" y="103" text-anchor="middle" font-family="monospace" font-size="11" fill="#831843">s[:-2]</text>
+            <text x="355" y="103" font-size="11" fill="#374151">= "Pyth"</text>
+            <rect x="10" y="118" width="100" height="24" rx="4" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="60" y="135" text-anchor="middle" font-family="monospace" font-size="11" fill="#166534">s[1:4:2]</text>
+            <text x="115" y="135" font-size="11" fill="#374151">= "yh"</text>
+            <rect x="250" y="118" width="100" height="24" rx="4" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="300" y="135" text-anchor="middle" font-family="monospace" font-size="11" fill="#166534">s[2:5]</text>
+            <text x="355" y="135" font-size="11" fill="#374151">= "tho"</text>
+        </svg>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>핵심 요약</h3>
+        <ul>
+            <li><code>[start:stop:step]</code> — 세 값 모두 생략 가능, 기본값은 처음/끝/1</li>
+            <li><code>[::-1]</code> — 문자열·리스트 뒤집기의 관용 표현</li>
+            <li>음수 인덱스: <code>-1</code>=마지막, <code>-n</code>=뒤에서 n번째</li>
+            <li>리스트는 슬라이스로 교체·삽입·삭제 가능, 문자열은 불가</li>
+            <li>step 양수=정방향, 음수=역방향 이동</li>
+        </ul>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

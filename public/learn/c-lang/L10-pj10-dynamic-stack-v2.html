@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 프로젝트: 동적 스택</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto Sans KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+.page { width: 210mm; min-height: 297mm; margin: 16px auto; padding: 18mm 20mm 15mm 22mm; background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: relative; page-break-after: always; }
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after { content: counter(pagenum); position: absolute; bottom: 10mm; right: 16mm; font-size: 10px; color: #94a3b8; font-weight: 600; }
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #0f766e; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark { position: absolute; top: -10px; right: -15px; font-size: 200px; font-weight: 900; color: rgba(180,195,212,0.3); line-height: 1; pointer-events: none; }
+.cover-label { font-size: 14px; font-weight: 500; color: #0f766e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 36px; font-weight: 900; color: #134e4a; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #134e4a; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #0f766e; font-weight: 900; }
+h2 { font-size: 20px; font-weight: 800; color: #134e4a; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code { background: #f0fdfa; padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #0f766e; font-weight: 600; }
+.code { background: #0f172a; border-radius: 8px; padding: 16px 20px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap; }
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.output-box { background: #0f172a; border-radius: 8px; padding: 14px 18px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #86efac; line-height: 1.8; margin: 14px 0; }
+.challenge { background: #fef3c7; border: 1.5px solid #f59e0b; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.challenge h3 { font-size: 14px; font-weight: 800; color: #92400e; margin-bottom: 8px; }
+.challenge p { font-size: 13px; color: #78350f; margin: 0; }
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<div class="page cover">
+  <div class="cover-sidebar"></div>
+  <div class="cover-accent"></div>
+  <div class="cover-body">
+    <div class="cover-watermark">P10</div>
+    <div class="cover-label">Chapter 10 · Project 10</div>
+    <h1 class="cover-title">동적 크기 스택<br>push/pop + 자동 확장</h1>
+    <p class="cover-sub">고정 배열 대신 realloc으로 자동 확장되는 동적 스택을 구현합니다. 용량 초과 시 2배 확장하는 capacity 패턴을 익힙니다.</p>
+    <div class="cover-goals">
+      <h3>이 프로젝트에서 만드는 것</h3>
+      <ul>
+        <li>Stack 구조체에 data 포인터, top, capacity를 저장합니다.</li>
+        <li>push 시 용량 초과면 realloc으로 2배 확장합니다.</li>
+        <li>pop 시 top--로 맨 위 값을 꺼냅니다.</li>
+        <li>peek으로 꺼내지 않고 맨 위 값만 확인합니다.</li>
+        <li>스택을 완전히 해제하는 함수를 만듭니다.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+  <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/computer-basics/ram.png" alt="RAM - 동적 메모리 할당 공간" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>동적 스택 구조</h2>
+  <p>스택은 LIFO(Last In, First Out) 구조입니다. 접시를 쌓듯이, 마지막에 올린 것을 먼저 꺼냅니다. capacity(최대 용량)를 초과하면 realloc으로 공간을 늘립니다.</p>
+  <div style="text-align:center;margin:12px 0;">
+    <svg viewBox="0 0 400 110" style="max-width:400px;width:100%">
+      <rect x="160" y="10" width="80" height="28" rx="4" fill="#bbf7d0" stroke="#16a34a" stroke-width="1.5"/>
+      <text x="200" y="29" text-anchor="middle" font-size="12" fill="#166534" font-weight="700">30  ← top</text>
+      <rect x="160" y="42" width="80" height="28" rx="4" fill="#f0fdfa" stroke="#0f766e" stroke-width="1.5"/>
+      <text x="200" y="61" text-anchor="middle" font-size="12" fill="#0f766e" font-weight="700">20</text>
+      <rect x="160" y="74" width="80" height="28" rx="4" fill="#f0fdfa" stroke="#0f766e" stroke-width="1.5"/>
+      <text x="200" y="93" text-anchor="middle" font-size="12" fill="#0f766e" font-weight="700">10</text>
+      <text x="70" y="29" text-anchor="middle" font-size="11" fill="#16a34a" font-weight="700">push(40)</text>
+      <path d="M115,24 L155,24" stroke="#16a34a" stroke-width="2" marker-end="url(#a1)"/>
+      <text x="330" y="29" text-anchor="middle" font-size="11" fill="#dc2626" font-weight="700">pop() → 30</text>
+      <path d="M245,24 L285,24" stroke="#dc2626" stroke-width="2" marker-end="url(#a2)"/>
+      <defs>
+        <marker id="a1" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#16a34a"/></marker>
+        <marker id="a2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#dc2626"/></marker>
+      </defs>
+    </svg>
+  </div>
+  <div class="code"><span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="kw">#include</span> <span class="str">&lt;stdlib.h&gt;</span>
+
+<span class="kw">typedef struct</span> {
+    <span class="kw">int</span> *data;
+    <span class="kw">int</span>  top;       <span class="cmt">// 현재 개수</span>
+    <span class="kw">int</span>  capacity;  <span class="cmt">// 최대 용량</span>
+} Stack;
+
+Stack* <span class="fn">stack_create</span>(<span class="kw">int</span> init_cap) {
+    Stack *s = (Stack*)<span class="fn">malloc</span>(<span class="kw">sizeof</span>(Stack));
+    s-&gt;data = (<span class="kw">int</span>*)<span class="fn">malloc</span>(<span class="kw">sizeof</span>(<span class="kw">int</span>)*init_cap);
+    s-&gt;top = <span class="num">0</span>; s-&gt;capacity = init_cap;
+    <span class="kw">return</span> s;
+}
+
+<span class="kw">void</span> <span class="fn">push</span>(Stack *s, <span class="kw">int</span> val) {
+    <span class="kw">if</span> (s-&gt;top == s-&gt;capacity) {        <span class="cmt">// 꽉 찼으면 2배 확장</span>
+        s-&gt;capacity *= <span class="num">2</span>;
+        s-&gt;data = (<span class="kw">int</span>*)<span class="fn">realloc</span>(s-&gt;data, <span class="kw">sizeof</span>(<span class="kw">int</span>)*s-&gt;capacity);
+        <span class="fn">printf</span>(<span class="str">"  [확장] capacity=%d\n"</span>, s-&gt;capacity);
+    }
+    s-&gt;data[s-&gt;top++] = val;
+}
+
+<span class="kw">int</span> <span class="fn">pop</span>(Stack *s) {
+    <span class="kw">if</span> (s-&gt;top == <span class="num">0</span>) { <span class="fn">printf</span>(<span class="str">"스택 비어있음\n"</span>); <span class="kw">return</span> -<span class="num">1</span>; }
+    <span class="kw">return</span> s-&gt;data[--s-&gt;top];
+}
+
+<span class="kw">int</span> <span class="fn">peek</span>(Stack *s) {
+    <span class="kw">if</span> (s-&gt;top == <span class="num">0</span>) <span class="kw">return</span> -<span class="num">1</span>;
+    <span class="kw">return</span> s-&gt;data[s-&gt;top-<span class="num">1</span>];
+}
+
+<span class="kw">void</span> <span class="fn">stack_destroy</span>(Stack *s) {
+    <span class="fn">free</span>(s-&gt;data); <span class="fn">free</span>(s);
+}
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    Stack *s = <span class="fn">stack_create</span>(<span class="num">2</span>);  <span class="cmt">// 초기 용량 2</span>
+    <span class="fn">push</span>(s,<span class="num">10</span>); <span class="fn">push</span>(s,<span class="num">20</span>); <span class="fn">push</span>(s,<span class="num">30</span>);  <span class="cmt">// 3번째에서 확장</span>
+    <span class="fn">push</span>(s,<span class="num">40</span>); <span class="fn">push</span>(s,<span class="num">50</span>);  <span class="cmt">// 5번째에서 또 확장</span>
+    <span class="fn">printf</span>(<span class="str">"top=%d cap=%d\n"</span>, s-&gt;top, s-&gt;capacity);
+    <span class="fn">printf</span>(<span class="str">"peek=%d\n"</span>, <span class="fn">peek</span>(s));
+    <span class="kw">while</span>(s-&gt;top) <span class="fn">printf</span>(<span class="str">"pop:%d\n"</span>, <span class="fn">pop</span>(s));
+    <span class="fn">stack_destroy</span>(s);
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+</div>
+
+<div class="page">
+  <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/computer-basics/cpu.png" alt="CPU - 동적 메모리 처리 장치" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>실행 결과</h2>
+  <div class="output-box">  [확장] capacity=4
+  [확장] capacity=8
+top=5 cap=8
+peek=50
+pop:50
+pop:40
+pop:30
+pop:20
+pop:10</div>
+  <div style="display:flex;align-items:center;gap:8px;margin:12px 0 6px;padding:7px 12px;background:#fefce8;border-radius:6px;border-left:3px solid #f59e0b;">
+    <img src="/images/learn/c-lang/database.png" alt="데이터베이스 - 동적 데이터 관리" style="width:24px;height:24px;object-fit:contain;background:#fff;border-radius:8px;">
+    <span style="font-size:12px;color:#92400e;font-weight:600;">도전 과제</span>
+</div>
+<div class="challenge">
+    <h3>도전 과제</h3>
+    <p>1. 정수 계산기를 만들어보세요. "3 4 + 2 *" 같은 후위 표기식을 스택으로 계산합니다.<br>2. 문자열 스택으로 브라우저 뒤로가기 기능을 시뮬레이션하세요.<br>3. 괄호 짝 검사: "({[]})"가 올바른지 스택으로 판별하세요.</p>
+  </div>
+</div>
+
+<div class="page">
+  <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/computer-basics/hard-drive.png" alt="하드 드라이브 - 메모리 저장 개념" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>스스로 만들어보기</h2>
+  <div class="code"><span class="cmt">// push 핵심 — capacity 초과 시 realloc</span>
+<span class="kw">void</span> push(Stack *s, <span class="kw">int</span> val) {
+    <span class="kw">if</span> (s-&gt;top == s-&gt;_______) {    <span class="cmt">// 1. 꽉 찼으면</span>
+        s-&gt;capacity *= <span class="num">2</span>;
+        s-&gt;data = (<span class="kw">int</span>*)<span class="fn">realloc</span>(s-&gt;data, <span class="kw">sizeof</span>(<span class="kw">int</span>)*s-&gt;_______); <span class="cmt">// 2.</span>
+    }
+    s-&gt;data[s-&gt;_______++] = val;    <span class="cmt">// 3. 저장 후 top 증가</span>
+}</div>
+  <p style="margin-top:16px;"><strong>정답:</strong> 1. capacity  2. capacity  3. top</p>
+
+    <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:20px;padding-top:10px;border-top:1px solid #f1f5f9;">
+        <img src="/images/learn/c-lang/binary-code.png" alt="이진 코드 - 메모리 할당 구조" style="width:22px;height:22px;object-fit:contain;opacity:0.6;background:#fff;border-radius:8px;">
+        <span style="font-size:10px;color:#cbd5e1;">코딩쏙 C언어</span>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

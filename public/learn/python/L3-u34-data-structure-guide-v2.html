@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 자료구조 선택 가이드: 언제 뭘 쓸까?</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+/* ── 페이지 ── */
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+/* ── 표지 ── */
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 36px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '-'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+
+/* ── 본문 ── */
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 16px; font-weight: 700; color: #1e3a5f; margin: 18px 0 10px; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+ul, ol { margin: 0 0 12px 20px; }
+li { font-size: 14px; color: #374151; line-height: 1.8; }
+
+/* ── 코드 블록 ── */
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13.5px;
+    color: #e2e8f0; line-height: 1.85; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.code .dec { color: #f9a8d4; }
+
+/* ── 따라해보세요 ── */
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '->'; color: #94a3b8; font-weight: 700; }
+
+/* ── 문제 ── */
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+
+/* ── 핵심 요약 ── */
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+/* ── 비교 표 ── */
+.compare-table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13px; }
+.compare-table th { background: #1e3a5f; color: #fff; padding: 8px 12px; text-align: center; font-size: 12px; font-weight: 700; }
+.compare-table td { padding: 7px 12px; border-bottom: 1px solid #f1f5f9; color: #374151; text-align: center; }
+.compare-table tr:nth-child(even) td { background: #fafbfc; }
+.compare-table .good { color: #166534; font-weight: 700; }
+.compare-table .bad { color: #991b1b; font-weight: 700; }
+.compare-table .head-col { text-align: left; font-weight: 700; color: #1e3a5f; }
+
+/* ── 선택 가이드 카드 ── */
+.guide-card { border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 14px 18px; margin: 10px 0; background: #fff; display: flex; gap: 14px; align-items: flex-start; }
+.guide-icon { width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.guide-content h4 { font-size: 14px; font-weight: 800; color: #1e3a5f; margin-bottom: 4px; }
+.guide-content p { font-size: 13px; color: #64748b; margin: 0; line-height: 1.6; }
+.guide-content code { background: #f1f5f9; padding: 1px 5px; border-radius: 3px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #2563eb; font-weight: 600; }
+
+/* ── 출력 박스 ── */
+.output-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #334155; line-height: 1.7; margin: 10px 0; }
+
+/* ── 흐름도 박스 ── */
+.flow-section { background: #f8fafc; border-radius: 10px; padding: 14px; margin: 14px 0; }
+.flow-section h4 { font-size: 13px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; text-align: center; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- ========== 1페이지: 표지 ========== -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">34</div>
+        <div class="cover-label">L3 — Unit 34 | L3c 딕셔너리 &amp; 자료구조 활용</div>
+        <h1 class="cover-title">자료구조 선택 가이드<br>언제 뭘 쓸까?</h1>
+        <p class="cover-sub">리스트, 튜플, 딕셔너리, 세트 — 네 가지 자료구조를 상황에 맞게 골라 쓰는 법을 배웁니다.</p>
+
+        <!-- SVG 01: 4대 자료구조 개요도 -->
+        <div style="margin:22px 0;">
+            <svg viewBox="0 0 480 140" style="max-width:480px;width:100%">
+                <defs>
+                    <marker id="arwCov" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                    </marker>
+                </defs>
+                <!-- 중앙 -->
+                <rect x="165" y="52" width="150" height="36" rx="8" fill="#1e3a5f"/>
+                <text x="240" y="66" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">Python 자료구조</text>
+                <text x="240" y="80" text-anchor="middle" font-size="9" fill="#93c5fd">4가지 선택지</text>
+                <!-- 리스트 -->
+                <rect x="5" y="5" width="120" height="38" rx="7" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="65" y="19" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="800">list</text>
+                <text x="65" y="33" text-anchor="middle" font-size="8" fill="#64748b">순서 + 변경 가능</text>
+                <line x1="128" y1="24" x2="162" y2="60" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+                <!-- 튜플 -->
+                <rect x="355" y="5" width="120" height="38" rx="7" fill="#fce7f3" stroke="#ec4899" stroke-width="1.5"/>
+                <text x="415" y="19" text-anchor="middle" font-size="10" fill="#9d174d" font-weight="800">tuple</text>
+                <text x="415" y="33" text-anchor="middle" font-size="8" fill="#64748b">순서 + 변경 불가</text>
+                <line x1="355" y1="24" x2="318" y2="60" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+                <!-- 딕셔너리 -->
+                <rect x="5" y="97" width="120" height="38" rx="7" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="65" y="111" text-anchor="middle" font-size="10" fill="#92400e" font-weight="800">dict</text>
+                <text x="65" y="125" text-anchor="middle" font-size="8" fill="#64748b">키 : 값 쌍</text>
+                <line x1="128" y1="116" x2="162" y2="78" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+                <!-- 세트 -->
+                <rect x="355" y="97" width="120" height="38" rx="7" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="415" y="111" text-anchor="middle" font-size="10" fill="#166534" font-weight="800">set</text>
+                <text x="415" y="125" text-anchor="middle" font-size="8" fill="#64748b">중복 없음 + 순서 없음</text>
+                <line x1="355" y1="116" x2="318" y2="78" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/database.png" alt="데이터" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 유닛에서 배우는 것</h3>
+            <ul>
+                <li>리스트, 튜플, 딕셔너리, 세트의 특징과 장단점을 설명할 수 있습니다.</li>
+                <li>상황에 따라 적절한 자료구조를 선택하는 기준을 이해합니다.</li>
+                <li>자료구조 간 변환 (<code>list</code>, <code>set</code>, <code>dict</code>)을 능숙하게 처리합니다.</li>
+                <li>중복 제거, 키:값 저장, 불변 데이터 등 실전 시나리오를 코드로 해결합니다.</li>
+                <li>선택 가이드 흐름도를 보고 스스로 올바른 자료구조를 고릅니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- ========== 2페이지: 4대 자료구조 비교 ========== -->
+<div class="page">
+    <h2>1. 4대 자료구조 비교 — 한눈에 보기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/folder.png" alt="구조" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>파이썬에는 데이터를 담는 대표 자료구조가 네 가지입니다. 각각의 특징을 비교하면 선택 기준이 명확해집니다.</p>
+
+    <!-- SVG 02: 특성 비교 레이더(막대형) -->
+    <div style="text-align:center; margin:14px 0;">
+        <svg viewBox="0 0 480 96" style="max-width:480px;width:100%">
+            <!-- list -->
+            <rect x="10" y="10" width="105" height="76" rx="8" fill="#f8fafc" stroke="#3b82f6" stroke-width="2"/>
+            <text x="62" y="28" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="800">list</text>
+            <text x="62" y="44" text-anchor="middle" font-size="9" fill="#374151">[ 1, 2, 3 ]</text>
+            <text x="62" y="58" text-anchor="middle" font-size="8" fill="#64748b">순서 O  변경 O</text>
+            <text x="62" y="72" text-anchor="middle" font-size="8" fill="#64748b">중복 O  색인 O</text>
+            <!-- tuple -->
+            <rect x="125" y="10" width="105" height="76" rx="8" fill="#f8fafc" stroke="#ec4899" stroke-width="2"/>
+            <text x="177" y="28" text-anchor="middle" font-size="11" fill="#9d174d" font-weight="800">tuple</text>
+            <text x="177" y="44" text-anchor="middle" font-size="9" fill="#374151">( 1, 2, 3 )</text>
+            <text x="177" y="58" text-anchor="middle" font-size="8" fill="#64748b">순서 O  변경 X</text>
+            <text x="177" y="72" text-anchor="middle" font-size="8" fill="#64748b">중복 O  색인 O</text>
+            <!-- dict -->
+            <rect x="240" y="10" width="105" height="76" rx="8" fill="#f8fafc" stroke="#f59e0b" stroke-width="2"/>
+            <text x="292" y="28" text-anchor="middle" font-size="11" fill="#92400e" font-weight="800">dict</text>
+            <text x="292" y="44" text-anchor="middle" font-size="9" fill="#374151">{ k: v }</text>
+            <text x="292" y="58" text-anchor="middle" font-size="8" fill="#64748b">키순서 O  변경 O</text>
+            <text x="292" y="72" text-anchor="middle" font-size="8" fill="#64748b">키중복 X  키 색인</text>
+            <!-- set -->
+            <rect x="355" y="10" width="115" height="76" rx="8" fill="#f8fafc" stroke="#22c55e" stroke-width="2"/>
+            <text x="412" y="28" text-anchor="middle" font-size="11" fill="#166534" font-weight="800">set</text>
+            <text x="412" y="44" text-anchor="middle" font-size="9" fill="#374151">{ 1, 2, 3 }</text>
+            <text x="412" y="58" text-anchor="middle" font-size="8" fill="#64748b">순서 X  변경 O</text>
+            <text x="412" y="72" text-anchor="middle" font-size="8" fill="#64748b">중복 X  색인 X</text>
+        </svg>
+    </div>
+
+    <table class="compare-table">
+        <thead>
+            <tr>
+                <th>특성</th>
+                <th>list</th>
+                <th>tuple</th>
+                <th>dict</th>
+                <th>set</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="head-col">선언 방법</td>
+                <td><code>[ ]</code></td>
+                <td><code>( )</code></td>
+                <td><code>{ k:v }</code></td>
+                <td><code>{ }</code> / <code>set()</code></td>
+            </tr>
+            <tr>
+                <td class="head-col">순서 유지</td>
+                <td class="good">O</td>
+                <td class="good">O</td>
+                <td class="good">O (3.7+)</td>
+                <td class="bad">X</td>
+            </tr>
+            <tr>
+                <td class="head-col">수정 가능</td>
+                <td class="good">O</td>
+                <td class="bad">X</td>
+                <td class="good">O</td>
+                <td class="good">O</td>
+            </tr>
+            <tr>
+                <td class="head-col">중복 허용</td>
+                <td class="good">O</td>
+                <td class="good">O</td>
+                <td>키 X / 값 O</td>
+                <td class="bad">X</td>
+            </tr>
+            <tr>
+                <td class="head-col">인덱스 접근</td>
+                <td class="good">O</td>
+                <td class="good">O</td>
+                <td>키로 접근</td>
+                <td class="bad">X</td>
+            </tr>
+            <tr>
+                <td class="head-col">주요 용도</td>
+                <td>일반 데이터 목록</td>
+                <td>변하면 안 되는 값</td>
+                <td>이름표 달린 데이터</td>
+                <td>중복 제거</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <p>표를 외울 필요는 없습니다. "내 데이터에 뭐가 필요한가?"를 물어보면 자연스럽게 선택이 됩니다. 다음 섹션에서 상황별로 정리합니다.</p>
+</div>
+
+<!-- ========== 3페이지: 상황별 선택 가이드 ========== -->
+<div class="page">
+    <h2>2. 상황별 선택 가이드 — 흐름도</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/hard-drive.png" alt="저장소" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>다음 질문에 순서대로 답하면 어떤 자료구조를 써야 할지 결정할 수 있습니다.</p>
+
+    <!-- SVG 03: 선택 흐름도 -->
+    <div style="text-align:center; margin:16px 0;">
+        <svg viewBox="0 0 480 230" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="arw3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+                </marker>
+            </defs>
+            <!-- 시작 -->
+            <rect x="165" y="5" width="150" height="32" rx="16" fill="#1e3a5f"/>
+            <text x="240" y="24" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">데이터를 저장하고 싶다</text>
+            <line x1="240" y1="37" x2="240" y2="52" stroke="#64748b" stroke-width="1.5" marker-end="url(#arw3)"/>
+            <!-- Q1 -->
+            <polygon points="240,55 330,75 240,95 150,75" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="240" y="72" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">키:값 쌍이 필요한가?</text>
+            <text x="240" y="85" text-anchor="middle" font-size="8" fill="#64748b">(이름, 나이, 점수 등)</text>
+            <!-- Q1 Y -> dict -->
+            <line x1="330" y1="75" x2="380" y2="75" stroke="#64748b" stroke-width="1.5" marker-end="url(#arw3)"/>
+            <text x="356" y="70" text-anchor="middle" font-size="8" fill="#64748b">Yes</text>
+            <rect x="383" y="60" width="90" height="30" rx="7" fill="#fefce8" stroke="#f59e0b" stroke-width="2"/>
+            <text x="428" y="78" text-anchor="middle" font-size="11" fill="#92400e" font-weight="800">dict</text>
+            <!-- Q1 N -->
+            <line x1="240" y1="95" x2="240" y2="110" stroke="#64748b" stroke-width="1.5" marker-end="url(#arw3)"/>
+            <text x="252" y="107" text-anchor="start" font-size="8" fill="#64748b">No</text>
+            <!-- Q2 -->
+            <polygon points="240,113 330,133 240,153 150,133" fill="#fce7f3" stroke="#ec4899" stroke-width="1.5"/>
+            <text x="240" y="130" text-anchor="middle" font-size="9" fill="#9d174d" font-weight="700">중복을 제거해야 하나?</text>
+            <text x="240" y="143" text-anchor="middle" font-size="8" fill="#64748b">(유일한 값만 필요)</text>
+            <!-- Q2 Y -> set -->
+            <line x1="330" y1="133" x2="380" y2="133" stroke="#64748b" stroke-width="1.5" marker-end="url(#arw3)"/>
+            <text x="356" y="128" text-anchor="middle" font-size="8" fill="#64748b">Yes</text>
+            <rect x="383" y="118" width="90" height="30" rx="7" fill="#f0fdf4" stroke="#22c55e" stroke-width="2"/>
+            <text x="428" y="136" text-anchor="middle" font-size="11" fill="#166534" font-weight="800">set</text>
+            <!-- Q2 N -->
+            <line x1="240" y1="153" x2="240" y2="168" stroke="#64748b" stroke-width="1.5" marker-end="url(#arw3)"/>
+            <text x="252" y="165" text-anchor="start" font-size="8" fill="#64748b">No</text>
+            <!-- Q3 -->
+            <polygon points="240,171 330,191 240,211 150,191" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="240" y="188" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">데이터가 바뀌면 안 되나?</text>
+            <text x="240" y="201" text-anchor="middle" font-size="8" fill="#64748b">(상수, 설정값 등)</text>
+            <!-- Q3 Y -> tuple -->
+            <line x1="330" y1="191" x2="380" y2="191" stroke="#64748b" stroke-width="1.5" marker-end="url(#arw3)"/>
+            <text x="356" y="186" text-anchor="middle" font-size="8" fill="#64748b">Yes</text>
+            <rect x="383" y="176" width="90" height="30" rx="7" fill="#fce7f3" stroke="#ec4899" stroke-width="2"/>
+            <text x="428" y="194" text-anchor="middle" font-size="11" fill="#9d174d" font-weight="800">tuple</text>
+            <!-- Q3 N -> list -->
+            <line x1="150" y1="191" x2="100" y2="191" stroke="#64748b" stroke-width="1.5" marker-end="url(#arw3)"/>
+            <text x="120" y="186" text-anchor="middle" font-size="8" fill="#64748b">No</text>
+            <rect x="7" y="176" width="90" height="30" rx="7" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+            <text x="52" y="194" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="800">list</text>
+        </svg>
+    </div>
+
+    <h3>상황별 요약</h3>
+
+    <div class="guide-card">
+        <div class="guide-icon" style="background:#dbeafe;">
+            <svg width="22" height="22" viewBox="0 0 22 22"><rect x="2" y="5" width="18" height="3" rx="1.5" fill="#3b82f6"/><rect x="2" y="10" width="14" height="3" rx="1.5" fill="#93c5fd"/><rect x="2" y="15" width="16" height="3" rx="1.5" fill="#93c5fd"/></svg>
+        </div>
+        <div class="guide-content">
+            <h4>순서가 필요하고 값이 바뀜 &rarr; <code>list</code></h4>
+            <p>학생 점수 목록, 쇼핑카트, 할 일 목록처럼 항목을 추가·삭제·수정해야 할 때. <code>append()</code>, <code>remove()</code> 등이 자유롭게 쓰입니다.</p>
+        </div>
+    </div>
+
+    <div class="guide-card">
+        <div class="guide-icon" style="background:#fefce8;">
+            <svg width="22" height="22" viewBox="0 0 22 22"><circle cx="11" cy="11" r="8" fill="none" stroke="#f59e0b" stroke-width="2"/><text x="11" y="15" text-anchor="middle" font-size="9" fill="#92400e" font-weight="800">k:v</text></svg>
+        </div>
+        <div class="guide-content">
+            <h4>이름표가 달린 데이터 &rarr; <code>dict</code></h4>
+            <p>이름, 나이, 점수처럼 각 데이터에 의미 있는 이름이 필요할 때. <code>student["name"]</code>처럼 키로 바로 접근합니다.</p>
+        </div>
+    </div>
+
+    <div class="guide-card">
+        <div class="guide-icon" style="background:#f0fdf4;">
+            <svg width="22" height="22" viewBox="0 0 22 22"><circle cx="8" cy="11" r="5" fill="none" stroke="#22c55e" stroke-width="1.8"/><circle cx="14" cy="11" r="5" fill="none" stroke="#22c55e" stroke-width="1.8"/><rect x="9.5" y="7.5" width="3" height="7" rx="1" fill="#22c55e"/></svg>
+        </div>
+        <div class="guide-content">
+            <h4>중복을 없애야 함 &rarr; <code>set</code></h4>
+            <p>방문자 목록에서 중복 ID 제거, 두 반의 공통 수강생 찾기 등. 교집합(<code>&amp;</code>), 합집합(<code>|</code>) 연산이 강력합니다.</p>
+        </div>
+    </div>
+
+    <div class="guide-card">
+        <div class="guide-icon" style="background:#fce7f3;">
+            <svg width="22" height="22" viewBox="0 0 22 22"><rect x="4" y="5" width="14" height="12" rx="3" fill="none" stroke="#ec4899" stroke-width="1.8"/><line x1="8" y1="9" x2="14" y2="9" stroke="#f9a8d4" stroke-width="1.5"/><line x1="8" y1="13" x2="12" y2="13" stroke="#f9a8d4" stroke-width="1.5"/><line x1="9" y1="3" x2="9" y2="5" stroke="#ec4899" stroke-width="1.5"/><line x1="13" y1="3" x2="13" y2="5" stroke="#ec4899" stroke-width="1.5"/></svg>
+        </div>
+        <div class="guide-content">
+            <h4>데이터가 바뀌면 안 됨 &rarr; <code>tuple</code></h4>
+            <p>RGB 색상 값, 좌표, 설정 상수처럼 실수로 바꾸면 안 되는 데이터. 수정 시도 시 오류가 발생해 안전합니다.</p>
+        </div>
+    </div>
+</div>
+
+<!-- ========== 4페이지: 리스트 vs 튜플 심화 ========== -->
+<div class="page">
+    <h2>3. 리스트와 튜플 — 같은 듯 다른 둘</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>리스트와 튜플은 둘 다 순서가 있고 중복을 허용합니다. 핵심 차이는 <strong>수정 가능 여부</strong>입니다.</p>
+
+    <!-- SVG 04: list vs tuple 메모리 구조 -->
+    <div style="text-align:center; margin:14px 0;">
+        <svg viewBox="0 0 480 100" style="max-width:480px;width:100%">
+            <!-- list -->
+            <text x="100" y="14" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="800">list — 변경 가능</text>
+            <rect x="10" y="20" width="50" height="28" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="35" y="38" text-anchor="middle" font-size="10" fill="#1d4ed8">"홍"</text>
+            <rect x="64" y="20" width="50" height="28" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="89" y="38" text-anchor="middle" font-size="10" fill="#1d4ed8">"김"</text>
+            <rect x="118" y="20" width="50" height="28" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="143" y="38" text-anchor="middle" font-size="10" fill="#1d4ed8">"박"</text>
+            <!-- 편집 화살표 -->
+            <path d="M143,52 Q143,70 120,70 L30,70 Q10,70 10,52" fill="none" stroke="#3b82f6" stroke-width="1.2" stroke-dasharray="4,2"/>
+            <text x="90" y="84" text-anchor="middle" font-size="8" fill="#3b82f6">append / remove 가능</text>
+            <!-- tuple -->
+            <text x="350" y="14" text-anchor="middle" font-size="10" fill="#9d174d" font-weight="800">tuple — 변경 불가</text>
+            <rect x="260" y="20" width="50" height="28" rx="4" fill="#fce7f3" stroke="#ec4899" stroke-width="1.5"/>
+            <text x="285" y="38" text-anchor="middle" font-size="10" fill="#9d174d">255</text>
+            <rect x="314" y="20" width="50" height="28" rx="4" fill="#fce7f3" stroke="#ec4899" stroke-width="1.5"/>
+            <text x="339" y="38" text-anchor="middle" font-size="10" fill="#9d174d">128</text>
+            <rect x="368" y="20" width="50" height="28" rx="4" fill="#fce7f3" stroke="#ec4899" stroke-width="1.5"/>
+            <text x="393" y="38" text-anchor="middle" font-size="10" fill="#9d174d">0</text>
+            <!-- 잠금 표시 -->
+            <rect x="422" y="24" width="16" height="12" rx="3" fill="#fce7f3" stroke="#ec4899" stroke-width="1.2"/>
+            <path d="M425,24 Q425,19 430,19 Q435,19 435,24" fill="none" stroke="#ec4899" stroke-width="1.2"/>
+            <text x="342" y="70" text-anchor="middle" font-size="8" fill="#ec4899">수정 불가 (TypeError 발생)</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># 리스트: 수정 가능</span>
+students = [<span class="str">"홍길동"</span>, <span class="str">"김철수"</span>, <span class="str">"박영희"</span>]
+students.<span class="fn">append</span>(<span class="str">"이민준"</span>)      <span class="cmt"># 추가 OK</span>
+students[<span class="num">0</span>] = <span class="str">"홍길동2"</span>            <span class="cmt"># 수정 OK</span>
+<span class="fn">print</span>(students)              <span class="cmt"># ['홍길동2', '김철수', '박영희', '이민준']</span>
+
+<span class="cmt"># 튜플: 수정 불가</span>
+rgb_red = (<span class="num">255</span>, <span class="num">0</span>, <span class="num">0</span>)
+<span class="fn">print</span>(rgb_red[<span class="num">0</span>])            <span class="cmt"># 255 — 읽기는 OK</span>
+<span class="cmt"># rgb_red[0] = 200           # TypeError! 수정 불가</span>
+
+<span class="cmt"># 튜플의 장점: 함수에서 여러 값 반환</span>
+<span class="kw">def</span> <span class="fn">min_max</span>(nums):
+    <span class="kw">return</span> <span class="fn">min</span>(nums), <span class="fn">max</span>(nums)   <span class="cmt"># 튜플로 반환</span>
+
+low, high = <span class="fn">min_max</span>([<span class="num">3</span>, <span class="num">1</span>, <span class="num">7</span>, <span class="num">2</span>])
+<span class="fn">print</span>(<span class="str">f"최솟값: {low}, 최댓값: {high}"</span>)  <span class="cmt"># 최솟값: 1, 최댓값: 7</span></div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="처리" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+        <div class="practice-head">따라해보세요 — 리스트와 튜플</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">실습 1</div>
+                <div class="practice-desc">학생 이름 리스트를 만들고 <code>append()</code>로 이름을 추가하세요. 그 다음 인덱스 0번 이름을 다른 이름으로 바꿔보세요.</div>
+                <div class="practice-result">리스트에 항목이 추가되고 첫 번째 이름이 바뀌는 것을 확인합니다.</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">실습 2</div>
+                <div class="practice-desc">좌표를 튜플 <code>point = (3, 7)</code>로 만들고 <code>point[0]</code>을 바꾸려 하면 어떤 오류가 나는지 확인하세요.</div>
+                <div class="practice-result">TypeError: 'tuple' object does not support item assignment 오류를 확인합니다.</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">실습 3</div>
+                <div class="practice-desc"><code>min_max()</code> 함수를 직접 작성하고 숫자 리스트를 넣어 최솟값·최댓값을 튜플 언패킹으로 받으세요.</div>
+                <div class="practice-result">두 변수에 최솟값과 최댓값이 각각 담깁니다.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========== 5페이지: 딕셔너리 심화 ========== -->
+<div class="page">
+    <h2>4. 딕셔너리 — 이름표 달린 데이터</h2>
+    <p>딕셔너리는 "이름표(키)"와 "내용(값)"을 하나의 쌍으로 관리합니다. 리스트의 숫자 인덱스 대신 의미 있는 이름으로 접근합니다.</p>
+
+    <!-- SVG 05: dict 구조도 -->
+    <div style="text-align:center; margin:14px 0;">
+        <svg viewBox="0 0 480 90" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="arw5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#f59e0b"/>
+                </marker>
+            </defs>
+            <!-- 키 열 -->
+            <text x="90" y="14" text-anchor="middle" font-size="10" fill="#92400e" font-weight="800">키 (Key)</text>
+            <rect x="10" y="20" width="160" height="22" rx="4" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="90" y="35" text-anchor="middle" font-size="10" fill="#92400e">"name"</text>
+            <rect x="10" y="46" width="160" height="22" rx="4" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="90" y="61" text-anchor="middle" font-size="10" fill="#92400e">"score"</text>
+            <rect x="10" y="72" width="160" height="22" rx="4" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="90" y="87" text-anchor="middle" font-size="10" fill="#92400e">"grade"</text>
+            <!-- 화살표 -->
+            <line x1="173" y1="31" x2="193" y2="31" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#arw5)"/>
+            <line x1="173" y1="57" x2="193" y2="57" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#arw5)"/>
+            <line x1="173" y1="83" x2="193" y2="83" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#arw5)"/>
+            <!-- 값 열 -->
+            <text x="330" y="14" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="800">값 (Value)</text>
+            <rect x="196" y="20" width="280" height="22" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="336" y="35" text-anchor="middle" font-size="10" fill="#1d4ed8">"홍길동"</text>
+            <rect x="196" y="46" width="280" height="22" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="336" y="61" text-anchor="middle" font-size="10" fill="#1d4ed8">95</text>
+            <rect x="196" y="72" width="280" height="22" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="336" y="87" text-anchor="middle" font-size="10" fill="#1d4ed8">"A"</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># 딕셔너리 기본 사용</span>
+student = {
+    <span class="str">"name"</span>: <span class="str">"홍길동"</span>,
+    <span class="str">"score"</span>: <span class="num">95</span>,
+    <span class="str">"grade"</span>: <span class="str">"A"</span>
+}
+
+<span class="cmt"># 키로 접근</span>
+<span class="fn">print</span>(student[<span class="str">"name"</span>])            <span class="cmt"># 홍길동</span>
+<span class="fn">print</span>(student.<span class="fn">get</span>(<span class="str">"score"</span>, <span class="num">0</span>))   <span class="cmt"># 95 (키 없으면 0 반환)</span>
+
+<span class="cmt"># 값 추가/수정</span>
+student[<span class="str">"teacher"</span>] = <span class="str">"김선생"</span>    <span class="cmt"># 새 키 추가</span>
+student[<span class="str">"score"</span>] = <span class="num">98</span>           <span class="cmt"># 값 수정</span>
+
+<span class="cmt"># 반복</span>
+<span class="kw">for</span> key, value <span class="kw">in</span> student.<span class="fn">items</span>():
+    <span class="fn">print</span>(<span class="str">f"{key}: {value}"</span>)</div>
+
+    <div class="output-box">name: 홍길동
+score: 98
+grade: A
+teacher: 김선생</div>
+
+    <h3>딕셔너리 실전 패턴 — 빈도 세기</h3>
+    <p>텍스트에서 단어 등장 횟수를 세는 전형적인 패턴입니다.</p>
+
+    <div class="code"><span class="cmt"># 단어 빈도 세기</span>
+words = [<span class="str">"python"</span>, <span class="str">"is"</span>, <span class="str">"fun"</span>, <span class="str">"python"</span>, <span class="str">"is"</span>, <span class="str">"great"</span>]
+freq = {}
+
+<span class="kw">for</span> word <span class="kw">in</span> words:
+    freq[word] = freq.<span class="fn">get</span>(word, <span class="num">0</span>) + <span class="num">1</span>
+
+<span class="fn">print</span>(freq)
+<span class="cmt"># {'python': 2, 'is': 2, 'fun': 1, 'great': 1}</span>
+
+<span class="cmt"># 가장 많이 등장한 단어</span>
+most_common = <span class="fn">max</span>(freq, key=freq.<span class="fn">get</span>)
+<span class="fn">print</span>(<span class="str">f"최다 등장: {most_common} ({freq[most_common]}회)"</span>)</div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요 — 딕셔너리</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">실습 4</div>
+                <div class="practice-desc">자신의 정보를 딕셔너리로 만들고 (<code>name</code>, <code>age</code>, <code>hobby</code>) <code>items()</code>로 모두 출력하세요.</div>
+                <div class="practice-result">각 키-값 쌍이 한 줄씩 출력됩니다.</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">실습 5</div>
+                <div class="practice-desc">단어 리스트 <code>["a","b","a","c","b","a"]</code>의 등장 빈도를 딕셔너리로 세어보세요.</div>
+                <div class="practice-result"><code>{'a': 3, 'b': 2, 'c': 1}</code>이 출력됩니다.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========== 6페이지: 세트 심화 ========== -->
+<div class="page">
+    <h2>5. 세트 — 중복 없이 깔끔하게</h2>
+    <p>세트는 수학의 집합과 같습니다. 같은 값을 여러 번 넣어도 한 번만 저장됩니다. 순서도 없습니다.</p>
+
+    <!-- SVG 06: 세트 교집합/합집합 벤다이어그램 -->
+    <div style="text-align:center; margin:14px 0;">
+        <svg viewBox="0 0 480 100" style="max-width:480px;width:100%">
+            <!-- 합집합 -->
+            <text x="90" y="12" text-anchor="middle" font-size="10" fill="#166534" font-weight="800">합집합 (|)</text>
+            <circle cx="70" cy="55" r="38" fill="#dcfce7" fill-opacity="0.7" stroke="#22c55e" stroke-width="1.5"/>
+            <circle cx="110" cy="55" r="38" fill="#dcfce7" fill-opacity="0.7" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="55" y="52" text-anchor="middle" font-size="9" fill="#166534">A만</text>
+            <text x="55" y="63" text-anchor="middle" font-size="8" fill="#166534">{1,2}</text>
+            <text x="90" y="52" text-anchor="middle" font-size="8" fill="#166534">공통</text>
+            <text x="90" y="63" text-anchor="middle" font-size="7" fill="#166534">{3}</text>
+            <text x="125" y="52" text-anchor="middle" font-size="9" fill="#166534">B만</text>
+            <text x="125" y="63" text-anchor="middle" font-size="8" fill="#166534">{4,5}</text>
+            <!-- 교집합 -->
+            <text x="330" y="12" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="800">교집합 (&amp;)</text>
+            <circle cx="305" cy="55" r="38" fill="#dbeafe" fill-opacity="0.6" stroke="#3b82f6" stroke-width="1.5"/>
+            <circle cx="355" cy="55" r="38" fill="#dbeafe" fill-opacity="0.6" stroke="#3b82f6" stroke-width="1.5"/>
+            <ellipse cx="330" cy="55" rx="18" ry="32" fill="#3b82f6" fill-opacity="0.3"/>
+            <text x="285" y="55" text-anchor="middle" font-size="8" fill="#1d4ed8">A</text>
+            <text x="330" y="52" text-anchor="middle" font-size="8" fill="#1d4ed8">공통</text>
+            <text x="330" y="63" text-anchor="middle" font-size="7" fill="#1d4ed8">{3}</text>
+            <text x="375" y="55" text-anchor="middle" font-size="8" fill="#1d4ed8">B</text>
+            <!-- 차집합 -->
+            <text x="440" y="12" text-anchor="middle" font-size="10" fill="#92400e" font-weight="800">차집합 (-)</text>
+            <circle cx="430" cy="55" r="28" fill="#fef3c7" fill-opacity="0.8" stroke="#f59e0b" stroke-width="1.5"/>
+            <circle cx="458" cy="55" r="20" fill="#fff" stroke="#f59e0b" stroke-width="1" stroke-dasharray="3,2"/>
+            <text x="420" y="52" text-anchor="middle" font-size="8" fill="#92400e">A-B</text>
+            <text x="420" y="64" text-anchor="middle" font-size="7" fill="#92400e">B만 빼냄</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># 세트 기본</span>
+nums = {<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">2</span>, <span class="num">1</span>}      <span class="cmt"># 중복 자동 제거</span>
+<span class="fn">print</span>(nums)                    <span class="cmt"># {1, 2, 3}</span>
+
+<span class="cmt"># 집합 연산</span>
+a = {<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>}
+b = {<span class="num">3</span>, <span class="num">4</span>, <span class="num">5</span>, <span class="num">6</span>}
+
+<span class="fn">print</span>(a | b)                   <span class="cmt"># 합집합: {1,2,3,4,5,6}</span>
+<span class="fn">print</span>(a &amp; b)                   <span class="cmt"># 교집합: {3,4}</span>
+<span class="fn">print</span>(a - b)                   <span class="cmt"># 차집합: {1,2}</span>
+<span class="fn">print</span>(a ^ b)                   <span class="cmt"># 대칭차: {1,2,5,6}</span></div>
+
+    <h3>세트의 핵심 활용 — 중복 제거</h3>
+    <div class="code"><span class="cmt"># 리스트에서 중복 제거</span>
+visitors = [<span class="str">"김철수"</span>, <span class="str">"홍길동"</span>, <span class="str">"김철수"</span>, <span class="str">"박영희"</span>, <span class="str">"홍길동"</span>]
+
+unique = <span class="fn">list</span>(<span class="fn">set</span>(visitors))   <span class="cmt"># set으로 중복 제거 후 list로 변환</span>
+<span class="fn">print</span>(<span class="str">f"방문자 수: {len(unique)}명"</span>)
+<span class="fn">print</span>(<span class="str">f"방문자 목록: {unique}"</span>)
+
+<span class="cmt"># 두 반의 공통 수강생 찾기</span>
+class_a = {<span class="str">"홍길동"</span>, <span class="str">"김철수"</span>, <span class="str">"이영희"</span>}
+class_b = {<span class="str">"박민준"</span>, <span class="str">"홍길동"</span>, <span class="str">"최수진"</span>}
+common = class_a &amp; class_b
+<span class="fn">print</span>(<span class="str">f"양쪽 모두 수강: {common}"</span>)  <span class="cmt"># {'홍길동'}</span></div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요 — 세트</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">실습 6</div>
+                <div class="practice-desc">중복이 포함된 리스트 <code>[1,2,3,2,1,4,3,5]</code>에서 고유한 숫자만 남기고 다시 리스트로 변환하세요.</div>
+                <div class="practice-result"><code>[1, 2, 3, 4, 5]</code> (순서는 다를 수 있음)가 출력됩니다.</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">실습 7</div>
+                <div class="practice-desc">두 개의 세트를 만들고 합집합, 교집합, 차집합을 각각 출력해보세요.</div>
+                <div class="practice-result">집합 연산 결과가 각각 출력됩니다.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========== 7페이지: 자료구조 변환 ========== -->
+<div class="page">
+    <h2>6. 자료구조 간 변환</h2>
+    <p>실전에서는 자료구조를 바꿔가며 사용하는 경우가 많습니다. 각 변환 함수의 역할을 이해합니다.</p>
+
+    <!-- SVG 07: 변환 흐름도 -->
+    <div style="text-align:center; margin:14px 0;">
+        <svg viewBox="0 0 480 120" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="arw7" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+                </marker>
+            </defs>
+            <!-- list -->
+            <rect x="10" y="44" width="90" height="32" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+            <text x="55" y="63" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="800">list</text>
+            <!-- list -> set -->
+            <line x1="103" y1="60" x2="138" y2="60" stroke="#64748b" stroke-width="1.5" marker-end="url(#arw7)"/>
+            <text x="120" y="54" text-anchor="middle" font-size="8" fill="#64748b">set()</text>
+            <!-- set -->
+            <rect x="141" y="44" width="90" height="32" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="2"/>
+            <text x="186" y="63" text-anchor="middle" font-size="11" fill="#166534" font-weight="800">set</text>
+            <!-- set -> list -->
+            <line x1="186" y1="44" x2="186" y2="22" stroke="#64748b" stroke-width="1.5" marker-end="url(#arw7)"/>
+            <path d="M186,18 Q120,10 55,18" fill="none" stroke="#64748b" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#arw7)"/>
+            <text x="120" y="10" text-anchor="middle" font-size="8" fill="#64748b">list()</text>
+            <!-- set -> tuple -->
+            <line x1="186" y1="76" x2="186" y2="98" stroke="#64748b" stroke-width="1.5" marker-end="url(#arw7)"/>
+            <path d="M186,102 Q280,115 374,102" fill="none" stroke="#64748b" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#arw7)"/>
+            <text x="280" y="116" text-anchor="middle" font-size="8" fill="#64748b">tuple()</text>
+            <!-- tuple -->
+            <rect x="377" y="44" width="90" height="32" rx="8" fill="#fce7f3" stroke="#ec4899" stroke-width="2"/>
+            <text x="422" y="63" text-anchor="middle" font-size="11" fill="#9d174d" font-weight="800">tuple</text>
+            <!-- tuple -> list -->
+            <line x1="422" y1="44" x2="422" y2="22" stroke="#64748b" stroke-width="1.5" marker-end="url(#arw7)"/>
+            <path d="M422,18 Q350,5 270,18" fill="none" stroke="#64748b" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#arw7)"/>
+            <text x="350" y="10" text-anchor="middle" font-size="8" fill="#64748b">list()</text>
+            <!-- dict -->
+            <rect x="259" y="44" width="90" height="32" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="2"/>
+            <text x="304" y="63" text-anchor="middle" font-size="11" fill="#92400e" font-weight="800">dict</text>
+            <!-- dict -> keys(list) -->
+            <line x1="259" y1="60" x2="234" y2="60" stroke="#64748b" stroke-width="1.5" marker-end="url(#arw7)"/>
+            <text x="246" y="54" text-anchor="middle" font-size="7" fill="#64748b">.keys()</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># 1. list -&gt; set: 중복 제거</span>
+data = [<span class="num">1</span>, <span class="num">2</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">3</span>, <span class="num">3</span>]
+unique = <span class="fn">set</span>(data)             <span class="cmt"># {1, 2, 3}</span>
+
+<span class="cmt"># 2. set -&gt; list: 다시 리스트로 (정렬 후 순서 확보)</span>
+back_to_list = <span class="fn">sorted</span>(unique)  <span class="cmt"># [1, 2, 3]</span>
+
+<span class="cmt"># 3. dict.keys() / .values() / .items() -&gt; list</span>
+scores = {<span class="str">"홍"</span>: <span class="num">90</span>, <span class="str">"김"</span>: <span class="num">85</span>, <span class="str">"박"</span>: <span class="num">92</span>}
+names = <span class="fn">list</span>(scores.<span class="fn">keys</span>())    <span class="cmt"># ['홍', '김', '박']</span>
+vals  = <span class="fn">list</span>(scores.<span class="fn">values</span>())  <span class="cmt"># [90, 85, 92]</span>
+
+<span class="cmt"># 4. 두 리스트 -&gt; dict (zip 활용)</span>
+keys   = [<span class="str">"name"</span>, <span class="str">"age"</span>, <span class="str">"city"</span>]
+values = [<span class="str">"홍길동"</span>, <span class="num">15</span>, <span class="str">"서울"</span>]
+person = <span class="fn">dict</span>(<span class="fn">zip</span>(keys, values))
+<span class="fn">print</span>(person)  <span class="cmt"># {'name': '홍길동', 'age': 15, 'city': '서울'}</span></div>
+
+    <div class="output-box">{'name': '홍길동', 'age': 15, 'city': '서울'}</div>
+
+    <!-- SVG 08: 변환 체인 시나리오 -->
+    <div style="text-align:center; margin:14px 0;">
+        <svg viewBox="0 0 480 56" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="arw8" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+                </marker>
+            </defs>
+            <rect x="5" y="14" width="100" height="28" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="55" y="25" text-anchor="middle" font-size="8" fill="#1d4ed8" font-weight="700">원본 list</text>
+            <text x="55" y="37" text-anchor="middle" font-size="8" fill="#64748b">[1,2,2,3,3,3]</text>
+            <line x1="108" y1="28" x2="125" y2="28" stroke="#64748b" stroke-width="1.5" marker-end="url(#arw8)"/>
+            <text x="116" y="22" text-anchor="middle" font-size="7" fill="#64748b">set()</text>
+            <rect x="128" y="14" width="90" height="28" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="173" y="25" text-anchor="middle" font-size="8" fill="#166534" font-weight="700">중복 제거</text>
+            <text x="173" y="37" text-anchor="middle" font-size="8" fill="#64748b">{1, 2, 3}</text>
+            <line x1="221" y1="28" x2="238" y2="28" stroke="#64748b" stroke-width="1.5" marker-end="url(#arw8)"/>
+            <text x="229" y="22" text-anchor="middle" font-size="7" fill="#64748b">sorted()</text>
+            <rect x="241" y="14" width="90" height="28" rx="6" fill="#fce7f3" stroke="#ec4899" stroke-width="1.5"/>
+            <text x="286" y="25" text-anchor="middle" font-size="8" fill="#9d174d" font-weight="700">정렬된 list</text>
+            <text x="286" y="37" text-anchor="middle" font-size="8" fill="#64748b">[1, 2, 3]</text>
+            <line x1="334" y1="28" x2="351" y2="28" stroke="#64748b" stroke-width="1.5" marker-end="url(#arw8)"/>
+            <text x="342" y="22" text-anchor="middle" font-size="7" fill="#64748b">tuple()</text>
+            <rect x="354" y="14" width="120" height="28" rx="6" fill="#fce7f3" stroke="#ec4899" stroke-width="1.5"/>
+            <text x="414" y="25" text-anchor="middle" font-size="8" fill="#9d174d" font-weight="700">불변 tuple</text>
+            <text x="414" y="37" text-anchor="middle" font-size="8" fill="#64748b">(1, 2, 3)</text>
+        </svg>
+    </div>
+</div>
+
+<!-- ========== 8페이지: 실전 시나리오 문제 ========== -->
+<div class="page">
+    <h2>7. 실전 시나리오 — 자료구조 선택</h2>
+    <p>실제 프로그램을 만들 때 어떤 자료구조를 써야 할지 판단하는 연습입니다. 문제를 읽고 최적의 자료구조를 고르세요.</p>
+
+    <!-- SVG 09: 시나리오 아이콘 -->
+    <div style="text-align:center; margin:10px 0 18px;">
+        <svg viewBox="0 0 480 60" style="max-width:480px;width:100%">
+            <!-- 성적 관리 -->
+            <rect x="10" y="8" width="100" height="44" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="60" y="26" text-anchor="middle" font-size="9" fill="#166534" font-weight="800">성적 관리</text>
+            <text x="60" y="40" text-anchor="middle" font-size="8" fill="#64748b">이름:점수 저장</text>
+            <!-- 방문 로그 -->
+            <rect x="120" y="8" width="100" height="44" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="170" y="26" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="800">방문 로그</text>
+            <text x="170" y="40" text-anchor="middle" font-size="8" fill="#64748b">순서대로 기록</text>
+            <!-- 고유 태그 -->
+            <rect x="230" y="8" width="100" height="44" rx="8" fill="#fce7f3" stroke="#ec4899" stroke-width="1.5"/>
+            <text x="280" y="26" text-anchor="middle" font-size="9" fill="#9d174d" font-weight="800">고유 태그</text>
+            <text x="280" y="40" text-anchor="middle" font-size="8" fill="#64748b">중복 없이 저장</text>
+            <!-- 위경도 좌표 -->
+            <rect x="340" y="8" width="130" height="44" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="405" y="26" text-anchor="middle" font-size="9" fill="#92400e" font-weight="800">위경도 좌표</text>
+            <text x="405" y="40" text-anchor="middle" font-size="8" fill="#64748b">변하면 안 되는 값</text>
+        </svg>
+    </div>
+
+    <!-- 문제 1 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">1</div>
+            <div class="problem-label">학생 성적 관리 시스템</div>
+            <span class="problem-diff medium">중간</span>
+        </div>
+        <div class="problem-body">
+            <p class="problem-text">학생 이름과 점수를 저장하고, 이름으로 점수를 바로 찾아야 합니다. 또한 새 학생을 추가하거나 점수를 수정할 수 있어야 합니다. 어떤 자료구조를 사용하고, 어떻게 코드를 작성하면 될까요?</p>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">입력</span>
+                    <span class="problem-example-value">이름: "홍길동", 점수: 95</span>
+                </div>
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력</span>
+                    <span class="problem-example-value">scores["홍길동"] -> 95</span>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기 / 정답 보기</summary>
+            <div class="problem-toggle-content">
+                <p class="hint-text">힌트: 이름(키)으로 점수(값)를 찾는다 = 딕셔너리. 수정도 가능해야 하므로 dict가 최적입니다.</p>
+                <div class="answer-code"><span style="color:#c084fc">scores</span> = {<span style="color:#86efac">"홍길동"</span>: <span style="color:#7dd3fc">95</span>, <span style="color:#86efac">"김철수"</span>: <span style="color:#7dd3fc">88</span>}
+scores[<span style="color:#86efac">"박영희"</span>] = <span style="color:#7dd3fc">92</span>   <span style="color:#64748b"># 추가</span>
+scores[<span style="color:#86efac">"홍길동"</span>] = <span style="color:#7dd3fc">98</span>  <span style="color:#64748b"># 수정</span>
+print(scores[<span style="color:#86efac">"홍길동"</span>])   <span style="color:#64748b"># 98</span></div>
+            </div>
+        </details>
+    </div>
+
+    <!-- 문제 2 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">2</div>
+            <div class="problem-label">방문자 중복 제거</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <p class="problem-text">웹사이트 방문 기록 리스트에 같은 사람이 여러 번 방문한 기록이 있습니다. 몇 명이 방문했는지 (중복 제외) 세어야 합니다. 어떤 자료구조를 사용하면 효율적으로 해결할 수 있을까요?</p>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">입력</span>
+                    <span class="problem-example-value">["김", "홍", "김", "박", "홍", "이"]</span>
+                </div>
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력</span>
+                    <span class="problem-example-value">고유 방문자: 4명</span>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기 / 정답 보기</summary>
+            <div class="problem-toggle-content">
+                <p class="hint-text">힌트: 중복을 자동으로 없애주는 자료구조 = set.</p>
+                <div class="answer-code">visits = [<span style="color:#86efac">"김"</span>, <span style="color:#86efac">"홍"</span>, <span style="color:#86efac">"김"</span>, <span style="color:#86efac">"박"</span>, <span style="color:#86efac">"홍"</span>, <span style="color:#86efac">"이"</span>]
+unique = <span style="color:#67e8f9">set</span>(visits)
+print(<span style="color:#86efac">f"고유 방문자: {len(unique)}명"</span>)  <span style="color:#64748b"># 4명</span></div>
+            </div>
+        </details>
+    </div>
+
+    <!-- 문제 3 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">3</div>
+            <div class="problem-label">GPS 좌표 안전하게 저장</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <p class="problem-text">서울의 위도와 경도 좌표를 저장해야 합니다. 이 값은 절대 바뀌면 안 됩니다. 어떤 자료구조를 사용해야 할까요? 그리고 왜 그 자료구조가 안전한지 설명하세요.</p>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">데이터</span>
+                    <span class="problem-example-value">위도 37.5665, 경도 126.9780</span>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기 / 정답 보기</summary>
+            <div class="problem-toggle-content">
+                <p class="hint-text">힌트: 변하면 안 되는 순서 있는 데이터 = tuple. 수정하려 하면 오류가 발생합니다.</p>
+                <div class="answer-code">SEOUL = (<span style="color:#7dd3fc">37.5665</span>, <span style="color:#7dd3fc">126.9780</span>)
+print(SEOUL[<span style="color:#7dd3fc">0</span>])    <span style="color:#64748b"># 37.5665</span>
+<span style="color:#64748b"># SEOUL[0] = 0  # TypeError! 안전하게 보호됨</span></div>
+            </div>
+        </details>
+    </div>
+
+    <!-- 문제 4 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">4</div>
+            <div class="problem-label">공통 관심사 찾기</div>
+            <span class="problem-diff medium">중간</span>
+        </div>
+        <div class="problem-body">
+            <p class="problem-text">두 친구의 관심사 목록이 있습니다. 두 사람이 공통으로 좋아하는 것과 한 사람만 좋아하는 것을 각각 구하는 코드를 작성하세요.</p>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">A</span>
+                    <span class="problem-example-value">["파이썬", "축구", "영화", "독서"]</span>
+                </div>
+                <div class="problem-example-row">
+                    <span class="problem-example-label">B</span>
+                    <span class="problem-example-value">["파이썬", "농구", "영화", "음악"]</span>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기 / 정답 보기</summary>
+            <div class="problem-toggle-content">
+                <p class="hint-text">힌트: 교집합(&amp;), 차집합(-)을 쓰는 set 문제입니다.</p>
+                <div class="answer-code">a = {<span style="color:#86efac">"파이썬"</span>, <span style="color:#86efac">"축구"</span>, <span style="color:#86efac">"영화"</span>, <span style="color:#86efac">"독서"</span>}
+b = {<span style="color:#86efac">"파이썬"</span>, <span style="color:#86efac">"농구"</span>, <span style="color:#86efac">"영화"</span>, <span style="color:#86efac">"음악"</span>}
+print(<span style="color:#86efac">f"공통: {a & b}"</span>)  <span style="color:#64748b"># {'파이썬', '영화'}</span>
+print(<span style="color:#86efac">f"A만: {a - b}"</span>)   <span style="color:#64748b"># {'축구', '독서'}</span></div>
+            </div>
+        </details>
+    </div>
+</div>
+
+<!-- ========== 9페이지: 종합 실습 + 핵심 요약 ========== -->
+<div class="page">
+    <h2>8. 종합 실습 — 학생 관리 미니 시스템</h2>
+    <p>네 가지 자료구조를 모두 활용해 학생 정보를 관리하는 미니 시스템을 만들어봅니다.</p>
+
+    <!-- SVG 10: 미니 시스템 구조 -->
+    <div style="text-align:center; margin:12px 0;">
+        <svg viewBox="0 0 480 80" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="arw10" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <!-- student dict -->
+            <rect x="5" y="24" width="110" height="32" rx="7" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="60" y="37" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">학생 dict</text>
+            <text x="60" y="50" text-anchor="middle" font-size="8" fill="#64748b">이름, 점수, 등급</text>
+            <line x1="118" y1="40" x2="136" y2="40" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arw10)"/>
+            <!-- students list -->
+            <rect x="139" y="24" width="110" height="32" rx="7" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="194" y="37" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">전체 list</text>
+            <text x="194" y="50" text-anchor="middle" font-size="8" fill="#64748b">여러 학생 순서 유지</text>
+            <line x1="252" y1="40" x2="270" y2="40" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arw10)"/>
+            <!-- subjects tuple -->
+            <rect x="273" y="24" width="100" height="32" rx="7" fill="#fce7f3" stroke="#ec4899" stroke-width="1.5"/>
+            <text x="323" y="37" text-anchor="middle" font-size="9" fill="#9d174d" font-weight="700">과목 tuple</text>
+            <text x="323" y="50" text-anchor="middle" font-size="8" fill="#64748b">변하지 않는 과목명</text>
+            <line x1="376" y1="40" x2="394" y2="40" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arw10)"/>
+            <!-- grades set -->
+            <rect x="397" y="24" width="78" height="32" rx="7" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="436" y="37" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">등급 set</text>
+            <text x="436" y="50" text-anchor="middle" font-size="8" fill="#64748b">고유 등급만</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># 종합 실습: 학생 관리 미니 시스템</span>
+SUBJECTS = (<span class="str">"수학"</span>, <span class="str">"영어"</span>, <span class="str">"과학"</span>)  <span class="cmt"># tuple: 과목명은 불변</span>
+
+students = [                           <span class="cmt"># list: 학생 목록</span>
+    {<span class="str">"name"</span>: <span class="str">"홍길동"</span>, <span class="str">"score"</span>: <span class="num">95</span>},    <span class="cmt"># dict: 학생 1명</span>
+    {<span class="str">"name"</span>: <span class="str">"김철수"</span>, <span class="str">"score"</span>: <span class="num">72</span>},
+    {<span class="str">"name"</span>: <span class="str">"박영희"</span>, <span class="str">"score"</span>: <span class="num">88</span>},
+    {<span class="str">"name"</span>: <span class="str">"이민준"</span>, <span class="str">"score"</span>: <span class="num">95</span>},
+]
+
+<span class="cmt"># 등급 계산 추가</span>
+<span class="kw">for</span> s <span class="kw">in</span> students:
+    s[<span class="str">"grade"</span>] = <span class="str">"A"</span> <span class="kw">if</span> s[<span class="str">"score"</span>] &gt;= <span class="num">90</span> <span class="kw">else</span> <span class="str">"B"</span> <span class="kw">if</span> s[<span class="str">"score"</span>] &gt;= <span class="num">80</span> <span class="kw">else</span> <span class="str">"C"</span>
+
+grades_used = {s[<span class="str">"grade"</span>] <span class="kw">for</span> s <span class="kw">in</span> students}  <span class="cmt"># set: 중복 없는 등급 목록</span>
+<span class="fn">print</span>(<span class="str">f"사용된 등급: {sorted(grades_used)}"</span>)     <span class="cmt"># ['A', 'B', 'C']</span>
+<span class="fn">print</span>(<span class="str">f"개설 과목: {SUBJECTS}"</span>)                  <span class="cmt"># ('수학', '영어', '과학')</span>
+
+<span class="kw">for</span> s <span class="kw">in</span> students:
+    <span class="fn">print</span>(<span class="str">f"{s['name']:6} {s['score']}점 → {s['grade']}"</span>)</div>
+
+    <div class="output-box">사용된 등급: ['A', 'B', 'C']
+개설 과목: ('수학', '영어', '과학')
+홍길동   95점 -> A
+김철수   72점 -> C
+박영희   88점 -> B
+이민준   95점 -> A</div>
+
+    <!-- 핵심 요약 -->
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>핵심 요약</h3>
+        <ul>
+            <li><strong>list</strong>: 순서 O, 중복 O, 수정 O — 일반 목록에 기본 선택</li>
+            <li><strong>tuple</strong>: 순서 O, 중복 O, 수정 X — 변하면 안 되는 값 (좌표, 상수)</li>
+            <li><strong>dict</strong>: 키:값 쌍, 수정 O — 이름표로 찾아야 할 때</li>
+            <li><strong>set</strong>: 중복 X, 순서 X, 수정 O — 중복 제거, 집합 연산</li>
+            <li><strong>변환 패턴</strong>: <code>list -&gt; set</code> (중복 제거), <code>set -&gt; list</code> (순서 확보), <code>zip -&gt; dict</code> (쌍 생성)</li>
+            <li><strong>선택 기준</strong>: 키:값 필요 → dict, 중복 제거 → set, 불변 → tuple, 나머지 → list</li>
+        </ul>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

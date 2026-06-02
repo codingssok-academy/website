@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 출석부</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+.cover { display: flex; min-height: 297mm; padding: 0; }
+.cover-sidebar { width: 10px; background: #1e3a5f; flex-shrink: 0; }
+.cover-accent { width: 7px; background: #e6a817; flex-shrink: 0; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 160px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 14px;
+    color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; white-space: pre-wrap; }
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- 1페이지: 표지 -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">SET</div>
+        <div class="cover-label">L2 Project 03</div>
+        <h1 class="cover-title">출석부</h1>
+        <p class="cover-sub">세트(set)로 출석 체크, 결석자 찾기, 집합 연산으로 출결 현황을 분석하는 프로그램을 만듭니다.</p>
+        <!-- SVG 1: 학습 로드맵 -->
+        <div style="margin:20px 0;">
+            <svg viewBox="0 0 460 55" style="max-width:460px;width:100%">
+                <rect x="5" y="10" width="90" height="30" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="50" y="30" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">set 만들기</text>
+                <line x1="100" y1="25" x2="120" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="125" y="10" width="90" height="30" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="170" y="30" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">add / discard</text>
+                <line x1="220" y1="25" x2="240" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="245" y="10" width="90" height="30" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="290" y="30" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">집합 연산</text>
+                <line x1="340" y1="25" x2="360" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="365" y="10" width="90" height="30" rx="6" fill="#eff6ff" stroke="#6366f1" stroke-width="1.5"/>
+                <text x="410" y="30" text-anchor="middle" font-size="10" fill="#4338ca" font-weight="700">결석자 찾기</text>
+            </svg>
+        </div>
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/database.png" alt="데이터베이스" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 프로젝트에서 배우는 것</h3>
+            <ul>
+                <li>set()으로 중복 없는 집합 자료형을 만들 수 있습니다.</li>
+                <li>add()로 출석 체크, discard()로 결석 처리를 할 수 있습니다.</li>
+                <li>차집합(-)으로 결석자를 자동으로 찾을 수 있습니다.</li>
+                <li>교집합(&), 합집합(|)으로 데이터를 비교할 수 있습니다.</li>
+                <li>in 연산자로 특정 학생이 출석했는지 확인할 수 있습니다.</li>
+            </ul>
+        </div>
+        <!-- SVG 2: 세트 vs 리스트 비교 -->
+        <div style="margin:20px 0;">
+            <svg viewBox="0 0 460 70" style="max-width:460px;width:100%">
+                <rect x="10" y="5" width="215" height="60" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+                <text x="117" y="22" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="700">리스트 (list)</text>
+                <text x="117" y="40" text-anchor="middle" font-size="10" fill="#64748b">["김민준", "이서연", "김민준"]</text>
+                <text x="117" y="57" text-anchor="middle" font-size="9" fill="#ef4444">중복 허용!</text>
+                <rect x="235" y="5" width="215" height="60" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="342" y="22" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">세트 (set)</text>
+                <text x="342" y="40" text-anchor="middle" font-size="10" fill="#166534">{"김민준", "이서연"}</text>
+                <text x="342" y="57" text-anchor="middle" font-size="9" fill="#16a34a">중복 자동 제거!</text>
+            </svg>
+        </div>
+    </div>
+</div>
+
+<!-- 2페이지: 세트 기초 -->
+<div class="page">
+    <h2>세트(set) 사용하기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/folder.png" alt="데이터" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>세트는 <strong>중복이 없는</strong> 자료형입니다. 출석부에 딱 맞는 도구입니다. 같은 이름을 두 번 추가해도 한 번만 저장됩니다.</p>
+
+    <!-- SVG 3: 세트 메서드 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="70" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="24" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="800">세트 주요 메서드</text>
+            <rect x="25" y="32" width="95" height="28" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="72" y="48" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">.add(값)</text>
+            <text x="72" y="60" text-anchor="middle" font-size="8" fill="#64748b">항목 추가</text>
+            <rect x="130" y="32" width="95" height="28" rx="6" fill="#fff4f4" stroke="#ef4444" stroke-width="1"/>
+            <text x="177" y="48" text-anchor="middle" font-size="9" fill="#dc2626" font-weight="700">.discard(값)</text>
+            <text x="177" y="60" text-anchor="middle" font-size="8" fill="#64748b">항목 제거</text>
+            <rect x="235" y="32" width="95" height="28" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1"/>
+            <text x="282" y="48" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">값 in 세트</text>
+            <text x="282" y="60" text-anchor="middle" font-size="8" fill="#64748b">포함 확인</text>
+            <rect x="340" y="32" width="95" height="28" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1"/>
+            <text x="387" y="48" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">len(세트)</text>
+            <text x="387" y="60" text-anchor="middle" font-size="8" fill="#64748b">항목 수</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># 전체 학생 명단 (세트)</span>
+all_students = {<span class="str">"김민준"</span>, <span class="str">"이서연"</span>, <span class="str">"박지호"</span>, <span class="str">"최유진"</span>, <span class="str">"정다은"</span>}
+
+<span class="cmt"># 출석 세트 (처음엔 비어있음)</span>
+present = <span class="fn">set</span>()
+
+<span class="cmt"># 출석 체크 — add()로 추가</span>
+present.add(<span class="str">"김민준"</span>)
+present.add(<span class="str">"이서연"</span>)
+present.add(<span class="str">"박지호"</span>)
+
+<span class="fn">print</span>(<span class="str">f"출석: {present}"</span>)
+<span class="fn">print</span>(<span class="str">f"출석 인원: {len(present)}명"</span>)</div>
+
+    <!-- SVG 4: 차집합으로 결석자 찾기 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="70" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="22" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="800">차집합으로 결석자 찾기</text>
+            <circle cx="130" cy="50" r="28" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5" opacity="0.8"/>
+            <text x="120" y="50" text-anchor="middle" font-size="8" fill="#1d4ed8" font-weight="700">all_students</text>
+            <text x="120" y="62" text-anchor="middle" font-size="7" fill="#64748b">전체 학생</text>
+            <circle cx="200" cy="50" r="28" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5" opacity="0.8"/>
+            <text x="210" y="50" text-anchor="middle" font-size="8" fill="#166534" font-weight="700">present</text>
+            <text x="210" y="62" text-anchor="middle" font-size="7" fill="#64748b">출석자</text>
+            <text x="275" y="53" text-anchor="middle" font-size="14" fill="#64748b" font-weight="700">-</text>
+            <text x="310" y="25" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">= 결석자</text>
+            <rect x="300" y="32" width="130" height="30" rx="6" fill="#fff4f4" stroke="#ef4444" stroke-width="1"/>
+            <text x="365" y="52" text-anchor="middle" font-size="9" fill="#dc2626" font-weight="700">absent = all_students - present</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># 차집합으로 결석자 자동 계산</span>
+absent = all_students - present
+
+<span class="fn">print</span>(<span class="str">f"결석자: {absent}"</span>)
+<span class="fn">print</span>(<span class="str">f"결석 인원: {len(absent)}명"</span>)
+
+<span class="cmt"># 특정 학생 출석 확인</span>
+<span class="kw">if</span> <span class="str">"최유진"</span> <span class="kw">in</span> present:
+    <span class="fn">print</span>(<span class="str">"최유진: 출석"</span>)
+<span class="kw">else</span>:
+    <span class="fn">print</span>(<span class="str">"최유진: 결석"</span>)</div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="완성" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">all_students 세트를 만들고 present 세트에 3명을 add()해보세요.</div>
+                <div class="code">all_students = {<span class="str">"A"</span>, <span class="str">"B"</span>, <span class="str">"C"</span>, <span class="str">"D"</span>, <span class="str">"E"</span>}
+present = <span class="fn">set</span>()
+present.add(<span class="str">"A"</span>)
+present.add(<span class="str">"B"</span>)
+present.add(<span class="str">"C"</span>)
+<span class="fn">print</span>(present)</div>
+                <div class="practice-result">{'A', 'B', 'C'}</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">차집합으로 결석자를 찾아 출력하세요.</div>
+                <div class="code">absent = all_students - present
+<span class="fn">print</span>(<span class="str">f"결석: {absent}"</span>)</div>
+                <div class="practice-result">결석: {'D', 'E'}</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">중복 추가 시 세트에서 어떻게 되는지 확인하세요.</div>
+                <div class="code">present.add(<span class="str">"A"</span>)  <span class="cmt"># 이미 있는 항목</span>
+present.add(<span class="str">"A"</span>)
+<span class="fn">print</span>(<span class="fn">len</span>(present))  <span class="cmt"># 여전히 3</span></div>
+                <div class="practice-result">중복 추가해도 3 그대로</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3페이지: 집합 연산 -->
+<div class="page">
+    <h2>집합 연산으로 출결 분석</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/hard-drive.png" alt="저장소" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>두 날의 출석 데이터를 집합 연산으로 비교합니다. 교집합(&)은 둘 다 출석한 학생, 합집합(|)은 한 번이라도 출석한 학생을 찾습니다.</p>
+
+    <!-- SVG 5: 집합 연산 벤다이어그램 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 100" style="max-width:460px;width:100%">
+            <rect x="5" y="5" width="440" height="90" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="22" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="800">집합 연산</text>
+            <circle cx="90" cy="60" r="32" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5" opacity="0.7"/>
+            <text x="72" y="58" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">월요일</text>
+            <circle cx="130" cy="60" r="32" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5" opacity="0.7"/>
+            <text x="148" y="58" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">화요일</text>
+            <text x="110" y="62" text-anchor="middle" font-size="8" fill="#0369a1" font-weight="700">&amp;</text>
+            <text x="80" y="95" text-anchor="middle" font-size="8" fill="#64748b">교집합: 둘 다 출석</text>
+            <circle cx="270" cy="60" r="32" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5" opacity="0.7"/>
+            <circle cx="310" cy="60" r="32" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5" opacity="0.7"/>
+            <text x="290" y="62" text-anchor="middle" font-size="9" fill="#7e22ce" font-weight="700">|</text>
+            <text x="290" y="95" text-anchor="middle" font-size="8" fill="#64748b">합집합: 한번이라도 출석</text>
+            <rect x="380" y="35" width="60" height="50" rx="6" fill="#fff4f4" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="410" y="57" text-anchor="middle" font-size="9" fill="#dc2626" font-weight="700">A - B</text>
+            <text x="410" y="72" text-anchor="middle" font-size="8" fill="#64748b">차집합</text>
+            <text x="410" y="95" text-anchor="middle" font-size="8" fill="#64748b">A에만 있는 것</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># 월요일 출석</span>
+monday = {<span class="str">"김민준"</span>, <span class="str">"이서연"</span>, <span class="str">"박지호"</span>}
+<span class="cmt"># 화요일 출석</span>
+tuesday = {<span class="str">"이서연"</span>, <span class="str">"박지호"</span>, <span class="str">"최유진"</span>}
+
+<span class="cmt"># 교집합: 월-화 모두 출석</span>
+both = monday & tuesday
+<span class="fn">print</span>(<span class="str">f"이틀 모두 출석: {both}"</span>)
+
+<span class="cmt"># 합집합: 한 번이라도 출석</span>
+any_day = monday | tuesday
+<span class="fn">print</span>(<span class="str">f"한 번이라도 출석: {any_day}"</span>)
+
+<span class="cmt"># 월요일만 출석한 사람</span>
+only_monday = monday - tuesday
+<span class="fn">print</span>(<span class="str">f"월요일만 출석: {only_monday}"</span>)</div>
+
+    <!-- SVG 6: 실행 결과 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 380 110" style="max-width:380px;width:100%">
+            <rect x="10" y="5" width="360" height="100" rx="8" fill="#0f172a"/>
+            <text x="20" y="28" font-family="monospace" font-size="11" fill="#e2e8f0">이틀 모두 출석: <tspan fill="#86efac">{'이서연', '박지호'}</tspan></text>
+            <text x="20" y="50" font-family="monospace" font-size="11" fill="#e2e8f0">한 번이라도 출석: <tspan fill="#7dd3fc">{'김민준', '이서연', ...}</tspan></text>
+            <text x="20" y="72" font-family="monospace" font-size="11" fill="#e2e8f0">월요일만 출석: <tspan fill="#fcd34d">{'김민준'}</tspan></text>
+        </svg>
+    </div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">monday와 tuesday 두 세트를 만들고 교집합(&)을 출력하세요.</div>
+                <div class="practice-result">이틀 모두 출석한 학생 집합</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">화요일에만 출석한 학생을 차집합으로 찾아보세요.</div>
+                <div class="code">only_tue = tuesday - monday
+<span class="fn">print</span>(<span class="str">f"화요일만 출석: {only_tue}"</span>)</div>
+                <div class="practice-result">화요일만 출석: {'최유진'}</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">출석률(출석수/전체 학생수 × 100)을 계산하세요.</div>
+                <div class="code">total = <span class="num">5</span>
+rate = <span class="fn">len</span>(monday) / total * <span class="num">100</span>
+<span class="fn">print</span>(<span class="str">f"출석률: {rate:.0f}%"</span>)</div>
+                <div class="practice-result">출석률: 60%</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 4페이지: 완성 코드 -->
+<div class="page">
+    <h2>완성: 출석부 프로그램</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="처리" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>입력으로 출석 체크를 하고 결석자를 자동으로 찾는 완전한 출석부 프로그램을 만듭니다.</p>
+
+    <!-- SVG 7: 프로그램 구조 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 55" style="max-width:460px;width:100%">
+            <rect x="5" y="10" width="440" height="35" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <rect x="15" y="18" width="100" height="20" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="65" y="31" text-anchor="middle" font-size="8" fill="#1d4ed8" font-weight="600">전체 학생 명단</text>
+            <rect x="125" y="18" width="100" height="20" rx="4" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+            <text x="175" y="31" text-anchor="middle" font-size="8" fill="#92400e" font-weight="600">이름 입력 출석 체크</text>
+            <rect x="235" y="18" width="100" height="20" rx="4" fill="#f0fdf4" stroke="#22c55e" stroke-width="1"/>
+            <text x="285" y="31" text-anchor="middle" font-size="8" fill="#166534" font-weight="600">차집합 결석자 자동 추출</text>
+            <rect x="345" y="18" width="105" height="20" rx="4" fill="#eff6ff" stroke="#6366f1" stroke-width="1"/>
+            <text x="397" y="31" text-anchor="middle" font-size="8" fill="#4338ca" font-weight="600">출석률 계산/출력</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># 전체 학생 명단</span>
+all_students = {<span class="str">"김민준"</span>, <span class="str">"이서연"</span>, <span class="str">"박지호"</span>, <span class="str">"최유진"</span>, <span class="str">"정다은"</span>}
+present = <span class="fn">set</span>()
+
+<span class="fn">print</span>(<span class="str">"출석 체크 시작! (끝내려면 '완료' 입력)"</span>)
+<span class="kw">while</span> <span class="kw">True</span>:
+    name = <span class="fn">input</span>(<span class="str">"출석 이름: "</span>)
+    <span class="kw">if</span> name == <span class="str">"완료"</span>:
+        <span class="kw">break</span>
+    <span class="kw">if</span> name <span class="kw">in</span> all_students:
+        present.add(name)
+        <span class="fn">print</span>(<span class="str">f"{name} 출석 확인!"</span>)
+    <span class="kw">else</span>:
+        <span class="fn">print</span>(<span class="str">f"{name}: 명단에 없는 학생"</span>)
+
+absent = all_students - present
+rate = <span class="fn">len</span>(present) / <span class="fn">len</span>(all_students) * <span class="num">100</span>
+<span class="fn">print</span>(<span class="str">f"\n출석: {len(present)}명 / {len(all_students)}명"</span>)
+<span class="fn">print</span>(<span class="str">f"출석률: {rate:.0f}%"</span>)
+<span class="fn">print</span>(<span class="str">f"결석자: {absent if absent else '없음'}"</span>)</div>
+
+    <!-- SVG 8: in 연산자 설명 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 380 60" style="max-width:380px;width:100%">
+            <rect x="10" y="5" width="360" height="50" rx="8" fill="#0f172a"/>
+            <text x="20" y="26" font-family="monospace" font-size="11" fill="#94a3b8">출석 체크 시작! (끝내려면 '완료' 입력)</text>
+            <text x="20" y="44" font-family="monospace" font-size="11" fill="#94a3b8">출석 이름: <tspan fill="#86efac">김민준</tspan></text>
+        </svg>
+    </div>
+</div>
+
+<!-- 5페이지: 문제 -->
+<div class="page">
+    <h2>직접 풀어보세요</h2>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q1</div>
+            <div class="problem-label">중복 이름 제거</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">아래 리스트에서 set()으로 중복 이름을 제거하고 고유한 이름의 수를 출력하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">입력</span><span class="problem-example-value">names = ["A","B","A","C","B","D"]</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">고유 이름: 4개</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle"><summary>힌트 보기</summary><div class="problem-toggle-content"><div class="hint-text">unique = set(names), len(unique)로 수를 셉니다.</div></div></details>
+        <details class="problem-toggle"><summary>정답 확인</summary><div class="problem-toggle-content"><div class="answer-code">names = ["A","B","A","C","B","D"]
+unique = set(names)
+print(f"고유 이름: {len(unique)}개")</div></div></details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q2</div>
+            <div class="problem-label">한 번도 결석 안 한 학생</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">월요일, 화요일, 수요일 모두 출석한 학생을 교집합으로 찾아 출력하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">월</span><span class="problem-example-value">{"A","B","C"}</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">화</span><span class="problem-example-value">{"B","C","D"}</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">수</span><span class="problem-example-value">{"B","C","E"}</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">{'B', 'C'}</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle"><summary>힌트 보기</summary><div class="problem-toggle-content"><div class="hint-text">all_present = mon & tue & wed 처럼 교집합을 연속으로 사용합니다.</div></div></details>
+        <details class="problem-toggle"><summary>정답 확인</summary><div class="problem-toggle-content"><div class="answer-code">mon = {"A","B","C"}
+tue = {"B","C","D"}
+wed = {"B","C","E"}
+all_present = mon & tue & wed
+print(all_present)</div></div></details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q3</div>
+            <div class="problem-label">3일 연속 결석자 경고</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">전체 학생 중 3일 모두 결석한 학생을 찾아 "경고" 메시지와 함께 출력하세요. 힌트: 전체 명단에서 3일 합집합을 빼면 됩니다.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">전체</span><span class="problem-example-value">{"A","B","C","D","E"}</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">경고 - 3일 연속 결석: E</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle"><summary>힌트 보기</summary><div class="problem-toggle-content"><div class="hint-text">never_came = all_students - (mon | tue | wed) 로 한번도 안 온 학생을 찾습니다.</div></div></details>
+        <details class="problem-toggle"><summary>정답 확인</summary><div class="problem-toggle-content"><div class="answer-code">all_students = {"A","B","C","D","E"}
+never_came = all_students - (mon | tue | wed)
+for s in never_came:
+    print(f"경고 - 3일 연속 결석: {s}")</div></div></details>
+    </div>
+</div>
+
+<!-- 6페이지: 핵심 요약 -->
+<div class="page">
+    <h2>핵심 요약</h2>
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>이 유닛에서 배운 것</h3>
+        <ul>
+            <li><code>set()</code>은 중복이 없는 자료형 — 같은 값을 여러 번 추가해도 한 번만 저장</li>
+            <li><code>.add(값)</code>으로 추가, <code>.discard(값)</code>으로 제거</li>
+            <li><code>값 in 세트</code>로 포함 여부를 True/False로 확인</li>
+            <li>차집합 <code>A - B</code>: A에는 있고 B에는 없는 것 (결석자 찾기)</li>
+            <li>교집합 <code>A &amp; B</code>: 둘 다 있는 것 (둘 다 출석)</li>
+            <li>합집합 <code>A | B</code>: 어느 한쪽에라도 있는 것</li>
+        </ul>
+    </div>
+
+    <!-- SVG 9: 집합 연산 정리 -->
+    <div style="text-align:center;margin:20px 0;">
+        <svg viewBox="0 0 460 70" style="max-width:460px;width:100%">
+            <rect x="5" y="5" width="440" height="60" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="22" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="800">집합 연산 기호 정리</text>
+            <rect x="15" y="28" width="100" height="28" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="65" y="45" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">A - B (차집합)</text>
+            <rect x="125" y="28" width="100" height="28" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1"/>
+            <text x="175" y="45" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">A &amp; B (교집합)</text>
+            <rect x="235" y="28" width="100" height="28" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1"/>
+            <text x="285" y="45" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">A | B (합집합)</text>
+            <rect x="345" y="28" width="90" height="28" rx="6" fill="#eff6ff" stroke="#6366f1" stroke-width="1"/>
+            <text x="390" y="45" text-anchor="middle" font-size="10" fill="#4338ca" font-weight="700">x in A (포함?)</text>
+        </svg>
+    </div>
+
+    <!-- SVG 10: 세트 vs 리스트 언제 쓰나 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 75" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="210" height="65" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="115" y="24" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="700">리스트 사용 때</text>
+            <text x="115" y="42" text-anchor="middle" font-size="9" fill="#64748b">순서가 중요할 때</text>
+            <text x="115" y="58" text-anchor="middle" font-size="9" fill="#64748b">중복을 허용해야 할 때</text>
+            <rect x="240" y="5" width="210" height="65" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="345" y="24" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">세트 사용 때</text>
+            <text x="345" y="42" text-anchor="middle" font-size="9" fill="#16a34a">중복 없이 유일한 값만 필요할 때</text>
+            <text x="345" y="58" text-anchor="middle" font-size="9" fill="#16a34a">집합 연산이 필요할 때</text>
+        </svg>
+    </div>
+
+    <!-- SVG 11: add/in/- 코드 요약 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 65" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="55" rx="8" fill="#0f172a" stroke="#334155" stroke-width="1.5"/>
+            <text x="30" y="26" font-family="monospace" font-size="10" fill="#67e8f9">present</text>
+            <text x="85" y="26" font-family="monospace" font-size="10" fill="#e2e8f0">.add("김민준")  </text>
+            <text x="220" y="26" font-family="monospace" font-size="10" fill="#64748b"># 추가</text>
+            <text x="30" y="44" font-family="monospace" font-size="10" fill="#e2e8f0">absent = all_students</text>
+            <text x="190" y="44" font-family="monospace" font-size="10" fill="#c084fc"> -</text>
+            <text x="200" y="44" font-family="monospace" font-size="10" fill="#67e8f9"> present</text>
+            <text x="270" y="44" font-family="monospace" font-size="10" fill="#64748b">  # 결석자</text>
+        </svg>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 프로젝트: ASCII 아트 생성기</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #0f766e; }
+.cover-accent { width: 7px; background: #f59e0b; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 200px; font-weight: 900; color: rgba(15,118,110,0.1);
+    line-height: 1; pointer-events: none; font-family: 'JetBrains Mono', monospace;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #0f766e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 36px; font-weight: 900; color: #134e4a; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #134e4a; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #0f766e; font-weight: 900; }
+
+h2 { font-size: 20px; font-weight: 800; color: #134e4a; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 16px; font-weight: 700; color: #134e4a; margin: 18px 0 10px; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #0f766e; font-weight: 600;
+}
+ul, ol { margin: 0 0 12px 20px; }
+li { font-size: 14px; color: #374151; line-height: 1.8; }
+
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13.5px;
+    color: #e2e8f0; line-height: 1.85; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.code .dec { color: #f9a8d4; }
+
+.practice { margin: 20px 0; border-left: 4px solid #0f766e; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #0d6464; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #0f766e; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #0f766e; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#0f766e,#14b8a6); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #134e4a; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #134e4a; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+.output-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #334155; line-height: 1.7; margin: 10px 0; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- ===== 1페이지: 표지 ===== -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">***</div>
+        <div class="cover-label">L3 — Project</div>
+        <h1 class="cover-title">프로젝트:<br>ASCII 아트 생성기</h1>
+        <p class="cover-sub">문자를 반복(<code>*</code>, <code>#</code>, <code>|</code> 등)해서 별, 삼각형, 다이아몬드 같은 도형을 만들고, 이름을 입력하면 배너로 출력하는 프로그램을 만듭니다. for 문과 문자열 연산의 정수를 보여줍니다.</p>
+
+        <!-- SVG: ASCII 아트 예시 시각화 -->
+        <div style="margin:20px 0;">
+            <svg viewBox="0 0 480 130" style="max-width:480px;width:100%">
+                <!-- 사각형 예시 -->
+                <rect x="5" y="8" width="110" height="114" rx="8" fill="#f0fdf4" stroke="#0f766e" stroke-width="1.5"/>
+                <text x="60" y="26" text-anchor="middle" font-size="9" fill="#134e4a" font-weight="700">사각형</text>
+                <text x="60" y="42" text-anchor="middle" font-family="monospace" font-size="10" fill="#0f172a">* * * * *</text>
+                <text x="60" y="56" text-anchor="middle" font-family="monospace" font-size="10" fill="#0f172a">*       *</text>
+                <text x="60" y="70" text-anchor="middle" font-family="monospace" font-size="10" fill="#0f172a">*       *</text>
+                <text x="60" y="84" text-anchor="middle" font-family="monospace" font-size="10" fill="#0f172a">*       *</text>
+                <text x="60" y="98" text-anchor="middle" font-family="monospace" font-size="10" fill="#0f172a">* * * * *</text>
+                <!-- 삼각형 예시 -->
+                <rect x="125" y="8" width="110" height="114" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="180" y="26" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">삼각형</text>
+                <text x="180" y="42" text-anchor="middle" font-family="monospace" font-size="10" fill="#0f172a">*</text>
+                <text x="180" y="56" text-anchor="middle" font-family="monospace" font-size="10" fill="#0f172a">* *</text>
+                <text x="180" y="70" text-anchor="middle" font-family="monospace" font-size="10" fill="#0f172a">* * *</text>
+                <text x="180" y="84" text-anchor="middle" font-family="monospace" font-size="10" fill="#0f172a">* * * *</text>
+                <text x="180" y="98" text-anchor="middle" font-family="monospace" font-size="10" fill="#0f172a">* * * * *</text>
+                <!-- 다이아몬드 -->
+                <rect x="245" y="8" width="110" height="114" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="300" y="26" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">다이아몬드</text>
+                <text x="300" y="42" text-anchor="middle" font-family="monospace" font-size="10" fill="#0f172a">    *</text>
+                <text x="300" y="56" text-anchor="middle" font-family="monospace" font-size="10" fill="#0f172a">  * * *</text>
+                <text x="300" y="70" text-anchor="middle" font-family="monospace" font-size="10" fill="#0f172a">* * * * *</text>
+                <text x="300" y="84" text-anchor="middle" font-family="monospace" font-size="10" fill="#0f172a">  * * *</text>
+                <text x="300" y="98" text-anchor="middle" font-family="monospace" font-size="10" fill="#0f172a">    *</text>
+                <!-- 배너 -->
+                <rect x="365" y="8" width="110" height="114" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+                <text x="420" y="26" text-anchor="middle" font-size="9" fill="#5b21b6" font-weight="700">이름 배너</text>
+                <text x="420" y="42" text-anchor="middle" font-family="monospace" font-size="10" fill="#0f172a">##########</text>
+                <text x="420" y="56" text-anchor="middle" font-family="monospace" font-size="10" fill="#0f172a">#  Anna  #</text>
+                <text x="420" y="70" text-anchor="middle" font-family="monospace" font-size="10" fill="#0f172a">##########</text>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 유닛에서 만드는 것</h3>
+            <ul>
+                <li><code>"*" * n</code> 문자열 곱셈으로 반복 패턴을 만들 수 있습니다.</li>
+                <li>중첩 for 문으로 2D 패턴(삼각형, 사각형)을 출력할 수 있습니다.</li>
+                <li><code>range()</code>의 시작/끝/스텝을 조절해 다이아몬드를 만들 수 있습니다.</li>
+                <li>이름을 입력받아 길이에 맞춘 배너를 자동으로 생성할 수 있습니다.</li>
+                <li>함수로 각 도형 생성 기능을 분리해 재사용할 수 있습니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- ===== 2페이지: 문자열 반복 + 삼각형 ===== -->
+<div class="page">
+    <h2>Step 1 — 문자열 곱셈과 패턴 반복</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/monitor.png" alt="모니터" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>파이썬에서 문자열에 정수를 곱하면 해당 문자열이 그 수만큼 반복됩니다. <code>"*" * 5</code>는 <code>"*****"</code>가 됩니다. 이 기능과 for 문을 합치면 단계적으로 늘어나는 패턴을 만들 수 있습니다.</p>
+
+    <!-- SVG: 문자열 곱셈 원리 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 60" style="max-width:460px;width:100%">
+            <defs>
+                <marker id="arwS1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="5" y="12" width="80" height="36" rx="8" fill="#f0fdf4" stroke="#0f766e" stroke-width="1.5"/>
+            <text x="45" y="28" text-anchor="middle" font-family="monospace" font-size="11" fill="#134e4a" font-weight="700">"*" * 1</text>
+            <text x="45" y="43" text-anchor="middle" font-size="8" fill="#64748b">→  "*"</text>
+            <rect x="100" y="12" width="80" height="36" rx="8" fill="#f0fdf4" stroke="#0f766e" stroke-width="1.5"/>
+            <text x="140" y="28" text-anchor="middle" font-family="monospace" font-size="11" fill="#134e4a" font-weight="700">"*" * 3</text>
+            <text x="140" y="43" text-anchor="middle" font-size="8" fill="#64748b">→  "***"</text>
+            <rect x="195" y="12" width="80" height="36" rx="8" fill="#f0fdf4" stroke="#0f766e" stroke-width="1.5"/>
+            <text x="235" y="28" text-anchor="middle" font-family="monospace" font-size="11" fill="#134e4a" font-weight="700">"*" * 5</text>
+            <text x="235" y="43" text-anchor="middle" font-size="8" fill="#64748b">→  "*****"</text>
+            <rect x="290" y="12" width="100" height="36" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="340" y="28" text-anchor="middle" font-family="monospace" font-size="10" fill="#92400e" font-weight="700">"ab" * 3</text>
+            <text x="340" y="43" text-anchor="middle" font-size="8" fill="#64748b">→  "ababab"</text>
+            <rect x="405" y="12" width="50" height="36" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+            <text x="430" y="28" text-anchor="middle" font-size="8" fill="#5b21b6" font-weight="700">"=" * n</text>
+            <text x="430" y="43" text-anchor="middle" font-size="7" fill="#64748b">n개의 =</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># Step 1: 직각삼각형 출력</span>
+<span class="kw">def</span> <span class="fn">triangle</span>(size, char=<span class="str">"*"</span>):
+    <span class="str">"""size 크기의 직각삼각형 출력"""</span>
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">1</span>, size + <span class="num">1</span>):
+        <span class="fn">print</span>(char * i)
+
+<span class="fn">triangle</span>(<span class="num">5</span>)
+<span class="fn">print</span>()
+<span class="fn">triangle</span>(<span class="num">4</span>, <span class="str">"#"</span>)  <span class="cmt"># 다른 문자 사용</span></div>
+
+    <div class="output-box">*
+**
+***
+****
+*****
+
+#
+##
+###
+####</div>
+
+    <h3>역삼각형 — range의 역순 활용</h3>
+    <p><code>range(start, stop, step)</code>에서 step을 음수로 주면 역순으로 순회합니다. <code>range(5, 0, -1)</code>은 5, 4, 3, 2, 1을 생성합니다.</p>
+
+    <!-- SVG: 삼각형 각 줄 분석 -->
+    <div style="text-align:center;margin:10px 0;">
+        <svg viewBox="0 0 460 50" style="max-width:460px;width:100%">
+            <rect x="5" y="6" width="450" height="38" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="20" text-anchor="middle" font-size="9" fill="#134e4a" font-weight="700">triangle(4): for i in range(1, 5)</text>
+            <rect x="20" y="26" width="88" height="14" rx="3" fill="#f0fdf4"/>
+            <text x="64" y="37" text-anchor="middle" font-size="7.5" fill="#134e4a">i=1: "*"*1 = "*"</text>
+            <rect x="118" y="26" width="88" height="14" rx="3" fill="#f0fdf4"/>
+            <text x="162" y="37" text-anchor="middle" font-size="7.5" fill="#134e4a">i=2: "*"*2 = "**"</text>
+            <rect x="216" y="26" width="88" height="14" rx="3" fill="#f0fdf4"/>
+            <text x="260" y="37" text-anchor="middle" font-size="7.5" fill="#134e4a">i=3: "*"*3 = "***"</text>
+            <rect x="314" y="26" width="88" height="14" rx="3" fill="#f0fdf4"/>
+            <text x="358" y="37" text-anchor="middle" font-size="7.5" fill="#134e4a">i=4: "*"*4 = "****"</text>
+        </svg>
+    </div>
+
+    <!-- SVG: range 역순 시각화 -->
+    <div style="text-align:center;margin:10px 0;">
+        <svg viewBox="0 0 460 48" style="max-width:460px;width:100%">
+            <rect x="5" y="8" width="220" height="32" rx="7" fill="#f0fdf4" stroke="#0f766e" stroke-width="1.5"/>
+            <text x="115" y="22" text-anchor="middle" font-size="9" fill="#134e4a" font-weight="700">range(1, 6)   →   1, 2, 3, 4, 5</text>
+            <text x="115" y="34" text-anchor="middle" font-size="8" fill="#64748b">step 기본값 +1, 오름차순</text>
+            <rect x="235" y="8" width="220" height="32" rx="7" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="345" y="22" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">range(5, 0, -1)   →   5, 4, 3, 2, 1</text>
+            <text x="345" y="34" text-anchor="middle" font-size="8" fill="#64748b">step -1, 내림차순</text>
+        </svg>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="완성" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+        <div class="practice-head">따라해보세요 — Step 1</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">triangle(5) 함수를 입력하고 실행하세요. 출력 모양을 확인합니다.</div>
+                <div class="code"><span class="fn">triangle</span>(<span class="num">5</span>)   <span class="cmt"># 1단부터 5단까지</span></div>
+                <div class="practice-result">* → ** → *** → **** → ***** (각 줄에 출력)</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">역삼각형을 출력하세요. range(5, 0, -1)을 사용합니다.</div>
+                <div class="code"><span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">5</span>, <span class="num">0</span>, <span class="num">-1</span>):
+    <span class="fn">print</span>(<span class="str">"*"</span> * i)</div>
+                <div class="practice-result">***** → **** → *** → ** → * (내림차순)</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">triangle 함수에서 char 파라미터를 "+" 로 바꿔 호출하세요.</div>
+                <div class="code"><span class="fn">triangle</span>(<span class="num">4</span>, <span class="str">"+"</span>)</div>
+                <div class="practice-result">+ → ++ → +++ → ++++</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== 3페이지: 사각형 + 다이아몬드 ===== -->
+<div class="page">
+    <h2>Step 2 — 사각형과 다이아몬드</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="패턴" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>속이 빈 사각형을 만들려면 첫 줄과 마지막 줄은 전체를 채우고, 중간 줄은 양 끝만 채웁니다. 조건문으로 현재 줄이 첫 줄인지 마지막 줄인지 판단합니다.</p>
+
+    <!-- SVG: 속빈 사각형 논리 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 90" style="max-width:460px;width:100%">
+            <rect x="5" y="8" width="220" height="74" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="115" y="24" text-anchor="middle" font-size="9" fill="#134e4a" font-weight="700">속빈 사각형 논리</text>
+            <rect x="20" y="32" width="185" height="18" rx="4" fill="#f0fdf4" stroke="#0f766e" stroke-width="1"/>
+            <text x="113" y="45" text-anchor="middle" font-size="8" fill="#166534">i == 0 or i == size-1: "* * * *" (가득)</text>
+            <rect x="20" y="54" width="185" height="18" rx="4" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+            <text x="113" y="67" text-anchor="middle" font-size="8" fill="#92400e">그 외: "*" + 공백 + "*" (양끝만)</text>
+            <!-- 예시 출력 -->
+            <rect x="235" y="8" width="220" height="74" rx="8" fill="#f0fdf4" stroke="#0f766e" stroke-width="1.5"/>
+            <text x="345" y="24" text-anchor="middle" font-size="9" fill="#134e4a" font-weight="700">rectangle(4) 출력</text>
+            <text x="345" y="40" text-anchor="middle" font-family="monospace" font-size="10" fill="#0f172a">* * * *</text>
+            <text x="345" y="54" text-anchor="middle" font-family="monospace" font-size="10" fill="#0f172a">*     *</text>
+            <text x="345" y="68" text-anchor="middle" font-family="monospace" font-size="10" fill="#0f172a">* * * *</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># Step 2a: 속빈 사각형</span>
+<span class="kw">def</span> <span class="fn">rectangle</span>(width, height=<span class="num">None</span>):
+    <span class="str">"""width x height 속빈 사각형"""</span>
+    <span class="kw">if</span> height <span class="kw">is</span> <span class="kw">None</span>:
+        height = width  <span class="cmt"># 정사각형</span>
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(height):
+        <span class="kw">if</span> i == <span class="num">0</span> <span class="kw">or</span> i == height - <span class="num">1</span>:
+            <span class="fn">print</span>(<span class="str">"* "</span> * width)
+        <span class="kw">else</span>:
+            <span class="fn">print</span>(<span class="str">"* "</span> + <span class="str">"  "</span> * (width - <span class="num">2</span>) + <span class="str">"*"</span>)
+
+<span class="fn">rectangle</span>(<span class="num">5</span>, <span class="num">4</span>)</div>
+
+    <div class="output-box">* * * * *
+*         *
+*         *
+* * * * *</div>
+
+    <h3>다이아몬드 — 공백과 별의 조합</h3>
+    <p>다이아몬드는 위로 갈수록 앞 공백이 줄고 별이 늘어나다가, 중간을 기점으로 반대가 됩니다. range를 두 번 사용해 위 절반과 아래 절반을 각각 그립니다.</p>
+
+    <!-- SVG: 다이아몬드 공백+별 패턴 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 460 70" style="max-width:460px;width:100%">
+            <rect x="5" y="8" width="450" height="54" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="22" text-anchor="middle" font-size="9" fill="#134e4a" font-weight="700">다이아몬드 각 줄 구성: 공백(n-i) + 별(2i-1)</text>
+            <!-- 행별 분석 -->
+            <text x="60" y="38" text-anchor="middle" font-size="8" fill="#0f766e">i=1: 공백3 + 별1</text>
+            <text x="60" y="52" text-anchor="middle" font-family="monospace" font-size="9" fill="#0f172a">   *</text>
+            <text x="160" y="38" text-anchor="middle" font-size="8" fill="#0f766e">i=2: 공백2 + 별3</text>
+            <text x="160" y="52" text-anchor="middle" font-family="monospace" font-size="9" fill="#0f172a">  ***</text>
+            <text x="270" y="38" text-anchor="middle" font-size="8" fill="#0f766e">i=3: 공백1 + 별5</text>
+            <text x="270" y="52" text-anchor="middle" font-family="monospace" font-size="9" fill="#0f172a"> *****</text>
+            <text x="390" y="38" text-anchor="middle" font-size="8" fill="#0f766e">i=4: 공백0 + 별7</text>
+            <text x="390" y="52" text-anchor="middle" font-family="monospace" font-size="9" fill="#0f172a">*******</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># Step 2b: 다이아몬드</span>
+<span class="kw">def</span> <span class="fn">diamond</span>(size):
+    <span class="str">"""size 크기 다이아몬드"""</span>
+    <span class="cmt"># 위 절반 (점점 커짐)</span>
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">1</span>, size + <span class="num">1</span>):
+        spaces = <span class="str">" "</span> * (size - i)
+        stars = <span class="str">"*"</span> * (<span class="num">2</span> * i - <span class="num">1</span>)
+        <span class="fn">print</span>(spaces + stars)
+    <span class="cmt"># 아래 절반 (점점 작아짐)</span>
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(size - <span class="num">1</span>, <span class="num">0</span>, <span class="num">-1</span>):
+        spaces = <span class="str">" "</span> * (size - i)
+        stars = <span class="str">"*"</span> * (<span class="num">2</span> * i - <span class="num">1</span>)
+        <span class="fn">print</span>(spaces + stars)
+
+<span class="fn">diamond</span>(<span class="num">4</span>)</div>
+
+    <div class="output-box">   *
+  ***
+ *****
+*******
+ *****
+  ***
+   *</div>
+</div>
+
+<!-- ===== 4페이지: 이름 배너 + 문제 ===== -->
+<div class="page">
+    <h2>Step 3 — 이름 배너 만들기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/clock.png" alt="반복" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>이름을 입력받아 그 길이에 맞게 자동으로 테두리를 만드는 배너 함수를 만듭니다. <code>len(name)</code>으로 이름 길이를 측정하고, 그에 맞춰 <code>"#"</code> 문자를 반복합니다.</p>
+
+    <!-- SVG: 함수 파라미터 기본값 설명 -->
+    <div style="text-align:center;margin:10px 0;">
+        <svg viewBox="0 0 460 50" style="max-width:460px;width:100%">
+            <rect x="5" y="6" width="450" height="38" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="20" text-anchor="middle" font-size="9" fill="#134e4a" font-weight="700">def name_banner(name, border="#"): — 기본값 파라미터</text>
+            <rect x="20" y="26" width="200" height="14" rx="3" fill="#f0fdf4" stroke="#0f766e" stroke-width="1"/>
+            <text x="120" y="37" text-anchor="middle" font-size="7.5" fill="#134e4a">name_banner("Hi") → border="#" 자동 사용</text>
+            <rect x="235" y="26" width="200" height="14" rx="3" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+            <text x="335" y="37" text-anchor="middle" font-size="7.5" fill="#92400e">name_banner("Hi","=") → border="=" 사용</text>
+        </svg>
+    </div>
+
+    <!-- SVG: 배너 구조 설명 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+            <rect x="5" y="8" width="450" height="64" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="24" text-anchor="middle" font-size="10" fill="#134e4a" font-weight="800">배너 구조 분석: name = "Python"</text>
+            <!-- 줄1 -->
+            <rect x="20" y="32" width="415" height="14" rx="3" fill="#f0fdf4" stroke="#0f766e" stroke-width="1"/>
+            <text x="228" y="43" text-anchor="middle" font-family="monospace" font-size="9" fill="#0f172a">##########  ← "#" * (len("Python") + 4)</text>
+            <!-- 줄2 -->
+            <rect x="20" y="48" width="415" height="14" rx="3" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+            <text x="228" y="59" text-anchor="middle" font-family="monospace" font-size="9" fill="#0f172a">#  Python  #  ← "# " + name + " #"</text>
+            <!-- 줄3 표시는 줄1과 동일 -->
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># Step 3: 이름 배너 함수</span>
+<span class="kw">def</span> <span class="fn">name_banner</span>(name, border=<span class="str">"#"</span>):
+    <span class="str">"""이름을 받아 테두리가 있는 배너 출력"""</span>
+    width = <span class="fn">len</span>(name) + <span class="num">4</span>  <span class="cmt"># 양쪽 "# " + " #" = 4</span>
+    line = border * width
+    <span class="fn">print</span>(line)
+    <span class="fn">print</span>(<span class="str">f"{border}  {name}  {border}"</span>)
+    <span class="fn">print</span>(line)
+
+<span class="fn">name_banner</span>(<span class="str">"Python"</span>)
+<span class="fn">print</span>()
+<span class="fn">name_banner</span>(<span class="str">"나는 코딩왕"</span>, <span class="str">"="</span>)  <span class="cmt"># 한글 이름도 가능</span></div>
+
+    <div class="output-box">##########
+#  Python  #
+##########
+
+=============
+=  나는 코딩왕  =
+=============</div>
+
+    <!-- 문제 1 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q1</div>
+            <div class="problem-label">계단 모양 출력</div>
+            <span class="problem-diff easy">기본</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">아래처럼 계단 모양으로 출력하는 <code>stairs(n)</code> 함수를 만드세요. 각 줄은 줄 번호만큼 공백이 앞에 붙고, 별 하나가 옵니다. 문자열 곱셈 <code>" " * i</code>를 활용하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">입력</span>
+                    <span class="problem-example-value">stairs(4)</span>
+                </div>
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력</span>
+                    <span class="problem-example-value">*  /  _*  /  _ _*  /  _ _ _*   (각 줄)</span>
+                </div>
+            </div>
+            <details class="problem-toggle">
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">range(n) 반복에서 " " * i + "*" 를 출력하세요. i=0이면 공백 0개, i=1이면 공백 1개가 됩니다.</div>
+                </div>
+            </details>
+            <details class="problem-toggle">
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code"><span class="kw">def</span> <span class="fn">stairs</span>(n):
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(n):
+        <span class="fn">print</span>(<span class="str">" "</span> * i + <span class="str">"*"</span>)</div>
+                </div>
+            </details>
+        </div>
+    </div>
+</div>
+
+<!-- ===== 5페이지: 문제 + 요약 ===== -->
+<div class="page">
+    <h2>연습 문제</h2>
+
+    <!-- SVG: 이번 프로젝트 함수 목록 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 460 54" style="max-width:460px;width:100%">
+            <text x="230" y="14" text-anchor="middle" font-size="10" fill="#134e4a" font-weight="800">완성된 함수 목록</text>
+            <rect x="5" y="20" width="100" height="28" rx="6" fill="#f0fdf4" stroke="#0f766e" stroke-width="1.5"/>
+            <text x="55" y="34" text-anchor="middle" font-size="8" fill="#134e4a" font-weight="700">triangle(size, char)</text>
+            <text x="55" y="44" text-anchor="middle" font-size="7" fill="#64748b">삼각형</text>
+            <rect x="115" y="20" width="100" height="28" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="165" y="34" text-anchor="middle" font-size="8" fill="#92400e" font-weight="700">rectangle(w, h)</text>
+            <text x="165" y="44" text-anchor="middle" font-size="7" fill="#64748b">속빈 사각형</text>
+            <rect x="225" y="20" width="100" height="28" rx="6" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="275" y="34" text-anchor="middle" font-size="8" fill="#1d4ed8" font-weight="700">diamond(size)</text>
+            <text x="275" y="44" text-anchor="middle" font-size="7" fill="#64748b">다이아몬드</text>
+            <rect x="335" y="20" width="120" height="28" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+            <text x="395" y="34" text-anchor="middle" font-size="8" fill="#5b21b6" font-weight="700">name_banner(name, border)</text>
+            <text x="395" y="44" text-anchor="middle" font-size="7" fill="#64748b">이름 배너</text>
+        </svg>
+    </div>
+
+    <!-- 문제 2 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q2</div>
+            <div class="problem-label">숫자 피라미드 출력</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">별 대신 줄 번호를 출력하는 숫자 피라미드를 만드세요. 각 줄 i에서 숫자 1부터 i까지를 공백 없이 출력합니다. <code>str(j)</code>로 숫자를 문자열로 변환해 연결합니다.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">입력</span>
+                    <span class="problem-example-value">num_pyramid(5)</span>
+                </div>
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력</span>
+                    <span class="problem-example-value">1 / 12 / 123 / 1234 / 12345</span>
+                </div>
+            </div>
+            <details class="problem-toggle">
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">외부 for i in range(1, n+1), 내부에서 "".join([str(j) for j in range(1, i+1)]) 로 각 줄을 만드세요.</div>
+                </div>
+            </details>
+            <details class="problem-toggle">
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code"><span class="kw">def</span> <span class="fn">num_pyramid</span>(n):
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">1</span>, n + <span class="num">1</span>):
+        row = <span class="str">""</span>.<span class="fn">join</span>([<span class="fn">str</span>(j) <span class="kw">for</span> j <span class="kw">in</span> <span class="fn">range</span>(<span class="num">1</span>, i + <span class="num">1</span>)])
+        <span class="fn">print</span>(row)</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <!-- 문제 3 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q3</div>
+            <div class="problem-label">체스판 패턴 만들기</div>
+            <span class="problem-diff hard">심화</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">n x n 크기의 체스판 패턴을 출력하세요. 행과 열의 합이 짝수이면 "#", 홀수이면 " "를 출력합니다. 행과 열 인덱스의 합인 <code>i + j</code>의 홀짝을 나머지 연산자 <code>%</code>로 판별하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">입력</span>
+                    <span class="problem-example-value">chess(4)</span>
+                </div>
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력</span>
+                    <span class="problem-example-value"># # # #  /  # # # #  (교대 패턴)</span>
+                </div>
+            </div>
+            <details class="problem-toggle">
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">이중 for 문에서 (i + j) % 2 == 0 이면 "#", 아니면 " " 를 row 문자열에 추가하세요.</div>
+                </div>
+            </details>
+            <details class="problem-toggle">
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code"><span class="kw">def</span> <span class="fn">chess</span>(n):
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(n):
+        row = <span class="str">""</span>
+        <span class="kw">for</span> j <span class="kw">in</span> <span class="fn">range</span>(n):
+            row += <span class="str">"# "</span> <span class="kw">if</span> (i + j) % <span class="num">2</span> == <span class="num">0</span> <span class="kw">else</span> <span class="str">"  "</span>
+        <span class="fn">print</span>(row)</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <!-- 핵심 요약 -->
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>핵심 요약</h3>
+        <ul>
+            <li><code>"*" * n</code> 문자열 곱셈으로 n개의 문자를 반복 생성합니다.</li>
+            <li><code>range(start, stop, step)</code>에서 step을 음수로 주면 역순 순회입니다.</li>
+            <li>중첩 for 문으로 2D 패턴(사각형, 다이아몬드)을 그릴 수 있습니다.</li>
+            <li><code>len(name)</code>으로 문자열 길이를 측정해 동적 테두리를 만듭니다.</li>
+            <li><code>" " * i + "*"</code> 패턴으로 들여쓰기가 있는 도형을 만듭니다.</li>
+        </ul>
+    </div>
+
+    <!-- SVG: 핵심 개념 요약 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 460 56" style="max-width:460px;width:100%">
+            <rect x="5" y="8" width="86" height="40" rx="7" fill="#f0fdf4" stroke="#0f766e" stroke-width="1.5"/>
+            <text x="48" y="26" text-anchor="middle" font-size="8" fill="#134e4a" font-weight="700">문자열 곱셈</text>
+            <text x="48" y="40" text-anchor="middle" font-size="7" fill="#64748b">"*" * n</text>
+            <rect x="100" y="8" width="86" height="40" rx="7" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="143" y="26" text-anchor="middle" font-size="8" fill="#92400e" font-weight="700">역순 range</text>
+            <text x="143" y="40" text-anchor="middle" font-size="7" fill="#64748b">step=-1</text>
+            <rect x="195" y="8" width="86" height="40" rx="7" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="238" y="26" text-anchor="middle" font-size="8" fill="#1d4ed8" font-weight="700">중첩 for</text>
+            <text x="238" y="40" text-anchor="middle" font-size="7" fill="#64748b">2D 패턴</text>
+            <rect x="290" y="8" width="86" height="40" rx="7" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+            <text x="333" y="26" text-anchor="middle" font-size="8" fill="#5b21b6" font-weight="700">len() 활용</text>
+            <text x="333" y="40" text-anchor="middle" font-size="7" fill="#64748b">동적 배너</text>
+            <rect x="385" y="8" width="70" height="40" rx="7" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="420" y="26" text-anchor="middle" font-size="8" fill="#166534" font-weight="700">공백 앞붙임</text>
+            <text x="420" y="40" text-anchor="middle" font-size="7" fill="#64748b">" " * i + "*"</text>
+        </svg>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

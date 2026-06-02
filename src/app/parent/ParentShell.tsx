@@ -1,0 +1,87 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
+import Image from "next/image";
+import { motion, AnimatePresence } from "framer-motion";
+import ParentBottomNav from "./ParentBottomNav";
+import ParentNameGate from "./ParentNameGate";
+import { installGlobalErrorHandler } from "@/lib/error-reporter";
+
+const STUDENT_KEY = "codingssok_parent_student";
+
+export default function ParentShell({ children }: { children: React.ReactNode }) {
+    useEffect(() => { installGlobalErrorHandler(); }, []);
+    const [studentName, setStudentName] = useState<string | null>(null);
+    const [booting, setBooting] = useState(true);
+    const pathname = usePathname();
+
+    useEffect(() => {
+        const stored = localStorage.getItem(STUDENT_KEY) ?? "";
+        setStudentName(stored || null);
+        setBooting(false);
+    }, []);
+
+    const handleNameSet = (name: string) => {
+        localStorage.setItem(STUDENT_KEY, name);
+        setStudentName(name);
+    };
+
+    if (booting) {
+        return (
+            <div suppressHydrationWarning className="min-h-dvh bg-white flex items-center justify-center">
+                <Image src="/images/logo-codingssok.png" alt="코딩쏙" width={120} height={38} priority />
+            </div>
+        );
+    }
+
+    if (!studentName) {
+        return <ParentNameGate onNameSet={handleNameSet} />;
+    }
+
+    return (
+        <div className="min-h-dvh bg-slate-50 font-[Pretendard,'Noto_Sans_KR',sans-serif] flex flex-col">
+            {/* Top header */}
+            <header
+                className="sticky top-0 z-[100] backdrop-blur-[20px] border-b border-slate-200/70 px-5 flex items-end"
+                style={{
+                    background: "rgba(255,255,255,0.95)",
+                    paddingTop: "env(safe-area-inset-top, 0px)",
+                    height: "calc(52px + env(safe-area-inset-top, 0px))",
+                    paddingBottom: 10,
+                }}
+            >
+                <div className="flex items-center justify-between w-full">
+                    <Image
+                        src="/images/logo-codingssok.png"
+                        alt="코딩쏙"
+                        width={90}
+                        height={28}
+                        style={{ objectFit: "contain" }}
+                        priority
+                    />
+                    <div className="flex items-center gap-1.5 bg-gray-100 rounded-full py-1.5 px-3">
+                        <span className="text-[13px] font-semibold text-gray-700">{studentName}</span>
+                    </div>
+                </div>
+            </header>
+
+            {/* Page content */}
+            <main className="flex-1 overflow-y-auto" style={{ paddingBottom: "calc(64px + env(safe-area-inset-bottom, 0px))" }}>
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={pathname}
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -4 }}
+                        transition={{ duration: 0.18, ease: "easeOut" }}
+                    >
+                        {children}
+                    </motion.div>
+                </AnimatePresence>
+            </main>
+
+            <ParentBottomNav studentName={studentName} />
+        </div>
+    );
+}

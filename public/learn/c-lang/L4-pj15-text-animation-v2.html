@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 텍스트 애니메이션</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 14px;
+    color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fce7f3; color: #9d174d; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 50px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+.info-box { background: #eff6ff; border: 1.5px solid #bfdbfe; border-radius: 8px; padding: 12px 16px; margin: 12px 0; }
+.info-box p { font-size: 13px; color: #1e40af; margin: 0; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- PAGE 1: 표지 -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">PJ</div>
+        <div class="cover-label">Level 4 · Project 15</div>
+        <h1 class="cover-title">텍스트 애니메이션</h1>
+        <p class="cover-sub">for + printf로 로딩바, 타이핑 효과, 프로그레스바를 만듭니다. 색상 코드(\033[)와 fflush를 활용한 터미널 애니메이션을 경험합니다.</p>
+        <div style="margin:24px 0;">
+            <svg viewBox="0 0 500 140" style="max-width:500px;width:100%">
+                <!-- 프로그레스바 단계 시각화 -->
+                <text x="250" y="16" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="700">프로그레스바 진행 단계</text>
+                <!-- 0% -->
+                <rect x="10" y="26" width="220" height="26" rx="4" fill="#0f172a"/>
+                <text x="220" y="39" text-anchor="right" font-size="11" fill="#94a3b8" font-family="JetBrains Mono" text-anchor="end">[          ] 0%</text>
+                <!-- 30% -->
+                <rect x="10" y="58" width="220" height="26" rx="4" fill="#0f172a"/>
+                <text x="14" y="71" font-size="11" fill="#86efac" font-family="JetBrains Mono">[###</text>
+                <text x="14" y="71" font-size="11" fill="#94a3b8" font-family="JetBrains Mono">        ] </text>
+                <text x="100" y="71" font-size="11" fill="#94a3b8" font-family="JetBrains Mono">        ] </text>
+                <text x="190" y="71" font-size="11" fill="#f59e0b" font-family="JetBrains Mono">30%</text>
+                <!-- 70% -->
+                <rect x="10" y="90" width="220" height="26" rx="4" fill="#0f172a"/>
+                <text x="14" y="103" font-size="11" fill="#86efac" font-family="JetBrains Mono">[#######   ] </text>
+                <text x="175" y="103" font-size="11" fill="#f59e0b" font-family="JetBrains Mono">70%</text>
+                <!-- 100% -->
+                <rect x="10" y="122" width="220" height="16" rx="4" fill="#0f172a"/>
+                <text x="14" y="134" font-size="11" fill="#86efac" font-family="JetBrains Mono">[##########] </text>
+                <text x="175" y="134" font-size="11" fill="#22c55e" font-family="JetBrains Mono">100%</text>
+                <!-- 타이핑 효과 -->
+                <rect x="256" y="26" width="230" height="112" rx="8" fill="#0f172a"/>
+                <text x="371" y="44" text-anchor="middle" font-size="11" fill="#f59e0b" font-family="JetBrains Mono" font-weight="700">타이핑 효과</text>
+                <text x="270" y="64" font-size="12" fill="#67e8f9" font-family="JetBrains Mono">H</text>
+                <text x="270" y="82" font-size="12" fill="#67e8f9" font-family="JetBrains Mono">He</text>
+                <text x="270" y="100" font-size="12" fill="#67e8f9" font-family="JetBrains Mono">Hell</text>
+                <text x="270" y="118" font-size="12" fill="#67e8f9" font-family="JetBrains Mono">Hello!</text>
+                <text x="390" y="64" font-size="10" fill="#64748b" font-family="JetBrains Mono">← i=0</text>
+                <text x="390" y="82" font-size="10" fill="#64748b" font-family="JetBrains Mono">← i=1</text>
+                <text x="390" y="100" font-size="10" fill="#64748b" font-family="JetBrains Mono">← i=3</text>
+                <text x="390" y="118" font-size="10" fill="#64748b" font-family="JetBrains Mono">← i=5</text>
+            </svg>
+        </div>
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 프로젝트에서 배우는 것</h3>
+            <ul>
+                <li>for + printf("\r")로 같은 줄에 덮어쓰는 애니메이션을 만듭니다.</li>
+                <li>fflush(stdout)으로 버퍼를 즉시 출력하는 방법을 배웁니다.</li>
+                <li>usleep/Sleep으로 딜레이를 줘서 시각적 효과를 냅니다.</li>
+                <li>ANSI 색상 코드(\033[31m 등)로 터미널에 색을 입힙니다.</li>
+                <li>카운트다운, ASCII 아트 애니메이션을 구현합니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- PAGE 2: 로딩바 + fflush -->
+<div class="page">
+    <h2>로딩바 구현 원리</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/monitor.png" alt="모니터" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>같은 줄을 계속 덮어쓰는 것이 핵심입니다. <code>\r</code>(캐리지 리턴)은 커서를 줄의 맨 앞으로 이동시킵니다. <code>\n</code>없이 출력하면 다음 출력이 같은 줄을 덮어씁니다.</p>
+
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 110" style="max-width:460px;width:100%">
+            <defs>
+                <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#3b82f6"/>
+                </marker>
+            </defs>
+            <!-- \n vs \r 비교 -->
+            <rect x="10" y="5" width="200" height="100" rx="8" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="110" y="22" text-anchor="middle" font-size="11" fill="#dc2626" font-weight="700">\n 사용 (새 줄로 이동)</text>
+            <text x="110" y="42" text-anchor="middle" font-size="11" fill="#374151" font-family="JetBrains Mono">[#   ] 10%</text>
+            <text x="110" y="58" text-anchor="middle" font-size="11" fill="#374151" font-family="JetBrains Mono">[##  ] 20%</text>
+            <text x="110" y="74" text-anchor="middle" font-size="11" fill="#374151" font-family="JetBrains Mono">[### ] 30%</text>
+            <text x="110" y="96" text-anchor="middle" font-size="10" fill="#ef4444">여러 줄로 출력됨</text>
+
+            <rect x="250" y="5" width="200" height="100" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="350" y="22" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">\r 사용 (같은 줄 덮어쓰기)</text>
+            <text x="350" y="55" text-anchor="middle" font-size="14" fill="#166534" font-family="JetBrains Mono">[### ] 30%</text>
+            <text x="350" y="96" text-anchor="middle" font-size="10" fill="#22c55e">한 줄에서 업데이트됨</text>
+
+            <!-- fflush 설명 -->
+            <rect x="10" y="108" width="440" height="0" rx="0" fill="none"/>
+        </svg>
+    </div>
+
+    <div class="info-box">
+        <p>fflush(stdout): C에서 출력은 버퍼에 쌓였다가 한꺼번에 출력됩니다. printf 후 fflush(stdout)을 호출해야 즉시 화면에 반영됩니다. \n 없이 출력할 때 반드시 필요합니다.</p>
+    </div>
+
+    <h2>로딩바 + 프로그레스바 전체 코드</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="패턴" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <div class="code"><span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="kw">#include</span> <span class="str">&lt;unistd.h&gt;</span>    <span class="cmt">// usleep (Linux/Mac)</span>
+<span class="cmt">// Windows: #include &lt;windows.h&gt; + Sleep(ms)</span>
+
+<span class="kw">void</span> <span class="fn">loading_bar</span>(<span class="kw">int</span> total) {
+    <span class="kw">int</span> i, j;
+    <span class="fn">printf</span>(<span class="str">"Loading: ["</span>);
+    <span class="kw">for</span> (i = <span class="num">0</span>; i &lt;= total; i++) {
+        <span class="fn">printf</span>(<span class="str">"\rLoading: ["</span>);        <span class="cmt">// 커서 맨 앞으로</span>
+        <span class="kw">for</span> (j = <span class="num">0</span>; j &lt; i; j++)
+            <span class="fn">printf</span>(<span class="str">"#"</span>);            <span class="cmt">// 채워진 부분</span>
+        <span class="kw">for</span> (j = i; j &lt; total; j++)
+            <span class="fn">printf</span>(<span class="str">" "</span>);            <span class="cmt">// 빈 부분</span>
+        <span class="fn">printf</span>(<span class="str">"] %3d%%"</span>, i * <span class="num">100</span> / total);
+        <span class="fn">fflush</span>(<span class="fn">stdout</span>);            <span class="cmt">// 즉시 출력</span>
+        <span class="fn">usleep</span>(<span class="num">80000</span>);              <span class="cmt">// 0.08초 대기</span>
+    }
+    <span class="fn">printf</span>(<span class="str">"\n완료!\n"</span>);
+}
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="fn">loading_bar</span>(<span class="num">20</span>);   <span class="cmt">// 20칸 로딩바</span>
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 460 52" style="max-width:460px;width:100%">
+            <rect x="0" y="0" width="460" height="52" rx="8" fill="#0f172a"/>
+            <text x="14" y="20" font-size="12" fill="#94a3b8" font-family="JetBrains Mono">Loading: [</text>
+            <text x="116" y="20" font-size="12" fill="#86efac" font-family="JetBrains Mono">############</text>
+            <text x="253" y="20" font-size="12" fill="#475569" font-family="JetBrains Mono">        </text>
+            <text x="309" y="20" font-size="12" fill="#94a3b8" font-family="JetBrains Mono">]  60%</text>
+            <text x="14" y="42" font-size="11" fill="#64748b" font-family="JetBrains Mono">→ 같은 줄에서 실시간 업데이트 (애니메이션 효과)</text>
+        </svg>
+    </div>
+</div>
+
+<!-- PAGE 3: 타이핑 효과 + 색상 코드 -->
+<div class="page">
+    <h2>타이핑 효과</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/clock.png" alt="반복" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>문자열을 한 글자씩 출력해 타자기처럼 보이게 합니다. 문자열은 배열이므로 <code>str[i]</code>로 i번째 글자에 접근합니다. 문자열 길이는 <code>strlen()</code>으로 구합니다.</p>
+
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+            <rect x="0" y="0" width="460" height="80" rx="8" fill="#0f172a"/>
+            <text x="14" y="20" font-size="12" fill="#94a3b8" font-family="JetBrains Mono">str = "Hello, World!"</text>
+            <text x="14" y="38" font-size="12" fill="#64748b" font-family="JetBrains Mono">str[0]='H' str[1]='e' str[2]='l' str[3]='l' str[4]='o'</text>
+            <text x="14" y="56" font-size="12" fill="#67e8f9" font-family="JetBrains Mono">printf("%c", str[i])  →  한 글자씩 출력</text>
+            <text x="14" y="72" font-size="12" fill="#86efac" font-family="JetBrains Mono">strlen("Hello") = 5  →  반복 횟수</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="kw">#include</span> <span class="str">&lt;string.h&gt;</span>
+<span class="kw">#include</span> <span class="str">&lt;unistd.h&gt;</span>
+
+<span class="kw">void</span> <span class="fn">type_print</span>(<span class="kw">const</span> <span class="kw">char</span> *str) {
+    <span class="kw">int</span> len = <span class="fn">strlen</span>(str);
+    <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; len; i++) {
+        <span class="fn">printf</span>(<span class="str">"%c"</span>, str[i]);
+        <span class="fn">fflush</span>(<span class="fn">stdout</span>);
+        <span class="fn">usleep</span>(<span class="num">100000</span>);     <span class="cmt">// 0.1초 딜레이</span>
+    }
+    <span class="fn">printf</span>(<span class="str">"\n"</span>);
+}
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="fn">type_print</span>(<span class="str">"안녕하세요, 코딩쏙입니다!"</span>);
+    <span class="fn">type_print</span>(<span class="str">"C언어를 배우고 있습니다."</span>);
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+
+    <h2>ANSI 색상 코드</h2>
+    <p>리눅스/Mac 터미널에서는 <code>\033[색상코드m</code> 형식으로 출력 색상을 바꿀 수 있습니다. <code>\033[0m</code>으로 반드시 원래 색으로 되돌려야 합니다.</p>
+
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 460 120" style="max-width:460px;width:100%">
+            <!-- 색상 코드 표 -->
+            <rect x="10" y="5" width="440" height="20" rx="4" fill="#1e3a5f"/>
+            <text x="90" y="19" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">코드</text>
+            <text x="200" y="19" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">색상</text>
+            <text x="350" y="19" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">사용 예시</text>
+            <rect x="10" y="25" width="440" height="16" fill="#f8fafc"/>
+            <text x="90" y="37" text-anchor="middle" font-size="10" fill="#374151" font-family="JetBrains Mono">\033[31m</text>
+            <rect x="170" y="27" width="60" height="12" rx="3" fill="#ef4444"/>
+            <text x="200" y="37" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">빨강</text>
+            <text x="350" y="37" text-anchor="middle" font-size="9" fill="#374151" font-family="JetBrains Mono">오류 메시지</text>
+            <rect x="10" y="41" width="440" height="16" fill="#fff"/>
+            <text x="90" y="53" text-anchor="middle" font-size="10" fill="#374151" font-family="JetBrains Mono">\033[32m</text>
+            <rect x="170" y="43" width="60" height="12" rx="3" fill="#22c55e"/>
+            <text x="200" y="53" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">초록</text>
+            <text x="350" y="53" text-anchor="middle" font-size="9" fill="#374151" font-family="JetBrains Mono">성공 메시지</text>
+            <rect x="10" y="57" width="440" height="16" fill="#f8fafc"/>
+            <text x="90" y="69" text-anchor="middle" font-size="10" fill="#374151" font-family="JetBrains Mono">\033[33m</text>
+            <rect x="170" y="59" width="60" height="12" rx="3" fill="#f59e0b"/>
+            <text x="200" y="69" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">노랑</text>
+            <text x="350" y="69" text-anchor="middle" font-size="9" fill="#374151" font-family="JetBrains Mono">경고 메시지</text>
+            <rect x="10" y="73" width="440" height="16" fill="#fff"/>
+            <text x="90" y="85" text-anchor="middle" font-size="10" fill="#374151" font-family="JetBrains Mono">\033[34m</text>
+            <rect x="170" y="75" width="60" height="12" rx="3" fill="#3b82f6"/>
+            <text x="200" y="85" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">파랑</text>
+            <text x="350" y="85" text-anchor="middle" font-size="9" fill="#374151" font-family="JetBrains Mono">정보 메시지</text>
+            <rect x="10" y="89" width="440" height="16" fill="#f8fafc"/>
+            <text x="90" y="101" text-anchor="middle" font-size="10" fill="#374151" font-family="JetBrains Mono">\033[1m</text>
+            <text x="200" y="101" text-anchor="middle" font-size="10" fill="#374151" font-weight="900">굵게</text>
+            <text x="350" y="101" text-anchor="middle" font-size="9" fill="#374151" font-family="JetBrains Mono">강조 텍스트</text>
+            <rect x="10" y="105" width="440" height="14" fill="#fff"/>
+            <text x="90" y="116" text-anchor="middle" font-size="10" fill="#374151" font-family="JetBrains Mono">\033[0m</text>
+            <text x="200" y="116" text-anchor="middle" font-size="10" fill="#374151">초기화</text>
+            <text x="350" y="116" text-anchor="middle" font-size="9" fill="#dc2626" font-weight="700">반드시 마지막에 사용!</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt">// 색상 + 타이핑 효과 결합</span>
+<span class="fn">printf</span>(<span class="str">"\033[32m"</span>);          <span class="cmt">// 초록색 시작</span>
+<span class="fn">type_print</span>(<span class="str">"로딩 완료!"</span>);
+<span class="fn">printf</span>(<span class="str">"\033[0m"</span>);           <span class="cmt">// 색상 초기화 (필수)</span>
+
+<span class="fn">printf</span>(<span class="str">"\033[31m오류: 파일 없음\033[0m\n"</span>);  <span class="cmt">// 한 줄 적용</span></div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="완성" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">로딩바를 10칸으로 만들고 각 칸을 'O'로 채워보세요. ([OOOOOO    ] 60%)</div>
+                <div class="practice-result">loading_bar 함수에서 '#'을 'O'로만 바꾸면 됩니다</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">type_print 함수의 usleep 값을 50000으로 바꾸면 타이핑이 빨라지나요 느려지나요?</div>
+                <div class="practice-result">0.05초로 줄어들어 더 빠르게 타이핑됩니다</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- PAGE 4: 카운트다운 + ASCII 아트 + 문제 -->
+<div class="page">
+    <h2>카운트다운 + 메시지</h2>
+    <p>숫자를 내려가며 카운트하고 0이 되면 메시지를 출력합니다. <code>\r</code>로 같은 줄을 덮어씁니다.</p>
+
+    <div class="code"><span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="kw">#include</span> <span class="str">&lt;unistd.h&gt;</span>
+
+<span class="kw">void</span> <span class="fn">countdown</span>(<span class="kw">int</span> n, <span class="kw">const</span> <span class="kw">char</span> *msg) {
+    <span class="kw">for</span> (<span class="kw">int</span> i = n; i &gt; <span class="num">0</span>; i--) {
+        <span class="fn">printf</span>(<span class="str">"\r\033[33m%d\033[0m 초 후 시작..."</span>, i);
+        <span class="fn">fflush</span>(<span class="fn">stdout</span>);
+        <span class="fn">sleep</span>(<span class="num">1</span>);              <span class="cmt">// 1초 대기</span>
+    }
+    <span class="fn">printf</span>(<span class="str">"\r\033[32m%s\033[0m\n"</span>, msg);
+}
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="fn">countdown</span>(<span class="num">5</span>, <span class="str">"발사!"</span>);
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+
+    <h2>ASCII 아트 프레임 애니메이션</h2>
+    <p>여러 ASCII 아트 프레임을 빠르게 교체해 간단한 움직임을 표현합니다. 화면을 지우는 <code>system("clear")</code>(Linux) 또는 <code>system("cls")</code>(Windows)를 활용합니다.</p>
+
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 460 90" style="max-width:460px;width:100%">
+            <!-- 3프레임 애니메이션 -->
+            <rect x="10" y="5" width="130" height="80" rx="8" fill="#0f172a"/>
+            <text x="75" y="22" text-anchor="middle" font-size="10" fill="#94a3b8" font-family="JetBrains Mono">프레임 1</text>
+            <text x="75" y="40" text-anchor="middle" font-size="13" fill="#86efac" font-family="JetBrains Mono">( o_o)</text>
+            <text x="75" y="56" text-anchor="middle" font-size="13" fill="#86efac" font-family="JetBrains Mono">/|  |</text>
+            <text x="75" y="72" text-anchor="middle" font-size="13" fill="#86efac" font-family="JetBrains Mono"> /\</text>
+            <rect x="165" y="5" width="130" height="80" rx="8" fill="#0f172a"/>
+            <text x="230" y="22" text-anchor="middle" font-size="10" fill="#94a3b8" font-family="JetBrains Mono">프레임 2</text>
+            <text x="230" y="40" text-anchor="middle" font-size="13" fill="#67e8f9" font-family="JetBrains Mono">( o_o)</text>
+            <text x="230" y="56" text-anchor="middle" font-size="13" fill="#67e8f9" font-family="JetBrains Mono">/|  |\</text>
+            <text x="230" y="72" text-anchor="middle" font-size="13" fill="#67e8f9" font-family="JetBrains Mono"> /\</text>
+            <rect x="320" y="5" width="130" height="80" rx="8" fill="#0f172a"/>
+            <text x="385" y="22" text-anchor="middle" font-size="10" fill="#94a3b8" font-family="JetBrains Mono">프레임 3</text>
+            <text x="385" y="40" text-anchor="middle" font-size="13" fill="#c084fc" font-family="JetBrains Mono">( ^_^)</text>
+            <text x="385" y="56" text-anchor="middle" font-size="13" fill="#c084fc" font-family="JetBrains Mono"> |  |</text>
+            <text x="385" y="72" text-anchor="middle" font-size="13" fill="#c084fc" font-family="JetBrains Mono"> /\</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">const</span> <span class="kw">char</span> *frames[] = {
+    <span class="str">"( o_o)\n/|  |\n /\\"</span>,
+    <span class="str">"( o_o)\n/|  |\\\n /\\"</span>,
+    <span class="str">"( ^_^)\n |  |\n /\\"</span>
+};
+<span class="kw">int</span> frame_count = <span class="num">3</span>;
+
+<span class="kw">for</span> (<span class="kw">int</span> cycle = <span class="num">0</span>; cycle &lt; <span class="num">6</span>; cycle++) {  <span class="cmt">// 6사이클 반복</span>
+    <span class="fn">system</span>(<span class="str">"cls"</span>);     <span class="cmt">// 화면 지우기 (Windows: cls, Linux: clear)</span>
+    <span class="fn">printf</span>(<span class="str">"%s\n"</span>, frames[cycle % frame_count]);
+    <span class="fn">fflush</span>(<span class="fn">stdout</span>);
+    <span class="fn">usleep</span>(<span class="num">200000</span>);    <span class="cmt">// 0.2초</span>
+}</div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">1</div>
+            <div class="problem-label">빨강→노랑→초록 색상 변환 로딩바를 구현하세요</div>
+            <span class="problem-diff medium">중간</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">로딩바 진행률이 0~33%이면 빨강, 34~66%이면 노랑, 67~100%이면 초록색으로 출력합니다. ANSI 색상 코드와 조건문을 결합하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">0~33%</span><span class="problem-example-value">\033[31m (빨강)</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">34~66%</span><span class="problem-example-value">\033[33m (노랑)</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">67~100%</span><span class="problem-example-value">\033[32m (초록)</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 / 정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">percent = i * 100 / total 계산 후 if/else로 색상 코드를 선택합니다.</div>
+                <div class="answer-code" style="margin-top:8px;"><span style="color:#c084fc">int</span> pct = i * <span style="color:#7dd3fc">100</span> / total;
+<span style="color:#c084fc">const char</span> *col = pct &lt; <span style="color:#7dd3fc">34</span> ? <span style="color:#86efac">"\033[31m"</span> :
+                  pct &lt; <span style="color:#7dd3fc">67</span> ? <span style="color:#86efac">"\033[33m"</span> : <span style="color:#86efac">"\033[32m"</span>;
+<span style="color:#67e8f9">printf</span>(<span style="color:#86efac">"%s[..] %d%%\033[0m"</span>, col, pct);</div>
+            </div>
+        </details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">2</div>
+            <div class="problem-label">스피너 애니메이션 — / - \ | 반복 출력</div>
+            <span class="problem-diff hard">어려움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">로딩 중 회전하는 스피너를 구현합니다. '/', '-', '\', '|' 4개 문자를 같은 자리에 빠르게 교체 출력하면 회전하는 것처럼 보입니다.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">순서</span><span class="problem-example-value">/ → - → \ → | → / → ...</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">처리 중... /   (같은 자리 갱신)</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 / 정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text"><code>char spin[] = "/-\\|"</code> 배열에서 <code>spin[i % 4]</code>로 인덱스를 순환합니다.</div>
+                <div class="answer-code" style="margin-top:8px;"><span style="color:#c084fc">char</span> spin[] = <span style="color:#86efac">"/-\\|"</span>;
+<span style="color:#c084fc">for</span> (<span style="color:#c084fc">int</span> i = <span style="color:#7dd3fc">0</span>; i &lt; <span style="color:#7dd3fc">40</span>; i++) {
+    <span style="color:#67e8f9">printf</span>(<span style="color:#86efac">"\r처리 중... %c"</span>, spin[i % <span style="color:#7dd3fc">4</span>]);
+    <span style="color:#67e8f9">fflush</span>(stdout);
+    <span style="color:#67e8f9">usleep</span>(<span style="color:#7dd3fc">100000</span>);
+}</div>
+            </div>
+        </details>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>핵심 정리</h3>
+        <ul>
+            <li>\r (캐리지 리턴): 커서를 현재 줄 맨 앞으로 이동 — 같은 줄 덮어쓰기</li>
+            <li>fflush(stdout): 출력 버퍼를 즉시 비워 화면에 반영</li>
+            <li>usleep(n): n 마이크로초 대기 (1,000,000 = 1초)</li>
+            <li>ANSI 색상: \033[31m(빨강), \033[32m(초록), \033[0m(초기화)</li>
+            <li>ASCII 아트: 여러 프레임을 빠르게 교체해 움직임 표현</li>
+        </ul>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+
+
+
+<script>
+(function(){
+  var KEY = 'cs_ans_' + location.pathname.replace(/[^a-zA-Z0-9]/g,'_');
+  var pagePath = location.pathname;
+  var userId = null;
+  try {
+    userId = window.parent?.localStorage?.getItem('codingssok_user_id')
+      || localStorage.getItem('codingssok_user_id');
+  } catch(e) {}
+
+  function save(){
+    var areas = document.querySelectorAll('textarea');
+    var saved = 0;
+    areas.forEach(function(ta, i){
+      if(ta.value.trim()) {
+        localStorage.setItem(KEY + '_' + i, ta.value);
+        saved++;
+      } else {
+        localStorage.removeItem(KEY + '_' + i);
+      }
+    });
+    if(saved > 0) showSaveIndicator();
+  }
+
+  function load(){
+    var areas = document.querySelectorAll('textarea');
+    var restored = 0;
+    areas.forEach(function(ta, i){
+      var val = localStorage.getItem(KEY + '_' + i);
+      if(val && val.trim()) {
+        ta.value = val;
+        ta.style.borderColor = '#10b981';
+        ta.style.boxShadow = '0 0 0 2px rgba(16,185,129,0.15)';
+        setTimeout(function(){ ta.style.borderColor = ''; ta.style.boxShadow = ''; }, 2000);
+        restored++;
+      }
+    });
+    if(restored > 0) showRestoreIndicator(restored);
+  }
+
+  function saveToDb(){
+    if(!userId) return;
+    var areas = document.querySelectorAll('textarea');
+    var answers = [];
+    areas.forEach(function(ta, i){
+      if(ta.value.trim()) answers.push({ field_index: i, answer_text: ta.value });
+    });
+    if(answers.length === 0) return;
+    fetch('/api/answers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId, page_path: pagePath, answers: answers })
+    }).catch(function(){});
+  }
+
+  function loadFromDb(){
+    if(!userId) return;
+    fetch('/api/answers?user_id=' + encodeURIComponent(userId) + '&page_path=' + encodeURIComponent(pagePath))
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(!d.answers || !d.answers.length) return;
+        var areas = document.querySelectorAll('textarea');
+        d.answers.forEach(function(a){
+          if(areas[a.field_index] && a.answer_text) {
+            areas[a.field_index].value = a.answer_text;
+            localStorage.setItem(KEY + '_' + a.field_index, a.answer_text);
+          }
+        });
+      }).catch(function(){});
+  }
+
+  function showSaveIndicator(){
+    var el = document.getElementById('cs-save-ind');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'cs-save-ind';
+      el.style.cssText = 'position:fixed;bottom:16px;right:16px;padding:6px 14px;border-radius:8px;background:#0f172a;color:#22c55e;font-size:11px;font-weight:700;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+      document.body.appendChild(el);
+    }
+    el.textContent = '\u2713 \uB2F5\uC548 \uC800\uC7A5\uB428'; // ✓ 답안 저장됨
+    el.style.opacity = '1';
+    setTimeout(function(){ el.style.opacity = '0'; }, 1500);
+  }
+
+  function showRestoreIndicator(n){
+    var el = document.getElementById('cs-save-ind');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'cs-save-ind';
+      el.style.cssText = 'position:fixed;bottom:16px;right:16px;padding:6px 14px;border-radius:8px;background:#0f172a;color:#3b82f6;font-size:11px;font-weight:700;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+      document.body.appendChild(el);
+    }
+    el.textContent = '\u21BB ' + n + '\uAC1C \uB2F5\uC548 \uBCF5\uC6D0'; // ↻ n개 답안 복원
+    el.style.color = '#3b82f6';
+    el.style.opacity = '1';
+    setTimeout(function(){ el.style.opacity = '0'; }, 2500);
+  }
+
+  var t = null;
+  document.addEventListener('input', function(e){
+    if(e.target.tagName === 'TEXTAREA'){
+      clearTimeout(t);
+      t = setTimeout(function(){ save(); saveToDb(); }, 300);
+    }
+  });
+  document.addEventListener('change', function(e){
+    if(e.target.tagName === 'TEXTAREA'){ save(); saveToDb(); }
+  });
+  document.addEventListener('focusout', function(e){
+    if(e.target.tagName === 'TEXTAREA'){ save(); saveToDb(); }
+  });
+  window.addEventListener('beforeunload', function(){ save(); saveToDb(); });
+
+  // 즉시 로드
+  load();
+  loadFromDb();
+})();
+</script>
+</body>
+</html>

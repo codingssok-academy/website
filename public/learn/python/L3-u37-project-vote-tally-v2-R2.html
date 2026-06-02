@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 프로젝트: 도서관 시스템</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '\25CF'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; font-size: 8px; top: 8px; }
+
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 16px; font-weight: 700; color: #1e3a5f; margin: 18px 0 10px; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+ul, ol { margin: 0 0 12px 20px; }
+li { font-size: 14px; color: #374151; line-height: 1.8; }
+
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13.5px;
+    color: #e2e8f0; line-height: 1.85; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.code .dec { color: #f9a8d4; }
+
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; display: inline-block; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+.step-box { border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 14px 18px; margin: 14px 0; background: #fff; }
+.step-label { font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+.step-title { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 8px; }
+
+.output-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #334155; line-height: 1.7; margin: 10px 0; }
+
+.compare-table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13px; }
+.compare-table th { background: #1e3a5f; color: #fff; padding: 8px 12px; text-align: left; font-weight: 700; }
+.compare-table td { padding: 7px 12px; border-bottom: 1px solid #e2e8f0; color: #374151; }
+.compare-table tr:nth-child(even) td { background: #f8fafc; }
+.compare-table code { background: #e0e7ff; padding: 1px 5px; border-radius: 3px; font-family: 'JetBrains Mono', monospace; color: #3730a3; font-size: 12px; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- 1페이지: 표지 -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">37</div>
+        <div class="cover-label">L3 — Unit 37 Project R2</div>
+        <h1 class="cover-title">프로젝트:<br>도서관 시스템</h1>
+        <p class="cover-sub">중첩 딕셔너리로 책 정보를 관리합니다. 대출/반납 처리, 제목/저자 검색, 연체 확인까지 실제 도서관을 모사한 프로그램을 완성합니다.</p>
+
+        <!-- SVG: 시스템 전체 구조도 -->
+        <div style="margin:24px 0;">
+            <svg viewBox="0 0 500 150" style="max-width:500px;width:100%">
+                <defs>
+                    <marker id="arwCovR2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                    </marker>
+                </defs>
+                <!-- 중앙: library.py -->
+                <rect x="165" y="54" width="170" height="42" rx="8" fill="#1e3a5f"/>
+                <text x="250" y="72" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">library.py</text>
+                <text x="250" y="87" text-anchor="middle" font-size="9" fill="#93c5fd">도서관 시스템</text>
+                <!-- 왼쪽 위: 도서 등록 -->
+                <rect x="5" y="8" width="125" height="34" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="67" y="22" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">도서 등록</text>
+                <text x="67" y="36" text-anchor="middle" font-size="8" fill="#64748b">중첩 딕셔너리</text>
+                <line x1="133" y1="25" x2="163" y2="65" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCovR2)"/>
+                <!-- 오른쪽 위: 대출/반납 -->
+                <rect x="370" y="8" width="125" height="34" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="432" y="22" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">대출 / 반납</text>
+                <text x="432" y="36" text-anchor="middle" font-size="8" fill="#64748b">available 상태 변경</text>
+                <line x1="367" y1="25" x2="337" y2="65" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCovR2)"/>
+                <!-- 왼쪽 아래: 검색 -->
+                <rect x="5" y="108" width="125" height="34" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="67" y="122" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">제목/저자 검색</text>
+                <text x="67" y="136" text-anchor="middle" font-size="8" fill="#64748b">items() 순회 + in</text>
+                <line x1="133" y1="125" x2="163" y2="88" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCovR2)"/>
+                <!-- 오른쪽 아래: 연체 확인 -->
+                <rect x="370" y="108" width="125" height="34" rx="6" fill="#eff6ff" stroke="#6366f1" stroke-width="1.5"/>
+                <text x="432" y="122" text-anchor="middle" font-size="9" fill="#4338ca" font-weight="700">연체 확인</text>
+                <text x="432" y="136" text-anchor="middle" font-size="8" fill="#64748b">날짜 비교</text>
+                <line x1="367" y1="125" x2="337" y2="88" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCovR2)"/>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/puzzle.png" alt="고급 기능" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 유닛에서 만드는 것</h3>
+            <ul>
+                <li>중첩 딕셔너리로 책의 제목, 저자, 대출 상태, 반납 기한을 한 구조로 관리합니다.</li>
+                <li><code>book["available"]</code>을 <code>True/False</code>로 바꿔 대출/반납 상태를 처리합니다.</li>
+                <li><code>items()</code> 순회와 <code>in</code> 연산자로 제목·저자 기준 검색을 구현합니다.</li>
+                <li>오늘 날짜와 반납 기한을 비교해 연체 여부와 연체일수를 계산합니다.</li>
+                <li>대출 가능 책 목록과 현재 대출 중인 책 목록을 필터링해서 출력합니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- 2페이지: Step 1~2 -->
+<div class="page">
+    <h2>Step 1 — 중첩 딕셔너리로 도서 데이터 구조 설계</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="처리" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>도서관 시스템의 핵심은 각 책을 하나의 딕셔너리로 표현하는 것입니다. 책 ID를 외부 키, 책 정보를 내부 딕셔너리로 구성하는 <strong>중첩 딕셔너리</strong> 구조를 사용합니다.</p>
+
+    <!-- SVG: 중첩 딕셔너리 구조 시각화 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 480 100" style="max-width:480px;width:100%">
+            <rect x="5" y="5" width="470" height="90" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="20" y="22" font-size="9" fill="#94a3b8" font-weight="700">library (외부 딕셔너리)</text>
+            <!-- 책 1 -->
+            <rect x="20" y="28" width="210" height="58" rx="6" fill="#fff" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="30" y="43" font-size="8" fill="#1d4ed8" font-weight="700">"B001" : {</text>
+            <text x="40" y="56" font-size="8" fill="#64748b">"title": "파이썬 입문",</text>
+            <text x="40" y="68" font-size="8" fill="#64748b">"author": "홍길동",</text>
+            <text x="40" y="80" font-size="8" fill="#64748b">"available": True</text>
+            <text x="30" y="82" font-size="8" fill="#1d4ed8" font-weight="700">}</text>
+            <!-- 책 2 -->
+            <rect x="245" y="28" width="220" height="58" rx="6" fill="#fff" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="255" y="43" font-size="8" fill="#92400e" font-weight="700">"B002" : {</text>
+            <text x="265" y="56" font-size="8" fill="#64748b">"title": "자료구조",</text>
+            <text x="265" y="68" font-size="8" fill="#64748b">"author": "김철수",</text>
+            <text x="265" y="80" font-size="8" fill="#ef4444">"available": False</text>
+            <text x="255" y="82" font-size="8" fill="#92400e" font-weight="700">}</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># library.py — Step 1: 데이터 구조</span>
+<span class="kw">from</span> datetime <span class="kw">import</span> date, timedelta
+
+<span class="cmt"># 중첩 딕셔너리: 책 ID → 책 정보</span>
+library = {
+    <span class="str">"B001"</span>: {
+        <span class="str">"title"</span>: <span class="str">"파이썬 입문"</span>,
+        <span class="str">"author"</span>: <span class="str">"홍길동"</span>,
+        <span class="str">"available"</span>: <span class="kw">True</span>,
+        <span class="str">"due_date"</span>: <span class="kw">None</span>
+    },
+    <span class="str">"B002"</span>: {
+        <span class="str">"title"</span>: <span class="str">"자료구조 완전 정복"</span>,
+        <span class="str">"author"</span>: <span class="str">"김철수"</span>,
+        <span class="str">"available"</span>: <span class="kw">False</span>,
+        <span class="str">"due_date"</span>: <span class="str">"2026-03-10"</span>  <span class="cmt"># 대출 중</span>
+    }
+}
+
+<span class="kw">def</span> <span class="fn">show_all_books</span>():
+    <span class="str">"""전체 도서 목록 출력"""</span>
+    <span class="fn">print</span>(<span class="str">f"\n{'ID':<6} {'제목':<20} {'저자':<12} {'상태'}"</span>)
+    <span class="fn">print</span>(<span class="str">"-" * 50</span>)
+    <span class="kw">for</span> book_id, info <span class="kw">in</span> library.<span class="fn">items</span>():
+        status = <span class="str">"대출가능"</span> <span class="kw">if</span> info[<span class="str">"available"</span>] <span class="kw">else</span> <span class="str">"대출중"</span>
+        <span class="fn">print</span>(<span class="str">f"{book_id:<6} {info['title']:<20} {info['author']:<12} {status}"</span>)</div>
+
+    <h3>Step 2 — 대출과 반납 기능</h3>
+    <p>대출 처리는 <code>book["available"]</code>을 <code>False</code>로, <code>book["due_date"]</code>에 반납 기한을 설정합니다. 반납은 반대로 <code>True</code>로 되돌립니다.</p>
+
+    <!-- SVG: 대출/반납 상태 전환 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 480 65" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="arwLend" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#3b82f6"/>
+                </marker>
+                <marker id="arwReturn" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#22c55e"/>
+                </marker>
+            </defs>
+            <rect x="30" y="15" width="150" height="34" rx="8" fill="#dcfce7" stroke="#22c55e" stroke-width="2"/>
+            <text x="105" y="30" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">available = True</text>
+            <text x="105" y="43" text-anchor="middle" font-size="8" fill="#166534">대출 가능</text>
+            <line x1="183" y1="27" x2="295" y2="27" stroke="#3b82f6" stroke-width="2" marker-end="url(#arwLend)"/>
+            <text x="240" y="22" text-anchor="middle" font-size="8" fill="#3b82f6" font-weight="700">대출</text>
+            <line x1="295" y1="44" x2="183" y2="44" stroke="#22c55e" stroke-width="2" marker-end="url(#arwReturn)"/>
+            <text x="240" y="56" text-anchor="middle" font-size="8" fill="#22c55e" font-weight="700">반납</text>
+            <rect x="298" y="15" width="150" height="34" rx="8" fill="#fee2e2" stroke="#ef4444" stroke-width="2"/>
+            <text x="373" y="30" text-anchor="middle" font-size="10" fill="#991b1b" font-weight="700">available = False</text>
+            <text x="373" y="43" text-anchor="middle" font-size="8" fill="#991b1b">대출 중</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">def</span> <span class="fn">borrow_book</span>(book_id, days=<span class="num">14</span>):
+    <span class="str">"""도서 대출"""</span>
+    <span class="kw">if</span> book_id <span class="kw">not in</span> library:
+        <span class="fn">print</span>(<span class="str">"존재하지 않는 도서입니다."</span>)
+        <span class="kw">return</span>
+    book = library[book_id]
+    <span class="kw">if</span> <span class="kw">not</span> book[<span class="str">"available"</span>]:
+        <span class="fn">print</span>(<span class="str">f"'{book['title']}'은(는) 현재 대출 중입니다."</span>)
+        <span class="kw">return</span>
+    book[<span class="str">"available"</span>] = <span class="kw">False</span>
+    due = date.<span class="fn">today</span>() + timedelta(days=days)
+    book[<span class="str">"due_date"</span>] = due.<span class="fn">isoformat</span>()
+    <span class="fn">print</span>(<span class="str">f"대출 완료: {book['title']} (반납기한: {book['due_date']})"</span>)
+
+<span class="kw">def</span> <span class="fn">return_book</span>(book_id):
+    <span class="str">"""도서 반납"""</span>
+    <span class="kw">if</span> book_id <span class="kw">in</span> library <span class="kw">and</span> <span class="kw">not</span> library[book_id][<span class="str">"available"</span>]:
+        library[book_id][<span class="str">"available"</span>] = <span class="kw">True</span>
+        library[book_id][<span class="str">"due_date"</span>] = <span class="kw">None</span>
+        <span class="fn">print</span>(<span class="str">f"반납 완료: {library[book_id]['title']}"</span>)</div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="완성" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">01</div>
+                <div class="practice-desc"><code>show_all_books()</code>를 실행해 전체 도서 목록과 상태를 확인하세요.</div>
+                <div class="practice-result">B001: 대출가능, B002: 대출중 테이블 출력</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">02</div>
+                <div class="practice-desc"><code>borrow_book("B001")</code>을 실행하고 다시 <code>show_all_books()</code>로 상태 변화를 확인하세요.</div>
+                <div class="practice-result">B001이 대출가능 → 대출중으로 변경됨</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">03</div>
+                <div class="practice-desc"><code>return_book("B001")</code>으로 반납하고 <code>library["B001"]["due_date"]</code>가 <code>None</code>인지 확인하세요.</div>
+                <div class="practice-result">반납 완료 메시지 출력, due_date가 None으로 초기화</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3페이지: Step 3~4 -->
+<div class="page">
+    <h2>Step 3 — 검색 기능: 제목 / 저자로 찾기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/database.png" alt="데이터" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>중첩 딕셔너리에서 제목이나 저자로 책을 검색하려면 <code>items()</code>로 전체 순회 후, 내부 딕셔너리의 값에 <code>in</code> 연산자로 부분 일치 검색합니다.</p>
+
+    <!-- SVG: 검색 순회 과정 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 480 80" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="arwSch" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="5" y="20" width="90" height="40" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="50" y="37" text-anchor="middle" font-size="8" fill="#374151" font-weight="700">library</text>
+            <text x="50" y="51" text-anchor="middle" font-size="8" fill="#64748b">.items()</text>
+            <line x1="98" y1="40" x2="118" y2="40" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwSch)"/>
+            <rect x="120" y="20" width="110" height="40" rx="6" fill="#eff6ff" stroke="#6366f1" stroke-width="1.5"/>
+            <text x="175" y="34" text-anchor="middle" font-size="8" fill="#4338ca" font-weight="700">for id, info</text>
+            <text x="175" y="46" text-anchor="middle" font-size="8" fill="#64748b">in library.items()</text>
+            <line x1="233" y1="40" x2="253" y2="40" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwSch)"/>
+            <rect x="255" y="20" width="115" height="40" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="312" y="34" text-anchor="middle" font-size="8" fill="#92400e" font-weight="700">keyword in</text>
+            <text x="312" y="46" text-anchor="middle" font-size="8" fill="#64748b">info["title"]</text>
+            <line x1="373" y1="40" x2="393" y2="40" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwSch)"/>
+            <rect x="395" y="20" width="80" height="40" rx="6" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="435" y="34" text-anchor="middle" font-size="8" fill="#166534" font-weight="700">결과 목록</text>
+            <text x="435" y="46" text-anchor="middle" font-size="8" fill="#64748b">출력</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">def</span> <span class="fn">search_by_title</span>(keyword):
+    <span class="str">"""제목으로 검색 — 부분 일치"""</span>
+    results = []
+    <span class="kw">for</span> book_id, info <span class="kw">in</span> library.<span class="fn">items</span>():
+        <span class="kw">if</span> keyword <span class="kw">in</span> info[<span class="str">"title"</span>]:
+            results.<span class="fn">append</span>((book_id, info))
+    <span class="kw">if</span> results:
+        <span class="kw">for</span> bid, info <span class="kw">in</span> results:
+            status = <span class="str">"대출가능"</span> <span class="kw">if</span> info[<span class="str">"available"</span>] <span class="kw">else</span> <span class="str">"대출중"</span>
+            <span class="fn">print</span>(<span class="str">f"[{bid}] {info['title']} / {info['author']} — {status}"</span>)
+    <span class="kw">else</span>:
+        <span class="fn">print</span>(<span class="str">f"'{keyword}' 검색 결과 없음"</span>)
+
+<span class="kw">def</span> <span class="fn">search_by_author</span>(author):
+    <span class="str">"""저자로 검색"""</span>
+    results = [(bid, info) <span class="kw">for</span> bid, info <span class="kw">in</span> library.<span class="fn">items</span>()
+               <span class="kw">if</span> author <span class="kw">in</span> info[<span class="str">"author"</span>]]
+    <span class="kw">for</span> bid, info <span class="kw">in</span> results:
+        <span class="fn">print</span>(<span class="str">f"[{bid}] {info['title']}"</span>)</div>
+
+    <h3>Step 4 — 연체 확인 기능</h3>
+    <p>오늘 날짜와 <code>due_date</code>를 비교해 연체 여부를 확인합니다. <code>date.fromisoformat()</code>으로 문자열을 날짜 객체로 변환 후 차이를 계산합니다.</p>
+
+    <!-- SVG: 연체 계산 흐름 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 480 72" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="arwOvr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="5" y="20" width="110" height="30" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="60" y="33" text-anchor="middle" font-size="8" fill="#1d4ed8" font-weight="700">due_date (문자열)</text>
+            <text x="60" y="44" text-anchor="middle" font-size="8" fill="#64748b">"2026-03-10"</text>
+            <line x1="118" y1="35" x2="140" y2="35" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwOvr)"/>
+            <rect x="143" y="20" width="130" height="30" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="208" y="33" text-anchor="middle" font-size="8" fill="#92400e" font-weight="700">fromisoformat()</text>
+            <text x="208" y="44" text-anchor="middle" font-size="8" fill="#64748b">date 객체 변환</text>
+            <line x1="276" y1="35" x2="298" y2="35" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwOvr)"/>
+            <rect x="300" y="20" width="110" height="30" rx="6" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="355" y="33" text-anchor="middle" font-size="8" fill="#991b1b" font-weight="700">today - due_date</text>
+            <text x="355" y="44" text-anchor="middle" font-size="8" fill="#64748b">연체일수 계산</text>
+            <text x="430" y="30" font-size="8" fill="#64748b">0 이하: 정상</text>
+            <text x="430" y="44" font-size="8" fill="#ef4444">양수: 연체</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">def</span> <span class="fn">check_overdue</span>():
+    <span class="str">"""연체 도서 확인"""</span>
+    today = date.<span class="fn">today</span>()
+    overdue_found = <span class="kw">False</span>
+    <span class="fn">print</span>(<span class="str">"\n--- 연체 도서 ---"</span>)
+    <span class="kw">for</span> book_id, info <span class="kw">in</span> library.<span class="fn">items</span>():
+        <span class="kw">if</span> <span class="kw">not</span> info[<span class="str">"available"</span>] <span class="kw">and</span> info[<span class="str">"due_date"</span>]:
+            due = date.<span class="fn">fromisoformat</span>(info[<span class="str">"due_date"</span>])
+            days_over = (today - due).days
+            <span class="kw">if</span> days_over > <span class="num">0</span>:
+                <span class="fn">print</span>(<span class="str">f"[{book_id}] {info['title']} — {days_over}일 연체"</span>)
+                overdue_found = <span class="kw">True</span>
+    <span class="kw">if</span> <span class="kw">not</span> overdue_found:
+        <span class="fn">print</span>(<span class="str">"연체 도서 없음"</span>)</div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">04</div>
+                <div class="practice-desc"><code>search_by_title("파이썬")</code>과 <code>search_by_author("홍")</code>을 각각 실행하세요.</div>
+                <div class="practice-result">파이썬 관련 책 목록 / 홍씨 저자 책 목록 출력</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">05</div>
+                <div class="practice-desc">B002의 <code>due_date</code>를 어제 날짜로 바꾼 뒤 <code>check_overdue()</code>를 실행하세요.</div>
+                <div class="practice-result">B002: 1일 연체 출력</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">06</div>
+                <div class="practice-desc">새 책 "B003: 알고리즘"을 라이브러리에 직접 추가하고 <code>show_all_books()</code>로 확인하세요.</div>
+                <div class="practice-result">B003이 목록에 추가되어 3권 출력</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 4페이지: 문제 -->
+<div class="page">
+    <h2>연습 문제</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+    <!-- SVG: 문제 개요 흐름 -->
+    <div style="text-align:center;margin:8px 0 14px;">
+        <svg viewBox="0 0 480 50" style="max-width:480px;width:100%">
+            <text x="10" y="18" font-size="10" fill="#1e3a5f" font-weight="800">L3c 딕셔너리 기법 종합 활용</text>
+            <rect x="10" y="26" width="130" height="18" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="75" y="39" text-anchor="middle" font-size="8" fill="#1d4ed8">items() 순회 + 필터</text>
+            <rect x="150" y="26" width="130" height="18" rx="4" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+            <text x="215" y="39" text-anchor="middle" font-size="8" fill="#92400e">values() 집계</text>
+            <rect x="290" y="26" width="180" height="18" rx="4" fill="#f0fdf4" stroke="#22c55e" stroke-width="1"/>
+            <text x="380" y="39" text-anchor="middle" font-size="8" fill="#166534">중첩 딕셔너리 수정</text>
+        </svg>
+    </div>
+
+    <!-- SVG: 대출 통계 개요 -->
+    <div style="text-align:center;margin:10px 0 16px;">
+        <svg viewBox="0 0 480 60" style="max-width:480px;width:100%">
+            <rect x="5" y="8" width="140" height="44" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="75" y="26" text-anchor="middle" font-size="9" fill="#1e3a5f" font-weight="700">library.items() 순회</text>
+            <text x="75" y="40" text-anchor="middle" font-size="8" fill="#64748b">book_id, info 쌍</text>
+            <rect x="160" y="8" width="150" height="44" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="235" y="26" text-anchor="middle" font-size="9" fill="#1e3a5f" font-weight="700">info["available"]</text>
+            <text x="235" y="40" text-anchor="middle" font-size="8" fill="#64748b">True/False 상태 체크</text>
+            <rect x="325" y="8" width="150" height="44" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="400" y="26" text-anchor="middle" font-size="9" fill="#1e3a5f" font-weight="700">대출/반납 통계</text>
+            <text x="400" y="40" text-anchor="middle" font-size="8" fill="#64748b">카운터 누적</text>
+        </svg>
+    </div>
+
+    <!-- 문제 1 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q1</div>
+            <div class="problem-label">대출 가능 도서 목록 출력</div>
+            <div class="problem-diff easy">쉬움</div>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text"><code>library.items()</code>를 순회해서 <code>info["available"]</code>이 <code>True</code>인 책만 출력하는 <code>show_available()</code> 함수를 작성하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <div class="problem-example-label">출력</div>
+                    <div class="problem-example-value">[B001] 파이썬 입문 — 대출가능</div>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text"><code>if info["available"]:</code> 조건으로 필터링합니다.</div>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">def show_available():
+    for book_id, info in library.items():
+        if info["available"]:
+            print(f"[{book_id}] {info['title']} — 대출가능")</div>
+            </div>
+        </details>
+    </div>
+
+    <!-- 문제 2 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q2</div>
+            <div class="problem-label">도서 통계 출력</div>
+            <div class="problem-diff medium">보통</div>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text"><code>library.items()</code>를 순회해 전체 권수, 대출 중인 권수, 대출 가능한 권수를 계산하고 출력하는 <code>show_stats()</code> 함수를 작성하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <div class="problem-example-label">출력</div>
+                    <div class="problem-example-value">전체: 3권 | 대출중: 1권 | 대출가능: 2권</div>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text"><code>borrowed = sum(1 for info in library.values() if not info["available"])</code></div>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">def show_stats():
+    total = len(library)
+    borrowed = sum(1 for info in library.values()
+                   if not info["available"])
+    available = total - borrowed
+    print(f"전체: {total}권 | 대출중: {borrowed}권 | 대출가능: {available}권")</div>
+            </div>
+        </details>
+    </div>
+
+    <!-- 문제 3 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q3</div>
+            <div class="problem-label">도서 정보 수정 기능</div>
+            <div class="problem-diff hard">어려움</div>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">책 ID와 수정할 필드(제목 또는 저자), 새 값을 받아 해당 도서 정보를 수정하는 <code>update_book(book_id, field, value)</code> 함수를 작성하세요. 존재하지 않는 책 ID나 잘못된 필드에는 안내 메시지를 출력합니다.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <div class="problem-example-label">입력</div>
+                    <div class="problem-example-value">update_book("B001", "title", "파이썬 심화")</div>
+                </div>
+                <div class="problem-example-row">
+                    <div class="problem-example-label">출력</div>
+                    <div class="problem-example-value">수정 완료: B001 title = 파이썬 심화</div>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">수정 가능한 필드를 <code>["title", "author"]</code> 리스트로 정의하고 허용 목록에 있는지 검증합니다.</div>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">def update_book(book_id, field, value):
+    allowed = ["title", "author"]
+    if book_id not in library:
+        print("존재하지 않는 도서입니다.")
+        return
+    if field not in allowed:
+        print(f"수정 불가 필드: {field}")
+        return
+    library[book_id][field] = value
+    print(f"수정 완료: {book_id} {field} = {value}")</div>
+            </div>
+        </details>
+    </div>
+</div>
+
+<!-- 5페이지: 요약 -->
+<div class="page">
+    <h2>핵심 요약</h2>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>도서관 시스템 핵심 기법</h3>
+        <ul>
+            <li><strong>중첩 딕셔너리</strong>: 외부 키(책 ID) → 내부 딕셔너리(책 정보) 구조</li>
+            <li><strong>상태 관리</strong>: <code>book["available"] = True/False</code>로 대출 상태 전환</li>
+            <li><strong>중첩 접근</strong>: <code>library[book_id]["title"]</code> — 두 단계로 접근</li>
+            <li><strong>부분 일치 검색</strong>: <code>keyword in info["title"]</code> — 문자열 포함 여부</li>
+            <li><strong>날짜 연산</strong>: <code>date.fromisoformat()</code>로 문자열 → date 변환 후 빼기</li>
+            <li><strong>리스트 컴프리헨션 필터</strong>: <code>[x for x in items if 조건]</code></li>
+            <li><strong>values() 집계</strong>: <code>sum(1 for info in library.values() if 조건)</code></li>
+        </ul>
+    </div>
+
+    <!-- SVG: 중첩 딕셔너리 접근 패턴 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 85" style="max-width:480px;width:100%">
+            <text x="10" y="18" font-size="10" fill="#1e3a5f" font-weight="800">중첩 딕셔너리 접근 패턴</text>
+            <defs>
+                <marker id="arwNst" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="10" y="25" width="80" height="50" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="50" y="44" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">library</text>
+            <text x="50" y="57" text-anchor="middle" font-size="8" fill="#64748b">외부 dict</text>
+            <text x="50" y="69" text-anchor="middle" font-size="8" fill="#3b82f6">["B001"]</text>
+            <line x1="93" y1="50" x2="118" y2="50" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwNst)"/>
+            <rect x="120" y="25" width="90" height="50" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="165" y="44" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">책 정보 dict</text>
+            <text x="165" y="57" text-anchor="middle" font-size="8" fill="#64748b">내부 dict</text>
+            <text x="165" y="69" text-anchor="middle" font-size="8" fill="#f59e0b">["title"]</text>
+            <line x1="213" y1="50" x2="238" y2="50" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwNst)"/>
+            <rect x="240" y="25" width="100" height="50" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="290" y="44" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">"파이썬 입문"</text>
+            <text x="290" y="57" text-anchor="middle" font-size="8" fill="#64748b">최종 값</text>
+            <!-- 코드 표시 -->
+            <rect x="355" y="25" width="120" height="50" rx="6" fill="#0f172a"/>
+            <text x="415" y="44" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="8" fill="#86efac">library</text>
+            <text x="415" y="56" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="8" fill="#7dd3fc">["B001"]</text>
+            <text x="415" y="68" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="8" fill="#f9a8d4">["title"]</text>
+        </svg>
+    </div>
+
+    <h3>주요 패턴 비교</h3>
+    <table class="compare-table">
+        <tr>
+            <th>작업</th>
+            <th>코드</th>
+            <th>설명</th>
+        </tr>
+        <tr>
+            <td>중첩 값 읽기</td>
+            <td><code>library["B001"]["title"]</code></td>
+            <td>두 단계 키 접근</td>
+        </tr>
+        <tr>
+            <td>중첩 값 수정</td>
+            <td><code>library["B001"]["available"] = False</code></td>
+            <td>내부 딕셔너리 직접 수정</td>
+        </tr>
+        <tr>
+            <td>전체 순회</td>
+            <td><code>for bid, info in library.items()</code></td>
+            <td>키+값 동시 접근</td>
+        </tr>
+        <tr>
+            <td>값만 집계</td>
+            <td><code>sum(1 for info in library.values() if 조건)</code></td>
+            <td>값 딕셔너리만 순회</td>
+        </tr>
+        <tr>
+            <td>날짜 비교</td>
+            <td><code>date.fromisoformat(str_date)</code></td>
+            <td>문자열 → date 변환</td>
+        </tr>
+    </table>
+
+    <!-- SVG: 완성 출력 예시 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 90" style="max-width:480px;width:100%">
+            <rect x="5" y="5" width="470" height="80" rx="8" fill="#0f172a"/>
+            <text x="20" y="22" font-family="JetBrains Mono, monospace" font-size="9" fill="#64748b">$ python library.py</text>
+            <text x="20" y="36" font-family="JetBrains Mono, monospace" font-size="9" fill="#e2e8f0">ID     제목                저자         상태</text>
+            <text x="20" y="49" font-family="JetBrains Mono, monospace" font-size="9" fill="#86efac">B001   파이썬 입문          홍길동        대출가능</text>
+            <text x="20" y="62" font-family="JetBrains Mono, monospace" font-size="9" fill="#f9a8d4">B002   자료구조 완전 정복    김철수        대출중</text>
+            <text x="20" y="75" font-family="JetBrains Mono, monospace" font-size="9" fill="#7dd3fc">전체: 2권 | 대출중: 1권 | 대출가능: 1권</text>
+        </svg>
+    </div>
+
+    <!-- SVG: 연체 알림 시각화 -->
+    <div style="text-align:center;margin:10px 0;">
+        <svg viewBox="0 0 480 55" style="max-width:480px;width:100%">
+            <rect x="5" y="5" width="230" height="44" rx="8" fill="#fff7ed" stroke="#f97316" stroke-width="1.5"/>
+            <text x="118" y="22" text-anchor="middle" font-size="9" fill="#c2410c" font-weight="700">연체 발생 시</text>
+            <text x="118" y="36" text-anchor="middle" font-size="8" fill="#64748b">(today - due_date).days &gt; 0</text>
+            <rect x="250" y="5" width="225" height="44" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="362" y="22" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">정상 반납 시</text>
+            <text x="362" y="36" text-anchor="middle" font-size="8" fill="#64748b">(today - due_date).days &lt;= 0</text>
+        </svg>
+    </div>
+
+    <div class="step-box">
+        <div class="step-label">도전 과제</div>
+        <div class="step-title">도서관 시스템 확장</div>
+        <ul>
+            <li>대출 이력 기능: 각 책에 대출 날짜와 대출자 이름을 리스트로 관리</li>
+            <li>예약 기능: 대출 중인 책에 예약자 목록을 리스트로 관리</li>
+            <li>JSON 저장: <code>json.dump(library)</code>로 상태 영구 저장</li>
+        </ul>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

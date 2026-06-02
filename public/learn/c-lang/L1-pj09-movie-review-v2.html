@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 프로젝트: 영화 리뷰 카드</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #b45309; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 220px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #b45309; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 36px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #b45309; font-weight: 900; }
+
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #fef3c7; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #b45309; font-weight: 600;
+}
+
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 14px;
+    color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+
+.practice { margin: 20px 0; border-left: 4px solid #b45309; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #92400e; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #b45309; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #b45309; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fef3c7; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#b45309); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #fef3c7; color: #92400e; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fef3c7; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+.project-badge { display: inline-block; background: linear-gradient(135deg,#f59e0b,#b45309); color: #fff; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 99px; margin-bottom: 8px; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- ═══ 1페이지: 표지 ═══ -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">PJ</div>
+        <div class="cover-label">Project 09</div>
+        <div class="project-badge">실전 프로젝트</div>
+        <h1 class="cover-title">영화 리뷰 카드</h1>
+        <p class="cover-sub">좋아하는 영화의 별점과 리뷰를 C 언어로 예쁘게 출력합니다.</p>
+
+        <!-- SVG: 영화 리뷰 카드 미리보기 -->
+        <div style="margin:24px 0;">
+            <svg viewBox="0 0 460 140" style="max-width:460px;width:100%">
+                <rect x="10" y="10" width="440" height="120" rx="10" fill="#0f172a"/>
+                <text x="230" y="30" text-anchor="middle" font-size="11" fill="#b45309" font-weight="700">출력 결과 미리보기</text>
+                <text x="30" y="52" font-family="monospace" font-size="12" fill="#fcd34d">[ 영화 리뷰 카드 ]</text>
+                <text x="30" y="70" font-family="monospace" font-size="12" fill="#e2e8f0">  제목: 인터스텔라</text>
+                <text x="30" y="86" font-family="monospace" font-size="12" fill="#fcd34d">  별점: ***** (5/5)</text>
+                <text x="30" y="102" font-family="monospace" font-size="12" fill="#94a3b8">  한 줄 평: 우주 여행의 감동!</text>
+                <text x="30" y="118" font-family="monospace" font-size="12" fill="#86efac">  추천 여부: 강력 추천!</text>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/lightbulb.png" alt="아이디어" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 프로젝트에서 만드는 것</h3>
+            <ul>
+                <li>영화 제목, 장르, 별점, 한 줄 평을 포함한 리뷰 카드 출력.</li>
+                <li>별점을 <code>*</code> 문자로 시각적으로 표현합니다.</li>
+                <li>여러 영화 리뷰를 연속 출력하는 리뷰 모음 완성.</li>
+                <li>정렬된 정보 배치로 깔끔한 카드 레이아웃 구현.</li>
+            </ul>
+        </div>
+
+        <!-- SVG: 별점 표현 방법 -->
+        <div style="margin:24px 0 0;">
+            <svg viewBox="0 0 440 80" style="max-width:440px;width:100%">
+                <rect x="10" y="10" width="420" height="60" rx="8" fill="#0f172a"/>
+                <text x="25" y="35" font-family="monospace" font-size="13" fill="#e2e8f0">1점: </text>
+                <text x="60" y="35" font-family="monospace" font-size="13" fill="#fcd34d">*</text>
+                <text x="140" y="35" font-family="monospace" font-size="13" fill="#e2e8f0">3점: </text>
+                <text x="175" y="35" font-family="monospace" font-size="13" fill="#fcd34d">***</text>
+                <text x="270" y="35" font-family="monospace" font-size="13" fill="#e2e8f0">5점: </text>
+                <text x="305" y="35" font-family="monospace" font-size="13" fill="#fcd34d">*****</text>
+                <text x="25" y="58" font-size="10" fill="#64748b">* 하나 = 별점 1점, * 개수로 점수 표현</text>
+            </svg>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ 2페이지: 리뷰 카드 기본 구조 ═══ -->
+<div class="page">
+    <h2>영화 리뷰 카드 만들기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>영화 리뷰 카드는 제목, 장르, 감독, 별점, 한 줄 평, 추천 여부 6개 정보로 구성합니다. 정보 레이블을 같은 폭으로 맞추면 정렬이 예쁩니다.</p>
+
+    <!-- SVG 1: 카드 레이아웃 -->
+    <div style="text-align:center;margin:20px 0;">
+        <svg viewBox="0 0 460 160" style="max-width:460px;width:100%">
+            <rect x="10" y="10" width="440" height="140" rx="10" fill="#0f172a"/>
+            <rect x="20" y="20" width="420" height="28" rx="4" fill="#2d1d00" stroke="#f59e0b" stroke-width="1"/>
+            <text x="230" y="38" text-anchor="middle" font-family="monospace" font-size="12" fill="#fcd34d" font-weight="700">[ 영화 리뷰 카드 ]</text>
+            <line x1="20" y1="52" x2="440" y2="52" stroke="#334155" stroke-width="1"/>
+            <text x="30" y="70" font-family="monospace" font-size="11" fill="#94a3b8">  제목    :</text>
+            <text x="118" y="70" font-family="monospace" font-size="11" fill="#e2e8f0"> 인터스텔라</text>
+            <text x="30" y="86" font-family="monospace" font-size="11" fill="#94a3b8">  장르    :</text>
+            <text x="118" y="86" font-family="monospace" font-size="11" fill="#e2e8f0"> SF / 드라마</text>
+            <text x="30" y="102" font-family="monospace" font-size="11" fill="#94a3b8">  별점    :</text>
+            <text x="118" y="102" font-family="monospace" font-size="11" fill="#fcd34d"> ***** (5/5)</text>
+            <text x="30" y="118" font-family="monospace" font-size="11" fill="#94a3b8">  한 줄 평 :</text>
+            <text x="118" y="118" font-family="monospace" font-size="11" fill="#86efac"> 우주 여행의 감동!</text>
+            <text x="30" y="134" font-family="monospace" font-size="11" fill="#94a3b8">  추천    :</text>
+            <text x="118" y="134" font-family="monospace" font-size="11" fill="#67e8f9"> 강력 추천!</text>
+        </svg>
+    </div>
+
+    <!-- SVG 2: 별점 레벨 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 70" style="max-width:460px;width:100%">
+            <text x="230" y="14" text-anchor="middle" font-size="11" fill="#64748b" font-weight="700">별점 단계별 표현</text>
+            <rect x="5" y="20" width="80" height="40" rx="6" fill="#0f172a"/>
+            <text x="45" y="36" text-anchor="middle" font-size="10" fill="#94a3b8">별점 1</text>
+            <text x="45" y="52" text-anchor="middle" font-family="monospace" font-size="14" fill="#fcd34d">*</text>
+            <rect x="95" y="20" width="80" height="40" rx="6" fill="#0f172a"/>
+            <text x="135" y="36" text-anchor="middle" font-size="10" fill="#94a3b8">별점 2</text>
+            <text x="135" y="52" text-anchor="middle" font-family="monospace" font-size="14" fill="#fcd34d">**</text>
+            <rect x="185" y="20" width="80" height="40" rx="6" fill="#0f172a"/>
+            <text x="225" y="36" text-anchor="middle" font-size="10" fill="#94a3b8">별점 3</text>
+            <text x="225" y="52" text-anchor="middle" font-family="monospace" font-size="14" fill="#fcd34d">***</text>
+            <rect x="275" y="20" width="80" height="40" rx="6" fill="#0f172a"/>
+            <text x="315" y="36" text-anchor="middle" font-size="10" fill="#94a3b8">별점 4</text>
+            <text x="315" y="52" text-anchor="middle" font-family="monospace" font-size="14" fill="#fcd34d">****</text>
+            <rect x="365" y="20" width="90" height="40" rx="6" fill="#0f172a"/>
+            <text x="410" y="36" text-anchor="middle" font-size="10" fill="#fcd34d" font-weight="700">별점 5</text>
+            <text x="410" y="52" text-anchor="middle" font-family="monospace" font-size="14" fill="#fcd34d">*****</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="cmt">/* 영화 리뷰 카드 */</span>
+
+    <span class="cmt">// 카드 헤더</span>
+    <span class="fn">printf</span>(<span class="str">"==============================\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"       [ 영화 리뷰 카드 ]\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"==============================\n"</span>);
+
+    <span class="cmt">// 영화 정보</span>
+    <span class="fn">printf</span>(<span class="str">"  제목    : 인터스텔라\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"  장르    : SF / 드라마\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"  감독    : 크리스토퍼 놀란\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"------------------------------\n"</span>);
+
+    <span class="cmt">// 별점과 리뷰</span>
+    <span class="fn">printf</span>(<span class="str">"  별점    : ***** (5/5)\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"  한 줄 평 : 우주 여행의 감동!\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"  추천    : 강력 추천!\n"</span>);
+
+    <span class="fn">printf</span>(<span class="str">"==============================\n"</span>);
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/desktop-pc.png" alt="데스크탑" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="완성" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">위 코드를 입력하고 리뷰 카드를 출력해보세요.</div>
+                <div class="practice-result">정렬된 영화 리뷰 카드 출력</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">좋아하는 영화로 내용을 바꿔보세요.</div>
+                <div class="practice-result">나만의 리뷰 카드 완성</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ 3페이지: 리뷰 모음 만들기 ═══ -->
+<div class="page">
+    <h2>영화 리뷰 모음 만들기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/monitor.png" alt="모니터" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>여러 영화를 한 프로그램에서 연속 출력하면 나만의 영화 리뷰 모음이 완성됩니다.</p>
+
+    <!-- SVG 3: 카드 연속 출력 구조 -->
+    <div style="text-align:center;margin:20px 0;">
+        <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+            <rect x="10" y="10" width="130" height="60" rx="8" fill="#2d1d00" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="75" y="35" text-anchor="middle" font-size="11" fill="#fcd34d" font-weight="700">리뷰 카드 1</text>
+            <text x="75" y="55" text-anchor="middle" font-size="10" fill="#94a3b8">영화 A</text>
+            <text x="157" y="45" text-anchor="middle" font-size="11" fill="#64748b">빈 줄</text>
+            <text x="157" y="58" text-anchor="middle" font-size="9" fill="#64748b">(\n)</text>
+            <rect x="175" y="10" width="130" height="60" rx="8" fill="#2d1d00" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="240" y="35" text-anchor="middle" font-size="11" fill="#fcd34d" font-weight="700">리뷰 카드 2</text>
+            <text x="240" y="55" text-anchor="middle" font-size="10" fill="#94a3b8">영화 B</text>
+            <text x="322" y="45" text-anchor="middle" font-size="11" fill="#64748b">빈 줄</text>
+            <rect x="340" y="10" width="110" height="60" rx="8" fill="#2d1d00" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="395" y="35" text-anchor="middle" font-size="11" fill="#fcd34d" font-weight="700">리뷰 카드 3</text>
+            <text x="395" y="55" text-anchor="middle" font-size="10" fill="#94a3b8">영화 C</text>
+        </svg>
+    </div>
+
+    <!-- SVG 4: 정렬 맞추기 팁 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+            <text x="230" y="14" text-anchor="middle" font-size="11" fill="#64748b" font-weight="700">레이블 정렬 맞추기</text>
+            <rect x="10" y="20" width="200" height="55" rx="8" fill="#0f172a"/>
+            <text x="25" y="40" font-family="monospace" font-size="11" fill="#94a3b8">제목:</text>
+            <text x="70" y="40" font-family="monospace" font-size="11" fill="#e2e8f0">라라랜드</text>
+            <text x="25" y="58" font-family="monospace" font-size="11" fill="#94a3b8">한줄평:</text>
+            <text x="85" y="58" font-family="monospace" font-size="11" fill="#fca5a5">정렬 안 맞음</text>
+            <rect x="250" y="20" width="200" height="55" rx="8" fill="#0f172a"/>
+            <text x="265" y="40" font-family="monospace" font-size="11" fill="#94a3b8">제목    :</text>
+            <text x="335" y="40" font-family="monospace" font-size="11" fill="#e2e8f0">라라랜드</text>
+            <text x="265" y="58" font-family="monospace" font-size="11" fill="#94a3b8">한 줄 평 :</text>
+            <text x="335" y="58" font-family="monospace" font-size="11" fill="#86efac">정렬 맞음</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="cmt">/* 영화 리뷰 모음 - 3편 */</span>
+
+    <span class="cmt">// 영화 1</span>
+    <span class="fn">printf</span>(<span class="str">"[ 인터스텔라 ]\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"  별점    : *****\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"  한 줄 평 : 감동적인 SF 걸작\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"\n"</span>);
+
+    <span class="cmt">// 영화 2</span>
+    <span class="fn">printf</span>(<span class="str">"[ 라라랜드 ]\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"  별점    : ****\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"  한 줄 평 : 꿈을 향한 아름다운 이야기\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"\n"</span>);
+
+    <span class="cmt">// 영화 3</span>
+    <span class="fn">printf</span>(<span class="str">"[ 어벤져스 ]\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"  별점    : ****\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"  한 줄 평 : 히어로 액션의 정점!\n"</span>);
+
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">3편의 리뷰 모음을 출력해보세요.</div>
+                <div class="practice-result">3편 연속 리뷰 출력</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">좋아하는 영화 3편으로 내용을 교체해보세요.</div>
+                <div class="practice-result">나만의 리뷰 모음 완성</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">전체를 테두리(====)로 감싸서 리뷰 모음 카드를 완성해보세요.</div>
+                <div class="practice-result">완성도 높은 리뷰 카드</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ 4페이지: 도전 과제 + 요약 ═══ -->
+<div class="page">
+    <h2>도전 과제</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/keyboard.png" alt="키보드" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q1</div>
+            <div class="problem-label">완전한 리뷰 카드 작성</div>
+            <span class="problem-diff easy">기본</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">좋아하는 영화 1편의 완전한 리뷰 카드를 작성하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">조건 1</span><span class="problem-example-value">제목, 장르, 감독, 별점, 한 줄 평 포함</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">조건 2</span><span class="problem-example-value">별점을 * 기호로 표현</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">조건 3</span><span class="problem-example-value">테두리로 감싸기</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>예시 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code"><span class="fn">printf</span>(<span class="str">"=========================\n"</span>);
+<span class="fn">printf</span>(<span class="str">"  제목    : 해리포터\n"</span>);
+<span class="fn">printf</span>(<span class="str">"  장르    : 판타지\n"</span>);
+<span class="fn">printf</span>(<span class="str">"  별점    : *****\n"</span>);
+<span class="fn">printf</span>(<span class="str">"  한 줄 평 : 마법 세계의 모험!\n"</span>);
+<span class="fn">printf</span>(<span class="str">"=========================\n"</span>);</div>
+            </div>
+        </details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q2</div>
+            <div class="problem-label">TOP 3 리뷰 모음</div>
+            <span class="problem-diff medium">심화</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">내가 본 영화 중 TOP 3를 선정해서 순위와 함께 출력하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">형식</span><span class="problem-example-value">[1위] 제목, [2위] 제목, [3위] 제목</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">각 리뷰 앞에 <code>printf("[1위]");</code> 처럼 순위를 출력하면 됩니다.</div>
+            </div>
+        </details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q3</div>
+            <div class="problem-label">책 또는 게임 리뷰 카드</div>
+            <span class="problem-diff easy">창의</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">영화 대신 좋아하는 책 또는 게임의 리뷰 카드를 만들어보세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">힌트</span><span class="problem-example-value">필드 이름만 바꾸면 됩니다 (저자, 개발사 등)</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>예시 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code"><span class="fn">printf</span>(<span class="str">"[ 게임 리뷰 카드 ]\n"</span>);
+<span class="fn">printf</span>(<span class="str">"  게임명   : 마인크래프트\n"</span>);
+<span class="fn">printf</span>(<span class="str">"  장르    : 샌드박스\n"</span>);
+<span class="fn">printf</span>(<span class="str">"  별점    : *****\n"</span>);
+<span class="fn">printf</span>(<span class="str">"  한 줄 평 : 무한한 창의력!\n"</span>);</div>
+            </div>
+        </details>
+    </div>
+
+    <div class="summary" style="background:#ffffff;">
+        <h3>핵심 요약</h3>
+        <ul>
+            <li><code>*</code> 기호 반복으로 별점을 시각적으로 표현 가능</li>
+            <li>레이블 폭을 일정하게 맞추면 정렬된 카드 레이아웃 완성</li>
+            <li><code>printf("\n")</code>으로 카드 사이 여백 삽입</li>
+            <li>여러 카드를 연속 출력해 리뷰 모음집 구성 가능</li>
+            <li>주석으로 각 영화 섹션 구분 → 코드 읽기 쉬움</li>
+        </ul>
+    </div>
+
+    <!-- SVG: 완성 리뷰 카드 미니 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 60" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="52" rx="8" fill="#0f172a"/>
+            <text x="230" y="22" text-anchor="middle" font-family="monospace" font-size="11" fill="#fcd34d" font-weight="700">[ 영화 리뷰 카드 ]</text>
+            <text x="30" y="36" font-family="monospace" font-size="11" fill="#94a3b8">  제목 : 내 영화</text>
+            <text x="200" y="36" font-family="monospace" font-size="11" fill="#fcd34d">  별점 : *****</text>
+            <text x="30" y="50" font-family="monospace" font-size="11" fill="#86efac">  한 줄 평 : 최고의 영화!</text>
+        </svg>
+    </div>
+</div>
+
+
+    <!-- Extra SVG -->
+    <div style="text-align:center;margin:8px 0;">
+        <svg viewBox="0 0 460 50" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="200" height="40" rx="8" fill="#0f172a" stroke="#b45309" stroke-width="1.5"/>
+            <text x="110" y="22" text-anchor="middle" font-size="10" fill="#b45309" font-weight="700">리뷰 카드</text>
+            <text x="110" y="38" text-anchor="middle" font-family="monospace" font-size="12" fill="#e2e8f0">* 별점 기호</text>
+            <rect x="250" y="5" width="200" height="40" rx="8" fill="#0f172a" stroke="#b45309" stroke-width="1.5"/>
+            <text x="350" y="22" text-anchor="middle" font-size="10" fill="#b45309" font-weight="700">예시</text>
+            <text x="350" y="38" text-anchor="middle" font-family="monospace" font-size="12" fill="#94a3b8">정렬 맞추기</text>
+        </svg>
+    </div>
+    <!-- Extra SVG -->
+    <div style="text-align:center;margin:6px 0;">
+        <svg viewBox="0 0 460 40" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="30" rx="6" fill="#0f172a"/>
+            <text x="230" y="24" text-anchor="middle" font-size="11" fill="#b45309" font-weight="700">리뷰 카드 2</text>
+        </svg>
+    </div>
+    <!-- Extra SVG -->
+    <div style="text-align:center;margin:6px 0;">
+        <svg viewBox="0 0 460 40" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="30" rx="6" fill="#0f172a"/>
+            <text x="230" y="24" text-anchor="middle" font-size="11" fill="#b45309" font-weight="700">리뷰 카드 3</text>
+        </svg>
+    </div>
+    <div class="code"><span class="cmt">// 추가 예시</span>
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="fn">printf</span>(<span class="str">"예시 출력
+"</span>);
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+
+
+
+<script>
+(function(){
+  var KEY = 'cs_ans_' + location.pathname.replace(/[^a-zA-Z0-9]/g,'_');
+  var pagePath = location.pathname;
+  var userId = null;
+  try {
+    userId = window.parent?.localStorage?.getItem('codingssok_user_id')
+      || localStorage.getItem('codingssok_user_id');
+  } catch(e) {}
+
+  function save(){
+    var areas = document.querySelectorAll('textarea');
+    var saved = 0;
+    areas.forEach(function(ta, i){
+      if(ta.value.trim()) {
+        localStorage.setItem(KEY + '_' + i, ta.value);
+        saved++;
+      } else {
+        localStorage.removeItem(KEY + '_' + i);
+      }
+    });
+    if(saved > 0) showSaveIndicator();
+  }
+
+  function load(){
+    var areas = document.querySelectorAll('textarea');
+    var restored = 0;
+    areas.forEach(function(ta, i){
+      var val = localStorage.getItem(KEY + '_' + i);
+      if(val && val.trim()) {
+        ta.value = val;
+        ta.style.borderColor = '#10b981';
+        ta.style.boxShadow = '0 0 0 2px rgba(16,185,129,0.15)';
+        setTimeout(function(){ ta.style.borderColor = ''; ta.style.boxShadow = ''; }, 2000);
+        restored++;
+      }
+    });
+    if(restored > 0) showRestoreIndicator(restored);
+  }
+
+  function saveToDb(){
+    if(!userId) return;
+    var areas = document.querySelectorAll('textarea');
+    var answers = [];
+    areas.forEach(function(ta, i){
+      if(ta.value.trim()) answers.push({ field_index: i, answer_text: ta.value });
+    });
+    if(answers.length === 0) return;
+    fetch('/api/answers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId, page_path: pagePath, answers: answers })
+    }).catch(function(){});
+  }
+
+  function loadFromDb(){
+    if(!userId) return;
+    fetch('/api/answers?user_id=' + encodeURIComponent(userId) + '&page_path=' + encodeURIComponent(pagePath))
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(!d.answers || !d.answers.length) return;
+        var areas = document.querySelectorAll('textarea');
+        d.answers.forEach(function(a){
+          if(areas[a.field_index] && a.answer_text) {
+            areas[a.field_index].value = a.answer_text;
+            localStorage.setItem(KEY + '_' + a.field_index, a.answer_text);
+          }
+        });
+      }).catch(function(){});
+  }
+
+  function showSaveIndicator(){
+    var el = document.getElementById('cs-save-ind');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'cs-save-ind';
+      el.style.cssText = 'position:fixed;bottom:16px;right:16px;padding:6px 14px;border-radius:8px;background:#0f172a;color:#22c55e;font-size:11px;font-weight:700;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+      document.body.appendChild(el);
+    }
+    el.textContent = '\u2713 \uB2F5\uC548 \uC800\uC7A5\uB428'; // ✓ 답안 저장됨
+    el.style.opacity = '1';
+    setTimeout(function(){ el.style.opacity = '0'; }, 1500);
+  }
+
+  function showRestoreIndicator(n){
+    var el = document.getElementById('cs-save-ind');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'cs-save-ind';
+      el.style.cssText = 'position:fixed;bottom:16px;right:16px;padding:6px 14px;border-radius:8px;background:#0f172a;color:#3b82f6;font-size:11px;font-weight:700;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+      document.body.appendChild(el);
+    }
+    el.textContent = '\u21BB ' + n + '\uAC1C \uB2F5\uC548 \uBCF5\uC6D0'; // ↻ n개 답안 복원
+    el.style.color = '#3b82f6';
+    el.style.opacity = '1';
+    setTimeout(function(){ el.style.opacity = '0'; }, 2500);
+  }
+
+  var t = null;
+  document.addEventListener('input', function(e){
+    if(e.target.tagName === 'TEXTAREA'){
+      clearTimeout(t);
+      t = setTimeout(function(){ save(); saveToDb(); }, 300);
+    }
+  });
+  document.addEventListener('change', function(e){
+    if(e.target.tagName === 'TEXTAREA'){ save(); saveToDb(); }
+  });
+  document.addEventListener('focusout', function(e){
+    if(e.target.tagName === 'TEXTAREA'){ save(); saveToDb(); }
+  });
+  window.addEventListener('beforeunload', function(){ save(); saveToDb(); });
+
+  // 즉시 로드
+  load();
+  loadFromDb();
+})();
+</script>
+</body>
+</html>

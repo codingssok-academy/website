@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>L7-PJ15 문장 분석기</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:#e8edf2;font-family:'Noto Sans KR',sans-serif;counter-reset:page;}
+  .page{width:210mm;min-height:297mm;margin:16px auto;padding:18mm 20mm 15mm 22mm;background:#fff;box-shadow:0 2px 12px rgba(0,0,0,.12);position:relative;overflow:hidden;}
+  .page::after{content:counter(page);counter-increment:page;position:absolute;bottom:10mm;right:20mm;font-size:9pt;color:#94a3b8;}
+
+  .cover{display:flex;height:100%;gap:0;}
+  .cover-sidebar{width:10px;background:#1e3a5f;border-radius:3px 0 0 3px;flex-shrink:0;}
+  .cover-accent{width:7px;background:#e6a817;flex-shrink:0;}
+  .cover-body{flex:1;padding:0 0 0 28px;display:flex;flex-direction:column;justify-content:space-between;}
+  .cover-top{padding-top:20px;}
+  .badge-row{display:flex;gap:8px;align-items:center;margin-bottom:16px;}
+  .badge{padding:4px 12px;border-radius:20px;font-size:9pt;font-weight:700;}
+  .badge-chapter{background:#1e3a5f;color:#fff;}
+  .badge-project{background:#e6a817;color:#1e3a5f;}
+  .badge-level{background:#f0f4f8;color:#475569;border:1px solid #cbd5e1;}
+  .cover-title{font-size:26pt;font-weight:900;color:#1e3a5f;line-height:1.15;margin-bottom:8px;}
+  .cover-subtitle{font-size:13pt;color:#e6a817;font-weight:700;margin-bottom:20px;}
+  .cover-desc{font-size:10.5pt;color:#475569;line-height:1.8;background:#f8fafc;padding:14px 18px;border-left:4px solid #1e3a5f;border-radius:0 6px 6px 0;}
+  .cover-svg{margin:18px 0;}
+  .cover-goals{margin-top:14px;}
+  .cover-goals h3{font-size:10pt;font-weight:700;color:#1e3a5f;margin-bottom:10px;}
+  .goal-item{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:9.5pt;color:#334155;}
+  .goal-dot{width:8px;height:8px;border-radius:50%;background:#e6a817;flex-shrink:0;}
+  .cover-bottom{border-top:2px solid #f1f5f9;padding-top:14px;display:flex;justify-content:space-between;align-items:center;}
+  .cover-meta{font-size:8.5pt;color:#94a3b8;}
+
+  .section-title{font-size:15pt;font-weight:900;color:#1e3a5f;border-bottom:3px solid #e6a817;padding-bottom:6px;margin-bottom:18px;}
+  .sub-title{font-size:11.5pt;font-weight:700;color:#1e3a5f;margin:18px 0 10px;}
+  p{font-size:9.5pt;color:#334155;line-height:1.9;margin-bottom:10px;}
+
+  .code{background:#0f172a;border-radius:8px;padding:14px 18px;margin:12px 0;font-family:'JetBrains Mono',monospace;font-size:8.5pt;line-height:1.8;overflow-x:auto;}
+  .code .kw{color:#c084fc;}.code .fn{color:#67e8f9;}.code .str{color:#86efac;}
+  .code .num{color:#7dd3fc;}.code .cmt{color:#64748b;}.code .var{color:#fbbf24;}
+  .code .op{color:#f472b6;}.code .pp{color:#fb923c;}
+
+  .tip{background:#fffbeb;border:1px solid #fcd34d;border-left:4px solid #e6a817;border-radius:6px;padding:12px 16px;margin:12px 0;font-size:9pt;color:#78350f;}
+  .info{background:#eff6ff;border:1px solid #93c5fd;border-left:4px solid #3b82f6;border-radius:6px;padding:12px 16px;margin:12px 0;font-size:9pt;color:#1e3a8a;}
+
+  .problem-box{border:2px solid #1e3a5f;border-radius:8px;margin:14px 0;overflow:hidden;}
+  .problem-head{background:#1e3a5f;color:#fff;padding:8px 16px;font-size:9.5pt;font-weight:700;display:flex;justify-content:space-between;align-items:center;}
+  .problem-body{padding:14px 16px;}
+  .problem-body p{margin:0 0 8px;font-size:9.5pt;}
+  details summary{cursor:pointer;font-size:9pt;color:#1e3a5f;font-weight:700;margin-top:10px;padding:6px 10px;background:#f0f4f8;border-radius:4px;}
+  details[open] summary{background:#dbeafe;}
+  .answer{padding:10px 12px;background:#f8fafc;border-radius:4px;margin-top:6px;font-size:9pt;color:#334155;}
+  .answer .code{margin:6px 0;font-size:8pt;}
+
+  .svg-wrap{margin:12px 0;text-align:center;}
+  .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0;}
+  .stat-box{background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:12px;text-align:center;}
+  .stat-num{font-size:20pt;font-weight:900;color:#1e3a5f;}
+  .stat-label{font-size:8.5pt;color:#94a3b8;margin-top:4px;}
+
+  .summary-box{background:#f0f4f8;border-radius:8px;padding:16px 20px;margin:14px 0;}
+  .summary-box h3{font-size:10pt;font-weight:700;color:#1e3a5f;margin-bottom:10px;}
+  .summary-item{display:flex;gap:10px;margin-bottom:7px;font-size:9pt;color:#334155;}
+  .summary-label{background:#1e3a5f;color:#fff;padding:2px 8px;border-radius:3px;font-size:8pt;font-weight:700;white-space:nowrap;}
+
+  @media print{body{background:#fff;}.page{margin:0;box-shadow:none;page-break-after:always;}}
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- PAGE 1: COVER -->
+<div class="page">
+  <div class="cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+      <div class="cover-top">
+        <div class="badge-row">
+          <span class="badge badge-chapter">L7 문자열</span>
+          <span class="badge badge-project">PROJECT 15</span>
+          <span class="badge badge-level">종합</span>
+        </div>
+        <div class="cover-title">문장 분석기<br>종합 프로젝트</div>
+        <div class="cover-subtitle">L7 마지막 관문 — 단어수 / 문장수 / 평균 길이</div>
+        <div class="cover-desc">
+          L7에서 배운 모든 문자열 기술의 총집합이다.<br>
+          단어 수(strtok), 문장 수(strchr), 평균 단어 길이, 가장 긴 단어, 글자 통계까지<br>
+          <b>하나의 텍스트를 다각도로 분석</b>하는 완전한 텍스트 분석기를 완성한다.
+        </div>
+
+        <div class="cover-svg">
+          <svg width="420" height="90" viewBox="0 0 420 90">
+            <!-- Input text -->
+            <rect x="10" y="10" width="180" height="28" rx="5" fill="#f8fafc" stroke="#e2e8f0"/>
+            <text x="100" y="28" text-anchor="middle" font-size="9.5" fill="#334155" font-family="'Noto Sans KR'">"Hello! I love C. It's fun!"</text>
+            <path d="M195 24 L235 24" fill="none" stroke="#e6a817" stroke-width="2" marker-end="url(#aa)"/>
+            <!-- Stats boxes -->
+            <rect x="240" y="5" width="60" height="28" rx="4" fill="#dbeafe" stroke="#93c5fd"/>
+            <text x="270" y="23" text-anchor="middle" font-size="10" font-weight="700" fill="#1e40af" font-family="'Noto Sans KR'">단어: 6</text>
+            <rect x="308" y="5" width="60" height="28" rx="4" fill="#fef3c7" stroke="#fcd34d"/>
+            <text x="338" y="23" text-anchor="middle" font-size="10" font-weight="700" fill="#92400e" font-family="'Noto Sans KR'">문장: 3</text>
+            <rect x="240" y="40" width="60" height="28" rx="4" fill="#f0fdf4" stroke="#22c55e"/>
+            <text x="270" y="58" text-anchor="middle" font-size="9" font-weight="700" fill="#15803d" font-family="'Noto Sans KR'">평균: 3.8</text>
+            <rect x="308" y="40" width="60" height="28" rx="4" fill="#f5f3ff" stroke="#a78bfa"/>
+            <text x="338" y="58" text-anchor="middle" font-size="9" font-weight="700" fill="#7c3aed" font-family="'Noto Sans KR'">최장: love</text>
+            <defs><marker id="aa" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#e6a817"/></marker></defs>
+          </svg>
+        </div>
+
+        <div class="cover-goals">
+          <h3>학습 목표</h3>
+          <div class="goal-item"><div class="goal-dot"></div><span>strtok으로 단어 수 & 가장 긴 단어 분석</span></div>
+          <div class="goal-item"><div class="goal-dot"></div><span>strchr로 '.', '!', '?' 개수 세어 문장 수 계산</span></div>
+          <div class="goal-item"><div class="goal-dot"></div><span>isalpha/isdigit으로 글자 종류별 통계</span></div>
+          <div class="goal-item"><div class="goal-dot"></div><span>L7 전체 내용을 하나의 프로그램으로 통합</span></div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;margin:12px 0 8px;">
+            <img src="/images/learn/computer-basics/keyboard.png" alt="키보드 - 문자열 입력" style="width:36px;height:36px;object-fit:contain;background:#fff;border-radius:8px;">
+            <img src="/images/learn/c-lang/book.png" alt="교재 - 문자열 개념 학습" style="width:36px;height:36px;object-fit:contain;background:#fff;border-radius:8px;">
+            <img src="/images/learn/c-lang/notebook.png" alt="노트북 - 문자열 기록" style="width:36px;height:36px;object-fit:contain;background:#fff;border-radius:8px;">
+            <img src="/images/learn/c-lang/lock.png" alt="자물쇠 - 문자열 보안 처리" style="width:36px;height:36px;object-fit:contain;background:#fff;border-radius:8px;">
+        </div>
+<div class="cover-bottom">
+        <div class="cover-meta">코딩쏙 C언어 · L7 문자열 · PJ-15 (마지막)</div>
+        <div class="cover-meta">종합 문자열 분석기</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 2: 분석기 완전 구현 -->
+<div class="page">
+  <div style="display:flex;align-items:center;gap:8px;margin:10px 0 6px;padding:6px 12px;background:#eff6ff;border-radius:6px;">
+    <img src="/images/learn/computer-basics/keyboard.png" alt="키보드 - 문자열 입력" style="width:26px;height:26px;object-fit:contain;background:#fff;border-radius:8px;">
+</div>
+<div class="section-title">완전한 문장 분석기</div>
+
+  <div class="code">
+<span class="pp">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="pp">#include</span> <span class="str">&lt;string.h&gt;</span>
+<span class="pp">#include</span> <span class="str">&lt;ctype.h&gt;</span>
+
+<span class="kw">void</span> <span class="fn">analyze</span>(<span class="kw">char</span> <span class="var">text</span>[]) {
+    <span class="cmt">// === 1. 글자 종류별 통계 ===</span>
+    <span class="kw">int</span> <span class="var">upper</span>=<span class="num">0</span>, <span class="var">lower</span>=<span class="num">0</span>, <span class="var">digit</span>=<span class="num">0</span>, <span class="var">space</span>=<span class="num">0</span>, <span class="var">punct</span>=<span class="num">0</span>;
+    <span class="kw">for</span> (<span class="kw">int</span> <span class="var">i</span>=<span class="num">0</span>; <span class="var">text</span>[<span class="var">i</span>]; <span class="var">i</span><span class="op">++</span>) {
+        <span class="kw">if</span>      (<span class="fn">isupper</span>(<span class="var">text</span>[<span class="var">i</span>])) <span class="var">upper</span><span class="op">++</span>;
+        <span class="kw">else if</span> (<span class="fn">islower</span>(<span class="var">text</span>[<span class="var">i</span>])) <span class="var">lower</span><span class="op">++</span>;
+        <span class="kw">else if</span> (<span class="fn">isdigit</span>(<span class="var">text</span>[<span class="var">i</span>])) <span class="var">digit</span><span class="op">++</span>;
+        <span class="kw">else if</span> (<span class="fn">isspace</span>(<span class="var">text</span>[<span class="var">i</span>])) <span class="var">space</span><span class="op">++</span>;
+        <span class="kw">else</span>                       <span class="var">punct</span><span class="op">++</span>;
+    }
+
+    <span class="cmt">// === 2. 문장 수 (., !, ? 기준) ===</span>
+    <span class="kw">int</span> <span class="var">sentences</span> = <span class="num">0</span>;
+    <span class="kw">for</span> (<span class="kw">int</span> <span class="var">i</span>=<span class="num">0</span>; <span class="var">text</span>[<span class="var">i</span>]; <span class="var">i</span><span class="op">++</span>)
+        <span class="kw">if</span> (<span class="var">text</span>[<span class="var">i</span>]==<span class="str">'.'</span> <span class="op">||</span> <span class="var">text</span>[<span class="var">i</span>]==<span class="str">'!'</span> <span class="op">||</span> <span class="var">text</span>[<span class="var">i</span>]==<span class="str">'?'</span>) <span class="var">sentences</span><span class="op">++</span>;
+
+    <span class="cmt">// === 3. 단어 수 + 최장 단어 (strtok) ===</span>
+    <span class="kw">char</span> <span class="var">copy</span>[<span class="num">500</span>]; <span class="fn">strcpy</span>(<span class="var">copy</span>, <span class="var">text</span>);  <span class="cmt">// strtok이 원본 수정하므로 복사</span>
+    <span class="kw">int</span>  <span class="var">word_cnt</span>=<span class="num">0</span>, <span class="var">total_len</span>=<span class="num">0</span>, <span class="var">max_len</span>=<span class="num">0</span>;
+    <span class="kw">char</span> <span class="var">longest</span>[<span class="num">50</span>] = <span class="str">""</span>;
+
+    <span class="kw">char</span> <span class="op">*</span><span class="var">tok</span> = <span class="fn">strtok</span>(<span class="var">copy</span>, <span class="str">" \t\n,.!?;:"</span>);
+    <span class="kw">while</span> (<span class="var">tok</span> <span class="op">!=</span> <span class="var">NULL</span>) {
+        <span class="kw">int</span> <span class="var">wlen</span> = <span class="fn">strlen</span>(<span class="var">tok</span>);
+        <span class="var">word_cnt</span><span class="op">++</span>;
+        <span class="var">total_len</span> <span class="op">+=</span> <span class="var">wlen</span>;
+        <span class="kw">if</span> (<span class="var">wlen</span> <span class="op">&gt;</span> <span class="var">max_len</span>) { <span class="var">max_len</span> = <span class="var">wlen</span>; <span class="fn">strcpy</span>(<span class="var">longest</span>, <span class="var">tok</span>); }
+        <span class="var">tok</span> = <span class="fn">strtok</span>(<span class="var">NULL</span>, <span class="str">" \t\n,.!?;:"</span>);
+    }
+
+    <span class="cmt">// === 결과 출력 ===</span>
+    <span class="fn">printf</span>(<span class="str">"=== 문장 분석 결과 ===\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"전체 길이   : %d\n"</span>, (<span class="kw">int</span>)<span class="fn">strlen</span>(<span class="var">text</span>));
+    <span class="fn">printf</span>(<span class="str">"단어 수     : %d\n"</span>, <span class="var">word_cnt</span>);
+    <span class="fn">printf</span>(<span class="str">"문장 수     : %d\n"</span>, <span class="var">sentences</span>);
+    <span class="fn">printf</span>(<span class="str">"평균 단어길이: %.1f\n"</span>, <span class="var">word_cnt</span>?(<span class="kw">float</span>)<span class="var">total_len</span>/<span class="var">word_cnt</span>:<span class="num">0</span>);
+    <span class="fn">printf</span>(<span class="str">"가장 긴 단어: \"%s\" (%d글자)\n"</span>, <span class="var">longest</span>, <span class="var">max_len</span>);
+    <span class="fn">printf</span>(<span class="str">"대문자/소문자/숫자/공백/기타: %d/%d/%d/%d/%d\n"</span>,
+           <span class="var">upper</span>, <span class="var">lower</span>, <span class="var">digit</span>, <span class="var">space</span>, <span class="var">punct</span>);
+}
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="kw">char</span> <span class="var">text</span>[<span class="num">500</span>];
+    <span class="fn">printf</span>(<span class="str">"텍스트 입력: "</span>);
+    <span class="fn">fgets</span>(<span class="var">text</span>, <span class="kw">sizeof</span>(<span class="var">text</span>), <span class="var">stdin</span>);
+    <span class="var">text</span>[<span class="fn">strcspn</span>(<span class="var">text</span>, <span class="str">"\n"</span>)] = <span class="str">'\0'</span>;
+    <span class="fn">analyze</span>(<span class="var">text</span>);
+    <span class="kw">return</span> <span class="num">0</span>;
+}
+  </div>
+</div>
+
+<!-- PAGE 3: 실행 예시 + L7 총정리 -->
+<div class="page">
+  <div style="display:flex;align-items:center;gap:8px;margin:10px 0 6px;padding:6px 12px;background:#eff6ff;border-radius:6px;">
+    <img src="/images/learn/c-lang/book.png" alt="교재 - 문자열 개념 학습" style="width:26px;height:26px;object-fit:contain;background:#fff;border-radius:8px;">
+</div>
+<div class="section-title">실행 예시 + L7 총정리</div>
+
+  <div style="display:flex;align-items:center;gap:8px;margin:8px 0 4px;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트북 - 문자열 기록" style="width:22px;height:22px;object-fit:contain;opacity:0.85;background:#fff;border-radius:8px;">
+</div>
+<div class="sub-title">실행 예시</div>
+  <div class="svg-wrap">
+    <svg width="480" height="140" viewBox="0 0 480 140">
+      <rect x="10" y="10" width="460" height="126" rx="6" fill="#0f172a" stroke="#334155"/>
+      <text x="24" y="28" font-size="9" fill="#67e8f9" font-family="'JetBrains Mono'">텍스트: Hello! I love C programming. It's fun!</text>
+      <text x="24" y="44" font-size="9" fill="#94a3b8" font-family="'JetBrains Mono'">=== 문장 분석 결과 ===</text>
+      <text x="24" y="58" font-size="9" fill="#86efac" font-family="'JetBrains Mono'">전체 길이   : 40</text>
+      <text x="24" y="72" font-size="9" fill="#86efac" font-family="'JetBrains Mono'">단어 수     : 7</text>
+      <text x="24" y="86" font-size="9" fill="#86efac" font-family="'JetBrains Mono'">문장 수     : 3</text>
+      <text x="24" y="100" font-size="9" fill="#86efac" font-family="'JetBrains Mono'">평균 단어길이: 5.1</text>
+      <text x="24" y="114" font-size="9" fill="#86efac" font-family="'JetBrains Mono'">가장 긴 단어: "programming" (11글자)</text>
+      <text x="24" y="128" font-size="9" fill="#86efac" font-family="'JetBrains Mono'">대/소/숫/공/기: 2/28/0/6/4</text>
+    </svg>
+  </div>
+
+  <div class="sub-title">L7 문자열 단원 총정리 마인드맵</div>
+  <div class="svg-wrap">
+    <svg width="480" height="160" viewBox="0 0 480 160">
+      <!-- Center -->
+      <ellipse cx="240" cy="80" rx="50" ry="25" fill="#1e3a5f"/>
+      <text x="240" y="85" text-anchor="middle" font-size="11" font-weight="700" fill="#fff" font-family="'Noto Sans KR'">L7 문자열</text>
+      <!-- Branches -->
+      <line x1="195" y1="70" x2="130" y2="40" stroke="#e6a817" stroke-width="1.5"/>
+      <rect x="60" y="20" width="72" height="40" rx="4" fill="#fef3c7" stroke="#fcd34d"/>
+      <text x="96" y="38" text-anchor="middle" font-size="8" fill="#92400e" font-family="'Noto Sans KR'">입출력</text>
+      <text x="96" y="52" text-anchor="middle" font-size="7.5" fill="#92400e" font-family="'JetBrains Mono'">scanf/fgets</text>
+
+      <line x1="240" y1="55" x2="240" y2="18" stroke="#3b82f6" stroke-width="1.5"/>
+      <rect x="190" y="5" width="100" height="24" rx="4" fill="#dbeafe" stroke="#93c5fd"/>
+      <text x="240" y="21" text-anchor="middle" font-size="8" fill="#1e40af" font-family="'Noto Sans KR'">기본함수 strlen/strcpy/strcat/strcmp</text>
+
+      <line x1="285" y1="70" x2="350" y2="40" stroke="#22c55e" stroke-width="1.5"/>
+      <rect x="348" y="20" width="80" height="40" rx="4" fill="#f0fdf4" stroke="#22c55e"/>
+      <text x="388" y="38" text-anchor="middle" font-size="8" fill="#15803d" font-family="'Noto Sans KR'">검색/분리</text>
+      <text x="388" y="52" text-anchor="middle" font-size="7.5" fill="#15803d" font-family="'JetBrains Mono'">strchr/strstr/strtok</text>
+
+      <line x1="195" y1="90" x2="130" y2="120" stroke="#8b5cf6" stroke-width="1.5"/>
+      <rect x="40" y="100" width="90" height="40" rx="4" fill="#f5f3ff" stroke="#a78bfa"/>
+      <text x="85" y="118" text-anchor="middle" font-size="8" fill="#7c3aed" font-family="'Noto Sans KR'">ctype.h</text>
+      <text x="85" y="132" text-anchor="middle" font-size="7.5" fill="#7c3aed" font-family="'Noto Sans KR'">isalpha/toupper...</text>
+
+      <line x1="240" y1="105" x2="240" y2="140" stroke="#f59e0b" stroke-width="1.5"/>
+      <rect x="180" y="132" width="120" height="24" rx="4" fill="#fffbeb" stroke="#fcd34d"/>
+      <text x="240" y="148" text-anchor="middle" font-size="8" fill="#92400e" font-family="'Noto Sans KR'">안전 함수 strncpy/strncat/fgets</text>
+
+      <line x1="285" y1="90" x2="350" y2="120" stroke="#ef4444" stroke-width="1.5"/>
+      <rect x="348" y="100" width="80" height="40" rx="4" fill="#fef2f2" stroke="#fca5a5"/>
+      <text x="388" y="118" text-anchor="middle" font-size="8" fill="#dc2626" font-family="'Noto Sans KR'">변환</text>
+      <text x="388" y="132" text-anchor="middle" font-size="7.5" fill="#dc2626" font-family="'Noto Sans KR'">atoi/sprintf</text>
+    </svg>
+  </div>
+
+  <div class="info"><b>L7 완료! 다음은 L8 포인터(Pointer)다.</b> 포인터는 메모리 주소를 직접 다루는 개념으로, 문자열 처리에서 이미 포인터를 사용하고 있었다 (char *, strstr 반환값 등). L8에서 포인터의 원리를 본격적으로 학습한다.</div>
+</div>
+
+<!-- PAGE 4: 연습 문제 + 최종 도전 -->
+<div class="page">
+  <div class="section-title">최종 연습 문제</div>
+
+  <div class="problem-box">
+    <div class="problem-head"><span>Q1. 분석 결과 예측</span><span style="font-weight:400;font-size:8.5pt;"></span></div>
+    <div class="problem-body">
+      <p>"Hello World!" 를 analyze() 함수에 전달하면 단어 수와 문장 수는?</p>
+      <details><summary>정답 보기</summary><div class="answer">단어 수: 2 ("Hello", "World") / 문장 수: 1 ('!')</div></details>
+    </div>
+  </div>
+
+  <div class="problem-box">
+    <div class="problem-head"><span>Q2. strtok 복사 이유</span><span style="font-weight:400;font-size:8.5pt;"></span></div>
+    <div class="problem-body">
+      <p>코드에서 strtok을 호출하기 전에 strcpy(copy, text)로 복사하는 이유는?</p>
+      <details><summary>정답 보기</summary><div class="answer">strtok은 원본 문자열을 수정(구분자를 '\0'으로 덮어씀)한다. 원본을 보존해야 하므로 복사본에 strtok을 적용한다.</div></details>
+    </div>
+  </div>
+
+  <div class="problem-box">
+    <div class="problem-head"><span>Q3. 개선</span><span style="font-weight:400;font-size:8.5pt;"></span></div>
+    <div class="problem-body">
+      <p>"..." 같이 점이 연속으로 나오면 문장 수가 3으로 계산된다. 이를 방지하는 코드를 작성하시오.</p>
+      <details><summary>정답 보기</summary><div class="answer">직전 문자가 '.','!','?' 가 아닐 때만 문장 수를 증가시킨다: if ((text[i]=='.'||...) && (i==0 || (text[i-1]!='.'&&text[i-1]!='!'&&text[i-1]!='?'))) sentences++;</div></details>
+    </div>
+  </div>
+
+  <div class="problem-box">
+    <div class="problem-head"><span>Q4. 응용</span><span style="font-weight:400;font-size:8.5pt;"></span></div>
+    <div class="problem-body">
+      <p>여러 줄의 텍스트를 입력받아 전체 통계를 누적하는 버전으로 analyze()를 수정하시오. (빈 줄 입력 시 분석 결과 출력)</p>
+      <details><summary>정답 보기</summary><div class="answer">전역 카운터 변수들을 선언. while(fgets)로 입력 받아 각 줄을 누적. 빈 줄 입력 시 최종 결과 출력.</div></details>
+    </div>
+  </div>
+
+  <div class="problem-box">
+    <div class="problem-head"><span>Q5. L7 종합 도전</span><span style="font-weight:400;font-size:8.5pt;"></span></div>
+    <div class="problem-body">
+      <p>문장 분석기에 다음 기능을 추가하시오:<br>
+      (1) 가장 짧은 단어<br>
+      (2) 단어 중 회문 단어가 있는지 확인<br>
+      (3) 모든 단어를 Title Case로 변환하여 출력</p>
+      <details><summary>정답 보기</summary><div class="answer">
+        (1) strtok 루프에서 min_len/shortest 추가<br>
+        (2) is_palindrome() 함수 호출<br>
+        (3) 각 단어에 title_case() 적용 후 strcat으로 재조립
+      </div></details>
+    </div>
+  </div>
+
+  <div class="summary-box">
+    <h3>L7 문자열 단원 최종 정리</h3>
+    <div class="summary-item"><span class="summary-label">u01-u04</span><span>문자열 기초: char 배열, \0, strlen, strcpy, strcat</span></div>
+    <div class="summary-item"><span class="summary-label">u05-u06</span><span>비교와 검색: strcmp, strchr, strstr</span></div>
+    <div class="summary-item"><span class="summary-label">u07-u08</span><span>ctype.h + 변환: isalpha/digit/toupper + atoi/sprintf</span></div>
+    <div class="summary-item"><span class="summary-label">u09-u12</span><span>고급: 2D 배열, strtok, 안전함수, 종합</span></div>
+    <div class="summary-item"><span class="summary-label">pj01-15</span><span>15개 프로젝트: 뒤집기, 암호, 로그인, 검색, 게임...</span></div>
+    <div class="summary-item"><span class="summary-label">다음</span><span>L8 포인터 — 메모리 주소를 직접 다루는 C의 핵심!</span></div>
+  </div>
+
+    <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:20px;padding-top:10px;border-top:1px solid #f1f5f9;">
+        <img src="/images/learn/c-lang/code-screen.png" alt="코드 화면 - 문자열 처리 코드" style="width:22px;height:22px;object-fit:contain;opacity:0.6;background:#fff;border-radius:8px;">
+        <span style="font-size:10px;color:#cbd5e1;">코딩쏙 C언어</span>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

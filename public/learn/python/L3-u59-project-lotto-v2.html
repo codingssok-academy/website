@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 프로젝트: 로또 번호 생성기</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+/* -- 페이지 -- */
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+/* -- 챕터 표지 -- */
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+
+/* -- 본문 -- */
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 16px; font-weight: 700; color: #1e3a5f; margin: 18px 0 10px; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+ul, ol { margin: 0 0 12px 20px; }
+li { font-size: 14px; color: #374151; line-height: 1.8; }
+
+/* -- 코드 블록 -- */
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13.5px;
+    color: #e2e8f0; line-height: 1.85; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.code .dec { color: #f9a8d4; }
+
+/* -- 따라해보세요 -- */
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+
+/* -- 문제 -- */
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+
+/* -- 요약 -- */
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+/* -- 단계 박스 -- */
+.step-box { border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 14px 18px; margin: 14px 0; background: #fff; }
+.step-label { font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+.step-title { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 8px; }
+
+/* -- 출력 박스 -- */
+.output-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #334155; line-height: 1.7; margin: 10px 0; }
+
+/* -- 비교 테이블 -- */
+.compare-table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13px; }
+.compare-table th { background: #1e3a5f; color: #fff; padding: 8px 12px; text-align: left; font-weight: 700; }
+.compare-table td { padding: 7px 12px; border-bottom: 1px solid #e2e8f0; color: #374151; }
+.compare-table tr:nth-child(even) td { background: #f8fafc; }
+.compare-table code { background: #e0e7ff; padding: 1px 5px; border-radius: 3px; font-family: 'JetBrains Mono', monospace; color: #3730a3; font-size: 12px; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- 1페이지: 표지 -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">59</div>
+        <div class="cover-label">L3 — Unit 59 Project</div>
+        <h1 class="cover-title">프로젝트:<br>로또 번호 생성기</h1>
+        <p class="cover-sub">random.sample로 1~45 중 6개를 뽑고, 정렬·보너스 번호·여러 게임 생성·당첨 확인·통계까지 단계별로 구현합니다.</p>
+
+        <!-- SVG: 전체 기능 구조도 -->
+        <div style="margin:24px 0;">
+            <svg viewBox="0 0 520 170" style="max-width:520px;width:100%">
+                <defs>
+                    <marker id="arwCov" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                    </marker>
+                </defs>
+                <!-- 중앙 generate_lotto -->
+                <rect x="175" y="60" width="170" height="50" rx="8" fill="#1e3a5f"/>
+                <text x="260" y="82" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">generate_lotto()</text>
+                <text x="260" y="98" text-anchor="middle" font-size="9" fill="#93c5fd">random.sample(range(1,46), 6)</text>
+                <!-- 정렬 -->
+                <rect x="5" y="15" width="130" height="42" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="70" y="33" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">sorted() 정렬</text>
+                <text x="70" y="48" text-anchor="middle" font-size="9" fill="#64748b">오름차순 6개 번호</text>
+                <line x1="138" y1="37" x2="172" y2="75" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+                <!-- 보너스 -->
+                <rect x="5" y="75" width="130" height="42" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="70" y="93" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">보너스 번호</text>
+                <text x="70" y="108" text-anchor="middle" font-size="9" fill="#64748b">6개 제외 후 1개 추가</text>
+                <line x1="138" y1="97" x2="172" y2="90" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+                <!-- 여러 게임 -->
+                <rect x="385" y="15" width="130" height="42" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="450" y="33" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">여러 게임 생성</text>
+                <text x="450" y="48" text-anchor="middle" font-size="9" fill="#64748b">리스트 컴프리헨션</text>
+                <line x1="348" y1="75" x2="382" y2="37" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+                <!-- 당첨 확인 -->
+                <rect x="385" y="75" width="130" height="42" rx="8" fill="#fdf4ff" stroke="#a855f7" stroke-width="1.5"/>
+                <text x="450" y="93" text-anchor="middle" font-size="10" fill="#7e22ce" font-weight="700">당첨 확인</text>
+                <text x="450" y="108" text-anchor="middle" font-size="9" fill="#64748b">set 교집합 활용</text>
+                <line x1="348" y1="90" x2="382" y2="97" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+                <!-- 통계 -->
+                <rect x="175" y="128" width="170" height="36" rx="8" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+                <text x="260" y="150" text-anchor="middle" font-size="10" fill="#991b1b" font-weight="700">통계: Counter로 빈도 분석</text>
+                <line x1="260" y1="113" x2="260" y2="125" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/puzzle.png" alt="고급 기능" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 유닛에서 만드는 것</h3>
+            <ul>
+                <li><code>random.sample</code>로 1~45 중 중복 없이 6개 번호를 뽑을 수 있습니다.</li>
+                <li><code>sorted()</code>로 번호를 오름차순 정렬하고 보너스 번호를 추가할 수 있습니다.</li>
+                <li>리스트 컴프리헨션으로 여러 게임을 한 번에 생성할 수 있습니다.</li>
+                <li><code>set</code> 교집합으로 당첨 번호와 비교해 등수를 판별할 수 있습니다.</li>
+                <li><code>Counter</code>로 자주 나오는 번호 통계를 낼 수 있습니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- 2페이지: random.sample 기초 + 정렬 + 보너스 -->
+<div class="page">
+    <h2>Step 1 — random.sample로 번호 뽑기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="처리" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p><code>random.sample(population, k)</code>는 시퀀스에서 중복 없이 k개를 무작위로 골라 리스트로 반환합니다. 로또처럼 "한 번 뽑은 건 다시 못 뽑는" 경우에 딱 맞습니다.</p>
+
+    <!-- SVG: sample vs choices 비교 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 100" style="max-width:500px;width:100%">
+            <rect x="5" y="10" width="230" height="80" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="120" y="30" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">random.sample</text>
+            <text x="120" y="48" text-anchor="middle" font-size="9" fill="#374151">중복 없음 (비복원 추출)</text>
+            <text x="120" y="63" text-anchor="middle" font-size="9" fill="#374151">k &lt;= 모집단 크기</text>
+            <text x="120" y="80" text-anchor="middle" font-size="8" fill="#64748b">로또, 뽑기, 순서 없는 선택</text>
+            <rect x="265" y="10" width="230" height="80" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="380" y="30" text-anchor="middle" font-size="11" fill="#92400e" font-weight="700">random.choices</text>
+            <text x="380" y="48" text-anchor="middle" font-size="9" fill="#374151">중복 허용 (복원 추출)</text>
+            <text x="380" y="63" text-anchor="middle" font-size="9" fill="#374151">같은 값이 여러 번 나올 수 있음</text>
+            <text x="380" y="80" text-anchor="middle" font-size="8" fill="#64748b">주사위, 가중치 있는 뽑기</text>
+        </svg>
+    </div>
+
+    <h3>기본 번호 생성 함수</h3>
+    <div class="code"><span class="kw">import</span> random
+
+<span class="kw">def</span> <span class="fn">generate_lotto</span>():
+    <span class="str">"""1~45 중 6개를 뽑아 정렬된 리스트로 반환"""</span>
+    numbers = <span class="fn">sorted</span>(random.<span class="fn">sample</span>(<span class="fn">range</span>(<span class="num">1</span>, <span class="num">46</span>), <span class="num">6</span>))
+    <span class="kw">return</span> numbers
+
+<span class="cmt"># 테스트</span>
+ticket = <span class="fn">generate_lotto</span>()
+<span class="fn">print</span>(<span class="str">"내 번호:"</span>, ticket)</div>
+
+    <div class="output-box">내 번호: [3, 12, 19, 27, 33, 41]</div>
+
+    <!-- SVG: range(1,46) 시각화 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 60" style="max-width:500px;width:100%">
+            <rect x="5" y="10" width="490" height="40" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="18" y="28" font-size="10" fill="#1e3a5f" font-weight="700">range(1, 46)</text>
+            <text x="18" y="43" font-size="9" fill="#64748b">1 ~ 45 (46 미포함)</text>
+            <rect x="110" y="17" width="24" height="24" rx="4" fill="#1e3a5f"/>
+            <text x="122" y="33" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">1</text>
+            <rect x="140" y="17" width="24" height="24" rx="4" fill="#3b82f6"/>
+            <text x="152" y="33" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">2</text>
+            <rect x="170" y="17" width="24" height="24" rx="4" fill="#3b82f6"/>
+            <text x="182" y="33" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">3</text>
+            <text x="205" y="33" font-size="9" fill="#94a3b8">...</text>
+            <rect x="222" y="17" width="24" height="24" rx="4" fill="#f59e0b"/>
+            <text x="234" y="33" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">23</text>
+            <text x="253" y="33" font-size="9" fill="#94a3b8">...</text>
+            <rect x="270" y="17" width="24" height="24" rx="4" fill="#3b82f6"/>
+            <text x="282" y="33" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">44</text>
+            <rect x="300" y="17" width="24" height="24" rx="4" fill="#1e3a5f"/>
+            <text x="312" y="33" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">45</text>
+            <text x="345" y="28" font-size="9" fill="#94a3b8">  sample 6개 선택 →</text>
+            <rect x="445" y="17" width="45" height="24" rx="4" fill="#fee2e2" stroke="#ef4444" stroke-width="1"/>
+            <text x="468" y="33" text-anchor="middle" font-size="9" fill="#991b1b" font-weight="700">46 X</text>
+        </svg>
+    </div>
+
+    <h3>보너스 번호 추가</h3>
+    <p>보너스 번호는 이미 뽑힌 6개를 제외한 나머지 중에서 1개를 추가로 뽑습니다. <code>set</code>을 활용하면 간단하게 구현할 수 있습니다.</p>
+
+    <div class="code"><span class="kw">def</span> <span class="fn">generate_lotto_with_bonus</span>():
+    <span class="str">"""6개 번호 + 보너스 번호 반환"""</span>
+    all_numbers = <span class="fn">list</span>(<span class="fn">range</span>(<span class="num">1</span>, <span class="num">46</span>))
+    numbers = <span class="fn">sorted</span>(random.<span class="fn">sample</span>(all_numbers, <span class="num">6</span>))
+    <span class="cmt"># 뽑힌 6개를 제외한 나머지 중 보너스 1개</span>
+    remaining = <span class="fn">list</span>(<span class="fn">set</span>(all_numbers) - <span class="fn">set</span>(numbers))
+    bonus = random.<span class="fn">choice</span>(remaining)
+    <span class="kw">return</span> numbers, bonus
+
+nums, bonus = <span class="fn">generate_lotto_with_bonus</span>()
+<span class="fn">print</span>(<span class="str">f"번호: {nums}"</span>)
+<span class="fn">print</span>(<span class="str">f"보너스: {bonus}"</span>)</div>
+
+    <div class="output-box">번호: [7, 14, 22, 31, 38, 43]
+보너스: 19</div>
+
+    <!-- SVG: 집합 차이 시각화 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 500 70" style="max-width:500px;width:100%">
+            <defs>
+                <marker id="arwSet" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="5" y="15" width="130" height="40" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="70" y="32" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">set(all_numbers)</text>
+            <text x="70" y="47" text-anchor="middle" font-size="8" fill="#64748b">{1, 2, ..., 45}</text>
+            <text x="148" y="37" text-anchor="middle" font-size="13" fill="#ef4444" font-weight="900">-</text>
+            <rect x="161" y="15" width="130" height="40" rx="6" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="226" y="32" text-anchor="middle" font-size="9" fill="#991b1b" font-weight="700">set(numbers)</text>
+            <text x="226" y="47" text-anchor="middle" font-size="8" fill="#64748b">당첨 6개</text>
+            <line x1="294" y1="35" x2="314" y2="35" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwSet)"/>
+            <rect x="317" y="15" width="178" height="40" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="406" y="32" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">remaining</text>
+            <text x="406" y="47" text-anchor="middle" font-size="8" fill="#64748b">39개 → random.choice()</text>
+        </svg>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="완성" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+        <div class="practice-head">따라해보세요 — Step 1</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc"><code>generate_lotto()</code>를 3번 호출해 매번 다른 번호가 나오는지 확인하세요.</div>
+                <div class="code"><span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">3</span>):
+    <span class="fn">print</span>(<span class="str">f"시도 {i+1}:"</span>, <span class="fn">generate_lotto</span>())</div>
+                <div class="practice-result">3번 모두 다른 6개 번호 리스트가 출력되면 성공</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc"><code>generate_lotto_with_bonus()</code>를 호출해 보너스 번호가 6개 안에 없음을 확인하세요.</div>
+                <div class="code">nums, bonus = <span class="fn">generate_lotto_with_bonus</span>()
+<span class="fn">print</span>(<span class="str">"보너스가 본 번호에 없음?"</span>, bonus <span class="kw">not in</span> nums)</div>
+                <div class="practice-result">True 가 출력되면 성공</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc"><code>random.sample</code> 결과를 <code>sorted()</code> 없이 출력한 뒤, <code>sorted()</code>를 적용한 결과와 비교하세요.</div>
+                <div class="code">raw = random.<span class="fn">sample</span>(<span class="fn">range</span>(<span class="num">1</span>, <span class="num">46</span>), <span class="num">6</span>)
+<span class="fn">print</span>(<span class="str">"정렬 전:"</span>, raw)
+<span class="fn">print</span>(<span class="str">"정렬 후:"</span>, <span class="fn">sorted</span>(raw))</div>
+                <div class="practice-result">정렬 후 오름차순이면 성공</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3페이지: 여러 게임 생성 + 당첨 확인 -->
+<div class="page">
+    <h2>Step 2 — 여러 게임 생성과 당첨 확인</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/database.png" alt="데이터" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>리스트 컴프리헨션으로 원하는 수만큼 게임을 한 번에 만들 수 있습니다. 당첨 확인은 <code>set</code> 교집합(<code>&amp;</code>)으로 일치 개수를 셉니다.</p>
+
+    <!-- SVG: 리스트 컴프리헨션 구조 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 72" style="max-width:500px;width:100%">
+            <rect x="5" y="12" width="490" height="50" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="20" y="32" font-size="10" fill="#1e3a5f" font-weight="700" font-family="monospace">[ generate_lotto()  for  _  in  range(n) ]</text>
+            <rect x="16" y="38" width="140" height="18" rx="3" fill="#dbeafe"/>
+            <text x="86" y="51" text-anchor="middle" font-size="8" fill="#1d4ed8" font-weight="700">표현식: 게임 1개</text>
+            <rect x="215" y="38" width="30" height="18" rx="3" fill="#fef3c7"/>
+            <text x="230" y="51" text-anchor="middle" font-size="8" fill="#92400e" font-weight="700">변수</text>
+            <rect x="278" y="38" width="90" height="18" rx="3" fill="#f0fdf4"/>
+            <text x="323" y="51" text-anchor="middle" font-size="8" fill="#166534" font-weight="700">반복: n번</text>
+        </svg>
+    </div>
+
+    <h3>여러 게임 생성 함수</h3>
+    <div class="code"><span class="kw">def</span> <span class="fn">generate_games</span>(n=<span class="num">5</span>):
+    <span class="str">"""n개의 로또 게임을 생성해 리스트로 반환"""</span>
+    <span class="kw">return</span> [<span class="fn">generate_lotto</span>() <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(n)]
+
+games = <span class="fn">generate_games</span>(<span class="num">5</span>)
+<span class="kw">for</span> i, g <span class="kw">in</span> <span class="fn">enumerate</span>(games, <span class="num">1</span>):
+    <span class="fn">print</span>(<span class="str">f"게임 {i}: {g}"</span>)</div>
+
+    <div class="output-box">게임 1: [4, 11, 20, 29, 35, 42]
+게임 2: [2, 9, 18, 23, 37, 44]
+게임 3: [6, 15, 25, 30, 36, 40]
+게임 4: [1, 10, 21, 28, 34, 43]
+게임 5: [8, 16, 22, 31, 38, 45]</div>
+
+    <h3>당첨 확인 함수</h3>
+    <p>실제 당첨 번호 리스트와 내 번호 리스트를 <code>set</code>으로 변환해 교집합 크기를 세면 일치 개수를 바로 알 수 있습니다.</p>
+
+    <div class="code"><span class="kw">def</span> <span class="fn">check_prize</span>(my_numbers, winning_numbers, bonus):
+    <span class="str">"""당첨 등수 반환 (미당첨은 0 반환)"""</span>
+    match = <span class="fn">len</span>(<span class="fn">set</span>(my_numbers) &amp; <span class="fn">set</span>(winning_numbers))
+    bonus_hit = bonus <span class="kw">in</span> my_numbers
+
+    <span class="kw">if</span> match == <span class="num">6</span>:
+        <span class="kw">return</span> <span class="num">1</span>  <span class="cmt"># 1등</span>
+    <span class="kw">elif</span> match == <span class="num">5</span> <span class="kw">and</span> bonus_hit:
+        <span class="kw">return</span> <span class="num">2</span>  <span class="cmt"># 2등</span>
+    <span class="kw">elif</span> match == <span class="num">5</span>:
+        <span class="kw">return</span> <span class="num">3</span>  <span class="cmt"># 3등</span>
+    <span class="kw">elif</span> match == <span class="num">4</span>:
+        <span class="kw">return</span> <span class="num">4</span>  <span class="cmt"># 4등</span>
+    <span class="kw">elif</span> match == <span class="num">3</span>:
+        <span class="kw">return</span> <span class="num">5</span>  <span class="cmt"># 5등</span>
+    <span class="kw">else</span>:
+        <span class="kw">return</span> <span class="num">0</span>  <span class="cmt"># 낙첨</span></div>
+
+    <!-- SVG: set 교집합 시각화 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 100" style="max-width:500px;width:100%">
+            <!-- 내 번호 원 -->
+            <ellipse cx="185" cy="50" rx="130" ry="42" fill="#dbeafe" fill-opacity="0.7" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="100" y="46" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">내 번호</text>
+            <text x="100" y="60" text-anchor="middle" font-size="8" fill="#374151">[3, 7, 19, 22, 31, 40]</text>
+            <!-- 당첨 번호 원 -->
+            <ellipse cx="315" cy="50" rx="130" ry="42" fill="#f0fdf4" fill-opacity="0.7" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="400" y="46" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">당첨 번호</text>
+            <text x="400" y="60" text-anchor="middle" font-size="8" fill="#374151">[7, 14, 19, 31, 38, 42]</text>
+            <!-- 교집합 -->
+            <text x="250" y="43" text-anchor="middle" font-size="9" fill="#1e3a5f" font-weight="900">일치</text>
+            <text x="250" y="57" text-anchor="middle" font-size="8" fill="#374151">7, 19, 31</text>
+            <text x="250" y="70" text-anchor="middle" font-size="8" fill="#ef4444" font-weight="700">3개 → 5등</text>
+        </svg>
+    </div>
+
+    <h3>전체 게임 결과 출력</h3>
+    <div class="code">winning = [<span class="num">7</span>, <span class="num">14</span>, <span class="num">19</span>, <span class="num">31</span>, <span class="num">38</span>, <span class="num">42</span>]
+bonus_num = <span class="num">25</span>
+
+<span class="kw">for</span> i, game <span class="kw">in</span> <span class="fn">enumerate</span>(games, <span class="num">1</span>):
+    rank = <span class="fn">check_prize</span>(game, winning, bonus_num)
+    result = <span class="str">f"{rank}등"</span> <span class="kw">if</span> rank > <span class="num">0</span> <span class="kw">else</span> <span class="str">"낙첨"</span>
+    <span class="fn">print</span>(<span class="str">f"게임 {i}: {game}  →  {result}"</span>)</div>
+
+    <div class="output-box">게임 1: [4, 11, 20, 29, 35, 42]  →  낙첨
+게임 2: [2, 9, 18, 23, 37, 44]  →  낙첨
+게임 3: [6, 15, 25, 30, 36, 40]  →  낙첨
+게임 4: [1, 10, 21, 28, 34, 43]  →  낙첨
+게임 5: [8, 16, 22, 31, 38, 45]  →  낙첨</div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요 — Step 2</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc"><code>generate_games(10)</code>로 10게임을 만들고 당첨 번호를 직접 지정해 결과를 출력해 보세요.</div>
+                <div class="code">games10 = <span class="fn">generate_games</span>(<span class="num">10</span>)
+winning_test = [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>, <span class="num">5</span>, <span class="num">6</span>]
+<span class="kw">for</span> i, g <span class="kw">in</span> <span class="fn">enumerate</span>(games10, <span class="num">1</span>):
+    <span class="fn">print</span>(i, <span class="fn">check_prize</span>(g, winning_test, <span class="num">7</span>))</div>
+                <div class="practice-result">10줄 결과(대부분 0)가 출력되면 성공</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">내 번호를 직접 입력해 <code>check_prize</code>로 당첨 확인을 해 보세요.</div>
+                <div class="code">my = [<span class="num">7</span>, <span class="num">14</span>, <span class="num">19</span>, <span class="num">31</span>, <span class="num">38</span>, <span class="num">42</span>]
+winning_w = [<span class="num">7</span>, <span class="num">14</span>, <span class="num">19</span>, <span class="num">31</span>, <span class="num">38</span>, <span class="num">42</span>]
+<span class="fn">print</span>(<span class="fn">check_prize</span>(my, winning_w, <span class="num">1</span>))</div>
+                <div class="practice-result">1 (1등)이 출력되면 성공</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">5개 일치 + 보너스 일치 케이스를 만들어 <code>check_prize</code>가 2를 반환하는지 확인하세요.</div>
+                <div class="code">my2 = [<span class="num">7</span>, <span class="num">14</span>, <span class="num">19</span>, <span class="num">31</span>, <span class="num">38</span>, <span class="num">25</span>]
+<span class="fn">print</span>(<span class="fn">check_prize</span>(my2, winning, bonus_num))</div>
+                <div class="practice-result">2 (2등)이 출력되면 성공</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 4페이지: 통계 (Counter) -->
+<div class="page">
+    <h2>Step 3 — Counter로 번호 통계 분석</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p><code>collections.Counter</code>는 요소의 등장 횟수를 자동으로 세는 딕셔너리 서브클래스입니다. 많은 게임을 시뮬레이션하고 가장 자주 나온 번호를 찾는 데 적합합니다.</p>
+
+    <!-- SVG: Counter 동작 원리 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 90" style="max-width:500px;width:100%">
+            <defs>
+                <marker id="arwCnt" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <!-- 입력 리스트 -->
+            <rect x="5" y="20" width="180" height="50" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="95" y="38" text-anchor="middle" font-size="9" fill="#374151" font-weight="700">모든 번호를 하나의 리스트로</text>
+            <text x="95" y="54" text-anchor="middle" font-size="8" fill="#64748b" font-family="monospace">[3, 12, 3, 7, 12, 3, ...]</text>
+            <text x="95" y="66" text-anchor="middle" font-size="8" fill="#94a3b8">1000게임 x 6개 = 6000개</text>
+            <line x1="188" y1="45" x2="208" y2="45" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCnt)"/>
+            <text x="215" y="38" font-size="9" fill="#64748b">Counter()</text>
+            <line x1="285" y1="45" x2="305" y2="45" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCnt)"/>
+            <!-- 결과 -->
+            <rect x="308" y="10" width="187" height="70" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="401" y="28" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">Counter 객체</text>
+            <text x="401" y="44" text-anchor="middle" font-size="8" fill="#374151" font-family="monospace">{ 3: 128, 12: 121, 7: 119 }</text>
+            <text x="401" y="60" text-anchor="middle" font-size="8" fill="#64748b">.most_common(10)</text>
+            <text x="401" y="74" text-anchor="middle" font-size="8" fill="#94a3b8">상위 N개 (값, 횟수) 쌍</text>
+        </svg>
+    </div>
+
+    <h3>통계 함수 구현</h3>
+    <div class="code"><span class="kw">from</span> collections <span class="kw">import</span> Counter
+
+<span class="kw">def</span> <span class="fn">lotto_statistics</span>(num_games=<span class="num">1000</span>, top_n=<span class="num">10</span>):
+    <span class="str">"""num_games번 시뮬레이션 후 자주 나온 번호 top_n개 반환"""</span>
+    all_numbers = []
+    <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(num_games):
+        all_numbers.<span class="fn">extend</span>(<span class="fn">generate_lotto</span>())
+
+    counter = <span class="fn">Counter</span>(all_numbers)
+    <span class="kw">return</span> counter.<span class="fn">most_common</span>(top_n)
+
+top10 = <span class="fn">lotto_statistics</span>(<span class="num">1000</span>, <span class="num">10</span>)
+<span class="fn">print</span>(<span class="str">"자주 나온 번호 Top 10:"</span>)
+<span class="kw">for</span> num, count <span class="kw">in</span> top10:
+    bar = <span class="str">"#"</span> * (count // <span class="num">5</span>)
+    <span class="fn">print</span>(<span class="str">f"  {num:2d}번: {count:4d}회  {bar}"</span>)</div>
+
+    <div class="output-box">자주 나온 번호 Top 10:
+  34번:  148회  ##############################
+   7번:  143회  ############################
+  19번:  141회  ############################
+  42번:  139회  ###########################
+  11번:  136회  ###########################
+  28번:  135회  ###########...
+  ...</div>
+
+    <!-- SVG: 번호별 빈도 막대 그래프 (예시) -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 100" style="max-width:500px;width:100%">
+            <text x="10" y="14" font-size="10" fill="#1e3a5f" font-weight="700">번호 빈도 분포 (예시)</text>
+            <!-- x축 -->
+            <line x1="40" y1="85" x2="490" y2="85" stroke="#e2e8f0" stroke-width="1.5"/>
+            <!-- 막대들 -->
+            <rect x="50" y="55" width="20" height="30" rx="2" fill="#3b82f6"/>
+            <text x="60" y="97" text-anchor="middle" font-size="7" fill="#64748b">3</text>
+            <rect x="80" y="42" width="20" height="43" rx="2" fill="#3b82f6"/>
+            <text x="90" y="97" text-anchor="middle" font-size="7" fill="#64748b">7</text>
+            <rect x="110" y="48" width="20" height="37" rx="2" fill="#3b82f6"/>
+            <text x="120" y="97" text-anchor="middle" font-size="7" fill="#64748b">11</text>
+            <rect x="140" y="38" width="20" height="47" rx="2" fill="#f59e0b"/>
+            <text x="150" y="97" text-anchor="middle" font-size="7" fill="#64748b">19</text>
+            <rect x="170" y="50" width="20" height="35" rx="2" fill="#3b82f6"/>
+            <text x="180" y="97" text-anchor="middle" font-size="7" fill="#64748b">22</text>
+            <rect x="200" y="44" width="20" height="41" rx="2" fill="#3b82f6"/>
+            <text x="210" y="97" text-anchor="middle" font-size="7" fill="#64748b">28</text>
+            <rect x="230" y="35" width="20" height="50" rx="2" fill="#ef4444"/>
+            <text x="240" y="97" text-anchor="middle" font-size="7" fill="#64748b">34</text>
+            <rect x="260" y="52" width="20" height="33" rx="2" fill="#3b82f6"/>
+            <text x="270" y="97" text-anchor="middle" font-size="7" fill="#64748b">38</text>
+            <rect x="290" y="47" width="20" height="38" rx="2" fill="#3b82f6"/>
+            <text x="300" y="97" text-anchor="middle" font-size="7" fill="#64748b">42</text>
+            <rect x="320" y="56" width="20" height="29" rx="2" fill="#3b82f6"/>
+            <text x="330" y="97" text-anchor="middle" font-size="7" fill="#64748b">45</text>
+            <text x="380" y="50" font-size="8" fill="#ef4444" font-weight="700">최다 출현</text>
+            <line x1="367" y1="53" x2="352" y2="58" stroke="#ef4444" stroke-width="1"/>
+        </svg>
+    </div>
+
+    <!-- SVG: extend vs append 차이 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 500 80" style="max-width:500px;width:100%">
+            <rect x="5" y="10" width="230" height="60" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="120" y="28" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">list.append([1,2,3])</text>
+            <text x="120" y="46" text-anchor="middle" font-size="8" fill="#374151">리스트를 통째로 추가 →</text>
+            <text x="120" y="60" text-anchor="middle" font-size="8" fill="#374151" font-family="monospace">[[1,2,3], [4,5,6]]</text>
+            <rect x="265" y="10" width="230" height="60" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="380" y="28" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">list.extend([1,2,3])</text>
+            <text x="380" y="46" text-anchor="middle" font-size="8" fill="#374151">원소를 하나씩 추가 →</text>
+            <text x="380" y="60" text-anchor="middle" font-size="8" fill="#374151" font-family="monospace">[1, 2, 3, 4, 5, 6]</text>
+        </svg>
+    </div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요 — Step 3</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc"><code>lotto_statistics(500, 5)</code>를 호출해 상위 5개 번호와 출현 횟수를 출력하세요.</div>
+                <div class="code">top5 = <span class="fn">lotto_statistics</span>(<span class="num">500</span>, <span class="num">5</span>)
+<span class="fn">print</span>(top5)</div>
+                <div class="practice-result">5개의 (번호, 횟수) 쌍 리스트가 출력되면 성공</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">반대로 가장 적게 나온 번호도 확인해 보세요. <code>most_common()</code>의 역순을 활용합니다.</div>
+                <div class="code"><span class="kw">from</span> collections <span class="kw">import</span> Counter
+all_n = []
+<span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(<span class="num">500</span>):
+    all_n.<span class="fn">extend</span>(<span class="fn">generate_lotto</span>())
+c = <span class="fn">Counter</span>(all_n)
+<span class="fn">print</span>(<span class="str">"가장 적게:"</span>, c.<span class="fn">most_common</span>()[-<span class="num">1</span>])</div>
+                <div class="practice-result">(번호, 횟수) 형태가 출력되면 성공</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">시뮬레이션 횟수를 100, 1000, 5000으로 바꿔가며 결과가 점점 고르게 분포하는지 관찰하세요.</div>
+                <div class="code"><span class="kw">for</span> n <span class="kw">in</span> [<span class="num">100</span>, <span class="num">1000</span>, <span class="num">5000</span>]:
+    top = <span class="fn">lotto_statistics</span>(n, <span class="num">1</span>)
+    <span class="fn">print</span>(<span class="str">f"{n}회 시뮬: 최다 {top[0]}"</span>)</div>
+                <div class="practice-result">횟수가 많을수록 최다 출현 번호의 빈도 차이가 줄면 성공</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 5페이지: 완성 코드 + 문제 -->
+<div class="page">
+    <h2>Step 4 — 완성 코드 통합</h2>
+    <p>지금까지 만든 함수들을 하나로 모아 메뉴 방식으로 실행하는 완성 프로그램입니다.</p>
+
+    <div class="code"><span class="kw">import</span> random
+<span class="kw">from</span> collections <span class="kw">import</span> Counter
+
+<span class="kw">def</span> <span class="fn">generate_lotto</span>():
+    <span class="kw">return</span> <span class="fn">sorted</span>(random.<span class="fn">sample</span>(<span class="fn">range</span>(<span class="num">1</span>, <span class="num">46</span>), <span class="num">6</span>))
+
+<span class="kw">def</span> <span class="fn">generate_lotto_with_bonus</span>():
+    all_n = <span class="fn">list</span>(<span class="fn">range</span>(<span class="num">1</span>, <span class="num">46</span>))
+    nums = <span class="fn">sorted</span>(random.<span class="fn">sample</span>(all_n, <span class="num">6</span>))
+    bonus = random.<span class="fn">choice</span>(<span class="fn">list</span>(<span class="fn">set</span>(all_n) - <span class="fn">set</span>(nums)))
+    <span class="kw">return</span> nums, bonus
+
+<span class="kw">def</span> <span class="fn">generate_games</span>(n=<span class="num">5</span>):
+    <span class="kw">return</span> [<span class="fn">generate_lotto</span>() <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(n)]
+
+<span class="kw">def</span> <span class="fn">check_prize</span>(my_numbers, winning_numbers, bonus):
+    match = <span class="fn">len</span>(<span class="fn">set</span>(my_numbers) &amp; <span class="fn">set</span>(winning_numbers))
+    bonus_hit = bonus <span class="kw">in</span> my_numbers
+    <span class="kw">if</span> match == <span class="num">6</span>: <span class="kw">return</span> <span class="num">1</span>
+    <span class="kw">if</span> match == <span class="num">5</span> <span class="kw">and</span> bonus_hit: <span class="kw">return</span> <span class="num">2</span>
+    <span class="kw">if</span> match == <span class="num">5</span>: <span class="kw">return</span> <span class="num">3</span>
+    <span class="kw">if</span> match == <span class="num">4</span>: <span class="kw">return</span> <span class="num">4</span>
+    <span class="kw">if</span> match == <span class="num">3</span>: <span class="kw">return</span> <span class="num">5</span>
+    <span class="kw">return</span> <span class="num">0</span>
+
+<span class="kw">def</span> <span class="fn">lotto_statistics</span>(num_games=<span class="num">1000</span>, top_n=<span class="num">10</span>):
+    all_n = []
+    <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(num_games):
+        all_n.<span class="fn">extend</span>(<span class="fn">generate_lotto</span>())
+    <span class="kw">return</span> <span class="fn">Counter</span>(all_n).<span class="fn">most_common</span>(top_n)</div>
+
+    <!-- SVG: 함수 의존 관계 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 80" style="max-width:500px;width:100%">
+            <defs>
+                <marker id="arwDep" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <!-- generate_lotto -->
+            <rect x="5" y="27" width="130" height="30" rx="6" fill="#1e3a5f"/>
+            <text x="70" y="46" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">generate_lotto()</text>
+            <line x1="138" y1="42" x2="158" y2="42" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwDep)"/>
+            <line x1="138" y1="42" x2="158" y2="18" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwDep)"/>
+            <line x1="138" y1="42" x2="158" y2="63" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwDep)"/>
+            <!-- check_prize -->
+            <rect x="161" y="27" width="120" height="30" rx="6" fill="#3b82f6"/>
+            <text x="221" y="46" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">check_prize()</text>
+            <!-- generate_games -->
+            <rect x="161" y="5" width="120" height="28" rx="6" fill="#22c55e"/>
+            <text x="221" y="23" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">generate_games()</text>
+            <!-- lotto_statistics -->
+            <rect x="161" y="52" width="120" height="28" rx="6" fill="#f59e0b"/>
+            <text x="221" y="70" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">lotto_statistics()</text>
+            <!-- random.sample -->
+            <text x="320" y="46" font-size="8" fill="#64748b">random.sample</text>
+            <text x="320" y="58" font-size="8" fill="#64748b">Counter</text>
+        </svg>
+    </div>
+
+    <!-- 문제 1 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">1</div>
+            <div class="problem-label">random.sample 빈칸 채우기</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">아래 코드에서 <code>___</code>를 채워 1~45 중 6개를 중복 없이 뽑아 정렬된 리스트를 만드세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">코드</span>
+                    <span class="problem-example-value">numbers = sorted(random.___(range(1, 46), ___))</span>
+                </div>
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력</span>
+                    <span class="problem-example-value">[3, 12, 19, 27, 33, 41]  (예시)</span>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">중복 없이 k개 뽑는 함수는 <code>random.sample(population, k)</code>입니다. k는 6입니다.</div>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">numbers = sorted(random.<span style="color:#67e8f9">sample</span>(range(1, 46), <span style="color:#7dd3fc">6</span>))</div>
+            </div>
+        </details>
+    </div>
+
+    <!-- 문제 2 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">2</div>
+            <div class="problem-label">당첨 등수 판별</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text"><code>check_prize</code> 함수를 이용해 아래 세 경우의 등수를 출력하는 코드를 작성하세요. 당첨 번호는 <code>[1,2,3,4,5,6]</code>, 보너스는 <code>7</code>입니다.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">A</span>
+                    <span class="problem-example-value">my = [1, 2, 3, 4, 5, 6]  →  1등</span>
+                </div>
+                <div class="problem-example-row">
+                    <span class="problem-example-label">B</span>
+                    <span class="problem-example-value">my = [1, 2, 3, 4, 5, 7]  →  2등</span>
+                </div>
+                <div class="problem-example-row">
+                    <span class="problem-example-label">C</span>
+                    <span class="problem-example-value">my = [1, 2, 3, 10, 20, 30]  →  5등</span>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">B는 5개 일치 + 보너스 7 포함이므로 2등입니다. <code>check_prize(my, winning, bonus)</code>를 세 번 호출하세요.</div>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">winning = [1,2,3,4,5,6]
+bonus = 7
+cases = [[1,2,3,4,5,6], [1,2,3,4,5,7], [1,2,3,10,20,30]]
+<span style="color:#c084fc">for</span> my <span style="color:#c084fc">in</span> cases:
+    <span style="color:#67e8f9">print</span>(check_prize(my, winning, bonus))</div>
+            </div>
+        </details>
+    </div>
+</div>
+
+<!-- 6페이지: 문제 + 핵심 요약 -->
+<div class="page">
+    <!-- 문제 3 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">3</div>
+            <div class="problem-label">통계 출력 개선</div>
+            <span class="problem-diff hard">어려움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text"><code>lotto_statistics(500, 10)</code>의 결과를 받아, 번호와 출현 횟수를 아래처럼 막대 형태로 출력하는 코드를 작성하세요. 막대는 <code>#</code> 문자로 횟수 // 5개만큼 출력합니다.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력</span>
+                    <span class="problem-example-value"> 7번:   68회  #############</span>
+                </div>
+                <div class="problem-example-row">
+                    <span class="problem-example-label"></span>
+                    <span class="problem-example-value">34번:   65회  #############</span>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">f-string으로 번호를 2자리(<code>:2d</code>), 횟수를 4자리(<code>:4d</code>)로 맞추고, <code>"#" * (count // 5)</code>로 막대를 만드세요.</div>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">results = lotto_statistics(500, 10)
+<span style="color:#c084fc">for</span> num, count <span style="color:#c084fc">in</span> results:
+    bar = <span style="color:#86efac">"#"</span> * (count // 5)
+    <span style="color:#67e8f9">print</span>(<span style="color:#86efac">f"{num:2d}번: {count:4d}회  {bar}"</span>)</div>
+            </div>
+        </details>
+    </div>
+
+    <!-- 핵심 요약 -->
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>핵심 요약</h3>
+        <ul>
+            <li><code>random.sample(range(1, 46), 6)</code> — 1~45 중 중복 없이 6개 추출</li>
+            <li><code>sorted()</code> — 리스트를 오름차순으로 정렬해 새 리스트 반환</li>
+            <li><code>set(A) &amp; set(B)</code> — 두 리스트의 교집합, 일치 개수를 <code>len()</code>으로 확인</li>
+            <li><code>list.extend(iterable)</code> — 다른 리스트의 원소를 하나씩 추가 (append는 통째로 추가)</li>
+            <li><code>Counter(list).most_common(n)</code> — 빈도 상위 n개를 (원소, 횟수) 리스트로 반환</li>
+            <li>리스트 컴프리헨션 <code>[f() for _ in range(n)]</code>으로 n개 게임을 한 줄에 생성</li>
+            <li>당첨 등수: 6개 일치=1등, 5개+보너스=2등, 5개=3등, 4개=4등, 3개=5등</li>
+        </ul>
+    </div>
+
+    <!-- SVG: 전체 흐름 요약 -->
+    <div style="text-align:center;margin:20px 0;">
+        <svg viewBox="0 0 500 110" style="max-width:500px;width:100%">
+            <defs>
+                <marker id="arwSum" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="5" y="35" width="90" height="40" rx="8" fill="#1e3a5f"/>
+            <text x="50" y="53" text-anchor="middle" font-size="8" fill="#fff" font-weight="700">random</text>
+            <text x="50" y="67" text-anchor="middle" font-size="8" fill="#93c5fd">.sample</text>
+            <line x1="98" y1="55" x2="118" y2="55" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwSum)"/>
+            <rect x="121" y="35" width="80" height="40" rx="8" fill="#3b82f6"/>
+            <text x="161" y="53" text-anchor="middle" font-size="8" fill="#fff" font-weight="700">sorted()</text>
+            <text x="161" y="67" text-anchor="middle" font-size="8" fill="#bfdbfe">정렬</text>
+            <line x1="204" y1="55" x2="224" y2="55" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwSum)"/>
+            <rect x="227" y="15" width="80" height="40" rx="8" fill="#22c55e"/>
+            <text x="267" y="33" text-anchor="middle" font-size="8" fill="#fff" font-weight="700">generate</text>
+            <text x="267" y="47" text-anchor="middle" font-size="8" fill="#dcfce7">_games()</text>
+            <rect x="227" y="55" width="80" height="40" rx="8" fill="#f59e0b"/>
+            <text x="267" y="73" text-anchor="middle" font-size="8" fill="#fff" font-weight="700">check</text>
+            <text x="267" y="87" text-anchor="middle" font-size="8" fill="#fef3c7">_prize()</text>
+            <line x1="310" y1="35" x2="330" y2="25" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwSum)"/>
+            <line x1="310" y1="75" x2="330" y2="85" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwSum)"/>
+            <rect x="333" y="10" width="80" height="40" rx="8" fill="#a855f7"/>
+            <text x="373" y="28" text-anchor="middle" font-size="8" fill="#fff" font-weight="700">여러 게임</text>
+            <text x="373" y="42" text-anchor="middle" font-size="8" fill="#f3e8ff">리스트</text>
+            <rect x="333" y="70" width="80" height="40" rx="8" fill="#ef4444"/>
+            <text x="373" y="88" text-anchor="middle" font-size="8" fill="#fff" font-weight="700">등수 판별</text>
+            <text x="373" y="102" text-anchor="middle" font-size="8" fill="#fecaca">1~5등</text>
+            <line x1="416" y1="30" x2="436" y2="55" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwSum)"/>
+            <line x1="416" y1="90" x2="436" y2="65" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwSum)"/>
+            <rect x="439" y="40" width="56" height="30" rx="8" fill="#0f172a"/>
+            <text x="467" y="58" text-anchor="middle" font-size="8" fill="#67e8f9" font-weight="700">Counter</text>
+        </svg>
+    </div>
+
+    <!-- compare-table -->
+    <table class="compare-table">
+        <thead>
+            <tr>
+                <th>함수/메서드</th>
+                <th>역할</th>
+                <th>핵심 파라미터</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>random.sample</code></td>
+                <td>중복 없이 k개 추출</td>
+                <td>population, k</td>
+            </tr>
+            <tr>
+                <td><code>sorted()</code></td>
+                <td>정렬된 새 리스트 반환</td>
+                <td>iterable, reverse=False</td>
+            </tr>
+            <tr>
+                <td><code>set() &amp;</code></td>
+                <td>교집합 — 두 집합의 공통 원소</td>
+                <td>set A &amp; set B</td>
+            </tr>
+            <tr>
+                <td><code>list.extend()</code></td>
+                <td>원소를 하나씩 추가</td>
+                <td>iterable</td>
+            </tr>
+            <tr>
+                <td><code>Counter.most_common(n)</code></td>
+                <td>빈도 상위 n개 반환</td>
+                <td>n (생략 시 전체)</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

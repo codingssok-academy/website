@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <title>PDF 필기 테스트</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #1a1a2e;
+            color: #e0e0e0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        h2 {
+            padding: 10px 16px;
+            background: #16213e;
+            font-size: 14px;
+        }
+
+        .viewer-frames {
+            flex: 1;
+            display: flex;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .viewer-frames iframe {
+            flex: 1;
+            border: none;
+            width: 50%;
+            height: 100%;
+        }
+
+        /* ── Canvas Overlay ── */
+        .annot-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            cursor: text;
+            touch-action: none;
+        }
+
+        /* ── Floating Toolbar ── */
+        .annot-bar {
+            position: absolute;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 20;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            background: rgba(20, 20, 28, .92);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, .15);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, .5);
+        }
+
+        .at-sep {
+            width: 1px;
+            height: 20px;
+            background: rgba(255, 255, 255, .15);
+            margin: 0 2px;
+        }
+
+        .at-tool {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, .15);
+            background: transparent;
+            color: #aaa;
+            cursor: pointer;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .at-tool:hover {
+            border-color: #60a5fa;
+            color: #60a5fa;
+        }
+
+        .at-tool.active {
+            background: rgba(96, 165, 250, .15);
+            border-color: #60a5fa;
+            color: #60a5fa;
+        }
+
+        .at-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            cursor: pointer;
+        }
+
+        .at-color.active {
+            border-color: #fff;
+            box-shadow: 0 0 0 2px #60a5fa;
+            transform: scale(1.2);
+        }
+
+        .at-lbl {
+            font-size: 10px;
+            color: #888;
+            font-weight: 600;
+        }
+
+        .at-range {
+            width: 55px;
+            accent-color: #60a5fa;
+        }
+
+        .at-btn {
+            padding: 4px 8px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, .15);
+            background: transparent;
+            color: #aaa;
+            cursor: pointer;
+            font-size: 11px;
+        }
+
+        .at-btn:hover {
+            border-color: #60a5fa;
+            color: #60a5fa;
+        }
+
+        .status {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: #22c55e;
+            color: #000;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            z-index: 100;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h2>📄 PDF 분할뷰 필기 테스트 — 아무 데나 클릭하면 바로 타이핑됩니다</h2>
+
+    <div class="viewer-frames" id="viewerFrames">
+        <iframe src="pdfs/2025/1차/problems/farcard.pdf"></iframe>
+        <iframe src="pdfs/2025/1차/solutions/farcard.pdf"></iframe>
+
+        <!-- Annotation Canvas (transparent overlay) -->
+        <canvas id="annotCanvas" class="annot-overlay"></canvas>
+
+        <!-- Floating Toolbar -->
+        <div class="annot-bar" id="annotBar">
+            <button class="at-tool" data-tool="pen" onclick="setTool('pen')" title="펜">✏️</button>
+            <button class="at-tool" data-tool="highlighter" onclick="setTool('highlighter')" title="형광펜">🖍️</button>
+            <button class="at-tool active" data-tool="text" onclick="setTool('text')" title="텍스트">T</button>
+            <button class="at-tool" data-tool="eraser" onclick="setTool('eraser')" title="지우개">🧹</button>
+            <div class="at-sep"></div>
+            <div id="colorPalette" style="display:flex;gap:3px"></div>
+            <div class="at-sep"></div>
+            <label class="at-lbl">굵기</label>
+            <input type="range" class="at-range" min="1" max="8" value="3" oninput="penSize=parseInt(this.value)">
+            <div class="at-sep"></div>
+            <button class="at-btn" onclick="undo()">↩️ 실행취소</button>
+            <button class="at-btn" onclick="clearAll()">🗑️ 전부 지우기</button>
+        </div>
+    </div>
+
+    <div class="status" id="statusBar">✅ 텍스트 모드 — 클릭하면 바로 타이핑!</div>
+
+    <script>
+        /* ═════ STATE ═════ */
+        let tool = 'text';
+        let color = '#1e40af';
+        let penSize = 3;
+        let drawing = false;
+        let paths = [];
+        let ctx, canvas;
+        let activeTextBox = null;
+
+        const COLORS = ['#1e40af', '#dc2626', '#059669', '#d97706', '#7c3aed', '#000000'];
+
+        /* ═════ INIT ═════ */
+        window.addEventListener('DOMContentLoaded', function () {
+            canvas = document.getElementById('annotCanvas');
+            const parent = canvas.parentElement;
+            canvas.width = parent.offsetWidth;
+            canvas.height = parent.offsetHeight;
+            ctx = canvas.getContext('2d');
+
+            // Mouse events
+            canvas.addEventListener('mousedown', onDown);
+            canvas.addEventListener('mousemove', onMove);
+            canvas.addEventListener('mouseup', onUp);
+            canvas.addEventListener('mouseleave', onUp);
+
+            // Touch events
+            canvas.addEventListener('touchstart', function (e) { e.preventDefault(); onDown(e); }, { passive: false });
+            canvas.addEventListener('touchmove', function (e) { e.preventDefault(); onMove(e); }, { passive: false });
+            canvas.addEventListener('touchend', onUp);
+
+            // Wheel passthrough for PDF scrolling
+            canvas.addEventListener('wheel', function () {
+                canvas.style.pointerEvents = 'none';
+                setTimeout(function () { canvas.style.pointerEvents = 'auto'; }, 80);
+            }, { passive: true });
+
+            // Build color palette
+            var pal = document.getElementById('colorPalette');
+            COLORS.forEach(function (c) {
+                var b = document.createElement('button');
+                b.className = 'at-color' + (c === color ? ' active' : '');
+                b.style.background = c;
+                b.dataset.color = c;
+                b.onclick = function () { setColor(c); };
+                pal.appendChild(b);
+            });
+
+            // Resize handler
+            window.addEventListener('resize', function () {
+                canvas.width = parent.offsetWidth;
+                canvas.height = parent.offsetHeight;
+                redrawAll();
+            });
+
+            setStatus('✅ 텍스트 모드 — 클릭하면 바로 타이핑!');
+        });
+
+        /* ═════ POINTER EVENTS ═════ */
+        function onDown(e) {
+            if (tool === 'text') {
+                openText(e);
+                return;
+            }
+            commitOpenText();
+            drawing = true;
+            var pt = getPos(e);
+            var c = tool === 'highlighter' ? color + '55' : (tool === 'eraser' ? 'erase' : color);
+            var s = tool === 'highlighter' ? penSize * 6 : (tool === 'eraser' ? penSize * 5 : penSize);
+            paths.push({ tool: tool, color: c, size: s, points: [pt] });
+            ctx.beginPath();
+            ctx.moveTo(pt.x, pt.y);
+        }
+
+        function onMove(e) {
+            if (!drawing) return;
+            var pt = getPos(e);
+            var path = paths[paths.length - 1];
+            path.points.push(pt);
+            if (path.color === 'erase') {
+                ctx.globalCompositeOperation = 'destination-out';
+                ctx.strokeStyle = 'rgba(0,0,0,1)';
+            } else {
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.strokeStyle = path.color;
+            }
+            ctx.lineWidth = path.size;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.lineTo(pt.x, pt.y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(pt.x, pt.y);
+        }
+
+        function onUp() {
+            if (!drawing) return;
+            drawing = false;
+            ctx.beginPath();
+            ctx.globalCompositeOperation = 'source-over';
+            savePaths();
+        }
+
+        function getPos(e) {
+            var r = canvas.getBoundingClientRect();
+            var cx = e.touches ? e.touches[0].clientX : e.clientX;
+            var cy = e.touches ? e.touches[0].clientY : e.clientY;
+            return {
+                x: ((cx - r.left) / r.width) * canvas.width,
+                y: ((cy - r.top) / r.height) * canvas.height
+            };
+        }
+
+        /* ═════ TEXT INPUT ═════ */
+        function openText(e) {
+            commitOpenText();
+
+            var r = canvas.getBoundingClientRect();
+            var cx = e.touches ? e.touches[0].clientX : e.clientX;
+            var cy = e.touches ? e.touches[0].clientY : e.clientY;
+            var leftPx = cx - r.left;
+            var topPx = cy - r.top;
+            var fontSize = Math.max(penSize * 5, 16);
+
+            var ta = document.createElement('textarea');
+            ta.style.cssText =
+                'position:absolute;z-index:25;' +
+                'left:' + leftPx + 'px;top:' + topPx + 'px;' +
+                'color:' + color + ';font-size:' + fontSize + 'px;' +
+                'font-family:Inter,Noto Sans KR,sans-serif;' +
+                'font-weight:600;line-height:1.4;' +
+                'min-width:150px;min-height:36px;max-width:60%;' +
+                'padding:6px 8px;border:2px dashed ' + color + ';' +
+                'border-radius:6px;background:rgba(255,255,255,.25);' +
+                'outline:none;resize:both;' +
+                'box-shadow:0 4px 16px rgba(0,0,0,.3);';
+            ta.placeholder = '여기에 입력하세요...';
+            ta._color = color;
+            ta._size = fontSize;
+            ta._pos = getPos(e);
+
+            canvas.parentElement.appendChild(ta);
+
+            // CRITICAL: Stop mousedown from reaching canvas (which would create another text box)
+            ta.addEventListener('mousedown', function (ev) { ev.stopPropagation(); });
+            ta.addEventListener('touchstart', function (ev) { ev.stopPropagation(); });
+
+            // Escape to commit
+            ta.addEventListener('keydown', function (ev) {
+                if (ev.key === 'Escape') { ev.preventDefault(); commitOpenText(); }
+            });
+
+            activeTextBox = ta;
+
+            // Focus with delay
+            requestAnimationFrame(function () { ta.focus(); });
+            setStatus('⌨️ 타이핑 중... (Esc로 확정)');
+        }
+
+        function commitOpenText() {
+            if (!activeTextBox) return;
+            var ta = activeTextBox;
+            activeTextBox = null;
+            var text = ta.value.trim();
+            if (text) {
+                paths.push({
+                    tool: 'text', color: ta._color, size: ta._size,
+                    points: [ta._pos], text: text, lines: text.split('\n')
+                });
+                redrawAll();
+                savePaths();
+            }
+            if (ta.parentElement) ta.remove();
+            setStatus('✅ 텍스트 모드 — 클릭하면 바로 타이핑!');
+        }
+
+        /* ═════ REDRAW ═════ */
+        function redrawAll() {
+            if (!ctx || !canvas) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            paths.forEach(function (p) {
+                if (p.tool === 'text') {
+                    ctx.globalCompositeOperation = 'source-over';
+                    ctx.font = 'bold ' + p.size + "px 'Inter','Noto Sans KR',sans-serif";
+                    ctx.fillStyle = p.color;
+                    var lines = p.lines || [p.text];
+                    var lh = p.size * 1.4;
+                    lines.forEach(function (line, i) {
+                        ctx.fillText(line, p.points[0].x, p.points[0].y + p.size + (i * lh));
+                    });
+                    return;
+                }
+                if (p.points.length < 2) return;
+                ctx.beginPath();
+                if (p.color === 'erase') {
+                    ctx.globalCompositeOperation = 'destination-out';
+                    ctx.strokeStyle = 'rgba(0,0,0,1)';
+                } else {
+                    ctx.globalCompositeOperation = 'source-over';
+                    ctx.strokeStyle = p.color;
+                }
+                ctx.lineWidth = p.size;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.moveTo(p.points[0].x, p.points[0].y);
+                for (var i = 1; i < p.points.length; i++) ctx.lineTo(p.points[i].x, p.points[i].y);
+                ctx.stroke();
+            });
+            ctx.globalCompositeOperation = 'source-over';
+        }
+
+        /* ═════ TOOLS ═════ */
+        function setTool(t) {
+            commitOpenText();
+            tool = t;
+            canvas.style.cursor = t === 'text' ? 'text' : t === 'eraser' ? 'cell' : 'crosshair';
+            document.querySelectorAll('.at-tool').forEach(function (el) {
+                el.classList.toggle('active', el.dataset.tool === t);
+            });
+            var labels = { text: '✅ 텍스트 모드', pen: '✏️ 펜 모드', highlighter: '🖍️ 형광펜 모드', eraser: '🧹 지우개 모드' };
+            setStatus(labels[t] || t);
+        }
+
+        function setColor(c) {
+            color = c;
+            document.querySelectorAll('.at-color').forEach(function (el) {
+                el.classList.toggle('active', el.dataset.color === c);
+            });
+        }
+
+        function undo() {
+            commitOpenText();
+            if (!paths.length) return;
+            paths.pop(); redrawAll(); savePaths();
+        }
+
+        function clearAll() {
+            commitOpenText();
+            if (!confirm('필기를 모두 지울까요?')) return;
+            paths = []; redrawAll(); savePaths();
+        }
+
+        function savePaths() {
+            try { localStorage.setItem('test_annot', JSON.stringify(paths)); } catch (e) { }
+        }
+
+        function setStatus(msg) {
+            var el = document.getElementById('statusBar');
+            if (el) el.textContent = msg;
+        }
+    </script>
+</body>
+
+</html>

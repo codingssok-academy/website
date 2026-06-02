@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — static과 함수 고급</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+.page { width: 210mm; min-height: 297mm; margin: 16px auto; padding: 18mm 20mm 15mm 22mm; background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: relative; page-break-after: always; }
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after { content: counter(pagenum); position: absolute; bottom: 10mm; right: 16mm; font-size: 10px; color: #94a3b8; font-weight: 600; }
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark { position: absolute; top: -10px; right: -15px; font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3); line-height: 1; pointer-events: none; }
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #2563eb; font-weight: 600; }
+.code { background: #0f172a; border-radius: 8px; padding: 16px 20px; font-family: 'JetBrains Mono', monospace; font-size: 14px; color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap; }
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">11</div>
+        <div class="cover-label">Chapter 06 · Unit 11</div>
+        <h1 class="cover-title">static과 함수 고급 — 값이 기억되는 변수</h1>
+        <p class="cover-sub">static 지역 변수는 함수가 끝나도 값이 사라지지 않습니다. 호출 카운터 패턴과 함수 포인터의 개념을 맛봅니다.</p>
+        <div style="display:flex;align-items:center;gap:10px;margin:16px 0 8px;padding:8px 0;">
+            <img src="/images/learn/c-lang/gear.png" alt="함수 기어 - 재사용 가능한 코드 구조" style="width:40px;height:40px;object-fit:contain;background:#fff;border-radius:8px;">
+            <img src="/images/learn/c-lang/puzzle.png" alt="퍼즐 조각 - 함수 조합으로 완성되는 프로그램" style="width:40px;height:40px;object-fit:contain;background:#fff;border-radius:8px;">
+            <img src="/images/learn/c-lang/book.png" alt="교재 - 함수 개념 학습" style="width:40px;height:40px;object-fit:contain;background:#fff;border-radius:8px;">
+            <img src="/images/learn/c-lang/code-screen.png" alt="코드 화면 - 함수 작성 예시" style="width:40px;height:40px;object-fit:contain;background:#fff;border-radius:8px;">
+            <img src="/images/learn/c-lang/lightbulb.png" alt="전구 - 함수 아이디어" style="width:40px;height:40px;object-fit:contain;background:#fff;border-radius:8px;">
+        </div>
+        <div style="margin:20px 0;">
+            <svg viewBox="0 0 500 70" style="max-width:500px;width:100%">
+                <rect x="5" y="15" width="110" height="30" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="60" y="35" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">static 변수</text>
+                <line x1="120" y1="30" x2="140" y2="30" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="145" y="15" width="120" height="30" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="205" y="35" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">값이 유지됨</text>
+                <line x1="270" y1="30" x2="290" y2="30" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="295" y="15" width="120" height="30" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="355" y="35" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">호출 카운터 패턴</text>
+                <line x1="420" y1="30" x2="440" y2="30" stroke="#94a3b8" stroke-width="1.5"/>
+            </svg>
+        </div>
+        <div class="cover-goals">
+            <h3>이 유닛에서 배우는 것</h3>
+            <ul>
+                <li>static 지역 변수가 일반 지역 변수와 어떻게 다른지 이해합니다.</li>
+                <li>static 변수로 호출 카운터를 구현합니다.</li>
+                <li>static 변수가 프로그램 전체 생애를 유지함을 압니다.</li>
+                <li>함수 포인터의 개념을 처음 맛봅니다.</li>
+                <li>static을 사용하는 상황을 판단할 수 있습니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="page">
+    <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/c-lang/gear.png" alt="함수 기어 - 재사용 가능한 코드 구조" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>static 지역 변수 — 값이 기억된다</h2>
+    <p>일반 지역 변수는 함수가 끝나면 사라집니다. 하지만 <code>static</code>을 붙이면 함수가 끝나도 값이 유지됩니다. 다음에 다시 호출하면 이전 값이 그대로 있습니다.</p>
+    <div style="text-align:center;margin:18px 0;">
+        <svg viewBox="0 0 460 140" style="max-width:460px;width:100%">
+            <!-- 일반 지역 변수 -->
+            <rect x="10" y="10" width="200" height="120" rx="8" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="110" y="30" text-anchor="middle" font-size="11" fill="#dc2626" font-weight="800">일반 지역 변수</text>
+            <text x="24" y="52" font-size="10" fill="#475569" font-family="JetBrains Mono">1번 호출: n=0 → n=1</text>
+            <text x="24" y="68" font-size="10" fill="#ef4444">함수 종료: n 사라짐</text>
+            <text x="24" y="88" font-size="10" fill="#475569" font-family="JetBrains Mono">2번 호출: n=0 → n=1</text>
+            <text x="24" y="104" font-size="10" fill="#ef4444">또 사라짐</text>
+            <text x="110" y="128" text-anchor="middle" font-size="9" fill="#ef4444">매번 0에서 시작</text>
+
+            <!-- static 변수 -->
+            <rect x="250" y="10" width="200" height="120" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="350" y="30" text-anchor="middle" font-size="11" fill="#166534" font-weight="800">static 지역 변수</text>
+            <text x="264" y="52" font-size="10" fill="#475569" font-family="JetBrains Mono">1번 호출: n=0 → n=1</text>
+            <text x="264" y="68" font-size="10" fill="#22c55e">함수 종료: n=1 유지!</text>
+            <text x="264" y="88" font-size="10" fill="#475569" font-family="JetBrains Mono">2번 호출: n=1 → n=2</text>
+            <text x="264" y="104" font-size="10" fill="#22c55e">함수 종료: n=2 유지!</text>
+            <text x="350" y="128" text-anchor="middle" font-size="9" fill="#22c55e">이전 값에서 계속</text>
+        </svg>
+    </div>
+    <div class="code"><span class="kw">void</span> <span class="fn">counter</span>() {
+    <span class="kw">static int</span> count = <span class="num">0</span>;   <span class="cmt">// 처음 한 번만 0으로 초기화</span>
+    count++;
+    <span class="fn">printf</span>(<span class="str">"호출 횟수: %d\n"</span>, count);
+}
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="fn">counter</span>();   <span class="cmt">// 호출 횟수: 1</span>
+    <span class="fn">counter</span>();   <span class="cmt">// 호출 횟수: 2</span>
+    <span class="fn">counter</span>();   <span class="cmt">// 호출 횟수: 3</span>
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+    <p><code>static int count = 0</code>은 프로그램 시작 시 딱 한 번만 0으로 초기화됩니다. 이후 호출에서는 이전 값을 그대로 유지합니다.</p>
+</div>
+
+<div class="page">
+    <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/c-lang/puzzle.png" alt="퍼즐 조각 - 함수 조합으로 완성되는 프로그램" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>호출 카운터 패턴</h2>
+    <p>static 변수는 함수가 몇 번 호출되었는지 세는 데 유용합니다. 전역 변수를 쓰지 않고도 상태를 유지할 수 있습니다.</p>
+    <div class="code"><span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+
+<span class="kw">int</span> <span class="fn">getNextId</span>() {
+    <span class="kw">static int</span> id = <span class="num">0</span>;
+    id++;
+    <span class="kw">return</span> id;   <span class="cmt">// 1, 2, 3, 4... 순서대로 반환</span>
+}
+
+<span class="kw">void</span> <span class="fn">registerUser</span>() {
+    <span class="kw">int</span> myId = <span class="fn">getNextId</span>();
+    <span class="fn">printf</span>(<span class="str">"회원 ID: %d\n"</span>, myId);
+}
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="fn">registerUser</span>();   <span class="cmt">// 회원 ID: 1</span>
+    <span class="fn">registerUser</span>();   <span class="cmt">// 회원 ID: 2</span>
+    <span class="fn">registerUser</span>();   <span class="cmt">// 회원 ID: 3</span>
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+    <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/c-lang/book.png" alt="교재 - 함수 개념 학습" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>함수 포인터 맛보기</h2>
+    <p>함수도 메모리에 저장되므로, 함수의 주소를 변수에 담을 수 있습니다. 이것을 <strong>함수 포인터</strong>라고 합니다. 지금은 이런 것이 있다는 것만 알면 됩니다.</p>
+    <div class="code"><span class="kw">int</span> <span class="fn">add</span>(<span class="kw">int</span> a, <span class="kw">int</span> b) { <span class="kw">return</span> a + b; }
+<span class="kw">int</span> <span class="fn">mul</span>(<span class="kw">int</span> a, <span class="kw">int</span> b) { <span class="kw">return</span> a * b; }
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="cmt">// 함수 포인터 선언: 반환타입 (*이름)(매개변수타입)</span>
+    <span class="kw">int</span> (*op)(<span class="kw">int</span>, <span class="kw">int</span>);
+
+    op = <span class="fn">add</span>;
+    <span class="fn">printf</span>(<span class="str">"%d\n"</span>, <span class="fn">op</span>(<span class="num">3</span>, <span class="num">4</span>));   <span class="cmt">// 7 (add 호출)</span>
+
+    op = <span class="fn">mul</span>;
+    <span class="fn">printf</span>(<span class="str">"%d\n"</span>, <span class="fn">op</span>(<span class="num">3</span>, <span class="num">4</span>));   <span class="cmt">// 12 (mul 호출)</span>
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+    <div style="display:flex;align-items:center;gap:6px;margin:14px 0 4px;">
+        <img src="/images/learn/c-lang/book.png" alt="교재 - 함수 개념 학습" style="width:24px;height:24px;object-fit:contain;background:#fff;border-radius:8px;">
+        <span style="font-size:12px;color:#1d4ed8;font-weight:600;">실습 구역</span>
+    </div>
+<div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">static 변수를 이용해 게임 점수 합산 함수 <code>addScore(int s)</code>를 만드세요. 호출할 때마다 누적합이 출력됩니다.</div>
+                <div class="code"><span class="kw">void</span> <span class="fn">addScore</span>(<span class="kw">int</span> s) {
+    <span class="kw">static int</span> total = <span class="num">0</span>;
+    total += s;
+    <span class="fn">printf</span>(<span class="str">"누적 점수: %d\n"</span>, total);
+}</div>
+                <div class="practice-result">addScore(10) → 10, addScore(20) → 30</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page">
+    <h2>확인 문제</h2>
+    <div class="problem">
+        <div class="problem-head"><div class="problem-badge">Q1</div><div class="problem-label">static O/X</div><span class="problem-diff easy">쉬움</span></div>
+        <div class="problem-body">
+            <div class="problem-text">맞으면 O, 틀리면 X를 쓰세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">(1)</span><span class="problem-example-value">static 변수는 함수가 끝나도 값이 유지된다.</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">(2)</span><span class="problem-example-value">static int n = 0은 호출될 때마다 0으로 초기화된다.</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">(3)</span><span class="problem-example-value">static 변수는 다른 함수에서 접근할 수 있다.</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">(4)</span><span class="problem-example-value">static 변수는 카운터 구현에 활용된다.</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle"><summary>정답 보기</summary><div class="problem-toggle-content"><div class="answer-code">(1) O  (2) X (처음 한 번만 초기화)  (3) X (선언된 함수 안에서만)  (4) O</div></div></details>
+    </div>
+    <div class="problem">
+        <div class="problem-head"><div class="problem-badge">Q2</div><div class="problem-label">출력 결과 예측</div><span class="problem-diff medium">보통</span></div>
+        <div class="problem-body">
+            <div class="problem-text">다음 코드의 출력을 쓰세요.</div>
+            <div class="code"><span class="kw">void</span> <span class="fn">test</span>() {
+    <span class="kw">static int</span> x = <span class="num">10</span>;
+    x += <span class="num">5</span>;
+    <span class="fn">printf</span>(<span class="str">"%d\n"</span>, x);
+}
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="fn">test</span>(); <span class="fn">test</span>(); <span class="fn">test</span>();
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle"><summary>정답 보기</summary><div class="problem-toggle-content"><div class="answer-code">15
+20
+25
+x는 10에서 시작해 5씩 누적으로 더해집니다.</div></div></details>
+    </div>
+    <div class="problem">
+        <div class="problem-head"><div class="problem-badge">Q3</div><div class="problem-label">일반 vs static 비교</div><span class="problem-diff easy">쉬움</span></div>
+        <div class="problem-body">
+            <div class="problem-text">다음 두 함수의 출력 차이를 설명하세요.</div>
+            <div class="code"><span class="kw">void</span> <span class="fn">a</span>() { <span class="kw">int</span> n=<span class="num">0</span>; n++; <span class="fn">printf</span>(<span class="str">"%d\n"</span>,n); }
+<span class="kw">void</span> <span class="fn">b</span>() { <span class="kw">static int</span> n=<span class="num">0</span>; n++; <span class="fn">printf</span>(<span class="str">"%d\n"</span>,n); }</div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle"><summary>정답 보기</summary><div class="problem-toggle-content"><div class="answer-code">a()를 3번 호출: 1, 1, 1 (매번 0에서 시작해 1이 됨)
+b()를 3번 호출: 1, 2, 3 (값이 유지되며 계속 증가)</div></div></details>
+    </div>
+    <div class="problem">
+        <div class="problem-head"><div class="problem-badge">Q4</div><div class="problem-label">호출 카운터 작성</div><span class="problem-diff medium">보통</span></div>
+        <div class="problem-body">
+            <div class="problem-text">static을 이용해 자신이 몇 번째 호출인지 출력하는 함수 <code>whoAmI()</code>를 작성하세요.</div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle"><summary>정답 보기</summary><div class="problem-toggle-content"><div class="answer-code">void whoAmI() {
+    static int call = 0;
+    call++;
+    printf("나는 %d번째 호출입니다.\n", call);
+}</div></div></details>
+    </div>
+    <div class="problem">
+        <div class="problem-head"><div class="problem-badge">Q5</div><div class="problem-label">함수 포인터 개념</div><span class="problem-diff easy">쉬움</span></div>
+        <div class="problem-body">
+            <div class="problem-text">함수 포인터란 무엇인지 한 문장으로 설명하세요.</div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle"><summary>정답 보기</summary><div class="problem-toggle-content"><div class="answer-code">함수 포인터는 함수의 메모리 주소를 저장하는 변수로, 변수처럼 함수를 전달하거나 바꿔 호출할 수 있게 해줍니다.</div></div></details>
+    </div>
+</div>
+
+<div class="page">
+    <h2>static 변수 생명주기 정리</h2>
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 170" style="max-width:460px;width:100%">
+            <!-- 타임라인 -->
+            <rect x="10" y="10" width="440" height="20" rx="4" fill="#1e3a5f"/>
+            <text x="230" y="24" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">프로그램 실행 타임라인</text>
+            <line x1="30" y1="55" x2="430" y2="55" stroke="#94a3b8" stroke-width="2"/>
+            <!-- 일반 지역 변수 -->
+            <rect x="60" y="40" width="80" height="28" rx="6" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="100" y="58" text-anchor="middle" font-size="9" fill="#dc2626">1번 호출</text>
+            <rect x="200" y="40" width="80" height="28" rx="6" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="240" y="58" text-anchor="middle" font-size="9" fill="#dc2626">2번 호출</text>
+            <text x="230" y="78" text-anchor="middle" font-size="9" fill="#ef4444">일반 지역 변수: 각 호출마다 생성 → 소멸</text>
+            <!-- static 변수 -->
+            <rect x="60" y="95" width="360" height="28" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="2"/>
+            <text x="240" y="113" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">static 변수: 프로그램 시작부터 끝까지 존재</text>
+            <text x="230" y="140" text-anchor="middle" font-size="9" fill="#64748b">1번 초기화 → 함수 종료 후에도 값 유지 → 다음 호출 시 이전 값</text>
+            <!-- 주의 -->
+            <rect x="10" y="148" width="440" height="18" rx="4" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="230" y="161" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">static 변수의 초기화 문(= 0)은 프로그램 시작 시 딱 1번만 실행됩니다</text>
+        </svg>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin:16px 0 6px;padding:8px 14px;background:#f0f9ff;border-radius:6px;border:1px solid #bae6fd;">
+        <img src="/images/learn/c-lang/gear.png" alt="함수 기어 - 재사용 가능한 코드 구조" style="width:28px;height:28px;object-fit:contain;background:#fff;border-radius:8px;">
+        <img src="/images/learn/c-lang/puzzle.png" alt="퍼즐 조각 - 함수 조합으로 완성되는 프로그램" style="width:28px;height:28px;object-fit:contain;background:#fff;border-radius:8px;">
+        <span style="font-size:12px;color:#0369a1;font-weight:600;">핵심 정리</span>
+    </div>
+<div class="summary">
+        <h3>핵심 요약</h3>
+        <ul>
+            <li>static 지역 변수: 함수가 끝나도 값이 유지됩니다.</li>
+            <li>static 초기화는 처음 한 번만 실행됩니다.</li>
+            <li>static 변수는 선언된 함수 안에서만 접근 가능합니다 (전역 변수와 다름).</li>
+            <li>호출 카운터, 누적 합산 등에 유용한 패턴입니다.</li>
+            <li>함수 포인터: 함수의 주소를 저장하는 변수 (고급 개념, 나중에 자세히).</li>
+        </ul>
+    </div>
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 50" style="max-width:460px;width:100%">
+            <defs><marker id="st1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#3b82f6"/></marker></defs>
+            <rect x="10" y="10" width="210" height="30" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="115" y="30" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">U11 static과 함수 고급</text>
+            <path d="M225,25 L250,25" stroke="#3b82f6" stroke-width="2" marker-end="url(#st1)"/>
+            <rect x="255" y="10" width="195" height="30" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="352" y="30" text-anchor="middle" font-size="11" fill="#92400e" font-weight="700">U12 함수 종합 실전</text>
+        </svg>
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:20px;padding-top:10px;border-top:1px solid #f1f5f9;">
+        <img src="/images/learn/c-lang/flowchart.png" alt="순서도 - 함수 호출 흐름" style="width:22px;height:22px;object-fit:contain;opacity:0.6;background:#fff;border-radius:8px;">
+        <span style="font-size:10px;color:#cbd5e1;">코딩쏙 C언어</span>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+
+
+
+<script>
+(function(){
+  var KEY = 'cs_ans_' + location.pathname.replace(/[^a-zA-Z0-9]/g,'_');
+  var pagePath = location.pathname;
+  var userId = null;
+  try {
+    userId = window.parent?.localStorage?.getItem('codingssok_user_id')
+      || localStorage.getItem('codingssok_user_id');
+  } catch(e) {}
+
+  function save(){
+    var areas = document.querySelectorAll('textarea');
+    var saved = 0;
+    areas.forEach(function(ta, i){
+      if(ta.value.trim()) {
+        localStorage.setItem(KEY + '_' + i, ta.value);
+        saved++;
+      } else {
+        localStorage.removeItem(KEY + '_' + i);
+      }
+    });
+    if(saved > 0) showSaveIndicator();
+  }
+
+  function load(){
+    var areas = document.querySelectorAll('textarea');
+    var restored = 0;
+    areas.forEach(function(ta, i){
+      var val = localStorage.getItem(KEY + '_' + i);
+      if(val && val.trim()) {
+        ta.value = val;
+        ta.style.borderColor = '#10b981';
+        ta.style.boxShadow = '0 0 0 2px rgba(16,185,129,0.15)';
+        setTimeout(function(){ ta.style.borderColor = ''; ta.style.boxShadow = ''; }, 2000);
+        restored++;
+      }
+    });
+    if(restored > 0) showRestoreIndicator(restored);
+  }
+
+  function saveToDb(){
+    if(!userId) return;
+    var areas = document.querySelectorAll('textarea');
+    var answers = [];
+    areas.forEach(function(ta, i){
+      if(ta.value.trim()) answers.push({ field_index: i, answer_text: ta.value });
+    });
+    if(answers.length === 0) return;
+    fetch('/api/answers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId, page_path: pagePath, answers: answers })
+    }).catch(function(){});
+  }
+
+  function loadFromDb(){
+    if(!userId) return;
+    fetch('/api/answers?user_id=' + encodeURIComponent(userId) + '&page_path=' + encodeURIComponent(pagePath))
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(!d.answers || !d.answers.length) return;
+        var areas = document.querySelectorAll('textarea');
+        d.answers.forEach(function(a){
+          if(areas[a.field_index] && a.answer_text) {
+            areas[a.field_index].value = a.answer_text;
+            localStorage.setItem(KEY + '_' + a.field_index, a.answer_text);
+          }
+        });
+      }).catch(function(){});
+  }
+
+  function showSaveIndicator(){
+    var el = document.getElementById('cs-save-ind');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'cs-save-ind';
+      el.style.cssText = 'position:fixed;bottom:16px;right:16px;padding:6px 14px;border-radius:8px;background:#0f172a;color:#22c55e;font-size:11px;font-weight:700;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+      document.body.appendChild(el);
+    }
+    el.textContent = '\u2713 \uB2F5\uC548 \uC800\uC7A5\uB428'; // ✓ 답안 저장됨
+    el.style.opacity = '1';
+    setTimeout(function(){ el.style.opacity = '0'; }, 1500);
+  }
+
+  function showRestoreIndicator(n){
+    var el = document.getElementById('cs-save-ind');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'cs-save-ind';
+      el.style.cssText = 'position:fixed;bottom:16px;right:16px;padding:6px 14px;border-radius:8px;background:#0f172a;color:#3b82f6;font-size:11px;font-weight:700;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+      document.body.appendChild(el);
+    }
+    el.textContent = '\u21BB ' + n + '\uAC1C \uB2F5\uC548 \uBCF5\uC6D0'; // ↻ n개 답안 복원
+    el.style.color = '#3b82f6';
+    el.style.opacity = '1';
+    setTimeout(function(){ el.style.opacity = '0'; }, 2500);
+  }
+
+  var t = null;
+  document.addEventListener('input', function(e){
+    if(e.target.tagName === 'TEXTAREA'){
+      clearTimeout(t);
+      t = setTimeout(function(){ save(); saveToDb(); }, 300);
+    }
+  });
+  document.addEventListener('change', function(e){
+    if(e.target.tagName === 'TEXTAREA'){ save(); saveToDb(); }
+  });
+  document.addEventListener('focusout', function(e){
+    if(e.target.tagName === 'TEXTAREA'){ save(); saveToDb(); }
+  });
+  window.addEventListener('beforeunload', function(){ save(); saveToDb(); });
+
+  // 즉시 로드
+  load();
+  loadFromDb();
+})();
+</script>
+</body>
+</html>

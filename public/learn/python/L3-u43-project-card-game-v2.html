@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 프로젝트: 카드 게임</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+/* -- 페이지 -- */
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+/* -- 챕터 표지 -- */
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+
+/* -- 본문 -- */
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 16px; font-weight: 700; color: #1e3a5f; margin: 18px 0 10px; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+ul, ol { margin: 0 0 12px 20px; }
+li { font-size: 14px; color: #374151; line-height: 1.8; }
+
+/* -- 코드 블록 -- */
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13.5px;
+    color: #e2e8f0; line-height: 1.85; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.code .dec { color: #f9a8d4; }
+
+/* -- 따라해보세요 -- */
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+
+/* -- 문제 -- */
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+
+/* -- 요약 -- */
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+/* -- 단계 박스 -- */
+.step-box { border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 14px 18px; margin: 14px 0; background: #fff; }
+.step-label { font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+.step-title { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 8px; }
+
+/* -- 출력 박스 -- */
+.output-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #334155; line-height: 1.7; margin: 10px 0; }
+
+/* -- 비교 테이블 -- */
+.compare-table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13px; }
+.compare-table th { background: #1e3a5f; color: #fff; padding: 8px 12px; text-align: left; font-weight: 700; }
+.compare-table td { padding: 7px 12px; border-bottom: 1px solid #e2e8f0; color: #374151; }
+.compare-table tr:nth-child(even) td { background: #f8fafc; }
+.compare-table code { background: #e0e7ff; padding: 1px 5px; border-radius: 3px; font-family: 'JetBrains Mono', monospace; color: #3730a3; font-size: 12px; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- 1페이지: 표지 -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">43</div>
+        <div class="cover-label">L3 — Unit 43 Project</div>
+        <h1 class="cover-title">프로젝트:<br>카드 게임</h1>
+        <p class="cover-sub">클래스(Card, Deck, Player)를 설계하고, random.shuffle로 덱을 섞어 전쟁 카드 게임(War)을 구현합니다. __str__ 메서드와 OOP 개념을 실전에서 완성합니다.</p>
+
+        <!-- SVG: 전체 클래스 관계 구조도 -->
+        <div style="margin:24px 0;">
+            <svg viewBox="0 0 500 150" style="max-width:500px;width:100%">
+                <defs>
+                    <marker id="arwCov" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                    </marker>
+                </defs>
+                <!-- Card 클래스 -->
+                <rect x="5" y="10" width="130" height="60" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="70" y="28" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">Card</text>
+                <text x="70" y="44" text-anchor="middle" font-size="9" fill="#374151">number, suit</text>
+                <text x="70" y="58" text-anchor="middle" font-size="9" fill="#64748b">__str__()</text>
+                <line x1="138" y1="40" x2="158" y2="40" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+                <!-- Deck 클래스 -->
+                <rect x="161" y="10" width="178" height="60" rx="8" fill="#1e3a5f"/>
+                <text x="250" y="28" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">Deck</text>
+                <text x="250" y="44" text-anchor="middle" font-size="9" fill="#93c5fd">52장 Card 보유</text>
+                <text x="250" y="58" text-anchor="middle" font-size="9" fill="#93c5fd">shuffle() / deal()</text>
+                <line x1="342" y1="40" x2="362" y2="40" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+                <!-- Player 클래스 -->
+                <rect x="365" y="10" width="130" height="60" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="430" y="28" text-anchor="middle" font-size="11" fill="#92400e" font-weight="700">Player</text>
+                <text x="430" y="44" text-anchor="middle" font-size="9" fill="#374151">name, hand</text>
+                <text x="430" y="58" text-anchor="middle" font-size="9" fill="#64748b">receive() / play()</text>
+                <!-- 게임 흐름 -->
+                <rect x="100" y="92" width="300" height="48" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="250" y="110" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">War 게임</text>
+                <text x="250" y="126" text-anchor="middle" font-size="9" fill="#64748b">Deck 섞기 → 플레이어에게 배분 → 높은 숫자 비교 → 승자 결정</text>
+                <line x1="250" y1="73" x2="250" y2="90" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/puzzle.png" alt="고급 기능" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 유닛에서 만드는 것</h3>
+            <ul>
+                <li><code>Card</code> 클래스에 숫자(number)와 무늬(suit) 속성을 정의할 수 있습니다.</li>
+                <li><code>__str__</code> 메서드로 <code>AS</code>, <code>KH</code>처럼 카드를 문자열로 출력할 수 있습니다.</li>
+                <li><code>Deck</code> 클래스에서 4가지 무늬 × 13장 = 52장 덱을 자동 생성할 수 있습니다.</li>
+                <li><code>random.shuffle</code>로 덱을 섞고 <code>deal()</code>로 카드를 한 장씩 뽑을 수 있습니다.</li>
+                <li><code>Player</code> 클래스로 이름과 손패(hand)를 관리할 수 있습니다.</li>
+                <li>높은 숫자가 이기는 War 게임 로직을 완성하고 승자를 출력할 수 있습니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- 2페이지: Card 클래스 -->
+<div class="page">
+    <h2>Step 1 — Card 클래스 설계</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="처리" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>카드 한 장을 표현하는 <code>Card</code> 클래스를 만듭니다. 카드는 숫자(number)와 무늬(suit)로 구성되며, <code>__str__</code> 메서드로 <code>"AS"</code>처럼 출력합니다.</p>
+
+    <!-- SVG: Card 클래스 내부 구조 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 100" style="max-width:480px;width:100%">
+            <!-- 클래스 박스 -->
+            <rect x="5" y="8" width="220" height="84" rx="8" fill="#f8fafc" stroke="#3b82f6" stroke-width="2"/>
+            <rect x="5" y="8" width="220" height="28" rx="8" fill="#3b82f6"/>
+            <text x="115" y="27" text-anchor="middle" font-size="12" fill="#fff" font-weight="700">class Card</text>
+            <text x="20" y="55" font-size="9" fill="#374151" font-weight="700">속성:</text>
+            <text x="20" y="68" font-size="9" fill="#64748b">  number  숫자 (1~13 또는 A,2..K)</text>
+            <text x="20" y="82" font-size="9" fill="#64748b">  suit      무늬 (S H D C)</text>
+            <!-- 메서드 박스 -->
+            <rect x="255" y="8" width="220" height="84" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <rect x="255" y="8" width="220" height="28" rx="8" fill="#1e3a5f"/>
+            <text x="365" y="27" text-anchor="middle" font-size="12" fill="#fff" font-weight="700">메서드</text>
+            <text x="270" y="50" font-size="9" fill="#374151" font-weight="700">__init__(self, number, suit)</text>
+            <text x="270" y="65" font-size="9" fill="#64748b">  속성 초기화</text>
+            <text x="270" y="78" font-size="9" fill="#374151" font-weight="700">__str__(self)</text>
+            <text x="270" y="91" font-size="9" fill="#64748b">  "AS" 형태 문자열 반환</text>
+        </svg>
+    </div>
+
+    <!-- SVG: 숫자 → 이름 변환 표 -->
+    <div style="text-align:center;margin:10px 0;">
+        <svg viewBox="0 0 480 54" style="max-width:480px;width:100%">
+            <rect x="5" y="5" width="470" height="44" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="20" y="22" font-size="9" fill="#1e3a5f" font-weight="700">숫자 변환 규칙:</text>
+            <text x="20" y="38" font-size="9" fill="#64748b">1 → A   2~10 → 그대로   11 → J   12 → Q   13 → K</text>
+            <text x="290" y="22" font-size="9" fill="#1e3a5f" font-weight="700">무늬 기호:</text>
+            <text x="290" y="38" font-size="9" fill="#64748b">spade=S  heart=H  diamond=D  club=C</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># Step 1: Card 클래스</span>
+
+<span class="kw">class</span> <span class="fn">Card</span>:
+    <span class="cmt"># 숫자 → 이름 매핑 (1=A, 11=J, 12=Q, 13=K)</span>
+    RANKS = {<span class="num">1</span>: <span class="str">"A"</span>, <span class="num">11</span>: <span class="str">"J"</span>, <span class="num">12</span>: <span class="str">"Q"</span>, <span class="num">13</span>: <span class="str">"K"</span>}
+
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="dec">self</span>, number, suit):
+        <span class="dec">self</span>.number = number   <span class="cmt"># 정수 1~13</span>
+        <span class="dec">self</span>.suit   = suit     <span class="cmt"># "S" "H" "D" "C"</span>
+
+    <span class="kw">def</span> <span class="fn">__str__</span>(<span class="dec">self</span>):
+        rank = <span class="dec">self</span>.RANKS.<span class="fn">get</span>(<span class="dec">self</span>.number, <span class="fn">str</span>(<span class="dec">self</span>.number))
+        <span class="kw">return</span> <span class="str">f"{rank}{self.suit}"</span>
+
+<span class="cmt"># 테스트</span>
+c1 = <span class="fn">Card</span>(<span class="num">1</span>, <span class="str">"S"</span>)
+c2 = <span class="fn">Card</span>(<span class="num">13</span>, <span class="str">"H"</span>)
+c3 = <span class="fn">Card</span>(<span class="num">7</span>, <span class="str">"D"</span>)
+<span class="fn">print</span>(c1, c2, c3)
+<span class="fn">print</span>(c1.number, c2.suit)</div>
+
+    <div class="output-box">AS KH 7D
+1 H</div>
+
+    <p><code>__str__</code>는 <code>print()</code>나 f-string에서 객체를 출력할 때 자동으로 호출됩니다. <code>RANKS.get(number, str(number))</code>는 딕셔너리에 없는 숫자(2~10)는 그대로 문자열로 변환합니다.</p>
+
+    <!-- SVG: __str__ 호출 흐름 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 480 66" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="arwStr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="5" y="15" width="120" height="38" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="65" y="31" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">print(c1)</text>
+            <text x="65" y="45" text-anchor="middle" font-size="8" fill="#64748b">print 호출</text>
+            <line x1="128" y1="34" x2="148" y2="34" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwStr)"/>
+            <rect x="151" y="8" width="170" height="52" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="236" y="26" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">c1.__str__() 자동 호출</text>
+            <text x="236" y="42" text-anchor="middle" font-size="8" fill="#64748b">RANKS.get(1, "1") → "A"</text>
+            <text x="236" y="56" text-anchor="middle" font-size="8" fill="#64748b">f"AS" 반환</text>
+            <line x1="324" y1="34" x2="344" y2="34" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwStr)"/>
+            <rect x="347" y="15" width="128" height="38" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="411" y="31" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">화면에 AS 출력</text>
+            <text x="411" y="45" text-anchor="middle" font-size="8" fill="#64748b">문자열 자동 변환</text>
+        </svg>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="완성" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+        <div class="practice-head">따라해보세요 — Step 1</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc"><code>Card</code> 클래스를 입력하고 퀸 카드 <code>Card(12, "C")</code>를 출력하세요.</div>
+                <div class="code">q = <span class="fn">Card</span>(<span class="num">12</span>, <span class="str">"C"</span>)
+<span class="fn">print</span>(q)</div>
+                <div class="practice-result">QC 이 출력되면 성공</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">카드 두 장을 만들어 number를 직접 비교하세요.</div>
+                <div class="code">a = <span class="fn">Card</span>(<span class="num">10</span>, <span class="str">"S"</span>)
+b = <span class="fn">Card</span>(<span class="num">7</span>, <span class="str">"H"</span>)
+<span class="fn">print</span>(a.number > b.number)</div>
+                <div class="practice-result">True — 10이 7보다 크다</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">f-string 안에서 카드를 사용하면 <code>__str__</code>이 자동 호출됩니다. 확인하세요.</div>
+                <div class="code">c = <span class="fn">Card</span>(<span class="num">1</span>, <span class="str">"D"</span>)
+<span class="fn">print</span>(<span class="str">f"내 카드: {c}"</span>)</div>
+                <div class="practice-result">내 카드: AD 출력</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3페이지: Deck 클래스 -->
+<div class="page">
+    <h2>Step 2 — Deck 클래스 (52장 생성, 셔플, 뽑기)</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/database.png" alt="데이터" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p><code>Deck</code> 클래스는 4가지 무늬 × 13장 = 52장 카드를 자동으로 생성합니다. <code>random.shuffle</code>로 섞고, <code>deal()</code>로 맨 뒤 카드를 한 장씩 뽑습니다.</p>
+
+    <!-- SVG: Deck 52장 생성 구조 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 96" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="arwDk" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <!-- 4가지 무늬 -->
+            <rect x="5" y="12" width="108" height="72" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="59" y="30" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">4가지 무늬</text>
+            <text x="59" y="46" text-anchor="middle" font-size="10" fill="#374151">S H D C</text>
+            <text x="59" y="62" text-anchor="middle" font-size="8" fill="#64748b">SUITS 리스트</text>
+            <text x="59" y="76" text-anchor="middle" font-size="8" fill="#64748b">4개</text>
+            <!-- 곱하기 -->
+            <text x="134" y="52" text-anchor="middle" font-size="16" fill="#94a3b8" font-weight="700">x</text>
+            <!-- 13장 숫자 -->
+            <rect x="155" y="12" width="108" height="72" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="209" y="30" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">13개 숫자</text>
+            <text x="209" y="46" text-anchor="middle" font-size="8" fill="#374151">1(A) 2 3 ... 10 11(J)</text>
+            <text x="209" y="60" text-anchor="middle" font-size="8" fill="#374151">12(Q) 13(K)</text>
+            <text x="209" y="76" text-anchor="middle" font-size="8" fill="#64748b">range(1, 14)</text>
+            <!-- 화살표 -->
+            <line x1="266" y1="48" x2="290" y2="48" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwDk)"/>
+            <!-- 52장 덱 -->
+            <rect x="293" y="8" width="182" height="80" rx="8" fill="#1e3a5f"/>
+            <text x="384" y="30" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">Deck (52장)</text>
+            <text x="384" y="48" text-anchor="middle" font-size="9" fill="#93c5fd">Card 객체 52개 리스트</text>
+            <text x="384" y="64" text-anchor="middle" font-size="8" fill="#93c5fd">shuffle() — random.shuffle</text>
+            <text x="384" y="78" text-anchor="middle" font-size="8" fill="#93c5fd">deal() — pop() 맨 뒤 뽑기</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># Step 2: Deck 클래스</span>
+<span class="kw">import</span> random
+
+<span class="kw">class</span> <span class="fn">Deck</span>:
+    SUITS = [<span class="str">"S"</span>, <span class="str">"H"</span>, <span class="str">"D"</span>, <span class="str">"C"</span>]
+
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="dec">self</span>):
+        <span class="cmt"># 4무늬 x 13숫자 = 52장 Card 생성</span>
+        <span class="dec">self</span>.cards = [
+            <span class="fn">Card</span>(n, s)
+            <span class="kw">for</span> s <span class="kw">in</span> <span class="dec">self</span>.SUITS
+            <span class="kw">for</span> n <span class="kw">in</span> <span class="fn">range</span>(<span class="num">1</span>, <span class="num">14</span>)
+        ]
+
+    <span class="kw">def</span> <span class="fn">shuffle</span>(<span class="dec">self</span>):
+        <span class="str">"""덱을 무작위로 섞기"""</span>
+        random.<span class="fn">shuffle</span>(<span class="dec">self</span>.cards)
+
+    <span class="kw">def</span> <span class="fn">deal</span>(<span class="dec">self</span>):
+        <span class="str">"""맨 뒤에서 카드 한 장 뽑기"""</span>
+        <span class="kw">if not</span> <span class="dec">self</span>.cards:
+            <span class="kw">return</span> <span class="dec">None</span>
+        <span class="kw">return</span> <span class="dec">self</span>.cards.<span class="fn">pop</span>()
+
+    <span class="kw">def</span> <span class="fn">__len__</span>(<span class="dec">self</span>):
+        <span class="kw">return</span> <span class="fn">len</span>(<span class="dec">self</span>.cards)
+
+<span class="cmt"># 테스트</span>
+d = <span class="fn">Deck</span>()
+<span class="fn">print</span>(<span class="str">f"덱 카드 수: {len(d)}"</span>)
+d.<span class="fn">shuffle</span>()
+card = d.<span class="fn">deal</span>()
+<span class="fn">print</span>(<span class="str">f"뽑은 카드: {card}"</span>)
+<span class="fn">print</span>(<span class="str">f"남은 카드: {len(d)}"</span>)</div>
+
+    <div class="output-box">덱 카드 수: 52
+뽑은 카드: 8D  (셔플 결과에 따라 다름)
+남은 카드: 51</div>
+
+    <!-- SVG: deal() 동작 — pop() -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 480 62" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="arwPop" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="5" y="12" width="300" height="38" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="80" y="28" text-anchor="middle" font-size="8" fill="#64748b">cards[0]</text>
+            <text x="140" y="28" text-anchor="middle" font-size="8" fill="#64748b">cards[1]</text>
+            <text x="200" y="28" text-anchor="middle" font-size="8" fill="#64748b">...</text>
+            <rect x="255" y="12" width="46" height="38" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="278" y="35" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">pop()</text>
+            <line x1="304" y1="31" x2="330" y2="31" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwPop)"/>
+            <rect x="333" y="12" width="140" height="38" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="403" y="28" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">Card 반환</text>
+            <text x="403" y="44" text-anchor="middle" font-size="8" fill="#64748b">리스트에서 제거됨</text>
+        </svg>
+    </div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요 — Step 2</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc"><code>Deck()</code>을 생성하고 셔플 전후로 첫 카드를 출력해 순서가 바뀌는지 확인하세요.</div>
+                <div class="code">d = <span class="fn">Deck</span>()
+<span class="fn">print</span>(<span class="str">f"셔플 전 첫 카드: {d.cards[0]}"</span>)
+d.<span class="fn">shuffle</span>()
+<span class="fn">print</span>(<span class="str">f"셔플 후 첫 카드: {d.cards[0]}"</span>)</div>
+                <div class="practice-result">셔플 전후 카드가 달라지면 성공 (확률적으로 같을 수도 있음)</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">덱이 비었을 때 <code>deal()</code>을 호출하면 <code>None</code>이 반환되는지 확인하세요.</div>
+                <div class="code">empty = <span class="fn">Deck</span>()
+empty.cards = []   <span class="cmt"># 강제로 비우기</span>
+<span class="fn">print</span>(empty.<span class="fn">deal</span>())</div>
+                <div class="practice-result">None 출력 — 오류 없이 처리됨</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">루프로 5장을 뽑아 출력하세요.</div>
+                <div class="code">d = <span class="fn">Deck</span>()
+d.<span class="fn">shuffle</span>()
+<span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(<span class="num">5</span>):
+    <span class="fn">print</span>(d.<span class="fn">deal</span>())</div>
+                <div class="practice-result">무작위 카드 5장 출력</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 4페이지: Player 클래스 + War 게임 -->
+<div class="page">
+    <h2>Step 3 — Player 클래스</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p><code>Player</code>는 이름(name)과 손패(hand) 리스트를 가집니다. <code>receive(card)</code>로 카드를 받고, <code>play()</code>로 손패에서 카드를 한 장 냅니다.</p>
+
+    <!-- SVG: Player 메서드 흐름 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 80" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="arwPl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <!-- Deck -->
+            <rect x="5" y="20" width="100" height="40" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="55" y="38" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">Deck</text>
+            <text x="55" y="52" text-anchor="middle" font-size="8" fill="#64748b">deal() 호출</text>
+            <line x1="108" y1="40" x2="130" y2="40" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwPl)"/>
+            <text x="119" y="34" text-anchor="middle" font-size="7" fill="#f59e0b" font-weight="700">Card</text>
+            <!-- Player -->
+            <rect x="133" y="8" width="160" height="64" rx="8" fill="#1e3a5f"/>
+            <text x="213" y="28" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">Player</text>
+            <text x="213" y="44" text-anchor="middle" font-size="9" fill="#93c5fd">receive(card) → hand.append</text>
+            <text x="213" y="58" text-anchor="middle" font-size="9" fill="#93c5fd">play() → hand.pop(0)</text>
+            <line x1="296" y1="40" x2="318" y2="40" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwPl)"/>
+            <!-- 게임판 -->
+            <rect x="321" y="20" width="154" height="40" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="398" y="36" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">게임판 비교</text>
+            <text x="398" y="50" text-anchor="middle" font-size="8" fill="#64748b">card.number 비교 → 승자</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># Step 3: Player 클래스</span>
+
+<span class="kw">class</span> <span class="fn">Player</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="dec">self</span>, name):
+        <span class="dec">self</span>.name = name
+        <span class="dec">self</span>.hand = []   <span class="cmt"># 손패 리스트</span>
+
+    <span class="kw">def</span> <span class="fn">receive</span>(<span class="dec">self</span>, card):
+        <span class="str">"""손패에 카드 추가"""</span>
+        <span class="dec">self</span>.hand.<span class="fn">append</span>(card)
+
+    <span class="kw">def</span> <span class="fn">play</span>(<span class="dec">self</span>):
+        <span class="str">"""손패 맨 앞 카드를 내기"""</span>
+        <span class="kw">if not</span> <span class="dec">self</span>.hand:
+            <span class="kw">return</span> <span class="dec">None</span>
+        <span class="kw">return</span> <span class="dec">self</span>.hand.<span class="fn">pop</span>(<span class="num">0</span>)
+
+    <span class="kw">def</span> <span class="fn">__str__</span>(<span class="dec">self</span>):
+        cards_str = <span class="str">" "</span>.<span class="fn">join</span>(<span class="fn">str</span>(c) <span class="kw">for</span> c <span class="kw">in</span> <span class="dec">self</span>.hand)
+        <span class="kw">return</span> <span class="str">f"{self.name}: [{cards_str}]"</span>
+
+<span class="cmt"># 테스트</span>
+p = <span class="fn">Player</span>(<span class="str">"Alice"</span>)
+p.<span class="fn">receive</span>(<span class="fn">Card</span>(<span class="num">10</span>, <span class="str">"S"</span>))
+p.<span class="fn">receive</span>(<span class="fn">Card</span>(<span class="num">3</span>, <span class="str">"H"</span>))
+<span class="fn">print</span>(p)
+played = p.<span class="fn">play</span>()
+<span class="fn">print</span>(<span class="str">f"낸 카드: {played}"</span>)</div>
+
+    <div class="output-box">Alice: [10S 3H]
+낸 카드: 10S</div>
+
+    <h3>Step 4 — War 게임 로직</h3>
+    <p>두 플레이어가 각자 카드를 한 장씩 내고, 숫자가 높은 쪽이 이깁니다. Ace(1)는 가장 약한 카드로 취급합니다. 같은 숫자면 무승부입니다.</p>
+
+    <!-- SVG: War 게임 한 라운드 흐름 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 480 68" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="arwWar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="5" y="14" width="100" height="40" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="55" y="30" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">Player 1</text>
+            <text x="55" y="46" text-anchor="middle" font-size="9" fill="#374151">play() → card1</text>
+            <line x1="108" y1="34" x2="170" y2="34" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwWar)"/>
+            <rect x="173" y="6" width="134" height="56" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="240" y="24" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">숫자 비교</text>
+            <text x="240" y="40" text-anchor="middle" font-size="8" fill="#64748b">card1.number vs card2.number</text>
+            <text x="240" y="54" text-anchor="middle" font-size="8" fill="#64748b">크면 승, 같으면 무승부</text>
+            <line x1="310" y1="34" x2="372" y2="34" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwWar)"/>
+            <rect x="375" y="14" width="100" height="40" rx="8" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="425" y="30" text-anchor="middle" font-size="9" fill="#991b1b" font-weight="700">Player 2</text>
+            <text x="425" y="46" text-anchor="middle" font-size="9" fill="#374151">play() → card2</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># Step 4: War 게임 — 한 라운드</span>
+
+<span class="kw">def</span> <span class="fn">war_round</span>(p1, p2):
+    <span class="str">"""한 라운드: 각자 카드 내고 높은 숫자 승"""</span>
+    c1 = p1.<span class="fn">play</span>()
+    c2 = p2.<span class="fn">play</span>()
+    <span class="kw">if</span> c1 <span class="kw">is</span> <span class="dec">None</span> <span class="kw">or</span> c2 <span class="kw">is</span> <span class="dec">None</span>:
+        <span class="kw">return</span> <span class="str">"게임 종료"</span>
+
+    <span class="fn">print</span>(<span class="str">f"{p1.name}: {c1}  vs  {p2.name}: {c2}"</span>)
+    <span class="kw">if</span> c1.number > c2.number:
+        <span class="kw">return</span> p1.name
+    <span class="kw">elif</span> c2.number > c1.number:
+        <span class="kw">return</span> p2.name
+    <span class="kw">else</span>:
+        <span class="kw">return</span> <span class="str">"무승부"</span></div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요 — Step 3 &amp; 4</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">두 Player를 만들어 카드 한 장씩 받게 하고 <code>war_round()</code>를 실행하세요.</div>
+                <div class="code">p1 = <span class="fn">Player</span>(<span class="str">"철수"</span>)
+p2 = <span class="fn">Player</span>(<span class="str">"영희"</span>)
+p1.<span class="fn">receive</span>(<span class="fn">Card</span>(<span class="num">10</span>, <span class="str">"S"</span>))
+p2.<span class="fn">receive</span>(<span class="fn">Card</span>(<span class="num">5</span>, <span class="str">"H"</span>))
+winner = <span class="fn">war_round</span>(p1, p2)
+<span class="fn">print</span>(<span class="str">f"승자: {winner}"</span>)</div>
+                <div class="practice-result">철수: 10S  vs  영희: 5H 출력 후 승자: 철수</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">같은 숫자 카드를 내면 "무승부"가 출력되는지 확인하세요.</div>
+                <div class="code">p1 = <span class="fn">Player</span>(<span class="str">"A"</span>)
+p2 = <span class="fn">Player</span>(<span class="str">"B"</span>)
+p1.<span class="fn">receive</span>(<span class="fn">Card</span>(<span class="num">7</span>, <span class="str">"S"</span>))
+p2.<span class="fn">receive</span>(<span class="fn">Card</span>(<span class="num">7</span>, <span class="str">"D"</span>))
+<span class="fn">print</span>(<span class="fn">war_round</span>(p1, p2))</div>
+                <div class="practice-result">무승부 출력</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc"><code>print(p)</code>로 Player의 손패를 출력해 <code>__str__</code>이 작동하는지 확인하세요.</div>
+                <div class="code">p = <span class="fn">Player</span>(<span class="str">"테스트"</span>)
+p.<span class="fn">receive</span>(<span class="fn">Card</span>(<span class="num">1</span>, <span class="str">"S"</span>))
+p.<span class="fn">receive</span>(<span class="fn">Card</span>(<span class="num">13</span>, <span class="str">"H"</span>))
+<span class="fn">print</span>(p)</div>
+                <div class="practice-result">테스트: [AS KH] 출력</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 5페이지: 완성 게임 -->
+<div class="page">
+    <h2>Step 5 — War 게임 완성</h2>
+    <p>두 플레이어에게 각각 5장을 배분하고, 5라운드 동안 카드를 내며 승패를 집계합니다. 가장 많이 이긴 플레이어가 최종 승자입니다.</p>
+
+    <!-- SVG: 전체 게임 흐름 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 82" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="arwGame" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="5" y="22" width="80" height="38" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="45" y="38" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">Deck 생성</text>
+            <text x="45" y="52" text-anchor="middle" font-size="8" fill="#64748b">52장 셔플</text>
+            <line x1="88" y1="41" x2="108" y2="41" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwGame)"/>
+            <rect x="111" y="22" width="80" height="38" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="151" y="38" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">카드 배분</text>
+            <text x="151" y="52" text-anchor="middle" font-size="8" fill="#64748b">각 5장 deal()</text>
+            <line x1="194" y1="41" x2="214" y2="41" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwGame)"/>
+            <rect x="217" y="14" width="80" height="54" rx="8" fill="#1e3a5f"/>
+            <text x="257" y="32" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">5라운드</text>
+            <text x="257" y="48" text-anchor="middle" font-size="8" fill="#93c5fd">war_round()</text>
+            <text x="257" y="62" text-anchor="middle" font-size="8" fill="#93c5fd">승패 집계</text>
+            <line x1="300" y1="41" x2="320" y2="41" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwGame)"/>
+            <rect x="323" y="22" width="80" height="38" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="363" y="38" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">결과 출력</text>
+            <text x="363" y="52" text-anchor="middle" font-size="8" fill="#64748b">최종 승자</text>
+            <line x1="406" y1="41" x2="426" y2="41" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwGame)"/>
+            <rect x="429" y="22" width="46" height="38" rx="8" fill="#eff6ff" stroke="#6366f1" stroke-width="1.5"/>
+            <text x="452" y="38" text-anchor="middle" font-size="9" fill="#4338ca" font-weight="700">종료</text>
+            <text x="452" y="52" text-anchor="middle" font-size="8" fill="#64748b">GAME</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># Step 5: 완성 War 게임</span>
+
+<span class="kw">def</span> <span class="fn">play_war_game</span>(rounds=<span class="num">5</span>):
+    <span class="cmt"># 덱 준비</span>
+    deck = <span class="fn">Deck</span>()
+    deck.<span class="fn">shuffle</span>()
+
+    <span class="cmt"># 두 플레이어</span>
+    p1 = <span class="fn">Player</span>(<span class="str">"철수"</span>)
+    p2 = <span class="fn">Player</span>(<span class="str">"영희"</span>)
+
+    <span class="cmt"># 각 플레이어에게 5장 배분</span>
+    <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(rounds):
+        p1.<span class="fn">receive</span>(deck.<span class="fn">deal</span>())
+        p2.<span class="fn">receive</span>(deck.<span class="fn">deal</span>())
+
+    <span class="fn">print</span>(<span class="str">f"=== WAR 카드 게임 ({rounds}라운드) ==="</span>)
+    <span class="fn">print</span>(p1)
+    <span class="fn">print</span>(p2)
+    <span class="fn">print</span>(<span class="str">"-" * 36</span>)
+
+    <span class="cmt"># 라운드 진행 + 승패 집계</span>
+    scores = {p1.name: <span class="num">0</span>, p2.name: <span class="num">0</span>}
+    <span class="kw">for</span> r <span class="kw">in</span> <span class="fn">range</span>(<span class="num">1</span>, rounds + <span class="num">1</span>):
+        <span class="fn">print</span>(<span class="str">f"라운드 {r}:"</span>, end=<span class="str">" "</span>)
+        winner = <span class="fn">war_round</span>(p1, p2)
+        <span class="kw">if</span> winner <span class="kw">in</span> scores:
+            scores[winner] += <span class="num">1</span>
+            <span class="fn">print</span>(<span class="str">f"  → {winner} 승!"</span>)
+        <span class="kw">else</span>:
+            <span class="fn">print</span>(<span class="str">"  → 무승부"</span>)
+
+    <span class="cmt"># 최종 결과</span>
+    <span class="fn">print</span>(<span class="str">"=" * 36</span>)
+    <span class="fn">print</span>(<span class="str">f"최종: 철수 {scores['철수']}승 | 영희 {scores['영희']}승"</span>)
+    <span class="kw">if</span> scores[p1.name] > scores[p2.name]:
+        <span class="fn">print</span>(<span class="str">f"우승: {p1.name}"</span>)
+    <span class="kw">elif</span> scores[p2.name] > scores[p1.name]:
+        <span class="fn">print</span>(<span class="str">f"우승: {p2.name}"</span>)
+    <span class="kw">else</span>:
+        <span class="fn">print</span>(<span class="str">"무승부 — 재경기 필요"</span>)
+
+<span class="fn">play_war_game</span>()</div>
+
+    <div class="output-box">=== WAR 카드 게임 (5라운드) ===
+철수: [3S KH 7D 2C 10S]
+영희: [JC 4H 9D 6S QC]
+------------------------------------
+라운드 1: 철수: 3S  vs  영희: JC   → 영희 승!
+라운드 2: 철수: KH  vs  영희: 4H   → 철수 승!
+라운드 3: 철수: 7D  vs  영희: 9D   → 영희 승!
+라운드 4: 철수: 2C  vs  영희: 6S   → 영희 승!
+라운드 5: 철수: 10S  vs  영희: QC  → 영희 승!
+====================================
+최종: 철수 1승 | 영희 4승
+우승: 영희</div>
+</div>
+
+<!-- 6페이지: 전체 코드 + 문제 -->
+<div class="page">
+    <h2>완성 코드 — card_war.py</h2>
+    <p>세 클래스(Card, Deck, Player)와 게임 함수를 하나의 파일로 통합합니다. 클래스 간 의존 관계를 확인하세요.</p>
+
+    <!-- SVG: 클래스 의존 관계 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 480 60" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="arwDep" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="5" y="10" width="100" height="40" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="55" y="34" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">Card</text>
+            <text x="140" y="18" text-anchor="middle" font-size="8" fill="#64748b">포함</text>
+            <line x1="108" y1="30" x2="188" y2="30" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwDep)"/>
+            <rect x="191" y="10" width="100" height="40" rx="8" fill="#1e3a5f"/>
+            <text x="241" y="34" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">Deck</text>
+            <text x="312" y="18" text-anchor="middle" font-size="8" fill="#64748b">deal()</text>
+            <line x1="294" y1="30" x2="374" y2="30" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwDep)"/>
+            <rect x="377" y="10" width="100" height="40" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="427" y="34" text-anchor="middle" font-size="11" fill="#92400e" font-weight="700">Player</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># card_war.py — 완성 코드</span>
+<span class="kw">import</span> random
+
+<span class="kw">class</span> <span class="fn">Card</span>:
+    RANKS = {<span class="num">1</span>:<span class="str">"A"</span>, <span class="num">11</span>:<span class="str">"J"</span>, <span class="num">12</span>:<span class="str">"Q"</span>, <span class="num">13</span>:<span class="str">"K"</span>}
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="dec">self</span>, number, suit):
+        <span class="dec">self</span>.number = number; <span class="dec">self</span>.suit = suit
+    <span class="kw">def</span> <span class="fn">__str__</span>(<span class="dec">self</span>):
+        <span class="kw">return</span> <span class="str">f"{self.RANKS.get(self.number, str(self.number))}{self.suit}"</span>
+
+<span class="kw">class</span> <span class="fn">Deck</span>:
+    SUITS = [<span class="str">"S"</span>, <span class="str">"H"</span>, <span class="str">"D"</span>, <span class="str">"C"</span>]
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="dec">self</span>):
+        <span class="dec">self</span>.cards = [<span class="fn">Card</span>(n,s) <span class="kw">for</span> s <span class="kw">in</span> <span class="dec">self</span>.SUITS <span class="kw">for</span> n <span class="kw">in</span> <span class="fn">range</span>(<span class="num">1</span>,<span class="num">14</span>)]
+    <span class="kw">def</span> <span class="fn">shuffle</span>(<span class="dec">self</span>): random.<span class="fn">shuffle</span>(<span class="dec">self</span>.cards)
+    <span class="kw">def</span> <span class="fn">deal</span>(<span class="dec">self</span>):
+        <span class="kw">return</span> <span class="dec">self</span>.cards.<span class="fn">pop</span>() <span class="kw">if</span> <span class="dec">self</span>.cards <span class="kw">else</span> <span class="dec">None</span>
+    <span class="kw">def</span> <span class="fn">__len__</span>(<span class="dec">self</span>): <span class="kw">return</span> <span class="fn">len</span>(<span class="dec">self</span>.cards)
+
+<span class="kw">class</span> <span class="fn">Player</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="dec">self</span>, name):
+        <span class="dec">self</span>.name = name; <span class="dec">self</span>.hand = []
+    <span class="kw">def</span> <span class="fn">receive</span>(<span class="dec">self</span>, card): <span class="dec">self</span>.hand.<span class="fn">append</span>(card)
+    <span class="kw">def</span> <span class="fn">play</span>(<span class="dec">self</span>):
+        <span class="kw">return</span> <span class="dec">self</span>.hand.<span class="fn">pop</span>(<span class="num">0</span>) <span class="kw">if</span> <span class="dec">self</span>.hand <span class="kw">else</span> <span class="dec">None</span>
+    <span class="kw">def</span> <span class="fn">__str__</span>(<span class="dec">self</span>):
+        <span class="kw">return</span> <span class="str">f"{self.name}: [{' '.join(str(c) for c in self.hand)}]"</span></div>
+
+    <!-- 문제 1 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">1</div>
+            <div class="problem-label">Card 클래스 — __str__ 활용</div>
+            <span class="problem-diff easy">기초</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">카드 리스트 <code>[Card(1,"S"), Card(11,"H"), Card(5,"D"), Card(13,"C")]</code>를 만들고, f-string과 join을 이용해 <code>"AS JH 5D KC"</code> 형태로 출력하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력</span>
+                    <span class="problem-example-value">AS JH 5D KC</span>
+                </div>
+            </div>
+            <details class="problem-toggle">
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">" ".join(str(c) for c in cards) — 리스트 내 모든 카드를 __str__로 변환 후 공백 결합</div>
+                </div>
+            </details>
+            <details class="problem-toggle">
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code">cards = [Card(1,"S"), Card(11,"H"), Card(5,"D"), Card(13,"C")]
+print(" ".join(str(c) for c in cards))</div>
+                </div>
+            </details>
+        </div>
+    </div>
+</div>
+
+<!-- 7페이지: 문제 2, 3 + 핵심 요약 -->
+<div class="page">
+    <!-- 문제 2 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">2</div>
+            <div class="problem-label">Deck 클래스 — 특정 무늬만 뽑기</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text"><code>Deck()</code>을 생성하고 셔플 없이 전체 카드 중 무늬가 <code>"S"</code>인 카드만 리스트로 추출하세요. 리스트 컴프리헨션과 <code>card.suit</code>를 활용합니다.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력</span>
+                    <span class="problem-example-value">스페이드 13장: AS 2S 3S 4S ... KS</span>
+                </div>
+            </div>
+            <details class="problem-toggle">
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">spades = [c for c in deck.cards if c.suit == "S"] 후 " ".join(str(c) for c in spades)</div>
+                </div>
+            </details>
+            <details class="problem-toggle">
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code">deck = Deck()
+spades = [c for c in deck.cards if c.suit == "S"]
+print(f"스페이드 {len(spades)}장:", " ".join(str(c) for c in spades))</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <!-- 문제 3 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">3</div>
+            <div class="problem-label">War 게임 확장 — 점수 누적 10라운드</div>
+            <span class="problem-diff hard">심화</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">두 플레이어에게 각 10장을 배분하고 10라운드 War 게임을 진행하세요. 각 플레이어의 승수를 딕셔너리로 집계하고 최종 우승자를 출력하세요. 무승부 라운드도 따로 셉니다.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력</span>
+                    <span class="problem-example-value">철수 X승 | 영희 Y승 | 무승부 Z회 → 우승: (이름)</span>
+                </div>
+            </div>
+            <details class="problem-toggle">
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">scores = {"철수": 0, "영희": 0, "무승부": 0} 딕셔너리로 관리. war_round() 반환값에 따라 scores[winner] += 1</div>
+                </div>
+            </details>
+            <details class="problem-toggle">
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code">deck = Deck()
+deck.shuffle()
+p1, p2 = Player("철수"), Player("영희")
+for _ in range(10):
+    p1.receive(deck.deal())
+    p2.receive(deck.deal())
+
+scores = {"철수": 0, "영희": 0, "무승부": 0}
+for _ in range(10):
+    w = war_round(p1, p2)
+    if w in scores:
+        scores[w] += 1
+    else:
+        scores["무승부"] += 1
+
+print(f"철수 {scores['철수']}승 | 영희 {scores['영희']}승 | 무승부 {scores['무승부']}회")
+if scores["철수"] > scores["영희"]:
+    print("우승: 철수")
+elif scores["영희"] > scores["철수"]:
+    print("우승: 영희")
+else:
+    print("동점 — 연장전 필요")</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <!-- 핵심 요약 -->
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>핵심 요약</h3>
+        <ul>
+            <li><code>class Card</code> — number(1~13), suit(SHDC) 속성; <code>__str__</code>으로 "KS" 형태 출력</li>
+            <li><code>RANKS.get(number, str(number))</code> — 딕셔너리 없는 키는 기본값(문자 변환)</li>
+            <li><code>class Deck</code> — 이중 for 컴프리헨션으로 52장 자동 생성: <code>[Card(n,s) for s in SUITS for n in range(1,14)]</code></li>
+            <li><code>random.shuffle(list)</code> — 리스트를 제자리에서 무작위 섞기 (반환값 없음)</li>
+            <li><code>list.pop()</code> — 맨 뒤 원소 제거 및 반환; <code>pop(0)</code> — 맨 앞 원소</li>
+            <li><code>class Player</code> — hand 리스트로 손패 관리; <code>receive()</code>로 받고 <code>play()</code>로 내기</li>
+        </ul>
+    </div>
+</div>
+
+<!-- 8페이지: 확장 기능 + 클래스 비교 -->
+<div class="page">
+    <h2>확장 기능 — Ace를 가장 강한 카드로</h2>
+    <p>기본 War 게임에서 Ace(1)는 숫자 그대로 1로 비교해 가장 약합니다. 실제 카드 게임처럼 Ace를 14로 취급해 가장 강한 카드로 만들어봅니다.</p>
+
+    <!-- SVG: Ace 값 비교 — 기본 vs 확장 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 86" style="max-width:480px;width:100%">
+            <!-- 기본 버전 -->
+            <rect x="5" y="8" width="225" height="70" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <rect x="5" y="8" width="225" height="26" rx="8" fill="#94a3b8"/>
+            <text x="117" y="25" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">기본 버전 (Ace = 1)</text>
+            <text x="20" y="48" font-size="9" fill="#374151">AS (1) vs KH (13)</text>
+            <text x="20" y="64" font-size="9" fill="#ef4444" font-weight="700">K 승 — A 가장 약함</text>
+            <!-- 확장 버전 -->
+            <rect x="250" y="8" width="225" height="70" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <rect x="250" y="8" width="225" height="26" rx="8" fill="#1e3a5f"/>
+            <text x="362" y="25" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">확장 버전 (Ace = 14)</text>
+            <text x="265" y="48" font-size="9" fill="#374151">AS (14) vs KH (13)</text>
+            <text x="265" y="64" font-size="9" fill="#166534" font-weight="700">A 승 — A 가장 강함</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># 확장: Ace를 14로 취급하는 war_round</span>
+
+<span class="kw">def</span> <span class="fn">card_value</span>(card):
+    <span class="str">"""Ace(1)를 14로 변환해 실제 강도 반환"""</span>
+    <span class="kw">return</span> <span class="num">14</span> <span class="kw">if</span> card.number == <span class="num">1</span> <span class="kw">else</span> card.number
+
+<span class="kw">def</span> <span class="fn">war_round_ace_high</span>(p1, p2):
+    <span class="str">"""Ace를 가장 강한 카드로 취급"""</span>
+    c1, c2 = p1.<span class="fn">play</span>(), p2.<span class="fn">play</span>()
+    <span class="kw">if</span> c1 <span class="kw">is</span> <span class="dec">None</span> <span class="kw">or</span> c2 <span class="kw">is</span> <span class="dec">None</span>:
+        <span class="kw">return</span> <span class="str">"게임 종료"</span>
+    v1, v2 = <span class="fn">card_value</span>(c1), <span class="fn">card_value</span>(c2)
+    <span class="fn">print</span>(<span class="str">f"{p1.name}: {c1}({v1})  vs  {p2.name}: {c2}({v2})"</span>)
+    <span class="kw">if</span> v1 > v2: <span class="kw">return</span> p1.name
+    <span class="kw">elif</span> v2 > v1: <span class="kw">return</span> p2.name
+    <span class="kw">else</span>: <span class="kw">return</span> <span class="str">"무승부"</span>
+
+<span class="cmt"># 테스트 — Ace vs King</span>
+p1 = <span class="fn">Player</span>(<span class="str">"철수"</span>)
+p2 = <span class="fn">Player</span>(<span class="str">"영희"</span>)
+p1.<span class="fn">receive</span>(<span class="fn">Card</span>(<span class="num">1</span>, <span class="str">"S"</span>))   <span class="cmt"># Ace</span>
+p2.<span class="fn">receive</span>(<span class="fn">Card</span>(<span class="num">13</span>, <span class="str">"H"</span>))  <span class="cmt"># King</span>
+<span class="fn">print</span>(<span class="fn">war_round_ace_high</span>(p1, p2))</div>
+
+    <div class="output-box">철수: AS(14)  vs  영희: KH(13)
+철수</div>
+
+    <!-- SVG: 클래스 역할 정리 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 72" style="max-width:480px;width:100%">
+            <rect x="5" y="6" width="145" height="60" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="77" y="24" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">Card (데이터)</text>
+            <text x="77" y="40" text-anchor="middle" font-size="8" fill="#374151">숫자 + 무늬 보관</text>
+            <text x="77" y="56" text-anchor="middle" font-size="8" fill="#64748b">__str__ 출력 담당</text>
+            <rect x="167" y="6" width="145" height="60" rx="8" fill="#1e3a5f"/>
+            <text x="239" y="24" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">Deck (관리)</text>
+            <text x="239" y="40" text-anchor="middle" font-size="9" fill="#93c5fd">52장 생성 / 셔플</text>
+            <text x="239" y="56" text-anchor="middle" font-size="9" fill="#93c5fd">deal()로 공급</text>
+            <rect x="329" y="6" width="145" height="60" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="401" y="24" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">Player (행동)</text>
+            <text x="401" y="40" text-anchor="middle" font-size="8" fill="#374151">손패 보관</text>
+            <text x="401" y="56" text-anchor="middle" font-size="8" fill="#64748b">receive / play</text>
+        </svg>
+    </div>
+
+    <table class="compare-table">
+        <thead>
+            <tr><th>클래스</th><th>핵심 속성</th><th>핵심 메서드</th><th>역할</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><code>Card</code></td><td>number, suit</td><td>__str__</td><td>카드 한 장 데이터</td></tr>
+            <tr><td><code>Deck</code></td><td>cards (리스트)</td><td>shuffle, deal</td><td>카드 덱 관리</td></tr>
+            <tr><td><code>Player</code></td><td>name, hand</td><td>receive, play</td><td>플레이어 상태</td></tr>
+        </tbody>
+    </table>
+
+    <div class="summary">
+        <h3>핵심 요약</h3>
+        <ul>
+            <li><code>__str__</code> — print(), f-string에서 객체를 문자열로 자동 변환하는 특수 메서드</li>
+            <li><code>random.shuffle(list)</code> — 인자로 전달한 리스트를 직접 수정 (반환값 None)</li>
+            <li><code>list.pop()</code> — 맨 뒤 / <code>list.pop(0)</code> — 맨 앞 원소를 제거하며 반환</li>
+            <li>이중 for 컴프리헨션 <code>[Card(n,s) for s in SUITS for n in range(1,14)]</code> — 52장 한 줄 생성</li>
+            <li>Ace 특수 처리: <code>14 if card.number == 1 else card.number</code> — 조건 표현식 활용</li>
+            <li>클래스 설계 순서: 데이터(Card) → 컨테이너(Deck) → 행동 주체(Player) → 게임 로직</li>
+        </ul>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

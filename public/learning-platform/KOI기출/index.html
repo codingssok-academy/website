@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KOI 기출 아카이브 — 한국정보올림피아드 2019–2025</title>
+  <meta name="description" content="한국정보올림피아드(KOI) 2019-2025 기출문제 아카이브. 프로그래밍 & 필기시험 PDF, 진도 관리, 통계 대시보드.">
+  <link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+  <nav class="nav">
+    <a class="nav-brand" href="#">
+      <div class="nav-logo">K</div>
+      <div class="nav-name">KOI Archive <span>by CodingSSok</span></div>
+    </a>
+    <div class="nav-r">
+      <button class="kbd-hint" onclick="openCmd()">⌘K</button>
+      <button class="nav-btn" onclick="openStats()" title="통계" id="btnStats"></button>
+      <button class="nav-btn" onclick="openContestSetup()" title="대회 시뮬레이션" id="btnContest"></button>
+      <button class="nav-btn" onclick="openStudyPlan()" title="학습 계획" id="btnPlan"></button>
+      <button class="nav-btn" onclick="openReviews()" title="복습" id="btnReview"></button>
+      <button class="nav-btn" onclick="toggleView()" id="viewToggle" title="뷰 전환"></button>
+      <button class="nav-btn" onclick="printList()" title="인쇄" id="btnPrint"></button>
+      <a class="nav-link" href="https://koi.or.kr/archives/" target="_blank" rel="noopener" id="btnOfficial">공식</a>
+      <button class="t-btn" onclick="togT()" id="btnTheme"></button>
+    </div>
+  </nav>
+
+  <div class="hd">
+    <h1>KOI <span>기출 아카이브</span></h1>
+    <p class="hd-sub">한국정보올림피아드 2019–2025 · 프로그래밍 & 필기시험</p>
+    <div class="hd-row">
+      <div class="metrics">
+        <div class="met"><span class="met-v" id="mT">0</span><span class="met-l">전체 문제</span></div>
+        <div class="met"><span class="met-v" style="color:var(--gn)" id="mD">0</span><span class="met-l">완료</span></div>
+        <div class="met"><span class="met-v" style="color:var(--am)" id="mW">0</span><span class="met-l">진행중</span>
+        </div>
+        <div class="data-btns" id="dataButtons"></div>
+      </div>
+      <div class="streak" id="streakWrap"></div>
+    </div>
+  </div>
+
+  <div class="heatmap-wrap" id="heatmapWrap">
+    <div class="heatmap-title">활동 히트맵 (12주)</div>
+    <div class="heatmap" id="heatmapEl"></div>
+  </div>
+
+  <div class="prog-ov" id="progBars"></div>
+  <div class="badges-bar" id="achBar"></div>
+
+  <div class="ctrl">
+    <div class="ctrl-in">
+      <div class="pills" id="fY"></div><span class="sep">|</span>
+      <div class="pills" id="fR"></div><span class="sep">|</span>
+      <div class="pills" id="fS"></div><span class="sep">|</span>
+      <button class="rand-btn" id="btnRand" onclick="randPick()"></button>
+      <button class="rand-btn" id="btnSuggest" onclick="suggestProblem()"></button>
+      <select class="sort-sel" id="sortSel" onchange="sortMode=this.value;render()">
+        <option value="default">정렬: 기본</option>
+        <option value="name">이름순</option>
+        <option value="diff-desc">난이도 높은순</option>
+        <option value="diff-asc">난이도 낮은순</option>
+        <option value="status">상태순</option>
+      </select>
+      <div class="tag-filter">
+        <select id="tagFilter" onchange="render()">
+          <option value="">태그: 전체</option>
+        </select>
+      </div>
+      <input class="q-in" id="q" placeholder="문제 검색..." oninput="render()">
+      <span class="cnt" id="cntL"></span>
+    </div>
+  </div>
+
+  <div class="tabs" id="dTabs"></div>
+  <div class="tab-line"></div>
+
+  <div class="written-wrap" id="writtenWrap" style="display:none">
+    <div class="tw" id="writtenTable"></div>
+  </div>
+
+  <div class="tw" id="tW"></div>
+  <div class="empty" id="emp" style="display:none">조건에 맞는 문제가 없습니다.</div>
+
+  <!-- PDF Viewer -->
+  <div class="viewer" id="vw">
+    <div class="vbar">
+      <span class="vt" id="vwT"></span>
+      <div class="vbar-r">
+        <div class="timer-display" id="timerDisplay" style="display:none">
+          <span id="timerIcon"></span>
+          <span class="timer-time">00:00</span>
+          <button class="timer-stop" onclick="stopTimer()" id="timerStopBtn"></button>
+        </div>
+        <a class="vb" id="vwO" href="#" target="_blank"><span id="vbExtIcon"></span> 외부 열기</a>
+        <button class="vb" onclick="clV()" id="vbClose"><span id="vbCloseIcon"></span> 닫기</button>
+      </div>
+    </div>
+    <div class="viewer-frames">
+      <iframe class="vf" id="vwF" src="about:blank"></iframe>
+      <iframe class="vf vf2" id="vwF2" src="about:blank"></iframe>
+
+    </div>
+  </div>
+
+  <!-- Memo -->
+  <div class="mm-bg" id="mmBg">
+    <div class="mm">
+      <div class="mm-bar"><span id="mmBarTitle"></span><button class="mm-cb" onclick="clM()" id="mmCloseBtn"></button>
+      </div>
+      <textarea class="mm-tx" id="mmTx" placeholder="메모를 입력하세요..."></textarea>
+      <div class="mm-ft"><span class="mm-hint">Markdown 지원</span><button class="mm-sv" onclick="svM()">저장</button></div>
+    </div>
+  </div>
+
+  <!-- Wrong Note -->
+  <div class="mm-bg" id="wrongBg">
+    <div class="mm wrong-modal">
+      <div class="mm-bar"><span id="wrongBarTitle"></span><button class="mm-cb" onclick="clWrong()"
+          id="wrongCloseBtn"></button>
+      </div>
+      <div class="wrong-body">
+        <div>
+          <div class="wrong-label">틀린 이유 / 핵심 아이디어</div>
+          <textarea class="mm-tx wrong-area" id="wrongTx" placeholder="왜 틀렸는지, 핵심 아이디어를 기록하세요..."></textarea>
+        </div>
+        <div>
+          <div class="wrong-label">실수 유형 태그</div>
+          <div class="wrong-tags" id="wrongTags"></div>
+        </div>
+      </div>
+      <div class="mm-ft"><span class="mm-hint">오답노트</span><button class="mm-sv" onclick="svWrong()">저장</button></div>
+    </div>
+  </div>
+
+  <!-- Command Palette -->
+  <div class="cmd-bg" id="cmdBg">
+    <div class="cmd">
+      <input class="cmd-in" id="cmdIn" placeholder="명령어 또는 문제 검색..." oninput="cmdSel=0;renderCmd()">
+      <div class="cmd-list" id="cmdList"></div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-bg" id="statsBg">
+    <div class="stats-modal">
+      <div class="stats-bar"><span id="statsBarTitle"></span><button class="mm-cb" onclick="closeStats()"
+          id="statsCloseBtn"></button></div>
+      <div class="stats-content" id="statsContent"></div>
+    </div>
+  </div>
+
+  <!-- Compare -->
+  <div class="cmp-bg" id="compareBg">
+    <div class="cmp-modal">
+      <div class="stats-bar"><span id="cmpBarTitle"></span><button class="mm-cb" onclick="closeCompare()"
+          id="cmpCloseBtn"></button></div>
+      <div class="cmp-content" id="compareContent"></div>
+    </div>
+  </div>
+
+  <!-- Contest Sim Bar -->
+  <div class="sim-bar" id="simBar" style="display:none">
+    <span class="sim-label" id="simLabel"></span>
+    <div class="sim-problems" id="simProblems"></div>
+    <span class="sim-time" id="simTime">00:00</span>
+    <button class="sim-end" onclick="endContest()" id="simEndBtn"></button>
+  </div>
+
+  <!-- Code Editor -->
+  <div class="mm-bg" id="codeBg" data-idx="0">
+    <div class="mm code-modal">
+      <div class="mm-bar"><span id="codeBarTitle"></span><button class="mm-cb" onclick="clCode()"
+          id="codeCloseBtn"></button></div>
+      <textarea class="mm-tx code-area" id="codeArea" placeholder="풀이 코드를 붙여넣으세요..." spellcheck="false"></textarea>
+      <div class="mm-ft"><span class="mm-hint">코드 저장 (localStorage)</span><button class="mm-sv"
+          onclick="svCode()">저장</button></div>
+    </div>
+  </div>
+
+  <!-- Review -->
+  <div class="mm-bg" id="reviewBg">
+    <div class="mm">
+      <div class="mm-bar"><span id="reviewBarTitle"></span><button class="mm-cb" onclick="clReview()"
+          id="reviewCloseBtn"></button></div>
+      <div class="review-content" id="reviewContent"></div>
+    </div>
+  </div>
+
+  <!-- Contest Setup -->
+  <div class="mm-bg" id="contestBg">
+    <div class="mm">
+      <div class="mm-bar"><span id="contestBarTitle"></span><button class="mm-cb" onclick="clContest()"
+          id="contestCloseBtn"></button></div>
+      <div class="contest-setup">
+        <label>연도 <select id="contestYear">
+            <option value="2025">2025</option>
+            <option value="2024">2024</option>
+            <option value="2023">2023</option>
+            <option value="2022">2022</option>
+            <option value="2021">2021</option>
+            <option value="2020">2020</option>
+            <option value="2019">2019</option>
+          </select></label>
+        <label>차수 <select id="contestRound">
+            <option value="1">1차</option>
+            <option value="2">2차</option>
+          </select></label>
+        <label>시간(분) <input type="number" id="contestTime" value="100" min="10" max="300"></label>
+        <button class="mm-sv" onclick="startContest()">시작</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Study Plan -->
+  <div class="mm-bg" id="planBg">
+    <div class="mm">
+      <div class="mm-bar"><span id="planBarTitle"></span><button class="mm-cb" onclick="clPlan()"
+          id="planCloseBtn"></button></div>
+      <div class="plan-body">
+        <div class="plan-goal-row"><label>주간 목표 <input type="number" id="planGoal" value="5" min="1"
+              max="50"></label><button class="mm-sv" onclick="savePlanGoal()">저장</button></div>
+        <div id="planProgress"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Shortcuts -->
+  <div class="mm-bg" id="shortcutsBg">
+    <div class="mm">
+      <div class="mm-bar"><span id="shortcutsBarTitle"></span><button class="mm-cb" onclick="clShortcuts()"
+          id="shortcutsCloseBtn"></button></div>
+      <div class="shortcuts-list">
+        <div class="sc-row"><kbd>⌘K</kbd><span>커맨드 팔레트</span></div>
+        <div class="sc-row"><kbd>?</kbd><span>단축키 가이드</span></div>
+        <div class="sc-row"><kbd>Esc</kbd><span>모달/뷰어 닫기</span></div>
+        <div class="sc-row"><kbd>↑ ↓</kbd><span>팔레트 항목 이동</span></div>
+        <div class="sc-row"><kbd>Enter</kbd><span>팔레트 항목 실행</span></div>
+      </div>
+    </div>
+  </div>
+
+
+
+  <div class="toast-wrap" id="toastWrap"></div>
+  <div id="confettiBox" style="position:fixed;top:50%;left:50%;z-index:9999;pointer-events:none"></div>
+  <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})"></button>
+  <input type="file" id="impFile" accept=".json" style="display:none" onchange="impData(event)">
+  <input type="file" id="cmpFile" accept=".json" style="display:none" onchange="handleCompare(event)">
+
+  <footer class="ft">
+    <p>KOI 기출 아카이브 · 한국정보올림피아드 2019–2025</p>
+    <p>문제 저작권: <a href="https://koi.or.kr" target="_blank">한국정보올림피아드</a> (CC BY-NC-SA 4.0)</p>
+  </footer>
+
+  <script src="icons.js"></script>
+  <script src="data.js"></script>
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/base16/tomorrow-night.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/cpp.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/java.min.js"></script>
+  <script src="app.js"></script>
+  <script src="extra.js"></script>
+
+  <script>
+    // ─── Inject SVG icons after all scripts loaded ───
+    (function () {
+      const $ = id => document.getElementById(id);
+      $('btnStats').innerHTML = ic('stats');
+      $('btnContest').innerHTML = ic('trophy');
+      $('btnPlan').innerHTML = ic('calendar');
+      $('btnReview').innerHTML = ic('clipboard');
+      $('viewToggle').innerHTML = ic('grid');
+      $('btnPrint').innerHTML = ic('printer');
+      $('btnOfficial').innerHTML = ic('ext', 12) + ' 공식';
+      $('btnTheme').innerHTML = ic('moon');
+      $('btnRand').innerHTML = ic('shuffle', 12) + ' 랜덤';
+      $('btnSuggest').innerHTML = ic('bulb', 12) + ' 추천';
+      $('scrollTop').innerHTML = ic('arrowUp');
+      $('streakWrap').innerHTML = ic('fire', 14) + '<span id="streakTxt">0일 연속</span>';
+      $('dataButtons').innerHTML =
+        '<button class="dbtn" onclick="expData()">' + ic('download', 12) + ' 백업</button>' +
+        '<button class="dbtn" onclick="document.getElementById(\'impFile\').click()">' + ic('upload', 12) + ' 복원</button>' +
+        '<button class="dbtn" onclick="compareProgress()">' + ic('compare', 12) + ' 비교</button>';
+      // Modal bar titles
+      $('mmBarTitle').innerHTML = ic('memo', 16) + '<span id="mmT">메모</span>';
+      $('mmCloseBtn').innerHTML = ic('close', 14);
+      $('statsBarTitle').innerHTML = ic('stats', 16) + ' 통계 대시보드';
+      $('statsCloseBtn').innerHTML = ic('close', 14);
+      $('cmpBarTitle').innerHTML = ic('compare', 16) + ' 진도 비교';
+      $('cmpCloseBtn').innerHTML = ic('close', 14);
+      $('codeBarTitle').innerHTML = ic('code', 16) + '<span id="codeTitle">풀이 코드</span>';
+      $('codeCloseBtn').innerHTML = ic('close', 14);
+      $('reviewBarTitle').innerHTML = ic('clipboard', 16) + ' 오늘 복습할 문제';
+      $('reviewCloseBtn').innerHTML = ic('close', 14);
+      $('contestBarTitle').innerHTML = ic('trophy', 16) + ' 대회 시뮬레이션';
+      $('contestCloseBtn').innerHTML = ic('close', 14);
+      $('planBarTitle').innerHTML = ic('calendar', 16) + ' 학습 계획';
+      $('planCloseBtn').innerHTML = ic('close', 14);
+      $('shortcutsBarTitle').innerHTML = ic('keyboard', 16) + ' 키보드 단축키';
+      $('shortcutsCloseBtn').innerHTML = ic('close', 14);
+
+      $('timerIcon').innerHTML = ic('timer', 14);
+      $('timerStopBtn').innerHTML = ic('stop', 10);
+      $('vbExtIcon').innerHTML = ic('ext', 12);
+      $('vbCloseIcon').innerHTML = ic('close', 12);
+      $('simEndBtn').innerHTML = ic('stop', 12) + ' 종료';
+      $('wrongBarTitle').innerHTML = ic('wrongNote', 16) + ' 오답노트';
+      $('wrongCloseBtn').innerHTML = ic('close', 14);
+    })();
+  </script>
+</body>
+
+</html>

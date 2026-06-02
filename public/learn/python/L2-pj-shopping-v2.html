@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 프로젝트: 장보기 목록</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute; bottom: 10mm; right: 16mm;
+    font-size: 10px; color: #94a3b8; font-weight: 600;
+}
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #0891b2; }
+.cover-accent { width: 7px; background: #f59e0b; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 200px; font-weight: 900; color: rgba(8,145,178,0.08);
+    line-height: 1; pointer-events: none; font-family: 'JetBrains Mono', monospace;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #0891b2; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 36px; font-weight: 900; color: #164e63; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #164e63; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #0891b2; font-weight: 900; }
+h2 { font-size: 20px; font-weight: 800; color: #164e63; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 16px; font-weight: 700; color: #164e63; margin: 18px 0 10px; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #ecfeff; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #0891b2; font-weight: 600;
+}
+ul, ol { margin: 0 0 12px 20px; }
+li { font-size: 14px; color: #374151; line-height: 1.8; }
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13.5px;
+    color: #e2e8f0; line-height: 1.85; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.code .dec { color: #f9a8d4; }
+.practice { margin: 20px 0; border-left: 4px solid #0891b2; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #0e7490; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #0891b2; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #0891b2; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#0891b2,#06b6d4); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #164e63; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; white-space: pre-wrap; }
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #164e63; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+.output-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #334155; line-height: 1.7; margin: 10px 0; white-space: pre-wrap; }
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- ===== 1페이지: 표지 ===== -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">L2</div>
+        <div class="cover-label">L2 — Project</div>
+        <h1 class="cover-title">프로젝트:<br>장보기 목록</h1>
+        <p class="cover-sub">리스트에 물건을 추가하고 삭제하며, 총 개수를 확인하는 장보기 앱을 만듭니다. while 메뉴로 사용자가 원하는 기능을 선택할 수 있게 합니다.</p>
+
+        <!-- SVG: 앱 메뉴 구조 -->
+        <div style="margin:20px 0;">
+            <svg viewBox="0 0 480 130" style="max-width:480px;width:100%">
+                <defs>
+                    <marker id="arr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                    </marker>
+                </defs>
+                <!-- 중앙 메뉴 -->
+                <rect x="165" y="40" width="150" height="50" rx="8" fill="#0891b2"/>
+                <text x="240" y="60" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">while 메뉴</text>
+                <text x="240" y="76" text-anchor="middle" font-size="9" fill="#bae6fd">1/2/3/4 선택</text>
+                <!-- 왼쪽 위: 추가 -->
+                <rect x="5" y="5" width="100" height="40" rx="6" fill="#ecfeff" stroke="#0891b2" stroke-width="1.5"/>
+                <text x="55" y="21" text-anchor="middle" font-size="9" fill="#0e7490" font-weight="700">1. 추가</text>
+                <text x="55" y="37" text-anchor="middle" font-size="8" fill="#64748b">append(item)</text>
+                <line x1="160" y1="55" x2="110" y2="30" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#arr2)"/>
+                <!-- 왼쪽 아래: 삭제 -->
+                <rect x="5" y="85" width="100" height="40" rx="6" fill="#fff1f2" stroke="#f43f5e" stroke-width="1.5"/>
+                <text x="55" y="101" text-anchor="middle" font-size="9" fill="#be123c" font-weight="700">2. 삭제</text>
+                <text x="55" y="117" text-anchor="middle" font-size="8" fill="#64748b">remove(item)</text>
+                <line x1="160" y1="75" x2="110" y2="100" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#arr2)"/>
+                <!-- 오른쪽 위: 보기 -->
+                <rect x="375" y="5" width="100" height="40" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="425" y="21" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">3. 목록 보기</text>
+                <text x="425" y="37" text-anchor="middle" font-size="8" fill="#64748b">for + print</text>
+                <line x1="320" y1="55" x2="370" y2="30" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#arr2)"/>
+                <!-- 오른쪽 아래: 종료 -->
+                <rect x="375" y="85" width="100" height="40" rx="6" fill="#fefce8" stroke="#ca8a04" stroke-width="1.5"/>
+                <text x="425" y="101" text-anchor="middle" font-size="9" fill="#a16207" font-weight="700">4. 종료</text>
+                <text x="425" y="117" text-anchor="middle" font-size="8" fill="#64748b">break</text>
+                <line x1="320" y1="75" x2="370" y2="100" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#arr2)"/>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/database.png" alt="데이터베이스" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 프로젝트에서 배우는 것</h3>
+            <ul>
+                <li><code>list.append()</code>와 <code>list.remove()</code>로 항목을 추가/삭제합니다.</li>
+                <li><code>while True</code> + 메뉴 번호로 사용자 인터페이스를 만듭니다.</li>
+                <li><code>in</code> 연산자로 리스트에 항목이 있는지 확인합니다.</li>
+                <li><code>len()</code>으로 목록 개수를 출력합니다.</li>
+                <li>함수로 기능을 나눠 코드를 정리합니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- ===== 2페이지: 추가/삭제 기본 ===== -->
+<div class="page">
+    <h2>Step 1 — 리스트에 추가하고 삭제하기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/folder.png" alt="데이터" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>리스트에 항목을 추가할 때는 <code>append()</code>, 삭제할 때는 <code>remove()</code>를 씁니다. <code>remove()</code>는 값으로 삭제하는데, 없는 값을 삭제하려 하면 오류가 납니다.</p>
+
+    <!-- SVG: append vs remove -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 72" style="max-width:460px;width:100%">
+            <defs>
+                <marker id="arrSh" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="5" y="8" width="210" height="56" rx="8" fill="#ecfeff" stroke="#0891b2" stroke-width="1.5"/>
+            <text x="110" y="26" text-anchor="middle" font-size="9" fill="#0e7490" font-weight="700">append("우유") — 추가</text>
+            <text x="110" y="40" text-anchor="middle" font-family="monospace" font-size="8" fill="#164e63">["사과","바나나"] → ["사과","바나나","우유"]</text>
+            <text x="110" y="55" text-anchor="middle" font-size="7.5" fill="#64748b">맨 끝에 "우유" 추가됨</text>
+            <rect x="245" y="8" width="210" height="56" rx="8" fill="#fff1f2" stroke="#f43f5e" stroke-width="1.5"/>
+            <text x="350" y="26" text-anchor="middle" font-size="9" fill="#be123c" font-weight="700">remove("바나나") — 삭제</text>
+            <text x="350" y="40" text-anchor="middle" font-family="monospace" font-size="8" fill="#164e63">["사과","바나나","우유"] → ["사과","우유"]</text>
+            <text x="350" y="55" text-anchor="middle" font-size="7.5" fill="#64748b">값이 "바나나"인 항목 제거됨</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># 장보기 목록 기본 조작</span>
+cart = []
+
+<span class="cmt"># 추가</span>
+cart.<span class="fn">append</span>(<span class="str">"사과"</span>)
+cart.<span class="fn">append</span>(<span class="str">"우유"</span>)
+cart.<span class="fn">append</span>(<span class="str">"달걀"</span>)
+<span class="fn">print</span>(cart)  <span class="cmt"># ['사과', '우유', '달걀']</span>
+
+<span class="cmt"># 삭제 전에 있는지 확인</span>
+<span class="kw">if</span> <span class="str">"우유"</span> <span class="kw">in</span> cart:
+    cart.<span class="fn">remove</span>(<span class="str">"우유"</span>)
+    <span class="fn">print</span>(<span class="str">"우유 삭제됨"</span>)
+<span class="kw">else</span>:
+    <span class="fn">print</span>(<span class="str">"우유가 목록에 없습니다"</span>)
+
+<span class="fn">print</span>(cart)  <span class="cmt"># ['사과', '달걀']</span></div>
+
+    <!-- SVG: in 연산자 동작 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 460 52" style="max-width:460px;width:100%">
+            <rect x="5" y="8" width="450" height="36" rx="8" fill="#ecfeff" stroke="#0891b2" stroke-width="1.5"/>
+            <text x="230" y="23" text-anchor="middle" font-size="9" fill="#0891b2" font-weight="700">x in list — 리스트에 x가 있는지 확인 (True/False)</text>
+            <text x="110" y="37" text-anchor="middle" font-size="8" fill="#0e7490">"우유" in ["사과","우유"] → True</text>
+            <text x="340" y="37" text-anchor="middle" font-size="8" fill="#be123c">"치킨" in ["사과","우유"] → False</text>
+        </svg>
+    </div>
+
+    <h3>목록 보기 함수</h3>
+    <p>for 문으로 모든 항목을 번호와 함께 출력합니다. 총 개수는 <code>len()</code>으로 표시합니다. <code>x in list</code>를 사용하면 항목이 있는지 확인한 뒤 안전하게 삭제할 수 있습니다.</p>
+
+    <!-- SVG: for 출력 구조 -->
+    <div style="text-align:center;margin:10px 0;">
+        <svg viewBox="0 0 460 50" style="max-width:460px;width:100%">
+            <rect x="5" y="8" width="450" height="36" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="24" text-anchor="middle" font-size="9" fill="#164e63" font-weight="700">for i, item in enumerate(cart, 1): print(f"{i}. {item}")</text>
+            <text x="230" y="38" text-anchor="middle" font-size="8" fill="#64748b">i=1 → "1. 사과"  |  i=2 → "2. 달걀"  |  len(cart) = 2</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">def</span> <span class="fn">show_cart</span>(cart):
+    <span class="fn">print</span>(<span class="str">"\n[ 장보기 목록 ]"</span>)
+    <span class="kw">if</span> <span class="kw">not</span> cart:
+        <span class="fn">print</span>(<span class="str">"목록이 비어있습니다."</span>)
+        <span class="kw">return</span>
+    <span class="kw">for</span> i, item <span class="kw">in</span> <span class="fn">enumerate</span>(cart, <span class="num">1</span>):
+        <span class="fn">print</span>(<span class="str">f"  {i}. {item}"</span>)
+    <span class="fn">print</span>(<span class="str">f"총 {len(cart)}개"</span>)</div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+        <div class="practice-head">따라해보세요 — Step 1</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">빈 cart 리스트에 물건 3개를 append()로 추가하고 print(cart)로 확인하세요.</div>
+                <div class="practice-result">['물건1', '물건2', '물건3'] 형태로 출력됨</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">없는 물건을 remove()로 삭제하려 할 때 in 체크 없이 하면 어떤 오류가 나는지 확인해보세요.</div>
+                <div class="practice-result">ValueError: list.remove(x): x not in list 오류 발생</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">show_cart(cart) 함수를 호출해서 번호가 붙은 목록을 출력하세요.</div>
+                <div class="practice-result">1. 물건1  2. 물건2  3. 물건3  총 3개</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== 3페이지: while 메뉴 + 완성 ===== -->
+<div class="page">
+    <h2>Step 2 — while 메뉴로 앱 완성하기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/hard-drive.png" alt="저장소" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p><code>while True</code> 루프 안에서 input으로 메뉴 번호를 받고, if/elif로 기능을 실행합니다. 4번을 선택하면 break로 종료합니다.</p>
+
+    <!-- SVG: pop vs remove 비교 -->
+    <div style="text-align:center;margin:10px 0;">
+        <svg viewBox="0 0 460 52" style="max-width:460px;width:100%">
+            <rect x="5" y="8" width="215" height="36" rx="8" fill="#ecfeff" stroke="#0891b2" stroke-width="1.5"/>
+            <text x="113" y="24" text-anchor="middle" font-size="9" fill="#0891b2" font-weight="700">remove("사과") — 값으로 삭제</text>
+            <text x="113" y="38" text-anchor="middle" font-size="8" fill="#64748b">값이 "사과"인 첫 항목 삭제</text>
+            <rect x="235" y="8" width="220" height="36" rx="8" fill="#fff7ed" stroke="#ea580c" stroke-width="1.5"/>
+            <text x="345" y="24" text-anchor="middle" font-size="9" fill="#ea580c" font-weight="700">pop(1) — 인덱스로 삭제</text>
+            <text x="345" y="38" text-anchor="middle" font-size="8" fill="#64748b">1번 인덱스 항목 삭제 후 반환</text>
+        </svg>
+    </div>
+
+    <!-- SVG: while 메뉴 흐름 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+            <defs>
+                <marker id="arrM" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="5" y="25" width="80" height="30" rx="6" fill="#0891b2"/>
+            <text x="45" y="43" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">입력받기</text>
+            <line x1="90" y1="40" x2="118" y2="40" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrM)"/>
+            <rect x="120" y="15" width="70" height="50" rx="6" fill="#ecfeff" stroke="#0891b2" stroke-width="1.5"/>
+            <text x="155" y="35" text-anchor="middle" font-size="9" fill="#0e7490" font-weight="700">"1"</text>
+            <text x="155" y="52" text-anchor="middle" font-size="8" fill="#64748b">추가</text>
+            <rect x="200" y="15" width="70" height="50" rx="6" fill="#fff1f2" stroke="#f43f5e" stroke-width="1.5"/>
+            <text x="235" y="35" text-anchor="middle" font-size="9" fill="#be123c" font-weight="700">"2"</text>
+            <text x="235" y="52" text-anchor="middle" font-size="8" fill="#64748b">삭제</text>
+            <rect x="280" y="15" width="70" height="50" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="315" y="35" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">"3"</text>
+            <text x="315" y="52" text-anchor="middle" font-size="8" fill="#64748b">보기</text>
+            <rect x="360" y="15" width="70" height="50" rx="6" fill="#fefce8" stroke="#ca8a04" stroke-width="1.5"/>
+            <text x="395" y="35" text-anchor="middle" font-size="9" fill="#a16207" font-weight="700">"4"</text>
+            <text x="395" y="52" text-anchor="middle" font-size="8" fill="#64748b">종료</text>
+            <text x="110" y="73" text-anchor="start" font-size="8" fill="#64748b">→ if/elif 로 분기</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># 완성된 장보기 앱</span>
+cart = []
+
+<span class="kw">def</span> <span class="fn">show_menu</span>():
+    <span class="fn">print</span>(<span class="str">"\n1.추가  2.삭제  3.목록보기  4.종료"</span>)
+
+<span class="kw">while</span> <span class="kw">True</span>:
+    <span class="fn">show_menu</span>()
+    choice = <span class="fn">input</span>(<span class="str">"선택: "</span>)
+
+    <span class="kw">if</span> choice == <span class="str">"1"</span>:
+        item = <span class="fn">input</span>(<span class="str">"추가할 물건: "</span>)
+        cart.<span class="fn">append</span>(item)
+        <span class="fn">print</span>(<span class="str">f"{item} 추가됨"</span>)
+
+    <span class="kw">elif</span> choice == <span class="str">"2"</span>:
+        item = <span class="fn">input</span>(<span class="str">"삭제할 물건: "</span>)
+        <span class="kw">if</span> item <span class="kw">in</span> cart:
+            cart.<span class="fn">remove</span>(item)
+            <span class="fn">print</span>(<span class="str">f"{item} 삭제됨"</span>)
+        <span class="kw">else</span>:
+            <span class="fn">print</span>(<span class="str">"목록에 없습니다"</span>)
+
+    <span class="kw">elif</span> choice == <span class="str">"3"</span>:
+        <span class="kw">for</span> i, item <span class="kw">in</span> <span class="fn">enumerate</span>(cart, <span class="num">1</span>):
+            <span class="fn">print</span>(<span class="str">f"  {i}. {item}"</span>)
+        <span class="fn">print</span>(<span class="str">f"총 {len(cart)}개"</span>)
+
+    <span class="kw">elif</span> choice == <span class="str">"4"</span>:
+        <span class="fn">print</span>(<span class="str">"장보기 완료!"</span>)
+        <span class="kw">break</span></div>
+
+    <!-- SVG: 리스트 메서드 총정리 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 60" style="max-width:460px;width:100%">
+            <rect x="5" y="8" width="88" height="44" rx="6" fill="#ecfeff" stroke="#0891b2" stroke-width="1.5"/>
+            <text x="49" y="24" text-anchor="middle" font-size="8.5" fill="#0891b2" font-weight="700">append(x)</text>
+            <text x="49" y="38" text-anchor="middle" font-size="7.5" fill="#64748b">끝에 추가</text>
+            <rect x="103" y="8" width="88" height="44" rx="6" fill="#fff1f2" stroke="#f43f5e" stroke-width="1.5"/>
+            <text x="147" y="24" text-anchor="middle" font-size="8.5" fill="#be123c" font-weight="700">remove(x)</text>
+            <text x="147" y="38" text-anchor="middle" font-size="7.5" fill="#64748b">값으로 삭제</text>
+            <rect x="201" y="8" width="88" height="44" rx="6" fill="#fff7ed" stroke="#ea580c" stroke-width="1.5"/>
+            <text x="245" y="24" text-anchor="middle" font-size="8.5" fill="#ea580c" font-weight="700">pop(i)</text>
+            <text x="245" y="38" text-anchor="middle" font-size="7.5" fill="#64748b">인덱스 삭제+반환</text>
+            <rect x="299" y="8" width="88" height="44" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="343" y="24" text-anchor="middle" font-size="8.5" fill="#166534" font-weight="700">clear()</text>
+            <text x="343" y="38" text-anchor="middle" font-size="7.5" fill="#64748b">전체 비우기</text>
+            <rect x="397" y="8" width="58" height="44" rx="6" fill="#f5f3ff" stroke="#7c3aed" stroke-width="1.5"/>
+            <text x="426" y="24" text-anchor="middle" font-size="8.5" fill="#5b21b6" font-weight="700">len(lst)</text>
+            <text x="426" y="38" text-anchor="middle" font-size="7.5" fill="#64748b">개수 반환</text>
+        </svg>
+    </div>
+
+    <!-- SVG: 중복 확인 로직 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 460 48" style="max-width:460px;width:100%">
+            <rect x="5" y="8" width="450" height="32" rx="8" fill="#fefce8" stroke="#ca8a04" stroke-width="1.5"/>
+            <text x="230" y="23" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">중복 방지 패턴: if item not in cart: cart.append(item)</text>
+            <text x="230" y="37" text-anchor="middle" font-size="8" fill="#64748b">cart에 없을 때만 추가 — not in 은 in의 반대</text>
+        </svg>
+    </div>
+
+    <!-- 문제 1 -->
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="완성" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q1</div>
+            <div class="problem-label">전체 비우기 기능 추가</div>
+            <div class="problem-diff easy">쉬움</div>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">메뉴에 "5. 전체 비우기"를 추가하세요. 선택하면 cart를 빈 리스트로 만들고 "목록을 비웠습니다"를 출력합니다.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">선택</span><span class="problem-example-value">5</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">목록을 비웠습니다</span></div>
+            </div>
+        </div>
+        <div class="problem-toggle">
+            <details>
+                <summary>힌트 / 정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">힌트: cart.clear() 또는 cart = [] 를 사용합니다.</div>
+                    <div class="answer-code">elif choice == "5":
+    cart.clear()
+    print("목록을 비웠습니다")</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <!-- 문제 2 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q2</div>
+            <div class="problem-label">중복 추가 방지</div>
+            <div class="problem-diff medium">보통</div>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">이미 목록에 있는 물건을 추가하려 할 때 "이미 있는 물건입니다"를 출력하고 추가하지 않도록 수정하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">입력</span><span class="problem-example-value">추가할 물건: 사과 (이미 있을 때)</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">이미 있는 물건입니다</span></div>
+            </div>
+        </div>
+        <div class="problem-toggle">
+            <details>
+                <summary>힌트 / 정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">힌트: if item in cart 로 먼저 확인합니다.</div>
+                    <div class="answer-code">if choice == "1":
+    item = input("추가할 물건: ")
+    if item in cart:
+        print("이미 있는 물건입니다")
+    else:
+        cart.append(item)
+        print(f"{item} 추가됨")</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <!-- 문제 3 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q3</div>
+            <div class="problem-label">번호로 삭제하기</div>
+            <div class="problem-diff hard">어려움</div>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">물건 이름 대신 번호로 삭제하는 기능을 만드세요. 번호 입력 → <code>int()</code>로 변환 → <code>pop(index-1)</code>으로 삭제.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">입력</span><span class="problem-example-value">몇 번 삭제? 2</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">2번 "달걀" 삭제됨</span></div>
+            </div>
+        </div>
+        <div class="problem-toggle">
+            <details>
+                <summary>힌트 / 정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">힌트: pop(n-1)은 n번째 항목을 제거하고 그 값을 반환합니다.</div>
+                    <div class="answer-code">n = int(input("몇 번 삭제? "))
+if 1 <= n <= len(cart):
+    removed = cart.pop(n - 1)
+    print(f"{n}번 '{removed}' 삭제됨")
+else:
+    print("없는 번호입니다")</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <!-- SVG: int() 변환 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 460 48" style="max-width:460px;width:100%">
+            <rect x="5" y="8" width="215" height="32" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="113" y="23" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">n = int(input("몇 번?"))  → 정수 변환</text>
+            <text x="113" y="37" text-anchor="middle" font-size="8" fill="#64748b">input()은 항상 문자열 반환 → int()로 변환 필요</text>
+            <rect x="235" y="8" width="220" height="32" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="345" y="23" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">cart.pop(n-1)  → n번째 항목 제거</text>
+            <text x="345" y="37" text-anchor="middle" font-size="8" fill="#64748b">인덱스는 0부터 → n번 = 인덱스 n-1</text>
+        </svg>
+    </div>
+
+    <!-- SVG: 앱 완성 구조도 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 460 44" style="max-width:460px;width:100%">
+            <rect x="5" y="8" width="450" height="28" rx="8" fill="#ecfeff" stroke="#0891b2" stroke-width="1.5"/>
+            <text x="230" y="22" text-anchor="middle" font-size="9" fill="#0891b2" font-weight="700">앱 흐름: while 루프 → 메뉴 선택 → if/elif 분기 → 기능 실행 → 다시 루프</text>
+            <text x="230" y="33" text-anchor="middle" font-size="7.5" fill="#64748b">4번(종료) 선택 시 break → 루프 탈출</text>
+        </svg>
+    </div>
+
+    <!-- 핵심 요약 -->
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="처리" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>핵심 요약</h3>
+        <ul>
+            <li><code>list.append(x)</code> — 끝에 추가 / <code>list.remove(x)</code> — 값으로 삭제</li>
+            <li><code>list.pop(i)</code> — 인덱스로 삭제하고 값 반환</li>
+            <li><code>list.clear()</code> — 전체 비우기</li>
+            <li><code>x in list</code> — 리스트에 x가 있는지 확인 (True/False)</li>
+            <li><code>while True + if/elif + break</code> — 메뉴 패턴</li>
+        </ul>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

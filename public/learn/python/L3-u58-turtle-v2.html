@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — Unit 58: turtle 그림 그리기 프로그래밍</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+/* -- 페이지 -- */
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+/* -- 챕터 표지 -- */
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #22c55e; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 260px; font-weight: 900; color: rgba(180,212,195,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #166534; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #22c55e; font-weight: 900; }
+
+/* -- 본문 -- */
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 16px; font-weight: 700; color: #1e3a5f; margin: 18px 0 10px; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f0fdf4; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #166534; font-weight: 600;
+}
+ul, ol { margin: 0 0 12px 20px; }
+li { font-size: 14px; color: #374151; line-height: 1.8; }
+
+/* -- 코드 블록 -- */
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13.5px;
+    color: #e2e8f0; line-height: 1.85; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.code .dec { color: #f9a8d4; }
+.code .mod { color: #fde68a; }
+
+/* -- 따라해보세요 -- */
+.practice { margin: 20px 0; border-left: 4px solid #22c55e; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #166534; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #22c55e; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #22c55e; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+
+/* -- 문제 -- */
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#22c55e,#16a34a); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #14532d; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #f0fdf4; padding: 8px 12px; border-radius: 6px; color: #166534; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+
+/* -- 요약 -- */
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+/* -- 출력 박스 -- */
+.output-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #334155; line-height: 1.7; margin: 10px 0; }
+
+/* -- 비교 테이블 -- */
+.compare-table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13px; }
+.compare-table th { background: #1e3a5f; color: #fff; padding: 8px 12px; text-align: left; font-weight: 700; }
+.compare-table td { padding: 7px 12px; border-bottom: 1px solid #e2e8f0; color: #374151; }
+.compare-table tr:nth-child(even) td { background: #f8fafc; }
+.compare-table code { background: #dcfce7; padding: 1px 5px; border-radius: 3px; font-family: 'JetBrains Mono', monospace; color: #166534; font-size: 12px; }
+
+/* -- info 박스 -- */
+.info-box { background: #f0fdf4; border: 1.5px solid #bbf7d0; border-radius: 8px; padding: 12px 16px; margin: 12px 0; font-size: 14px; color: #14532d; line-height: 1.7; }
+.warn-box { background: #fffbeb; border: 1.5px solid #fde68a; border-radius: 8px; padding: 12px 16px; margin: 12px 0; font-size: 14px; color: #78350f; line-height: 1.7; }
+.warn-box strong { color: #92400e; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- 1페이지: 표지 -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">58</div>
+        <div class="cover-label">L3 — Unit 58</div>
+        <h1 class="cover-title">turtle —<br>그림 그리기<br>프로그래밍</h1>
+        <p class="cover-sub">파이썬 내장 모듈 turtle로 거북이를 움직여 선, 도형, 별, 나선, 집을 그립니다. 반복문과 결합하면 복잡한 그래픽도 단 몇 줄로 완성됩니다.</p>
+
+        <!-- SVG: turtle 주요 명령어 개요 -->
+        <div style="margin:24px 0;">
+            <svg viewBox="0 0 520 170" style="max-width:520px;width:100%">
+                <!-- 배경 -->
+                <rect x="0" y="0" width="520" height="170" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+                <!-- 거북이 아이콘 (SVG) -->
+                <ellipse cx="260" cy="85" rx="28" ry="20" fill="#22c55e" opacity="0.18"/>
+                <ellipse cx="260" cy="85" rx="20" ry="14" fill="#16a34a"/>
+                <ellipse cx="260" cy="85" rx="20" ry="14" fill="none" stroke="#14532d" stroke-width="1.5"/>
+                <!-- 거북이 머리 -->
+                <circle cx="280" cy="80" r="6" fill="#22c55e"/>
+                <!-- 다리 -->
+                <ellipse cx="248" cy="75" rx="5" ry="3" fill="#22c55e"/>
+                <ellipse cx="248" cy="95" rx="5" ry="3" fill="#22c55e"/>
+                <ellipse cx="272" cy="75" rx="5" ry="3" fill="#22c55e"/>
+                <ellipse cx="272" cy="95" rx="5" ry="3" fill="#22c55e"/>
+                <!-- 꼬리 -->
+                <ellipse cx="241" cy="85" rx="6" ry="3" fill="#22c55e"/>
+                <!-- 왼쪽 명령어들 -->
+                <rect x="10" y="15" width="120" height="28" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.2"/>
+                <text x="70" y="33" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">forward(d) / backward(d)</text>
+                <rect x="10" y="53" width="120" height="28" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.2"/>
+                <text x="70" y="71" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">left(a) / right(a)</text>
+                <rect x="10" y="91" width="120" height="28" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.2"/>
+                <text x="70" y="109" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">penup() / pendown()</text>
+                <rect x="10" y="129" width="120" height="28" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.2"/>
+                <text x="70" y="147" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">color(c) / circle(r)</text>
+                <!-- 선 연결 -->
+                <line x1="131" y1="29" x2="232" y2="80" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3,3"/>
+                <line x1="131" y1="67" x2="232" y2="82" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3,3"/>
+                <line x1="131" y1="105" x2="232" y2="86" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3,3"/>
+                <line x1="131" y1="143" x2="232" y2="88" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3,3"/>
+                <!-- 오른쪽 결과물들 -->
+                <rect x="390" y="15" width="120" height="28" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.2"/>
+                <text x="450" y="33" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">정사각형 / 삼각형</text>
+                <rect x="390" y="53" width="120" height="28" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.2"/>
+                <text x="450" y="71" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">별(star)</text>
+                <rect x="390" y="91" width="120" height="28" rx="6" fill="#fdf4ff" stroke="#a855f7" stroke-width="1.2"/>
+                <text x="450" y="109" text-anchor="middle" font-size="10" fill="#7e22ce" font-weight="700">나선형(spiral)</text>
+                <rect x="390" y="129" width="120" height="28" rx="6" fill="#fee2e2" stroke="#ef4444" stroke-width="1.2"/>
+                <text x="450" y="147" text-anchor="middle" font-size="10" fill="#991b1b" font-weight="700">집(house)</text>
+                <!-- 선 연결 오른쪽 -->
+                <line x1="290" y1="80" x2="388" y2="29" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3,3"/>
+                <line x1="290" y1="82" x2="388" y2="67" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3,3"/>
+                <line x1="290" y1="86" x2="388" y2="105" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3,3"/>
+                <line x1="290" y1="88" x2="388" y2="143" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3,3"/>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/puzzle.png" alt="고급 기능" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 유닛에서 배우는 것</h3>
+            <ul>
+                <li><code>import turtle</code>로 모듈을 불러오고 화면을 설정할 수 있습니다.</li>
+                <li><code>forward</code>, <code>backward</code>, <code>left</code>, <code>right</code>로 거북이를 움직일 수 있습니다.</li>
+                <li><code>penup</code>, <code>pendown</code>으로 선을 그리거나 이동만 할 수 있습니다.</li>
+                <li><code>color</code>, <code>fillcolor</code>, <code>begin_fill</code>, <code>end_fill</code>로 색을 채울 수 있습니다.</li>
+                <li><code>circle(r)</code>으로 원과 호를 그릴 수 있습니다.</li>
+                <li><code>for</code>문과 결합해 별, 나선, 집 등 실용 도형을 그릴 수 있습니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- 2페이지: import turtle + 기본 이동 명령어 -->
+<div class="page">
+    <h2>1 — turtle 모듈 시작하기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="처리" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>turtle은 파이썬에 기본 내장된 모듈입니다. 별도 설치 없이 <code>import turtle</code>만으로 바로 사용할 수 있습니다. 실행하면 별도 창(윈도우)이 열리고, 가운데서 거북이가 출발합니다.</p>
+
+    <!-- SVG: turtle 좌표계 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 200" style="max-width:500px;width:100%">
+            <rect x="0" y="0" width="500" height="200" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <!-- 좌표 축 -->
+            <line x1="60" y1="100" x2="440" y2="100" stroke="#cbd5e1" stroke-width="1.5"/>
+            <line x1="250" y1="20" x2="250" y2="180" stroke="#cbd5e1" stroke-width="1.5"/>
+            <!-- 화살표 x -->
+            <polygon points="440,96 450,100 440,104" fill="#cbd5e1"/>
+            <!-- 화살표 y -->
+            <polygon points="246,20 250,10 254,20" fill="#cbd5e1"/>
+            <!-- 라벨 -->
+            <text x="455" y="103" font-size="11" fill="#64748b" font-weight="700">x</text>
+            <text x="248" y="8" font-size="11" fill="#64748b" font-weight="700">y</text>
+            <!-- 원점 -->
+            <circle cx="250" cy="100" r="4" fill="#22c55e"/>
+            <text x="255" y="116" font-size="10" fill="#64748b">(0, 0) 시작점</text>
+            <!-- forward 화살표 -->
+            <line x1="250" y1="100" x2="360" y2="100" stroke="#3b82f6" stroke-width="2.5" stroke-dasharray="5,3"/>
+            <polygon points="360,96 372,100 360,104" fill="#3b82f6"/>
+            <text x="290" y="93" font-size="10" fill="#1d4ed8" font-weight="700">forward(100)</text>
+            <!-- 각도 표시 -->
+            <path d="M 270 100 A 20 20 0 0 0 250 80" fill="none" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="275" y="82" font-size="9" fill="#92400e">left(90)</text>
+            <!-- 상향 화살표 -->
+            <line x1="250" y1="100" x2="250" y2="55" stroke="#a855f7" stroke-width="2" stroke-dasharray="5,3"/>
+            <polygon points="246,55 250,43 254,55" fill="#a855f7"/>
+            <!-- 사분면 라벨 -->
+            <text x="80" y="60" font-size="9" fill="#94a3b8">(-x, +y)</text>
+            <text x="380" y="60" font-size="9" fill="#94a3b8">(+x, +y)</text>
+            <text x="80" y="155" font-size="9" fill="#94a3b8">(-x, -y)</text>
+            <text x="380" y="155" font-size="9" fill="#94a3b8">(+x, -y)</text>
+            <!-- 초기 방향 -->
+            <text x="95" y="193" font-size="10" fill="#64748b">시작 방향: 오른쪽(동쪽, 0도). left는 반시계방향, right는 시계방향.</text>
+        </svg>
+    </div>
+
+    <h3>기본 이동 명령어</h3>
+    <table class="compare-table">
+        <tr><th>명령어</th><th>단축형</th><th>설명</th></tr>
+        <tr><td><code>forward(d)</code></td><td><code>fd(d)</code></td><td>현재 방향으로 d픽셀 전진</td></tr>
+        <tr><td><code>backward(d)</code></td><td><code>bk(d)</code></td><td>현재 방향의 반대로 d픽셀 후진</td></tr>
+        <tr><td><code>left(a)</code></td><td><code>lt(a)</code></td><td>현재 방향에서 왼쪽(반시계)으로 a도 회전</td></tr>
+        <tr><td><code>right(a)</code></td><td><code>rt(a)</code></td><td>현재 방향에서 오른쪽(시계)으로 a도 회전</td></tr>
+        <tr><td><code>goto(x, y)</code></td><td><code>setpos(x, y)</code></td><td>좌표 (x, y)로 바로 이동 (선이 그려짐)</td></tr>
+        <tr><td><code>home()</code></td><td>—</td><td>원점 (0,0)으로 돌아가고 방향도 초기화</td></tr>
+    </table>
+
+    <h3>첫 번째 코드: 정사각형 그리기</h3>
+    <div class="code"><span class="kw">import</span> <span class="mod">turtle</span>
+
+t = <span class="fn">turtle.Turtle</span>()          <span class="cmt"># 거북이 객체 생성</span>
+
+<span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">4</span>):            <span class="cmt"># 4번 반복</span>
+    t.<span class="fn">forward</span>(<span class="num">100</span>)            <span class="cmt"># 100픽셀 전진</span>
+    t.<span class="fn">left</span>(<span class="num">90</span>)               <span class="cmt"># 왼쪽으로 90도 회전</span>
+
+<span class="fn">turtle.done</span>()               <span class="cmt"># 창 유지 (없으면 즉시 닫힘)</span></div>
+
+    <div class="info-box">
+        <strong>turtle.done()</strong>은 항상 마지막에 써야 합니다. 없으면 그림이 그려지자마자 창이 닫혀버립니다. 
+        IDLE에서 실행할 때는 없어도 되지만, 터미널에서 직접 실행할 때는 필수입니다.
+    </div>
+
+    <!-- SVG: 정사각형 그리는 과정 단계별 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 130" style="max-width:500px;width:100%">
+            <rect x="0" y="0" width="500" height="130" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="250" y="18" text-anchor="middle" font-size="10" fill="#64748b" font-weight="700">for 4번 반복으로 정사각형 완성 과정</text>
+            <!-- step 1 -->
+            <rect x="15" y="30" width="95" height="85" rx="6" fill="#fff" stroke="#e2e8f0" stroke-width="1.2"/>
+            <text x="62" y="45" text-anchor="middle" font-size="9" fill="#64748b">i=0: 전진</text>
+            <line x1="25" y1="90" x2="95" y2="90" stroke="#3b82f6" stroke-width="2"/>
+            <polygon points="95,86 103,90 95,94" fill="#3b82f6"/>
+            <circle cx="25" cy="90" r="3" fill="#22c55e"/>
+            <!-- step 2 -->
+            <rect x="125" y="30" width="95" height="85" rx="6" fill="#fff" stroke="#e2e8f0" stroke-width="1.2"/>
+            <text x="172" y="45" text-anchor="middle" font-size="9" fill="#64748b">i=1: 회전+전진</text>
+            <line x1="135" y1="105" x2="205" y2="105" stroke="#3b82f6" stroke-width="2"/>
+            <line x1="205" y1="105" x2="205" y2="50" stroke="#3b82f6" stroke-width="2"/>
+            <polygon points="201,50 205,41 209,50" fill="#3b82f6"/>
+            <circle cx="135" cy="105" r="3" fill="#22c55e"/>
+            <!-- step 3 -->
+            <rect x="235" y="30" width="95" height="85" rx="6" fill="#fff" stroke="#e2e8f0" stroke-width="1.2"/>
+            <text x="282" y="45" text-anchor="middle" font-size="9" fill="#64748b">i=2: 회전+전진</text>
+            <line x1="245" y1="110" x2="315" y2="110" stroke="#3b82f6" stroke-width="2"/>
+            <line x1="315" y1="110" x2="315" y2="55" stroke="#3b82f6" stroke-width="2"/>
+            <line x1="315" y1="55" x2="248" y2="55" stroke="#3b82f6" stroke-width="2"/>
+            <polygon points="248,51 240,55 248,59" fill="#3b82f6"/>
+            <circle cx="245" cy="110" r="3" fill="#22c55e"/>
+            <!-- step 4 -->
+            <rect x="345" y="30" width="145" height="85" rx="6" fill="#fff" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="417" y="45" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">i=3: 완성</text>
+            <rect x="360" y="55" width="60" height="60" rx="0" fill="none" stroke="#3b82f6" stroke-width="2.5"/>
+            <text x="417" y="113" text-anchor="middle" font-size="9" fill="#64748b">정사각형</text>
+        </svg>
+    </div>
+</div>
+
+<!-- 3페이지: penup/pendown + color + circle -->
+<div class="page">
+    <h2>2 — 펜 제어와 색상</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/database.png" alt="데이터" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+    <h3>penup / pendown</h3>
+    <p>거북이가 이동할 때 항상 선이 그려지지는 않습니다. <code>penup()</code>을 호출하면 이동해도 선을 그리지 않고, <code>pendown()</code>을 호출하면 다시 선을 그립니다.</p>
+
+    <!-- SVG: penup/pendown 동작 시각화 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 500 90" style="max-width:500px;width:100%">
+            <rect x="0" y="0" width="500" height="90" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <!-- pendown 구간 -->
+            <line x1="30" y1="50" x2="120" y2="50" stroke="#3b82f6" stroke-width="3"/>
+            <text x="75" y="42" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">pendown()</text>
+            <text x="75" y="70" text-anchor="middle" font-size="9" fill="#64748b">선 그림</text>
+            <!-- penup 구간 -->
+            <line x1="120" y1="50" x2="240" y2="50" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="8,6"/>
+            <text x="180" y="42" text-anchor="middle" font-size="9" fill="#94a3b8" font-weight="700">penup()</text>
+            <text x="180" y="70" text-anchor="middle" font-size="9" fill="#cbd5e1">이동만, 선 없음</text>
+            <!-- pendown 다시 -->
+            <line x1="240" y1="50" x2="360" y2="50" stroke="#3b82f6" stroke-width="3"/>
+            <text x="300" y="42" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">pendown()</text>
+            <text x="300" y="70" text-anchor="middle" font-size="9" fill="#64748b">선 다시 그림</text>
+            <!-- 점 -->
+            <circle cx="30" cy="50" r="4" fill="#22c55e"/>
+            <circle cx="120" cy="50" r="4" fill="#f59e0b"/>
+            <circle cx="240" cy="50" r="4" fill="#f59e0b"/>
+            <circle cx="360" cy="50" r="4" fill="#ef4444"/>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">import</span> <span class="mod">turtle</span>
+
+t = <span class="fn">turtle.Turtle</span>()
+t.<span class="fn">forward</span>(<span class="num">80</span>)       <span class="cmt"># 선 그리며 이동</span>
+t.<span class="fn">penup</span>()            <span class="cmt"># 펜 올림 — 이동해도 선 없음</span>
+t.<span class="fn">forward</span>(<span class="num">40</span>)       <span class="cmt"># 이동만 (선 없음)</span>
+t.<span class="fn">pendown</span>()          <span class="cmt"># 펜 내림 — 다시 선 그림</span>
+t.<span class="fn">forward</span>(<span class="num">80</span>)       <span class="cmt"># 선 그리며 이동</span>
+
+<span class="fn">turtle.done</span>()</div>
+
+    <h3>색상 설정</h3>
+    <p><code>color(선색)</code> 또는 <code>color(선색, 채우기색)</code>으로 색을 지정합니다. 색 이름 문자열("red", "blue") 또는 HEX 코드("#ff6600")를 모두 사용할 수 있습니다.</p>
+
+    <!-- SVG: color 사용법 시각화 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 500 100" style="max-width:500px;width:100%">
+            <rect x="0" y="0" width="500" height="100" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <!-- 색상 예시 -->
+            <rect x="20" y="20" width="70" height="60" rx="6" fill="#ef4444" stroke="#dc2626" stroke-width="1.5"/>
+            <text x="55" y="72" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">"red"</text>
+            <rect x="105" y="20" width="70" height="60" rx="6" fill="#3b82f6" stroke="#2563eb" stroke-width="1.5"/>
+            <text x="140" y="72" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">"blue"</text>
+            <rect x="190" y="20" width="70" height="60" rx="6" fill="#22c55e" stroke="#16a34a" stroke-width="1.5"/>
+            <text x="225" y="72" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">"green"</text>
+            <rect x="275" y="20" width="70" height="60" rx="6" fill="#f59e0b" stroke="#d97706" stroke-width="1.5"/>
+            <text x="310" y="72" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">"yellow"</text>
+            <rect x="360" y="20" width="70" height="60" rx="6" fill="#a855f7" stroke="#9333ea" stroke-width="1.5"/>
+            <text x="395" y="72" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">"purple"</text>
+            <rect x="445" y="20" width="46" height="60" rx="6" fill="#ff6600" stroke="#ea580c" stroke-width="1.5"/>
+            <text x="468" y="67" text-anchor="middle" font-size="8" fill="#fff" font-weight="700">"#ff6600"</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">import</span> <span class="mod">turtle</span>
+
+t = <span class="fn">turtle.Turtle</span>()
+t.<span class="fn">color</span>(<span class="str">"red"</span>)                <span class="cmt"># 선 색만 빨강</span>
+t.<span class="fn">color</span>(<span class="str">"blue"</span>, <span class="str">"yellow"</span>)   <span class="cmt"># 선=파랑, 채우기=노랑</span>
+t.<span class="fn">pensize</span>(<span class="num">3</span>)                 <span class="cmt"># 선 굵기 3픽셀</span>
+
+t.<span class="fn">begin_fill</span>()               <span class="cmt"># 채우기 시작</span>
+<span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(<span class="num">4</span>):
+    t.<span class="fn">forward</span>(<span class="num">100</span>)
+    t.<span class="fn">left</span>(<span class="num">90</span>)
+t.<span class="fn">end_fill</span>()                 <span class="cmt"># 채우기 끝 — 노란 정사각형 완성</span>
+
+<span class="fn">turtle.done</span>()</div>
+
+    <h3>circle — 원과 호 그리기</h3>
+    <p><code>circle(r)</code>은 반지름 r인 원을 그립니다. <code>circle(r, extent)</code>는 extent도만큼의 호를 그립니다.</p>
+
+    <table class="compare-table">
+        <tr><th>명령어</th><th>설명</th><th>예시</th></tr>
+        <tr><td><code>circle(50)</code></td><td>반지름 50의 원 (360도)</td><td>완전한 원</td></tr>
+        <tr><td><code>circle(50, 180)</code></td><td>반지름 50의 반원 (180도)</td><td>반원 호</td></tr>
+        <tr><td><code>circle(50, 90)</code></td><td>반지름 50의 1/4 원 (90도)</td><td>모서리 곡선</td></tr>
+        <tr><td><code>circle(-50)</code></td><td>오른쪽 방향으로 원 (음수 반지름)</td><td>반대 방향 원</td></tr>
+    </table>
+</div>
+
+<!-- 4페이지: for문으로 도형 + 별 그리기 -->
+<div class="page">
+    <h2>3 — for문으로 도형과 별 그리기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+    <p><code>for</code>문과 이동 명령어를 결합하면 정다각형을 간단하게 그릴 수 있습니다. n각형의 외각은 항상 360/n도입니다.</p>
+
+    <!-- SVG: 정다각형 외각 공식 시각화 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 130" style="max-width:500px;width:100%">
+            <rect x="0" y="0" width="500" height="130" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="250" y="18" text-anchor="middle" font-size="10" fill="#64748b" font-weight="700">n각형: 외각 = 360 / n 도</text>
+            <!-- 삼각형 -->
+            <polygon points="70,105 110,35 150,105" fill="none" stroke="#3b82f6" stroke-width="2.5"/>
+            <text x="110" y="120" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">삼각형 (n=3)</text>
+            <text x="110" y="131" text-anchor="middle" font-size="9" fill="#64748b">360/3 = 120°</text>
+            <!-- 사각형 -->
+            <rect x="185" y="40" width="65" height="65" fill="none" stroke="#22c55e" stroke-width="2.5"/>
+            <text x="217" y="120" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">사각형 (n=4)</text>
+            <text x="217" y="131" text-anchor="middle" font-size="9" fill="#64748b">360/4 = 90°</text>
+            <!-- 오각형 -->
+            <polygon points="345,38 376,60 363,95 326,95 314,60" fill="none" stroke="#f59e0b" stroke-width="2.5"/>
+            <text x="345" y="120" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">오각형 (n=5)</text>
+            <text x="345" y="131" text-anchor="middle" font-size="9" fill="#64748b">360/5 = 72°</text>
+            <!-- 육각형 -->
+            <polygon points="455,45 474,62 474,82 455,99 436,82 436,62" fill="none" stroke="#a855f7" stroke-width="2.5"/>
+            <text x="455" y="120" text-anchor="middle" font-size="9" fill="#7e22ce" font-weight="700">육각형 (n=6)</text>
+            <text x="455" y="131" text-anchor="middle" font-size="9" fill="#64748b">360/6 = 60°</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">import</span> <span class="mod">turtle</span>
+
+t = <span class="fn">turtle.Turtle</span>()
+
+<span class="cmt"># n각형 그리기 — n과 side만 바꾸면 어떤 정다각형도 OK</span>
+n = <span class="num">6</span>          <span class="cmt"># 육각형</span>
+side = <span class="num">80</span>      <span class="cmt"># 한 변의 길이</span>
+angle = <span class="num">360</span> / n  <span class="cmt"># 외각 계산</span>
+
+<span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(n):
+    t.<span class="fn">forward</span>(side)
+    t.<span class="fn">left</span>(angle)
+
+<span class="fn">turtle.done</span>()</div>
+
+    <h3>별(Star) 그리기</h3>
+    <p>별은 5번 반복하며 144도씩 회전합니다. 한 꼭짓점에서 출발해 두 칸씩 건너뛰며 연결하면 별 모양이 됩니다.</p>
+
+    <!-- SVG: 별 그리는 원리 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 500 150" style="max-width:500px;width:100%">
+            <rect x="0" y="0" width="500" height="150" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <!-- 별 도형 SVG -->
+            <polygon points="180,20 194,65 240,65 203,92 217,137 180,110 143,137 157,92 120,65 166,65"
+                     fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+            <text x="180" y="148" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">5번 forward(100), left(144)</text>
+            <!-- 설명 -->
+            <text x="310" y="35" font-size="11" fill="#1e3a5f" font-weight="800">별 공식</text>
+            <text x="310" y="55" font-size="10" fill="#374151">반복: 5번</text>
+            <text x="310" y="72" font-size="10" fill="#374151">전진: forward(100)</text>
+            <text x="310" y="89" font-size="10" fill="#374151">회전: left(144)</text>
+            <rect x="298" y="98" width="185" height="30" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.2"/>
+            <text x="390" y="118" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">5 x 72 = 360 (5각형 외각)</text>
+            <text x="390" y="136" text-anchor="middle" font-size="9" fill="#64748b">144 = 72 x 2 (한 칸 건너뜀)</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">import</span> <span class="mod">turtle</span>
+
+t = <span class="fn">turtle.Turtle</span>()
+t.<span class="fn">color</span>(<span class="str">"gold"</span>, <span class="str">"yellow"</span>)
+t.<span class="fn">pensize</span>(<span class="num">2</span>)
+t.<span class="fn">begin_fill</span>()
+
+<span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(<span class="num">5</span>):       <span class="cmt"># 5번 반복</span>
+    t.<span class="fn">forward</span>(<span class="num">100</span>)       <span class="cmt"># 100픽셀 전진</span>
+    t.<span class="fn">left</span>(<span class="num">144</span>)          <span class="cmt"># 144도 회전 (두 칸 건너뜀)</span>
+
+t.<span class="fn">end_fill</span>()
+<span class="fn">turtle.done</span>()</div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="완성" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+        <div class="practice-head">따라해보세요 1 — 정다각형 & 별</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">실습 1-1</div>
+                <div class="practice-desc">위 코드에서 <code>n = 3</code>으로 바꿔 노란 채우기 삼각형을 그려보세요. 외각 계산식은 수정할 필요 없습니다.</div>
+                <div class="practice-result">삼각형이 화면에 나타납니다. (외각 120도)</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">실습 1-2</div>
+                <div class="practice-desc">별 코드를 실행해보고, <code>left(144)</code>를 <code>right(144)</code>로 바꾸면 어떻게 달라지는지 확인해보세요.</div>
+                <div class="practice-result">별이 반대 방향(오른쪽 방향)으로 그려집니다.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 5페이지: 나선 + 집 그리기 -->
+<div class="page">
+    <h2>4 — 나선(Spiral)과 집(House) 그리기</h2>
+
+    <h3>나선형(Spiral) 그리기</h3>
+    <p>나선은 매 반복마다 전진 거리를 조금씩 늘리면 됩니다. <code>for</code>문의 <code>range</code>를 거리로 활용하거나, 변수를 누적해서 늘릴 수 있습니다.</p>
+
+    <!-- SVG: 나선 구조 시각화 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 500 160" style="max-width:500px;width:100%">
+            <rect x="0" y="0" width="500" height="160" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <!-- 나선 예시 (사각나선) -->
+            <g transform="translate(130,80)">
+                <!-- 안쪽에서 바깥쪽으로 나선 묘사 -->
+                <line x1="0" y1="0" x2="10" y2="0" stroke="#3b82f6" stroke-width="2"/>
+                <line x1="10" y1="0" x2="10" y2="-10" stroke="#3b82f6" stroke-width="2"/>
+                <line x1="10" y1="-10" x2="-10" y2="-10" stroke="#3b82f6" stroke-width="2"/>
+                <line x1="-10" y1="-10" x2="-10" y2="15" stroke="#3b82f6" stroke-width="2"/>
+                <line x1="-10" y1="15" x2="20" y2="15" stroke="#3b82f6" stroke-width="2"/>
+                <line x1="20" y1="15" x2="20" y2="-25" stroke="#3b82f6" stroke-width="2"/>
+                <line x1="20" y1="-25" x2="-25" y2="-25" stroke="#3b82f6" stroke-width="2"/>
+                <line x1="-25" y1="-25" x2="-25" y2="35" stroke="#3b82f6" stroke-width="2"/>
+                <line x1="-25" y1="35" x2="40" y2="35" stroke="#3b82f6" stroke-width="2"/>
+                <line x1="40" y1="35" x2="40" y2="-45" stroke="#3b82f6" stroke-width="2"/>
+                <line x1="40" y1="-45" x2="-45" y2="-45" stroke="#3b82f6" stroke-width="2"/>
+                <line x1="-45" y1="-45" x2="-45" y2="55" stroke="#3b82f6" stroke-width="2"/>
+                <line x1="-45" y1="55" x2="60" y2="55" stroke="#3b82f6" stroke-width="2"/>
+                <circle cx="0" cy="0" r="3" fill="#22c55e"/>
+            </g>
+            <text x="130" y="148" text-anchor="middle" font-size="9" fill="#64748b">사각 나선: 매번 10씩 증가</text>
+            <!-- 코드 설명 -->
+            <rect x="280" y="20" width="200" height="120" rx="6" fill="#0f172a"/>
+            <text x="296" y="40" font-size="10" fill="#c084fc" font-family="monospace">for</text>
+            <text x="316" y="40" font-size="10" fill="#e2e8f0" font-family="monospace"> i in range(10, 110, 10):</text>
+            <text x="308" y="58" font-size="10" fill="#67e8f9" font-family="monospace">    t.forward(i)</text>
+            <text x="308" y="75" font-size="10" fill="#67e8f9" font-family="monospace">    t.left(90)</text>
+            <text x="296" y="100" font-size="9" fill="#64748b" font-family="monospace"># i: 10,20,30,...,100</text>
+            <text x="296" y="115" font-size="9" fill="#64748b" font-family="monospace"># 매 반복 거리 10씩 증가</text>
+            <text x="296" y="130" font-size="9" fill="#64748b" font-family="monospace"># 90도 좌회전 고정</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">import</span> <span class="mod">turtle</span>
+
+t = <span class="fn">turtle.Turtle</span>()
+t.<span class="fn">speed</span>(<span class="num">0</span>)    <span class="cmt"># 최고 속도 (0=fastest, 1=slowest, 10=fast)</span>
+
+colors = [<span class="str">"red"</span>, <span class="str">"blue"</span>, <span class="str">"green"</span>, <span class="str">"orange"</span>]
+
+<span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">10</span>, <span class="num">110</span>, <span class="num">10</span>):   <span class="cmt"># 10,20,30,...,100</span>
+    t.<span class="fn">color</span>(colors[i // <span class="num">10</span> % <span class="fn">len</span>(colors)])
+    t.<span class="fn">forward</span>(i)
+    t.<span class="fn">left</span>(<span class="num">90</span>)
+
+<span class="fn">turtle.done</span>()</div>
+
+    <h3>집(House) 그리기</h3>
+    <p>집 = 정사각형(본체) + 삼각형(지붕)의 조합입니다. 정사각형을 그린 뒤 방향을 조정하고 삼각형을 연이어 그립니다.</p>
+
+    <!-- SVG: 집 구조 분해 시각화 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 500 140" style="max-width:500px;width:100%">
+            <rect x="0" y="0" width="500" height="140" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <!-- 본체 사각형 -->
+            <rect x="50" y="55" width="80" height="70" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+            <text x="90" y="100" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">본체</text>
+            <text x="90" y="115" text-anchor="middle" font-size="9" fill="#64748b">for 4: fd(80), lt(90)</text>
+            <!-- + 기호 -->
+            <text x="165" y="95" font-size="24" fill="#94a3b8" font-weight="300">+</text>
+            <!-- 지붕 삼각형 -->
+            <polygon points="250,30 210,75 290,75" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+            <text x="250" y="95" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">지붕</text>
+            <text x="250" y="110" text-anchor="middle" font-size="9" fill="#64748b">for 3: fd(80), lt(120)</text>
+            <!-- = 기호 -->
+            <text x="320" y="95" font-size="24" fill="#94a3b8" font-weight="300">=</text>
+            <!-- 완성 집 -->
+            <polygon points="425,30 385,75 465,75" fill="#fef3c7" stroke="#f59e0b" stroke-width="2.5"/>
+            <rect x="385" y="75" width="80" height="55" fill="#dbeafe" stroke="#3b82f6" stroke-width="2.5"/>
+            <text x="425" y="128" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">집 완성</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">import</span> <span class="mod">turtle</span>
+
+t = <span class="fn">turtle.Turtle</span>()
+t.<span class="fn">speed</span>(<span class="num">3</span>)
+
+<span class="cmt"># 본체: 정사각형</span>
+t.<span class="fn">color</span>(<span class="str">"navy"</span>, <span class="str">"lightblue"</span>)
+t.<span class="fn">begin_fill</span>()
+<span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(<span class="num">4</span>):
+    t.<span class="fn">forward</span>(<span class="num">100</span>)
+    t.<span class="fn">left</span>(<span class="num">90</span>)
+t.<span class="fn">end_fill</span>()
+
+<span class="cmt"># 지붕: 삼각형 (왼쪽 아랫모서리에서 시작)</span>
+t.<span class="fn">color</span>(<span class="str">"darkred"</span>, <span class="str">"salmon"</span>)
+t.<span class="fn">left</span>(<span class="num">30</span>)             <span class="cmt"># 방향 조정으로 지붕 각도 맞춤</span>
+t.<span class="fn">begin_fill</span>()
+<span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(<span class="num">3</span>):
+    t.<span class="fn">forward</span>(<span class="num">115</span>)       <span class="cmt"># 대각선 길이 (100 / cos30 ≈ 115)</span>
+    t.<span class="fn">left</span>(<span class="num">120</span>)          <span class="cmt"># 삼각형 외각 360/3 = 120</span>
+t.<span class="fn">end_fill</span>()
+
+<span class="fn">turtle.done</span>()</div>
+</div>
+
+<!-- 6페이지: 따라해보세요 2, 3 + 문제 1 -->
+<div class="page">
+    <h2>5 — 실습과 문제</h2>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요 2 — 나선 색상 변경</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">실습 2-1</div>
+                <div class="practice-desc">나선 코드에서 <code>range(10, 110, 10)</code>을 <code>range(5, 105, 5)</code>로 바꿔서 촘촘한 나선을 그려보세요. 반복 횟수는 20번이 됩니다.</div>
+                <div class="practice-result">더 촘촘하고 부드러운 나선이 나타납니다.</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">실습 2-2</div>
+                <div class="practice-desc">나선에서 <code>left(90)</code>을 <code>left(89)</code>로 바꾸면 어떤 모양이 되는지 관찰해보세요. (약간 틀어진 나선이 됩니다)</div>
+                <div class="practice-result">정사각형이 아닌 조금씩 회전하는 사각 나선형이 됩니다.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요 3 — 다중 원 그리기</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">실습 3-1</div>
+                <div class="practice-desc">아래 코드를 입력해 동심원 패턴을 만들어보세요. <code>penup/goto/pendown</code>으로 위치를 조정합니다.</div>
+                <div class="code" style="font-size:12.5px;"><span class="kw">import</span> <span class="mod">turtle</span>
+t = <span class="fn">turtle.Turtle</span>()
+t.<span class="fn">speed</span>(<span class="num">0</span>)
+colors = [<span class="str">"red"</span>, <span class="str">"orange"</span>, <span class="str">"green"</span>, <span class="str">"blue"</span>, <span class="str">"purple"</span>]
+<span class="kw">for</span> i, c <span class="kw">in</span> <span class="fn">enumerate</span>(colors):
+    t.<span class="fn">color</span>(c)
+    t.<span class="fn">penup</span>()
+    t.<span class="fn">goto</span>(<span class="num">0</span>, -(i + <span class="num">1</span>) * <span class="num">20</span>)   <span class="cmt"># 아래로 이동해 동심원 맞춤</span>
+    t.<span class="fn">pendown</span>()
+    t.<span class="fn">circle</span>((i + <span class="num">1</span>) * <span class="num">20</span>)
+<span class="fn">turtle.done</span>()</div>
+                <div class="practice-result">반지름 20, 40, 60, 80, 100의 동심원 5개가 색별로 그려집니다.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 문제 1 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">1</div>
+            <div class="problem-label">정팔각형 그리기</div>
+            <div class="problem-diff easy">쉬움</div>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">
+                <code>for</code>문을 사용하여 한 변의 길이가 70픽셀인 정팔각형을 그리는 코드를 작성하세요. 선 색은 <code>"navy"</code>, 채우기 색은 <code>"lightblue"</code>로 지정하세요.
+            </div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <div class="problem-example-label">공식</div>
+                    <div class="problem-example-value">n=8, 외각 = 360 / 8 = 45도</div>
+                </div>
+                <div class="problem-example-row">
+                    <div class="problem-example-label">반복</div>
+                    <div class="problem-example-value">8번, forward(70), left(45)</div>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 / 정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">n각형의 외각 = 360 / n. 팔각형은 8번 반복하며 45도씩 회전합니다.</div>
+                <div class="answer-code"><span style="color:#c084fc">import</span> <span style="color:#fde68a">turtle</span>
+t = <span style="color:#67e8f9">turtle.Turtle</span>()
+t.<span style="color:#67e8f9">color</span>(<span style="color:#86efac">"navy"</span>, <span style="color:#86efac">"lightblue"</span>)
+t.<span style="color:#67e8f9">begin_fill</span>()
+<span style="color:#c084fc">for</span> _ <span style="color:#c084fc">in</span> <span style="color:#67e8f9">range</span>(<span style="color:#7dd3fc">8</span>):
+    t.<span style="color:#67e8f9">forward</span>(<span style="color:#7dd3fc">70</span>)
+    t.<span style="color:#67e8f9">left</span>(<span style="color:#7dd3fc">45</span>)
+t.<span style="color:#67e8f9">end_fill</span>()
+<span style="color:#67e8f9">turtle.done</span>()</div>
+            </div>
+        </details>
+    </div>
+</div>
+
+<!-- 7페이지: 문제 2, 3 -->
+<div class="page">
+    <h2>6 — 심화 문제</h2>
+
+    <!-- 문제 2 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">2</div>
+            <div class="problem-label">무지개 별 그리기</div>
+            <div class="problem-diff medium">보통</div>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">
+                아래 조건을 만족하는 별을 그리는 코드를 작성하세요.<br>
+                조건: 별의 꼭짓점마다 색이 바뀌는 "무지개 별"을 만드세요. 색 목록 <code>["red","orange","yellow","green","blue"]</code>를 순서대로 사용합니다. 각 변을 그리기 전 색을 바꾸고, 한 변의 길이는 120픽셀입니다.
+            </div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <div class="problem-example-label">힌트</div>
+                    <div class="problem-example-value">enumerate() 또는 인덱스 i % 5로 색 순환</div>
+                </div>
+                <div class="problem-example-row">
+                    <div class="problem-example-label">회전</div>
+                    <div class="problem-example-value">left(144) — 별의 외각</div>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 / 정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text"><code>for i in range(5)</code>에서 <code>i</code>를 인덱스로 사용해 <code>colors[i]</code>로 색을 선택하세요.</div>
+                <div class="answer-code"><span style="color:#c084fc">import</span> <span style="color:#fde68a">turtle</span>
+t = <span style="color:#67e8f9">turtle.Turtle</span>()
+t.<span style="color:#67e8f9">pensize</span>(<span style="color:#7dd3fc">3</span>)
+t.<span style="color:#67e8f9">speed</span>(<span style="color:#7dd3fc">3</span>)
+colors = [<span style="color:#86efac">"red"</span>, <span style="color:#86efac">"orange"</span>, <span style="color:#86efac">"yellow"</span>, <span style="color:#86efac">"green"</span>, <span style="color:#86efac">"blue"</span>]
+<span style="color:#c084fc">for</span> i <span style="color:#c084fc">in</span> <span style="color:#67e8f9">range</span>(<span style="color:#7dd3fc">5</span>):
+    t.<span style="color:#67e8f9">color</span>(colors[i])
+    t.<span style="color:#67e8f9">forward</span>(<span style="color:#7dd3fc">120</span>)
+    t.<span style="color:#67e8f9">left</span>(<span style="color:#7dd3fc">144</span>)
+<span style="color:#67e8f9">turtle.done</span>()</div>
+            </div>
+        </details>
+    </div>
+
+    <!-- 문제 3 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">3</div>
+            <div class="problem-label">함수로 별 n개 그리기</div>
+            <div class="problem-diff hard">어려움</div>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">
+                <code>draw_star(t, x, y, size, color)</code> 함수를 정의하고, 이 함수를 이용해 화면에 서로 다른 위치에 크기와 색이 다른 별 3개를 그리세요.<br>
+                <br>
+                함수 동작: 주어진 (x, y) 위치로 이동(penup)한 뒤 지정한 색과 크기로 별을 그립니다.
+            </div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <div class="problem-example-label">호출</div>
+                    <div class="problem-example-value">draw_star(t, -150, 0, 80, "gold")</div>
+                </div>
+                <div class="problem-example-row">
+                    <div class="problem-example-label">호출</div>
+                    <div class="problem-example-value">draw_star(t, 0, 50, 50, "red")</div>
+                </div>
+                <div class="problem-example-row">
+                    <div class="problem-example-label">호출</div>
+                    <div class="problem-example-value">draw_star(t, 150, -30, 100, "blue")</div>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 / 정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">함수 안에서 <code>penup → goto(x,y) → pendown → color → begin_fill → for 5 → end_fill</code> 순서로 작성합니다.</div>
+                <div class="answer-code"><span style="color:#c084fc">import</span> <span style="color:#fde68a">turtle</span>
+
+<span style="color:#c084fc">def</span> <span style="color:#67e8f9">draw_star</span>(t, x, y, size, color):
+    t.<span style="color:#67e8f9">penup</span>()
+    t.<span style="color:#67e8f9">goto</span>(x, y)
+    t.<span style="color:#67e8f9">pendown</span>()
+    t.<span style="color:#67e8f9">color</span>(color)
+    t.<span style="color:#67e8f9">begin_fill</span>()
+    <span style="color:#c084fc">for</span> _ <span style="color:#c084fc">in</span> <span style="color:#67e8f9">range</span>(<span style="color:#7dd3fc">5</span>):
+        t.<span style="color:#67e8f9">forward</span>(size)
+        t.<span style="color:#67e8f9">left</span>(<span style="color:#7dd3fc">144</span>)
+    t.<span style="color:#67e8f9">end_fill</span>()
+
+t = <span style="color:#67e8f9">turtle.Turtle</span>()
+t.<span style="color:#67e8f9">speed</span>(<span style="color:#7dd3fc">0</span>)
+<span style="color:#67e8f9">draw_star</span>(t, -<span style="color:#7dd3fc">150</span>, <span style="color:#7dd3fc">0</span>, <span style="color:#7dd3fc">80</span>, <span style="color:#86efac">"gold"</span>)
+<span style="color:#67e8f9">draw_star</span>(t, <span style="color:#7dd3fc">0</span>, <span style="color:#7dd3fc">50</span>, <span style="color:#7dd3fc">50</span>, <span style="color:#86efac">"red"</span>)
+<span style="color:#67e8f9">draw_star</span>(t, <span style="color:#7dd3fc">150</span>, -<span style="color:#7dd3fc">30</span>, <span style="color:#7dd3fc">100</span>, <span style="color:#86efac">"blue"</span>)
+<span style="color:#67e8f9">turtle.done</span>()</div>
+            </div>
+        </details>
+    </div>
+
+    <div class="warn-box">
+        <strong>주의:</strong> turtle은 GUI 창이 필요합니다. 서버나 주피터 노트북 환경에서는 실행되지 않을 수 있습니다. 반드시 로컬 PC(IDLE, VS Code, 터미널)에서 실행하세요.
+    </div>
+</div>
+
+<!-- 8페이지: 핵심 요약 + 심화 -->
+<div class="page">
+    <h2>핵심 요약</h2>
+
+    <!-- 핵심 요약 -->
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>turtle 주요 명령어 한눈에 보기</h3>
+        <table class="compare-table" style="margin:8px 0;">
+            <tr><th>분류</th><th>명령어</th><th>설명</th></tr>
+            <tr><td>이동</td><td><code>forward(d)</code> / <code>backward(d)</code></td><td>앞/뒤로 d픽셀 이동</td></tr>
+            <tr><td>회전</td><td><code>left(a)</code> / <code>right(a)</code></td><td>반시계/시계 방향 a도 회전</td></tr>
+            <tr><td>펜</td><td><code>penup()</code> / <code>pendown()</code></td><td>선 그리기 ON/OFF</td></tr>
+            <tr><td>색상</td><td><code>color(c)</code> / <code>color(c, fc)</code></td><td>선색 / 선색+채우기색</td></tr>
+            <tr><td>채우기</td><td><code>begin_fill()</code> / <code>end_fill()</code></td><td>채우기 영역 시작/끝</td></tr>
+            <tr><td>원</td><td><code>circle(r)</code> / <code>circle(r, extent)</code></td><td>원 / extent도 호</td></tr>
+            <tr><td>위치</td><td><code>goto(x, y)</code> / <code>home()</code></td><td>좌표 이동 / 원점 복귀</td></tr>
+            <tr><td>속도</td><td><code>speed(n)</code></td><td>0=최고속, 1=최저속, 3=보통</td></tr>
+            <tr><td>종료</td><td><code>turtle.done()</code></td><td>창 유지 (터미널 실행 시 필수)</td></tr>
+        </table>
+    </div>
+
+    <!-- SVG: 도형별 공식 요약 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 520 120" style="max-width:520px;width:100%">
+            <rect x="0" y="0" width="520" height="120" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="260" y="16" text-anchor="middle" font-size="10" fill="#64748b" font-weight="700">도형별 for문 공식</text>
+            <!-- 정사각형 -->
+            <rect x="10" y="24" width="120" height="88" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.2"/>
+            <text x="70" y="40" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="800">정사각형</text>
+            <text x="70" y="56" text-anchor="middle" font-size="9" fill="#374151">range(4)</text>
+            <text x="70" y="71" text-anchor="middle" font-size="9" fill="#374151">forward(s)</text>
+            <text x="70" y="86" text-anchor="middle" font-size="9" fill="#374151">left(90)</text>
+            <!-- 별 -->
+            <rect x="140" y="24" width="120" height="88" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.2"/>
+            <text x="200" y="40" text-anchor="middle" font-size="10" fill="#92400e" font-weight="800">별(star)</text>
+            <text x="200" y="56" text-anchor="middle" font-size="9" fill="#374151">range(5)</text>
+            <text x="200" y="71" text-anchor="middle" font-size="9" fill="#374151">forward(s)</text>
+            <text x="200" y="86" text-anchor="middle" font-size="9" fill="#374151">left(144)</text>
+            <!-- 나선 -->
+            <rect x="270" y="24" width="120" height="88" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.2"/>
+            <text x="330" y="40" text-anchor="middle" font-size="10" fill="#166534" font-weight="800">나선(spiral)</text>
+            <text x="330" y="56" text-anchor="middle" font-size="9" fill="#374151">range(10,110,10)</text>
+            <text x="330" y="71" text-anchor="middle" font-size="9" fill="#374151">forward(i)</text>
+            <text x="330" y="86" text-anchor="middle" font-size="9" fill="#374151">left(90)</text>
+            <!-- n각형 -->
+            <rect x="400" y="24" width="110" height="88" rx="6" fill="#fdf4ff" stroke="#a855f7" stroke-width="1.2"/>
+            <text x="455" y="40" text-anchor="middle" font-size="10" fill="#7e22ce" font-weight="800">n각형</text>
+            <text x="455" y="56" text-anchor="middle" font-size="9" fill="#374151">range(n)</text>
+            <text x="455" y="71" text-anchor="middle" font-size="9" fill="#374151">forward(s)</text>
+            <text x="455" y="86" text-anchor="middle" font-size="9" fill="#374151">left(360/n)</text>
+        </svg>
+    </div>
+
+    <h3>심화: turtle.Screen() 설정</h3>
+    <p>화면 크기, 배경색, 타이틀을 설정하려면 <code>turtle.Screen()</code>을 사용합니다.</p>
+
+    <div class="code"><span class="kw">import</span> <span class="mod">turtle</span>
+
+screen = <span class="fn">turtle.Screen</span>()
+screen.<span class="fn">title</span>(<span class="str">"나의 turtle 그림"</span>)     <span class="cmt"># 창 제목</span>
+screen.<span class="fn">bgcolor</span>(<span class="str">"black"</span>)            <span class="cmt"># 배경색</span>
+screen.<span class="fn">setup</span>(<span class="num">600</span>, <span class="num">600</span>)              <span class="cmt"># 창 크기 (width, height)</span>
+
+t = <span class="fn">turtle.Turtle</span>()
+t.<span class="fn">color</span>(<span class="str">"white"</span>)
+t.<span class="fn">speed</span>(<span class="num">0</span>)
+
+<span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">36</span>):              <span class="cmt"># 36개 별 방향</span>
+    t.<span class="fn">forward</span>(<span class="num">100</span>)
+    t.<span class="fn">backward</span>(<span class="num">100</span>)
+    t.<span class="fn">right</span>(<span class="num">10</span>)                  <span class="cmt"># 10도씩 회전 → 방사형</span>
+
+<span class="fn">turtle.done</span>()</div>
+
+    <details style="border: 1.5px solid #e2e8f0; border-radius:8px; padding:10px 16px; margin:14px 0;">
+        <summary style="font-size:14px; font-weight:700; color:#1e3a5f; cursor:pointer;">심화 보충: hideturtle()과 tracer()</summary>
+        <div style="padding-top:10px;">
+            <p style="font-size:13px;"><code>t.hideturtle()</code>: 거북이 아이콘을 숨깁니다. 완성된 그림만 보여줄 때 사용합니다.</p>
+            <p style="font-size:13px;"><code>turtle.tracer(0)</code> + <code>turtle.update()</code>: 애니메이션을 끄고 한번에 완성 그림을 보여줍니다. 복잡한 그림일 때 속도가 훨씬 빠릅니다.</p>
+            <div class="code" style="font-size:12.5px;"><span class="kw">import</span> <span class="mod">turtle</span>
+<span class="fn">turtle.tracer</span>(<span class="num">0</span>)      <span class="cmt"># 애니메이션 끔</span>
+t = <span class="fn">turtle.Turtle</span>()
+t.<span class="fn">hideturtle</span>()        <span class="cmt"># 거북이 아이콘 숨김</span>
+<span class="cmt"># ... 복잡한 그리기 코드 ...</span>
+<span class="fn">turtle.update</span>()       <span class="cmt"># 한번에 화면 갱신</span>
+<span class="fn">turtle.done</span>()</div>
+        </div>
+    </details>
+
+    <details style="border: 1.5px solid #e2e8f0; border-radius:8px; padding:10px 16px; margin:14px 0;">
+        <summary style="font-size:14px; font-weight:700; color:#1e3a5f; cursor:pointer;">심화 보충: write()로 텍스트 출력</summary>
+        <div style="padding-top:10px;">
+            <p style="font-size:13px;"><code>t.write(텍스트, font=(폰트, 크기, 스타일))</code>으로 거북이 위치에 텍스트를 출력할 수 있습니다.</p>
+            <div class="code" style="font-size:12.5px;"><span class="kw">import</span> <span class="mod">turtle</span>
+t = <span class="fn">turtle.Turtle</span>()
+t.<span class="fn">penup</span>()
+t.<span class="fn">goto</span>(-<span class="num">80</span>, <span class="num">0</span>)
+t.<span class="fn">write</span>(<span class="str">"Hello, turtle!"</span>, font=(<span class="str">"Arial"</span>, <span class="num">20</span>, <span class="str">"bold"</span>))
+<span class="fn">turtle.done</span>()</div>
+        </div>
+    </details>
+
+    <!-- SVG: 최종 요약 플로우차트 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 520 80" style="max-width:520px;width:100%">
+            <rect x="0" y="0" width="520" height="80" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <defs>
+                <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="10" y="22" width="90" height="36" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.2"/>
+            <text x="55" y="38" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">import turtle</text>
+            <text x="55" y="51" text-anchor="middle" font-size="8" fill="#64748b">모듈 불러오기</text>
+            <line x1="103" y1="40" x2="118" y2="40" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arr)"/>
+            <rect x="120" y="22" width="90" height="36" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.2"/>
+            <text x="165" y="38" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">Turtle()</text>
+            <text x="165" y="51" text-anchor="middle" font-size="8" fill="#64748b">객체 생성</text>
+            <line x1="213" y1="40" x2="228" y2="40" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arr)"/>
+            <rect x="230" y="22" width="100" height="36" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.2"/>
+            <text x="280" y="38" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">color / pensize</text>
+            <text x="280" y="51" text-anchor="middle" font-size="8" fill="#64748b">색·굵기 설정</text>
+            <line x1="333" y1="40" x2="348" y2="40" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arr)"/>
+            <rect x="350" y="22" width="100" height="36" rx="6" fill="#fdf4ff" stroke="#a855f7" stroke-width="1.2"/>
+            <text x="400" y="38" text-anchor="middle" font-size="9" fill="#7e22ce" font-weight="700">for + forward/left</text>
+            <text x="400" y="51" text-anchor="middle" font-size="8" fill="#64748b">도형 그리기</text>
+            <line x1="453" y1="40" x2="468" y2="40" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arr)"/>
+            <rect x="470" y="22" width="42" height="36" rx="6" fill="#fee2e2" stroke="#ef4444" stroke-width="1.2"/>
+            <text x="491" y="38" text-anchor="middle" font-size="8" fill="#991b1b" font-weight="700">done()</text>
+            <text x="491" y="51" text-anchor="middle" font-size="8" fill="#64748b">창 유지</text>
+        </svg>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

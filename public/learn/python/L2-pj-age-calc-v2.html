@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 나이 계산기</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute; bottom: 10mm; right: 16mm;
+    font-size: 10px; color: #94a3b8; font-weight: 600;
+}
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark { position: absolute; top: -10px; right: -15px; font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3); line-height: 1; pointer-events: none; }
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #2563eb; font-weight: 600; }
+.code { background: #0f172a; border-radius: 8px; padding: 16px 20px; font-family: 'JetBrains Mono', monospace; font-size: 14px; color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap; }
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; white-space: pre-wrap; }
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- 1페이지: 표지 -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">AGE</div>
+        <div class="cover-label">Project 02</div>
+        <h1 class="cover-title">나이 계산기 + 띠 알아보기</h1>
+        <p class="cover-sub">태어난 해를 입력받아 나이를 계산하고, 12간지 띠도 알아봅니다.</p>
+        <!-- SVG 1: 학습 로드맵 -->
+        <div style="margin:20px 0;">
+            <svg viewBox="0 0 460 55" style="max-width:460px;width:100%">
+                <rect x="5" y="10" width="85" height="30" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="47" y="30" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">태어난 해 입력</text>
+                <line x1="95" y1="25" x2="115" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="120" y="10" width="85" height="30" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="162" y="30" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">나이 빼기 계산</text>
+                <line x1="210" y1="25" x2="230" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="235" y="10" width="85" height="30" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="277" y="30" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">% 12 연산</text>
+                <line x1="325" y1="25" x2="345" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="350" y="10" width="100" height="30" rx="6" fill="#eff6ff" stroke="#6366f1" stroke-width="1.5"/>
+                <text x="400" y="30" text-anchor="middle" font-size="9" fill="#4338ca" font-weight="700">12간지 리스트</text>
+            </svg>
+        </div>
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/calculator.png" alt="계산기" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 프로젝트에서 배우는 것</h3>
+            <ul>
+                <li>현재 연도에서 태어난 해를 빼서 나이를 계산할 수 있습니다.</li>
+                <li>% (모듈로) 연산으로 12간지 인덱스를 구할 수 있습니다.</li>
+                <li>리스트에서 인덱스로 값을 꺼내는 방법을 배웁니다.</li>
+                <li>여러 조건에 따라 다른 출력을 만들 수 있습니다.</li>
+                <li>실생활 날짜 계산 프로그램을 만들 수 있습니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- 2페이지: 나이 계산 기초 -->
+<div class="page">
+    <h2>나이 계산하기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/keyboard.png" alt="키보드" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>나이를 계산하는 방법은 간단합니다. 현재 연도에서 태어난 해를 뺍니다.</p>
+
+    <!-- SVG 2: 나이 계산 공식 -->
+    <div style="text-align:center;margin:20px 0;">
+        <svg viewBox="0 0 460 70" style="max-width:460px;width:100%">
+            <rect x="10" y="15" width="110" height="40" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="65" y="33" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">현재 연도</text>
+            <text x="65" y="48" text-anchor="middle" font-family="monospace" font-size="13" fill="#1d4ed8" font-weight="700">2026</text>
+            <text x="150" y="40" text-anchor="middle" font-size="28" fill="#94a3b8" font-weight="700">-</text>
+            <rect x="165" y="15" width="130" height="40" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="230" y="33" text-anchor="middle" font-size="11" fill="#92400e" font-weight="700">태어난 해</text>
+            <text x="230" y="48" text-anchor="middle" font-family="monospace" font-size="13" fill="#92400e" font-weight="700">2010</text>
+            <text x="325" y="40" text-anchor="middle" font-size="28" fill="#94a3b8" font-weight="700">=</text>
+            <rect x="340" y="15" width="110" height="40" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="395" y="33" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">나이</text>
+            <text x="395" y="48" text-anchor="middle" font-family="monospace" font-size="13" fill="#166534" font-weight="700">16살</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># 나이 계산기 기본</span>
+current_year = <span class="num">2026</span>
+birth_year = <span class="fn">int</span>(<span class="fn">input</span>(<span class="str">"태어난 해를 입력하세요: "</span>))
+age = current_year - birth_year
+
+<span class="fn">print</span>(<span class="str">f"{birth_year}년생은 {age}살입니다."</span>)</div>
+
+    <!-- SVG 3: 한국 나이 vs 만 나이 설명 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="70" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="24" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="800">나이 계산 방식 비교</text>
+            <rect x="25" y="32" width="185" height="35" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="117" y="48" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">만 나이 (국제 기준)</text>
+            <text x="117" y="62" text-anchor="middle" font-size="9" fill="#64748b">2026 - 2010 = 16세</text>
+            <rect x="250" y="32" width="185" height="35" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1"/>
+            <text x="342" y="48" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">한국식 나이</text>
+            <text x="342" y="62" text-anchor="middle" font-size="9" fill="#64748b">2026 - 2010 + 1 = 17세</text>
+        </svg>
+    </div>
+
+    <p>한국식 나이는 태어나자마자 1살이므로 <code>age + 1</code>을 더합니다. 이 프로젝트에서는 만 나이를 기준으로 합니다.</p>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="완성" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">2010년생의 만 나이를 계산해서 출력하세요.</div>
+                <div class="code">birth = <span class="fn">int</span>(<span class="fn">input</span>(<span class="str">"태어난 해: "</span>))
+age = <span class="num">2026</span> - birth
+<span class="fn">print</span>(<span class="str">f"만 나이: {age}세"</span>)</div>
+                <div class="practice-result">2010 입력 시 만 나이: 16세</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">만 나이와 한국 나이를 함께 출력하세요.</div>
+                <div class="code">birth = <span class="fn">int</span>(<span class="fn">input</span>(<span class="str">"태어난 해: "</span>))
+age_int = <span class="num">2026</span> - birth
+age_kor = age_int + <span class="num">1</span>
+<span class="fn">print</span>(<span class="str">f"만 나이: {age_int}세 / 한국 나이: {age_kor}세"</span>)</div>
+                <div class="practice-result">두 가지 나이가 함께 출력됩니다</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">몇 년 후에 성인(만 18세)이 되는지 계산하세요.</div>
+                <div class="code">birth = <span class="fn">int</span>(<span class="fn">input</span>(<span class="str">"태어난 해: "</span>))
+age = <span class="num">2026</span> - birth
+years_to_adult = <span class="num">18</span> - age
+<span class="kw">if</span> years_to_adult <= <span class="num">0</span>:
+    <span class="fn">print</span>(<span class="str">"이미 성인입니다!"</span>)
+<span class="kw">else</span>:
+    <span class="fn">print</span>(<span class="str">f"{years_to_adult}년 후 성인이 됩니다."</span>)</div>
+                <div class="practice-result">성인 여부와 남은 시간을 알 수 있습니다</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3페이지: 12간지 띠 계산 -->
+<div class="page">
+    <h2>12간지 띠 계산하기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="로직" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>12간지는 쥐, 소, 호랑이 ... 총 12개의 동물이 12년 주기로 반복됩니다. <code>% 12</code>(나머지 연산)로 어떤 동물인지 알 수 있습니다.</p>
+
+    <!-- SVG 4: 12간지 원형 다이어그램 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 300 160" style="max-width:300px;width:100%">
+            <circle cx="150" cy="85" r="70" fill="none" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="150" y="78" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="800">12간지</text>
+            <text x="150" y="95" text-anchor="middle" font-size="10" fill="#64748b">12년 주기</text>
+            <text x="150" y="20" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">쥐(0)</text>
+            <text x="210" y="38" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">소(1)</text>
+            <text x="245" y="90" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">호랑이(2)</text>
+            <text x="215" y="140" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">토끼(3)</text>
+            <text x="150" y="160" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">용(4)</text>
+            <text x="88" y="140" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">뱀(5)</text>
+            <text x="55" y="90" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">말(6)</text>
+            <text x="85" y="38" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">양(7)</text>
+        </svg>
+    </div>
+
+    <!-- SVG 5: % 12 계산 예시 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 60" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="50" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="30" y="28" font-size="11" fill="#1e3a5f" font-weight="700">예시: 2010년생</text>
+            <text x="30" y="46" font-family="monospace" font-size="10" fill="#64748b">2010 % 12 = 2   →  인덱스 2  →  호랑이</text>
+            <text x="280" y="28" font-size="11" fill="#1e3a5f" font-weight="700">2000년생</text>
+            <text x="280" y="46" font-family="monospace" font-size="10" fill="#64748b">2000 % 12 = 4   →  인덱스 4  →  용</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># 12간지 리스트 (인덱스 0~11)</span>
+zodiac = [<span class="str">"원숭이"</span>, <span class="str">"닭"</span>, <span class="str">"개"</span>, <span class="str">"돼지"</span>,
+          <span class="str">"쥐"</span>, <span class="str">"소"</span>, <span class="str">"호랑이"</span>, <span class="str">"토끼"</span>,
+          <span class="str">"용"</span>, <span class="str">"뱀"</span>, <span class="str">"말"</span>, <span class="str">"양"</span>]
+
+birth_year = <span class="fn">int</span>(<span class="fn">input</span>(<span class="str">"태어난 해: "</span>))
+index = birth_year % <span class="num">12</span>   <span class="cmt"># 나머지로 인덱스 계산</span>
+animal = zodiac[index]
+
+<span class="fn">print</span>(<span class="str">f"당신의 띠는 {animal}띠입니다!"</span>)</div>
+
+    <!-- SVG 6: 리스트 인덱스 시각화 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 60" style="max-width:460px;width:100%">
+            <text x="10" y="18" font-size="10" fill="#1e3a5f" font-weight="700">zodiac 리스트</text>
+            <rect x="10" y="25" width="32" height="28" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="26" y="36" text-anchor="middle" font-size="8" fill="#64748b">[0]</text>
+            <text x="26" y="48" text-anchor="middle" font-size="8" fill="#1d4ed8" font-weight="600">원숭이</text>
+            <rect x="45" y="25" width="32" height="28" rx="4" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+            <text x="61" y="36" text-anchor="middle" font-size="8" fill="#64748b">[1]</text>
+            <text x="61" y="48" text-anchor="middle" font-size="8" fill="#334155">닭</text>
+            <rect x="80" y="25" width="32" height="28" rx="4" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+            <text x="96" y="36" text-anchor="middle" font-size="8" fill="#64748b">[2]</text>
+            <text x="96" y="48" text-anchor="middle" font-size="8" fill="#334155">개</text>
+            <rect x="115" y="25" width="32" height="28" rx="4" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+            <text x="131" y="36" text-anchor="middle" font-size="8" fill="#64748b">[3]</text>
+            <text x="131" y="48" text-anchor="middle" font-size="8" fill="#334155">돼지</text>
+            <rect x="150" y="25" width="32" height="28" rx="4" fill="#f0fdf4" stroke="#22c55e" stroke-width="1"/>
+            <text x="166" y="36" text-anchor="middle" font-size="8" fill="#64748b">[4]</text>
+            <text x="166" y="48" text-anchor="middle" font-size="8" fill="#166534" font-weight="600">쥐</text>
+            <text x="200" y="40" text-anchor="middle" font-size="14" fill="#94a3b8">...</text>
+            <rect x="220" y="25" width="32" height="28" rx="4" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+            <text x="236" y="36" text-anchor="middle" font-size="8" fill="#64748b">[11]</text>
+            <text x="236" y="48" text-anchor="middle" font-size="8" fill="#334155">양</text>
+            <text x="290" y="30" font-size="10" fill="#475569">2010 % 12 = 2</text>
+            <text x="290" y="46" font-size="10" fill="#475569">zodiac[2] = "개"</text>
+        </svg>
+    </div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">12간지 리스트를 만들고 인덱스 2, 5, 10의 동물을 출력하세요.</div>
+                <div class="code">zodiac = [<span class="str">"원숭이"</span>, <span class="str">"닭"</span>, <span class="str">"개"</span>, <span class="str">"돼지"</span>,
+          <span class="str">"쥐"</span>, <span class="str">"소"</span>, <span class="str">"호랑이"</span>, <span class="str">"토끼"</span>,
+          <span class="str">"용"</span>, <span class="str">"뱀"</span>, <span class="str">"말"</span>, <span class="str">"양"</span>]
+<span class="fn">print</span>(zodiac[<span class="num">2</span>], zodiac[<span class="num">5</span>], zodiac[<span class="num">10</span>])</div>
+                <div class="practice-result">개 소 말 출력</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">2010년 % 12를 직접 계산하고 그 인덱스의 동물을 출력하세요.</div>
+                <div class="code">zodiac = [<span class="str">"원숭이"</span>, <span class="str">"닭"</span>, <span class="str">"개"</span>, <span class="str">"돼지"</span>,
+          <span class="str">"쥐"</span>, <span class="str">"소"</span>, <span class="str">"호랑이"</span>, <span class="str">"토끼"</span>,
+          <span class="str">"용"</span>, <span class="str">"뱀"</span>, <span class="str">"말"</span>, <span class="str">"양"</span>]
+idx = <span class="num">2010</span> % <span class="num">12</span>
+<span class="fn">print</span>(<span class="str">f"2010년 인덱스: {idx}, 동물: {zodiac[idx]}"</span>)</div>
+                <div class="practice-result">2010년 인덱스: 2, 동물: 개</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">태어난 해를 입력받아 띠 동물을 출력하는 전체 프로그램을 만드세요.</div>
+                <div class="code">zodiac = [<span class="str">"원숭이"</span>, <span class="str">"닭"</span>, <span class="str">"개"</span>, <span class="str">"돼지"</span>,
+          <span class="str">"쥐"</span>, <span class="str">"소"</span>, <span class="str">"호랑이"</span>, <span class="str">"토끼"</span>,
+          <span class="str">"용"</span>, <span class="str">"뱀"</span>, <span class="str">"말"</span>, <span class="str">"양"</span>]
+birth = <span class="fn">int</span>(<span class="fn">input</span>(<span class="str">"태어난 해: "</span>))
+<span class="fn">print</span>(<span class="str">f"당신은 {zodiac[birth % 12]}띠입니다!"</span>)</div>
+                <div class="practice-result">2010 입력 시 "개"띠 출력</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 4페이지: 완성 프로그램 -->
+<div class="page">
+    <h2>완성: 나이 + 띠 계산기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/monitor.png" alt="모니터" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>나이 계산과 12간지를 합쳐서 완전한 프로그램을 만듭니다.</p>
+
+    <!-- SVG 7: 완성 프로그램 구조 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 70" style="max-width:460px;width:100%">
+            <rect x="5" y="10" width="440" height="55" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <rect x="20" y="22" width="90" height="30" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="65" y="40" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="600">태어난 해 입력</text>
+            <rect x="125" y="22" width="90" height="30" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1"/>
+            <text x="170" y="40" text-anchor="middle" font-size="9" fill="#92400e" font-weight="600">나이 계산</text>
+            <rect x="230" y="22" width="90" height="30" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1"/>
+            <text x="275" y="40" text-anchor="middle" font-size="9" fill="#166534" font-weight="600">% 12 → 띠</text>
+            <rect x="335" y="22" width="100" height="30" rx="6" fill="#eff6ff" stroke="#6366f1" stroke-width="1"/>
+            <text x="385" y="40" text-anchor="middle" font-size="9" fill="#4338ca" font-weight="600">결과 출력</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># 나이 + 띠 계산기 완성 버전</span>
+zodiac = [<span class="str">"원숭이"</span>, <span class="str">"닭"</span>, <span class="str">"개"</span>, <span class="str">"돼지"</span>,
+          <span class="str">"쥐"</span>, <span class="str">"소"</span>, <span class="str">"호랑이"</span>, <span class="str">"토끼"</span>,
+          <span class="str">"용"</span>, <span class="str">"뱀"</span>, <span class="str">"말"</span>, <span class="str">"양"</span>]
+
+<span class="fn">print</span>(<span class="str">"=== 나이 계산기 ==="</span>)
+birth_year = <span class="fn">int</span>(<span class="fn">input</span>(<span class="str">"태어난 해를 입력하세요: "</span>))
+
+current_year = <span class="num">2026</span>
+age = current_year - birth_year
+korean_age = age + <span class="num">1</span>
+animal = zodiac[birth_year % <span class="num">12</span>]
+
+<span class="fn">print</span>(<span class="str">f"\n--- 결과 ---"</span>)
+<span class="fn">print</span>(<span class="str">f"만 나이: {age}세"</span>)
+<span class="fn">print</span>(<span class="str">f"한국 나이: {korean_age}세"</span>)
+<span class="fn">print</span>(<span class="str">f"당신의 띠: {animal}띠"</span>)
+
+<span class="kw">if</span> age >= <span class="num">18</span>:
+    <span class="fn">print</span>(<span class="str">"성인입니다!"</span>)
+<span class="kw">else</span>:
+    years_left = <span class="num">18</span> - age
+    <span class="fn">print</span>(<span class="str">f"{years_left}년 후 성인이 됩니다."</span>)</div>
+
+    <!-- SVG 8: 실행 예시 화면 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 380 140" style="max-width:380px;width:100%">
+            <rect x="10" y="5" width="360" height="130" rx="8" fill="#0f172a"/>
+            <text x="20" y="28" font-family="monospace" font-size="10" fill="#94a3b8">=== 나이 계산기 ===</text>
+            <text x="20" y="46" font-family="monospace" font-size="10" fill="#94a3b8">태어난 해를 입력하세요: <tspan fill="#86efac">2008</tspan></text>
+            <line x1="20" y1="55" x2="360" y2="55" stroke="#334155" stroke-width="0.5"/>
+            <text x="20" y="73" font-family="monospace" font-size="10" fill="#e2e8f0">만 나이: 18세</text>
+            <text x="20" y="91" font-family="monospace" font-size="10" fill="#e2e8f0">한국 나이: 19세</text>
+            <text x="20" y="109" font-family="monospace" font-size="10" fill="#86efac">당신의 띠: 쥐띠</text>
+            <text x="20" y="127" font-family="monospace" font-size="10" fill="#7dd3fc">성인입니다!</text>
+        </svg>
+    </div>
+
+    <!-- SVG 9: 유명인 띠 예시 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 70" style="max-width:460px;width:100%">
+            <text x="10" y="18" font-size="11" fill="#1e3a5f" font-weight="700">연도별 띠 확인</text>
+            <rect x="10" y="24" width="85" height="38" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+            <text x="52" y="40" text-anchor="middle" font-size="9" fill="#64748b">2000년생</text>
+            <text x="52" y="56" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">용띠</text>
+            <rect x="104" y="24" width="85" height="38" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+            <text x="146" y="40" text-anchor="middle" font-size="9" fill="#64748b">2004년생</text>
+            <text x="146" y="56" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">원숭이띠</text>
+            <rect x="198" y="24" width="85" height="38" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+            <text x="240" y="40" text-anchor="middle" font-size="9" fill="#64748b">2008년생</text>
+            <text x="240" y="56" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">쥐띠</text>
+            <rect x="292" y="24" width="85" height="38" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+            <text x="334" y="40" text-anchor="middle" font-size="9" fill="#64748b">2010년생</text>
+            <text x="334" y="56" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">개띠</text>
+            <rect x="386" y="24" width="64" height="38" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+            <text x="418" y="40" text-anchor="middle" font-size="9" fill="#64748b">2012년생</text>
+            <text x="418" y="56" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">용띠</text>
+        </svg>
+    </div>
+</div>
+
+<!-- 5페이지: 문제 -->
+<div class="page">
+    <h2>직접 풀어보세요</h2>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q1</div>
+            <div class="problem-label">나이 계산 기본</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">태어난 해를 입력받아 만 나이와 한국 나이를 모두 출력하는 프로그램을 만드세요. 현재 연도는 2026으로 고정합니다.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">입력</span><span class="problem-example-value">2010</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">만 나이: 16세 / 한국 나이: 17세</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle"><summary>힌트 보기</summary><div class="problem-toggle-content"><div class="hint-text">age = 2026 - birth, korean_age = age + 1</div></div></details>
+        <details class="problem-toggle"><summary>정답 확인</summary><div class="problem-toggle-content"><div class="answer-code">birth = int(input("태어난 해: "))
+age = 2026 - birth
+print(f"만 나이: {age}세 / 한국 나이: {age+1}세")</div></div></details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q2</div>
+            <div class="problem-label">띠 알아보기</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">태어난 해를 입력받아 12간지 띠를 출력하세요. 리스트와 <code>% 12</code>를 활용합니다.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">입력</span><span class="problem-example-value">2000</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">당신은 용띠입니다!</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle"><summary>힌트 보기</summary><div class="problem-toggle-content"><div class="hint-text">zodiac 리스트를 만들고 zodiac[birth % 12]로 인덱싱</div></div></details>
+        <details class="problem-toggle"><summary>정답 확인</summary><div class="problem-toggle-content"><div class="answer-code">zodiac = ["원숭이","닭","개","돼지","쥐","소","호랑이","토끼","용","뱀","말","양"]
+birth = int(input("태어난 해: "))
+print(f"당신은 {zodiac[birth % 12]}띠입니다!")</div></div></details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q3</div>
+            <div class="problem-label">나이 + 띠 + 성인 여부</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">태어난 해를 입력받아 만 나이, 띠, 성인 여부(만 18세 이상인지)를 모두 출력하는 완성 프로그램을 만드세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">입력</span><span class="problem-example-value">2005</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">21세 / 닭띠 / 성인</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle"><summary>힌트 보기</summary><div class="problem-toggle-content"><div class="hint-text">나이 계산 + zodiac[birth % 12] + if age >= 18 조합</div></div></details>
+        <details class="problem-toggle"><summary>정답 확인</summary><div class="problem-toggle-content"><div class="answer-code">zodiac = ["원숭이","닭","개","돼지","쥐","소","호랑이","토끼","용","뱀","말","양"]
+birth = int(input("태어난 해: "))
+age = 2026 - birth
+animal = zodiac[birth % 12]
+status = "성인" if age >= 18 else f"{18-age}년 후 성인"
+print(f"{age}세 / {animal}띠 / {status}")</div></div></details>
+    </div>
+</div>
+
+<!-- 6페이지: 핵심 요약 -->
+<div class="page">
+    <h2>핵심 요약</h2>
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>이 유닛에서 배운 것</h3>
+        <ul>
+            <li>나이 계산: <code>현재연도 - 태어난해</code></li>
+            <li>한국 나이: 만 나이 + 1</li>
+            <li><code>% 12</code> 나머지 연산으로 12간지 인덱스를 구한다</li>
+            <li>리스트 인덱싱: <code>zodiac[index]</code>로 원하는 값을 꺼낸다</li>
+            <li><code>if/else</code>로 성인 여부 같은 조건 판정을 한다</li>
+            <li>변수에 계산 결과를 저장하면 나중에 재사용할 수 있다</li>
+        </ul>
+    </div>
+
+    <!-- SVG 10: % 연산 핵심 정리 -->
+    <div style="text-align:center;margin:20px 0;">
+        <svg viewBox="0 0 460 70" style="max-width:460px;width:100%">
+            <rect x="5" y="5" width="450" height="60" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="24" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="800">% (모듈로) 연산 핵심</text>
+            <text x="30" y="48" font-family="monospace" font-size="11" fill="#c084fc">2010</text>
+            <text x="80" y="48" font-family="monospace" font-size="11" fill="#e2e8f0"> % 12 = </text>
+            <text x="160" y="48" font-family="monospace" font-size="11" fill="#7dd3fc">2</text>
+            <text x="195" y="48" font-family="monospace" font-size="11" fill="#64748b"> → zodiac[2] = </text>
+            <text x="335" y="48" font-family="monospace" font-size="11" fill="#86efac">"개"</text>
+        </svg>
+    </div>
+
+    <!-- SVG 11: 리스트 인덱싱 정리 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 65" style="max-width:460px;width:100%">
+            <rect x="5" y="5" width="450" height="55" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="24" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="800">리스트 인덱싱</text>
+            <text x="30" y="48" font-family="monospace" font-size="11" fill="#67e8f9">zodiac</text>
+            <text x="90" y="48" font-family="monospace" font-size="11" fill="#e2e8f0">[</text>
+            <text x="100" y="48" font-family="monospace" font-size="11" fill="#7dd3fc">index</text>
+            <text x="148" y="48" font-family="monospace" font-size="11" fill="#e2e8f0">]  → 리스트의 index번째 값을 꺼냄</text>
+            <text x="30" y="60" font-family="monospace" font-size="9" fill="#64748b">인덱스는 0부터 시작! zodiac[0]이 첫 번째 원소</text>
+        </svg>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

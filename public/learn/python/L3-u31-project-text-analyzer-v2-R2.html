@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 프로젝트: 시저 암호</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+/* ── 페이지 ── */
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+/* ── 챕터 표지 ── */
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+
+/* ── 본문 ── */
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 16px; font-weight: 700; color: #1e3a5f; margin: 18px 0 10px; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+ul, ol { margin: 0 0 12px 20px; }
+li { font-size: 14px; color: #374151; line-height: 1.8; }
+
+/* ── 코드 블록 ── */
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13.5px;
+    color: #e2e8f0; line-height: 1.85; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.code .dec { color: #f9a8d4; }
+
+/* ── 따라해보세요 ── */
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+
+/* ── 문제 ── */
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+
+/* ── 요약 ── */
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+/* ── 단계 박스 ── */
+.step-box { border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 14px 18px; margin: 14px 0; background: #fff; }
+.step-label { font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+.step-title { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 8px; }
+
+/* ── 출력 박스 ── */
+.output-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #334155; line-height: 1.7; margin: 10px 0; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- ═══ 1페이지: 표지 ═══ -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">31</div>
+        <div class="cover-label">L3 — Unit 31 Project · R2</div>
+        <h1 class="cover-title">프로젝트:<br>시저 암호</h1>
+        <p class="cover-sub"><code>chr</code>와 <code>ord</code>로 알파벳을 숫자로 변환하고, 슬라이싱과 문자열 메서드를 활용해 암호화/복호화 함수를 완성합니다. 역사 속 가장 오래된 암호를 파이썬으로 구현합니다.</p>
+
+        <!-- SVG: 시저 암호 원리 시각화 -->
+        <div style="margin:24px 0;">
+            <svg viewBox="0 0 480 150" style="max-width:480px;width:100%">
+                <defs>
+                    <marker id="arwCov" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                    </marker>
+                </defs>
+                <!-- 원래 알파벳 -->
+                <text x="240" y="16" text-anchor="middle" font-size="9" fill="#64748b" font-weight="600">원문 알파벳 (shift=3 이동)</text>
+                <rect x="5" y="22" width="26" height="26" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.2"/><text x="18" y="39" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">A</text>
+                <rect x="35" y="22" width="26" height="26" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.2"/><text x="48" y="39" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">B</text>
+                <rect x="65" y="22" width="26" height="26" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.2"/><text x="78" y="39" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">C</text>
+                <rect x="95" y="22" width="26" height="26" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.2"/><text x="108" y="39" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">D</text>
+                <text x="140" y="39" text-anchor="middle" font-size="12" fill="#94a3b8">...</text>
+                <rect x="163" y="22" width="26" height="26" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.2"/><text x="176" y="39" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">X</text>
+                <rect x="193" y="22" width="26" height="26" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.2"/><text x="206" y="39" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">Y</text>
+                <rect x="223" y="22" width="26" height="26" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.2"/><text x="236" y="39" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">Z</text>
+                <!-- 화살표 -->
+                <text x="240" y="68" text-anchor="middle" font-size="8" fill="#94a3b8">+3 이동</text>
+                <path d="M18,50 L18,72" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#arwCov)"/>
+                <path d="M48,50 L48,72" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#arwCov)"/>
+                <path d="M78,50 L78,72" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#arwCov)"/>
+                <path d="M108,50 L108,72" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#arwCov)"/>
+                <path d="M176,50 L176,72" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#arwCov)"/>
+                <path d="M206,50 L206,72" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#arwCov)"/>
+                <path d="M236,50 L236,72" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#arwCov)"/>
+                <!-- 암호 알파벳 -->
+                <rect x="5" y="75" width="26" height="26" rx="4" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.2"/><text x="18" y="92" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">D</text>
+                <rect x="35" y="75" width="26" height="26" rx="4" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.2"/><text x="48" y="92" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">E</text>
+                <rect x="65" y="75" width="26" height="26" rx="4" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.2"/><text x="78" y="92" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">F</text>
+                <rect x="95" y="75" width="26" height="26" rx="4" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.2"/><text x="108" y="92" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">G</text>
+                <text x="140" y="92" text-anchor="middle" font-size="12" fill="#94a3b8">...</text>
+                <rect x="163" y="75" width="26" height="26" rx="4" fill="#fefce8" stroke="#f59e0b" stroke-width="1.2"/><text x="176" y="92" text-anchor="middle" font-size="11" fill="#92400e" font-weight="700">A</text>
+                <rect x="193" y="75" width="26" height="26" rx="4" fill="#fefce8" stroke="#f59e0b" stroke-width="1.2"/><text x="206" y="92" text-anchor="middle" font-size="11" fill="#92400e" font-weight="700">B</text>
+                <rect x="223" y="75" width="26" height="26" rx="4" fill="#fefce8" stroke="#f59e0b" stroke-width="1.2"/><text x="236" y="92" text-anchor="middle" font-size="11" fill="#92400e" font-weight="700">C</text>
+                <text x="163" y="118" text-anchor="middle" font-size="7" fill="#92400e">끝에서 처음으로 순환</text>
+                <!-- 예시 -->
+                <text x="5" y="138" font-size="9" fill="#64748b">"HELLO" + shift 3 → "KHOOR" | 복호화: "KHOOR" - 3 → "HELLO"</text>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/puzzle.png" alt="고급 기능" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 프로젝트에서 만드는 것</h3>
+            <ul>
+                <li><code>ord()</code>로 문자를 아스키 코드(숫자)로 변환할 수 있습니다.</li>
+                <li><code>chr()</code>로 아스키 코드를 문자로 되돌릴 수 있습니다.</li>
+                <li><code>% 26</code> 나머지 연산으로 알파벳을 순환(Z 다음 A)할 수 있습니다.</li>
+                <li>슬라이싱과 문자열 메서드로 암호화 문자열을 조립할 수 있습니다.</li>
+                <li>암호화 함수와 복호화 함수를 분리해 설계할 수 있습니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ 2페이지: 핵심 개념 + Step 1 ═══ -->
+<div class="page">
+    <h2>핵심 개념 — chr, ord, 그리고 아스키 코드</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="처리" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>파이썬에서 모든 문자는 내부적으로 숫자로 저장됩니다. <code>ord()</code>는 문자 → 숫자, <code>chr()</code>는 숫자 → 문자 변환을 담당합니다.</p>
+
+    <!-- SVG: ord/chr 변환 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+            <defs>
+                <marker id="arwOC" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <!-- 문자 -->
+            <rect x="20" y="20" width="80" height="40" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="60" y="38" text-anchor="middle" font-size="14" fill="#1d4ed8" font-weight="900">'A'</text>
+            <text x="60" y="54" text-anchor="middle" font-size="8" fill="#64748b">문자</text>
+            <!-- ord 화살표 -->
+            <path d="M103,34 L153,34" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwOC)"/>
+            <text x="128" y="28" text-anchor="middle" font-size="9" fill="#374151" font-weight="600">ord()</text>
+            <!-- 숫자 -->
+            <rect x="156" y="20" width="80" height="40" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="196" y="38" text-anchor="middle" font-size="14" fill="#166534" font-weight="900">65</text>
+            <text x="196" y="54" text-anchor="middle" font-size="8" fill="#64748b">아스키 코드</text>
+            <!-- chr 화살표 -->
+            <path d="M239,34 L289,34" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwOC)"/>
+            <text x="264" y="28" text-anchor="middle" font-size="9" fill="#374151" font-weight="600">chr()</text>
+            <!-- 다시 문자 -->
+            <rect x="292" y="20" width="80" height="40" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="332" y="38" text-anchor="middle" font-size="14" fill="#1d4ed8" font-weight="900">'A'</text>
+            <text x="332" y="54" text-anchor="middle" font-size="8" fill="#64748b">문자로 복원</text>
+            <!-- 보조 정보 -->
+            <text x="420" y="28" text-anchor="middle" font-size="8" fill="#64748b">A=65</text>
+            <text x="420" y="40" text-anchor="middle" font-size="8" fill="#64748b">Z=90</text>
+            <text x="420" y="52" text-anchor="middle" font-size="8" fill="#64748b">a=97</text>
+            <text x="420" y="64" text-anchor="middle" font-size="8" fill="#64748b">z=122</text>
+        </svg>
+    </div>
+
+    <!-- SVG: 알파벳 순환 원리 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+            <text x="230" y="12" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">% 26 순환 원리 — Z 다음은 A</text>
+            <rect x="5" y="20" width="90" height="50" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="50" y="37" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">ord('Z') = 90</text>
+            <text x="50" y="51" text-anchor="middle" font-size="8" fill="#64748b">90 - 65 = 25</text>
+            <text x="50" y="63" text-anchor="middle" font-size="8" fill="#64748b">(A 기준 0~25)</text>
+            <text x="110" y="48" text-anchor="middle" font-size="8" fill="#94a3b8">+3 shift</text>
+            <path d="M100,45 L140,45" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwOC2)"/>
+            <defs>
+                <marker id="arwOC2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="143" y="20" width="110" height="50" rx="8" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="198" y="37" text-anchor="middle" font-size="9" fill="#991b1b" font-weight="700">25 + 3 = 28</text>
+            <text x="198" y="51" text-anchor="middle" font-size="8" fill="#64748b">28 % 26 = 2</text>
+            <text x="198" y="63" text-anchor="middle" font-size="8" fill="#991b1b">순환!</text>
+            <path d="M256,45 L296,45" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwOC2)"/>
+            <text x="276" y="40" text-anchor="middle" font-size="8" fill="#94a3b8">chr()</text>
+            <rect x="299" y="20" width="110" height="50" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="354" y="37" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">2 + 65 = 67</text>
+            <text x="354" y="51" text-anchor="middle" font-size="8" fill="#64748b">chr(67) = 'C'</text>
+            <text x="354" y="63" text-anchor="middle" font-size="8" fill="#166534">Z → C 완료</text>
+        </svg>
+    </div>
+
+    <h3>Step 1 — 단일 문자 암호화</h3>
+    <p>한 글자를 받아 시저 암호로 변환하는 과정입니다. <code>ord()</code>로 숫자 변환 → shift 더하기 → <code>% 26</code> 순환 → <code>chr()</code>로 복원 순으로 진행합니다.</p>
+
+    <div class="code"><span class="cmt"># Step 1: 단일 문자 암호화</span>
+
+<span class="kw">def</span> <span class="fn">encrypt_char</span>(c, shift):
+    <span class="str">"""알파벳 한 글자를 시저 암호로 변환"""</span>
+    <span class="kw">if</span> c.<span class="fn">isalpha</span>():
+        base = <span class="fn">ord</span>(<span class="str">'A'</span>) <span class="kw">if</span> c.<span class="fn">isupper</span>() <span class="kw">else</span> <span class="fn">ord</span>(<span class="str">'a'</span>)
+        shifted = (<span class="fn">ord</span>(c) - base + shift) % <span class="num">26</span>
+        <span class="kw">return</span> <span class="fn">chr</span>(base + shifted)
+    <span class="kw">return</span> c   <span class="cmt"># 알파벳 아니면 그대로</span>
+
+<span class="cmt"># 테스트</span>
+<span class="fn">print</span>(<span class="fn">encrypt_char</span>(<span class="str">'A'</span>, <span class="num">3</span>))   <span class="cmt"># D</span>
+<span class="fn">print</span>(<span class="fn">encrypt_char</span>(<span class="str">'Z'</span>, <span class="num">3</span>))   <span class="cmt"># C  (순환)</span>
+<span class="fn">print</span>(<span class="fn">encrypt_char</span>(<span class="str">'!'</span>, <span class="num">3</span>))   <span class="cmt"># !  (비알파벳 유지)</span></div>
+
+    <div class="output-box">D
+C
+!</div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="완성" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+        <div class="practice-head">따라해보세요 — Step 1</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc"><code>ord('A')</code>, <code>ord('a')</code>, <code>ord('Z')</code>를 출력해 아스키 코드 값을 확인하세요.</div>
+                <div class="code"><span class="fn">print</span>(<span class="fn">ord</span>(<span class="str">'A'</span>), <span class="fn">ord</span>(<span class="str">'a'</span>), <span class="fn">ord</span>(<span class="str">'Z'</span>))</div>
+                <div class="practice-result">65 97 90</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc"><code>encrypt_char('H', 13)</code>을 호출하세요. shift 13은 ROT13이라는 유명한 암호입니다.</div>
+                <div class="code"><span class="fn">print</span>(<span class="fn">encrypt_char</span>(<span class="str">'H'</span>, <span class="num">13</span>))</div>
+                <div class="practice-result">U — 알파벳 13칸 이동</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">소문자 'z'를 shift 1로 암호화하면 무엇이 나오는지 확인하세요.</div>
+                <div class="code"><span class="fn">print</span>(<span class="fn">encrypt_char</span>(<span class="str">'z'</span>, <span class="num">1</span>))</div>
+                <div class="practice-result">a — 소문자도 순환 처리됨</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ 3페이지: Step 2 문자열 암호화 + Step 3 복호화 ═══ -->
+<div class="page">
+    <h2>Step 2 — 문자열 전체 암호화</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/database.png" alt="데이터" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p><code>encrypt_char()</code>를 각 문자에 적용하는 방법은 두 가지입니다. 반복문을 쓰거나 리스트 컴프리헨션을 쓸 수 있습니다.</p>
+
+    <!-- SVG: 문자열 처리 흐름 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+            <defs>
+                <marker id="arwStr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="5" y="20" width="80" height="40" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="45" y="37" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">"Hello!"</text>
+            <text x="45" y="52" text-anchor="middle" font-size="8" fill="#64748b">원문</text>
+            <line x1="88" y1="40" x2="108" y2="40" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwStr)"/>
+            <rect x="111" y="12" width="140" height="56" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="181" y="30" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">각 문자에 encrypt_char</text>
+            <text x="181" y="44" text-anchor="middle" font-size="8" fill="#64748b">[encrypt_char(c, shift)</text>
+            <text x="181" y="58" text-anchor="middle" font-size="8" fill="#64748b"> for c in text]</text>
+            <line x1="254" y1="40" x2="274" y2="40" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwStr)"/>
+            <rect x="277" y="12" width="90" height="56" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="322" y="30" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">"".join()</text>
+            <text x="322" y="44" text-anchor="middle" font-size="8" fill="#64748b">리스트 → 문자열</text>
+            <text x="322" y="58" text-anchor="middle" font-size="8" fill="#374151">"Khoor!"</text>
+            <text x="400" y="37" text-anchor="middle" font-size="8" fill="#94a3b8">shift=3</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># Step 2: 문자열 암호화 함수</span>
+
+<span class="kw">def</span> <span class="fn">encrypt</span>(text, shift):
+    <span class="str">"""문자열 전체를 시저 암호로 변환 (리스트 컴프리헨션)"""</span>
+    encrypted = [<span class="fn">encrypt_char</span>(c, shift) <span class="kw">for</span> c <span class="kw">in</span> text]
+    <span class="kw">return</span> <span class="str">""</span>.<span class="fn">join</span>(encrypted)
+
+<span class="fn">print</span>(<span class="fn">encrypt</span>(<span class="str">"Hello, World!"</span>, <span class="num">3</span>))   <span class="cmt"># Khoor, Zruog!</span>
+<span class="fn">print</span>(<span class="fn">encrypt</span>(<span class="str">"Python"</span>, <span class="num">13</span>))        <span class="cmt"># ROT13</span>
+<span class="fn">print</span>(<span class="fn">encrypt</span>(<span class="str">"ABCXYZ"</span>, <span class="num">3</span>))         <span class="cmt"># DEFABC (순환 확인)</span></div>
+
+    <div class="output-box">Khoor, Zruog!
+Clguba
+DEFABC</div>
+
+    <h3>Step 3 — 복호화 함수</h3>
+    <p>복호화는 암호화의 역과정입니다. shift를 빼면 원문을 복원할 수 있습니다. 수학적으로 <code>-shift</code>는 <code>26 - shift</code>와 같습니다.</p>
+
+    <!-- SVG: 암호화/복호화 대칭 구조 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 90" style="max-width:460px;width:100%">
+            <defs>
+                <marker id="arwDec" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+                <marker id="arwDecR" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M10,0 L0,5 L10,10 z" fill="#ef4444"/>
+                </marker>
+            </defs>
+            <!-- 원문 -->
+            <rect x="10" y="30" width="100" height="30" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="60" y="50" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">"HELLO"</text>
+            <!-- 암호화 화살표 (위) -->
+            <path d="M113,38 L347,38" stroke="#22c55e" stroke-width="2" marker-end="url(#arwDec)"/>
+            <text x="230" y="32" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">encrypt(shift=3)</text>
+            <!-- 암호문 -->
+            <rect x="350" y="30" width="100" height="30" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="400" y="50" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">"KHOOR"</text>
+            <!-- 복호화 화살표 (아래) -->
+            <path d="M350,52 L116,52" stroke="#ef4444" stroke-width="2" marker-end="url(#arwDecR)"/>
+            <text x="230" y="72" text-anchor="middle" font-size="9" fill="#991b1b" font-weight="700">decrypt(shift=3) = encrypt(shift=23)</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># Step 3: 복호화 함수</span>
+
+<span class="kw">def</span> <span class="fn">decrypt</span>(text, shift):
+    <span class="str">"""암호문을 원문으로 복원"""</span>
+    <span class="kw">return</span> <span class="fn">encrypt</span>(text, <span class="num">26</span> - shift)  <span class="cmt"># -shift 와 동일</span>
+
+<span class="cmt"># 검증: 암호화 후 복호화하면 원문이 나와야 함</span>
+original = <span class="str">"Hello, World!"</span>
+encoded  = <span class="fn">encrypt</span>(original, <span class="num">3</span>)
+decoded  = <span class="fn">decrypt</span>(encoded, <span class="num">3</span>)
+
+<span class="fn">print</span>(<span class="str">f"원문:   {original}"</span>)
+<span class="fn">print</span>(<span class="str">f"암호화: {encoded}"</span>)
+<span class="fn">print</span>(<span class="str">f"복호화: {decoded}"</span>)
+<span class="fn">print</span>(<span class="str">f"복원 성공: {original == decoded}"</span>)</div>
+
+    <div class="output-box">원문:   Hello, World!
+암호화: Khoor, Zruog!
+복호화: Hello, World!
+복원 성공: True</div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요 — Step 2 & 3</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">"Python is fun!"을 shift=5로 암호화하고, 결과를 다시 복호화해 원문을 복원하세요.</div>
+                <div class="code">msg = <span class="str">"Python is fun!"</span>
+enc = <span class="fn">encrypt</span>(msg, <span class="num">5</span>)
+dec = <span class="fn">decrypt</span>(enc, <span class="num">5</span>)
+<span class="fn">print</span>(enc, dec)</div>
+                <div class="practice-result">Udymts nx kzs! Python is fun!</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">ROT13 암호(shift=13)는 두 번 적용하면 원문이 됩니다. 확인해보세요.</div>
+                <div class="code"><span class="fn">print</span>(<span class="fn">encrypt</span>(<span class="fn">encrypt</span>(<span class="str">"SECRET"</span>, <span class="num">13</span>), <span class="num">13</span>))</div>
+                <div class="practice-result">SECRET — shift 13은 자기 자신이 역함수</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">shift 0으로 암호화하면 어떻게 되는지 확인하세요.</div>
+                <div class="code"><span class="fn">print</span>(<span class="fn">encrypt</span>(<span class="str">"Hello"</span>, <span class="num">0</span>))</div>
+                <div class="practice-result">Hello — shift 0은 변화 없음</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ 4페이지: 완성 통합 + 문제 ═══ -->
+<div class="page">
+    <h2>Step 4 — 완성 프로그램 통합</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>암호화/복호화 함수를 하나의 <code>caesar_cipher.py</code>로 통합합니다. 슬라이싱으로 암호화된 문자열의 일부를 추출하는 기능도 추가합니다.</p>
+
+    <!-- SVG: 완성 프로그램 구조 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 100" style="max-width:460px;width:100%">
+            <defs>
+                <marker id="arwFin" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="5" y="30" width="100" height="40" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="55" y="48" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">encrypt_char()</text>
+            <text x="55" y="62" text-anchor="middle" font-size="8" fill="#64748b">단일 문자</text>
+            <line x1="108" y1="50" x2="128" y2="50" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwFin)"/>
+            <rect x="131" y="15" width="120" height="70" rx="8" fill="#1e3a5f"/>
+            <text x="191" y="40" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">caesar_cipher.py</text>
+            <text x="191" y="55" text-anchor="middle" font-size="8" fill="#93c5fd">encrypt()</text>
+            <text x="191" y="68" text-anchor="middle" font-size="8" fill="#93c5fd">decrypt()</text>
+            <text x="191" y="79" text-anchor="middle" font-size="8" fill="#64748b">main()</text>
+            <line x1="254" y1="50" x2="274" y2="50" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwFin)"/>
+            <rect x="277" y="30" width="100" height="40" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="327" y="48" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">결과 출력</text>
+            <text x="327" y="62" text-anchor="middle" font-size="8" fill="#64748b">f-string 포맷</text>
+            <!-- 위: decrypt -->
+            <rect x="5" y="5" width="100" height="22" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.2"/>
+            <text x="55" y="20" text-anchor="middle" font-size="8" fill="#92400e" font-weight="700">decrypt()</text>
+            <line x1="108" y1="16" x2="149" y2="30" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#arwFin)"/>
+            <!-- 아래: 슬라이싱 -->
+            <rect x="5" y="75" width="100" height="22" rx="6" fill="#eff6ff" stroke="#6366f1" stroke-width="1.2"/>
+            <text x="55" y="90" text-anchor="middle" font-size="8" fill="#4338ca" font-weight="700">슬라이싱 활용</text>
+            <line x1="108" y1="86" x2="149" y2="72" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#arwFin)"/>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># caesar_cipher.py — 완성 프로그램</span>
+
+<span class="kw">def</span> <span class="fn">encrypt_char</span>(c, shift):
+    <span class="kw">if</span> c.<span class="fn">isalpha</span>():
+        base = <span class="fn">ord</span>(<span class="str">'A'</span>) <span class="kw">if</span> c.<span class="fn">isupper</span>() <span class="kw">else</span> <span class="fn">ord</span>(<span class="str">'a'</span>)
+        <span class="kw">return</span> <span class="fn">chr</span>(base + (<span class="fn">ord</span>(c) - base + shift) % <span class="num">26</span>)
+    <span class="kw">return</span> c
+
+<span class="kw">def</span> <span class="fn">encrypt</span>(text, shift):
+    <span class="kw">return</span> <span class="str">""</span>.<span class="fn">join</span>([<span class="fn">encrypt_char</span>(c, shift) <span class="kw">for</span> c <span class="kw">in</span> text])
+
+<span class="kw">def</span> <span class="fn">decrypt</span>(text, shift):
+    <span class="kw">return</span> <span class="fn">encrypt</span>(text, <span class="num">26</span> - shift)
+
+<span class="kw">def</span> <span class="fn">main</span>():
+    messages = [<span class="str">"Attack at dawn"</span>, <span class="str">"Python 3.12"</span>, <span class="str">"Hello, World!"</span>]
+    shift = <span class="num">7</span>
+    <span class="fn">print</span>(<span class="str">f"=== 시저 암호 (shift={shift}) ===\n"</span>)
+    <span class="kw">for</span> msg <span class="kw">in</span> messages:
+        enc = <span class="fn">encrypt</span>(msg, shift)
+        dec = <span class="fn">decrypt</span>(enc, shift)
+        <span class="cmt"># 슬라이싱: 암호문 앞 5글자만 미리보기</span>
+        preview = enc[:<span class="num">5</span>]
+        <span class="fn">print</span>(<span class="str">f"원문:    {msg}"</span>)
+        <span class="fn">print</span>(<span class="str">f"암호화:  {enc}  (미리보기: {preview}...)"</span>)
+        <span class="fn">print</span>(<span class="str">f"복호화:  {dec}\n"</span>)
+
+<span class="fn">main</span>()</div>
+
+    <div class="output-box">=== 시저 암호 (shift=7) ===
+
+원문:    Attack at dawn
+암호화:  Haahje ha khdu  (미리보기: Haahj...)
+복호화:  Attack at dawn
+
+원문:    Python 3.12
+암호화:  Wfaovu 3.12  (미리보기: Wfaov...)
+복호화:  Python 3.12</div>
+
+    <!-- 문제 1 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">1</div>
+            <div class="problem-label">Q1. 브루트포스 복호화</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">shift를 모르는 암호문을 복호화하려면 0~25까지 모두 시도하면 됩니다. <code>for</code> 반복문으로 26가지 후보를 출력하는 <code>brute_force(text)</code>를 작성하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">입력</span><span class="problem-example-value">"Khoor"</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">shift 3: Hello (26줄 중 하나)</span></div>
+            </div>
+        </div>
+        <div class="problem-toggle">
+            <details>
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text"><code>for shift in range(26):</code>로 0부터 25까지 반복하고, 각 shift로 <code>decrypt(text, shift)</code>를 호출해 결과를 출력하세요.</div>
+                </div>
+            </details>
+            <details>
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code">def brute_force(text):
+    for shift in range(26):
+        candidate = decrypt(text, shift)
+        print(f"shift {shift:2d}: {candidate}")
+
+brute_force("Khoor")</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <!-- 문제 2 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">2</div>
+            <div class="problem-label">Q2. 슬라이싱으로 암호 메시지 조립</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">두 문자열의 짝수 인덱스와 홀수 인덱스를 각각 다른 shift로 암호화해 합치는 <code>double_encrypt(text, s1, s2)</code>를 작성하세요. 슬라이싱 <code>[::2]</code>와 <code>[1::2]</code>를 활용합니다.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">입력</span><span class="problem-example-value">"HELLO", s1=3, s2=7</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">짝수위치</span><span class="problem-example-value">HLO (인덱스 0,2,4)</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">홀수위치</span><span class="problem-example-value">EL (인덱스 1,3)</span></div>
+            </div>
+        </div>
+        <div class="problem-toggle">
+            <details>
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text"><code>text[::2]</code>는 짝수 인덱스 문자, <code>text[1::2]</code>는 홀수 인덱스 문자를 추출합니다. 각각 다른 shift로 암호화 후 합치세요.</div>
+                </div>
+            </details>
+            <details>
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code">def double_encrypt(text, s1, s2):
+    evens = encrypt(text[::2], s1)
+    odds  = encrypt(text[1::2], s2)
+    return evens + " | " + odds
+
+print(double_encrypt("HELLO", 3, 7))</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <!-- 문제 3 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">3</div>
+            <div class="problem-label">Q3. 단어별 다른 shift 암호화</div>
+            <span class="problem-diff hard">어려움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">문장을 단어로 분리한 뒤, 각 단어에 단어 위치 번호를 shift로 적용해 암호화하는 <code>word_cipher(text)</code>를 작성하세요. 첫 번째 단어는 shift 1, 두 번째는 shift 2, ...</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">입력</span><span class="problem-example-value">"Hello World Python"</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">"Ifmmp Yqtnf Sbwkrq"</span></div>
+            </div>
+        </div>
+        <div class="problem-toggle">
+            <details>
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text"><code>enumerate(text.split())</code>로 단어와 인덱스를 함께 꺼낸 뒤 <code>encrypt(word, i+1)</code>를 적용하세요. 결과를 <code>" ".join()</code>으로 합칩니다.</div>
+                </div>
+            </details>
+            <details>
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code">def word_cipher(text):
+    words = text.split()
+    result = [encrypt(w, i+1)
+              for i, w in enumerate(words)]
+    return " ".join(result)
+
+print(word_cipher("Hello World Python"))</div>
+                </div>
+            </details>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ 5페이지: 핵심 요약 ═══ -->
+<div class="page">
+    <h2>핵심 요약 — 시저 암호 완성</h2>
+
+    <!-- SVG: chr/ord 핵심 공식 시각화 -->
+    <div style="text-align:center;margin:18px 0;">
+        <svg viewBox="0 0 460 110" style="max-width:460px;width:100%">
+            <text x="230" y="14" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">시저 암호 핵심 공식</text>
+            <!-- 암호화 공식 -->
+            <rect x="5" y="20" width="450" height="40" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="230" y="38" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">암호화: chr(base + (ord(c) - base + shift) % 26)</text>
+            <text x="230" y="52" text-anchor="middle" font-size="8" fill="#64748b">base = ord('A') 또는 ord('a')  |  % 26 으로 Z 이후 A로 순환</text>
+            <!-- 복호화 공식 -->
+            <rect x="5" y="68" width="450" height="36" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="230" y="85" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">복호화: encrypt(text, 26 - shift)</text>
+            <text x="230" y="98" text-anchor="middle" font-size="8" fill="#64748b">-shift == 26 - shift (mod 26)  |  동일한 함수를 재사용</text>
+        </svg>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>핵심 요약</h3>
+        <ul>
+            <li><code>ord(c)</code> — 문자 c의 아스키 코드(정수)를 반환. <code>ord('A')</code>=65, <code>ord('a')</code>=97.</li>
+            <li><code>chr(n)</code> — 정수 n에 해당하는 문자를 반환. <code>chr(65)</code>='A'.</li>
+            <li><code>% 26</code> — 나머지 연산으로 0~25 범위로 순환. Z 다음이 A가 되도록 함.</li>
+            <li><code>c.isupper()</code> — 대문자면 True. 대소문자를 구별해 base 값을 선택.</li>
+            <li><code>c.isalpha()</code> — 알파벳이면 True. 숫자, 공백, 구두점은 그대로 유지.</li>
+            <li><code>s[::2]</code> — 짝수 인덱스만 추출. <code>s[1::2]</code>는 홀수 인덱스. 슬라이싱 step 활용.</li>
+            <li><code>"".join(list)</code> — 문자 리스트를 하나의 문자열로 조립.</li>
+        </ul>
+    </div>
+
+    <!-- SVG: 아스키 코드 표 (주요 영역) -->
+    <div style="text-align:center;margin:18px 0;">
+        <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+            <text x="230" y="12" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">주요 아스키 코드 참조</text>
+            <!-- 대문자 영역 -->
+            <rect x="5" y="20" width="140" height="52" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="75" y="36" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">대문자 A~Z</text>
+            <text x="75" y="50" text-anchor="middle" font-size="8" fill="#374151">65 ~ 90</text>
+            <text x="75" y="64" text-anchor="middle" font-size="8" fill="#64748b">ord('A')=65, ord('Z')=90</text>
+            <!-- 소문자 영역 -->
+            <rect x="160" y="20" width="140" height="52" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="230" y="36" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">소문자 a~z</text>
+            <text x="230" y="50" text-anchor="middle" font-size="8" fill="#374151">97 ~ 122</text>
+            <text x="230" y="64" text-anchor="middle" font-size="8" fill="#64748b">ord('a')=97, ord('z')=122</text>
+            <!-- 숫자 영역 -->
+            <rect x="315" y="20" width="140" height="52" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="385" y="36" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">숫자 0~9</text>
+            <text x="385" y="50" text-anchor="middle" font-size="8" fill="#374151">48 ~ 57</text>
+            <text x="385" y="64" text-anchor="middle" font-size="8" fill="#64748b">암호화에서 제외됨</text>
+        </svg>
+    </div>
+
+    <!-- SVG: 슬라이싱 step 정리 -->
+    <div style="text-align:center;margin:18px 0;">
+        <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+            <text x="230" y="12" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">슬라이싱 step 활용 정리</text>
+            <rect x="5" y="20" width="140" height="52" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="75" y="36" text-anchor="middle" font-size="9" fill="#374151" font-weight="700">s[::2]</text>
+            <text x="75" y="50" text-anchor="middle" font-size="8" fill="#64748b">짝수 인덱스 (0,2,4...)</text>
+            <text x="75" y="64" text-anchor="middle" font-size="8" fill="#94a3b8">"HELLO" → "HLO"</text>
+            <rect x="160" y="20" width="140" height="52" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="36" text-anchor="middle" font-size="9" fill="#374151" font-weight="700">s[1::2]</text>
+            <text x="230" y="50" text-anchor="middle" font-size="8" fill="#64748b">홀수 인덱스 (1,3,5...)</text>
+            <text x="230" y="64" text-anchor="middle" font-size="8" fill="#94a3b8">"HELLO" → "EL"</text>
+            <rect x="315" y="20" width="140" height="52" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="385" y="36" text-anchor="middle" font-size="9" fill="#374151" font-weight="700">s[::-1]</text>
+            <text x="385" y="50" text-anchor="middle" font-size="8" fill="#64748b">전체 역순</text>
+            <text x="385" y="64" text-anchor="middle" font-size="8" fill="#94a3b8">"HELLO" → "OLLEH"</text>
+        </svg>
+    </div>
+
+    <div class="step-box">
+        <div class="step-label">확장 아이디어</div>
+        <div class="step-title">더 나아가기</div>
+        <ul>
+            <li>시저 암호는 shift가 26가지뿐이라 브루트포스로 쉽게 해독됩니다. 키워드 기반 비즈네르 암호로 발전시킬 수 있습니다.</li>
+            <li>파일에서 텍스트를 읽어 암호화하고, 다른 파일에 저장하는 기능을 추가할 수 있습니다.</li>
+            <li>알파벳 빈도 분석(E가 가장 많이 나옴)으로 shift 없이도 복호화할 수 있습니다.</li>
+        </ul>
+    </div>
+
+    <!-- SVG: 암호화 단계 요약 -->
+    <div style="text-align:center;margin:18px 0;">
+        <svg viewBox="0 0 460 72" style="max-width:460px;width:100%">
+            <text x="230" y="12" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">encrypt_char 단계별 계산 예시 — 'H' + shift 3</text>
+            <rect x="5" y="20" width="86" height="44" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="48" y="37" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">ord('H')</text>
+            <text x="48" y="52" text-anchor="middle" font-size="9" fill="#374151">= 72</text>
+            <text x="101" y="45" text-anchor="middle" font-size="8" fill="#94a3b8">-65</text>
+            <rect x="108" y="20" width="86" height="44" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="151" y="37" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">72-65=7</text>
+            <text x="151" y="52" text-anchor="middle" font-size="9" fill="#374151">+3 = 10</text>
+            <text x="204" y="45" text-anchor="middle" font-size="8" fill="#94a3b8">%26</text>
+            <rect x="211" y="20" width="86" height="44" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="254" y="37" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">10 % 26</text>
+            <text x="254" y="52" text-anchor="middle" font-size="9" fill="#374151">= 10</text>
+            <text x="307" y="45" text-anchor="middle" font-size="8" fill="#94a3b8">+65</text>
+            <rect x="314" y="20" width="86" height="44" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="357" y="37" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">chr(75)</text>
+            <text x="357" y="52" text-anchor="middle" font-size="9" fill="#166534">= 'K'</text>
+            <text x="415" y="42" text-anchor="middle" font-size="9" fill="#374151">H → K</text>
+        </svg>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 동전 던지기 시뮬레이터</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+.page { width: 210mm; min-height: 297mm; margin: 16px auto; padding: 18mm 20mm 15mm 22mm; background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: relative; page-break-after: always; }
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after { content: counter(pagenum); position: absolute; bottom: 10mm; right: 16mm; font-size: 10px; color: #94a3b8; font-weight: 600; }
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark { position: absolute; top: -10px; right: -15px; font-size: 220px; font-weight: 900; color: rgba(180,195,212,0.3); line-height: 1; pointer-events: none; }
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #2563eb; font-weight: 600; }
+.code { background: #0f172a; border-radius: 8px; padding: 16px 20px; font-family: 'JetBrains Mono', monospace; font-size: 14px; color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap; }
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; white-space: pre-wrap; }
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- 1페이지: 표지 -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">COIN</div>
+        <div class="cover-label">Project 05</div>
+        <h1 class="cover-title">동전 던지기 시뮬레이터</h1>
+        <p class="cover-sub">random 모듈로 동전 앞/뒤를 시뮬레이션하고 통계를 냅니다.</p>
+        <!-- SVG 1: 로드맵 -->
+        <div style="margin:20px 0;">
+            <svg viewBox="0 0 460 55" style="max-width:460px;width:100%">
+                <rect x="5" y="10" width="100" height="30" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="55" y="30" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">random 임포트</text>
+                <line x1="110" y1="25" x2="125" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="130" y="10" width="90" height="30" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="175" y="30" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">randint(0,1)</text>
+                <line x1="225" y1="25" x2="240" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="245" y="10" width="90" height="30" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="290" y="30" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">while 반복</text>
+                <line x1="340" y1="25" x2="355" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="360" y="10" width="95" height="30" rx="6" fill="#eff6ff" stroke="#6366f1" stroke-width="1.5"/>
+                <text x="407" y="30" text-anchor="middle" font-size="9" fill="#4338ca" font-weight="700">앞/뒤 통계</text>
+            </svg>
+        </div>
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/gamepad.png" alt="게임" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 프로젝트에서 배우는 것</h3>
+            <ul>
+                <li>random 모듈을 import해서 사용할 수 있습니다.</li>
+                <li>random.randint(0, 1)로 0 또는 1을 무작위로 뽑을 수 있습니다.</li>
+                <li>while 반복문으로 N번 반복 실행할 수 있습니다.</li>
+                <li>카운터 변수로 앞면/뒷면 횟수를 셀 수 있습니다.</li>
+                <li>시뮬레이션 결과로 확률 통계를 계산할 수 있습니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- 2페이지: random 모듈 -->
+<div class="page">
+    <h2>random 모듈 사용하기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="우승" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>파이썬의 <code>random</code> 모듈을 가져오면 난수(무작위 수)를 생성할 수 있습니다. <code>import random</code> 한 줄로 불러옵니다.</p>
+
+    <!-- SVG 2: import 설명 -->
+    <div style="text-align:center;margin:20px 0;">
+        <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+            <rect x="10" y="10" width="440" height="60" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="30" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="800">import — 외부 기능 가져오기</text>
+            <text x="50" y="55" font-family="monospace" font-size="12" fill="#c084fc" font-weight="700">import</text>
+            <text x="115" y="55" font-family="monospace" font-size="12" fill="#67e8f9"> random</text>
+            <text x="230" y="55" font-family="monospace" font-size="10" fill="#64748b">→ random 모듈의 모든 함수 사용 가능</text>
+        </svg>
+    </div>
+
+    <!-- SVG 3: randint 설명 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 90" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="80" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="24" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="800">randint(a, b) — a이상 b이하 정수</text>
+            <rect x="30" y="32" width="185" height="44" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="122" y="52" text-anchor="middle" font-family="monospace" font-size="11" fill="#1d4ed8" font-weight="700">randint(0, 1)</text>
+            <text x="122" y="68" text-anchor="middle" font-size="9" fill="#64748b">0 또는 1 (동전: 앞/뒤)</text>
+            <rect x="245" y="32" width="185" height="44" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1"/>
+            <text x="337" y="52" text-anchor="middle" font-family="monospace" font-size="11" fill="#92400e" font-weight="700">randint(1, 6)</text>
+            <text x="337" y="68" text-anchor="middle" font-size="9" fill="#64748b">1~6 (주사위)</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">import</span> random
+
+<span class="cmt"># 동전 한 번 던지기</span>
+result = random.randint(<span class="num">0</span>, <span class="num">1</span>)
+
+<span class="kw">if</span> result == <span class="num">0</span>:
+    <span class="fn">print</span>(<span class="str">"앞면!"</span>)
+<span class="kw">else</span>:
+    <span class="fn">print</span>(<span class="str">"뒷면!"</span>)</div>
+
+    <p>실행할 때마다 다른 결과가 나옵니다. 이게 바로 시뮬레이션의 매력입니다.</p>
+
+    <!-- SVG 4: 여러 번 실행 결과 예시 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 60" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="50" rx="8" fill="#0f172a"/>
+            <text x="30" y="25" font-family="monospace" font-size="10" fill="#94a3b8">1회: <tspan fill="#86efac">앞면!</tspan>  2회: <tspan fill="#fcd34d">뒷면!</tspan>  3회: <tspan fill="#86efac">앞면!</tspan>  4회: <tspan fill="#86efac">앞면!</tspan>  5회: <tspan fill="#fcd34d">뒷면!</tspan></text>
+            <text x="30" y="46" font-family="monospace" font-size="10" fill="#64748b">실행할 때마다 순서가 달라집니다</text>
+        </svg>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">random을 import하고 동전을 한 번 던져보세요.</div>
+                <div class="code"><span class="kw">import</span> random
+r = random.randint(<span class="num">0</span>, <span class="num">1</span>)
+<span class="fn">print</span>(<span class="str">"앞면"</span> <span class="kw">if</span> r == <span class="num">0</span> <span class="kw">else</span> <span class="str">"뒷면"</span>)</div>
+                <div class="practice-result">앞면 또는 뒷면이 무작위로 출력됩니다</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">주사위도 만들어보세요. 1~6 사이 숫자를 뽑습니다.</div>
+                <div class="code"><span class="kw">import</span> random
+dice = random.randint(<span class="num">1</span>, <span class="num">6</span>)
+<span class="fn">print</span>(<span class="str">f"주사위: {dice}"</span>)</div>
+                <div class="practice-result">1에서 6 사이 숫자가 무작위로 나옵니다</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">random.choice()로 리스트에서 무작위 선택을 해보세요.</div>
+                <div class="code"><span class="kw">import</span> random
+options = [<span class="str">"가위"</span>, <span class="str">"바위"</span>, <span class="str">"보"</span>]
+pick = random.choice(options)
+<span class="fn">print</span>(<span class="str">f"컴퓨터 선택: {pick}"</span>)</div>
+                <div class="practice-result">가위, 바위, 보 중 하나가 무작위로 선택됩니다</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3페이지: while 반복 + 통계 -->
+<div class="page">
+    <h2>while로 N번 던지기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/flowchart.png" alt="게임 흐름" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p><code>while</code> 반복문으로 동전을 N번 던지고 앞면/뒷면 횟수를 카운터 변수로 셉니다.</p>
+
+    <!-- SVG 5: while 흐름도 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 110" style="max-width:460px;width:100%">
+            <rect x="175" y="5" width="110" height="28" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="230" y="24" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">i = 0 시작</text>
+            <line x1="230" y1="33" x2="230" y2="48" stroke="#94a3b8" stroke-width="1.5"/>
+            <polygon points="200,48 260,48 230,65" fill="#f59e0b"/>
+            <text x="230" y="60" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">i &lt; N?</text>
+            <line x1="200" y1="57" x2="100" y2="57" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="155" y="52" text-anchor="middle" font-size="9" fill="#22c55e">True</text>
+            <rect x="20" y="45" width="75" height="28" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="57" y="63" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">동전 던지기</text>
+            <line x1="57" y1="73" x2="57" y2="95" stroke="#94a3b8" stroke-width="1.5"/>
+            <rect x="20" y="95" width="75" height="20" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="57" y="109" text-anchor="middle" font-size="8" fill="#166534">i += 1</text>
+            <line x1="260" y1="57" x2="380" y2="57" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="315" y="52" text-anchor="middle" font-size="9" fill="#ef4444">False</text>
+            <rect x="340" y="45" width="100" height="28" rx="6" fill="#fff4f4" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="390" y="63" text-anchor="middle" font-size="9" fill="#dc2626" font-weight="700">통계 출력</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">import</span> random
+
+n = <span class="fn">int</span>(<span class="fn">input</span>(<span class="str">"동전을 몇 번 던질까요? "</span>))
+
+heads = <span class="num">0</span>   <span class="cmt"># 앞면 카운터</span>
+tails = <span class="num">0</span>   <span class="cmt"># 뒷면 카운터</span>
+i = <span class="num">0</span>
+
+<span class="kw">while</span> i < n:
+    result = random.randint(<span class="num">0</span>, <span class="num">1</span>)
+    <span class="kw">if</span> result == <span class="num">0</span>:
+        heads += <span class="num">1</span>
+        <span class="fn">print</span>(<span class="str">f"던지기 {i+1}: 앞면"</span>)
+    <span class="kw">else</span>:
+        tails += <span class="num">1</span>
+        <span class="fn">print</span>(<span class="str">f"던지기 {i+1}: 뒷면"</span>)
+    i += <span class="num">1</span>
+
+<span class="fn">print</span>(<span class="str">f"\n결과: 앞면 {heads}회 / 뒷면 {tails}회"</span>)
+<span class="fn">print</span>(<span class="str">f"앞면 확률: {heads/n*100:.1f}%"</span>)</div>
+
+    <!-- SVG 6: 실행 예시 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 380 130" style="max-width:380px;width:100%">
+            <rect x="10" y="5" width="360" height="120" rx="8" fill="#0f172a"/>
+            <text x="20" y="24" font-family="monospace" font-size="10" fill="#94a3b8">동전을 몇 번 던질까요? <tspan fill="#86efac">5</tspan></text>
+            <text x="20" y="42" font-family="monospace" font-size="10" fill="#e2e8f0">던지기 1: <tspan fill="#7dd3fc">앞면</tspan></text>
+            <text x="20" y="58" font-family="monospace" font-size="10" fill="#e2e8f0">던지기 2: <tspan fill="#fcd34d">뒷면</tspan></text>
+            <text x="20" y="74" font-family="monospace" font-size="10" fill="#e2e8f0">던지기 3: <tspan fill="#7dd3fc">앞면</tspan>  ...  던지기 5: <tspan fill="#7dd3fc">앞면</tspan></text>
+            <line x1="20" y1="82" x2="360" y2="82" stroke="#334155" stroke-width="0.5"/>
+            <text x="20" y="100" font-family="monospace" font-size="10" fill="#e2e8f0">결과: 앞면 3회 / 뒷면 2회</text>
+            <text x="20" y="118" font-family="monospace" font-size="10" fill="#86efac">앞면 확률: 60.0%</text>
+        </svg>
+    </div>
+
+    <!-- SVG 7: += 연산자 설명 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 55" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="45" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="24" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="800">+= 단축 연산자</text>
+            <text x="60" y="44" text-anchor="middle" font-family="monospace" font-size="11" fill="#c084fc">heads += 1</text>
+            <text x="180" y="44" text-anchor="middle" font-size="10" fill="#64748b">는</text>
+            <text x="310" y="44" text-anchor="middle" font-family="monospace" font-size="11" fill="#86efac">heads = heads + 1</text>
+            <text x="440" y="44" text-anchor="middle" font-size="10" fill="#64748b">과 같음</text>
+        </svg>
+    </div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">동전을 10번 던져서 앞면/뒷면 횟수를 세어보세요.</div>
+                <div class="code"><span class="kw">import</span> random
+heads = tails = <span class="num">0</span>
+i = <span class="num">0</span>
+<span class="kw">while</span> i < <span class="num">10</span>:
+    <span class="kw">if</span> random.randint(<span class="num">0</span>, <span class="num">1</span>) == <span class="num">0</span>:
+        heads += <span class="num">1</span>
+    <span class="kw">else</span>:
+        tails += <span class="num">1</span>
+    i += <span class="num">1</span>
+<span class="fn">print</span>(<span class="str">f"앞:{heads} / 뒤:{tails}"</span>)</div>
+                <div class="practice-result">10번의 결과가 합산됩니다</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">100번 던졌을 때 앞면 비율이 50%에 가까운지 확인하세요.</div>
+                <div class="code"><span class="kw">import</span> random
+heads = <span class="num">0</span>
+i = <span class="num">0</span>
+<span class="kw">while</span> i < <span class="num">100</span>:
+    <span class="kw">if</span> random.randint(<span class="num">0</span>, <span class="num">1</span>) == <span class="num">0</span>:
+        heads += <span class="num">1</span>
+    i += <span class="num">1</span>
+<span class="fn">print</span>(<span class="str">f"앞면 비율: {heads}%"</span>)</div>
+                <div class="practice-result">많이 던질수록 50%에 가까워집니다</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">던진 횟수를 input()으로 받아 결과를 출력하세요.</div>
+                <div class="code"><span class="kw">import</span> random
+n = <span class="fn">int</span>(<span class="fn">input</span>(<span class="str">"몇 번? "</span>))
+heads = tails = <span class="num">0</span>
+i = <span class="num">0</span>
+<span class="kw">while</span> i < n:
+    <span class="kw">if</span> random.randint(<span class="num">0</span>,<span class="num">1</span>) == <span class="num">0</span>: heads += <span class="num">1</span>
+    <span class="kw">else</span>: tails += <span class="num">1</span>
+    i += <span class="num">1</span>
+<span class="fn">print</span>(<span class="str">f"앞:{heads}회 뒤:{tails}회 ({heads/n*100:.1f}%)"</span>)</div>
+                <div class="practice-result">원하는 횟수만큼 시뮬레이션할 수 있습니다</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 4페이지: 문제 -->
+<div class="page">
+    <h2>직접 풀어보세요</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q1</div>
+            <div class="problem-label">주사위 한 번 던지기</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">random.randint()로 1~6 주사위를 던지고, 6이 나오면 "대박!" 아니면 숫자를 출력하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">주사위: 6 — 대박! 또는 주사위: 3</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle"><summary>힌트 보기</summary><div class="problem-toggle-content"><div class="hint-text">dice = random.randint(1, 6), if dice == 6으로 판정</div></div></details>
+        <details class="problem-toggle"><summary>정답 확인</summary><div class="problem-toggle-content"><div class="answer-code">import random
+dice = random.randint(1, 6)
+if dice == 6:
+    print(f"주사위: {dice} — 대박!")
+else:
+    print(f"주사위: {dice}")</div></div></details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q2</div>
+            <div class="problem-label">동전 N번 던져서 통계</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">동전을 20번 던져서 앞면 횟수와 앞면 비율(%)을 출력하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">앞면: 11회 (55.0%)</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle"><summary>힌트 보기</summary><div class="problem-toggle-content"><div class="hint-text">while i &lt; 20 반복, heads += 1 카운터, heads/20*100으로 비율 계산</div></div></details>
+        <details class="problem-toggle"><summary>정답 확인</summary><div class="problem-toggle-content"><div class="answer-code">import random
+heads = 0
+i = 0
+while i < 20:
+    if random.randint(0, 1) == 0:
+        heads += 1
+    i += 1
+print(f"앞면: {heads}회 ({heads/20*100:.1f}%)")</div></div></details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q3</div>
+            <div class="problem-label">횟수 입력받아 통계 완성</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">던질 횟수를 input()으로 받아 앞면/뒷면 횟수와 각각의 비율을 출력하는 완성 프로그램을 만드세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">입력</span><span class="problem-example-value">50</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">앞면: 27회(54.0%) / 뒷면: 23회(46.0%)</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle"><summary>힌트 보기</summary><div class="problem-toggle-content"><div class="hint-text">n = int(input()), while 반복, heads와 tails 두 카운터, n으로 나눠서 비율 계산</div></div></details>
+        <details class="problem-toggle"><summary>정답 확인</summary><div class="problem-toggle-content"><div class="answer-code">import random
+n = int(input("몇 번 던질까요? "))
+heads = tails = 0
+i = 0
+while i < n:
+    if random.randint(0, 1) == 0:
+        heads += 1
+    else:
+        tails += 1
+    i += 1
+print(f"앞면: {heads}회({heads/n*100:.1f}%) / 뒷면: {tails}회({tails/n*100:.1f}%)")</div></div></details>
+    </div>
+</div>
+
+<!-- 5페이지: 핵심 요약 -->
+<div class="page">
+    <h2>핵심 요약</h2>
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/lightbulb.png" alt="아이디어" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>이 유닛에서 배운 것</h3>
+        <ul>
+            <li><code>import random</code>으로 random 모듈을 불러온다</li>
+            <li><code>random.randint(a, b)</code>는 a이상 b이하의 정수를 무작위로 반환한다</li>
+            <li><code>random.choice(리스트)</code>는 리스트에서 무작위로 하나를 뽑는다</li>
+            <li><code>while i &lt; n</code>으로 n번 반복하고 반복할 때마다 <code>i += 1</code></li>
+            <li><code>카운터 += 1</code>로 조건에 맞는 횟수를 누적한다</li>
+            <li>비율 = 앞면 횟수 / 전체 횟수 * 100</li>
+        </ul>
+    </div>
+
+    <!-- SVG 8: while 반복 구조 -->
+    <div style="text-align:center;margin:20px 0;">
+        <svg viewBox="0 0 460 70" style="max-width:460px;width:100%">
+            <rect x="5" y="5" width="450" height="60" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="24" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="800">while 반복 패턴</text>
+            <text x="30" y="48" font-family="monospace" font-size="10" fill="#c084fc">i</text>
+            <text x="44" y="48" font-family="monospace" font-size="10" fill="#e2e8f0"> = 0   </text>
+            <text x="105" y="48" font-family="monospace" font-size="10" fill="#c084fc">while</text>
+            <text x="148" y="48" font-family="monospace" font-size="10" fill="#e2e8f0"> i &lt; n:  (작업)  </text>
+            <text x="320" y="48" font-family="monospace" font-size="10" fill="#c084fc">i</text>
+            <text x="334" y="48" font-family="monospace" font-size="10" fill="#e2e8f0"> += 1</text>
+            <text x="30" y="62" font-family="monospace" font-size="9" fill="#64748b">시작      조건확인        반복 내용         증가</text>
+        </svg>
+    </div>
+
+    <!-- SVG 9: random 함수 정리 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 70" style="max-width:460px;width:100%">
+            <rect x="5" y="5" width="450" height="60" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="24" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="800">random 주요 함수</text>
+            <text x="30" y="48" font-family="monospace" font-size="10" fill="#67e8f9">randint</text>
+            <text x="90" y="48" font-family="monospace" font-size="10" fill="#e2e8f0">(0,1)  정수 범위 랜덤    |  </text>
+            <text x="285" y="48" font-family="monospace" font-size="10" fill="#67e8f9">choice</text>
+            <text x="340" y="48" font-family="monospace" font-size="10" fill="#e2e8f0">([...])  리스트 랜덤</text>
+        </svg>
+    </div>
+
+    <!-- SVG 10: 카운터 패턴 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 60" style="max-width:460px;width:100%">
+            <rect x="5" y="5" width="450" height="50" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="24" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="800">카운터 패턴</text>
+            <text x="30" y="46" font-family="monospace" font-size="10" fill="#e2e8f0">count = 0   →   (조건이면) count += 1   →   최종 count 출력</text>
+        </svg>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

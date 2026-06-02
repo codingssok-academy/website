@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 프로젝트: 숫자 야구 게임</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+/* -- 페이지 -- */
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+/* -- 챕터 표지 -- */
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+
+/* -- 본문 -- */
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 16px; font-weight: 700; color: #1e3a5f; margin: 18px 0 10px; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+ul, ol { margin: 0 0 12px 20px; }
+li { font-size: 14px; color: #374151; line-height: 1.8; }
+
+/* -- 코드 블록 -- */
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13.5px;
+    color: #e2e8f0; line-height: 1.85; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.code .dec { color: #f9a8d4; }
+
+/* -- 따라해보세요 -- */
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+
+/* -- 문제 -- */
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+
+/* -- 요약 -- */
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+/* -- 단계 박스 -- */
+.step-box { border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 14px 18px; margin: 14px 0; background: #fff; }
+.step-label { font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+.step-title { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 8px; }
+
+/* -- 출력 박스 -- */
+.output-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #334155; line-height: 1.7; margin: 10px 0; }
+
+/* -- 비교 테이블 -- */
+.compare-table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13px; }
+.compare-table th { background: #1e3a5f; color: #fff; padding: 8px 12px; text-align: left; font-weight: 700; }
+.compare-table td { padding: 7px 12px; border-bottom: 1px solid #e2e8f0; color: #374151; }
+.compare-table tr:nth-child(even) td { background: #f8fafc; }
+.compare-table code { background: #e0e7ff; padding: 1px 5px; border-radius: 3px; font-family: 'JetBrains Mono', monospace; color: #3730a3; font-size: 12px; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- 1페이지: 표지 -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">54</div>
+        <div class="cover-label">L3 — Unit 54 Project</div>
+        <h1 class="cover-title">프로젝트:<br>숫자 야구 게임</h1>
+        <p class="cover-sub">random으로 3자리 비밀 숫자를 생성하고, 스트라이크/볼 판정 알고리즘으로 힌트를 제공해 사용자가 정답을 맞히는 과정을 시도 횟수와 함께 기록합니다.</p>
+
+        <!-- SVG: 게임 흐름 구조도 -->
+        <div style="margin:24px 0;">
+            <svg viewBox="0 0 520 180" style="max-width:520px;width:100%">
+                <defs>
+                    <marker id="arwCov" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                    </marker>
+                </defs>
+                <!-- 시작 -->
+                <rect x="5" y="70" width="90" height="36" rx="8" fill="#1e3a5f"/>
+                <text x="50" y="93" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">비밀번호 생성</text>
+                <line x1="98" y1="88" x2="118" y2="88" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+                <!-- 입력 -->
+                <rect x="120" y="70" width="90" height="36" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="165" y="84" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">사용자 추측</text>
+                <text x="165" y="98" text-anchor="middle" font-size="8" fill="#64748b">3자리 입력</text>
+                <line x1="213" y1="88" x2="233" y2="88" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+                <!-- 판정 -->
+                <rect x="235" y="70" width="100" height="36" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="285" y="84" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">S/B 판정</text>
+                <text x="285" y="98" text-anchor="middle" font-size="8" fill="#64748b">스트라이크/볼</text>
+                <!-- 분기 -->
+                <line x1="338" y1="88" x2="358" y2="88" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+                <rect x="360" y="60" width="70" height="30" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="395" y="79" text-anchor="middle" font-size="8" fill="#166534" font-weight="700">3S → 정답!</text>
+                <rect x="360" y="100" width="70" height="30" rx="6" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+                <text x="395" y="119" text-anchor="middle" font-size="8" fill="#991b1b" font-weight="700">아니면 재시도</text>
+                <!-- 루프 화살표 -->
+                <path d="M395,132 Q395,160 165,160 Q165,115 165,109" stroke="#94a3b8" stroke-width="1.2" fill="none" marker-end="url(#arwCov)"/>
+                <!-- 최종 -->
+                <line x1="433" y1="75" x2="458" y2="75" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+                <rect x="460" y="58" width="55" height="56" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="2"/>
+                <text x="487" y="78" text-anchor="middle" font-size="9" fill="#92400e" font-weight="900">시도 횟수</text>
+                <text x="487" y="93" text-anchor="middle" font-size="8" fill="#64748b">기록 출력</text>
+                <!-- 레이블 -->
+                <text x="50" y="120" text-anchor="middle" font-size="7" fill="#64748b">random 사용</text>
+                <text x="285" y="120" text-anchor="middle" font-size="7" fill="#64748b">알고리즘 핵심</text>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/puzzle.png" alt="고급 기능" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 유닛에서 만드는 것</h3>
+            <ul>
+                <li><code>random.sample()</code>로 중복 없는 3자리 숫자를 생성할 수 있습니다.</li>
+                <li>스트라이크(위치+값 일치)와 볼(값만 일치) 판정 알고리즘을 구현할 수 있습니다.</li>
+                <li>사용자 입력을 검증하고 유효하지 않은 입력을 걸러낼 수 있습니다.</li>
+                <li>시도 횟수를 누적 기록하고 게임 종료 시 통계를 출력할 수 있습니다.</li>
+                <li>게임을 반복 실행하는 메인 루프를 구성할 수 있습니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- 2페이지: 비밀번호 생성 + S/B 판정 알고리즘 -->
+<div class="page">
+    <h2>Step 1 — 비밀번호 생성과 입력 검증</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="처리" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>숫자 야구에서 비밀번호는 <strong>1~9까지 중복 없이 3자리</strong>입니다. <code>random.sample()</code>은 리스트에서 중복 없이 원하는 개수만큼 뽑아줍니다.</p>
+
+    <!-- SVG: random.sample 동작 설명 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 100" style="max-width:500px;width:100%">
+            <defs>
+                <marker id="arwS" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="5" y="20" width="200" height="60" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="105" y="38" text-anchor="middle" font-size="10" fill="#374151" font-weight="700">range(1, 10)</text>
+            <text x="105" y="55" text-anchor="middle" font-size="9" fill="#64748b" font-family="monospace">[1, 2, 3, 4, 5, 6, 7, 8, 9]</text>
+            <text x="105" y="72" text-anchor="middle" font-size="8" fill="#94a3b8">9개 숫자 풀</text>
+            <line x1="208" y1="50" x2="235" y2="50" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwS)"/>
+            <rect x="238" y="20" width="140" height="60" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="308" y="38" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">random.sample( , 3)</text>
+            <text x="308" y="55" text-anchor="middle" font-size="9" fill="#374151" font-family="monospace">중복 없이 3개 선택</text>
+            <text x="308" y="72" text-anchor="middle" font-size="8" fill="#64748b">예: [4, 7, 2]</text>
+            <line x1="381" y1="50" x2="405" y2="50" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwS)"/>
+            <rect x="408" y="30" width="80" height="40" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="2"/>
+            <text x="448" y="48" text-anchor="middle" font-size="11" fill="#166534" font-weight="900">472</text>
+            <text x="448" y="62" text-anchor="middle" font-size="8" fill="#64748b">비밀번호</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">import</span> random
+
+<span class="kw">def</span> <span class="fn">generate_secret</span>() -> <span class="fn">list</span>:
+    <span class="str">"""1~9에서 중복 없이 3자리 비밀번호 생성"""</span>
+    <span class="kw">return</span> random.<span class="fn">sample</span>(<span class="fn">range</span>(<span class="num">1</span>, <span class="num">10</span>), <span class="num">3</span>)
+
+<span class="kw">def</span> <span class="fn">validate_input</span>(user_input: <span class="fn">str</span>) -> <span class="fn">list</span> | <span class="fn">None</span>:
+    <span class="str">"""입력 검증 — 3자리 숫자, 중복 없음, 0 없음. 유효하면 list 반환"""</span>
+    <span class="kw">if</span> <span class="fn">len</span>(user_input) != <span class="num">3</span>:
+        <span class="kw">return</span> <span class="num">None</span>
+    <span class="kw">if</span> <span class="kw">not</span> user_input.<span class="fn">isdigit</span>():
+        <span class="kw">return</span> <span class="num">None</span>
+    digits = [<span class="fn">int</span>(c) <span class="kw">for</span> c <span class="kw">in</span> user_input]
+    <span class="kw">if</span> <span class="num">0</span> <span class="kw">in</span> digits:
+        <span class="kw">return</span> <span class="num">None</span>
+    <span class="kw">if</span> <span class="fn">len</span>(<span class="fn">set</span>(digits)) != <span class="num">3</span>:      <span class="cmt"># 중복 체크</span>
+        <span class="kw">return</span> <span class="num">None</span>
+    <span class="kw">return</span> digits</div>
+
+    <!-- SVG: 입력 검증 흐름도 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 110" style="max-width:500px;width:100%">
+            <defs>
+                <marker id="arwV" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="5" y="35" width="70" height="36" rx="6" fill="#1e3a5f"/>
+            <text x="40" y="58" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">문자열 입력</text>
+            <line x1="78" y1="53" x2="98" y2="53" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#arwV)"/>
+            <rect x="100" y="35" width="70" height="36" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="135" y="49" text-anchor="middle" font-size="8" fill="#92400e" font-weight="700">길이 == 3?</text>
+            <text x="135" y="62" text-anchor="middle" font-size="7" fill="#64748b">isdigit?</text>
+            <line x1="173" y1="53" x2="193" y2="53" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#arwV)"/>
+            <rect x="195" y="35" width="70" height="36" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="230" y="49" text-anchor="middle" font-size="8" fill="#92400e" font-weight="700">0 없음?</text>
+            <text x="230" y="62" text-anchor="middle" font-size="7" fill="#64748b">중복 없음?</text>
+            <line x1="268" y1="53" x2="288" y2="53" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#arwV)"/>
+            <rect x="290" y="35" width="80" height="36" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="330" y="49" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">유효한 입력</text>
+            <text x="330" y="63" text-anchor="middle" font-size="8" fill="#64748b">list 반환</text>
+            <!-- 실패 경로 -->
+            <line x1="135" y1="74" x2="135" y2="90" stroke="#ef4444" stroke-width="1.2" marker-end="url(#arwV)"/>
+            <text x="135" y="105" text-anchor="middle" font-size="8" fill="#ef4444">None 반환</text>
+            <line x1="230" y1="74" x2="230" y2="90" stroke="#ef4444" stroke-width="1.2" marker-end="url(#arwV)"/>
+            <text x="230" y="105" text-anchor="middle" font-size="8" fill="#ef4444">None 반환</text>
+        </svg>
+    </div>
+
+    <h3>게임 루프 — 입력 받기</h3>
+    <div class="code"><span class="kw">def</span> <span class="fn">get_guess</span>() -> <span class="fn">list</span>:
+    <span class="str">"""유효한 추측을 받을 때까지 반복 입력"""</span>
+    <span class="kw">while</span> <span class="num">True</span>:
+        raw = <span class="fn">input</span>(<span class="str">"추측 (3자리, 예: 472): "</span>).<span class="fn">strip</span>()
+        digits = <span class="fn">validate_input</span>(raw)
+        <span class="kw">if</span> digits <span class="kw">is not</span> <span class="num">None</span>:
+            <span class="kw">return</span> digits
+        <span class="fn">print</span>(<span class="str">"  잘못된 입력입니다. 1~9에서 중복 없이 3자리를 입력하세요."</span>)</div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="완성" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+        <div class="practice-head">따라해보세요 — Step 1</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc"><code>generate_secret()</code>를 5번 호출하고 매번 다른 숫자가 나오는지 확인하세요.</div>
+                <div class="code"><span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(<span class="num">5</span>):
+    <span class="fn">print</span>(<span class="fn">generate_secret</span>())</div>
+                <div class="practice-result">3개짜리 리스트가 5번 출력되고, 모두 1~9 범위이며 중복 없으면 성공</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc"><code>validate_input()</code>에 여러 값을 넣어 검증 동작을 확인하세요.</div>
+                <div class="code"><span class="fn">print</span>(<span class="fn">validate_input</span>(<span class="str">"472"</span>))   <span class="cmt"># [4, 7, 2]</span>
+<span class="fn">print</span>(<span class="fn">validate_input</span>(<span class="str">"112"</span>))   <span class="cmt"># None (중복)</span>
+<span class="fn">print</span>(<span class="fn">validate_input</span>(<span class="str">"305"</span>))   <span class="cmt"># None (0 포함)</span>
+<span class="fn">print</span>(<span class="fn">validate_input</span>(<span class="str">"12"</span>))    <span class="cmt"># None (2자리)</span></div>
+                <div class="practice-result">첫 번째만 리스트, 나머지는 None이면 성공</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc"><code>set()</code>으로 중복을 제거했을 때 길이가 어떻게 달라지는지 확인하세요.</div>
+                <div class="code">digits_ok = [<span class="num">4</span>, <span class="num">7</span>, <span class="num">2</span>]
+digits_dup = [<span class="num">1</span>, <span class="num">1</span>, <span class="num">2</span>]
+<span class="fn">print</span>(<span class="fn">len</span>(<span class="fn">set</span>(digits_ok)))   <span class="cmt"># 3</span>
+<span class="fn">print</span>(<span class="fn">len</span>(<span class="fn">set</span>(digits_dup)))  <span class="cmt"># 2</span></div>
+                <div class="practice-result">3과 2가 출력되면 중복 체크 원리 이해 성공</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3페이지: 스트라이크/볼 판정 알고리즘 -->
+<div class="page">
+    <h2>Step 2 — 스트라이크/볼 판정 알고리즘</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/database.png" alt="데이터" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>숫자 야구의 핵심은 <strong>스트라이크</strong>(위치와 값 모두 일치)와 <strong>볼</strong>(값은 맞지만 위치가 다름) 판정입니다.</p>
+
+    <!-- SVG: 스트라이크/볼 개념 설명 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 140" style="max-width:500px;width:100%">
+            <!-- 비밀번호 -->
+            <text x="30" y="22" font-size="10" fill="#64748b" font-weight="700">비밀번호</text>
+            <rect x="80" y="8" width="40" height="30" rx="6" fill="#1e3a5f"/>
+            <text x="100" y="28" text-anchor="middle" font-size="14" fill="#fff" font-weight="900">4</text>
+            <rect x="130" y="8" width="40" height="30" rx="6" fill="#1e3a5f"/>
+            <text x="150" y="28" text-anchor="middle" font-size="14" fill="#fff" font-weight="900">7</text>
+            <rect x="180" y="8" width="40" height="30" rx="6" fill="#1e3a5f"/>
+            <text x="200" y="28" text-anchor="middle" font-size="14" fill="#fff" font-weight="900">2</text>
+            <!-- 위치 표시 -->
+            <text x="100" y="50" text-anchor="middle" font-size="8" fill="#94a3b8">위치0</text>
+            <text x="150" y="50" text-anchor="middle" font-size="8" fill="#94a3b8">위치1</text>
+            <text x="200" y="50" text-anchor="middle" font-size="8" fill="#94a3b8">위치2</text>
+            <!-- 추측1: 1S 1B -->
+            <text x="30" y="78" font-size="10" fill="#64748b" font-weight="700">추측 492</text>
+            <rect x="80" y="62" width="40" height="30" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="2"/>
+            <text x="100" y="82" text-anchor="middle" font-size="14" fill="#166534" font-weight="900">4</text>
+            <rect x="130" y="62" width="40" height="30" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="2"/>
+            <text x="150" y="82" text-anchor="middle" font-size="14" fill="#92400e" font-weight="900">9</text>
+            <rect x="180" y="62" width="40" height="30" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+            <text x="200" y="82" text-anchor="middle" font-size="14" fill="#1d4ed8" font-weight="900">2</text>
+            <!-- 판정 표시 -->
+            <text x="100" y="105" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">1 Strike</text>
+            <text x="150" y="105" text-anchor="middle" font-size="9" fill="#ef4444">OUT</text>
+            <text x="200" y="105" text-anchor="middle" font-size="9" fill="#3b82f6" font-weight="700">1 Ball</text>
+            <text x="320" y="78" font-size="11" fill="#1e3a5f" font-weight="700">결과: 1S 1B</text>
+            <text x="320" y="95" font-size="9" fill="#64748b">4: 위치0에 4 일치 → Strike</text>
+            <text x="320" y="110" font-size="9" fill="#64748b">2: 비밀번호에 있지만 위치 다름 → Ball</text>
+            <!-- 추측2: 3S -->
+            <text x="30" y="135" font-size="10" fill="#64748b" font-weight="700">추측 472</text>
+            <rect x="80" y="118" width="40" height="30" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="2"/>
+            <text x="100" y="138" text-anchor="middle" font-size="14" fill="#166534" font-weight="900">4</text>
+            <rect x="130" y="118" width="40" height="30" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="2"/>
+            <text x="150" y="138" text-anchor="middle" font-size="14" fill="#166534" font-weight="900">7</text>
+            <rect x="180" y="118" width="40" height="30" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="2"/>
+            <text x="200" y="138" text-anchor="middle" font-size="14" fill="#166534" font-weight="900">2</text>
+            <text x="320" y="135" font-size="11" fill="#166534" font-weight="700">결과: 3S → 정답!</text>
+        </svg>
+    </div>
+
+    <h3>판정 함수 구현</h3>
+    <div class="code"><span class="kw">def</span> <span class="fn">judge</span>(secret: <span class="fn">list</span>, guess: <span class="fn">list</span>) -> <span class="fn">tuple</span>:
+    <span class="str">"""(strikes, balls) 반환"""</span>
+    strikes = <span class="num">0</span>
+    balls = <span class="num">0</span>
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">3</span>):
+        <span class="kw">if</span> guess[i] == secret[i]:
+            strikes += <span class="num">1</span>          <span class="cmt"># 위치, 값 모두 일치</span>
+        <span class="kw">elif</span> guess[i] <span class="kw">in</span> secret:
+            balls += <span class="num">1</span>            <span class="cmt"># 값만 일치 (위치 다름)</span>
+    <span class="kw">return</span> strikes, balls</div>
+
+    <!-- SVG: judge() 알고리즘 순서도 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 100" style="max-width:500px;width:100%">
+            <defs>
+                <marker id="arwJ" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="5" y="30" width="75" height="36" rx="8" fill="#1e3a5f"/>
+            <text x="42" y="53" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">i = 0,1,2</text>
+            <line x1="83" y1="48" x2="103" y2="48" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#arwJ)"/>
+            <rect x="105" y="30" width="95" height="36" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="152" y="44" text-anchor="middle" font-size="8" fill="#92400e" font-weight="700">guess[i] == secret[i]?</text>
+            <text x="152" y="58" text-anchor="middle" font-size="7" fill="#64748b">위치+값 일치?</text>
+            <!-- Strike -->
+            <line x1="200" y1="35" x2="230" y2="20" stroke="#22c55e" stroke-width="1.2" marker-end="url(#arwJ)"/>
+            <text x="245" y="18" font-size="8" fill="#166534" font-weight="700">YES → strikes +1</text>
+            <!-- 두번째 조건 -->
+            <line x1="200" y1="55" x2="230" y2="60" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#arwJ)"/>
+            <rect x="232" y="46" width="100" height="28" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="282" y="57" text-anchor="middle" font-size="8" fill="#1d4ed8" font-weight="700">guess[i] in secret?</text>
+            <text x="282" y="70" text-anchor="middle" font-size="7" fill="#64748b">값만 일치?</text>
+            <!-- Ball -->
+            <line x1="335" y1="55" x2="360" y2="45" stroke="#3b82f6" stroke-width="1.2" marker-end="url(#arwJ)"/>
+            <text x="365" y="43" font-size="8" fill="#1d4ed8" font-weight="700">YES → balls +1</text>
+            <!-- OUT -->
+            <line x1="335" y1="65" x2="360" y2="75" stroke="#ef4444" stroke-width="1.2" marker-end="url(#arwJ)"/>
+            <text x="365" y="78" font-size="8" fill="#ef4444" font-weight="700">NO → 아웃</text>
+        </svg>
+    </div>
+
+    <h3>시도 횟수 기록</h3>
+    <p><code>attempts</code> 카운터를 게임 루프 밖에서 초기화하고, 매 시도마다 1씩 증가합니다. 게임 종료 시 기록 리스트에 추가해 이전 기록과 비교합니다.</p>
+
+    <div class="code">history = []          <span class="cmt"># 이전 게임 기록 저장</span>
+
+<span class="kw">def</span> <span class="fn">play_game</span>():
+    secret = <span class="fn">generate_secret</span>()
+    attempts = <span class="num">0</span>
+
+    <span class="fn">print</span>(<span class="str">"숫자 야구 시작! (1~9, 중복없는 3자리)"</span>)
+    <span class="kw">while</span> <span class="num">True</span>:
+        guess = <span class="fn">get_guess</span>()
+        attempts += <span class="num">1</span>
+        s, b = <span class="fn">judge</span>(secret, guess)
+        <span class="fn">print</span>(<span class="str">f"  → {s}S {b}B"</span>)
+        <span class="kw">if</span> s == <span class="num">3</span>:
+            <span class="fn">print</span>(<span class="str">f"정답! {attempts}번 만에 맞혔습니다."</span>)
+            history.<span class="fn">append</span>(attempts)
+            <span class="kw">break</span>
+
+    <span class="fn">print</span>(<span class="str">f"기록 목록: {history}"</span>)
+    <span class="fn">print</span>(<span class="str">f"최소 시도: {min(history)}번"</span>)</div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요 — Step 2</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">비밀번호 <code>[4,7,2]</code>에 대해 여러 추측을 판정해 보세요.</div>
+                <div class="code">secret = [<span class="num">4</span>, <span class="num">7</span>, <span class="num">2</span>]
+<span class="fn">print</span>(<span class="fn">judge</span>(secret, [<span class="num">4</span>, <span class="num">7</span>, <span class="num">2</span>]))  <span class="cmt"># (3, 0)</span>
+<span class="fn">print</span>(<span class="fn">judge</span>(secret, [<span class="num">4</span>, <span class="num">9</span>, <span class="num">2</span>]))  <span class="cmt"># (2, 0)</span>
+<span class="fn">print</span>(<span class="fn">judge</span>(secret, [<span class="num">2</span>, <span class="num">4</span>, <span class="num">7</span>]))  <span class="cmt"># (0, 3)</span></div>
+                <div class="practice-result">(3,0), (2,0), (0,3) 순서로 출력되면 성공</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc"><code>judge()</code>에서 <code>elif</code>를 <code>if</code>로 바꾸면 어떤 문제가 생기는지 확인하세요.</div>
+                <div class="code"><span class="cmt"># elif → if 로 변경하면</span>
+<span class="cmt"># 스트라이크가 볼로도 중복 카운트됨</span>
+secret2 = [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>]
+<span class="fn">print</span>(<span class="fn">judge</span>(secret2, [<span class="num">1</span>, <span class="num">3</span>, <span class="num">2</span>]))</div>
+                <div class="practice-result">(1, 2) 가 나오면 elif의 의미를 이해한 것</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc"><code>history</code>에 기록 3개를 수동으로 추가하고 평균 시도 횟수를 출력하세요.</div>
+                <div class="code">history = [<span class="num">7</span>, <span class="num">4</span>, <span class="num">9</span>]
+avg = <span class="fn">sum</span>(history) / <span class="fn">len</span>(history)
+<span class="fn">print</span>(<span class="str">f"평균 시도: {avg:.1f}번"</span>)</div>
+                <div class="practice-result">평균 시도: 6.7번 출력되면 성공</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 4페이지: 완성 코드 + 확장 -->
+<div class="page">
+    <h2>Step 3 — 완성 코드와 통계 출력</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>모든 함수를 조합해 완전한 숫자 야구 게임을 완성합니다. 여러 판을 플레이한 후 최솟값, 최댓값, 평균을 출력합니다.</p>
+
+    <!-- SVG: 완성 프로그램 모듈 구조 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 80" style="max-width:500px;width:100%">
+            <rect x="5" y="5" width="490" height="70" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="250" y="22" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">baseball.py 모듈 구조</text>
+            <rect x="15" y="30" width="88" height="36" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="59" y="48" text-anchor="middle" font-size="8" fill="#1d4ed8" font-weight="700">generate_secret</text>
+            <text x="59" y="61" text-anchor="middle" font-size="7" fill="#64748b">random.sample</text>
+            <rect x="115" y="30" width="88" height="36" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="159" y="48" text-anchor="middle" font-size="8" fill="#166534" font-weight="700">validate_input</text>
+            <text x="159" y="61" text-anchor="middle" font-size="7" fill="#64748b">검증 로직</text>
+            <rect x="215" y="30" width="88" height="36" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="259" y="48" text-anchor="middle" font-size="8" fill="#92400e" font-weight="700">judge</text>
+            <text x="259" y="61" text-anchor="middle" font-size="7" fill="#64748b">S/B 판정</text>
+            <rect x="315" y="30" width="88" height="36" rx="6" fill="#fdf4ff" stroke="#a855f7" stroke-width="1.5"/>
+            <text x="359" y="48" text-anchor="middle" font-size="8" fill="#7e22ce" font-weight="700">play_game</text>
+            <text x="359" y="61" text-anchor="middle" font-size="7" fill="#64748b">게임 루프</text>
+            <rect x="415" y="30" width="72" height="36" rx="6" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="451" y="48" text-anchor="middle" font-size="8" fill="#991b1b" font-weight="700">print_stats</text>
+            <text x="451" y="61" text-anchor="middle" font-size="7" fill="#64748b">통계 출력</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">def</span> <span class="fn">print_stats</span>(history: <span class="fn">list</span>):
+    <span class="str">"""게임 기록 통계 출력"""</span>
+    <span class="kw">if</span> <span class="kw">not</span> history:
+        <span class="fn">print</span>(<span class="str">"기록 없음"</span>)
+        <span class="kw">return</span>
+    <span class="fn">print</span>(<span class="str">f"\n--- 전체 기록 ({len(history)}판) ---"</span>)
+    <span class="fn">print</span>(<span class="str">f"최소: {min(history)}번"</span>)
+    <span class="fn">print</span>(<span class="str">f"최대: {max(history)}번"</span>)
+    <span class="fn">print</span>(<span class="str">f"평균: {sum(history)/len(history):.1f}번"</span>)
+
+<span class="kw">def</span> <span class="fn">main</span>():
+    history = []
+    <span class="kw">while</span> <span class="num">True</span>:
+        <span class="fn">play_game</span>(history)
+        again = <span class="fn">input</span>(<span class="str">"한 판 더? (y/n): "</span>)
+        <span class="kw">if</span> again.<span class="fn">lower</span>() != <span class="str">"y"</span>:
+            <span class="kw">break</span>
+    <span class="fn">print_stats</span>(history)
+
+<span class="kw">if</span> __name__ == <span class="str">"__main__"</span>:
+    <span class="fn">main</span>()</div>
+
+    <!-- SVG: 실행 결과 예시 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 120" style="max-width:500px;width:100%">
+            <rect x="5" y="5" width="490" height="110" rx="8" fill="#0f172a"/>
+            <text x="20" y="28" font-size="9" fill="#64748b" font-family="monospace">$ python baseball.py</text>
+            <text x="20" y="45" font-size="9" fill="#e2e8f0" font-family="monospace">숫자 야구 시작! (1~9, 중복없는 3자리)</text>
+            <text x="20" y="62" font-size="9" fill="#94a3b8" font-family="monospace">추측 (3자리, 예: 472): 123</text>
+            <text x="20" y="78" font-size="9" fill="#86efac" font-family="monospace">  → 1S 1B</text>
+            <text x="20" y="94" font-size="9" fill="#94a3b8" font-family="monospace">추측 (3자리, 예: 472): 145</text>
+            <text x="20" y="110" font-size="9" fill="#86efac" font-family="monospace">  → 3S  정답! 2번 만에 맞혔습니다.</text>
+        </svg>
+    </div>
+
+    <h3>힌트 모드 확장</h3>
+    <p>스트라이크/볼 결과만으로는 어렵다고 느끼는 사용자를 위해 <strong>힌트 모드</strong>를 추가할 수 있습니다. <code>hint_mode=True</code>이면 볼의 실제 숫자를 알려줍니다.</p>
+
+    <!-- SVG: 힌트 모드 분기 구조 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 500 80" style="max-width:500px;width:100%">
+            <defs>
+                <marker id="arwHm" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="160" y="5" width="170" height="32" rx="8" fill="#1e3a5f"/>
+            <text x="245" y="26" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">judge_with_hint()</text>
+            <line x1="210" y1="40" x2="130" y2="55" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#arwHm)"/>
+            <line x1="280" y1="40" x2="360" y2="55" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#arwHm)"/>
+            <rect x="30" y="57" width="190" height="20" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="125" y="71" text-anchor="middle" font-size="8" fill="#1d4ed8" font-weight="700">hint_mode=True: 볼 숫자 공개</text>
+            <rect x="280" y="57" width="190" height="20" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="375" y="71" text-anchor="middle" font-size="8" fill="#64748b" font-weight="700">hint_mode=False: S/B만 출력</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">def</span> <span class="fn">judge_with_hint</span>(secret, guess, hint_mode=<span class="num">False</span>):
+    s, b = <span class="fn">judge</span>(secret, guess)
+    <span class="fn">print</span>(<span class="str">f"  → {s}S {b}B"</span>)
+    <span class="kw">if</span> hint_mode <span class="kw">and</span> b > <span class="num">0</span>:
+        balls = [guess[i] <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">3</span>)
+                 <span class="kw">if</span> guess[i] != secret[i] <span class="kw">and</span> guess[i] <span class="kw">in</span> secret]
+        <span class="fn">print</span>(<span class="str">f"  힌트: {balls} 는 볼입니다."</span>)
+    <span class="kw">return</span> s, b</div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요 — Step 3</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc"><code>print_stats()</code>에 이전 기록 목록도 같이 출력하는 코드를 추가하세요.</div>
+                <div class="code">history = [<span class="num">5</span>, <span class="num">3</span>, <span class="num">8</span>, <span class="num">4</span>]
+<span class="fn">print_stats</span>(history)</div>
+                <div class="practice-result">최소 3번, 최대 8번, 평균 5.0번 출력되면 성공</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc"><code>judge_with_hint()</code>에서 힌트 모드가 동작하는지 확인하세요.</div>
+                <div class="code">secret = [<span class="num">4</span>, <span class="num">7</span>, <span class="num">2</span>]
+<span class="fn">judge_with_hint</span>(secret, [<span class="num">2</span>, <span class="num">9</span>, <span class="num">4</span>], hint_mode=<span class="num">True</span>)</div>
+                <div class="practice-result">0S 2B와 함께 힌트 숫자가 출력되면 성공</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">제한 시도 횟수(예: 10회)를 넘으면 자동으로 게임이 끝나도록 수정하세요.</div>
+                <div class="code">MAX_TRIES = <span class="num">10</span>
+<span class="kw">if</span> attempts >= MAX_TRIES:
+    <span class="fn">print</span>(<span class="str">f"게임 오버! 정답은 {secret}"</span>)
+    <span class="kw">break</span></div>
+                <div class="practice-result">10회 초과 시 정답을 보여주면 성공</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 5페이지: 문제 + 핵심 요약 -->
+<div class="page">
+    <h2>Step 4 — 4자리 모드와 난이도 선택</h2>
+    <p>기본 3자리 모드에서 4자리 모드로 확장하면 난이도가 크게 올라갑니다. <code>digit_count</code> 매개변수로 자릿수를 조절하면 하나의 함수로 두 모드를 지원할 수 있습니다.</p>
+
+    <!-- SVG: 난이도별 파라미터 비교 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 90" style="max-width:500px;width:100%">
+            <rect x="5" y="5" width="240" height="80" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="2"/>
+            <text x="125" y="25" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">쉬움 (3자리)</text>
+            <text x="125" y="45" text-anchor="middle" font-size="9" fill="#374151" font-family="monospace">digit_count = 3</text>
+            <text x="125" y="62" text-anchor="middle" font-size="9" fill="#374151" font-family="monospace">경우의 수: 504</text>
+            <text x="125" y="78" text-anchor="middle" font-size="8" fill="#64748b">9P3 = 9x8x7</text>
+            <rect x="255" y="5" width="240" height="80" rx="8" fill="#fee2e2" stroke="#ef4444" stroke-width="2"/>
+            <text x="375" y="25" text-anchor="middle" font-size="10" fill="#991b1b" font-weight="700">어려움 (4자리)</text>
+            <text x="375" y="45" text-anchor="middle" font-size="9" fill="#374151" font-family="monospace">digit_count = 4</text>
+            <text x="375" y="62" text-anchor="middle" font-size="9" fill="#374151" font-family="monospace">경우의 수: 3024</text>
+            <text x="375" y="78" text-anchor="middle" font-size="8" fill="#64748b">9P4 = 9x8x7x6</text>
+        </svg>
+    </div>
+
+    <!-- SVG: 자릿수 파라미터 동작 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 70" style="max-width:500px;width:100%">
+            <defs>
+                <marker id="arwD" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="5" y="15" width="180" height="40" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="95" y="32" text-anchor="middle" font-size="9" fill="#374151" font-family="monospace">generate_secret(digit_count=3)</text>
+            <text x="95" y="48" text-anchor="middle" font-size="8" fill="#64748b">sample(range(1,10), 3)</text>
+            <line x1="188" y1="35" x2="208" y2="35" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#arwD)"/>
+            <rect x="210" y="15" width="100" height="40" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="260" y="38" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="900">[4, 7, 2]</text>
+            <line x1="315" y1="35" x2="335" y2="35" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#arwD)"/>
+            <rect x="337" y="15" width="158" height="40" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="416" y="32" text-anchor="middle" font-size="9" fill="#374151" font-family="monospace">generate_secret(digit_count=4)</text>
+            <text x="416" y="48" text-anchor="middle" font-size="8" fill="#64748b">[3, 1, 8, 5]</text>
+        </svg>
+    </div>
+
+    <!-- 문제 1 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">1</div>
+            <div class="problem-label">아웃(Out) 횟수 판정 추가</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <p class="problem-text"><code>judge()</code> 함수를 수정해 스트라이크도 볼도 아닌 숫자의 개수(아웃 수)도 함께 반환하도록 고치세요. 반환값을 <code>(strikes, balls, outs)</code>로 바꿉니다.</p>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">예)</span>
+                    <span class="problem-example-value">secret=[4,7,2], guess=[4,9,2] → (2, 0, 1)</span>
+                </div>
+            </div>
+        </div>
+        <div class="problem-toggle">
+            <details>
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">outs = 3 - strikes - balls 로 계산하면 별도 루프 없이 간단히 구할 수 있습니다.</div>
+                </div>
+            </details>
+            <details>
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code"><span style="color:#c084fc">def</span> <span style="color:#67e8f9">judge</span>(secret, guess):
+    strikes = balls = 0
+    <span style="color:#c084fc">for</span> i <span style="color:#c084fc">in</span> <span style="color:#67e8f9">range</span>(3):
+        <span style="color:#c084fc">if</span> guess[i] == secret[i]: strikes += 1
+        <span style="color:#c084fc">elif</span> guess[i] <span style="color:#c084fc">in</span> secret:  balls += 1
+    outs = 3 - strikes - balls
+    <span style="color:#c084fc">return</span> strikes, balls, outs</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <!-- 문제 2 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">2</div>
+            <div class="problem-label">최고 기록 경신 알림</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <p class="problem-text"><code>play_game(history)</code>에서 게임이 끝난 후, 이번 시도 횟수가 <code>history</code>의 최솟값보다 적으면 "신기록!"을 출력하도록 수정하세요. <code>history</code>가 비어 있으면 항상 신기록입니다.</p>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">예)</span>
+                    <span class="problem-example-value">history=[7,5], 이번=3 → "신기록! 이전 최고: 5번"</span>
+                </div>
+            </div>
+        </div>
+        <div class="problem-toggle">
+            <details>
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">not history 로 빈 리스트 체크, min(history) 로 이전 최고 기록을 가져옵니다. attempts &lt; min(history) 이면 신기록입니다.</div>
+                </div>
+            </details>
+            <details>
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code"><span style="color:#c084fc">if</span> <span style="color:#c084fc">not</span> history <span style="color:#c084fc">or</span> attempts &lt; <span style="color:#67e8f9">min</span>(history):
+    prev = <span style="color:#67e8f9">min</span>(history) <span style="color:#c084fc">if</span> history <span style="color:#c084fc">else</span> <span style="color:#86efac">"-"</span>
+    <span style="color:#67e8f9">print</span>(<span style="color:#86efac">f"신기록! 이전 최고: {prev}번"</span>)</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <!-- 문제 3 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">3</div>
+            <div class="problem-label">4자리 모드 지원</div>
+            <span class="problem-diff hard">어려움</span>
+        </div>
+        <div class="problem-body">
+            <p class="problem-text"><code>generate_secret(digit_count=3)</code>와 <code>judge(secret, guess)</code>를 자릿수에 무관하게 동작하도록 수정하세요. <code>digit_count</code> 매개변수를 두 함수에 추가하고, <code>validate_input()</code>도 길이 체크를 <code>digit_count</code>에 맞게 바꾸세요.</p>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">예)</span>
+                    <span class="problem-example-value">generate_secret(4) → 4개짜리 리스트 반환</span>
+                </div>
+            </div>
+        </div>
+        <div class="problem-toggle">
+            <details>
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">random.sample(range(1,10), digit_count) 로 자릿수를 파라미터로 받으면 됩니다. judge()의 range(3)도 range(digit_count)로 바꾸세요.</div>
+                </div>
+            </details>
+            <details>
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code"><span style="color:#c084fc">def</span> <span style="color:#67e8f9">generate_secret</span>(digit_count=3):
+    <span style="color:#c084fc">return</span> random.<span style="color:#67e8f9">sample</span>(<span style="color:#67e8f9">range</span>(1,10), digit_count)
+
+<span style="color:#c084fc">def</span> <span style="color:#67e8f9">judge</span>(secret, guess):
+    s = b = 0
+    n = <span style="color:#67e8f9">len</span>(secret)
+    <span style="color:#c084fc">for</span> i <span style="color:#c084fc">in</span> <span style="color:#67e8f9">range</span>(n):
+        <span style="color:#c084fc">if</span> guess[i] == secret[i]: s += 1
+        <span style="color:#c084fc">elif</span> guess[i] <span style="color:#c084fc">in</span> secret:  b += 1
+    <span style="color:#c084fc">return</span> s, b</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <!-- 핵심 요약 -->
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>핵심 요약</h3>
+        <ul>
+            <li><code>random.sample(population, k)</code>: population에서 중복 없이 k개 무작위 선택 — 비밀번호 생성 핵심</li>
+            <li>스트라이크 판정: <code>guess[i] == secret[i]</code> — 위치와 값이 모두 일치할 때</li>
+            <li>볼 판정: <code>elif guess[i] in secret</code> — 스트라이크가 아닌 경우에만 체크 (elif 필수)</li>
+            <li><code>set(digits)</code>으로 중복 체크: 길이가 달라지면 중복 있음</li>
+            <li>시도 횟수 기록: 게임 루프 밖 리스트에 추가, <code>min()/max()/sum()</code>으로 통계</li>
+            <li>매개변수화: <code>digit_count</code>를 파라미터로 넘겨 3자리/4자리 모드 분리</li>
+        </ul>
+    </div>
+</div>
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

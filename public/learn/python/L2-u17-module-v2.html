@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 모듈과 패키지</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+/* ── 페이지 ── */
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+/* ── 챕터 표지 ── */
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+
+/* ── 본문 ── */
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+
+/* ── 코드 블록 ── */
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 14px;
+    color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+
+/* ── 따라해보세요 ── */
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+
+/* ── 문제 ── */
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+
+/* ── 요약 ── */
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- ═══ 1페이지: 표지 ═══ -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">17</div>
+        <div class="cover-label">Chapter 17</div>
+        <h1 class="cover-title">모듈과 패키지</h1>
+        <p class="cover-sub">코드를 파일로 나누고, 남이 만든 코드를 가져다 쓰는 방법을 배웁니다.</p>
+        <!-- SVG 1: 학습 로드맵 -->
+        <div style="margin:20px 0;">
+            <svg viewBox="0 0 480 50" style="max-width:480px;width:100%">
+                <rect x="5" y="10" width="85" height="30" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="47" y="30" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">import</text>
+                <line x1="95" y1="25" x2="110" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="115" y="10" width="85" height="30" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="157" y="30" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">from</text>
+                <line x1="205" y1="25" x2="220" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="225" y="10" width="85" height="30" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="267" y="30" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">as 별칭</text>
+                <line x1="315" y1="25" x2="330" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="335" y="10" width="85" height="30" rx="6" fill="#eff6ff" stroke="#6366f1" stroke-width="1.5"/>
+                <text x="377" y="30" text-anchor="middle" font-size="10" fill="#4338ca" font-weight="700">내 모듈</text>
+            </svg>
+        </div>
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/puzzle.png" alt="모듈" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 유닛에서 배우는 것</h3>
+            <ul>
+                <li>import로 표준 모듈을 불러올 수 있습니다.</li>
+                <li>from ... import로 특정 함수만 가져올 수 있습니다.</li>
+                <li>as를 이용해 모듈에 별칭을 붙일 수 있습니다.</li>
+                <li>직접 모듈 파일(.py)을 만들어서 사용할 수 있습니다.</li>
+                <li>__name__과 if __name__ == "__main__"의 의미를 이해합니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ 2페이지: import 기본 ═══ -->
+<div class="page">
+    <h2>import — 모듈 불러오기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/folder.png" alt="패키지" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p><code>import</code>는 다른 파일에 있는 코드를 가져오는 명령입니다. 파이썬에는 미리 만들어둔 표준 모듈이 수백 개 있습니다.</p>
+
+    <!-- SVG 2: import 구조 분해 -->
+    <div style="text-align:center;margin:20px 0;">
+        <svg viewBox="0 0 420 70" style="max-width:420px;width:100%">
+            <text x="20" y="30" font-family="monospace" font-size="14" fill="#c084fc" font-weight="700">import</text>
+            <rect x="85" y="10" width="80" height="30" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="125" y="30" text-anchor="middle" font-family="monospace" font-size="13" fill="#1d4ed8">random</text>
+            <line x1="85" y1="46" x2="85" y2="55" stroke="#94a3b8" stroke-width="1"/>
+            <text x="85" y="64" font-size="8" fill="#94a3b8">키워드</text>
+            <line x1="125" y1="42" x2="125" y2="55" stroke="#94a3b8" stroke-width="1"/>
+            <text x="125" y="64" text-anchor="middle" font-size="8" fill="#94a3b8">모듈 이름</text>
+            <text x="200" y="30" font-size="13" fill="#94a3b8">&#8594;</text>
+            <rect x="220" y="10" width="190" height="30" rx="4" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="315" y="30" text-anchor="middle" font-family="monospace" font-size="12" fill="#166534">random.randint(1, 6)</text>
+            <text x="315" y="64" text-anchor="middle" font-size="8" fill="#94a3b8">모듈이름.함수() 형태로 사용</text>
+        </svg>
+    </div>
+
+    <!-- SVG 3: 모듈 = 도구 상자 비유 -->
+    <div style="text-align:center;margin:20px 0;">
+        <svg viewBox="0 0 440 120" style="max-width:440px;width:100%">
+            <rect x="10" y="10" width="130" height="100" rx="8" fill="#f8fafc" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="75" y="30" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">random 모듈</text>
+            <rect x="20" y="40" width="110" height="20" rx="4" fill="#dbeafe"/>
+            <text x="75" y="54" text-anchor="middle" font-family="monospace" font-size="10" fill="#1d4ed8">randint()</text>
+            <rect x="20" y="65" width="110" height="20" rx="4" fill="#dbeafe"/>
+            <text x="75" y="79" text-anchor="middle" font-family="monospace" font-size="10" fill="#1d4ed8">choice()</text>
+            <rect x="20" y="90" width="110" height="14" rx="4" fill="#dbeafe"/>
+            <text x="75" y="101" text-anchor="middle" font-family="monospace" font-size="9" fill="#1d4ed8">shuffle() ...</text>
+
+            <rect x="160" y="10" width="130" height="100" rx="8" fill="#f8fafc" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="225" y="30" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">math 모듈</text>
+            <rect x="170" y="40" width="110" height="20" rx="4" fill="#dcfce7"/>
+            <text x="225" y="54" text-anchor="middle" font-family="monospace" font-size="10" fill="#166534">sqrt()</text>
+            <rect x="170" y="65" width="110" height="20" rx="4" fill="#dcfce7"/>
+            <text x="225" y="79" text-anchor="middle" font-family="monospace" font-size="10" fill="#166534">pi</text>
+            <rect x="170" y="90" width="110" height="14" rx="4" fill="#dcfce7"/>
+            <text x="225" y="101" text-anchor="middle" font-family="monospace" font-size="9" fill="#166534">ceil() ...</text>
+
+            <rect x="310" y="10" width="130" height="100" rx="8" fill="#f8fafc" stroke="#8b5cf6" stroke-width="1.5"/>
+            <text x="375" y="30" text-anchor="middle" font-size="11" fill="#6d28d9" font-weight="700">datetime 모듈</text>
+            <rect x="320" y="40" width="110" height="20" rx="4" fill="#ede9fe"/>
+            <text x="375" y="54" text-anchor="middle" font-family="monospace" font-size="10" fill="#6d28d9">date</text>
+            <rect x="320" y="65" width="110" height="20" rx="4" fill="#ede9fe"/>
+            <text x="375" y="79" text-anchor="middle" font-family="monospace" font-size="10" fill="#6d28d9">time</text>
+            <rect x="320" y="90" width="110" height="14" rx="4" fill="#ede9fe"/>
+            <text x="375" y="101" text-anchor="middle" font-family="monospace" font-size="9" fill="#6d28d9">datetime ...</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">import</span> random
+
+num = random.<span class="fn">randint</span>(<span class="num">1</span>, <span class="num">6</span>)
+<span class="fn">print</span>(<span class="str">"주사위:"</span>, num)</div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/lightbulb.png" alt="아이디어" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc"><code>random</code> 모듈로 주사위를 굴려보세요.</div>
+                <div class="code"><span class="kw">import</span> random
+<span class="fn">print</span>(random.<span class="fn">randint</span>(<span class="num">1</span>, <span class="num">6</span>))</div>
+                <div class="practice-result">1~6 사이의 랜덤 숫자가 출력됩니다</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc"><code>math</code> 모듈로 제곱근을 구해보세요.</div>
+                <div class="code"><span class="kw">import</span> math
+<span class="fn">print</span>(math.<span class="fn">sqrt</span>(<span class="num">144</span>))</div>
+                <div class="practice-result">12.0 이 출력됩니다</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc"><code>datetime</code>으로 오늘 날짜를 출력해보세요.</div>
+                <div class="code"><span class="kw">import</span> datetime
+today = datetime.date.<span class="fn">today</span>()
+<span class="fn">print</span>(<span class="str">"오늘:"</span>, today)</div>
+                <div class="practice-result">오늘: 2026-03-21 형태로 출력됩니다</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ 3페이지: from ... import ═══ -->
+<div class="page">
+    <h2>from ... import — 골라서 가져오기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p><code>from 모듈 import 함수</code>를 쓰면 모듈 이름 없이 바로 함수를 사용할 수 있습니다.</p>
+
+    <!-- SVG 4: import vs from import 비교 -->
+    <div style="text-align:center;margin:20px 0;">
+        <svg viewBox="0 0 460 100" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="210" height="40" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="115" y="18" text-anchor="middle" font-size="10" fill="#94a3b8" font-weight="600">import 방식</text>
+            <text x="115" y="36" text-anchor="middle" font-family="monospace" font-size="11" fill="#0f172a">random.randint(1, 6)</text>
+
+            <rect x="240" y="5" width="210" height="40" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="345" y="18" text-anchor="middle" font-size="10" fill="#166534" font-weight="600">from 방식</text>
+            <text x="345" y="36" text-anchor="middle" font-family="monospace" font-size="11" fill="#0f172a">randint(1, 6)</text>
+
+            <rect x="10" y="55" width="210" height="35" rx="6" fill="#0f172a"/>
+            <text x="115" y="77" text-anchor="middle" font-family="monospace" font-size="10" fill="#c084fc">import random</text>
+
+            <rect x="240" y="55" width="210" height="35" rx="6" fill="#0f172a"/>
+            <text x="345" y="77" text-anchor="middle" font-family="monospace" font-size="10" fill="#c084fc">from random import randint</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">from</span> random <span class="kw">import</span> randint, choice
+
+<span class="fn">print</span>(<span class="fn">randint</span>(<span class="num">1</span>, <span class="num">100</span>))  <span class="cmt"># random. 없이 바로</span>
+fruits = [<span class="str">"사과"</span>, <span class="str">"바나나"</span>, <span class="str">"포도"</span>]
+<span class="fn">print</span>(<span class="fn">choice</span>(fruits))   <span class="cmt"># 하나를 랜덤 선택</span></div>
+
+    <!-- SVG 5: as 별칭 구조 -->
+    <h2 style="margin-top:24px;">as — 별칭 붙이기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="도구" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>모듈 이름이 길 때 <code>as</code>로 짧은 이름을 붙여 편하게 씁니다.</p>
+
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 440 60" style="max-width:440px;width:100%">
+            <text x="10" y="30" font-family="monospace" font-size="13" fill="#c084fc" font-weight="700">import</text>
+            <rect x="70" y="10" width="100" height="30" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="120" y="30" text-anchor="middle" font-family="monospace" font-size="12" fill="#1d4ed8">datetime</text>
+            <text x="185" y="30" font-family="monospace" font-size="13" fill="#c084fc" font-weight="700">as</text>
+            <rect x="205" y="10" width="50" height="30" rx="4" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="230" y="30" text-anchor="middle" font-family="monospace" font-size="13" fill="#166534" font-weight="700">dt</text>
+            <text x="275" y="30" font-size="13" fill="#94a3b8">&#8594;</text>
+            <text x="295" y="30" font-family="monospace" font-size="12" fill="#0f172a">dt.date.today()</text>
+            <text x="120" y="55" text-anchor="middle" font-size="8" fill="#94a3b8">원래 이름</text>
+            <text x="230" y="55" text-anchor="middle" font-size="8" fill="#94a3b8">별칭</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">import</span> datetime <span class="kw">as</span> dt
+
+today = dt.date.<span class="fn">today</span>()
+<span class="fn">print</span>(<span class="str">"오늘:"</span>, today)</div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc"><code>from</code>으로 <code>math.pi</code>를 직접 가져와보세요.</div>
+                <div class="code"><span class="kw">from</span> math <span class="kw">import</span> pi, sqrt
+<span class="fn">print</span>(<span class="str">"원주율:"</span>, pi)
+<span class="fn">print</span>(<span class="str">"루트9:"</span>, <span class="fn">sqrt</span>(<span class="num">9</span>))</div>
+                <div class="practice-result">원주율: 3.141592... 와 루트9: 3.0</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc"><code>as</code>로 별칭을 지어보세요.</div>
+                <div class="code"><span class="kw">import</span> random <span class="kw">as</span> rd
+<span class="fn">print</span>(rd.<span class="fn">randint</span>(<span class="num">1</span>, <span class="num">100</span>))</div>
+                <div class="practice-result">rd라는 짧은 이름으로 사용 가능</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc"><code>from ... import *</code>를 써보고, 왜 위험한지 생각해보세요.</div>
+                <div class="code"><span class="kw">from</span> math <span class="kw">import</span> *
+<span class="fn">print</span>(<span class="fn">ceil</span>(<span class="num">3.2</span>))   <span class="cmt"># 4</span>
+<span class="fn">print</span>(<span class="fn">floor</span>(<span class="num">3.8</span>))  <span class="cmt"># 3</span></div>
+                <div class="practice-result">편하지만 이름 충돌 위험 — 실무에서는 피함</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ 4페이지: 내 모듈 만들기 ═══ -->
+<div class="page">
+    <h2>내 모듈 만들기</h2>
+    <p>파이썬 파일(.py) 하나가 곧 모듈입니다. 함수를 모아둔 파일을 만들면 다른 파일에서 <code>import</code>할 수 있습니다.</p>
+
+    <!-- SVG 6: 파일 구조 다이어그램 -->
+    <div style="text-align:center;margin:20px 0;">
+        <svg viewBox="0 0 420 130" style="max-width:420px;width:100%">
+            <rect x="10" y="10" width="180" height="110" rx="8" fill="#f8fafc" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="100" y="30" text-anchor="middle" font-size="12" fill="#1d4ed8" font-weight="700">mytools.py</text>
+            <rect x="20" y="40" width="160" height="22" rx="4" fill="#dbeafe"/>
+            <text x="100" y="55" text-anchor="middle" font-family="monospace" font-size="10" fill="#1d4ed8">def greet(name):</text>
+            <rect x="20" y="68" width="160" height="22" rx="4" fill="#dbeafe"/>
+            <text x="100" y="83" text-anchor="middle" font-family="monospace" font-size="10" fill="#1d4ed8">def add(a, b):</text>
+            <rect x="20" y="96" width="160" height="18" rx="4" fill="#dbeafe"/>
+            <text x="100" y="109" text-anchor="middle" font-family="monospace" font-size="10" fill="#1d4ed8">def square(n):</text>
+
+            <line x1="200" y1="65" x2="230" y2="65" stroke="#3b82f6" stroke-width="2" marker-end="url(#arr)"/>
+
+            <rect x="240" y="10" width="180" height="110" rx="8" fill="#f8fafc" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="330" y="30" text-anchor="middle" font-size="12" fill="#166534" font-weight="700">main.py</text>
+            <rect x="250" y="42" width="160" height="22" rx="4" fill="#dcfce7"/>
+            <text x="330" y="57" text-anchor="middle" font-family="monospace" font-size="10" fill="#166534">import mytools</text>
+            <rect x="250" y="70" width="160" height="22" rx="4" fill="#dcfce7"/>
+            <text x="330" y="85" text-anchor="middle" font-family="monospace" font-size="10" fill="#166534">mytools.greet("자현")</text>
+            <rect x="250" y="98" width="160" height="18" rx="4" fill="#dcfce7"/>
+            <text x="330" y="111" text-anchor="middle" font-family="monospace" font-size="10" fill="#166534">mytools.add(3, 5)</text>
+
+            <defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#3b82f6"/></marker></defs>
+        </svg>
+    </div>
+
+    <p><strong>mytools.py</strong> (도구 모듈)</p>
+    <div class="code"><span class="kw">def</span> <span class="fn">greet</span>(name):
+    <span class="kw">return</span> <span class="str">f"안녕, {name}!"</span>
+
+<span class="kw">def</span> <span class="fn">add</span>(a, b):
+    <span class="kw">return</span> a + b
+
+<span class="kw">def</span> <span class="fn">square</span>(n):
+    <span class="kw">return</span> n ** <span class="num">2</span></div>
+
+    <p><strong>main.py</strong> (실행 파일)</p>
+    <div class="code"><span class="kw">import</span> mytools
+
+<span class="fn">print</span>(mytools.<span class="fn">greet</span>(<span class="str">"자현"</span>))  <span class="cmt"># 안녕, 자현!</span>
+<span class="fn">print</span>(mytools.<span class="fn">add</span>(<span class="num">3</span>, <span class="num">5</span>))       <span class="cmt"># 8</span>
+<span class="fn">print</span>(mytools.<span class="fn">square</span>(<span class="num">4</span>))     <span class="cmt"># 16</span></div>
+
+    <!-- SVG 7: __name__ 동작 원리 -->
+    <h2 style="margin-top:24px;">__name__ 이해하기</h2>
+    <p>파일을 직접 실행하면 <code>__name__</code>은 <code>"__main__"</code>이 됩니다. 다른 파일에서 import하면 모듈 이름이 됩니다.</p>
+
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+            <rect x="10" y="10" width="200" height="55" rx="8" fill="#0f172a"/>
+            <text x="110" y="28" text-anchor="middle" font-family="monospace" font-size="10" fill="#c084fc">python mytools.py</text>
+            <text x="110" y="50" text-anchor="middle" font-family="monospace" font-size="11" fill="#86efac">__name__ == "__main__"</text>
+
+            <rect x="240" y="10" width="210" height="55" rx="8" fill="#0f172a"/>
+            <text x="345" y="28" text-anchor="middle" font-family="monospace" font-size="10" fill="#c084fc">import mytools (main.py)</text>
+            <text x="345" y="50" text-anchor="middle" font-family="monospace" font-size="11" fill="#86efac">__name__ == "mytools"</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># mytools.py 끝에 추가</span>
+<span class="kw">if</span> __name__ == <span class="str">"__main__"</span>:
+    <span class="cmt"># 직접 실행할 때만 동작 (import 시 무시)</span>
+    <span class="fn">print</span>(<span class="fn">greet</span>(<span class="str">"테스트"</span>))
+    <span class="fn">print</span>(<span class="fn">add</span>(<span class="num">10</span>, <span class="num">20</span>))</div>
+</div>
+
+<!-- ═══ 5페이지: 유용한 표준 모듈 ═══ -->
+<div class="page">
+    <h2>자주 쓰는 표준 모듈</h2>
+
+    <!-- SVG 8: 표준 모듈 카드 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 160" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="130" height="65" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="75" y="22" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">random</text>
+            <text x="75" y="38" text-anchor="middle" font-size="9" fill="#475569">랜덤 숫자, 선택</text>
+            <text x="75" y="55" text-anchor="middle" font-family="monospace" font-size="9" fill="#64748b">randint, choice</text>
+
+            <rect x="160" y="5" width="130" height="65" rx="6" fill="#dcfce7" stroke="#22c55e" stroke-width="1"/>
+            <text x="225" y="22" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">math</text>
+            <text x="225" y="38" text-anchor="middle" font-size="9" fill="#475569">수학 함수, 상수</text>
+            <text x="225" y="55" text-anchor="middle" font-family="monospace" font-size="9" fill="#64748b">sqrt, pi, ceil</text>
+
+            <rect x="310" y="5" width="140" height="65" rx="6" fill="#ede9fe" stroke="#8b5cf6" stroke-width="1"/>
+            <text x="380" y="22" text-anchor="middle" font-size="11" fill="#6d28d9" font-weight="700">datetime</text>
+            <text x="380" y="38" text-anchor="middle" font-size="9" fill="#475569">날짜와 시간</text>
+            <text x="380" y="55" text-anchor="middle" font-family="monospace" font-size="9" fill="#64748b">date, time, now</text>
+
+            <rect x="10" y="85" width="130" height="65" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1"/>
+            <text x="75" y="102" text-anchor="middle" font-size="11" fill="#92400e" font-weight="700">os</text>
+            <text x="75" y="118" text-anchor="middle" font-size="9" fill="#475569">운영체제 기능</text>
+            <text x="75" y="135" text-anchor="middle" font-family="monospace" font-size="9" fill="#64748b">getcwd, listdir</text>
+
+            <rect x="160" y="85" width="130" height="65" rx="6" fill="#fce7f3" stroke="#ec4899" stroke-width="1"/>
+            <text x="225" y="102" text-anchor="middle" font-size="11" fill="#be185d" font-weight="700">time</text>
+            <text x="225" y="118" text-anchor="middle" font-size="9" fill="#475569">시간 측정, 대기</text>
+            <text x="225" y="135" text-anchor="middle" font-family="monospace" font-size="9" fill="#64748b">sleep, time</text>
+
+            <rect x="310" y="85" width="140" height="65" rx="6" fill="#f1f5f9" stroke="#64748b" stroke-width="1"/>
+            <text x="380" y="102" text-anchor="middle" font-size="11" fill="#334155" font-weight="700">string</text>
+            <text x="380" y="118" text-anchor="middle" font-size="9" fill="#475569">문자열 상수</text>
+            <text x="380" y="135" text-anchor="middle" font-family="monospace" font-size="9" fill="#64748b">ascii_letters</text>
+        </svg>
+    </div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc"><code>time.sleep()</code>으로 카운트다운을 만들어보세요.</div>
+                <div class="code"><span class="kw">import</span> time
+
+<span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">3</span>, <span class="num">0</span>, -<span class="num">1</span>):
+    <span class="fn">print</span>(i)
+    time.<span class="fn">sleep</span>(<span class="num">1</span>)
+<span class="fn">print</span>(<span class="str">"출발!"</span>)</div>
+                <div class="practice-result">3, 2, 1, 출발! 이 1초 간격으로 출력</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc"><code>random.choice()</code>로 랜덤 메뉴 추천기를 만드세요.</div>
+                <div class="code"><span class="kw">from</span> random <span class="kw">import</span> choice
+menus = [<span class="str">"피자"</span>, <span class="str">"치킨"</span>, <span class="str">"햄버거"</span>, <span class="str">"떡볶이"</span>]
+<span class="fn">print</span>(<span class="str">"오늘의 메뉴:"</span>, <span class="fn">choice</span>(menus))</div>
+                <div class="practice-result">랜덤으로 메뉴가 하나 선택됩니다</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc"><code>os</code> 모듈로 현재 폴더 위치를 확인해보세요.</div>
+                <div class="code"><span class="kw">import</span> os
+<span class="fn">print</span>(<span class="str">"현재 위치:"</span>, os.<span class="fn">getcwd</span>())
+<span class="fn">print</span>(<span class="str">"파일 목록:"</span>, os.<span class="fn">listdir</span>(<span class="str">"."</span>))</div>
+                <div class="practice-result">현재 디렉토리 경로와 파일 목록 출력</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SVG 9: import 정리 치트시트 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 110" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="100" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+            <text x="230" y="22" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="800">import 방법 정리</text>
+            <text x="20" y="42" font-family="monospace" font-size="10" fill="#c084fc">import random</text>
+            <text x="250" y="42" font-size="10" fill="#64748b">&#8594; random.randint(1, 6)</text>
+            <text x="20" y="60" font-family="monospace" font-size="10" fill="#c084fc">from random import randint</text>
+            <text x="250" y="60" font-size="10" fill="#64748b">&#8594; randint(1, 6)</text>
+            <text x="20" y="78" font-family="monospace" font-size="10" fill="#c084fc">import random as rd</text>
+            <text x="250" y="78" font-size="10" fill="#64748b">&#8594; rd.randint(1, 6)</text>
+            <text x="20" y="96" font-family="monospace" font-size="10" fill="#ef4444">from random import *</text>
+            <text x="250" y="96" font-size="10" fill="#ef4444">&#8594; 비추천 (이름 충돌 위험)</text>
+        </svg>
+    </div>
+</div>
+
+<!-- ═══ 6페이지: 문제 ═══ -->
+<div class="page">
+    <h2>직접 풀어보세요</h2>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q1</div>
+            <div class="problem-label">로또 번호 생성기</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text"><code>random</code> 모듈을 사용해서 1~45 사이의 서로 다른 숫자 6개를 출력하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">[3, 12, 18, 27, 33, 41]  (매번 다름)</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle"><summary>힌트 보기</summary><div class="problem-toggle-content"><div class="hint-text"><code>random.sample(range(1, 46), 6)</code>을 사용해보세요.</div></div></details>
+        <details class="problem-toggle"><summary>정답 확인</summary><div class="problem-toggle-content"><div class="answer-code">import random
+numbers = random.sample(range(1, 46), 6)
+numbers.sort()
+print(numbers)</div></div></details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q2</div>
+            <div class="problem-label">나만의 계산기 모듈</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text"><code>calc.py</code> 파일에 <code>add</code>, <code>sub</code>, <code>mul</code>, <code>div</code> 함수를 만들고, <code>main.py</code>에서 import하여 사용하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">add(10, 3) = 13 / div(10, 3) = 3.33...</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle"><summary>힌트 보기</summary><div class="problem-toggle-content"><div class="hint-text">각 함수는 <code>return</code>으로 결과를 돌려줘야 합니다.</div></div></details>
+        <details class="problem-toggle"><summary>정답 확인</summary><div class="problem-toggle-content"><div class="answer-code"># calc.py
+def add(a, b): return a + b
+def sub(a, b): return a - b
+def mul(a, b): return a * b
+def div(a, b): return a / b
+
+# main.py
+from calc import add, sub, mul, div
+print(add(10, 3))   # 13
+print(div(10, 3))   # 3.333...</div></div></details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q3</div>
+            <div class="problem-label">비밀번호 생성기</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text"><code>random</code>과 <code>string</code> 모듈을 사용해서 영문+숫자 8자리 랜덤 비밀번호를 생성하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">비밀번호: aB3xK9mQ  (매번 다름)</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle"><summary>힌트 보기</summary><div class="problem-toggle-content"><div class="hint-text"><code>string.ascii_letters + string.digits</code>로 문자 풀을 만들고 <code>random.choices()</code>를 사용하세요.</div></div></details>
+        <details class="problem-toggle"><summary>정답 확인</summary><div class="problem-toggle-content"><div class="answer-code">import random
+import string
+
+chars = string.ascii_letters + string.digits
+pw = "".join(random.choices(chars, k=8))
+print("비밀번호:", pw)</div></div></details>
+    </div>
+</div>
+
+<!-- ═══ 7페이지: 핵심 요약 ═══ -->
+<div class="page">
+    <h2>핵심 요약</h2>
+
+    <!-- SVG 10: 모듈 전체 흐름 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+            <rect x="10" y="15" width="100" height="50" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="60" y="45" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">모듈 작성</text>
+            <line x1="115" y1="40" x2="145" y2="40" stroke="#3b82f6" stroke-width="2" marker-end="url(#arr)"/>
+            <rect x="150" y="15" width="100" height="50" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="200" y="45" text-anchor="middle" font-size="11" fill="#92400e" font-weight="700">import</text>
+            <line x1="255" y1="40" x2="285" y2="40" stroke="#f59e0b" stroke-width="2" marker-end="url(#arr)"/>
+            <rect x="290" y="15" width="100" height="50" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="340" y="45" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">함수 사용</text>
+        </svg>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>이 유닛에서 배운 것</h3>
+        <ul>
+            <li><code>import 모듈</code>로 표준 모듈을 불러온다</li>
+            <li><code>from 모듈 import 함수</code>로 특정 함수만 가져온다</li>
+            <li><code>import 모듈 as 별칭</code>으로 짧은 이름을 붙인다</li>
+            <li>.py 파일 하나가 곧 모듈이다 — 직접 만들어서 import 가능</li>
+            <li><code>if __name__ == "__main__":</code>으로 직접 실행 시에만 동작하는 코드를 작성한다</li>
+        </ul>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

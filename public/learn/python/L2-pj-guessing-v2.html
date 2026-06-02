@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 숫자 맞추기 게임</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+.page { width: 210mm; min-height: 297mm; margin: 16px auto; padding: 18mm 20mm 15mm 22mm; background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: relative; page-break-after: always; }
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after { content: counter(pagenum); position: absolute; bottom: 10mm; right: 16mm; font-size: 10px; color: #94a3b8; font-weight: 600; }
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark { position: absolute; top: -10px; right: -15px; font-size: 200px; font-weight: 900; color: rgba(180,195,212,0.3); line-height: 1; pointer-events: none; }
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #2563eb; font-weight: 600; }
+.code { background: #0f172a; border-radius: 8px; padding: 16px 20px; font-family: 'JetBrains Mono', monospace; font-size: 14px; color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap; }
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; white-space: pre-wrap; }
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- 1페이지: 표지 -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">GUESS</div>
+        <div class="cover-label">Project 07</div>
+        <h1 class="cover-title">숫자 맞추기 게임</h1>
+        <p class="cover-sub">컴퓨터가 숨긴 숫자를 UP/DOWN 힌트를 받으며 맞추는 게임입니다.</p>
+        <!-- SVG 1: 로드맵 -->
+        <div style="margin:20px 0;">
+            <svg viewBox="0 0 460 55" style="max-width:460px;width:100%">
+                <rect x="5" y="10" width="90" height="30" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="50" y="30" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">random 숫자 생성</text>
+                <line x1="100" y1="25" x2="115" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="120" y="10" width="90" height="30" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="165" y="30" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">while 무한 반복</text>
+                <line x1="215" y1="25" x2="230" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="235" y="10" width="90" height="30" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="280" y="30" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">UP/DOWN 힌트</text>
+                <line x1="330" y1="25" x2="345" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="350" y="10" width="105" height="30" rx="6" fill="#eff6ff" stroke="#6366f1" stroke-width="1.5"/>
+                <text x="402" y="30" text-anchor="middle" font-size="9" fill="#4338ca" font-weight="700">정답 시 break</text>
+            </svg>
+        </div>
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/gamepad.png" alt="게임" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 프로젝트에서 배우는 것</h3>
+            <ul>
+                <li>while True로 무한 반복을 만들 수 있습니다.</li>
+                <li>break로 반복문을 탈출할 수 있습니다.</li>
+                <li>비교 연산자(>, &lt;, ==)로 숫자를 비교합니다.</li>
+                <li>시도 횟수를 카운터로 셀 수 있습니다.</li>
+                <li>이진 탐색의 원리를 게임으로 이해합니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- 2페이지: while True + break -->
+<div class="page">
+    <h2>while True와 break</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="우승" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p><code>while True</code>는 조건 없이 영원히 반복합니다. <code>break</code>를 만나면 즉시 반복을 탈출합니다.</p>
+
+    <!-- SVG 2: while True 흐름도 -->
+    <div style="text-align:center;margin:20px 0;">
+        <svg viewBox="0 0 460 110" style="max-width:460px;width:100%">
+            <rect x="175" y="5" width="110" height="28" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="230" y="24" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">while True 시작</text>
+            <line x1="230" y1="33" x2="230" y2="48" stroke="#94a3b8" stroke-width="1.5"/>
+            <rect x="160" y="48" width="140" height="28" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="230" y="67" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">반복 작업 실행</text>
+            <line x1="230" y1="76" x2="230" y2="91" stroke="#94a3b8" stroke-width="1.5"/>
+            <polygon points="200,91 260,91 230,108" fill="#f59e0b"/>
+            <text x="230" y="104" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">break?</text>
+            <line x1="200" y1="100" x2="80" y2="100" stroke="#3b82f6" stroke-width="1.5"/>
+            <line x1="80" y1="100" x2="80" y2="62" stroke="#3b82f6" stroke-width="1.5"/>
+            <line x1="80" y1="62" x2="160" y2="62" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="130" y="95" text-anchor="middle" font-size="9" fill="#3b82f6">No → 반복</text>
+            <line x1="260" y1="100" x2="390" y2="100" stroke="#ef4444" stroke-width="1.5"/>
+            <rect x="350" y="88" width="80" height="24" rx="6" fill="#fff4f4" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="390" y="104" text-anchor="middle" font-size="9" fill="#dc2626" font-weight="700">Yes → 탈출!</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># while True + break 기본 패턴</span>
+<span class="kw">while</span> <span class="kw">True</span>:
+    answer = <span class="fn">input</span>(<span class="str">"숫자를 입력하세요 (0이면 종료): "</span>)
+    <span class="kw">if</span> answer == <span class="str">"0"</span>:
+        <span class="fn">print</span>(<span class="str">"종료합니다."</span>)
+        <span class="kw">break</span>     <span class="cmt"># 여기서 while 탈출!</span>
+    <span class="fn">print</span>(<span class="str">f"{answer} 입력됨"</span>)</div>
+
+    <!-- SVG 3: break vs continue 비교 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 60" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="210" height="50" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="115" y="24" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="700">break</text>
+            <text x="115" y="42" text-anchor="middle" font-size="9" fill="#64748b">반복문 완전 탈출</text>
+            <rect x="240" y="5" width="210" height="50" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="345" y="24" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="700">continue</text>
+            <text x="345" y="42" text-anchor="middle" font-size="9" fill="#64748b">이번 반복만 건너뛰고 계속</text>
+        </svg>
+    </div>
+
+    <p>숫자 맞추기 게임에서는 정답을 맞출 때까지 계속 반복해야 하므로 <code>while True</code>가 적합합니다.</p>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">"quit" 입력 시 break로 탈출하는 반복문을 만드세요.</div>
+                <div class="code"><span class="kw">while</span> <span class="kw">True</span>:
+    word = <span class="fn">input</span>(<span class="str">"단어 입력 (quit으로 종료): "</span>)
+    <span class="kw">if</span> word == <span class="str">"quit"</span>:
+        <span class="kw">break</span>
+    <span class="fn">print</span>(<span class="str">f"입력한 단어: {word}"</span>)
+<span class="fn">print</span>(<span class="str">"게임 종료!"</span>)</div>
+                <div class="practice-result">quit 입력 시 게임 종료! 출력되고 탈출합니다</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">숫자를 입력받아 50보다 크면 break, 아니면 계속 반복하세요.</div>
+                <div class="code"><span class="kw">while</span> <span class="kw">True</span>:
+    n = <span class="fn">int</span>(<span class="fn">input</span>(<span class="str">"숫자 입력: "</span>))
+    <span class="kw">if</span> n > <span class="num">50</span>:
+        <span class="fn">print</span>(<span class="str">"50보다 큰 숫자! 탈출!"</span>)
+        <span class="kw">break</span>
+    <span class="fn">print</span>(<span class="str">f"{n}은 50 이하입니다."</span>)</div>
+                <div class="practice-result">50 이하면 계속, 51 이상이면 탈출</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">시도 횟수를 세는 카운터와 함께 만들어보세요.</div>
+                <div class="code">count = <span class="num">0</span>
+<span class="kw">while</span> <span class="kw">True</span>:
+    n = <span class="fn">int</span>(<span class="fn">input</span>(<span class="str">"숫자: "</span>))
+    count += <span class="num">1</span>
+    <span class="kw">if</span> n == <span class="num">7</span>:
+        <span class="fn">print</span>(<span class="str">f"정답! {count}번 만에 맞췄습니다!"</span>)
+        <span class="kw">break</span></div>
+                <div class="practice-result">7을 입력할 때까지 반복, 횟수 표시</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3페이지: 완성 게임 -->
+<div class="page">
+    <h2>완성: 숫자 맞추기 게임</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/flowchart.png" alt="게임 흐름" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>1~100 사이 숫자를 UP/DOWN 힌트로 맞추는 완성 게임입니다.</p>
+
+    <!-- SVG 4: 이진 탐색 시각화 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="70" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="24" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="800">UP/DOWN 탐색 전략</text>
+            <rect x="20" y="32" width="420" height="10" rx="5" fill="#e2e8f0"/>
+            <rect x="20" y="32" width="420" height="10" rx="5" fill="none" stroke="#94a3b8" stroke-width="0.5"/>
+            <text x="20" y="58" font-size="9" fill="#64748b">1</text>
+            <text x="225" y="58" font-size="9" fill="#1d4ed8" font-weight="700">50 (첫 시도)</text>
+            <text x="440" y="58" font-size="9" fill="#64748b">100</text>
+            <line x1="232" y1="42" x2="232" y2="32" stroke="#3b82f6" stroke-width="2"/>
+            <text x="232" y="72" text-anchor="middle" font-size="9" fill="#64748b">DOWN → 25 시도</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">import</span> random
+
+secret = random.randint(<span class="num">1</span>, <span class="num">100</span>)   <span class="cmt"># 비밀 숫자</span>
+tries = <span class="num">0</span>
+
+<span class="fn">print</span>(<span class="str">"=== 숫자 맞추기 게임 ==="</span>)
+<span class="fn">print</span>(<span class="str">"1~100 사이 숫자를 맞춰보세요!"</span>)
+
+<span class="kw">while</span> <span class="kw">True</span>:
+    guess = <span class="fn">int</span>(<span class="fn">input</span>(<span class="str">"숫자 입력: "</span>))
+    tries += <span class="num">1</span>
+
+    <span class="kw">if</span> guess == secret:
+        <span class="fn">print</span>(<span class="str">f"정답! {tries}번 만에 맞췄습니다!"</span>)
+        <span class="kw">if</span> tries <= <span class="num">5</span>:
+            <span class="fn">print</span>(<span class="str">"대단해요! 천재적인 실력!"</span>)
+        <span class="kw">elif</span> tries <= <span class="num">10</span>:
+            <span class="fn">print</span>(<span class="str">"잘 했어요!"</span>)
+        <span class="kw">else</span>:
+            <span class="fn">print</span>(<span class="str">"조금 더 연습해봐요~"</span>)
+        <span class="kw">break</span>
+    <span class="kw">elif</span> guess < secret:
+        <span class="fn">print</span>(<span class="str">f"{guess} — UP (더 큰 숫자!)"</span>)
+    <span class="kw">else</span>:
+        <span class="fn">print</span>(<span class="str">f"{guess} — DOWN (더 작은 숫자!)"</span>)</div>
+
+    <!-- SVG 5: 실행 예시 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 380 130" style="max-width:380px;width:100%">
+            <rect x="10" y="5" width="360" height="120" rx="8" fill="#0f172a"/>
+            <text x="20" y="24" font-family="monospace" font-size="10" fill="#e2e8f0">숫자 입력: <tspan fill="#86efac">50</tspan></text>
+            <text x="20" y="40" font-family="monospace" font-size="10" fill="#fcd34d">50 — UP (더 큰 숫자!)</text>
+            <text x="20" y="56" font-family="monospace" font-size="10" fill="#e2e8f0">숫자 입력: <tspan fill="#86efac">75</tspan></text>
+            <text x="20" y="72" font-family="monospace" font-size="10" fill="#f87171">75 — DOWN (더 작은 숫자!)</text>
+            <text x="20" y="88" font-family="monospace" font-size="10" fill="#e2e8f0">숫자 입력: <tspan fill="#86efac">63</tspan></text>
+            <text x="20" y="104" font-family="monospace" font-size="10" fill="#86efac">정답! 3번 만에 맞췄습니다!</text>
+            <text x="20" y="120" font-family="monospace" font-size="10" fill="#7dd3fc">대단해요! 천재적인 실력!</text>
+        </svg>
+    </div>
+
+    <!-- SVG 6: 시도별 평가 기준 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 55" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="45" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="24" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="800">시도 횟수별 평가</text>
+            <text x="70" y="42" text-anchor="middle" font-size="10" fill="#166534">1~5번: 천재!</text>
+            <text x="200" y="42" text-anchor="middle" font-size="10" fill="#1d4ed8">6~10번: 잘했어요</text>
+            <text x="340" y="42" text-anchor="middle" font-size="10" fill="#92400e">11번 이상: 연습 필요</text>
+        </svg>
+    </div>
+
+    <!-- SVG 7: 최대 시도 횟수 제한 버전 안내 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 60" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="50" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="24" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="800">응용: 최대 시도 횟수 제한</text>
+            <text x="30" y="44" font-family="monospace" font-size="10" fill="#64748b">while tries &lt; 10:  (최대 10번만 허용, 틀리면 while 탈출)</text>
+        </svg>
+    </div>
+</div>
+
+<!-- 4페이지: 문제 -->
+<div class="page">
+    <h2>직접 풀어보세요</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q1</div>
+            <div class="problem-label">비밀번호 맞추기</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">비밀번호를 코드 안에 1234로 고정하고, 사용자가 맞출 때까지 반복해서 입력받으세요. 맞으면 "정답!" 출력 후 break합니다.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">입력</span><span class="problem-example-value">5678 (틀림) → 1234 (정답)</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">틀렸습니다. / 정답!</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle"><summary>힌트 보기</summary><div class="problem-toggle-content"><div class="hint-text">password = "1234", while True, if guess == password: print("정답!") break, else: print("틀렸습니다.")</div></div></details>
+        <details class="problem-toggle"><summary>정답 확인</summary><div class="problem-toggle-content"><div class="answer-code">password = "1234"
+while True:
+    guess = input("비밀번호 입력: ")
+    if guess == password:
+        print("정답!")
+        break
+    else:
+        print("틀렸습니다.")</div></div></details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q2</div>
+            <div class="problem-label">숫자 맞추기 힌트</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">secret = 42로 고정하고, 입력값이 크면 "DOWN", 작으면 "UP", 맞으면 "정답!" 출력하고 break하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">입력</span><span class="problem-example-value">60 → DOWN / 30 → UP / 42 → 정답!</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle"><summary>힌트 보기</summary><div class="problem-toggle-content"><div class="hint-text">secret = 42, while True, if guess == secret: break, elif guess &gt; secret: "DOWN", else: "UP"</div></div></details>
+        <details class="problem-toggle"><summary>정답 확인</summary><div class="problem-toggle-content"><div class="answer-code">secret = 42
+while True:
+    guess = int(input("숫자: "))
+    if guess == secret:
+        print("정답!")
+        break
+    elif guess > secret:
+        print("DOWN")
+    else:
+        print("UP")</div></div></details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q3</div>
+            <div class="problem-label">완전한 숫자 맞추기 게임</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">random으로 1~100 숫자를 생성하고, UP/DOWN 힌트를 주며 맞추는 게임을 만드세요. 시도 횟수도 출력합니다.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">맞추면 "N번 만에 정답!" 출력</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle"><summary>힌트 보기</summary><div class="problem-toggle-content"><div class="hint-text">import random, secret = random.randint(1,100), tries = 0, while True: tries += 1</div></div></details>
+        <details class="problem-toggle"><summary>정답 확인</summary><div class="problem-toggle-content"><div class="answer-code">import random
+secret = random.randint(1, 100)
+tries = 0
+while True:
+    guess = int(input("숫자 입력: "))
+    tries += 1
+    if guess == secret:
+        print(f"{tries}번 만에 정답!")
+        break
+    elif guess < secret:
+        print("UP")
+    else:
+        print("DOWN")</div></div></details>
+    </div>
+</div>
+
+<!-- 5페이지: 핵심 요약 -->
+<div class="page">
+    <h2>핵심 요약</h2>
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/lightbulb.png" alt="아이디어" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>이 유닛에서 배운 것</h3>
+        <ul>
+            <li><code>while True</code>는 무한 반복 — 반드시 break로 탈출해야 함</li>
+            <li><code>break</code>는 반복문을 즉시 탈출한다</li>
+            <li><code>tries += 1</code>로 반복할 때마다 시도 횟수를 누적한다</li>
+            <li>비교 연산자: <code>==</code>(같음), <code>&gt;</code>(큼), <code>&lt;</code>(작음)</li>
+            <li>UP/DOWN 전략: 중간값을 먼저 시도하면 최소 시도로 맞출 수 있다 (이진 탐색)</li>
+            <li>random.randint(1, 100)으로 1~100 사이 비밀 숫자 생성</li>
+        </ul>
+    </div>
+
+    <!-- SVG 8: while True + break 패턴 -->
+    <div style="text-align:center;margin:20px 0;">
+        <svg viewBox="0 0 460 70" style="max-width:460px;width:100%">
+            <rect x="5" y="5" width="450" height="60" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="24" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="800">while True + break 패턴</text>
+            <text x="30" y="48" font-family="monospace" font-size="10" fill="#c084fc">while</text>
+            <text x="75" y="48" font-family="monospace" font-size="10" fill="#c084fc"> True</text>
+            <text x="115" y="48" font-family="monospace" font-size="10" fill="#e2e8f0">:  ...작업...  if 탈출조건:</text>
+            <text x="315" y="48" font-family="monospace" font-size="10" fill="#c084fc">break</text>
+        </svg>
+    </div>
+
+    <!-- SVG 9: 이진 탐색 원리 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 70" style="max-width:460px;width:100%">
+            <rect x="5" y="5" width="450" height="60" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="24" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="800">이진 탐색 전략 (1~100 최대 7번!)</text>
+            <text x="40" y="44" text-anchor="middle" font-size="10" fill="#1d4ed8">1회: 50</text>
+            <text x="115" y="44" text-anchor="middle" font-size="10" fill="#1d4ed8">2회: 25 or 75</text>
+            <text x="210" y="44" text-anchor="middle" font-size="10" fill="#1d4ed8">3회: ...</text>
+            <text x="310" y="44" text-anchor="middle" font-size="10" fill="#166534">항상 중간값!</text>
+            <text x="40" y="58" text-anchor="middle" font-size="9" fill="#64748b">UP→75</text>
+            <text x="135" y="58" text-anchor="middle" font-size="9" fill="#64748b">UP→62, DOWN→37...</text>
+        </svg>
+    </div>
+
+    <!-- SVG 10: break vs while N 비교 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 55" style="max-width:460px;width:100%">
+            <rect x="5" y="5" width="220" height="45" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="115" y="24" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">while True + break</text>
+            <text x="115" y="40" text-anchor="middle" font-size="9" fill="#64748b">맞출 때까지 무한 반복</text>
+            <rect x="235" y="5" width="220" height="45" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="345" y="24" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">while tries &lt; N</text>
+            <text x="345" y="40" text-anchor="middle" font-size="9" fill="#64748b">최대 N번 시도 제한</text>
+        </svg>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

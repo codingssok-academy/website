@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Unit 66. 스택 · 큐 · 트리 — C 언어</title>
+    <link rel="stylesheet" href="../common.css">
+</head>
+
+<body>
+    <div class="wrap">
+        <div class="hdr">
+            <h1>Unit 66. 스택 · 큐 · 트리</h1>
+            <div class="sub">배열/연결리스트 기반 · BST · 순회</div>
+            <span class="unit-badge">Chapter 22 · 자료구조</span>
+            <div class="level-bar"><span class="on"></span><span class="on"></span><span class="on"></span><span
+                    class="on"></span></div>
+            <div class="meta"><span class="tag pri">📚 자료구조</span><span class="tag acc">📝 15문제</span><span
+                    class="tag">⏱ 55분</span></div>
+        </div>
+        <div class="stu-bar"><label>👤 이름 <input type="text" id="stu-name" placeholder="이름"></label><label>📅 날짜 <input
+                    type="date" id="stu-date"></label></div>
+        <div id="problems"></div>
+        <div class="submit-section">
+            <p>모든 문제를 풀었나요? 📨</p><button class="btn-submit" id="btn-submit">📄 제출하기</button>
+        </div>
+        <div class="modal-overlay" id="submit-modal">
+            <div class="modal-box">
+                <div class="modal-icon">✅</div>
+                <h3>제출 완료!</h3>
+                <p>학습지가 저장되었습니다.</p>
+                <div style="margin:12px 0"><span class="info-tag" id="modal-name"></span> <span class="info-tag"
+                        id="modal-date"></span> <span class="info-tag" id="modal-count"></span></div>
+                <p style="font-size:.78rem;color:var(--dim)">📁 <strong id="modal-filename"></strong></p><button
+                    class="btn-close-modal" id="btn-close-modal">확인</button>
+            </div>
+        </div>
+        <div class="pg"><a href="Unit65_연결리스트.html">← Unit 65</a><span class="tag active">Unit 66</span><a
+                href="../23_고급마스터/Unit67_메모리.html">Unit 67 →</a></div>
+        <div class="ft">📚 스택·큐·트리 · Unit 66</div>
+    </div>
+    <script>
+        const P = [
+            {
+                n: 1, t: "배열 기반 스택", d: 2,
+                q: `배열로 스택을 구현하세요.
+<pre class="code-c">#define MAX 100
+typedef struct { int data[MAX]; int top; } Stack;
+void init(Stack *s) { <span class="cm">/* ? */</span> }
+void push(Stack *s, int val) { <span class="cm">/* ? */</span> }
+int pop(Stack *s) { <span class="cm">/* ? */</span> }
+int peek(Stack *s) { <span class="cm">/* ? */</span> }
+int isEmpty(Stack *s) { <span class="cm">/* ? */</span> }</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">void init(Stack *s) { s->top = -1; }
+int isEmpty(Stack *s) { return s->top == -1; }
+void push(Stack *s, int val) { s->data[++(s->top)] = val; }
+int pop(Stack *s) { return s->data[(s->top)--]; }
+int peek(Stack *s) { return s->data[s->top]; }</pre><div class="trace">top=-1: 빈 스택<br>push: top 증가 후 저장<br>pop: 값 반환 후 top 감소<br>LIFO: Last In First Out!</div>`},
+
+            {
+                n: 2, t: "괄호 검사 (스택 활용)", d: 2,
+                q: `문자열의 괄호가 올바른지 검사하세요.
+<pre class="code-c"><span class="cm">// "(())" → 1 (올바름)</span>
+<span class="cm">// "([)]" → 0 (잘못됨)</span>
+<span class="cm">// "{[()]}" → 1 (올바름)</span>
+int isValid(char *str) {
+    <span class="cm">// 스택으로 검사</span>
+}</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">int isValid(char *str) {
+    char stack[100]; int top = -1;
+    for (int i = 0; str[i]; i++) {
+        char c = str[i];
+        if (c=='('||c=='['||c=='{') stack[++top]=c;
+        else {
+            if (top == -1) return 0;
+            char p = stack[top--];
+            if ((c==')' && p!='(') ||
+                (c==']' && p!='[') ||
+                (c=='}' && p!='{')) return 0;
+        }
+    }
+    return top == -1;
+}</pre>`},
+
+            {
+                n: 3, t: "후위 표기법 계산", d: 3,
+                q: `후위 표기식(예: "3 4 + 2 *")을 계산하세요.
+<pre class="code-c"><span class="cm">// "3 4 +" → 7</span>
+<span class="cm">// "5 1 2 + 4 * + 3 -" → 14</span>
+int evalPostfix(char *expr) {
+    <span class="cm">// 스택으로 계산</span>
+}</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">int evalPostfix(char *expr) {
+    int stack[100], top=-1;
+    for (int i=0; expr[i]; i++) {
+        if (expr[i]==' ') continue;
+        if (expr[i]>='0' && expr[i]<='9') {
+            int num = 0;
+            while (expr[i]>='0' && expr[i]<='9')
+                num = num*10 + (expr[i++]-'0');
+            stack[++top] = num; i--;
+        } else {
+            int b=stack[top--], a=stack[top--];
+            switch(expr[i]) {
+                case '+': stack[++top]=a+b; break;
+                case '-': stack[++top]=a-b; break;
+                case '*': stack[++top]=a*b; break;
+                case '/': stack[++top]=a/b; break;
+            }
+        }
+    }
+    return stack[0];
+}</pre>`},
+
+            {
+                n: 4, t: "배열 기반 큐", d: 2,
+                q: `배열로 원형 큐를 구현하세요.
+<pre class="code-c">#define MAX 100
+typedef struct {
+    int data[MAX]; int front, rear, count;
+} Queue;
+void enqueue(Queue *q, int val) { <span class="cm">/* ? */</span> }
+int dequeue(Queue *q) { <span class="cm">/* ? */</span> }</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">void init(Queue *q) { q->front=0; q->rear=-1; q->count=0; }
+void enqueue(Queue *q, int val) {
+    q->rear = (q->rear + 1) % MAX;
+    q->data[q->rear] = val;
+    q->count++;
+}
+int dequeue(Queue *q) {
+    int val = q->data[q->front];
+    q->front = (q->front + 1) % MAX;
+    q->count--;
+    return val;
+}</pre><div class="trace">원형 큐: % MAX로 인덱스 순환!<br>FIFO: First In, First Out</div>`},
+
+            {
+                n: 5, t: "BFS 미로 탐색 (큐 활용)", d: 3,
+                q: `큐를 이용해서 미로의 최단 경로를 찾으세요.
+<pre class="code-c"><span class="cm">// 0: 이동가능, 1: 벽</span>
+<span class="cm">// (0,0)에서 (N-1,M-1)까지 최단 거리</span>
+int bfs(int maze[][100], int n, int m) {
+    <span class="cm">// 큐 + 방문 배열로 BFS</span>
+}</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">int dx[]={0,0,1,-1}, dy[]={1,-1,0,0};
+int bfs(int maze[][100], int n, int m) {
+    int dist[100][100]={0}, visited[100][100]={0};
+    int qx[10000],qy[10000],front=0,rear=0;
+    qx[rear]=0; qy[rear++]=0; visited[0][0]=1;
+    while (front < rear) {
+        int x=qx[front], y=qy[front++];
+        if (x==n-1 && y==m-1) return dist[x][y];
+        for (int d=0;d<4;d++) {
+            int nx=x+dx[d], ny=y+dy[d];
+            if (nx>=0&&nx<n&&ny>=0&&ny<m&&
+                !visited[nx][ny]&&!maze[nx][ny]) {
+                visited[nx][ny]=1;
+                dist[nx][ny]=dist[x][y]+1;
+                qx[rear]=nx; qy[rear++]=ny;
+            }
+        }
+    }
+    return -1;
+}</pre>`},
+
+            {
+                n: 6, t: "BST 노드 삽입", d: 2,
+                q: `이진 탐색 트리에 값을 삽입하세요.
+<pre class="code-c">typedef struct TNode {
+    int data;
+    struct TNode *left, *right;
+} TNode;
+TNode* insert(TNode *root, int data) {
+    <span class="cm">// 재귀로 올바른 위치에 삽입</span>
+}</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">TNode* createTNode(int data) {
+    TNode *n=(TNode*)malloc(sizeof(TNode));
+    n->data=data; n->left=n->right=NULL;
+    return n;
+}
+TNode* insert(TNode *root, int data) {
+    if (!root) return createTNode(data);
+    if (data < root->data)
+        root->left = insert(root->left, data);
+    else if (data > root->data)
+        root->right = insert(root->right, data);
+    return root;
+}</pre><div class="trace">작으면 왼쪽, 크면 오른쪽!<br>재귀로 빈 자리까지 내려감</div>`},
+
+            {
+                n: 7, t: "BST 탐색", d: 2,
+                q: `BST에서 값을 찾으세요.
+<pre class="code-c">TNode* search(TNode *root, int key) {
+    <span class="cm">// key를 찾아 노드 포인터 반환 (없으면 NULL)</span>
+}</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">TNode* search(TNode *root, int key) {
+    if (!root || root->data == key) return root;
+    if (key < root->data) return search(root->left, key);
+    return search(root->right, key);
+}</pre><div class="trace">O(log n) — 매번 절반 제거!<br>(편향 트리면 O(n))</div>`},
+
+            {
+                n: 8, t: "트리 순회 (전위·중위·후위)", d: 2,
+                q: `세 가지 트리 순회를 작성하세요.
+<pre class="code-c">void preorder(TNode *r)  { <span class="cm">/* 전위: 루트→좌→우 */</span> }
+void inorder(TNode *r)   { <span class="cm">/* 중위: 좌→루트→우 */</span> }
+void postorder(TNode *r) { <span class="cm">/* 후위: 좌→우→루트 */</span> }</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">void preorder(TNode *r) {
+    if (!r) return;
+    printf("%d ",r->data);
+    preorder(r->left); preorder(r->right);
+}
+void inorder(TNode *r) {
+    if (!r) return;
+    inorder(r->left);
+    printf("%d ",r->data);
+    inorder(r->right);
+}
+void postorder(TNode *r) {
+    if (!r) return;
+    postorder(r->left); postorder(r->right);
+    printf("%d ",r->data);
+}</pre><div class="trace">BST의 중위순회 = 오름차순 출력!<br>전위: 복사에 유용<br>후위: 삭제에 유용</div>`},
+
+            {
+                n: 9, t: "[출력예측] 트리 순회", d: 2,
+                q: `아래 BST의 순회 결과를 쓰세요.
+<pre class="code-c"><span class="cm">        5</span>
+<span class="cm">       / \\</span>
+<span class="cm">      3   7</span>
+<span class="cm">     / \\   \\</span>
+<span class="cm">    2   4   8</span>
+
+<span class="cm">전위(preorder):  ?</span>
+<span class="cm">중위(inorder):   ?</span>
+<span class="cm">후위(postorder): ?</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">전위: 5 3 2 4 7 8
+중위: 2 3 4 5 7 8
+후위: 2 4 3 8 7 5</pre><div class="trace">전위: 루트(5)→좌(3→2→4)→우(7→8)<br>중위: 좌(2→3→4)→루트(5)→우(7→8) <span class="val">= 정렬!</span><br>후위: 좌(2→4→3)→우(8→7)→루트(5)</div>`},
+
+            {
+                n: 10, t: "트리 높이", d: 2,
+                q: `트리의 높이(깊이)를 구하세요.
+<pre class="code-c">int height(TNode *root) {
+    <span class="cm">// 빈 트리: 0, 리프: 1</span>
+}</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">int height(TNode *root) {
+    if (!root) return 0;
+    int lh = height(root->left);
+    int rh = height(root->right);
+    return (lh > rh ? lh : rh) + 1;
+}</pre>`},
+
+            {
+                n: 11, t: "트리 노드 수 세기", d: 1,
+                q: `트리의 전체 노드 수를 세세요.
+<pre class="code-c">int countNodes(TNode *root) { <span class="cm">/* ? */</span> }</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">int countNodes(TNode *root) {
+    if (!root) return 0;
+    return 1 + countNodes(root->left) + countNodes(root->right);
+}</pre>`},
+
+            {
+                n: 12, t: "DFS 그래프 탐색 (재귀)", d: 3,
+                q: `인접 행렬 그래프에서 DFS를 구현하세요.
+<pre class="code-c">int visited[100] = {0};
+void dfs(int graph[][100], int n, int v) {
+    <span class="cm">// 정점 v에서 DFS</span>
+}</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">void dfs(int graph[][100], int n, int v) {
+    visited[v] = 1;
+    printf("%d ", v);
+    for (int i = 0; i < n; i++)
+        if (graph[v][i] && !visited[i])
+            dfs(graph, n, i);
+}</pre>`},
+
+            {
+                n: 13, t: "해시 테이블 (체이닝)", d: 3,
+                q: `해시 테이블을 연결 리스트 체이닝으로 구현하세요.
+<pre class="code-c">#define TABLE_SIZE 10
+typedef struct Entry { int key; int val; struct Entry *next; } Entry;
+Entry *table[TABLE_SIZE];
+void put(int key, int val) { <span class="cm">/* ? */</span> }
+int get(int key) { <span class="cm">/* ? */</span> }</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">int hash(int key) { return key % TABLE_SIZE; }
+void put(int key, int val) {
+    int h = hash(key);
+    Entry *e = (Entry*)malloc(sizeof(Entry));
+    e->key=key; e->val=val;
+    e->next = table[h];
+    table[h] = e;
+}
+int get(int key) {
+    int h = hash(key);
+    Entry *e = table[h];
+    while (e) {
+        if (e->key == key) return e->val;
+        e = e->next;
+    }
+    return -1; <span class="cm">// 못 찾음</span>
+}</pre>`},
+
+            {
+                n: 14, t: "우선순위 큐 (힙)", d: 3,
+                q: `최소 힙을 배열로 구현하세요.
+<pre class="code-c">int heap[101], heapSize = 0;
+void insert(int val) { <span class="cm">/* ? */</span> }
+int extractMin() { <span class="cm">/* ? */</span> }</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">void insert(int val) {
+    heap[++heapSize] = val;
+    int i = heapSize;
+    while (i>1 && heap[i]<heap[i/2]) {
+        int t=heap[i]; heap[i]=heap[i/2]; heap[i/2]=t;
+        i /= 2;
+    }
+}
+int extractMin() {
+    int min = heap[1];
+    heap[1] = heap[heapSize--];
+    int i = 1;
+    while (2*i <= heapSize) {
+        int child = 2*i;
+        if (child+1<=heapSize && heap[child+1]<heap[child])
+            child++;
+        if (heap[i]<=heap[child]) break;
+        int t=heap[i]; heap[i]=heap[child]; heap[child]=t;
+        i = child;
+    }
+    return min;
+}</pre><div class="trace">부모: i/2, 자식: 2i, 2i+1<br>삽입: 맨 끝에 넣고 위로 올리기<br>삭제: 루트↔마지막, 아래로 내리기</div>`},
+
+            {
+                n: 15, t: "🏆 자료구조 선택 문제", d: 2,
+                q: `각 상황에 가장 적합한 자료구조를 고르세요.
+<pre class="code-c"><span class="cm">(A) 함수 호출 추적 → ?</span>
+<span class="cm">(B) 프린터 작업 대기 → ?</span>
+<span class="cm">(C) 사전 단어 검색 → ?</span>
+<span class="cm">(D) 최단 경로 탐색 → ?</span>
+<span class="cm">(E) 항상 최솟값 빠르게 → ?</span>
+<span class="cm">(F) key→value 매핑, O(1) 조회 → ?</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">(A) 스택 — LIFO, 재귀/되돌리기
+(B) 큐 — FIFO, 순서대로 처리
+(C) BST/해시 — O(log n) 또는 O(1) 검색
+(D) 그래프 + BFS — 최단 경로는 BFS!
+(E) 최소 힙 — O(1) 최솟값, O(log n) 삽입삭제
+(F) 해시 테이블 — O(1) 평균 조회</pre>`}
+        ];
+        const c = document.getElementById('problems'); P.forEach(p => { const dc = p.d <= 1 ? 'ez' : p.d <= 2 ? 'md' : 'hd'; const dots = Array.from({ length: 5 }, (_, i) => `<span${i < p.d ? ' class="on"' : ''}>​</span>`).join(''); c.innerHTML += `<div class="prob"><div class="prob-top"><div class="prob-num ${dc}">${p.n}</div><div class="prob-title">${p.t}</div><div class="diff-dots">${dots}</div></div><div class="prob-body"><div class="q">${p.q}</div><textarea class="write" placeholder="✍️ 답을 작성하세요" rows="8"></textarea><details class="ans"><summary>정답 및 해설 보기</summary><div class="ans-body">${p.a}</div></details></div></div>`; });
+    </script>
+    <script src="../submit.js"></script>
+    <script src="../../platform.js"></script>
+</body>
+
+</html>

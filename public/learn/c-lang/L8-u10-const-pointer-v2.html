@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — const 포인터</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+.page { width: 210mm; min-height: 297mm; margin: 16px auto; padding: 18mm 20mm 15mm 22mm; background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: relative; page-break-after: always; }
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after { content: counter(pagenum); position: absolute; bottom: 10mm; right: 16mm; font-size: 10px; color: #94a3b8; font-weight: 600; }
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #7c3aed; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark { position: absolute; top: -10px; right: -15px; font-size: 260px; font-weight: 900; color: rgba(124,58,237,0.12); line-height: 1; pointer-events: none; }
+.cover-label { font-size: 14px; font-weight: 500; color: #7c3aed; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 36px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #7c3aed; font-weight: 900; }
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #7c3aed; font-weight: 600; }
+.code { background: #0f172a; border-radius: 8px; padding: 16px 20px; font-family: 'JetBrains Mono', monospace; font-size: 14px; color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap; }
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.practice { margin: 20px 0; border-left: 4px solid #7c3aed; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #5b21b6; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #7c3aed; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #7c3aed; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#7c3aed,#a855f7); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #4c1d95; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+.summary { background: #fff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+.callout { background: #f5f3ff; border-left: 4px solid #7c3aed; border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 14px 0; }
+.callout p { margin: 0; font-size: 14px; color: #4c1d95; }
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<div class="page cover">
+  <div class="cover-sidebar"></div>
+  <div class="cover-accent"></div>
+  <div class="cover-body">
+    <div class="cover-watermark">L8</div>
+    <div class="cover-label">Chapter 8 — Unit 10</div>
+    <h1 class="cover-title">const int *p vs int *const p<br>값 보호 vs 주소 보호</h1>
+    <p class="cover-sub">const 위치에 따라 "값을 못 바꾸는 포인터"와 "주소를 못 바꾸는 포인터"가 달라집니다. 헷갈리는 두 가지를 완전히 구분합니다.</p>
+    <div style="margin:24px 0;">
+      <svg viewBox="0 0 500 140" style="max-width:500px;width:100%">
+        <defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#7c3aed"/></marker></defs>
+        <!-- const int *p -->
+        <rect x="10" y="20" width="220" height="100" rx="8" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+        <text x="120" y="40" text-anchor="middle" font-size="11" fill="#dc2626" font-weight="800">const int *p (값 보호)</text>
+        <text x="30" y="60" font-size="11" fill="#dc2626" font-family="JetBrains Mono">const int *p = &amp;a;</text>
+        <text x="30" y="78" font-size="10" fill="#ef4444">*p = 10;  → 오류! (값 수정 불가)</text>
+        <text x="30" y="94" font-size="10" fill="#22c55e">p = &amp;b;   → OK (주소 변경 가능)</text>
+        <text x="120" y="112" text-anchor="middle" font-size="9" fill="#dc2626" font-weight="700">*가 const 뒤 = 값 고정</text>
+        <!-- int *const p -->
+        <rect x="270" y="20" width="220" height="100" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+        <text x="380" y="40" text-anchor="middle" font-size="11" fill="#92400e" font-weight="800">int *const p (주소 보호)</text>
+        <text x="290" y="60" font-size="11" fill="#92400e" font-family="JetBrains Mono">int *const p = &amp;a;</text>
+        <text x="290" y="78" font-size="10" fill="#22c55e">*p = 10;  → OK (값 수정 가능)</text>
+        <text x="290" y="94" font-size="10" fill="#ef4444">p = &amp;b;   → 오류! (주소 변경 불가)</text>
+        <text x="380" y="112" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">const가 * 뒤 = 주소 고정</text>
+      </svg>
+    </div>
+    <div class="cover-goals">
+      <h3>이 유닛에서 배우는 것</h3>
+      <ul>
+        <li><code>const int *p</code>: 포인터로 값을 바꿀 수 없음을 이해합니다.</li>
+        <li><code>int *const p</code>: 포인터 주소를 바꿀 수 없음을 이해합니다.</li>
+        <li><code>const int *const p</code>: 둘 다 고정됨을 압니다.</li>
+        <li>const 포인터를 사용하는 이유(안전성)를 설명합니다.</li>
+        <li>함수 매개변수에서 const를 올바르게 사용합니다.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- 페이지 2 -->
+<div class="page">
+  <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/computer-basics/cpu.png" alt="CPU - 포인터와 메모리 처리" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>const int *p — 가리키는 값을 보호</h2>
+  <p><code>const</code>가 <code>*</code> <strong>앞</strong>에 있으면 포인터를 통해 값을 변경할 수 없습니다. 포인터 자체(가리키는 대상)는 바꿀 수 있습니다.</p>
+  <div style="text-align:center;margin:18px 0;">
+    <svg viewBox="0 0 460 150" style="max-width:460px;width:100%">
+      <defs><marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#ef4444"/></marker><marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#22c55e"/></marker></defs>
+      <!-- 변수들 -->
+      <rect x="10" y="30" width="80" height="50" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+      <text x="50" y="50" text-anchor="middle" font-size="9" fill="#64748b">a=10</text>
+      <text x="50" y="68" text-anchor="middle" font-size="18" fill="#1d4ed8" font-weight="900">10</text>
+      <rect x="10" y="95" width="80" height="50" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="2"/>
+      <text x="50" y="115" text-anchor="middle" font-size="9" fill="#64748b">b=20</text>
+      <text x="50" y="133" text-anchor="middle" font-size="18" fill="#166534" font-weight="900">20</text>
+      <!-- 포인터 p -->
+      <rect x="200" y="55" width="130" height="45" rx="6" fill="#fef2f2" stroke="#ef4444" stroke-width="2"/>
+      <text x="265" y="72" text-anchor="middle" font-size="10" fill="#dc2626" font-weight="700">const int *p</text>
+      <text x="265" y="90" text-anchor="middle" font-size="9" fill="#dc2626">값 변경 불가!</text>
+      <!-- 가리킴 화살표 -->
+      <line x1="200" y1="77" x2="93" y2="55" stroke="#7c3aed" stroke-width="2" marker-end="url(#a1)"/>
+      <!-- *p=10 불가 -->
+      <rect x="350" y="30" width="100" height="35" rx="6" fill="#fef2f2" stroke="#ef4444"/>
+      <text x="400" y="45" text-anchor="middle" font-size="10" fill="#dc2626" font-weight="700">*p = 10</text>
+      <text x="400" y="59" text-anchor="middle" font-size="10" fill="#dc2626">→ 오류!</text>
+      <!-- p=&b 가능 -->
+      <rect x="350" y="80" width="100" height="35" rx="6" fill="#f0fdf4" stroke="#22c55e"/>
+      <text x="400" y="95" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">p = &amp;b</text>
+      <text x="400" y="109" text-anchor="middle" font-size="10" fill="#166534">→ 가능!</text>
+      <!-- 잠금 표시 -->
+      <circle cx="265" cy="35" r="12" fill="#ef4444"/>
+      <text x="265" y="40" text-anchor="middle" font-size="12" fill="#fff" font-weight="900">X</text>
+      <text x="265" y="25" text-anchor="middle" font-size="10" fill="#ef4444" font-weight="700">값 잠금</text>
+    </svg>
+  </div>
+  <div class="code"><span class="kw">int</span> a = <span class="num">10</span>, b = <span class="num">20</span>;
+<span class="kw">const int</span> *p = &amp;a;
+
+<span class="cmt">// *p = 99;  — 오류! 값 수정 불가</span>
+p = &amp;b;          <span class="cmt">// OK — 다른 주소로 변경 가능</span>
+<span class="fn">printf</span>(<span class="str">"%d\n"</span>, *p);  <span class="cmt">// 20</span>
+
+<span class="cmt">// a는 직접 수정 가능</span>
+a = <span class="num">99</span>;
+<span class="fn">printf</span>(<span class="str">"%d\n"</span>, *p);  <span class="cmt">// 오류 아님 — p가 a 가리키면 99</span></div>
+
+  <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/computer-basics/ram.png" alt="RAM - 포인터가 가리키는 메모리" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>int *const p — 포인터 주소를 보호</h2>
+  <p><code>const</code>가 <code>*</code> <strong>뒤</strong>에 있으면 포인터가 가리키는 주소를 변경할 수 없습니다. 값은 바꿀 수 있습니다.</p>
+  <div class="code"><span class="kw">int</span> a = <span class="num">10</span>, b = <span class="num">20</span>;
+<span class="kw">int</span> *<span class="kw">const</span> p = &amp;a;  <span class="cmt">// p는 반드시 초기화!</span>
+
+*p = <span class="num">99</span>;          <span class="cmt">// OK — 값 수정 가능</span>
+<span class="cmt">// p = &amp;b;  — 오류! 주소 변경 불가</span>
+<span class="fn">printf</span>(<span class="str">"%d\n"</span>, a);  <span class="cmt">// 99</span></div>
+</div>
+
+<!-- 페이지 3 -->
+<div class="page">
+  <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/c-lang/magnifying-glass.png" alt="돋보기 - 포인터 주소 탐색" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>세 가지 const 포인터 비교</h2>
+  <div style="text-align:center;margin:18px 0;">
+    <svg viewBox="0 0 460 220" style="max-width:460px;width:100%">
+      <text x="230" y="18" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="800">const 위치에 따른 제한</text>
+      <!-- 헤더 -->
+      <text x="10" y="38" font-size="10" fill="#94a3b8" font-weight="700">선언</text>
+      <text x="200" y="38" font-size="10" fill="#94a3b8" font-weight="700">*p = 변경</text>
+      <text x="310" y="38" font-size="10" fill="#94a3b8" font-weight="700">p = 주소변경</text>
+      <text x="410" y="38" font-size="10" fill="#94a3b8" font-weight="700">용도</text>
+      <line x1="10" y1="42" x2="450" y2="42" stroke="#e2e8f0"/>
+      <!-- 1: 일반 포인터 -->
+      <text x="10" y="62" font-size="10" fill="#64748b" font-family="JetBrains Mono">int *p</text>
+      <rect x="195" y="50" width="40" height="18" rx="4" fill="#f0fdf4" stroke="#22c55e"/>
+      <text x="215" y="63" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">가능</text>
+      <rect x="305" y="50" width="40" height="18" rx="4" fill="#f0fdf4" stroke="#22c55e"/>
+      <text x="325" y="63" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">가능</text>
+      <text x="405" y="62" font-size="9" fill="#64748b">일반 사용</text>
+      <line x1="10" y1="74" x2="450" y2="74" stroke="#f1f5f9"/>
+      <!-- 2: const int *p -->
+      <text x="10" y="94" font-size="10" fill="#dc2626" font-family="JetBrains Mono">const int *p</text>
+      <rect x="195" y="82" width="40" height="18" rx="4" fill="#fef2f2" stroke="#ef4444"/>
+      <text x="215" y="95" text-anchor="middle" font-size="9" fill="#dc2626" font-weight="700">불가</text>
+      <rect x="305" y="82" width="40" height="18" rx="4" fill="#f0fdf4" stroke="#22c55e"/>
+      <text x="325" y="95" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">가능</text>
+      <text x="405" y="94" font-size="9" fill="#64748b">읽기 전용</text>
+      <line x1="10" y1="106" x2="450" y2="106" stroke="#f1f5f9"/>
+      <!-- 3: int *const p -->
+      <text x="10" y="126" font-size="10" fill="#92400e" font-family="JetBrains Mono">int *const p</text>
+      <rect x="195" y="114" width="40" height="18" rx="4" fill="#f0fdf4" stroke="#22c55e"/>
+      <text x="215" y="127" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">가능</text>
+      <rect x="305" y="114" width="40" height="18" rx="4" fill="#fef2f2" stroke="#ef4444"/>
+      <text x="325" y="127" text-anchor="middle" font-size="9" fill="#dc2626" font-weight="700">불가</text>
+      <text x="405" y="126" font-size="9" fill="#64748b">고정 주소</text>
+      <line x1="10" y1="138" x2="450" y2="138" stroke="#f1f5f9"/>
+      <!-- 4: const int *const p -->
+      <text x="10" y="158" font-size="9" fill="#5b21b6" font-family="JetBrains Mono">const int *const p</text>
+      <rect x="195" y="146" width="40" height="18" rx="4" fill="#fef2f2" stroke="#ef4444"/>
+      <text x="215" y="159" text-anchor="middle" font-size="9" fill="#dc2626" font-weight="700">불가</text>
+      <rect x="305" y="146" width="40" height="18" rx="4" fill="#fef2f2" stroke="#ef4444"/>
+      <text x="325" y="159" text-anchor="middle" font-size="9" fill="#dc2626" font-weight="700">불가</text>
+      <text x="405" y="158" font-size="9" fill="#64748b">완전 고정</text>
+      <!-- 암기 비법 -->
+      <rect x="10" y="178" width="440" height="36" rx="8" fill="#f5f3ff" stroke="#7c3aed"/>
+      <text x="230" y="194" text-anchor="middle" font-size="11" fill="#5b21b6" font-weight="700">암기 비법: *의 오른쪽에 const → 그 쪽이 고정</text>
+      <text x="230" y="208" text-anchor="middle" font-size="10" fill="#7c3aed">const *p = 값고정  |  * const p = 주소고정</text>
+    </svg>
+  </div>
+  <div class="code"><span class="kw">int</span> a = <span class="num">1</span>, b = <span class="num">2</span>;
+
+<span class="kw">const int</span> *p1 = &amp;a;      <span class="cmt">// 값 보호</span>
+<span class="kw">int</span> *<span class="kw">const</span> p2 = &amp;a;      <span class="cmt">// 주소 보호 (초기화 필수)</span>
+<span class="kw">const int</span> *<span class="kw">const</span> p3 = &amp;a; <span class="cmt">// 모두 보호</span>
+
+<span class="cmt">// p1: 값 변경 불가, 주소 변경 가능</span>
+<span class="cmt">// *p1 = 9;  — 오류</span>
+p1 = &amp;b;  <span class="cmt">// OK</span>
+
+<span class="cmt">// p2: 값 변경 가능, 주소 변경 불가</span>
+*p2 = <span class="num">9</span>;  <span class="cmt">// OK</span>
+<span class="cmt">// p2 = &amp;b;  — 오류</span></div>
+</div>
+
+<!-- 페이지 4 -->
+<div class="page">
+  <h2>함수에서 const 사용</h2>
+  <p>함수가 배열이나 변수를 수정하지 않는다면 매개변수에 <code>const</code>를 붙여 의도를 명확히 표현하고 버그를 방지합니다.</p>
+  <div class="code"><span class="cmt">// 배열을 읽기만 — const 붙이기</span>
+<span class="kw">int</span> <span class="fn">sum</span>(<span class="kw">const int</span> *arr, <span class="kw">int</span> n) {
+    <span class="kw">int</span> s = <span class="num">0</span>;
+    <span class="kw">for</span> (<span class="kw">int</span> i=<span class="num">0</span>; i&lt;n; i++) s += arr[i];
+    <span class="cmt">// arr[0] = 0;  — 오류! const로 보호</span>
+    <span class="kw">return</span> s;
+}
+
+<span class="cmt">// 문자열 길이 — const char*</span>
+<span class="kw">int</span> <span class="fn">my_strlen</span>(<span class="kw">const char</span> *s) {
+    <span class="kw">int</span> n = <span class="num">0</span>;
+    <span class="kw">while</span> (*s++) n++;
+    <span class="kw">return</span> n;
+}
+
+<span class="cmt">// 배열 수정 필요 — const 없이</span>
+<span class="kw">void</span> <span class="fn">fill</span>(<span class="kw">int</span> *arr, <span class="kw">int</span> n, <span class="kw">int</span> val) {
+    <span class="kw">for</span> (<span class="kw">int</span> i=<span class="num">0</span>; i&lt;n; i++) arr[i] = val;
+}</div>
+  <div class="callout">
+    <p><strong>좋은 습관:</strong> 읽기 전용 매개변수에는 항상 <code>const</code>를 붙이세요. 실수로 수정하면 컴파일러가 잡아줍니다!</p>
+  </div>
+  <div style="display:flex;align-items:center;gap:6px;margin:14px 0 4px;">
+        <img src="/images/learn/c-lang/magnifying-glass.png" alt="돋보기 - 포인터 주소 탐색" style="width:24px;height:24px;object-fit:contain;background:#fff;border-radius:8px;">
+        <span style="font-size:12px;color:#1d4ed8;font-weight:600;">실습 구역</span>
+    </div>
+<div class="practice">
+    <div class="practice-head">따라해보세요</div>
+    <div class="practice-body">
+      <div class="practice-item">
+        <div class="practice-num">1</div>
+        <div class="practice-desc">배열의 최댓값을 찾아 반환하는 함수를 const int* 매개변수로 작성하세요.</div>
+        <div class="code"><span class="kw">int</span> <span class="fn">max_val</span>(<span class="kw">const int</span> *arr, <span class="kw">int</span> n) {
+    <span class="kw">int</span> m = arr[<span class="num">0</span>];
+    <span class="kw">for</span> (<span class="kw">int</span> i=<span class="num">1</span>;i&lt;n;i++)
+        <span class="kw">if</span>(arr[i]&gt;m) m=arr[i];
+    <span class="kw">return</span> m;
+}</div>
+        <div class="practice-result">배열을 수정하지 않으므로 const가 적절</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 페이지 5 -->
+<div class="page">
+  <h2>정리 + 연습문제</h2>
+  <div style="display:flex;align-items:center;gap:8px;margin:16px 0 6px;padding:8px 14px;background:#f0f9ff;border-radius:6px;border:1px solid #bae6fd;">
+        <img src="/images/learn/computer-basics/cpu.png" alt="CPU - 포인터와 메모리 처리" style="width:28px;height:28px;object-fit:contain;background:#fff;border-radius:8px;">
+        <img src="/images/learn/computer-basics/ram.png" alt="RAM - 포인터가 가리키는 메모리" style="width:28px;height:28px;object-fit:contain;background:#fff;border-radius:8px;">
+        <span style="font-size:12px;color:#0369a1;font-weight:600;">핵심 정리</span>
+    </div>
+<div class="summary">
+    <h3>핵심 정리</h3>
+    <ul>
+      <li><code>const int *p</code>: 가리키는 값 변경 불가, 주소 변경 가능 (값 보호)</li>
+      <li><code>int *const p</code>: 주소 변경 불가, 값 변경 가능 (주소 고정, 초기화 필수)</li>
+      <li><code>const int *const p</code>: 값도 주소도 모두 변경 불가</li>
+      <li>암기: * 오른쪽 const = 그 쪽이 고정</li>
+      <li>함수 매개변수: 수정 안 하면 const 붙이기</li>
+    </ul>
+  </div>
+
+  <div class="problem">
+    <div class="problem-head"><div class="problem-badge">1</div><div class="problem-label">가능/불가능 판단</div><span class="problem-diff easy">쉬움</span></div>
+    <div class="problem-body">
+      <div class="problem-text"><code>const int *p = &amp;a;</code> 선언 후 가능한 것은?</div>
+      <div class="problem-example">
+        <div class="problem-example-row"><span class="problem-example-label">①</span><span class="problem-example-value">*p = 99;</span></div>
+        <div class="problem-example-row"><span class="problem-example-label">②</span><span class="problem-example-value">p = &amp;b;</span></div>
+      </div>
+    </div>
+    <details class="problem-toggle"><summary>정답 보기</summary><div class="problem-toggle-content"><div class="answer-code">② p = &amp;b; 는 가능 (주소 변경 가능)
+① *p = 99; 는 오류 (값 수정 불가)</div></div></details>
+  </div>
+
+  <div class="problem">
+    <div class="problem-head"><div class="problem-badge">2</div><div class="problem-label">const 위치</div><span class="problem-diff easy">쉬움</span></div>
+    <div class="problem-body">
+      <div class="problem-text">포인터가 항상 같은 변수를 가리켜야 할 때(주소 고정) 올바른 선언은?</div>
+      <div class="problem-example">
+        <div class="problem-example-row"><span class="problem-example-label">①</span><span class="problem-example-value">const int *p = &amp;a;</span></div>
+        <div class="problem-example-row"><span class="problem-example-label">②</span><span class="problem-example-value">int *const p = &amp;a;</span></div>
+      </div>
+    </div>
+    <details class="problem-toggle"><summary>정답 보기</summary><div class="problem-toggle-content"><div class="answer-code">② int *const p = &amp;a; — * 뒤 const = 주소 고정</div></div></details>
+  </div>
+
+  <div class="problem">
+    <div class="problem-head"><div class="problem-badge">3</div><div class="problem-label">오류 찾기</div><span class="problem-diff medium">보통</span></div>
+    <div class="problem-body">
+      <div class="problem-text">아래에서 오류가 발생하는 줄의 번호를 쓰세요.</div>
+      <div class="problem-example">
+        <div class="problem-example-row"><span class="problem-example-label">1</span><span class="problem-example-value">int a=1, b=2; int *const p = &amp;a;</span></div>
+        <div class="problem-example-row"><span class="problem-example-label">2</span><span class="problem-example-value">*p = 99;</span></div>
+        <div class="problem-example-row"><span class="problem-example-label">3</span><span class="problem-example-value">p = &amp;b;</span></div>
+      </div>
+    </div>
+    <details class="problem-toggle"><summary>정답 보기</summary><div class="problem-toggle-content"><div class="answer-code">3번 줄 — int *const p는 주소 변경 불가, 2번은 가능</div></div></details>
+  </div>
+
+  <div class="problem">
+    <div class="problem-head"><div class="problem-badge">4</div><div class="problem-label">const 함수 매개변수</div><span class="problem-diff medium">보통</span></div>
+    <div class="problem-body">
+      <div class="problem-text">배열 원소를 모두 출력하는 함수에 const를 적용하세요.</div>
+      <div class="problem-example">
+        <div class="problem-example-row"><span class="problem-example-value">void print(_____ arr, int n);</span></div>
+      </div>
+    </div>
+    <details class="problem-toggle"><summary>정답 보기</summary><div class="problem-toggle-content"><div class="answer-code">void print(const int *arr, int n);</div></div></details>
+  </div>
+
+  <div class="problem">
+    <div class="problem-head"><div class="problem-badge">5</div><div class="problem-label">완전 고정 포인터</div><span class="problem-diff hard">어려움</span></div>
+    <div class="problem-body">
+      <div class="problem-text">값도, 주소도 변경할 수 없는 포인터를 선언하는 완전한 코드를 작성하세요.</div>
+    </div>
+    <details class="problem-toggle"><summary>정답 보기</summary><div class="problem-toggle-content"><div class="answer-code">int a = 10;
+const int *const p = &amp;a;
+// *p = 20;   — 오류
+// p = &amp;b;    — 오류</div></div></details>
+  </div>
+
+    <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:20px;padding-top:10px;border-top:1px solid #f1f5f9;">
+        <img src="/images/learn/c-lang/code-screen.png" alt="코드 화면 - 포인터 코드 예시" style="width:22px;height:22px;object-fit:contain;opacity:0.6;background:#fff;border-radius:8px;">
+        <span style="font-size:10px;color:#cbd5e1;">코딩쏙 C언어</span>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

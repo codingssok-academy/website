@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 공용체 union</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+.page { width: 210mm; min-height: 297mm; margin: 16px auto; padding: 18mm 20mm 15mm 22mm; background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: relative; page-break-after: always; }
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after { content: counter(pagenum); position: absolute; bottom: 10mm; right: 16mm; font-size: 10px; color: #94a3b8; font-weight: 600; }
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark { position: absolute; top: -10px; right: -15px; font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3); line-height: 1; pointer-events: none; }
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #2563eb; font-weight: 600; }
+.code { background: #0f172a; border-radius: 8px; padding: 16px 20px; font-family: 'JetBrains Mono', monospace; font-size: 14px; color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap; }
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<div class="page cover">
+  <div class="cover-sidebar"></div>
+  <div class="cover-accent"></div>
+  <div class="cover-body">
+    <div class="cover-watermark">L9</div>
+    <div class="cover-label">Level 9 · Unit 10</div>
+    <h1 class="cover-title">공용체 union — 메모리 공유하기</h1>
+    <p class="cover-sub">union은 여러 멤버가 같은 메모리 공간을 공유합니다. 구조체와 비교하며 언제 union이 유용한지 이해해봅시다.</p>
+    <div style="margin:20px 0;">
+      <svg viewBox="0 0 460 100" style="max-width:460px;width:100%">
+        <!-- struct 메모리 -->
+        <text x="100" y="16" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="800">struct: 멤버별 독립</text>
+        <rect x="10" y="24" width="50" height="28" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+        <text x="35" y="42" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">i(4B)</text>
+        <rect x="68" y="24" width="50" height="28" rx="4" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+        <text x="93" y="42" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">f(4B)</text>
+        <rect x="126" y="24" width="30" height="28" rx="4" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+        <text x="141" y="42" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">c(1B)</text>
+        <text x="100" y="64" text-anchor="middle" font-size="10" fill="#64748b">총 9 bytes</text>
+        <!-- union 메모리 -->
+        <text x="350" y="16" text-anchor="middle" font-size="11" fill="#dc2626" font-weight="800">union: 메모리 공유</text>
+        <rect x="250" y="24" width="200" height="28" rx="4" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+        <text x="280" y="36" font-size="10" fill="#dc2626" font-family="JetBrains Mono">i/f/c 모두 이 공간 공유</text>
+        <text x="280" y="50" font-size="9" fill="#ef4444">← 4 bytes (가장 큰 멤버 크기) →</text>
+        <text x="350" y="64" text-anchor="middle" font-size="10" fill="#64748b">총 4 bytes</text>
+        <text x="230" y="88" text-anchor="middle" font-size="10" fill="#94a3b8">union은 한 번에 하나의 멤버만 유효!</text>
+      </svg>
+    </div>
+    <div class="cover-goals">
+      <h3>이 유닛에서 배우는 것</h3>
+      <ul>
+        <li>union이 struct와 어떻게 다른지 설명할 수 있습니다.</li>
+        <li>union 선언과 멤버 접근을 할 수 있습니다.</li>
+        <li>union의 크기가 가장 큰 멤버 크기임을 이해합니다.</li>
+        <li>한 번에 하나의 멤버만 유효하다는 규칙을 알 수 있습니다.</li>
+        <li>union의 실용적 사용 사례를 이해합니다.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+  <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/c-lang/database.png" alt="데이터베이스 - 구조체로 데이터 묶음" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>union(공용체) 기본 문법</h2>
+  <p>union은 struct와 문법이 비슷하지만, 모든 멤버가 <strong>같은 메모리 주소</strong>를 공유합니다. 크기는 가장 큰 멤버의 크기와 같습니다.</p>
+  <div class="code"><span class="kw">union</span> Data {
+    <span class="kw">int</span>   i;    <span class="cmt">// 4 bytes</span>
+    <span class="kw">float</span> f;    <span class="cmt">// 4 bytes</span>
+    <span class="kw">char</span>  c;    <span class="cmt">// 1 byte</span>
+};            <span class="cmt">// sizeof(union Data) = 4 (가장 큰 멤버)</span>
+
+<span class="kw">union</span> Data d;
+d.i = <span class="num">65</span>;
+<span class="fn">printf</span>(<span class="str">"i = %d\n"</span>, d.i);  <span class="cmt">// 65</span>
+<span class="fn">printf</span>(<span class="str">"c = %c\n"</span>, d.c);  <span class="cmt">// A (같은 메모리이므로 65=ASCII 'A')</span>
+
+d.f = <span class="num">3.14f</span>;  <span class="cmt">// 이제 f를 쓰면 i는 쓰레기값이 됨!</span>
+<span class="fn">printf</span>(<span class="str">"f = %.2f\n"</span>, d.f);  <span class="cmt">// 3.14</span>
+<span class="fn">printf</span>(<span class="str">"i = %d\n"</span>, d.i);   <span class="cmt">// 쓰레기값 (부동소수점 비트 해석)</span></div>
+  <div style="text-align:center;margin:14px 0;">
+    <svg viewBox="0 0 440 90" style="max-width:440px;width:100%">
+      <text x="220" y="16" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="800">union 메모리 공유 시각화</text>
+      <!-- 4 bytes 공간 -->
+      <rect x="80" y="26" width="280" height="40" rx="4" fill="#f8fafc" stroke="#e2e8f0" stroke-width="2"/>
+      <!-- 1 byte 구분 -->
+      <rect x="80" y="26" width="70" height="40" rx="0" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+      <text x="115" y="50" text-anchor="middle" font-size="9" fill="#1d4ed8">byte 0</text>
+      <rect x="150" y="26" width="70" height="40" rx="0" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+      <text x="185" y="50" text-anchor="middle" font-size="9" fill="#1d4ed8">byte 1</text>
+      <rect x="220" y="26" width="70" height="40" rx="0" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+      <text x="255" y="50" text-anchor="middle" font-size="9" fill="#1d4ed8">byte 2</text>
+      <rect x="290" y="26" width="70" height="40" rx="0" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+      <text x="325" y="50" text-anchor="middle" font-size="9" fill="#1d4ed8">byte 3</text>
+      <text x="20" y="34" font-size="10" fill="#dc2626" font-weight="700">d.i</text>
+      <text x="20" y="50" font-size="10" fill="#f59e0b" font-weight="700">d.f</text>
+      <text x="20" y="66" font-size="10" fill="#22c55e" font-weight="700">d.c</text>
+      <line x1="55" y1="32" x2="80" y2="46" stroke="#dc2626" stroke-width="1" stroke-dasharray="3"/>
+      <line x1="55" y1="48" x2="80" y2="46" stroke="#f59e0b" stroke-width="1" stroke-dasharray="3"/>
+      <line x1="55" y1="64" x2="80" y2="46" stroke="#22c55e" stroke-width="1" stroke-dasharray="3"/>
+      <text x="220" y="80" text-anchor="middle" font-size="10" fill="#94a3b8">모두 같은 4 bytes 공유</text>
+    </svg>
+  </div>
+</div>
+
+<div class="page">
+  <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/c-lang/folder.png" alt="폴더 - 구조체 멤버 구성" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>struct vs union 크기 비교</h2>
+  <div class="code"><span class="kw">struct</span> S { <span class="kw">int</span> i; <span class="kw">float</span> f; <span class="kw">char</span> c; };
+<span class="kw">union</span>  U { <span class="kw">int</span> i; <span class="kw">float</span> f; <span class="kw">char</span> c; };
+
+<span class="fn">printf</span>(<span class="str">"struct 크기: %zu\n"</span>, <span class="kw">sizeof</span>(<span class="kw">struct</span> S));  <span class="cmt">// 12 (패딩 포함)</span>
+<span class="fn">printf</span>(<span class="str">"union  크기: %zu\n"</span>, <span class="kw">sizeof</span>(<span class="kw">union</span>  U));  <span class="cmt">// 4</span></div>
+  <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/c-lang/gear.png" alt="기어 - 구조체 활용 원리" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>실용적 사용: 다양한 타입을 하나의 공간에</h2>
+  <p>통신 프로토콜, 하드웨어 레지스터, 다형적 데이터 구조에서 union이 자주 사용됩니다.</p>
+  <div class="code"><span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+
+<span class="kw">typedef</span> <span class="kw">union</span> {
+    <span class="kw">unsigned int</span>  raw;    <span class="cmt">// 4 bytes 전체</span>
+    <span class="kw">unsigned char</span> bytes[<span class="num">4</span>];  <span class="cmt">// 바이트 단위 접근</span>
+} IpAddress;
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    IpAddress ip;
+    ip.raw = <span class="num">0xC0A80001</span>;  <span class="cmt">// 192.168.0.1 (빅엔디안 기준)</span>
+
+    <span class="fn">printf</span>(<span class="str">"IP: %d.%d.%d.%d\n"</span>,
+           ip.bytes[<span class="num">3</span>], ip.bytes[<span class="num">2</span>],
+           ip.bytes[<span class="num">1</span>], ip.bytes[<span class="num">0</span>]);  <span class="cmt">// 시스템에 따라 다름</span>
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+  <div style="display:flex;align-items:center;gap:6px;margin:14px 0 4px;">
+        <img src="/images/learn/c-lang/gear.png" alt="기어 - 구조체 활용 원리" style="width:24px;height:24px;object-fit:contain;background:#fff;border-radius:8px;">
+        <span style="font-size:12px;color:#1d4ed8;font-weight:600;">실습 구역</span>
+    </div>
+<div class="practice">
+    <div class="practice-head">따라해보세요</div>
+    <div class="practice-body">
+      <div class="practice-item">
+        <div class="practice-num">1</div>
+        <div class="practice-desc">union Value { int i; double d; }를 만들고 sizeof로 크기를 확인해보세요.</div>
+        <div class="code"><span class="kw">union</span> Value { <span class="kw">int</span> i; <span class="kw">double</span> d; };
+<span class="fn">printf</span>(<span class="str">"%zu\n"</span>, <span class="kw">sizeof</span>(<span class="kw">union</span> Value));</div>
+        <div class="practice-result">8 출력 (double이 더 크므로)</div>
+      </div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;margin:16px 0 6px;padding:8px 14px;background:#f0f9ff;border-radius:6px;border:1px solid #bae6fd;">
+        <img src="/images/learn/c-lang/database.png" alt="데이터베이스 - 구조체로 데이터 묶음" style="width:28px;height:28px;object-fit:contain;background:#fff;border-radius:8px;">
+        <img src="/images/learn/c-lang/folder.png" alt="폴더 - 구조체 멤버 구성" style="width:28px;height:28px;object-fit:contain;background:#fff;border-radius:8px;">
+        <span style="font-size:12px;color:#0369a1;font-weight:600;">핵심 정리</span>
+    </div>
+<div class="summary">
+    <h3>핵심 정리</h3>
+    <ul>
+      <li>union은 모든 멤버가 같은 메모리 주소를 공유합니다.</li>
+      <li>크기 = 가장 큰 멤버의 크기</li>
+      <li>한 번에 하나의 멤버만 의미 있는 값을 가집니다.</li>
+      <li>struct는 멤버별 독립 공간, union은 공유 공간</li>
+      <li>주로 메모리 절약, 타입 재해석, 프로토콜 처리에 사용합니다.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="page">
+  <h2>확인 문제</h2>
+
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">1</div>
+      <div class="problem-label">union 크기 계산</div>
+      <span class="problem-diff easy">쉬움</span>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text"><code>union U { char c; int i; double d; };</code>의 sizeof는?</div>
+      <div class="problem-toggle">
+        <details>
+          <summary>힌트 / 정답 보기</summary>
+          <div class="problem-toggle-content">
+            <div class="answer-code">8 bytes (가장 큰 멤버 double의 크기)</div>
+          </div>
+        </details>
+      </div>
+    </div>
+  </div>
+
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">2</div>
+      <div class="problem-label">union 멤버 덮어쓰기</div>
+      <span class="problem-diff easy">쉬움</span>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">아래 코드의 출력 결과를 예측하세요.</div>
+      <div class="problem-example">
+        <div class="problem-example-row"><span class="problem-example-label">코드</span><span class="problem-example-value">union U { int i; float f; } u; u.i=100; u.f=1.5f; printf("%d",u.i);</span></div>
+      </div>
+      <div class="problem-toggle">
+        <details>
+          <summary>힌트 / 정답 보기</summary>
+          <div class="problem-toggle-content">
+            <div class="hint-text">f에 값을 쓰면 i 자리를 덮어씁니다.</div>
+            <div class="answer-code">u.f=1.5f 로 같은 메모리를 덮어쓰므로
+u.i 는 1.5f의 비트 패턴을 int로 해석한 값이 나옴
+(정확한 숫자는 플랫폼마다 다름, 100이 아님)</div>
+          </div>
+        </details>
+      </div>
+    </div>
+  </div>
+
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">3</div>
+      <div class="problem-label">struct vs union 크기</div>
+      <span class="problem-diff easy">쉬움</span>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text"><code>struct S { int a; char b; };</code>와 <code>union U { int a; char b; };</code>의 sizeof를 각각 예측하세요. (int=4, char=1)</div>
+      <div class="problem-toggle">
+        <details>
+          <summary>힌트 / 정답 보기</summary>
+          <div class="problem-toggle-content">
+            <div class="answer-code">struct S: 8 (int 4 + char 패딩 포함)
+union U: 4 (가장 큰 int 크기만)</div>
+          </div>
+        </details>
+      </div>
+    </div>
+  </div>
+
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">4</div>
+      <div class="problem-label">union으로 바이트 분리</div>
+      <span class="problem-diff medium">보통</span>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">int 하나를 4개의 byte로 분리해 출력하는 프로그램을 union을 사용해 작성하세요.</div>
+      <div class="problem-toggle">
+        <details>
+          <summary>힌트 / 정답 보기</summary>
+          <div class="problem-toggle-content">
+            <div class="answer-code">union Split { int i; unsigned char b[4]; };
+union Split s;
+s.i = 0x12345678;
+for (int k=0; k<4; k++)
+    printf("byte[%d]=0x%02X\n", k, s.b[k]);</div>
+          </div>
+        </details>
+      </div>
+    </div>
+  </div>
+
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">5</div>
+      <div class="problem-label">struct + union 조합</div>
+      <span class="problem-diff medium">보통</span>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">struct 안에 union을 포함하여, 정수 또는 실수 값 중 하나를 저장할 수 있는 <code>Value</code> 타입을 만드세요. isFloat 멤버로 어떤 타입인지 구분하세요.</div>
+      <div class="problem-toggle">
+        <details>
+          <summary>힌트 / 정답 보기</summary>
+          <div class="problem-toggle-content">
+            <div class="answer-code">typedef struct {
+    int isFloat;  // 0=int, 1=float
+    union { int i; float f; } v;
+} Value;
+
+Value a = {0, .v.i=42};
+Value b = {1, .v.f=3.14f};
+if (a.isFloat) printf("%.2f\n", a.v.f);
+else           printf("%d\n",   a.v.i);  // 42</div>
+          </div>
+        </details>
+      </div>
+    </div>
+  </div>
+
+    <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:20px;padding-top:10px;border-top:1px solid #f1f5f9;">
+        <img src="/images/learn/c-lang/notebook.png" alt="노트북 - 구조체 예시 정리" style="width:22px;height:22px;object-fit:contain;opacity:0.6;background:#fff;border-radius:8px;">
+        <span style="font-size:10px;color:#cbd5e1;">코딩쏙 C언어</span>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

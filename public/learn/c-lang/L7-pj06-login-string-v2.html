@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>L7-PJ06 로그인 시스템</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:#e8edf2;font-family:'Noto Sans KR',sans-serif;counter-reset:page;}
+  .page{width:210mm;min-height:297mm;margin:16px auto;padding:18mm 20mm 15mm 22mm;background:#fff;box-shadow:0 2px 12px rgba(0,0,0,.12);position:relative;overflow:hidden;}
+  .page::after{content:counter(page);counter-increment:page;position:absolute;bottom:10mm;right:20mm;font-size:9pt;color:#94a3b8;}
+
+  .cover{display:flex;height:100%;gap:0;}
+  .cover-sidebar{width:10px;background:#1e3a5f;border-radius:3px 0 0 3px;flex-shrink:0;}
+  .cover-accent{width:7px;background:#e6a817;flex-shrink:0;}
+  .cover-body{flex:1;padding:0 0 0 28px;display:flex;flex-direction:column;justify-content:space-between;}
+  .cover-top{padding-top:20px;}
+  .badge-row{display:flex;gap:8px;align-items:center;margin-bottom:16px;}
+  .badge{padding:4px 12px;border-radius:20px;font-size:9pt;font-weight:700;}
+  .badge-chapter{background:#1e3a5f;color:#fff;}
+  .badge-project{background:#e6a817;color:#1e3a5f;}
+  .badge-level{background:#f0f4f8;color:#475569;border:1px solid #cbd5e1;}
+  .cover-title{font-size:28pt;font-weight:900;color:#1e3a5f;line-height:1.15;margin-bottom:8px;}
+  .cover-subtitle{font-size:13pt;color:#e6a817;font-weight:700;margin-bottom:20px;}
+  .cover-desc{font-size:10.5pt;color:#475569;line-height:1.8;background:#f8fafc;padding:14px 18px;border-left:4px solid #1e3a5f;border-radius:0 6px 6px 0;}
+  .cover-svg{margin:20px 0;}
+  .cover-goals{margin-top:16px;}
+  .cover-goals h3{font-size:10pt;font-weight:700;color:#1e3a5f;margin-bottom:10px;}
+  .goal-item{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:9.5pt;color:#334155;}
+  .goal-dot{width:8px;height:8px;border-radius:50%;background:#e6a817;flex-shrink:0;}
+  .cover-bottom{border-top:2px solid #f1f5f9;padding-top:14px;display:flex;justify-content:space-between;align-items:center;}
+  .cover-meta{font-size:8.5pt;color:#94a3b8;}
+
+  .section-title{font-size:15pt;font-weight:900;color:#1e3a5f;border-bottom:3px solid #e6a817;padding-bottom:6px;margin-bottom:18px;}
+  .sub-title{font-size:11.5pt;font-weight:700;color:#1e3a5f;margin:18px 0 10px;}
+  p{font-size:9.5pt;color:#334155;line-height:1.9;margin-bottom:10px;}
+
+  .code{background:#0f172a;border-radius:8px;padding:14px 18px;margin:12px 0;font-family:'JetBrains Mono',monospace;font-size:8.5pt;line-height:1.8;overflow-x:auto;}
+  .code .kw{color:#c084fc;}.code .fn{color:#67e8f9;}.code .str{color:#86efac;}
+  .code .num{color:#7dd3fc;}.code .cmt{color:#64748b;}.code .var{color:#fbbf24;}
+  .code .op{color:#f472b6;}.code .pp{color:#fb923c;}
+
+  .tip{background:#fffbeb;border:1px solid #fcd34d;border-left:4px solid #e6a817;border-radius:6px;padding:12px 16px;margin:12px 0;font-size:9pt;color:#78350f;}
+  .warn{background:#fef2f2;border:1px solid #fca5a5;border-left:4px solid #ef4444;border-radius:6px;padding:12px 16px;margin:12px 0;font-size:9pt;color:#7f1d1d;}
+  .info{background:#eff6ff;border:1px solid #93c5fd;border-left:4px solid #3b82f6;border-radius:6px;padding:12px 16px;margin:12px 0;font-size:9pt;color:#1e3a8a;}
+
+  .problem-box{border:2px solid #1e3a5f;border-radius:8px;margin:14px 0;overflow:hidden;}
+  .problem-head{background:#1e3a5f;color:#fff;padding:8px 16px;font-size:9.5pt;font-weight:700;display:flex;justify-content:space-between;align-items:center;}
+  .problem-body{padding:14px 16px;}
+  .problem-body p{margin:0 0 8px;font-size:9.5pt;}
+  details summary{cursor:pointer;font-size:9pt;color:#1e3a5f;font-weight:700;margin-top:10px;padding:6px 10px;background:#f0f4f8;border-radius:4px;}
+  details[open] summary{background:#dbeafe;}
+  .answer{padding:10px 12px;background:#f8fafc;border-radius:4px;margin-top:6px;font-size:9pt;color:#334155;}
+  .answer .code{margin:6px 0;font-size:8pt;}
+
+  .svg-wrap{margin:14px 0;text-align:center;}
+  .summary-box{background:#f0f4f8;border-radius:8px;padding:16px 20px;margin:14px 0;}
+  .summary-box h3{font-size:10pt;font-weight:700;color:#1e3a5f;margin-bottom:10px;}
+  .summary-item{display:flex;gap:10px;margin-bottom:7px;font-size:9pt;color:#334155;}
+  .summary-label{background:#1e3a5f;color:#fff;padding:2px 8px;border-radius:3px;font-size:8pt;font-weight:700;white-space:nowrap;}
+
+  @media print{body{background:#fff;}.page{margin:0;box-shadow:none;page-break-after:always;}}
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- PAGE 1: COVER -->
+<div class="page">
+  <div class="cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+      <div class="cover-top">
+        <div class="badge-row">
+          <span class="badge badge-chapter">L7 문자열</span>
+          <span class="badge badge-project">PROJECT 06</span>
+          <span class="badge badge-level">중급</span>
+        </div>
+        <div class="cover-title">strcmp로<br>로그인 구현</div>
+        <div class="cover-subtitle">문자열 비교 — 인증의 핵심</div>
+        <div class="cover-desc">
+          로그인은 <b>"사용자가 입력한 문자열"과 "저장된 문자열"이 완전히 같은지</b> 확인하는 과정이다.<br>
+          C에서는 == 대신 <b>strcmp()</b>를 사용한다. strcmp가 0을 반환하면 일치 — 이것이 로그인 성공 조건이다.<br>
+          3회 시도 제한, 대소문자 구분 등 실제 로그인 요소도 함께 구현한다.
+        </div>
+
+        <div class="cover-svg">
+          <svg width="420" height="110" viewBox="0 0 420 110">
+            <!-- Login flow -->
+            <rect x="10" y="20" width="100" height="35" rx="5" fill="#dbeafe" stroke="#93c5fd" stroke-width="1.5"/>
+            <text x="60" y="35" text-anchor="middle" font-size="9" fill="#475569" font-family="'Noto Sans KR'">사용자 입력</text>
+            <text x="60" y="50" text-anchor="middle" font-size="11" font-weight="700" fill="#1e40af" font-family="'JetBrains Mono'">"admin"</text>
+            <path d="M112 37 L152 37" fill="none" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#la)"/>
+            <rect x="154" y="20" width="100" height="35" rx="5" fill="#1e3a5f"/>
+            <text x="204" y="35" text-anchor="middle" font-size="9" fill="#e6a817" font-family="'Noto Sans KR'">strcmp()</text>
+            <text x="204" y="50" text-anchor="middle" font-size="9" fill="#94a3b8" font-family="'JetBrains Mono'">반환값?</text>
+            <path d="M256 37 L296 37" fill="none" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#la)"/>
+            <!-- Result split -->
+            <rect x="298" y="10" width="110" height="25" rx="4" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="353" y="27" text-anchor="middle" font-size="10" font-weight="700" fill="#15803d" font-family="'Noto Sans KR'">0 → 로그인 성공</text>
+            <rect x="298" y="44" width="110" height="25" rx="4" fill="#fef2f2" stroke="#fca5a5" stroke-width="1.5"/>
+            <text x="353" y="61" text-anchor="middle" font-size="10" font-weight="700" fill="#dc2626" font-family="'Noto Sans KR'">≠0 → 로그인 실패</text>
+            <!-- Saved PW -->
+            <rect x="10" y="70" width="100" height="35" rx="5" fill="#fef3c7" stroke="#fcd34d" stroke-width="1.5"/>
+            <text x="60" y="85" text-anchor="middle" font-size="9" fill="#475569" font-family="'Noto Sans KR'">저장된 값</text>
+            <text x="60" y="100" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e" font-family="'JetBrains Mono'">"admin"</text>
+            <path d="M112 87 L154 52" fill="none" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="3,2"/>
+            <defs><marker id="la" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#94a3b8"/></marker></defs>
+          </svg>
+        </div>
+
+        <div class="cover-goals">
+          <h3>학습 목표</h3>
+          <div class="goal-item"><div class="goal-dot"></div><span>strcmp() 반환값 0의 의미와 활용법</span></div>
+          <div class="goal-item"><div class="goal-dot"></div><span>ID와 PW 동시 비교 로직 구성</span></div>
+          <div class="goal-item"><div class="goal-dot"></div><span>3회 시도 제한 루프 구현</span></div>
+          <div class="goal-item"><div class="goal-dot"></div><span>문자열 비교 시 == 쓰면 안 되는 이유 이해</span></div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;margin:12px 0 8px;">
+            <img src="/images/learn/computer-basics/keyboard.png" alt="키보드 - 문자열 입력" style="width:36px;height:36px;object-fit:contain;background:#fff;border-radius:8px;">
+            <img src="/images/learn/c-lang/book.png" alt="교재 - 문자열 개념 학습" style="width:36px;height:36px;object-fit:contain;background:#fff;border-radius:8px;">
+            <img src="/images/learn/c-lang/notebook.png" alt="노트북 - 문자열 기록" style="width:36px;height:36px;object-fit:contain;background:#fff;border-radius:8px;">
+            <img src="/images/learn/c-lang/lock.png" alt="자물쇠 - 문자열 보안 처리" style="width:36px;height:36px;object-fit:contain;background:#fff;border-radius:8px;">
+        </div>
+<div class="cover-bottom">
+        <div class="cover-meta">코딩쏙 C언어 · L7 문자열 · PJ-06</div>
+        <div class="cover-meta">strcmp Authentication</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 2: strcmp 원리 + 기본 로그인 -->
+<div class="page">
+  <div style="display:flex;align-items:center;gap:8px;margin:10px 0 6px;padding:6px 12px;background:#eff6ff;border-radius:6px;">
+    <img src="/images/learn/computer-basics/keyboard.png" alt="키보드 - 문자열 입력" style="width:26px;height:26px;object-fit:contain;background:#fff;border-radius:8px;">
+</div>
+<div class="section-title">strcmp 비교 원리</div>
+
+  <div style="display:flex;align-items:center;gap:8px;margin:8px 0 4px;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트북 - 문자열 기록" style="width:22px;height:22px;object-fit:contain;opacity:0.85;background:#fff;border-radius:8px;">
+</div>
+<div class="sub-title">왜 == 를 사용하면 안 되나?</div>
+  <p>C에서 문자열 변수는 배열의 <b>주소(포인터)</b>다. <code>id == "admin"</code>은 주소를 비교하는 것이라 항상 거짓이 된다. 반드시 <b>strcmp()</b>로 내용을 비교해야 한다.</p>
+
+  <div class="svg-wrap">
+    <svg width="480" height="90" viewBox="0 0 480 90">
+      <!-- Wrong way -->
+      <rect x="10" y="10" width="200" height="70" rx="6" fill="#fef2f2" stroke="#fca5a5" stroke-width="1.5"/>
+      <text x="110" y="28" text-anchor="middle" font-size="9" font-weight="700" fill="#dc2626" font-family="'Noto Sans KR'">잘못된 방법</text>
+      <text x="110" y="48" text-anchor="middle" font-size="9" fill="#dc2626" font-family="'JetBrains Mono'">if (id == "admin")</text>
+      <text x="110" y="65" text-anchor="middle" font-size="8.5" fill="#94a3b8" font-family="'Noto Sans KR'">주소값 비교 → 항상 false</text>
+      <!-- Right way -->
+      <rect x="260" y="10" width="210" height="70" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+      <text x="365" y="28" text-anchor="middle" font-size="9" font-weight="700" fill="#15803d" font-family="'Noto Sans KR'">올바른 방법</text>
+      <text x="365" y="48" text-anchor="middle" font-size="9" fill="#15803d" font-family="'JetBrains Mono'">if (strcmp(id,"admin")==0)</text>
+      <text x="365" y="65" text-anchor="middle" font-size="8.5" fill="#94a3b8" font-family="'Noto Sans KR'">문자 내용 비교 → 정확</text>
+      <text x="218" y="50" font-size="20" fill="#ef4444"></text>
+      <text x="238" y="50" font-size="20" fill="#22c55e"></text>
+    </svg>
+  </div>
+
+  <div class="sub-title">기본 로그인 구현</div>
+  <div class="code">
+<span class="pp">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="pp">#include</span> <span class="str">&lt;string.h&gt;</span>
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="kw">char</span> <span class="var">saved_id</span>[<span class="num">20</span>]  = <span class="str">"admin"</span>;  <span class="cmt">// 저장된 아이디</span>
+    <span class="kw">char</span> <span class="var">saved_pw</span>[<span class="num">20</span>]  = <span class="str">"1234"</span>;   <span class="cmt">// 저장된 비밀번호</span>
+
+    <span class="kw">char</span> <span class="var">input_id</span>[<span class="num">20</span>], <span class="var">input_pw</span>[<span class="num">20</span>];
+    <span class="fn">printf</span>(<span class="str">"ID: "</span>);    <span class="fn">scanf</span>(<span class="str">"%s"</span>, <span class="var">input_id</span>);
+    <span class="fn">printf</span>(<span class="str">"PW: "</span>);    <span class="fn">scanf</span>(<span class="str">"%s"</span>, <span class="var">input_pw</span>);
+
+    <span class="kw">if</span> (<span class="fn">strcmp</span>(<span class="var">input_id</span>, <span class="var">saved_id</span>) == <span class="num">0</span> <span class="op">&amp;&amp;</span>
+        <span class="fn">strcmp</span>(<span class="var">input_pw</span>, <span class="var">saved_pw</span>) == <span class="num">0</span>) {
+        <span class="fn">printf</span>(<span class="str">"로그인 성공! 환영합니다.\n"</span>);
+    } <span class="kw">else if</span> (<span class="fn">strcmp</span>(<span class="var">input_id</span>, <span class="var">saved_id</span>) == <span class="num">0</span>) {
+        <span class="fn">printf</span>(<span class="str">"비밀번호가 틀렸습니다.\n"</span>);
+    } <span class="kw">else</span> {
+        <span class="fn">printf</span>(<span class="str">"아이디를 찾을 수 없습니다.\n"</span>);
+    }
+    <span class="kw">return</span> <span class="num">0</span>;
+}
+  </div>
+
+  <div class="sub-title">3회 시도 제한 추가</div>
+  <div class="code">
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="kw">char</span> <span class="var">saved_id</span>[] = <span class="str">"admin"</span>, <span class="var">saved_pw</span>[] = <span class="str">"1234"</span>;
+    <span class="kw">char</span> <span class="var">id</span>[<span class="num">20</span>], <span class="var">pw</span>[<span class="num">20</span>];
+    <span class="kw">int</span> <span class="var">attempts</span> = <span class="num">0</span>;
+
+    <span class="kw">while</span> (<span class="var">attempts</span> <span class="op">&lt;</span> <span class="num">3</span>) {
+        <span class="fn">printf</span>(<span class="str">"시도 %d/3\n"</span>, <span class="var">attempts</span> <span class="op">+</span> <span class="num">1</span>);
+        <span class="fn">printf</span>(<span class="str">"ID: "</span>); <span class="fn">scanf</span>(<span class="str">"%s"</span>, <span class="var">id</span>);
+        <span class="fn">printf</span>(<span class="str">"PW: "</span>); <span class="fn">scanf</span>(<span class="str">"%s"</span>, <span class="var">pw</span>);
+
+        <span class="kw">if</span> (<span class="fn">strcmp</span>(<span class="var">id</span>, <span class="var">saved_id</span>) == <span class="num">0</span> <span class="op">&amp;&amp;</span>
+            <span class="fn">strcmp</span>(<span class="var">pw</span>, <span class="var">saved_pw</span>) == <span class="num">0</span>) {
+            <span class="fn">printf</span>(<span class="str">"로그인 성공!\n"</span>);
+            <span class="kw">return</span> <span class="num">0</span>;
+        }
+        <span class="fn">printf</span>(<span class="str">"실패. 남은 시도: %d\n"</span>, <span class="num">2</span> <span class="op">-</span> <span class="var">attempts</span>);
+        <span class="var">attempts</span><span class="op">++</span>;
+    }
+    <span class="fn">printf</span>(<span class="str">"계정이 잠겼습니다.\n"</span>);
+    <span class="kw">return</span> <span class="num">0</span>;
+}
+  </div>
+</div>
+
+<!-- PAGE 3: 다중 계정 + 응용 -->
+<div class="page">
+  <div style="display:flex;align-items:center;gap:8px;margin:10px 0 6px;padding:6px 12px;background:#eff6ff;border-radius:6px;">
+    <img src="/images/learn/c-lang/book.png" alt="교재 - 문자열 개념 학습" style="width:26px;height:26px;object-fit:contain;background:#fff;border-radius:8px;">
+</div>
+<div class="section-title">응용 — 다중 계정 로그인</div>
+
+  <div class="sub-title">2차원 배열로 여러 계정 관리</div>
+  <p>여러 계정을 <b>2차원 char 배열</b>로 저장하고, for 루프로 순서대로 비교하는 패턴이다.</p>
+
+  <div class="svg-wrap">
+    <svg width="480" height="100" viewBox="0 0 480 100">
+      <text x="10" y="14" font-size="9" fill="#94a3b8" font-family="'Noto Sans KR'">users[3][20] — 3개 계정</text>
+      <!-- Array visualization -->
+      <rect x="10" y="20" width="120" height="24" rx="3" fill="#dbeafe" stroke="#93c5fd" stroke-width="1.5"/>
+      <text x="70" y="37" text-anchor="middle" font-size="10" fill="#1e40af" font-family="'JetBrains Mono'" font-weight="700">"admin"</text>
+      <rect x="10" y="48" width="120" height="24" rx="3" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+      <text x="70" y="65" text-anchor="middle" font-size="10" fill="#334155" font-family="'JetBrains Mono'" font-weight="700">"alice"</text>
+      <rect x="10" y="76" width="120" height="24" rx="3" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+      <text x="70" y="93" text-anchor="middle" font-size="10" fill="#334155" font-family="'JetBrains Mono'" font-weight="700">"bob"</text>
+      <text x="138" y="56" font-size="9" fill="#94a3b8" font-family="'Noto Sans KR'">입력 "alice"와 비교</text>
+      <!-- Compare arrows -->
+      <path d="M132 32 L196 52" fill="none" stroke="#ef4444" stroke-width="1.2" stroke-dasharray="3,2"/>
+      <text x="165" y="38" font-size="8" fill="#ef4444" font-family="'JetBrains Mono'">≠</text>
+      <path d="M132 60 L196 60" fill="none" stroke="#22c55e" stroke-width="1.8" marker-end="url(#ma)"/>
+      <text x="165" y="57" font-size="8" fill="#22c55e" font-family="'JetBrains Mono'">=0 !</text>
+      <rect x="200" y="46" width="100" height="28" rx="5" fill="#f0fdf4" stroke="#22c55e" stroke-width="2"/>
+      <text x="250" y="64" text-anchor="middle" font-size="10" font-weight="700" fill="#15803d" font-family="'Noto Sans KR'">로그인 성공</text>
+      <defs><marker id="ma" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#22c55e"/></marker></defs>
+    </svg>
+  </div>
+
+  <div class="code">
+<span class="pp">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="pp">#include</span> <span class="str">&lt;string.h&gt;</span>
+
+<span class="pp">#define</span> <span class="var">MAX_USERS</span> <span class="num">3</span>
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="kw">char</span> <span class="var">users</span>[<span class="var">MAX_USERS</span>][<span class="num">20</span>] = {<span class="str">"admin"</span>, <span class="str">"alice"</span>, <span class="str">"bob"</span>};
+    <span class="kw">char</span> <span class="var">pwds</span>[<span class="var">MAX_USERS</span>][<span class="num">20</span>]  = {<span class="str">"1234"</span>,  <span class="str">"abcd"</span>,  <span class="str">"5678"</span>};
+    <span class="kw">char</span> <span class="var">id</span>[<span class="num">20</span>], <span class="var">pw</span>[<span class="num">20</span>];
+
+    <span class="fn">printf</span>(<span class="str">"ID: "</span>); <span class="fn">scanf</span>(<span class="str">"%s"</span>, <span class="var">id</span>);
+    <span class="fn">printf</span>(<span class="str">"PW: "</span>); <span class="fn">scanf</span>(<span class="str">"%s"</span>, <span class="var">pw</span>);
+
+    <span class="kw">int</span> <span class="var">found</span> = <span class="num">0</span>;
+    <span class="kw">for</span> (<span class="kw">int</span> <span class="var">i</span> = <span class="num">0</span>; <span class="var">i</span> <span class="op">&lt;</span> <span class="var">MAX_USERS</span>; <span class="var">i</span><span class="op">++</span>) {
+        <span class="kw">if</span> (<span class="fn">strcmp</span>(<span class="var">id</span>, <span class="var">users</span>[<span class="var">i</span>]) == <span class="num">0</span>) {
+            <span class="kw">if</span> (<span class="fn">strcmp</span>(<span class="var">pw</span>, <span class="var">pwds</span>[<span class="var">i</span>]) == <span class="num">0</span>) {
+                <span class="fn">printf</span>(<span class="str">"로그인 성공! 환영합니다, %s\n"</span>, <span class="var">users</span>[<span class="var">i</span>]);
+            } <span class="kw">else</span> {
+                <span class="fn">printf</span>(<span class="str">"비밀번호 불일치\n"</span>);
+            }
+            <span class="var">found</span> = <span class="num">1</span>;
+            <span class="kw">break</span>;
+        }
+    }
+    <span class="kw">if</span> (<span class="op">!</span><span class="var">found</span>) <span class="fn">printf</span>(<span class="str">"존재하지 않는 아이디\n"</span>);
+    <span class="kw">return</span> <span class="num">0</span>;
+}
+  </div>
+
+  <div class="info"><b>found 플래그 패턴:</b> 루프에서 일치 항목을 찾으면 found=1로 표시하고 break. 루프 후 found가 0이면 "찾지 못함" 처리. 이것은 검색 알고리즘의 기본 패턴이다.</div>
+</div>
+
+<!-- PAGE 4: 연습 문제 -->
+<div class="page">
+  <div class="section-title">연습 문제</div>
+
+  <div class="problem-box">
+    <div class="problem-head"><span>Q1. 개념 확인</span><span style="font-weight:400;font-size:8.5pt;"></span></div>
+    <div class="problem-body">
+      <p>strcmp("apple", "apple")의 반환값은 무엇인가? strcmp("apple", "banana")의 반환값은?</p>
+      <details><summary>정답 보기</summary><div class="answer">strcmp("apple","apple") = 0 (같음)<br>strcmp("apple","banana") = 음수 ('a' &lt; 'b' 이므로)</div></details>
+    </div>
+  </div>
+
+  <div class="problem-box">
+    <div class="problem-head"><span>Q2. 오류 찾기</span><span style="font-weight:400;font-size:8.5pt;"></span></div>
+    <div class="problem-body">
+      <p>아래 코드에서 버그를 찾으시오.</p>
+      <div class="code">
+<span class="kw">if</span> (<span class="fn">strcmp</span>(<span class="var">input_pw</span>, <span class="var">saved_pw</span>)) {
+    <span class="fn">printf</span>(<span class="str">"로그인 성공\n"</span>);
+}
+      </div>
+      <details><summary>정답 보기</summary><div class="answer">strcmp 반환값이 0일 때 성공인데, if (strcmp(...))는 0이 아닐 때 true. 조건이 반대다. if (strcmp(...) == 0)으로 수정해야 한다.</div></details>
+    </div>
+  </div>
+
+  <div class="problem-box">
+    <div class="problem-head"><span>Q3. 코드 완성</span><span style="font-weight:400;font-size:8.5pt;"></span></div>
+    <div class="problem-body">
+      <p>대소문자 구분 없이 ID를 비교하도록 아래 코드를 수정하시오. (strcasecmp 또는 직접 tolower 변환)</p>
+      <div class="code">
+<span class="kw">if</span> (<span class="fn">strcmp</span>(<span class="var">input_id</span>, <span class="var">saved_id</span>) == <span class="num">0</span>) { ... }
+      </div>
+      <details><summary>정답 보기</summary><div class="answer">
+        <div class="code">
+<span class="cmt">// 방법 1: Linux/Mac만 사용 가능한 strcasecmp</span>
+<span class="kw">if</span> (<span class="fn">strcasecmp</span>(<span class="var">input_id</span>, <span class="var">saved_id</span>) == <span class="num">0</span>)
+
+<span class="cmt">// 방법 2: 직접 소문자로 변환 후 비교</span>
+<span class="kw">for</span>(<span class="kw">int</span> <span class="var">i</span>=<span class="num">0</span>; <span class="var">input_id</span>[<span class="var">i</span>]; <span class="var">i</span><span class="op">++</span>)
+    <span class="var">input_id</span>[<span class="var">i</span>] = <span class="fn">tolower</span>(<span class="var">input_id</span>[<span class="var">i</span>]);
+        </div>
+      </div></details>
+    </div>
+  </div>
+
+  <div class="problem-box">
+    <div class="problem-head"><span>Q4. 응용</span><span style="font-weight:400;font-size:8.5pt;"></span></div>
+    <div class="problem-body">
+      <p>비밀번호 변경 기능을 구현하시오: 현재 비밀번호 확인 → 새 비밀번호 2회 입력 → 일치하면 저장.</p>
+      <details><summary>정답 보기</summary><div class="answer">
+        <div class="code">
+<span class="kw">char</span> <span class="var">cur</span>[<span class="num">20</span>], <span class="var">new1</span>[<span class="num">20</span>], <span class="var">new2</span>[<span class="num">20</span>];
+<span class="fn">printf</span>(<span class="str">"현재 PW: "</span>); <span class="fn">scanf</span>(<span class="str">"%s"</span>,<span class="var">cur</span>);
+<span class="kw">if</span>(<span class="fn">strcmp</span>(<span class="var">cur</span>,<span class="var">saved_pw</span>)!=<span class="num">0</span>){ <span class="fn">printf</span>(<span class="str">"불일치\n"</span>); <span class="kw">return</span> <span class="num">1</span>; }
+<span class="fn">printf</span>(<span class="str">"새 PW: "</span>); <span class="fn">scanf</span>(<span class="str">"%s"</span>,<span class="var">new1</span>);
+<span class="fn">printf</span>(<span class="str">"확인: "</span>); <span class="fn">scanf</span>(<span class="str">"%s"</span>,<span class="var">new2</span>);
+<span class="kw">if</span>(<span class="fn">strcmp</span>(<span class="var">new1</span>,<span class="var">new2</span>)==<span class="num">0</span>) <span class="fn">strcpy</span>(<span class="var">saved_pw</span>,<span class="var">new1</span>);
+        </div>
+      </div></details>
+    </div>
+  </div>
+
+  <div class="problem-box">
+    <div class="problem-head"><span>Q5. 도전</span><span style="font-weight:400;font-size:8.5pt;"></span></div>
+    <div class="problem-body">
+      <p>회원가입 기능 추가: 이미 있는 아이디면 "중복" 메시지 출력, 없으면 새 계정 추가. (users 배열에 저장)</p>
+      <details><summary>정답 보기</summary><div class="answer">for 루프로 전체 users 배열을 탐색해 strcmp(new_id, users[i])==0 인 경우 "중복" 출력. 없으면 strcpy(users[count], new_id)로 추가.</div></details>
+    </div>
+  </div>
+
+  <div class="summary-box">
+    <h3>핵심 정리</h3>
+    <div class="summary-item"><span class="summary-label">strcmp</span><span>반환 0 = 같음, 음수 = 앞이 작음, 양수 = 앞이 큼</span></div>
+    <div class="summary-item"><span class="summary-label">주의</span><span>if(strcmp(a,b))는 불일치 시 true — 조건 반대. 반드시 == 0 명시</span></div>
+    <div class="summary-item"><span class="summary-label">다중계정</span><span>2차원 배열 + for 루프 + found 플래그 패턴</span></div>
+    <div class="summary-item"><span class="summary-label">보안</span><span>실제 서비스에서는 비밀번호를 평문으로 저장하지 않음 (해시 사용)</span></div>
+  </div>
+
+    <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:20px;padding-top:10px;border-top:1px solid #f1f5f9;">
+        <img src="/images/learn/c-lang/code-screen.png" alt="코드 화면 - 문자열 처리 코드" style="width:22px;height:22px;object-fit:contain;opacity:0.6;background:#fff;border-radius:8px;">
+        <span style="font-size:10px;color:#cbd5e1;">코딩쏙 C언어</span>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 점(.) 연산자와 멤버 접근</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+.page { width: 210mm; min-height: 297mm; margin: 16px auto; padding: 18mm 20mm 15mm 22mm; background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: relative; page-break-after: always; }
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after { content: counter(pagenum); position: absolute; bottom: 10mm; right: 16mm; font-size: 10px; color: #94a3b8; font-weight: 600; }
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark { position: absolute; top: -10px; right: -15px; font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3); line-height: 1; pointer-events: none; }
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #2563eb; font-weight: 600; }
+.code { background: #0f172a; border-radius: 8px; padding: 16px 20px; font-family: 'JetBrains Mono', monospace; font-size: 14px; color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap; }
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<div class="page cover">
+  <div class="cover-sidebar"></div>
+  <div class="cover-accent"></div>
+  <div class="cover-body">
+    <div class="cover-watermark">L9</div>
+    <div class="cover-label">Level 9 · Unit 03</div>
+    <h1 class="cover-title">점(.) 연산자 — 멤버 읽기/쓰기</h1>
+    <p class="cover-sub">점(.) 연산자로 구조체 멤버에 접근하는 방법을 깊이 익힙니다. 멤버 값을 읽고, 수정하고, 연산에 활용해봅시다.</p>
+    <div style="margin:20px 0;">
+      <svg viewBox="0 0 480 55" style="max-width:480px;width:100%">
+        <rect x="5" y="8" width="100" height="34" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+        <text x="55" y="29" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">. 연산자 기본</text>
+        <line x1="110" y1="25" x2="128" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+        <rect x="133" y="8" width="100" height="34" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+        <text x="183" y="29" text-anchor="middle" font-size="11" fill="#92400e" font-weight="700">값 읽기</text>
+        <line x1="238" y1="25" x2="256" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+        <rect x="261" y="8" width="100" height="34" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+        <text x="311" y="29" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">값 쓰기</text>
+        <line x1="366" y1="25" x2="384" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+        <rect x="389" y="8" width="80" height="34" rx="6" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+        <text x="429" y="29" text-anchor="middle" font-size="11" fill="#dc2626" font-weight="700">멤버 연산</text>
+      </svg>
+    </div>
+    <div class="cover-goals">
+      <h3>이 유닛에서 배우는 것</h3>
+      <ul>
+        <li>점(.) 연산자의 의미와 사용법을 설명할 수 있습니다.</li>
+        <li>구조체 멤버의 값을 읽어 출력할 수 있습니다.</li>
+        <li>구조체 멤버의 값을 수정할 수 있습니다.</li>
+        <li>멤버 값을 사용해 계산(연산)을 수행할 수 있습니다.</li>
+        <li>scanf로 구조체 멤버에 직접 입력받을 수 있습니다.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+  <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/c-lang/database.png" alt="데이터베이스 - 구조체로 데이터 묶음" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>점(.) 연산자란?</h2>
+  <p>점 연산자 <code>.</code>는 구조체 변수와 멤버 이름 사이에 써서 특정 멤버에 접근합니다. <strong>변수.멤버이름</strong> 형식으로 사용합니다.</p>
+  <div style="text-align:center;margin:16px 0;">
+    <svg viewBox="0 0 460 120" style="max-width:460px;width:100%">
+      <!-- 구조체 박스 -->
+      <rect x="20" y="20" width="200" height="90" rx="8" fill="#f8fafc" stroke="#3b82f6" stroke-width="2"/>
+      <text x="120" y="38" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="800">struct Student s</text>
+      <rect x="35" y="44" width="170" height="20" rx="4" fill="#dbeafe"/>
+      <text x="120" y="58" text-anchor="middle" font-size="10" fill="#1d4ed8" font-family="JetBrains Mono">name: "김민준"</text>
+      <rect x="35" y="68" width="170" height="20" rx="4" fill="#fefce8"/>
+      <text x="120" y="82" text-anchor="middle" font-size="10" fill="#92400e" font-family="JetBrains Mono">age: 15</text>
+      <rect x="35" y="92" width="170" height="14" rx="4" fill="#f0fdf4"/>
+      <text x="120" y="103" text-anchor="middle" font-size="10" fill="#166534" font-family="JetBrains Mono">score: 88.5</text>
+      <!-- 접근 표시 -->
+      <text x="255" y="60" font-size="12" fill="#f59e0b" font-weight="700" font-family="JetBrains Mono">s.age</text>
+      <path d="M248,62 L228,75" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#dot1)"/>
+      <text x="255" y="85" font-size="12" fill="#22c55e" font-weight="700" font-family="JetBrains Mono">s.score</text>
+      <path d="M248,82 L228,96" stroke="#22c55e" stroke-width="1.5" marker-end="url(#dot2)"/>
+      <text x="255" y="108" font-size="12" fill="#3b82f6" font-weight="700" font-family="JetBrains Mono">s.name</text>
+      <path d="M248,105 L228,55" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#dot3)"/>
+      <defs>
+        <marker id="dot1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#f59e0b"/></marker>
+        <marker id="dot2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#22c55e"/></marker>
+        <marker id="dot3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#3b82f6"/></marker>
+      </defs>
+    </svg>
+  </div>
+  <div class="code"><span class="kw">struct</span> Student {
+    <span class="kw">char</span>  name[<span class="num">20</span>];
+    <span class="kw">int</span>   age;
+    <span class="kw">float</span> score;
+};
+
+<span class="kw">struct</span> Student s = {<span class="str">"김민준"</span>, <span class="num">15</span>, <span class="num">88.5f</span>};
+
+<span class="cmt">// 멤버 읽기</span>
+<span class="fn">printf</span>(<span class="str">"%s\n"</span>,  s.name);   <span class="cmt">// 김민준</span>
+<span class="fn">printf</span>(<span class="str">"%d\n"</span>,  s.age);    <span class="cmt">// 15</span>
+<span class="fn">printf</span>(<span class="str">"%.1f\n"</span>, s.score);  <span class="cmt">// 88.5</span>
+
+<span class="cmt">// 멤버 쓰기(수정)</span>
+s.age   = <span class="num">16</span>;
+s.score = <span class="num">92.0f</span>;
+<span class="fn">strcpy</span>(s.name, <span class="str">"김민준(수정)"</span>);</div>
+  <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/c-lang/folder.png" alt="폴더 - 구조체 멤버 구성" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>멤버 값으로 연산하기</h2>
+  <p>멤버에 접근한 값은 일반 변수처럼 사칙연산, 비교, 출력 등 모든 연산에 사용할 수 있습니다.</p>
+  <div class="code"><span class="kw">struct</span> Rectangle {
+    <span class="kw">int</span> width;
+    <span class="kw">int</span> height;
+};
+
+<span class="kw">struct</span> Rectangle r = {<span class="num">10</span>, <span class="num">5</span>};
+
+<span class="kw">int</span> area      = r.width * r.height;   <span class="cmt">// 50</span>
+<span class="kw">int</span> perimeter = (r.width + r.height) * <span class="num">2</span>;  <span class="cmt">// 30</span>
+
+<span class="fn">printf</span>(<span class="str">"넓이: %d\n"</span>,    area);
+<span class="fn">printf</span>(<span class="str">"둘레: %d\n"</span>, perimeter);
+
+<span class="cmt">// 멤버 자체에 연산 적용</span>
+r.width  += <span class="num">5</span>;  <span class="cmt">// r.width = 15</span>
+r.height *= <span class="num">2</span>;  <span class="cmt">// r.height = 10</span></div>
+</div>
+
+<div class="page">
+  <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/c-lang/gear.png" alt="기어 - 구조체 활용 원리" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>scanf로 멤버에 입력받기</h2>
+  <p><code>scanf</code>로 구조체 멤버에 직접 입력받을 수 있습니다. 정수/실수 멤버는 <code>&amp;s.멤버</code>를 사용합니다.</p>
+  <div class="code"><span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+
+<span class="kw">struct</span> Student {
+    <span class="kw">char</span>  name[<span class="num">20</span>];
+    <span class="kw">int</span>   age;
+    <span class="kw">float</span> score;
+};
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="kw">struct</span> Student s;
+
+    <span class="fn">printf</span>(<span class="str">"이름 입력: "</span>);
+    <span class="fn">scanf</span>(<span class="str">"%s"</span>, s.name);    <span class="cmt">// 문자 배열: & 없이 사용</span>
+
+    <span class="fn">printf</span>(<span class="str">"나이 입력: "</span>);
+    <span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;s.age);    <span class="cmt">// 정수: & 필요</span>
+
+    <span class="fn">printf</span>(<span class="str">"점수 입력: "</span>);
+    <span class="fn">scanf</span>(<span class="str">"%f"</span>, &amp;s.score);  <span class="cmt">// 실수: & 필요</span>
+
+    <span class="fn">printf</span>(<span class="str">"\n이름: %s, 나이: %d, 점수: %.1f\n"</span>,
+           s.name, s.age, s.score);
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+  <div style="text-align:center;margin:14px 0;">
+    <svg viewBox="0 0 420 72" style="max-width:420px;width:100%">
+      <rect x="10" y="5" width="190" height="60" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+      <text x="105" y="24" text-anchor="middle" font-size="11" fill="#166534" font-weight="800">문자 배열 멤버</text>
+      <text x="105" y="44" text-anchor="middle" font-size="10" fill="#14532d" font-family="JetBrains Mono">scanf("%s", s.name);</text>
+      <text x="105" y="59" text-anchor="middle" font-size="9" fill="#16a34a">배열 이름 자체가 주소</text>
+      <rect x="220" y="5" width="190" height="60" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+      <text x="315" y="24" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="800">숫자 멤버</text>
+      <text x="315" y="44" text-anchor="middle" font-size="10" fill="#1e40af" font-family="JetBrains Mono">scanf("%d", &amp;s.age);</text>
+      <text x="315" y="59" text-anchor="middle" font-size="9" fill="#2563eb">&amp; 로 주소 전달 필수</text>
+    </svg>
+  </div>
+  <div style="display:flex;align-items:center;gap:6px;margin:14px 0 4px;">
+        <img src="/images/learn/c-lang/gear.png" alt="기어 - 구조체 활용 원리" style="width:24px;height:24px;object-fit:contain;background:#fff;border-radius:8px;">
+        <span style="font-size:12px;color:#1d4ed8;font-weight:600;">실습 구역</span>
+    </div>
+<div class="practice">
+    <div class="practice-head">따라해보세요</div>
+    <div class="practice-body">
+      <div class="practice-item">
+        <div class="practice-num">1</div>
+        <div class="practice-desc"><code>struct Circle { float r; };</code>에서 변수 c를 만들고 r=7.0을 넣은 뒤 넓이(r*r*3.14)를 계산해 출력하세요.</div>
+        <div class="code"><span class="kw">struct</span> Circle c;
+c.r = <span class="num">7.0f</span>;
+<span class="fn">printf</span>(<span class="str">"넓이: %.2f\n"</span>, c.r * c.r * <span class="num">3.14f</span>);</div>
+        <div class="practice-result">넓이: 153.86 출력</div>
+      </div>
+      <div class="practice-item">
+        <div class="practice-num">2</div>
+        <div class="practice-desc">두 학생의 점수 평균을 구조체 멤버로 계산하여 출력해보세요.</div>
+        <div class="code"><span class="kw">struct</span> Student a = {<span class="str">"민준"</span>, <span class="num">15</span>, <span class="num">80.0f</span>};
+<span class="kw">struct</span> Student b = {<span class="str">"서연"</span>, <span class="num">15</span>, <span class="num">90.0f</span>};
+<span class="fn">printf</span>(<span class="str">"평균: %.1f\n"</span>, (a.score + b.score) / <span class="num">2</span>);</div>
+        <div class="practice-result">평균: 85.0 출력</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+  <h2>멤버를 함수 인수로 전달</h2>
+  <p>구조체 멤버는 일반 변수처럼 함수에 인수로 전달할 수 있습니다. 단, 구조체 전체를 넘기는 것과 멤버 하나만 넘기는 것은 다릅니다.</p>
+  <div class="code"><span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+
+<span class="kw">void</span> <span class="fn">printAge</span>(<span class="kw">int</span> age) {
+    <span class="fn">printf</span>(<span class="str">"나이: %d세\n"</span>, age);
+}
+
+<span class="kw">void</span> <span class="fn">addScore</span>(<span class="kw">float</span> *score, <span class="kw">float</span> bonus) {
+    *score += bonus;
+}
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="kw">struct</span> Student s = {<span class="str">"김민준"</span>, <span class="num">15</span>, <span class="num">88.5f</span>};
+
+    <span class="fn">printAge</span>(s.age);           <span class="cmt">// 멤버 값 전달</span>
+    <span class="fn">addScore</span>(&amp;s.score, <span class="num">5.0f</span>);  <span class="cmt">// 멤버 주소 전달 → 수정 가능</span>
+
+    <span class="fn">printf</span>(<span class="str">"수정된 점수: %.1f\n"</span>, s.score);  <span class="cmt">// 93.5</span>
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+  <div style="display:flex;align-items:center;gap:8px;margin:16px 0 6px;padding:8px 14px;background:#f0f9ff;border-radius:6px;border:1px solid #bae6fd;">
+        <img src="/images/learn/c-lang/database.png" alt="데이터베이스 - 구조체로 데이터 묶음" style="width:28px;height:28px;object-fit:contain;background:#fff;border-radius:8px;">
+        <img src="/images/learn/c-lang/folder.png" alt="폴더 - 구조체 멤버 구성" style="width:28px;height:28px;object-fit:contain;background:#fff;border-radius:8px;">
+        <span style="font-size:12px;color:#0369a1;font-weight:600;">핵심 정리</span>
+    </div>
+<div class="summary">
+    <h3>핵심 정리</h3>
+    <ul>
+      <li><code>변수.멤버</code> 형식으로 구조체 멤버에 접근합니다.</li>
+      <li>멤버 읽기: <code>printf("%d", s.age)</code></li>
+      <li>멤버 쓰기: <code>s.age = 16;</code> (문자열은 strcpy)</li>
+      <li>멤버는 일반 변수처럼 연산, 함수 인수, 조건 비교에 사용 가능합니다.</li>
+      <li>scanf 입력: 숫자 멤버는 <code>&amp;s.멤버</code>, 문자 배열은 <code>s.name</code></li>
+    </ul>
+  </div>
+</div>
+
+<div class="page">
+  <h2>확인 문제</h2>
+
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">1</div>
+      <div class="problem-label">점 연산자 결과 예측</div>
+      <span class="problem-diff easy">쉬움</span>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">아래 코드의 출력 결과를 쓰세요.</div>
+      <div class="problem-example">
+        <div class="problem-example-row"><span class="problem-example-label">코드</span><span class="problem-example-value">struct Box { int w; int h; }; struct Box b={4,6}; b.w+=2; printf("%d %d",b.w,b.h);</span></div>
+      </div>
+      <div class="problem-toggle">
+        <details>
+          <summary>힌트 / 정답 보기</summary>
+          <div class="problem-toggle-content">
+            <div class="answer-code">출력: 6 6
+b.w = 4+2 = 6, b.h = 6 그대로</div>
+          </div>
+        </details>
+      </div>
+    </div>
+  </div>
+
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">2</div>
+      <div class="problem-label">멤버 접근 코드 작성</div>
+      <span class="problem-diff easy">쉬움</span>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text"><code>struct Score { int math; int eng; int sci; };</code>에서 s={80, 90, 70}일 때, 세 과목의 합계와 평균을 구해 출력하는 코드를 작성하세요.</div>
+      <div class="problem-toggle">
+        <details>
+          <summary>힌트 / 정답 보기</summary>
+          <div class="problem-toggle-content">
+            <div class="answer-code">struct Score s = {80, 90, 70};
+int total = s.math + s.eng + s.sci;
+float avg = total / 3.0f;
+printf("합계: %d, 평균: %.1f\n", total, avg);
+// 합계: 240, 평균: 80.0</div>
+          </div>
+        </details>
+      </div>
+    </div>
+  </div>
+
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">3</div>
+      <div class="problem-label">scanf 멤버 입력</div>
+      <span class="problem-diff easy">쉬움</span>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text"><code>struct Item { char name[20]; int qty; float price; };</code>에서 변수 <code>item</code>에 scanf로 세 멤버를 입력받는 코드를 작성하세요. (&amp; 사용 여부 주의)</div>
+      <div class="problem-toggle">
+        <details>
+          <summary>힌트 / 정답 보기</summary>
+          <div class="problem-toggle-content">
+            <div class="answer-code">struct Item item;
+scanf("%s", item.name);     // 배열: & 없음
+scanf("%d", &item.qty);    // 정수: & 필요
+scanf("%f", &item.price);  // 실수: & 필요</div>
+          </div>
+        </details>
+      </div>
+    </div>
+  </div>
+
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">4</div>
+      <div class="problem-label">BMI 계산기</div>
+      <span class="problem-diff medium">보통</span>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text"><code>struct Person { char name[20]; float height; float weight; };</code>를 사용해 BMI(체중/키²)를 계산하고 출력하는 프로그램을 작성하세요. (예: 키=1.70, 몸무게=65.0)</div>
+      <div class="problem-toggle">
+        <details>
+          <summary>힌트 / 정답 보기</summary>
+          <div class="problem-toggle-content">
+            <div class="answer-code">struct Person p = {"김민준", 1.70f, 65.0f};
+float bmi = p.weight / (p.height * p.height);
+printf("%s BMI: %.1f\n", p.name, bmi);
+// 출력: 김민준 BMI: 22.5</div>
+          </div>
+        </details>
+      </div>
+    </div>
+  </div>
+
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">5</div>
+      <div class="problem-label">멤버 비교로 최고 점수 찾기</div>
+      <span class="problem-diff medium">보통</span>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">학생 세 명의 구조체 변수 a, b, c를 만들고(점수 각각 85, 92, 78), 가장 높은 점수와 그 학생 이름을 출력하세요.</div>
+      <div class="problem-toggle">
+        <details>
+          <summary>힌트 / 정답 보기</summary>
+          <div class="problem-toggle-content">
+            <div class="answer-code">struct Student a={"민준",15,85.0f}, b={"서연",15,92.0f}, c={"지호",15,78.0f};
+struct Student best = a;
+if (b.score > best.score) best = b;
+if (c.score > best.score) best = c;
+printf("최고: %s (%.1f)\n", best.name, best.score);
+// 출력: 최고: 서연 (92.0)</div>
+          </div>
+        </details>
+      </div>
+    </div>
+  </div>
+
+    <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:20px;padding-top:10px;border-top:1px solid #f1f5f9;">
+        <img src="/images/learn/c-lang/notebook.png" alt="노트북 - 구조체 예시 정리" style="width:22px;height:22px;object-fit:contain;opacity:0.6;background:#fff;border-radius:8px;">
+        <span style="font-size:10px;color:#cbd5e1;">코딩쏙 C언어</span>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

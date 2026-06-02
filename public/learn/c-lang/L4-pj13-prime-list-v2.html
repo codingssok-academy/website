@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 소수 목록 출력기</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 14px;
+    color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fce7f3; color: #9d174d; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- PAGE 1: 표지 -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">PJ</div>
+        <div class="cover-label">Level 4 · Project 13</div>
+        <h1 class="cover-title">소수 목록 출력기</h1>
+        <p class="cover-sub">2부터 N까지 소수를 전부 출력합니다. 브루트포스 검사와 에라토스테네스의 체를 비교하며 알고리즘 효율을 배웁니다.</p>
+        <div style="margin:24px 0;">
+            <svg viewBox="0 0 500 130" style="max-width:500px;width:100%">
+                <!-- 에라토스테네스의 체 시각화 (1-30) -->
+                <text x="250" y="16" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="700">에라토스테네스의 체 — 2~30 소수 찾기</text>
+                <!-- 숫자 그리드 -->
+                <!-- row 1: 2-10 -->
+                <rect x="10" y="24" width="28" height="24" rx="4" fill="#22c55e" stroke="#16a34a" stroke-width="1"/><text x="24" y="41" text-anchor="middle" font-size="11" fill="#fff" font-weight="800">2</text>
+                <rect x="42" y="24" width="28" height="24" rx="4" fill="#22c55e" stroke="#16a34a" stroke-width="1"/><text x="56" y="41" text-anchor="middle" font-size="11" fill="#fff" font-weight="800">3</text>
+                <rect x="74" y="24" width="28" height="24" rx="4" fill="#fca5a5" stroke="#ef4444" stroke-width="1"/><text x="88" y="41" text-anchor="middle" font-size="11" fill="#7f1d1d" font-weight="600">4</text>
+                <rect x="106" y="24" width="28" height="24" rx="4" fill="#22c55e" stroke="#16a34a" stroke-width="1"/><text x="120" y="41" text-anchor="middle" font-size="11" fill="#fff" font-weight="800">5</text>
+                <rect x="138" y="24" width="28" height="24" rx="4" fill="#fca5a5" stroke="#ef4444" stroke-width="1"/><text x="152" y="41" text-anchor="middle" font-size="11" fill="#7f1d1d" font-weight="600">6</text>
+                <rect x="170" y="24" width="28" height="24" rx="4" fill="#22c55e" stroke="#16a34a" stroke-width="1"/><text x="184" y="41" text-anchor="middle" font-size="11" fill="#fff" font-weight="800">7</text>
+                <rect x="202" y="24" width="28" height="24" rx="4" fill="#fca5a5" stroke="#ef4444" stroke-width="1"/><text x="216" y="41" text-anchor="middle" font-size="11" fill="#7f1d1d" font-weight="600">8</text>
+                <rect x="234" y="24" width="28" height="24" rx="4" fill="#fca5a5" stroke="#ef4444" stroke-width="1"/><text x="248" y="41" text-anchor="middle" font-size="11" fill="#7f1d1d" font-weight="600">9</text>
+                <rect x="266" y="24" width="28" height="24" rx="4" fill="#fca5a5" stroke="#ef4444" stroke-width="1"/><text x="280" y="41" text-anchor="middle" font-size="11" fill="#7f1d1d" font-weight="600">10</text>
+                <rect x="298" y="24" width="28" height="24" rx="4" fill="#22c55e" stroke="#16a34a" stroke-width="1"/><text x="312" y="41" text-anchor="middle" font-size="11" fill="#fff" font-weight="800">11</text>
+                <rect x="330" y="24" width="28" height="24" rx="4" fill="#fca5a5" stroke="#ef4444" stroke-width="1"/><text x="344" y="41" text-anchor="middle" font-size="11" fill="#7f1d1d" font-weight="600">12</text>
+                <rect x="362" y="24" width="28" height="24" rx="4" fill="#22c55e" stroke="#16a34a" stroke-width="1"/><text x="376" y="41" text-anchor="middle" font-size="11" fill="#fff" font-weight="800">13</text>
+                <rect x="394" y="24" width="28" height="24" rx="4" fill="#fca5a5" stroke="#ef4444" stroke-width="1"/><text x="408" y="41" text-anchor="middle" font-size="11" fill="#7f1d1d" font-weight="600">14</text>
+                <rect x="426" y="24" width="28" height="24" rx="4" fill="#fca5a5" stroke="#ef4444" stroke-width="1"/><text x="440" y="41" text-anchor="middle" font-size="11" fill="#7f1d1d" font-weight="600">15</text>
+                <!-- row 2 -->
+                <rect x="10" y="52" width="28" height="24" rx="4" fill="#fca5a5" stroke="#ef4444" stroke-width="1"/><text x="24" y="69" text-anchor="middle" font-size="11" fill="#7f1d1d" font-weight="600">16</text>
+                <rect x="42" y="52" width="28" height="24" rx="4" fill="#22c55e" stroke="#16a34a" stroke-width="1"/><text x="56" y="69" text-anchor="middle" font-size="11" fill="#fff" font-weight="800">17</text>
+                <rect x="74" y="52" width="28" height="24" rx="4" fill="#fca5a5" stroke="#ef4444" stroke-width="1"/><text x="88" y="69" text-anchor="middle" font-size="11" fill="#7f1d1d" font-weight="600">18</text>
+                <rect x="106" y="52" width="28" height="24" rx="4" fill="#22c55e" stroke="#16a34a" stroke-width="1"/><text x="120" y="69" text-anchor="middle" font-size="11" fill="#fff" font-weight="800">19</text>
+                <rect x="138" y="52" width="28" height="24" rx="4" fill="#fca5a5" stroke="#ef4444" stroke-width="1"/><text x="152" y="69" text-anchor="middle" font-size="11" fill="#7f1d1d" font-weight="600">20</text>
+                <rect x="170" y="52" width="28" height="24" rx="4" fill="#fca5a5" stroke="#ef4444" stroke-width="1"/><text x="184" y="69" text-anchor="middle" font-size="11" fill="#7f1d1d" font-weight="600">21</text>
+                <rect x="202" y="52" width="28" height="24" rx="4" fill="#fca5a5" stroke="#ef4444" stroke-width="1"/><text x="216" y="69" text-anchor="middle" font-size="11" fill="#7f1d1d" font-weight="600">22</text>
+                <rect x="234" y="52" width="28" height="24" rx="4" fill="#22c55e" stroke="#16a34a" stroke-width="1"/><text x="248" y="69" text-anchor="middle" font-size="11" fill="#fff" font-weight="800">23</text>
+                <rect x="266" y="52" width="28" height="24" rx="4" fill="#fca5a5" stroke="#ef4444" stroke-width="1"/><text x="280" y="69" text-anchor="middle" font-size="11" fill="#7f1d1d" font-weight="600">24</text>
+                <rect x="298" y="52" width="28" height="24" rx="4" fill="#fca5a5" stroke="#ef4444" stroke-width="1"/><text x="312" y="69" text-anchor="middle" font-size="11" fill="#7f1d1d" font-weight="600">25</text>
+                <rect x="330" y="52" width="28" height="24" rx="4" fill="#fca5a5" stroke="#ef4444" stroke-width="1"/><text x="344" y="69" text-anchor="middle" font-size="11" fill="#7f1d1d" font-weight="600">26</text>
+                <rect x="362" y="52" width="28" height="24" rx="4" fill="#fca5a5" stroke="#ef4444" stroke-width="1"/><text x="376" y="69" text-anchor="middle" font-size="11" fill="#7f1d1d" font-weight="600">27</text>
+                <rect x="394" y="52" width="28" height="24" rx="4" fill="#fca5a5" stroke="#ef4444" stroke-width="1"/><text x="408" y="69" text-anchor="middle" font-size="11" fill="#7f1d1d" font-weight="600">28</text>
+                <rect x="426" y="52" width="28" height="24" rx="4" fill="#22c55e" stroke="#16a34a" stroke-width="1"/><text x="440" y="69" text-anchor="middle" font-size="11" fill="#fff" font-weight="800">29</text>
+                <!-- 범례 -->
+                <rect x="120" y="88" width="16" height="16" rx="3" fill="#22c55e"/>
+                <text x="142" y="101" font-size="11" fill="#374151">소수</text>
+                <rect x="200" y="88" width="16" height="16" rx="3" fill="#fca5a5"/>
+                <text x="222" y="101" font-size="11" fill="#374151">합성수 (지워짐)</text>
+                <text x="250" y="118" text-anchor="middle" font-size="10" fill="#64748b">2~30 사이 소수: 2, 3, 5, 7, 11, 13, 17, 19, 23, 29 (총 10개)</text>
+            </svg>
+        </div>
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="반복" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 프로젝트에서 배우는 것</h3>
+            <ul>
+                <li>소수(Prime)의 정의와 판별 조건을 이해합니다.</li>
+                <li>중첩 for문으로 소수를 브루트포스 검사합니다.</li>
+                <li>에라토스테네스의 체 알고리즘으로 효율을 높입니다.</li>
+                <li>소수 개수를 카운트하고 n번째 소수를 찾습니다.</li>
+                <li>차이가 2인 소수 쌍(쌍둥이 소수)을 출력합니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- PAGE 2: 소수 판별 + 브루트포스 -->
+<div class="page">
+    <h2>소수(Prime Number)란?</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/clock.png" alt="반복 시간" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>소수는 1과 자기 자신으로만 나누어지는 2 이상의 정수입니다. 2, 3, 5, 7, 11, 13... 이 해당합니다. 1은 소수가 아닙니다.</p>
+
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 100" style="max-width:460px;width:100%">
+            <!-- 소수 vs 합성수 -->
+            <rect x="10" y="5" width="210" height="90" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="115" y="24" text-anchor="middle" font-size="12" fill="#166534" font-weight="800">소수 (약수: 1, 자기자신)</text>
+            <text x="115" y="44" text-anchor="middle" font-size="11" fill="#374151" font-family="JetBrains Mono">7 = 1, 7</text>
+            <text x="115" y="60" text-anchor="middle" font-size="11" fill="#374151" font-family="JetBrains Mono">13 = 1, 13</text>
+            <text x="115" y="76" text-anchor="middle" font-size="11" fill="#374151" font-family="JetBrains Mono">나누는 수: 1개뿐</text>
+            <text x="115" y="91" text-anchor="middle" font-size="10" fill="#22c55e" font-weight="600">소수 맞음</text>
+            <rect x="240" y="5" width="210" height="90" rx="8" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="345" y="24" text-anchor="middle" font-size="12" fill="#dc2626" font-weight="800">합성수 (약수 3개 이상)</text>
+            <text x="345" y="44" text-anchor="middle" font-size="11" fill="#374151" font-family="JetBrains Mono">12 = 1, 2, 3, 4, 6, 12</text>
+            <text x="345" y="60" text-anchor="middle" font-size="11" fill="#374151" font-family="JetBrains Mono">15 = 1, 3, 5, 15</text>
+            <text x="345" y="76" text-anchor="middle" font-size="11" fill="#374151" font-family="JetBrains Mono">2 이상으로 나눠짐</text>
+            <text x="345" y="91" text-anchor="middle" font-size="10" fill="#ef4444" font-weight="600">소수 아님</text>
+        </svg>
+    </div>
+
+    <h2>브루트포스 소수 판별</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/flowchart.png" alt="흐름도" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>2부터 n-1까지 나누어보는 방법입니다. 하나라도 나누어지면 소수가 아닙니다. 간단하지만 느립니다. 최적화: <code>2부터 sqrt(n)까지만</code> 검사해도 충분합니다.</p>
+
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+            <!-- sqrt 최적화 설명 -->
+            <rect x="10" y="5" width="440" height="70" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="230" y="22" text-anchor="middle" font-size="11" fill="#92400e" font-weight="700">왜 sqrt(n)까지만 검사해도 될까?</text>
+            <text x="230" y="40" text-anchor="middle" font-size="11" fill="#374151">n=36이면 약수 쌍: (2,18), (3,12), (4,9), (6,6)</text>
+            <text x="230" y="56" text-anchor="middle" font-size="11" fill="#374151">작은 쪽은 항상 sqrt(36)=6 이하 — 6까지만 검사하면 충분</text>
+            <text x="230" y="70" text-anchor="middle" font-size="10" fill="#f59e0b" font-weight="600">검사 횟수 대폭 감소 (n번 → sqrt(n)번)</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="kw">#include</span> <span class="str">&lt;math.h&gt;</span>    <span class="cmt">// sqrt() 사용 (컴파일: -lm 옵션)</span>
+
+<span class="kw">int</span> <span class="fn">is_prime</span>(<span class="kw">int</span> n) {
+    <span class="kw">if</span> (n &lt; <span class="num">2</span>) <span class="kw">return</span> <span class="num">0</span>;           <span class="cmt">// 2 미만: 소수 아님</span>
+    <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">2</span>; i &lt;= (<span class="kw">int</span>)<span class="fn">sqrt</span>(n); i++) {
+        <span class="kw">if</span> (n % i == <span class="num">0</span>) <span class="kw">return</span> <span class="num">0</span>;  <span class="cmt">// 나누어지면 소수 아님</span>
+    }
+    <span class="kw">return</span> <span class="num">1</span>;                       <span class="cmt">// 나누어지지 않으면 소수</span>
+}
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="kw">int</span> n, count = <span class="num">0</span>;
+    <span class="fn">printf</span>(<span class="str">"N 입력: "</span>);
+    <span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;n);
+
+    <span class="fn">printf</span>(<span class="str">"2~%d 소수: "</span>, n);
+    <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">2</span>; i &lt;= n; i++) {
+        <span class="kw">if</span> (<span class="fn">is_prime</span>(i)) {
+            <span class="fn">printf</span>(<span class="str">"%d "</span>, i);
+            count++;
+        }
+    }
+    <span class="fn">printf</span>(<span class="str">"\n총 %d개\n"</span>, count);
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+</div>
+
+<!-- PAGE 3: 에라토스테네스의 체 -->
+<div class="page">
+    <h2>에라토스테네스의 체 알고리즘</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>배열을 이용해 소수가 아닌 수를 한꺼번에 지워나가는 고대 그리스의 알고리즘입니다. 브루트포스보다 훨씬 빠릅니다.</p>
+
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 200" style="max-width:460px;width:100%">
+            <!-- 단계별 체 과정 -->
+            <text x="10" y="14" font-size="11" fill="#1e3a5f" font-weight="700">Step 1: 배열 초기화 (모두 소수 가정)</text>
+            <rect x="10" y="18" width="26" height="18" rx="3" fill="#22c55e"/><text x="23" y="31" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">2</text>
+            <rect x="38" y="18" width="26" height="18" rx="3" fill="#22c55e"/><text x="51" y="31" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">3</text>
+            <rect x="66" y="18" width="26" height="18" rx="3" fill="#22c55e"/><text x="79" y="31" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">4</text>
+            <rect x="94" y="18" width="26" height="18" rx="3" fill="#22c55e"/><text x="107" y="31" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">5</text>
+            <rect x="122" y="18" width="26" height="18" rx="3" fill="#22c55e"/><text x="135" y="31" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">6</text>
+            <rect x="150" y="18" width="26" height="18" rx="3" fill="#22c55e"/><text x="163" y="31" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">7</text>
+            <rect x="178" y="18" width="26" height="18" rx="3" fill="#22c55e"/><text x="191" y="31" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">8</text>
+            <rect x="206" y="18" width="26" height="18" rx="3" fill="#22c55e"/><text x="219" y="31" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">9</text>
+            <rect x="234" y="18" width="26" height="18" rx="3" fill="#22c55e"/><text x="247" y="31" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">10</text>
+            <rect x="262" y="18" width="26" height="18" rx="3" fill="#22c55e"/><text x="275" y="31" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">11</text>
+            <rect x="290" y="18" width="26" height="18" rx="3" fill="#22c55e"/><text x="303" y="31" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">12</text>
+            <rect x="318" y="18" width="26" height="18" rx="3" fill="#22c55e"/><text x="331" y="31" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">13</text>
+            <!-- Step 2: 2의 배수 제거 -->
+            <text x="10" y="54" font-size="11" fill="#3b82f6" font-weight="700">Step 2: 2의 배수 제거 (4, 6, 8, 10, 12...)</text>
+            <rect x="10" y="58" width="26" height="18" rx="3" fill="#f59e0b" stroke="#d97706" stroke-width="1.5"/><text x="23" y="71" text-anchor="middle" font-size="9" fill="#fff" font-weight="900">2</text>
+            <rect x="38" y="58" width="26" height="18" rx="3" fill="#22c55e"/><text x="51" y="71" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">3</text>
+            <rect x="66" y="58" width="26" height="18" rx="3" fill="#e2e8f0"/><text x="79" y="71" text-anchor="middle" font-size="9" fill="#94a3b8" text-decoration="line-through">4</text>
+            <rect x="94" y="58" width="26" height="18" rx="3" fill="#22c55e"/><text x="107" y="71" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">5</text>
+            <rect x="122" y="58" width="26" height="18" rx="3" fill="#e2e8f0"/><text x="135" y="71" text-anchor="middle" font-size="9" fill="#94a3b8">6</text>
+            <rect x="150" y="58" width="26" height="18" rx="3" fill="#22c55e"/><text x="163" y="71" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">7</text>
+            <rect x="178" y="58" width="26" height="18" rx="3" fill="#e2e8f0"/><text x="191" y="71" text-anchor="middle" font-size="9" fill="#94a3b8">8</text>
+            <rect x="206" y="58" width="26" height="18" rx="3" fill="#22c55e"/><text x="219" y="71" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">9</text>
+            <rect x="234" y="58" width="26" height="18" rx="3" fill="#e2e8f0"/><text x="247" y="71" text-anchor="middle" font-size="9" fill="#94a3b8">10</text>
+            <rect x="262" y="58" width="26" height="18" rx="3" fill="#22c55e"/><text x="275" y="71" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">11</text>
+            <rect x="290" y="58" width="26" height="18" rx="3" fill="#e2e8f0"/><text x="303" y="71" text-anchor="middle" font-size="9" fill="#94a3b8">12</text>
+            <rect x="318" y="58" width="26" height="18" rx="3" fill="#22c55e"/><text x="331" y="71" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">13</text>
+            <!-- Step 3: 3의 배수 제거 -->
+            <text x="10" y="94" font-size="11" fill="#6366f1" font-weight="700">Step 3: 3의 배수 제거 (9, 15... — 6은 이미 제거)</text>
+            <rect x="10" y="98" width="26" height="18" rx="3" fill="#f59e0b" stroke="#d97706" stroke-width="1.5"/><text x="23" y="111" text-anchor="middle" font-size="9" fill="#fff" font-weight="900">2</text>
+            <rect x="38" y="98" width="26" height="18" rx="3" fill="#f59e0b" stroke="#d97706" stroke-width="1.5"/><text x="51" y="111" text-anchor="middle" font-size="9" fill="#fff" font-weight="900">3</text>
+            <rect x="66" y="98" width="26" height="18" rx="3" fill="#e2e8f0"/><text x="79" y="111" text-anchor="middle" font-size="9" fill="#94a3b8">4</text>
+            <rect x="94" y="98" width="26" height="18" rx="3" fill="#22c55e"/><text x="107" y="111" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">5</text>
+            <rect x="122" y="98" width="26" height="18" rx="3" fill="#e2e8f0"/><text x="135" y="111" text-anchor="middle" font-size="9" fill="#94a3b8">6</text>
+            <rect x="150" y="98" width="26" height="18" rx="3" fill="#22c55e"/><text x="163" y="111" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">7</text>
+            <rect x="178" y="98" width="26" height="18" rx="3" fill="#e2e8f0"/><text x="191" y="111" text-anchor="middle" font-size="9" fill="#94a3b8">8</text>
+            <rect x="206" y="98" width="26" height="18" rx="3" fill="#e2e8f0"/><text x="219" y="111" text-anchor="middle" font-size="9" fill="#94a3b8">9</text>
+            <rect x="234" y="98" width="26" height="18" rx="3" fill="#e2e8f0"/><text x="247" y="111" text-anchor="middle" font-size="9" fill="#94a3b8">10</text>
+            <rect x="262" y="98" width="26" height="18" rx="3" fill="#22c55e"/><text x="275" y="111" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">11</text>
+            <rect x="290" y="98" width="26" height="18" rx="3" fill="#e2e8f0"/><text x="303" y="111" text-anchor="middle" font-size="9" fill="#94a3b8">12</text>
+            <rect x="318" y="98" width="26" height="18" rx="3" fill="#22c55e"/><text x="331" y="111" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">13</text>
+            <!-- 최종 -->
+            <text x="10" y="134" font-size="11" fill="#166534" font-weight="700">최종: 남은 수 = 소수</text>
+            <rect x="10" y="138" width="440" height="24" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1"/>
+            <text x="230" y="155" text-anchor="middle" font-size="11" fill="#166534" font-weight="700" font-family="JetBrains Mono">2, 3, 5, 7, 11, 13 ...</text>
+            <text x="230" y="180" text-anchor="middle" font-size="10" fill="#64748b">체(sieve): 소수가 아닌 수를 '걸러낸다'는 의미</text>
+            <text x="230" y="195" text-anchor="middle" font-size="10" fill="#64748b">시간복잡도: O(n log log n) — 브루트포스 O(n√n)보다 훨씬 빠름</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="kw">#define</span> MAX <span class="num">1000</span>
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="kw">int</span> sieve[MAX + <span class="num">1</span>];
+    <span class="kw">int</span> n, i, j;
+
+    <span class="fn">printf</span>(<span class="str">"N 입력: "</span>); <span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;n);
+
+    <span class="cmt">// 1단계: 모두 1(소수 가정)로 초기화</span>
+    <span class="kw">for</span> (i = <span class="num">2</span>; i &lt;= n; i++) sieve[i] = <span class="num">1</span>;
+    sieve[<span class="num">0</span>] = sieve[<span class="num">1</span>] = <span class="num">0</span>;   <span class="cmt">// 0, 1은 소수 아님</span>
+
+    <span class="cmt">// 2단계: i의 배수를 0(소수 아님)으로 표시</span>
+    <span class="kw">for</span> (i = <span class="num">2</span>; i * i &lt;= n; i++) {
+        <span class="kw">if</span> (sieve[i]) {
+            <span class="kw">for</span> (j = i * i; j &lt;= n; j += i)
+                sieve[j] = <span class="num">0</span>;
+        }
+    }
+
+    <span class="cmt">// 3단계: sieve[i]==1인 수 출력</span>
+    <span class="kw">int</span> count = <span class="num">0</span>;
+    <span class="kw">for</span> (i = <span class="num">2</span>; i &lt;= n; i++) {
+        <span class="kw">if</span> (sieve[i]) { <span class="fn">printf</span>(<span class="str">"%d "</span>, i); count++; }
+    }
+    <span class="fn">printf</span>(<span class="str">"\n총 %d개\n"</span>, count);
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+</div>
+
+<!-- PAGE 4: n번째 소수 + 쌍둥이 소수 + 문제 -->
+<div class="page">
+    <h2>n번째 소수 찾기</h2>
+    <p>소수를 찾을 때마다 카운트를 늘려서, 카운트가 원하는 순서(k번째)에 도달하면 멈춥니다. 무한루프 + break 패턴을 활용합니다.</p>
+
+    <div class="code"><span class="cmt">// k번째 소수 찾기</span>
+<span class="kw">int</span> k, count = <span class="num">0</span>, num = <span class="num">1</span>;
+<span class="fn">printf</span>(<span class="str">"몇 번째 소수? "</span>);
+<span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;k);
+
+<span class="kw">while</span> (count &lt; k) {
+    num++;
+    <span class="kw">if</span> (<span class="fn">is_prime</span>(num)) count++;
+}
+<span class="fn">printf</span>(<span class="str">"%d번째 소수 = %d\n"</span>, k, num);
+<span class="cmt">// 입력: 10 → 출력: 10번째 소수 = 29</span></div>
+
+    <h2>쌍둥이 소수 (Twin Prime)</h2>
+    <p>차이가 2인 소수 쌍을 쌍둥이 소수라고 합니다. (3,5), (5,7), (11,13), (17,19), (29,31)... 두 소수를 모두 찾아 쌍으로 출력합니다.</p>
+
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+            <!-- 쌍둥이 소수 시각화 -->
+            <rect x="10" y="10" width="60" height="60" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="40" y="36" text-anchor="middle" font-size="16" fill="#1d4ed8" font-weight="900">3</text>
+            <text x="40" y="56" text-anchor="middle" font-size="9" fill="#3b82f6">소수</text>
+            <line x1="72" y1="40" x2="86" y2="40" stroke="#f59e0b" stroke-width="2"/>
+            <text x="79" y="34" text-anchor="middle" font-size="9" fill="#f59e0b" font-weight="700">+2</text>
+            <rect x="88" y="10" width="60" height="60" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="118" y="36" text-anchor="middle" font-size="16" fill="#1d4ed8" font-weight="900">5</text>
+            <text x="118" y="56" text-anchor="middle" font-size="9" fill="#3b82f6">소수</text>
+            <text x="79" y="72" text-anchor="middle" font-size="9" fill="#22c55e" font-weight="700">(3,5) 쌍둥이</text>
+            <line x1="150" y1="40" x2="164" y2="40" stroke="#f59e0b" stroke-width="2"/>
+            <text x="157" y="34" text-anchor="middle" font-size="9" fill="#f59e0b" font-weight="700">+2</text>
+            <rect x="166" y="10" width="60" height="60" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="196" y="36" text-anchor="middle" font-size="16" fill="#1d4ed8" font-weight="900">7</text>
+            <text x="196" y="56" text-anchor="middle" font-size="9" fill="#3b82f6">소수</text>
+            <text x="181" y="72" text-anchor="middle" font-size="9" fill="#22c55e" font-weight="700">(5,7) 쌍둥이</text>
+            <line x1="228" y1="40" x2="242" y2="40" stroke="#94a3b8" stroke-width="2" stroke-dasharray="3,2"/>
+            <rect x="244" y="10" width="60" height="60" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="274" y="36" text-anchor="middle" font-size="16" fill="#94a3b8" font-weight="900">9</text>
+            <text x="274" y="56" text-anchor="middle" font-size="9" fill="#94a3b8">합성수</text>
+            <text x="259" y="72" text-anchor="middle" font-size="9" fill="#ef4444" font-weight="700">(7,9) 아님</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">2</span>; i &lt;= n; i++) {
+    <span class="kw">if</span> (<span class="fn">is_prime</span>(i) &amp;&amp; <span class="fn">is_prime</span>(i + <span class="num">2</span>)) {
+        <span class="fn">printf</span>(<span class="str">"(%d, %d)\n"</span>, i, i + <span class="num">2</span>);
+    }
+}</div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">1</div>
+            <div class="problem-label">골드바흐의 추측 — 짝수를 두 소수의 합으로 표현하세요</div>
+            <span class="problem-diff medium">중간</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">4 이상의 모든 짝수는 두 소수의 합으로 나타낼 수 있다는 것이 골드바흐의 추측입니다. 입력받은 짝수 n에 대해 n = p + q (p, q는 소수)가 되는 쌍을 찾아 출력하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">입력</span><span class="problem-example-value">20</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">3+17, 7+13</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 / 정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">p를 2부터 n/2까지 순회하며 is_prime(p) && is_prime(n-p) 조건을 검사합니다.</div>
+                <div class="answer-code" style="margin-top:8px;"><span style="color:#c084fc">for</span> (<span style="color:#c084fc">int</span> p = <span style="color:#7dd3fc">2</span>; p &lt;= n/<span style="color:#7dd3fc">2</span>; p++)
+    <span style="color:#c084fc">if</span> (<span style="color:#67e8f9">is_prime</span>(p) &amp;&amp; <span style="color:#67e8f9">is_prime</span>(n-p))
+        <span style="color:#67e8f9">printf</span>(<span style="color:#86efac">"%d+%d\n"</span>, p, n-p);</div>
+            </div>
+        </details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">2</div>
+            <div class="problem-label">소인수분해 — n을 소수의 곱으로 분해해 출력하세요</div>
+            <span class="problem-diff hard">어려움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">소인수분해는 수를 소수의 곱으로 나타냅니다. 60 = 2 × 2 × 3 × 5처럼 출력합니다. 2부터 나누어지는 수를 계속 출력하며 n을 줄여나갑니다.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">입력</span><span class="problem-example-value">60</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">2 x 2 x 3 x 5</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 / 정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">i=2부터 시작해 n%i==0이면 출력하고 n/=i, 아니면 i++.</div>
+                <div class="answer-code" style="margin-top:8px;"><span style="color:#c084fc">for</span> (<span style="color:#c084fc">int</span> i = <span style="color:#7dd3fc">2</span>; i &lt;= n; i++)
+    <span style="color:#c084fc">while</span> (n % i == <span style="color:#7dd3fc">0</span>) { <span style="color:#67e8f9">printf</span>(<span style="color:#86efac">"%d "</span>, i); n /= i; }</div>
+            </div>
+        </details>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>핵심 정리</h3>
+        <ul>
+            <li>소수: 1과 자기자신으로만 나누어지는 2 이상의 수</li>
+            <li>브루트포스: 2부터 sqrt(n)까지 나눠보기 — O(sqrt(n))</li>
+            <li>에라토스테네스의 체: 배열로 배수를 일괄 제거 — O(n log log n)</li>
+            <li>n번째 소수: 카운트 변수로 k번째 소수 위치 추적</li>
+            <li>쌍둥이 소수: is_prime(i) && is_prime(i+2) 동시 검사</li>
+        </ul>
+    </div>
+</div>
+
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/calculator.png" alt="계산" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+
+
+
+<script>
+(function(){
+  var KEY = 'cs_ans_' + location.pathname.replace(/[^a-zA-Z0-9]/g,'_');
+  var pagePath = location.pathname;
+  var userId = null;
+  try {
+    userId = window.parent?.localStorage?.getItem('codingssok_user_id')
+      || localStorage.getItem('codingssok_user_id');
+  } catch(e) {}
+
+  function save(){
+    var areas = document.querySelectorAll('textarea');
+    var saved = 0;
+    areas.forEach(function(ta, i){
+      if(ta.value.trim()) {
+        localStorage.setItem(KEY + '_' + i, ta.value);
+        saved++;
+      } else {
+        localStorage.removeItem(KEY + '_' + i);
+      }
+    });
+    if(saved > 0) showSaveIndicator();
+  }
+
+  function load(){
+    var areas = document.querySelectorAll('textarea');
+    var restored = 0;
+    areas.forEach(function(ta, i){
+      var val = localStorage.getItem(KEY + '_' + i);
+      if(val && val.trim()) {
+        ta.value = val;
+        ta.style.borderColor = '#10b981';
+        ta.style.boxShadow = '0 0 0 2px rgba(16,185,129,0.15)';
+        setTimeout(function(){ ta.style.borderColor = ''; ta.style.boxShadow = ''; }, 2000);
+        restored++;
+      }
+    });
+    if(restored > 0) showRestoreIndicator(restored);
+  }
+
+  function saveToDb(){
+    if(!userId) return;
+    var areas = document.querySelectorAll('textarea');
+    var answers = [];
+    areas.forEach(function(ta, i){
+      if(ta.value.trim()) answers.push({ field_index: i, answer_text: ta.value });
+    });
+    if(answers.length === 0) return;
+    fetch('/api/answers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId, page_path: pagePath, answers: answers })
+    }).catch(function(){});
+  }
+
+  function loadFromDb(){
+    if(!userId) return;
+    fetch('/api/answers?user_id=' + encodeURIComponent(userId) + '&page_path=' + encodeURIComponent(pagePath))
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(!d.answers || !d.answers.length) return;
+        var areas = document.querySelectorAll('textarea');
+        d.answers.forEach(function(a){
+          if(areas[a.field_index] && a.answer_text) {
+            areas[a.field_index].value = a.answer_text;
+            localStorage.setItem(KEY + '_' + a.field_index, a.answer_text);
+          }
+        });
+      }).catch(function(){});
+  }
+
+  function showSaveIndicator(){
+    var el = document.getElementById('cs-save-ind');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'cs-save-ind';
+      el.style.cssText = 'position:fixed;bottom:16px;right:16px;padding:6px 14px;border-radius:8px;background:#0f172a;color:#22c55e;font-size:11px;font-weight:700;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+      document.body.appendChild(el);
+    }
+    el.textContent = '\u2713 \uB2F5\uC548 \uC800\uC7A5\uB428'; // ✓ 답안 저장됨
+    el.style.opacity = '1';
+    setTimeout(function(){ el.style.opacity = '0'; }, 1500);
+  }
+
+  function showRestoreIndicator(n){
+    var el = document.getElementById('cs-save-ind');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'cs-save-ind';
+      el.style.cssText = 'position:fixed;bottom:16px;right:16px;padding:6px 14px;border-radius:8px;background:#0f172a;color:#3b82f6;font-size:11px;font-weight:700;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+      document.body.appendChild(el);
+    }
+    el.textContent = '\u21BB ' + n + '\uAC1C \uB2F5\uC548 \uBCF5\uC6D0'; // ↻ n개 답안 복원
+    el.style.color = '#3b82f6';
+    el.style.opacity = '1';
+    setTimeout(function(){ el.style.opacity = '0'; }, 2500);
+  }
+
+  var t = null;
+  document.addEventListener('input', function(e){
+    if(e.target.tagName === 'TEXTAREA'){
+      clearTimeout(t);
+      t = setTimeout(function(){ save(); saveToDb(); }, 300);
+    }
+  });
+  document.addEventListener('change', function(e){
+    if(e.target.tagName === 'TEXTAREA'){ save(); saveToDb(); }
+  });
+  document.addEventListener('focusout', function(e){
+    if(e.target.tagName === 'TEXTAREA'){ save(); saveToDb(); }
+  });
+  window.addEventListener('beforeunload', function(){ save(); saveToDb(); });
+
+  // 즉시 로드
+  load();
+  loadFromDb();
+})();
+</script>
+</body>
+</html>

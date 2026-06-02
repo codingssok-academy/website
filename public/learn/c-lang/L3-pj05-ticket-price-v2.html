@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 프로젝트: 놀이공원 입장료 계산기</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+/* ── 페이지 ── */
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+/* ── 커버 ── */
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 200px; font-weight: 900; color: rgba(180,195,212,0.25);
+    line-height: 1; pointer-events: none; font-family: 'JetBrains Mono', monospace;
+}
+.cover-label { font-size: 12px; font-weight: 700; color: #e6a817; letter-spacing: 3px; margin-bottom: 6px; text-transform: uppercase; }
+.cover-project-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: linear-gradient(135deg, #1e3a5f, #2d5a8e);
+    color: #fff; padding: 5px 16px; border-radius: 99px;
+    font-size: 12px; font-weight: 700; letter-spacing: 1px; margin-bottom: 14px;
+}
+.cover-title { font-size: 36px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 8px; }
+.cover-sub { font-size: 14px; color: #6b7280; margin-bottom: 20px; padding-bottom: 18px; border-bottom: 1px solid #e5e7eb; line-height: 1.7; }
+.cover-goals { margin-top: 18px; }
+.cover-goals h3 { font-size: 16px; font-weight: 800; color: #1e3a5f; margin-bottom: 12px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.85; padding: 3px 0 3px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #e6a817; font-weight: 900; }
+.skill-tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 20px; }
+.skill-tag {
+    padding: 4px 12px; border-radius: 99px; font-size: 11px; font-weight: 700;
+    letter-spacing: 0.5px;
+}
+.skill-tag.blue  { background: #dbeafe; color: #1d4ed8; }
+.skill-tag.green { background: #dcfce7; color: #166534; }
+.skill-tag.amber { background: #fef3c7; color: #92400e; }
+.skill-tag.purple{ background: #ede9fe; color: #5b21b6; }
+
+/* ── 본문 ── */
+h2 { font-size: 19px; font-weight: 800; color: #1e3a5f; margin: 0 0 13px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin: 18px 0 10px; }
+p  { font-size: 14px; color: #374151; line-height: 1.75; margin: 0 0 10px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 12px;
+    color: #2563eb; font-weight: 600;
+}
+ul { padding-left: 0; list-style: none; }
+ul li { font-size: 14px; color: #374151; line-height: 1.8; padding: 2px 0 2px 18px; position: relative; }
+ul li::before { content: '•'; position: absolute; left: 2px; color: #3b82f6; font-weight: 900; }
+
+/* ── 코드 블록 ── */
+.code {
+    background: #0f172a; border-radius: 8px; padding: 15px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #e2e8f0; line-height: 1.85; margin: 12px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw  { color: #c084fc; }
+.code .fn  { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.code .op  { color: #f9a8d4; }
+
+/* ── 스텝 박스 ── */
+.step-wrap { margin: 14px 0; }
+.step {
+    display: flex; gap: 14px; margin-bottom: 14px;
+    background: #f8fafc; border-radius: 10px; padding: 14px 16px;
+    border-left: 4px solid #3b82f6;
+}
+.step-num {
+    min-width: 30px; height: 30px; background: #3b82f6;
+    color: #fff; border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; font-size: 13px; font-weight: 900; flex-shrink: 0; margin-top: 1px;
+}
+.step-content { flex: 1; }
+.step-title { font-size: 14px; font-weight: 800; color: #1e3a5f; margin-bottom: 5px; }
+.step-desc  { font-size: 13px; color: #475569; line-height: 1.7; }
+
+/* ── 요금표 카드 ── */
+.fare-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 14px 0;
+}
+.fare-card {
+    border-radius: 10px; padding: 12px 10px; text-align: center;
+}
+.fare-card .age-range { font-size: 11px; font-weight: 700; margin-bottom: 4px; }
+.fare-card .group-name { font-size: 14px; font-weight: 900; margin-bottom: 6px; }
+.fare-card .price { font-size: 16px; font-weight: 900; font-family: 'JetBrains Mono', monospace; }
+.fare-card.free     { background: #f0fdf4; border: 1.5px solid #86efac; color: #166534; }
+.fare-card.teen     { background: #fefce8; border: 1.5px solid #fde047; color: #854d0e; }
+.fare-card.adult    { background: #eff6ff; border: 1.5px solid #93c5fd; color: #1e40af; }
+.fare-card.senior   { background: #fdf4ff; border: 1.5px solid #d8b4fe; color: #6b21a8; }
+
+/* ── 확장 과제 박스 ── */
+.extend-box {
+    border-radius: 12px; margin: 14px 0; overflow: hidden;
+    border: 1.5px solid #e2e8f0;
+}
+.extend-head {
+    display: flex; align-items: center; gap: 10px;
+    padding: 11px 16px; border-bottom: 1.5px solid #e2e8f0;
+}
+.extend-badge {
+    width: 28px; height: 28px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 900; color: #fff; flex-shrink: 0;
+}
+.extend-title { font-size: 14px; font-weight: 800; flex: 1; }
+.extend-keyword {
+    font-size: 11px; font-weight: 700; padding: 2px 10px;
+    border-radius: 99px;
+}
+.extend-body { padding: 13px 16px; }
+.extend-desc { font-size: 13px; color: #475569; line-height: 1.7; margin-bottom: 8px; }
+.extend-box.ext1 .extend-head { background: #eff6ff; }
+.extend-box.ext1 .extend-badge { background: #3b82f6; }
+.extend-box.ext1 .extend-title { color: #1e40af; }
+.extend-box.ext1 .extend-keyword { background: #dbeafe; color: #1d4ed8; }
+.extend-box.ext2 .extend-head { background: #fdf4ff; }
+.extend-box.ext2 .extend-badge { background: #a855f7; }
+.extend-box.ext2 .extend-title { color: #6b21a8; }
+.extend-box.ext2 .extend-keyword { background: #ede9fe; color: #5b21b6; }
+.extend-box.ext3 .extend-head { background: #f0fdf4; }
+.extend-box.ext3 .extend-badge { background: #22c55e; }
+.extend-box.ext3 .extend-title { color: #14532d; }
+.extend-box.ext3 .extend-keyword { background: #dcfce7; color: #166534; }
+
+/* ── 도전 과제 ── */
+.challenge {
+    margin: 16px 0; border: 1.5px solid #fde68a;
+    background: #fffbeb; border-radius: 12px;
+}
+.challenge-head { display: flex; align-items: center; gap: 10px; padding: 11px 16px; border-bottom: 1px solid #fde68a; }
+.challenge-star { font-size: 18px; color: #f59e0b; }
+.challenge-title { font-size: 14px; font-weight: 800; color: #92400e; flex: 1; }
+.challenge-body { padding: 13px 16px; }
+.challenge-item { font-size: 13px; color: #78350f; line-height: 1.8; padding: 3px 0 3px 18px; position: relative; }
+.challenge-item::before { content: ''; position: absolute; left: 0; font-size: 10px; color: #f59e0b; }
+
+/* ── 요약 ── */
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 14px 18px; margin: 14px 0; }
+.summary h3 { font-size: 14px; font-weight: 800; color: #1e3a5f; margin-bottom: 8px; }
+.summary li { font-size: 13px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+/* ── 흐름도/다이어그램 공통 ── */
+.fig { text-align: center; margin: 14px 0; }
+
+/* ── 출력 예시 ── */
+.output {
+    background: #1e293b; border-radius: 8px; padding: 12px 16px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #94a3b8; line-height: 1.7; margin: 10px 0;
+}
+.output .out-label { color: #64748b; font-size: 11px; margin-bottom: 4px; }
+.output .out-line  { color: #e2e8f0; }
+.output .out-input { color: #67e8f9; }
+
+/* ── 알림 박스 ── */
+.notice {
+    border-radius: 8px; padding: 11px 16px; margin: 12px 0;
+    font-size: 13px; line-height: 1.7;
+}
+.notice.info   { background: #eff6ff; border-left: 4px solid #3b82f6; color: #1e40af; }
+.notice.warn   { background: #fffbeb; border-left: 4px solid #f59e0b; color: #92400e; }
+.notice.tip    { background: #f0fdf4; border-left: 4px solid #22c55e; color: #14532d; }
+
+/* ── 문제 ── */
+.problem { margin: 16px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 16px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 28px; height: 28px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900; }
+.problem-label { font-size: 13px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard   { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 13px 16px; }
+.problem-text { font-size: 13px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 8px 16px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 16px 12px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 11px 15px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #e2e8f0; line-height: 1.7; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════
+     PAGE 1 — 커버
+════════════════════════════════════════════════ -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">PJ</div>
+
+        <div class="cover-label">Level 3A &nbsp;·&nbsp; Project 05</div>
+        <div class="cover-project-badge">PROJECT</div>
+        <h1 class="cover-title">놀이공원<br>입장료 계산기</h1>
+        <p class="cover-sub">나이를 입력하면 입장료를 알려주는 프로그램을 만들어봅니다.<br>비교 연산자, if-else if-else, 논리 연산자를 종합 활용합니다.</p>
+
+        <!-- 입장 게이트 SVG -->
+        <div class="fig">
+            <svg viewBox="0 0 520 160" style="max-width:520px;width:100%">
+                <defs>
+                    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#dbeafe"/>
+                        <stop offset="100%" stop-color="#eff6ff"/>
+                    </linearGradient>
+                </defs>
+                <!-- 하늘 배경 -->
+                <rect x="0" y="0" width="520" height="160" rx="12" fill="url(#sky)"/>
+                <!-- 땅 -->
+                <rect x="0" y="128" width="520" height="32" rx="0" fill="#86efac" opacity="0.4"/>
+                <!-- 중앙 게이트 아치 -->
+                <rect x="195" y="30" width="130" height="98" rx="6" fill="#fff" stroke="#3b82f6" stroke-width="2"/>
+                <path d="M195,62 Q260,18 325,62" fill="none" stroke="#3b82f6" stroke-width="2.5"/>
+                <rect x="220" y="62" width="80" height="66" rx="0" fill="#bfdbfe" opacity="0.5"/>
+                <!-- 게이트 기둥 -->
+                <rect x="195" y="30" width="12" height="98" fill="#3b82f6" opacity="0.25"/>
+                <rect x="313" y="30" width="12" height="98" fill="#3b82f6" opacity="0.25"/>
+                <!-- 입장 텍스트 -->
+                <text x="260" y="88" text-anchor="middle" font-size="13" fill="#1e40af" font-weight="900" font-family="Noto Sans KR">입장</text>
+                <text x="260" y="104" text-anchor="middle" font-size="10" fill="#64748b" font-weight="600" font-family="Noto Sans KR">나이를 확인해주세요</text>
+                <!-- 왼쪽 표지판 -->
+                <rect x="30" y="40" width="120" height="80" rx="8" fill="#fff" stroke="#e5e7eb" stroke-width="1.5"/>
+                <rect x="30" y="40" width="120" height="26" rx="8 8 0 0" fill="#1e3a5f"/>
+                <text x="90" y="57" text-anchor="middle" font-size="11" fill="#fff" font-weight="700" font-family="Noto Sans KR">요금 안내</text>
+                <text x="90" y="80" text-anchor="middle" font-size="10" fill="#374151" font-family="Noto Sans KR">어린이(~7세) 무료</text>
+                <text x="90" y="94" text-anchor="middle" font-size="10" fill="#854d0e" font-family="Noto Sans KR">청소년(8~17) 15,000</text>
+                <text x="90" y="108" text-anchor="middle" font-size="10" fill="#1e40af" font-family="Noto Sans KR">성인(18~64) 30,000</text>
+                <!-- 오른쪽 화살표 안내 -->
+                <rect x="370" y="40" width="120" height="80" rx="8" fill="#fff" stroke="#e5e7eb" stroke-width="1.5"/>
+                <rect x="370" y="40" width="120" height="26" rx="8 8 0 0" fill="#e6a817"/>
+                <text x="430" y="57" text-anchor="middle" font-size="11" fill="#fff" font-weight="700" font-family="Noto Sans KR">이 프로젝트에서</text>
+                <text x="430" y="80" text-anchor="middle" font-size="10" fill="#374151" font-family="Noto Sans KR">나이 입력 받기</text>
+                <text x="430" y="94" text-anchor="middle" font-size="10" fill="#374151" font-family="Noto Sans KR">요금 분기 처리</text>
+                <text x="430" y="108" text-anchor="middle" font-size="10" fill="#374151" font-family="Noto Sans KR">결과 출력</text>
+                <!-- 사람 아이콘 (왼쪽 대기) -->
+                <circle cx="168" cy="90" r="8" fill="#fde68a" stroke="#f59e0b" stroke-width="1.5"/>
+                <rect x="162" y="99" width="12" height="18" rx="3" fill="#fde68a" stroke="#f59e0b" stroke-width="1.5"/>
+                <line x1="168" y1="107" x2="162" y2="122" stroke="#f59e0b" stroke-width="1.5"/>
+                <line x1="168" y1="107" x2="174" y2="122" stroke="#f59e0b" stroke-width="1.5"/>
+                <!-- 화살표: 사람이 게이트로 -->
+                <path d="M180,108 L194,108" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arr1)"/>
+                <defs>
+                    <marker id="arr1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                    </marker>
+                </defs>
+            </svg>
+        </div>
+
+        <div class="skill-tags">
+            <span class="skill-tag blue">if-else if-else</span>
+            <span class="skill-tag green">비교 연산자</span>
+            <span class="skill-tag amber">논리 연산자 &amp;&amp; ||</span>
+            <span class="skill-tag purple">scanf / printf</span>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/lightbulb.png" alt="아이디어" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 프로젝트에서 만드는 것</h3>
+            <ul>
+                <li>나이를 입력하면 입장료 등급을 판별하는 기본 계산기</li>
+                <li>단체 할인(10명 이상 20% 할인) — <code>&amp;&amp;</code> 활용</li>
+                <li>장애인 할인(50% 할인) — <code>||</code> 활용</li>
+                <li>여러 명의 입장료 합산 계산</li>
+                <li>할인 쿠폰 시스템 도전 과제</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════
+     PAGE 2 — 요금 규칙 + 단계별 구현
+════════════════════════════════════════════════ -->
+<div class="page">
+    <h2>요금 규칙 &amp; 단계별 구현</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+    <!-- 요금표 카드 -->
+    <div class="fare-grid">
+        <div class="fare-card free">
+            <div class="age-range">0 ~ 7세</div>
+            <div class="group-name">어린이</div>
+            <div class="price">무 료</div>
+        </div>
+        <div class="fare-card teen">
+            <div class="age-range">8 ~ 17세</div>
+            <div class="group-name">청소년</div>
+            <div class="price">15,000원</div>
+        </div>
+        <div class="fare-card adult">
+            <div class="age-range">18 ~ 64세</div>
+            <div class="group-name">성인</div>
+            <div class="price">30,000원</div>
+        </div>
+        <div class="fare-card senior">
+            <div class="age-range">65세 이상</div>
+            <div class="group-name">경로</div>
+            <div class="price">무 료</div>
+        </div>
+    </div>
+
+    <!-- 요금 분기 흐름도 SVG -->
+    <div class="fig">
+        <svg viewBox="0 0 520 175" style="max-width:520px;width:100%">
+            <defs>
+                <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <!-- 입력 박스 -->
+            <rect x="200" y="8" width="120" height="34" rx="8" fill="#1e3a5f"/>
+            <text x="260" y="30" text-anchor="middle" font-size="12" fill="#fff" font-weight="700" font-family="Noto Sans KR">나이(age) 입력</text>
+            <!-- 화살표 아래 -->
+            <line x1="260" y1="42" x2="260" y2="58" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#a2)"/>
+            <!-- 마름모 1: age <= 7 -->
+            <polygon points="260,60 330,88 260,116 190,88" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="260" y="85" text-anchor="middle" font-size="11" fill="#166534" font-weight="700" font-family="JetBrains Mono">age &lt;= 7</text>
+            <text x="260" y="99" text-anchor="middle" font-size="9" fill="#166534" font-weight="600" font-family="Noto Sans KR">또는 age &gt;= 65?</text>
+            <!-- Y 분기 왼쪽 -->
+            <line x1="190" y1="88" x2="75" y2="88" stroke="#22c55e" stroke-width="1.5" marker-end="url(#a2)"/>
+            <text x="132" y="82" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">YES</text>
+            <rect x="10" y="74" width="64" height="28" rx="6" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="42" y="92" text-anchor="middle" font-size="11" fill="#166534" font-weight="800" font-family="Noto Sans KR">무 료</text>
+            <!-- N 분기 오른쪽 화살표 -->
+            <line x1="330" y1="88" x2="390" y2="88" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#a2)"/>
+            <text x="360" y="82" text-anchor="middle" font-size="10" fill="#64748b" font-weight="700">NO</text>
+            <!-- 마름모 2: age <= 17 -->
+            <polygon points="425,60 495,88 425,116 355,88" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="425" y="85" text-anchor="middle" font-size="11" fill="#854d0e" font-weight="700" font-family="JetBrains Mono">age &lt;= 17</text>
+            <text x="425" y="99" text-anchor="middle" font-size="9" fill="#854d0e" font-weight="600" font-family="Noto Sans KR">청소년?</text>
+            <!-- 청소년 YES 아래 -->
+            <line x1="425" y1="116" x2="425" y2="148" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#a2)"/>
+            <text x="437" y="136" font-size="10" fill="#854d0e" font-weight="700">YES</text>
+            <rect x="382" y="148" width="86" height="22" rx="6" fill="#fef9c3" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="425" y="163" text-anchor="middle" font-size="11" fill="#854d0e" font-weight="800" font-family="Noto Sans KR">15,000원</text>
+            <!-- 성인 NO -->
+            <line x1="495" y1="88" x2="508" y2="88" stroke="#94a3b8" stroke-width="1.5"/>
+            <line x1="508" y1="88" x2="508" y2="148" stroke="#94a3b8" stroke-width="1.5"/>
+            <line x1="508" y1="148" x2="500" y2="148" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#a2)"/>
+            <text x="516" y="110" text-anchor="middle" font-size="9" fill="#64748b" font-weight="700">NO</text>
+            <rect x="460" y="137" width="40" height="22" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="480" y="152" text-anchor="middle" font-size="10" fill="#1e40af" font-weight="800" font-family="Noto Sans KR">30,000</text>
+            <!-- 아래 레이블 -->
+            <text x="260" y="170" text-anchor="middle" font-size="10" fill="#94a3b8" font-family="Noto Sans KR">if - else if - else 흐름도</text>
+        </svg>
+    </div>
+
+    <!-- Step 1 -->
+    <h3>구현 단계</h3>
+    <div class="step-wrap">
+        <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-content">
+                <div class="step-title">나이 입력 받기</div>
+                <div class="step-desc"><code>int age;</code>를 선언하고 <code>scanf</code>로 입력 받습니다.</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-content">
+                <div class="step-title">if - else if - else 로 요금 분기</div>
+                <div class="step-desc">4가지 조건을 순서대로 확인합니다. 어린이 → 청소년 → 성인 → 경로 순으로 작성합니다.</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-content">
+                <div class="step-title">요금 출력</div>
+                <div class="step-desc"><code>printf</code>로 분기된 요금을 화면에 출력합니다.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 기본 코드 -->
+    <div class="code"><span class="cmt">/* 놀이공원 입장료 계산기 — 기본 버전 */</span>
+<span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="kw">int</span> age;
+    <span class="kw">int</span> price = <span class="num">0</span>;            <span class="cmt">// 입장료 (원)</span>
+
+    <span class="fn">printf</span>(<span class="str">"나이를 입력하세요: "</span>);
+    <span class="fn">scanf</span>(<span class="str">"%d"</span>, <span class="op">&amp;</span>age);
+
+    <span class="kw">if</span> (age <span class="op">&lt;=</span> <span class="num">7</span>) {              <span class="cmt">// 어린이</span>
+        price = <span class="num">0</span>;
+        <span class="fn">printf</span>(<span class="str">"어린이 — 무료입니다!\n"</span>);
+    } <span class="kw">else if</span> (age <span class="op">&lt;=</span> <span class="num">17</span>) {     <span class="cmt">// 청소년</span>
+        price = <span class="num">15000</span>;
+        <span class="fn">printf</span>(<span class="str">"청소년 — 입장료: %d원\n"</span>, price);
+    } <span class="kw">else if</span> (age <span class="op">&lt;=</span> <span class="num">64</span>) {     <span class="cmt">// 성인</span>
+        price = <span class="num">30000</span>;
+        <span class="fn">printf</span>(<span class="str">"성인 — 입장료: %d원\n"</span>, price);
+    } <span class="kw">else</span> {                    <span class="cmt">// 경로 (65세 이상)</span>
+        price = <span class="num">0</span>;
+        <span class="fn">printf</span>(<span class="str">"경로 우대 — 무료입니다!\n"</span>);
+    }
+
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+
+    <!-- 출력 예시 -->
+    <div class="output">
+        <div class="out-label">실행 예시</div>
+        <div class="out-line">나이를 입력하세요: <span class="out-input">25</span></div>
+        <div class="out-line">성인 — 입장료: 30000원</div>
+    </div>
+
+    <div class="notice info">
+        <strong>핵심 포인트</strong> &nbsp;else if 조건은 위에서부터 차례대로 확인됩니다. age &lt;= 17이 실행되는 시점은 이미 age &gt; 7이 보장된 상태이므로, 8 &lt;= age &lt;= 17을 자동으로 의미합니다.
+    </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════
+     PAGE 3 — 확장 과제
+════════════════════════════════════════════════ -->
+<div class="page">
+    <h2>확장 과제 — 할인 기능 추가하기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/monitor.png" alt="모니터" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>기본 계산기에 3가지 할인 기능을 추가합니다. 각 확장마다 논리 연산자를 어떻게 쓰는지 집중해서 봅니다.</p>
+
+    <!-- 확장 1: 단체 할인 -->
+    <div class="extend-box ext1">
+        <div class="extend-head">
+            <div class="extend-badge">1</div>
+            <div class="extend-title">단체 할인 — 10명 이상이면 20% 할인</div>
+            <span class="extend-keyword">&amp;&amp; 활용</span>
+        </div>
+        <div class="extend-body">
+            <div class="extend-desc">성인이면서 동시에 10명 이상일 때만 할인이 적용됩니다. 두 조건이 모두 참이어야 하므로 <code>&amp;&amp;</code>를 사용합니다.</div>
+
+            <!-- &&  SVG 다이어그램 -->
+            <div class="fig">
+                <svg viewBox="0 0 480 90" style="max-width:480px;width:100%">
+                    <defs>
+                        <marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                            <path d="M0,0 L10,5 L0,10 z" fill="#3b82f6"/>
+                        </marker>
+                    </defs>
+                    <!-- 조건 A -->
+                    <rect x="10" y="22" width="120" height="40" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                    <text x="70" y="40" text-anchor="middle" font-size="12" fill="#1e40af" font-weight="700" font-family="Noto Sans KR">성인인가?</text>
+                    <text x="70" y="56" text-anchor="middle" font-size="10" fill="#3b82f6" font-weight="600" font-family="JetBrains Mono">age &gt;= 18 &amp;&amp;</text>
+                    <!-- AND 연결 -->
+                    <line x1="130" y1="42" x2="165" y2="42" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#a3)"/>
+                    <text x="147" y="37" text-anchor="middle" font-size="9" fill="#3b82f6" font-weight="800">&amp;&amp;</text>
+                    <!-- 조건 B -->
+                    <rect x="165" y="22" width="120" height="40" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                    <text x="225" y="40" text-anchor="middle" font-size="12" fill="#1e40af" font-weight="700" font-family="Noto Sans KR">10명 이상?</text>
+                    <text x="225" y="56" text-anchor="middle" font-size="10" fill="#3b82f6" font-weight="600" font-family="JetBrains Mono">count &gt;= 10</text>
+                    <!-- 화살표 결과 -->
+                    <line x1="285" y1="42" x2="325" y2="42" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#a3)"/>
+                    <!-- 결과 박스 -->
+                    <rect x="325" y="15" width="145" height="54" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+                    <text x="397" y="38" text-anchor="middle" font-size="12" fill="#1e40af" font-weight="800" font-family="Noto Sans KR">20% 할인 적용</text>
+                    <text x="397" y="57" text-anchor="middle" font-size="11" fill="#3b82f6" font-weight="600" font-family="JetBrains Mono">price * 0.8</text>
+                    <!-- 둘 다 참이어야 -->
+                    <text x="240" y="84" text-anchor="middle" font-size="10" fill="#64748b" font-family="Noto Sans KR">두 조건이 모두 참일 때만 실행</text>
+                </svg>
+            </div>
+
+            <div class="code"><span class="kw">int</span> age, count;
+<span class="kw">int</span> price = <span class="num">0</span>;
+
+<span class="fn">printf</span>(<span class="str">"나이: "</span>);  <span class="fn">scanf</span>(<span class="str">"%d"</span>, <span class="op">&amp;</span>age);
+<span class="fn">printf</span>(<span class="str">"인원 수: "</span>); <span class="fn">scanf</span>(<span class="str">"%d"</span>, <span class="op">&amp;</span>count);
+
+<span class="kw">if</span> (age <span class="op">&lt;=</span> <span class="num">7</span>) {
+    price = <span class="num">0</span>;
+} <span class="kw">else if</span> (age <span class="op">&lt;=</span> <span class="num">17</span>) {
+    price = <span class="num">15000</span>;
+} <span class="kw">else if</span> (age <span class="op">&lt;=</span> <span class="num">64</span>) {
+    price = <span class="num">30000</span>;
+} <span class="kw">else</span> {
+    price = <span class="num">0</span>;
+}
+
+<span class="cmt">// 단체 할인: 성인이면서(&&) 10명 이상</span>
+<span class="kw">if</span> (age <span class="op">&gt;=</span> <span class="num">18</span> <span class="op">&amp;&amp;</span> age <span class="op">&lt;=</span> <span class="num">64</span> <span class="op">&amp;&amp;</span> count <span class="op">&gt;=</span> <span class="num">10</span>) {
+    price = price <span class="op">*</span> <span class="num">8</span> / <span class="num">10</span>;   <span class="cmt">// 정수 연산으로 20% 할인</span>
+    <span class="fn">printf</span>(<span class="str">"단체 할인 적용! 입장료: %d원\n"</span>, price);
+} <span class="kw">else</span> {
+    <span class="fn">printf</span>(<span class="str">"입장료: %d원\n"</span>, price);
+}</div>
+        </div>
+    </div>
+
+    <!-- 확장 2: 장애인 할인 -->
+    <div class="extend-box ext2">
+        <div class="extend-head">
+            <div class="extend-badge">2</div>
+            <div class="extend-title">장애인 할인 — 별도 입력, 50% 할인</div>
+            <span class="extend-keyword">|| 활용</span>
+        </div>
+        <div class="extend-body">
+            <div class="extend-desc">단체 할인 또는 장애인 할인 중 하나라도 해당되면 할인이 적용됩니다. 둘 중 하나만 참이어도 되므로 <code>||</code>를 사용합니다.</div>
+
+            <!-- || 다이어그램 SVG -->
+            <div class="fig">
+                <svg viewBox="0 0 480 80" style="max-width:480px;width:100%">
+                    <defs>
+                        <marker id="a4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                            <path d="M0,0 L10,5 L0,10 z" fill="#a855f7"/>
+                        </marker>
+                    </defs>
+                    <rect x="10" y="8" width="130" height="34" rx="8" fill="#fdf4ff" stroke="#a855f7" stroke-width="1.5"/>
+                    <text x="75" y="22" text-anchor="middle" font-size="11" fill="#6b21a8" font-weight="700" font-family="Noto Sans KR">단체(10명 이상)?</text>
+                    <text x="75" y="36" text-anchor="middle" font-size="10" fill="#a855f7" font-weight="600" font-family="JetBrains Mono">count &gt;= 10</text>
+                    <!-- OR -->
+                    <line x1="140" y1="25" x2="175" y2="25" stroke="#a855f7" stroke-width="1.5"/>
+                    <text x="157" y="20" text-anchor="middle" font-size="9" fill="#a855f7" font-weight="800">||</text>
+                    <rect x="175" y="8" width="130" height="34" rx="8" fill="#fdf4ff" stroke="#a855f7" stroke-width="1.5"/>
+                    <text x="240" y="22" text-anchor="middle" font-size="11" fill="#6b21a8" font-weight="700" font-family="Noto Sans KR">장애인 등록?</text>
+                    <text x="240" y="36" text-anchor="middle" font-size="10" fill="#a855f7" font-weight="600" font-family="JetBrains Mono">disabled == 1</text>
+                    <line x1="305" y1="25" x2="345" y2="25" stroke="#a855f7" stroke-width="1.5" marker-end="url(#a4)"/>
+                    <rect x="345" y="8" width="125" height="34" rx="8" fill="#ede9fe" stroke="#a855f7" stroke-width="1.5"/>
+                    <text x="407" y="21" text-anchor="middle" font-size="11" fill="#5b21b6" font-weight="800" font-family="Noto Sans KR">둘 중 하나면</text>
+                    <text x="407" y="36" text-anchor="middle" font-size="11" fill="#5b21b6" font-weight="800" font-family="Noto Sans KR">할인 적용!</text>
+                    <text x="240" y="70" text-anchor="middle" font-size="10" fill="#64748b" font-family="Noto Sans KR">하나만 참이어도 실행</text>
+                </svg>
+            </div>
+
+            <div class="code"><span class="kw">int</span> disabled;   <span class="cmt">// 1 = 장애인, 0 = 일반</span>
+
+<span class="fn">printf</span>(<span class="str">"장애인 등록 여부 (1=예, 0=아니오): "</span>);
+<span class="fn">scanf</span>(<span class="str">"%d"</span>, <span class="op">&amp;</span>disabled);
+
+<span class="cmt">// 단체(10명+) 또는(||) 장애인이면 할인</span>
+<span class="kw">if</span> (count <span class="op">&gt;=</span> <span class="num">10</span> <span class="op">||</span> disabled <span class="op">==</span> <span class="num">1</span>) {
+    <span class="kw">int</span> rate = (disabled <span class="op">==</span> <span class="num">1</span>) ? <span class="num">5</span> : <span class="num">8</span>;  <span class="cmt">// 장애인 50%, 단체 20%</span>
+    price = price <span class="op">*</span> rate / <span class="num">10</span>;
+    <span class="fn">printf</span>(<span class="str">"할인 후 입장료: %d원\n"</span>, price);
+} <span class="kw">else</span> {
+    <span class="fn">printf</span>(<span class="str">"입장료: %d원\n"</span>, price);
+}</div>
+        </div>
+    </div>
+
+    <!-- 확장 3: 여러 명 합산 -->
+    <div class="extend-box ext3">
+        <div class="extend-head">
+            <div class="extend-badge">3</div>
+            <div class="extend-title">여러 명 합산 — 인원 수만큼 총 금액 계산</div>
+            <span class="extend-keyword">반복 없이 곱셈</span>
+        </div>
+        <div class="extend-body">
+            <div class="extend-desc">같은 나이대의 여러 명이 입장할 때 총 금액을 계산합니다. 1인 요금을 구한 뒤 인원 수를 곱합니다.</div>
+
+            <!-- 합산 SVG -->
+            <div class="fig">
+                <svg viewBox="0 0 480 68" style="max-width:480px;width:100%">
+                    <defs>
+                        <marker id="a5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                            <path d="M0,0 L10,5 L0,10 z" fill="#22c55e"/>
+                        </marker>
+                    </defs>
+                    <rect x="10" y="12" width="100" height="40" rx="8" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+                    <text x="60" y="28" text-anchor="middle" font-size="11" fill="#14532d" font-weight="800" font-family="Noto Sans KR">1인 요금</text>
+                    <text x="60" y="44" text-anchor="middle" font-size="11" fill="#22c55e" font-weight="700" font-family="JetBrains Mono">price</text>
+                    <text x="130" y="35" text-anchor="middle" font-size="18" fill="#22c55e" font-weight="900">×</text>
+                    <rect x="150" y="12" width="100" height="40" rx="8" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+                    <text x="200" y="28" text-anchor="middle" font-size="11" fill="#14532d" font-weight="800" font-family="Noto Sans KR">인원 수</text>
+                    <text x="200" y="44" text-anchor="middle" font-size="11" fill="#22c55e" font-weight="700" font-family="JetBrains Mono">count</text>
+                    <line x1="250" y1="32" x2="285" y2="32" stroke="#22c55e" stroke-width="1.5" marker-end="url(#a5)"/>
+                    <text x="270" y="26" text-anchor="middle" font-size="9" fill="#22c55e" font-weight="700">=</text>
+                    <rect x="285" y="5" width="180" height="54" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                    <text x="375" y="26" text-anchor="middle" font-size="11" fill="#14532d" font-weight="800" font-family="Noto Sans KR">총 입장료</text>
+                    <text x="375" y="46" text-anchor="middle" font-size="11" fill="#166534" font-weight="700" font-family="JetBrains Mono">total = price * count</text>
+                </svg>
+            </div>
+
+            <div class="code"><span class="kw">int</span> total = price <span class="op">*</span> count;
+<span class="fn">printf</span>(<span class="str">"\n--- 입장료 계산 결과 ---\n"</span>);
+<span class="fn">printf</span>(<span class="str">"인원 수  : %d명\n"</span>, count);
+<span class="fn">printf</span>(<span class="str">"1인 요금 : %d원\n"</span>, price);
+<span class="fn">printf</span>(<span class="str">"총 입장료: %d원\n"</span>, total);</div>
+
+            <div class="output">
+                <div class="out-label">실행 예시 (성인 12명)</div>
+                <div class="out-line">--- 입장료 계산 결과 ---</div>
+                <div class="out-line">인원 수  : 12명</div>
+                <div class="out-line">1인 요금 : 24000원 &nbsp;<span style="color:#64748b;font-size:11px">(단체 20% 할인 적용)</span></div>
+                <div class="out-line">총 입장료: 288000원</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 문제 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q</div>
+            <div class="problem-label">확인 문제 — 빈칸 채우기</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">
+                성인이면서(<code>&amp;&amp;</code>) VIP 회원(<code>vip == 1</code>)일 때 15% 할인을 적용하는 조건식을 작성하세요.
+            </div>
+            <div class="code"><span class="kw">if</span> ( ______ <span class="op">&amp;&amp;</span> ______ <span class="op">&amp;&amp;</span> ______ ) {
+    price = price <span class="op">*</span> <span class="num">85</span> / <span class="num">100</span>;
+}</div>
+        </div>
+        <div class="problem-toggle">
+            <details>
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code"><span style="color:#c084fc">if</span> (age <span style="color:#f9a8d4">&gt;=</span> <span style="color:#7dd3fc">18</span> <span style="color:#f9a8d4">&amp;&amp;</span> age <span style="color:#f9a8d4">&lt;=</span> <span style="color:#7dd3fc">64</span> <span style="color:#f9a8d4">&amp;&amp;</span> vip <span style="color:#f9a8d4">==</span> <span style="color:#7dd3fc">1</span>) {</div>
+                </div>
+            </details>
+        </div>
+    </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════
+     PAGE 4 — 전체 코드 + 도전 과제
+════════════════════════════════════════════════ -->
+<div class="page">
+    <h2>전체 코드 — 통합 버전</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/keyboard.png" alt="키보드" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>지금까지 만든 기능을 하나의 프로그램으로 합칩니다.</p>
+
+    <div class="code"><span class="cmt">/* 놀이공원 입장료 계산기 — 통합 버전 */</span>
+<span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="kw">int</span> age, count, disabled;
+    <span class="kw">int</span> price = <span class="num">0</span>;
+    <span class="kw">int</span> total = <span class="num">0</span>;
+
+    <span class="cmt">/* ── 1. 입력 ── */</span>
+    <span class="fn">printf</span>(<span class="str">"나이를 입력하세요: "</span>);
+    <span class="fn">scanf</span>(<span class="str">"%d"</span>, <span class="op">&amp;</span>age);
+    <span class="fn">printf</span>(<span class="str">"인원 수를 입력하세요: "</span>);
+    <span class="fn">scanf</span>(<span class="str">"%d"</span>, <span class="op">&amp;</span>count);
+    <span class="fn">printf</span>(<span class="str">"장애인 등록 여부 (1=예, 0=아니오): "</span>);
+    <span class="fn">scanf</span>(<span class="str">"%d"</span>, <span class="op">&amp;</span>disabled);
+
+    <span class="cmt">/* ── 2. 나이별 기본 요금 ── */</span>
+    <span class="kw">if</span> (age <span class="op">&lt;=</span> <span class="num">7</span>) {
+        price = <span class="num">0</span>;
+        <span class="fn">printf</span>(<span class="str">"[어린이] 기본 요금: 무료\n"</span>);
+    } <span class="kw">else if</span> (age <span class="op">&lt;=</span> <span class="num">17</span>) {
+        price = <span class="num">15000</span>;
+        <span class="fn">printf</span>(<span class="str">"[청소년] 기본 요금: %d원\n"</span>, price);
+    } <span class="kw">else if</span> (age <span class="op">&lt;=</span> <span class="num">64</span>) {
+        price = <span class="num">30000</span>;
+        <span class="fn">printf</span>(<span class="str">"[성인] 기본 요금: %d원\n"</span>, price);
+    } <span class="kw">else</span> {
+        price = <span class="num">0</span>;
+        <span class="fn">printf</span>(<span class="str">"[경로] 기본 요금: 무료\n"</span>);
+    }
+
+    <span class="cmt">/* ── 3. 할인 적용 ── */</span>
+    <span class="kw">if</span> (disabled <span class="op">==</span> <span class="num">1</span>) {              <span class="cmt">// 장애인 50% 할인 우선</span>
+        price = price / <span class="num">2</span>;
+        <span class="fn">printf</span>(<span class="str">"장애인 할인 50%% 적용 → %d원\n"</span>, price);
+    } <span class="kw">else if</span> (count <span class="op">&gt;=</span> <span class="num">10</span>) {        <span class="cmt">// 단체 20% 할인</span>
+        price = price <span class="op">*</span> <span class="num">8</span> / <span class="num">10</span>;
+        <span class="fn">printf</span>(<span class="str">"단체 할인 20%% 적용 → %d원\n"</span>, price);
+    }
+
+    <span class="cmt">/* ── 4. 총 금액 ── */</span>
+    total = price <span class="op">*</span> count;
+    <span class="fn">printf</span>(<span class="str">"\n===== 최종 결제 금액 =====\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"인원 수  : %d명\n"</span>, count);
+    <span class="fn">printf</span>(<span class="str">"1인 요금 : %d원\n"</span>, price);
+    <span class="fn">printf</span>(<span class="str">"총 입장료: %d원\n"</span>, total);
+    <span class="fn">printf</span>(<span class="str">"========================\n"</span>);
+
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+
+    <!-- 실행 예시 출력 -->
+    <div class="output">
+        <div class="out-label">실행 예시 (성인 12명, 장애인 아님)</div>
+        <div class="out-line">나이를 입력하세요: <span class="out-input">30</span></div>
+        <div class="out-line">인원 수를 입력하세요: <span class="out-input">12</span></div>
+        <div class="out-line">장애인 등록 여부 (1=예, 0=아니오): <span class="out-input">0</span></div>
+        <div class="out-line">[성인] 기본 요금: 30000원</div>
+        <div class="out-line">단체 할인 20% 적용 → 24000원</div>
+        <div class="out-line">&nbsp;</div>
+        <div class="out-line">===== 최종 결제 금액 =====</div>
+        <div class="out-line">인원 수  : 12명</div>
+        <div class="out-line">1인 요금 : 24000원</div>
+        <div class="out-line">총 입장료: 288000원</div>
+        <div class="out-line">========================</div>
+    </div>
+
+    <!-- 도전 과제 -->
+    <div class="challenge">
+        <div class="challenge-head">
+            <div class="challenge-star"></div>
+            <div class="challenge-title">도전 과제 — 할인 쿠폰 시스템 추가하기</div>
+            <span style="font-size:11px;font-weight:700;color:#92400e;background:#fde68a;padding:2px 10px;border-radius:99px;">어려움</span>
+        </div>
+        <div class="challenge-body">
+            <div class="challenge-item">쿠폰 번호를 정수로 입력받아, 1111이면 10% 추가 할인, 2222이면 5,000원 정액 할인을 적용하세요.</div>
+            <div class="challenge-item">쿠폰이 적용된 뒤 금액이 0원 미만이면 0원으로 처리하세요 (음수 방지).</div>
+            <div class="challenge-item">쿠폰 할인은 단체/장애인 할인이 모두 적용된 이후에 마지막으로 적용되어야 합니다.</div>
+            <div class="challenge-item">유효하지 않은 쿠폰 번호(1111도 2222도 아닌 값)가 입력되면 "유효하지 않은 쿠폰입니다."를 출력하세요.</div>
+        </div>
+    </div>
+
+    <!-- 요약 -->
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>이 프로젝트에서 사용한 핵심 개념</h3>
+        <ul>
+            <li><code>if - else if - else</code> : 여러 조건을 순서대로 검사하여 하나만 실행</li>
+            <li><code>&amp;&amp;</code> (AND) : 두 조건이 모두 참일 때만 실행 — 단체 할인</li>
+            <li><code>||</code> (OR) : 조건 중 하나라도 참이면 실행 — 중복 할인 여부 판단</li>
+            <li>비교 연산자 <code>&lt;= &gt;= ==</code> : 나이 범위 판별에 활용</li>
+            <li>정수 곱셈·나눗셈으로 % 할인 계산 (<code>price * 8 / 10</code>)</li>
+        </ul>
+    </div>
+
+    <!-- 종합 정리 SVG: 이 프로젝트에서 배운 것 -->
+    <div class="fig" style="margin-top:14px;">
+        <svg viewBox="0 0 520 70" style="max-width:520px;width:100%">
+            <!-- 배경 -->
+            <rect x="0" y="0" width="520" height="70" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <!-- 아이콘 박스들 -->
+            <rect x="12" y="12" width="90" height="46" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="57" y="30" text-anchor="middle" font-size="10" fill="#1e40af" font-weight="800" font-family="Noto Sans KR">if-else if</text>
+            <text x="57" y="46" text-anchor="middle" font-size="9" fill="#3b82f6" font-family="Noto Sans KR">4단계 분기</text>
+            <!-- 화살표 -->
+            <text x="116" y="39" text-anchor="middle" font-size="14" fill="#94a3b8">+</text>
+            <rect x="130" y="12" width="90" height="46" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+            <text x="175" y="30" text-anchor="middle" font-size="10" fill="#92400e" font-weight="800" font-family="JetBrains Mono">&amp;&amp; AND</text>
+            <text x="175" y="46" text-anchor="middle" font-size="9" fill="#854d0e" font-family="Noto Sans KR">단체 할인</text>
+            <text x="234" y="39" text-anchor="middle" font-size="14" fill="#94a3b8">+</text>
+            <rect x="248" y="12" width="90" height="46" rx="8" fill="#ede9fe" stroke="#a855f7" stroke-width="1"/>
+            <text x="293" y="30" text-anchor="middle" font-size="10" fill="#5b21b6" font-weight="800" font-family="JetBrains Mono">|| OR</text>
+            <text x="293" y="46" text-anchor="middle" font-size="9" fill="#6b21a8" font-family="Noto Sans KR">장애인 할인</text>
+            <text x="352" y="39" text-anchor="middle" font-size="14" fill="#94a3b8">=</text>
+            <rect x="366" y="8" width="142" height="54" rx="8" fill="#1e3a5f"/>
+            <text x="437" y="32" text-anchor="middle" font-size="12" fill="#e6a817" font-weight="900" font-family="Noto Sans KR">입장료 계산기</text>
+            <text x="437" y="50" text-anchor="middle" font-size="10" fill="#93c5fd" font-family="Noto Sans KR">완성!</text>
+        </svg>
+    </div>
+</div>
+
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="완성" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/flowchart.png" alt="흐름도" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

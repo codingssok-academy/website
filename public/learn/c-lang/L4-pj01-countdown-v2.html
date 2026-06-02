@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 프로젝트 01: 카운트다운 타이머</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 14px;
+    color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+.callout { border-radius: 8px; padding: 12px 16px; margin: 12px 0; font-size: 14px; line-height: 1.7; }
+.callout-info { background: #eff6ff; border-left: 4px solid #3b82f6; color: #1e40af; }
+.callout-warn { background: #fffbeb; border-left: 4px solid #f59e0b; color: #92400e; }
+.callout-tip { background: #f0fdf4; border-left: 4px solid #22c55e; color: #166534; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- ========== PAGE 1: COVER ========== -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">P1</div>
+        <div class="cover-label">Project 01 · Level 4</div>
+        <h1 class="cover-title">카운트다운 타이머</h1>
+        <p class="cover-sub">while 반복문으로 숫자를 세면서 "발사!"까지 출력하는 카운트다운 프로그램을 만들어봅니다.</p>
+
+        <!-- SVG 1: 카운트다운 숫자 시각화 -->
+        <div style="text-align:center;margin:24px 0 16px;">
+            <svg viewBox="0 0 500 130" style="max-width:500px;width:100%">
+                <defs>
+                    <marker id="arr1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                    </marker>
+                </defs>
+                <!-- 숫자 원형 -->
+                <circle cx="60" cy="65" r="42" fill="#fef2f2" stroke="#ef4444" stroke-width="2.5"/>
+                <text x="60" y="58" text-anchor="middle" font-size="34" fill="#dc2626" font-weight="900" font-family="JetBrains Mono">5</text>
+                <text x="60" y="100" text-anchor="middle" font-size="10" fill="#ef4444" font-weight="700">시작</text>
+
+                <line x1="106" y1="65" x2="130" y2="65" stroke="#94a3b8" stroke-width="2" marker-end="url(#arr1)"/>
+
+                <circle cx="175" cy="65" r="35" fill="#fef3c7" stroke="#f59e0b" stroke-width="2.5"/>
+                <text x="175" y="58" text-anchor="middle" font-size="30" fill="#92400e" font-weight="900" font-family="JetBrains Mono">4</text>
+                <text x="175" y="96" text-anchor="middle" font-size="10" fill="#f59e0b" font-weight="700">n--</text>
+
+                <line x1="214" y1="65" x2="234" y2="65" stroke="#94a3b8" stroke-width="2" marker-end="url(#arr1)"/>
+
+                <circle cx="272" cy="65" r="28" fill="#fffbeb" stroke="#eab308" stroke-width="2"/>
+                <text x="272" y="58" text-anchor="middle" font-size="26" fill="#854d0e" font-weight="900" font-family="JetBrains Mono">3</text>
+                <text x="272" y="92" text-anchor="middle" font-size="10" fill="#eab308" font-weight="700">n--</text>
+
+                <line x1="303" y1="65" x2="320" y2="65" stroke="#94a3b8" stroke-width="2" marker-end="url(#arr1)"/>
+
+                <circle cx="350" cy="65" r="22" fill="#f0fdf4" stroke="#22c55e" stroke-width="2"/>
+                <text x="350" y="57" text-anchor="middle" font-size="20" fill="#166534" font-weight="900" font-family="JetBrains Mono">2</text>
+                <text x="350" y="87" text-anchor="middle" font-size="9" fill="#22c55e" font-weight="700">n--</text>
+
+                <line x1="374" y1="65" x2="390" y2="65" stroke="#94a3b8" stroke-width="2" marker-end="url(#arr1)"/>
+
+                <circle cx="410" cy="65" r="16" fill="#eff6ff" stroke="#3b82f6" stroke-width="2"/>
+                <text x="410" y="70" text-anchor="middle" font-size="14" fill="#1d4ed8" font-weight="900" font-family="JetBrains Mono">1</text>
+
+                <line x1="428" y1="65" x2="446" y2="65" stroke="#94a3b8" stroke-width="2" marker-end="url(#arr1)"/>
+
+                <rect x="456" y="48" width="40" height="34" rx="6" fill="#1e3a5f"/>
+                <text x="476" y="70" text-anchor="middle" font-size="11" fill="#fff" font-weight="900">발사</text>
+
+                <text x="250" y="126" text-anchor="middle" font-size="11" fill="#64748b" font-weight="600">n이 0보다 크면 출력하고, n을 1씩 줄입니다</text>
+            </svg>
+        </div>
+
+        <!-- SVG 2: 흐름도 -->
+        <div style="text-align:center;margin:16px 0;">
+            <svg viewBox="0 0 500 60" style="max-width:500px;width:100%">
+                <defs>
+                    <marker id="arr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+                    </marker>
+                </defs>
+                <rect x="10" y="15" width="80" height="28" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="50" y="33" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">n 입력</text>
+
+                <line x1="93" y1="29" x2="108" y2="29" stroke="#64748b" stroke-width="1.5" marker-end="url(#arr2)"/>
+
+                <rect x="110" y="15" width="100" height="28" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="160" y="33" text-anchor="middle" font-size="11" fill="#92400e" font-weight="700">while(n &gt; 0)</text>
+
+                <line x1="213" y1="29" x2="228" y2="29" stroke="#64748b" stroke-width="1.5" marker-end="url(#arr2)"/>
+
+                <rect x="230" y="15" width="80" height="28" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="270" y="33" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">n 출력</text>
+
+                <line x1="313" y1="29" x2="328" y2="29" stroke="#64748b" stroke-width="1.5" marker-end="url(#arr2)"/>
+
+                <rect x="330" y="15" width="60" height="28" rx="6" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+                <text x="360" y="33" text-anchor="middle" font-size="11" fill="#dc2626" font-weight="700">n--</text>
+
+                <line x1="393" y1="29" x2="408" y2="29" stroke="#64748b" stroke-width="1.5" marker-end="url(#arr2)"/>
+
+                <rect x="410" y="15" width="80" height="28" rx="6" fill="#1e3a5f"/>
+                <text x="450" y="33" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">"발사!" 출력</text>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/lightbulb.png" alt="아이디어" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 프로젝트에서 배우는 것</h3>
+            <ul>
+                <li>while 반복문으로 숫자를 줄여가며 출력할 수 있습니다.</li>
+                <li>n-- 연산으로 변수를 1씩 감소시키는 방법을 익힙니다.</li>
+                <li>조건이 거짓이 될 때 반복이 끝나는 원리를 이해합니다.</li>
+                <li>2씩 감소, 조건 강조 등 다양한 변형을 만들 수 있습니다.</li>
+                <li>완성된 프로그램을 보며 반복문 흐름 전체를 그릴 수 있습니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- ========== PAGE 2: 기본 구현 ========== -->
+<div class="page">
+    <h2>카운트다운 타이머 — 기본 구현</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>사용자가 시작 숫자를 입력하면, <code>while</code> 반복문으로 숫자를 하나씩 줄여가며 출력하다가 0이 되면 "발사!"를 출력하는 프로그램입니다.</p>
+
+    <!-- SVG 3: while 조건 판단 다이어그램 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 160" style="max-width:460px;width:100%">
+            <defs>
+                <marker id="arr3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+                </marker>
+                <marker id="arr3r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#3b82f6"/>
+                </marker>
+            </defs>
+            <!-- 조건 다이아몬드 -->
+            <polygon points="170,20 260,55 170,90 80,55" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+            <text x="170" y="52" text-anchor="middle" font-size="12" fill="#92400e" font-weight="800">n &gt; 0</text>
+            <text x="170" y="66" text-anchor="middle" font-size="10" fill="#92400e">?</text>
+
+            <!-- 참 -->
+            <line x1="260" y1="55" x2="320" y2="55" stroke="#64748b" stroke-width="1.5" marker-end="url(#arr3)"/>
+            <text x="292" y="46" text-anchor="middle" font-size="10" fill="#22c55e" font-weight="700">참</text>
+            <rect x="322" y="38" width="100" height="34" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="372" y="52" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">printf(n)</text>
+            <text x="372" y="66" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">n--</text>
+            <!-- 되돌아가는 화살표 -->
+            <path d="M372,72 L372,140 L170,140 L170,90" stroke="#3b82f6" stroke-width="1.5" fill="none" marker-end="url(#arr3r)"/>
+            <text x="280" y="155" text-anchor="middle" font-size="10" fill="#3b82f6" font-weight="600">다시 조건 확인</text>
+
+            <!-- 거짓 -->
+            <line x1="170" y1="90" x2="170" y2="108" stroke="#64748b" stroke-width="1.5" marker-end="url(#arr3)"/>
+            <text x="148" y="103" text-anchor="middle" font-size="10" fill="#ef4444" font-weight="700">거짓</text>
+            <rect x="105" y="110" width="130" height="30" rx="6" fill="#1e3a5f"/>
+            <text x="170" y="130" text-anchor="middle" font-size="12" fill="#fff" font-weight="700">printf("발사!")</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt">// 카운트다운 타이머 — 기본 버전</span>
+<span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="kw">int</span> n;
+
+    <span class="fn">printf</span>(<span class="str">"시작 숫자를 입력하세요: "</span>);
+    <span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;n);
+
+    <span class="kw">while</span> (n &gt; <span class="num">0</span>) {       <span class="cmt">// n이 0보다 큰 동안 반복</span>
+        <span class="fn">printf</span>(<span class="str">"%d\n"</span>, n);  <span class="cmt">// 현재 n 출력</span>
+        n--;                   <span class="cmt">// n을 1 줄임</span>
+    }
+
+    <span class="fn">printf</span>(<span class="str">"발사!\n"</span>);         <span class="cmt">// 반복 끝나면 발사 출력</span>
+
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/clock.png" alt="시계" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="완성" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">위 코드를 그대로 입력하고 시작 숫자로 <code>5</code>를 넣어보세요.</div>
+                <div class="practice-result">5 4 3 2 1 발사! 순서로 출력됩니다</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">시작 숫자로 <code>3</code>을 넣으면 어떻게 출력될까요? 직접 예측해본 뒤 실행해보세요.</div>
+                <div class="practice-result">3 2 1 발사!</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc"><code>while (n &gt; 0)</code>을 <code>while (n &gt;= 1)</code>로 바꿔도 결과가 같은지 확인해보세요.</div>
+                <div class="practice-result">n >= 1 은 n > 0 과 정수에서는 완전히 같은 조건입니다</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">1</div>
+            <div class="problem-label">n이 0일 때 while 몇 번 실행되나요?</div>
+            <div class="problem-diff easy">쉬움</div>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">사용자가 시작 숫자로 <code>0</code>을 입력하면 프로그램이 어떻게 동작할지 예상해보고, 실제로 실행해서 확인해보세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">입력</span>
+                    <span class="problem-example-value">0</span>
+                </div>
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력</span>
+                    <span class="problem-example-value">발사!</span>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 / 정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">n=0이면 while(0 &gt; 0)은 처음부터 거짓이므로 반복문 본체가 단 한 번도 실행되지 않습니다. 바로 "발사!"가 출력됩니다.</div>
+            </div>
+        </details>
+    </div>
+</div>
+
+<!-- ========== PAGE 3: 확장 구현 ========== -->
+<div class="page">
+    <h2>확장 1 — 2씩 감소 &amp; 3초 전 강조</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/monitor.png" alt="모니터" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>기본 카운트다운을 더 실감나게 바꿔봅니다. 숫자를 2씩 줄이거나, 3 이하일 때 다른 메시지를 출력해 긴장감을 높입니다.</p>
+
+    <!-- SVG 4: 2씩 감소 시각화 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+            <defs>
+                <marker id="arr4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <text x="230" y="16" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="800">2씩 감소 카운트다운 (n=10에서 시작)</text>
+            <circle cx="38" cy="50" r="22" fill="#fef2f2" stroke="#ef4444" stroke-width="2"/>
+            <text x="38" y="55" text-anchor="middle" font-size="18" fill="#dc2626" font-weight="900" font-family="JetBrains Mono">10</text>
+            <line x1="62" y1="50" x2="80" y2="50" stroke="#94a3b8" stroke-width="2" marker-end="url(#arr4)"/>
+            <circle cx="100" cy="50" r="18" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+            <text x="100" y="55" text-anchor="middle" font-size="16" fill="#92400e" font-weight="900" font-family="JetBrains Mono">8</text>
+            <line x1="120" y1="50" x2="138" y2="50" stroke="#94a3b8" stroke-width="2" marker-end="url(#arr4)"/>
+            <circle cx="156" cy="50" r="15" fill="#fffbeb" stroke="#eab308" stroke-width="2"/>
+            <text x="156" y="55" text-anchor="middle" font-size="14" fill="#854d0e" font-weight="900" font-family="JetBrains Mono">6</text>
+            <line x1="173" y1="50" x2="191" y2="50" stroke="#94a3b8" stroke-width="2" marker-end="url(#arr4)"/>
+            <circle cx="207" cy="50" r="13" fill="#f0fdf4" stroke="#22c55e" stroke-width="2"/>
+            <text x="207" y="55" text-anchor="middle" font-size="13" fill="#166534" font-weight="900" font-family="JetBrains Mono">4</text>
+            <line x1="222" y1="50" x2="240" y2="50" stroke="#94a3b8" stroke-width="2" marker-end="url(#arr4)"/>
+
+            <!-- 3 이하 강조 구간 -->
+            <rect x="248" y="28" width="180" height="44" rx="8" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4,2"/>
+            <text x="338" y="22" text-anchor="middle" font-size="10" fill="#ef4444" font-weight="700">3초 전 강조 구간</text>
+            <circle cx="260" cy="50" r="11" fill="#ef4444"/>
+            <text x="260" y="54" text-anchor="middle" font-size="12" fill="#fff" font-weight="900" font-family="JetBrains Mono">2</text>
+            <line x1="273" y1="50" x2="291" y2="50" stroke="#94a3b8" stroke-width="2" marker-end="url(#arr4)"/>
+            <!-- 사실 2씩 감소면 1이 없지만 강조 구간 표시용 -->
+            <rect x="300" y="38" width="60" height="24" rx="6" fill="#1e3a5f"/>
+            <text x="330" y="54" text-anchor="middle" font-size="11" fill="#fff" font-weight="900">발사!</text>
+            <text x="388" y="54" text-anchor="middle" font-size="10" fill="#64748b">n -= 2</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt">// 확장 버전: 2씩 감소 + 3 이하 강조</span>
+<span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="kw">int</span> n;
+
+    <span class="fn">printf</span>(<span class="str">"시작 숫자 입력 (짝수 추천): "</span>);
+    <span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;n);
+
+    <span class="kw">while</span> (n &gt; <span class="num">0</span>) {
+        <span class="kw">if</span> (n &lt;= <span class="num">3</span>) {
+            <span class="fn">printf</span>(<span class="str">"*** %d *** 곧 발사!\n"</span>, n);  <span class="cmt">// 3 이하면 강조</span>
+        } <span class="kw">else</span> {
+            <span class="fn">printf</span>(<span class="str">"%d\n"</span>, n);
+        }
+        n -= <span class="num">2</span>;   <span class="cmt">// 2씩 감소</span>
+    }
+
+    <span class="fn">printf</span>(<span class="str">"발사!\n"</span>);
+
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+
+    <h2>확장 2 — sleep()으로 딜레이 추가</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/keyboard.png" alt="키보드" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p><code>sleep(1)</code>을 사용하면 1초씩 기다리며 카운트다운을 출력할 수 있습니다. 실제 타이머처럼 동작합니다.</p>
+
+    <!-- SVG 5: sleep 타임라인 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 70" style="max-width:460px;width:100%">
+            <text x="230" y="15" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="700">sleep(1) 타임라인 — 1초 간격으로 출력</text>
+            <line x1="20" y1="40" x2="440" y2="40" stroke="#e2e8f0" stroke-width="2"/>
+            <!-- 타임라인 포인트 -->
+            <circle cx="60" cy="40" r="8" fill="#ef4444"/><text x="60" y="44" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">3</text>
+            <text x="60" y="62" text-anchor="middle" font-size="10" fill="#64748b">0초</text>
+            <rect x="68" y="32" width="74" height="16" rx="4" fill="#f1f5f9"/>
+            <text x="105" y="44" text-anchor="middle" font-size="9" fill="#94a3b8">sleep(1)</text>
+            <circle cx="150" cy="40" r="8" fill="#f59e0b"/><text x="150" y="44" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">2</text>
+            <text x="150" y="62" text-anchor="middle" font-size="10" fill="#64748b">1초</text>
+            <rect x="158" y="32" width="74" height="16" rx="4" fill="#f1f5f9"/>
+            <text x="195" y="44" text-anchor="middle" font-size="9" fill="#94a3b8">sleep(1)</text>
+            <circle cx="240" cy="40" r="8" fill="#22c55e"/><text x="240" y="44" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">1</text>
+            <text x="240" y="62" text-anchor="middle" font-size="10" fill="#64748b">2초</text>
+            <rect x="248" y="32" width="74" height="16" rx="4" fill="#f1f5f9"/>
+            <text x="285" y="44" text-anchor="middle" font-size="9" fill="#94a3b8">sleep(1)</text>
+            <rect x="330" y="28" width="70" height="24" rx="6" fill="#1e3a5f"/>
+            <text x="365" y="44" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">발사!</text>
+            <text x="365" y="62" text-anchor="middle" font-size="10" fill="#64748b">3초</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt">// sleep() 딜레이 추가 버전</span>
+<span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="kw">#include</span> <span class="str">&lt;unistd.h&gt;</span>   <span class="cmt">// sleep() 함수 포함 (Linux/Mac)</span>
+<span class="cmt">// Windows: #include &lt;windows.h&gt;  Sleep(1000); 으로 사용</span>
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="kw">int</span> n = <span class="num">5</span>;
+
+    <span class="kw">while</span> (n &gt; <span class="num">0</span>) {
+        <span class="fn">printf</span>(<span class="str">"%d\n"</span>, n);
+        <span class="fn">sleep</span>(<span class="num">1</span>);   <span class="cmt">// 1초 대기</span>
+        n--;
+    }
+
+    <span class="fn">printf</span>(<span class="str">"발사!\n"</span>);
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+
+    <div class="callout callout-info">
+        <strong>sleep() 참고</strong><br>
+        <code>sleep(1)</code>은 1초, <code>sleep(2)</code>는 2초 기다립니다. Windows에서는 <code>Sleep(1000)</code>처럼 밀리초(1000 = 1초)를 사용합니다. 학교 환경에서는 선생님께 어떤 방식을 쓰는지 확인하세요.
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">2</div>
+            <div class="problem-label">10에서 1씩 감소, 5 이하부터 "! " 붙여 출력</div>
+            <div class="problem-diff medium">보통</div>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">시작 숫자 10부터 1씩 줄이며 출력하되, 5 이하가 되면 숫자 앞에 "! "를 붙여 강조해보세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력</span>
+                    <span class="problem-example-value">10 9 8 7 6 ! 5 ! 4 ! 3 ! 2 ! 1 발사!</span>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 / 정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code"><span style="color:#c084fc">if</span> (n &lt;= <span style="color:#7dd3fc">5</span>) <span style="color:#67e8f9">printf</span>(<span style="color:#86efac">"! %d\n"</span>, n);
+<span style="color:#c084fc">else</span> <span style="color:#67e8f9">printf</span>(<span style="color:#86efac">"%d\n"</span>, n);</div>
+            </div>
+        </details>
+    </div>
+</div>
+
+<!-- ========== PAGE 4: 정리 + 연습 문제 ========== -->
+<div class="page">
+    <h2>핵심 정리</h2>
+
+    <!-- SVG 6: n-- vs n -= 2 비교 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 100" style="max-width:460px;width:100%">
+            <text x="115" y="16" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="800">n-- (1씩 감소)</text>
+            <text x="345" y="16" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="800">n -= 2 (2씩 감소)</text>
+            <line x1="230" y1="5" x2="230" y2="95" stroke="#e2e8f0" stroke-width="1.5"/>
+
+            <rect x="20" y="24" width="50" height="22" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="45" y="38" text-anchor="middle" font-size="11" fill="#1d4ed8" font-family="JetBrains Mono" font-weight="700">n=5</text>
+            <text x="80" y="38" font-size="10" fill="#64748b">→ 5,4,3,2,1,발사</text>
+            <rect x="20" y="52" width="50" height="22" rx="4" fill="#f0fdf4" stroke="#22c55e" stroke-width="1"/>
+            <text x="45" y="66" text-anchor="middle" font-size="11" fill="#166534" font-family="JetBrains Mono" font-weight="700">n=3</text>
+            <text x="80" y="66" font-size="10" fill="#64748b">→ 3,2,1,발사</text>
+            <rect x="20" y="80" width="50" height="14" rx="4" fill="#fef2f2" stroke="#ef4444" stroke-width="1"/>
+            <text x="45" y="91" text-anchor="middle" font-size="9" fill="#dc2626" font-family="JetBrains Mono">n=0</text>
+            <text x="80" y="91" font-size="9" fill="#64748b">→ 바로 발사</text>
+
+            <rect x="250" y="24" width="50" height="22" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="275" y="38" text-anchor="middle" font-size="11" fill="#1d4ed8" font-family="JetBrains Mono" font-weight="700">n=6</text>
+            <text x="310" y="38" font-size="10" fill="#64748b">→ 6,4,2,발사</text>
+            <rect x="250" y="52" width="50" height="22" rx="4" fill="#f0fdf4" stroke="#22c55e" stroke-width="1"/>
+            <text x="275" y="66" text-anchor="middle" font-size="11" fill="#166534" font-family="JetBrains Mono" font-weight="700">n=5</text>
+            <text x="310" y="66" font-size="10" fill="#64748b">→ 5,3,1,발사</text>
+            <rect x="250" y="80" width="50" height="14" rx="4" fill="#fffbeb" stroke="#f59e0b" stroke-width="1"/>
+            <text x="275" y="91" text-anchor="middle" font-size="9" fill="#92400e" font-family="JetBrains Mono">n=7</text>
+            <text x="310" y="91" font-size="9" fill="#64748b">→ 7,5,3,1,발사</text>
+        </svg>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>카운트다운 타이머 핵심 요약</h3>
+        <ul>
+            <li><code>while (n &gt; 0)</code> — n이 0보다 크면 계속 반복합니다.</li>
+            <li><code>n--</code> — n을 1씩 줄입니다. <code>n = n - 1</code>과 완전히 같습니다.</li>
+            <li><code>n -= 2</code> — n을 2씩 줄입니다. 홀수/짝수 중 하나만 거칩니다.</li>
+            <li>조건이 처음부터 거짓(n=0)이면 반복문 본체는 한 번도 실행되지 않습니다.</li>
+            <li><code>sleep(1)</code>로 1초 딜레이를 추가할 수 있습니다.</li>
+        </ul>
+    </div>
+
+    <!-- SVG 7: 오류 사례 — 무한루프 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+            <text x="230" y="14" text-anchor="middle" font-size="11" fill="#dc2626" font-weight="800">주의: n-- 빠뜨리면 무한루프!</text>
+            <rect x="20" y="22" width="200" height="52" rx="8" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="30" y="40" font-size="11" fill="#dc2626" font-family="JetBrains Mono">while (n &gt; 0) {</text>
+            <text x="30" y="56" font-size="11" fill="#dc2626" font-family="JetBrains Mono">  printf("%d\n", n);</text>
+            <text x="30" y="68" font-size="11" fill="#dc2626" font-family="JetBrains Mono">}</text>
+            <text x="240" y="40" font-size="11" fill="#94a3b8">← n이 줄지 않아서</text>
+            <text x="240" y="56" font-size="11" fill="#94a3b8">영원히 반복됩니다</text>
+            <text x="240" y="70" font-size="10" fill="#ef4444" font-weight="700">Ctrl+C 로 강제 종료!</text>
+        </svg>
+    </div>
+
+    <div class="callout callout-warn">
+        <strong>무한루프 주의</strong><br>
+        <code>n--</code>을 잊으면 n이 영원히 줄지 않아서 프로그램이 끝나지 않습니다. 반복문 안에서 반드시 종료 조건이 변하도록 코드를 작성하세요.
+    </div>
+
+    <!-- SVG 8: 전체 코드 구조 요약 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 90" style="max-width:460px;width:100%">
+            <text x="230" y="14" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="800">카운트다운 프로그램 구조 한눈에 보기</text>
+            <rect x="20" y="22" width="80" height="28" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="60" y="40" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">int n 선언</text>
+            <rect x="120" y="22" width="80" height="28" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="160" y="40" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">scanf로 입력</text>
+            <rect x="220" y="22" width="100" height="28" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="270" y="36" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">while(n&gt;0)</text>
+            <text x="270" y="48" text-anchor="middle" font-size="9" fill="#166534">printf + n--</text>
+            <rect x="340" y="22" width="100" height="28" rx="6" fill="#1e3a5f"/>
+            <text x="390" y="40" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">발사! 출력</text>
+            <text x="104" y="42" font-size="12" fill="#94a3b8">→</text>
+            <text x="204" y="42" font-size="12" fill="#94a3b8">→</text>
+            <text x="324" y="42" font-size="12" fill="#94a3b8">→</text>
+            <text x="230" y="80" text-anchor="middle" font-size="11" fill="#64748b">이 흐름 4단계를 기억하세요!</text>
+        </svg>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">3</div>
+            <div class="problem-label">거꾸로가 아니라 올라가는 카운트업 만들기</div>
+            <div class="problem-diff medium">보통</div>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">1부터 목표 숫자까지 1씩 올라가며 출력하고, 목표 숫자에서 "도착!"을 출력하는 프로그램을 만들어보세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">목표</span>
+                    <span class="problem-example-value">5</span>
+                </div>
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력</span>
+                    <span class="problem-example-value">1 2 3 4 5 도착!</span>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 / 정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code"><span style="color:#c084fc">int</span> i = <span style="color:#7dd3fc">1</span>, target;
+<span style="color:#67e8f9">scanf</span>(<span style="color:#86efac">"%d"</span>, &amp;target);
+<span style="color:#c084fc">while</span> (i &lt;= target) {
+    <span style="color:#67e8f9">printf</span>(<span style="color:#86efac">"%d\n"</span>, i);
+    i++;
+}
+<span style="color:#67e8f9">printf</span>(<span style="color:#86efac">"도착!\n"</span>);</div>
+            </div>
+        </details>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+
+
+
+<script>
+(function(){
+  var KEY = 'cs_ans_' + location.pathname.replace(/[^a-zA-Z0-9]/g,'_');
+  var pagePath = location.pathname;
+  var userId = null;
+  try {
+    userId = window.parent?.localStorage?.getItem('codingssok_user_id')
+      || localStorage.getItem('codingssok_user_id');
+  } catch(e) {}
+
+  function save(){
+    var areas = document.querySelectorAll('textarea');
+    var saved = 0;
+    areas.forEach(function(ta, i){
+      if(ta.value.trim()) {
+        localStorage.setItem(KEY + '_' + i, ta.value);
+        saved++;
+      } else {
+        localStorage.removeItem(KEY + '_' + i);
+      }
+    });
+    if(saved > 0) showSaveIndicator();
+  }
+
+  function load(){
+    var areas = document.querySelectorAll('textarea');
+    var restored = 0;
+    areas.forEach(function(ta, i){
+      var val = localStorage.getItem(KEY + '_' + i);
+      if(val && val.trim()) {
+        ta.value = val;
+        ta.style.borderColor = '#10b981';
+        ta.style.boxShadow = '0 0 0 2px rgba(16,185,129,0.15)';
+        setTimeout(function(){ ta.style.borderColor = ''; ta.style.boxShadow = ''; }, 2000);
+        restored++;
+      }
+    });
+    if(restored > 0) showRestoreIndicator(restored);
+  }
+
+  function saveToDb(){
+    if(!userId) return;
+    var areas = document.querySelectorAll('textarea');
+    var answers = [];
+    areas.forEach(function(ta, i){
+      if(ta.value.trim()) answers.push({ field_index: i, answer_text: ta.value });
+    });
+    if(answers.length === 0) return;
+    fetch('/api/answers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId, page_path: pagePath, answers: answers })
+    }).catch(function(){});
+  }
+
+  function loadFromDb(){
+    if(!userId) return;
+    fetch('/api/answers?user_id=' + encodeURIComponent(userId) + '&page_path=' + encodeURIComponent(pagePath))
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(!d.answers || !d.answers.length) return;
+        var areas = document.querySelectorAll('textarea');
+        d.answers.forEach(function(a){
+          if(areas[a.field_index] && a.answer_text) {
+            areas[a.field_index].value = a.answer_text;
+            localStorage.setItem(KEY + '_' + a.field_index, a.answer_text);
+          }
+        });
+      }).catch(function(){});
+  }
+
+  function showSaveIndicator(){
+    var el = document.getElementById('cs-save-ind');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'cs-save-ind';
+      el.style.cssText = 'position:fixed;bottom:16px;right:16px;padding:6px 14px;border-radius:8px;background:#0f172a;color:#22c55e;font-size:11px;font-weight:700;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+      document.body.appendChild(el);
+    }
+    el.textContent = '\u2713 \uB2F5\uC548 \uC800\uC7A5\uB428'; // ✓ 답안 저장됨
+    el.style.opacity = '1';
+    setTimeout(function(){ el.style.opacity = '0'; }, 1500);
+  }
+
+  function showRestoreIndicator(n){
+    var el = document.getElementById('cs-save-ind');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'cs-save-ind';
+      el.style.cssText = 'position:fixed;bottom:16px;right:16px;padding:6px 14px;border-radius:8px;background:#0f172a;color:#3b82f6;font-size:11px;font-weight:700;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+      document.body.appendChild(el);
+    }
+    el.textContent = '\u21BB ' + n + '\uAC1C \uB2F5\uC548 \uBCF5\uC6D0'; // ↻ n개 답안 복원
+    el.style.color = '#3b82f6';
+    el.style.opacity = '1';
+    setTimeout(function(){ el.style.opacity = '0'; }, 2500);
+  }
+
+  var t = null;
+  document.addEventListener('input', function(e){
+    if(e.target.tagName === 'TEXTAREA'){
+      clearTimeout(t);
+      t = setTimeout(function(){ save(); saveToDb(); }, 300);
+    }
+  });
+  document.addEventListener('change', function(e){
+    if(e.target.tagName === 'TEXTAREA'){ save(); saveToDb(); }
+  });
+  document.addEventListener('focusout', function(e){
+    if(e.target.tagName === 'TEXTAREA'){ save(); saveToDb(); }
+  });
+  window.addEventListener('beforeunload', function(){ save(); saveToDb(); });
+
+  // 즉시 로드
+  load();
+  loadFromDb();
+})();
+</script>
+</body>
+</html>

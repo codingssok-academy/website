@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 파일 다루기 심화</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+/* -- 페이지 -- */
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+/* -- 챕터 표지 -- */
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+
+/* -- 본문 -- */
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 16px; font-weight: 700; color: #1e3a5f; margin: 18px 0 10px; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+ul, ol { margin: 0 0 12px 20px; }
+li { font-size: 14px; color: #374151; line-height: 1.8; }
+
+/* -- 코드 블록 -- */
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13.5px;
+    color: #e2e8f0; line-height: 1.85; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.code .dec { color: #f9a8d4; }
+
+/* -- 따라해보세요 -- */
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+
+/* -- 문제 -- */
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+
+/* -- 요약 -- */
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+/* -- 출력 박스 -- */
+.output-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #334155; line-height: 1.7; margin: 10px 0; }
+
+/* -- 비교 테이블 -- */
+.compare-table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13px; }
+.compare-table th { background: #1e3a5f; color: #fff; padding: 8px 12px; text-align: left; font-weight: 700; }
+.compare-table td { padding: 7px 12px; border-bottom: 1px solid #e2e8f0; color: #374151; }
+.compare-table tr:nth-child(even) td { background: #f8fafc; }
+.compare-table code { background: #e0e7ff; padding: 1px 5px; border-radius: 3px; font-family: 'JetBrains Mono', monospace; color: #3730a3; font-size: 12px; }
+
+/* -- 정보 박스 -- */
+.info-box { border: 1.5px solid #bfdbfe; background: #eff6ff; border-radius: 8px; padding: 12px 16px; margin: 12px 0; }
+.info-box .info-title { font-size: 13px; font-weight: 700; color: #1d4ed8; margin-bottom: 6px; }
+.info-box p { font-size: 13px; color: #374151; margin: 0; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- 1페이지: 표지 -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">44</div>
+        <div class="cover-label">L3 — Unit 44</div>
+        <h1 class="cover-title">파일 다루기 심화</h1>
+        <p class="cover-sub">with문으로 파일을 안전하게 열고 닫는 방법, 파일 모드(r/w/a/r+)의 차이, 여러 파일을 동시에 다루는 패턴, readlines와 writelines로 여러 줄을 한 번에 처리하는 방법을 배웁니다.</p>
+
+        <!-- SVG: 파일 처리 전체 흐름 -->
+        <div style="margin:24px 0;">
+            <svg viewBox="0 0 500 160" style="max-width:500px;width:100%">
+                <defs>
+                    <marker id="arwCov" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                    </marker>
+                </defs>
+                <!-- open -->
+                <rect x="5" y="10" width="100" height="50" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="55" y="31" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">open()</text>
+                <text x="55" y="47" text-anchor="middle" font-size="9" fill="#64748b">파일 열기</text>
+                <line x1="108" y1="35" x2="128" y2="35" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+                <!-- with -->
+                <rect x="131" y="5" width="130" height="60" rx="8" fill="#1e3a5f"/>
+                <text x="196" y="27" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">with open() as f</text>
+                <text x="196" y="43" text-anchor="middle" font-size="9" fill="#93c5fd">자동으로 close()</text>
+                <text x="196" y="57" text-anchor="middle" font-size="9" fill="#93c5fd">예외 발생해도 안전</text>
+                <line x1="264" y1="35" x2="284" y2="35" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+                <!-- read/write -->
+                <rect x="287" y="10" width="110" height="50" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="342" y="28" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">read / write</text>
+                <text x="342" y="44" text-anchor="middle" font-size="9" fill="#64748b">readlines / writelines</text>
+                <line x1="400" y1="35" x2="420" y2="35" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+                <!-- close -->
+                <rect x="423" y="10" width="70" height="50" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="458" y="31" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">close()</text>
+                <text x="458" y="47" text-anchor="middle" font-size="9" fill="#64748b">자동 처리</text>
+                <!-- 파일 모드들 -->
+                <rect x="40" y="90" width="420" height="62" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+                <text x="250" y="110" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">파일 모드</text>
+                <text x="90"  y="130" text-anchor="middle" font-size="9" fill="#3b82f6" font-weight="700">r</text>
+                <text x="90"  y="144" text-anchor="middle" font-size="8" fill="#64748b">읽기</text>
+                <text x="180" y="130" text-anchor="middle" font-size="9" fill="#22c55e" font-weight="700">w</text>
+                <text x="180" y="144" text-anchor="middle" font-size="8" fill="#64748b">쓰기(덮어씀)</text>
+                <text x="270" y="130" text-anchor="middle" font-size="9" fill="#f59e0b" font-weight="700">a</text>
+                <text x="270" y="144" text-anchor="middle" font-size="8" fill="#64748b">이어쓰기</text>
+                <text x="360" y="130" text-anchor="middle" font-size="9" fill="#ec4899" font-weight="700">r+</text>
+                <text x="360" y="144" text-anchor="middle" font-size="8" fill="#64748b">읽기+쓰기</text>
+                <text x="450" y="130" text-anchor="middle" font-size="9" fill="#8b5cf6" font-weight="700">encoding</text>
+                <text x="450" y="144" text-anchor="middle" font-size="8" fill="#64748b">utf-8</text>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/folder.png" alt="파일" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 유닛에서 배우는 것</h3>
+            <ul>
+                <li><code>with open() as f:</code> 구문으로 파일을 안전하게 열고 자동으로 닫을 수 있습니다.</li>
+                <li>파일 모드 <code>r</code>, <code>w</code>, <code>a</code>, <code>r+</code>의 차이를 알고 상황에 맞게 선택할 수 있습니다.</li>
+                <li><code>readlines()</code>로 파일 전체를 줄 단위 리스트로 읽을 수 있습니다.</li>
+                <li><code>writelines()</code>로 리스트 데이터를 파일에 한 번에 저장할 수 있습니다.</li>
+                <li>두 파일을 동시에 열어 데이터를 복사하거나 병합할 수 있습니다.</li>
+                <li>성적 기록, 일기장 등 실용적인 파일 처리 프로그램을 만들 수 있습니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- 2페이지: with open() as f 구문 -->
+<div class="page">
+    <h2>with open() as f: 구문</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/hard-drive.png" alt="저장소" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>파일을 열 때 <code>open()</code>만 쓰면 프로그램이 오류로 종료될 때 파일이 닫히지 않아 데이터가 손상될 수 있습니다. <code>with</code>문을 쓰면 블록이 끝날 때 파이썬이 자동으로 <code>close()</code>를 호출합니다.</p>
+
+    <!-- SVG: with vs open 비교 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 120" style="max-width:500px;width:100%">
+            <!-- 왼쪽: 기존 방식 -->
+            <rect x="5" y="5" width="230" height="110" rx="8" fill="#fff5f5" stroke="#fca5a5" stroke-width="1.5"/>
+            <text x="120" y="24" text-anchor="middle" font-size="10" fill="#dc2626" font-weight="700">기존 방식 (위험)</text>
+            <text x="15" y="42" font-size="9" fill="#374151" font-family="JetBrains Mono,monospace">f = open("file.txt", "r")</text>
+            <text x="15" y="57" font-size="9" fill="#374151" font-family="JetBrains Mono,monospace">data = f.read()</text>
+            <text x="15" y="72" font-size="9" fill="#dc2626" font-family="JetBrains Mono,monospace">  # 오류 발생 시</text>
+            <text x="15" y="87" font-size="9" fill="#dc2626" font-family="JetBrains Mono,monospace">  # close() 안 됨!</text>
+            <text x="15" y="102" font-size="9" fill="#374151" font-family="JetBrains Mono,monospace">f.close()  # 직접 호출 필요</text>
+            <!-- 오른쪽: with 방식 -->
+            <rect x="265" y="5" width="230" height="110" rx="8" fill="#f0fdf4" stroke="#86efac" stroke-width="1.5"/>
+            <text x="380" y="24" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">with 방식 (안전)</text>
+            <text x="275" y="42" font-size="9" fill="#374151" font-family="JetBrains Mono,monospace">with open("file.txt", "r") as f:</text>
+            <text x="275" y="57" font-size="9" fill="#374151" font-family="JetBrains Mono,monospace">    data = f.read()</text>
+            <text x="275" y="72" font-size="9" fill="#64748b" font-family="JetBrains Mono,monospace">    # 오류 발생해도</text>
+            <text x="275" y="87" font-size="9" fill="#166534" font-family="JetBrains Mono,monospace">    # close() 자동!</text>
+            <text x="275" y="102" font-size="9" fill="#94a3b8" font-family="JetBrains Mono,monospace"># 블록 끝 = 자동 닫힘</text>
+        </svg>
+    </div>
+
+    <h3>기본 읽기</h3>
+    <div class="code"><span class="cmt"># 파일 읽기 — with 사용</span>
+<span class="kw">with</span> <span class="fn">open</span>(<span class="str">"note.txt"</span>, <span class="str">"r"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+    content = f.<span class="fn">read</span>()          <span class="cmt"># 전체를 하나의 문자열로</span>
+    <span class="fn">print</span>(content)
+
+<span class="cmt"># 줄 단위로 읽기</span>
+<span class="kw">with</span> <span class="fn">open</span>(<span class="str">"note.txt"</span>, <span class="str">"r"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+    <span class="kw">for</span> line <span class="kw">in</span> f:
+        <span class="fn">print</span>(line.<span class="fn">strip</span>())      <span class="cmt"># strip()으로 줄바꿈 제거</span></div>
+
+    <!-- SVG: open() 인자 설명 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 500 72" style="max-width:500px;width:100%">
+            <defs>
+                <marker id="arwArg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <text x="10" y="30" font-size="13" fill="#e2e8f0" font-family="JetBrains Mono,monospace" font-weight="600">open(</text>
+            <text x="68" y="30" font-size="13" fill="#86efac" font-family="JetBrains Mono,monospace" font-weight="600">"note.txt"</text>
+            <text x="170" y="30" font-size="13" fill="#e2e8f0" font-family="JetBrains Mono,monospace">,</text>
+            <text x="182" y="30" font-size="13" fill="#7dd3fc" font-family="JetBrains Mono,monospace" font-weight="600">"r"</text>
+            <text x="210" y="30" font-size="13" fill="#e2e8f0" font-family="JetBrains Mono,monospace">,</text>
+            <text x="222" y="30" font-size="13" fill="#f9a8d4" font-family="JetBrains Mono,monospace">encoding=</text>
+            <text x="316" y="30" font-size="13" fill="#86efac" font-family="JetBrains Mono,monospace">"utf-8"</text>
+            <text x="380" y="30" font-size="13" fill="#e2e8f0" font-family="JetBrains Mono,monospace">)</text>
+            <!-- 화살표 설명 -->
+            <line x1="113" y1="33" x2="113" y2="50" stroke="#94a3b8" stroke-width="1" marker-end="url(#arwArg)"/>
+            <text x="113" y="66" text-anchor="middle" font-size="8" fill="#64748b">파일 경로</text>
+            <line x1="193" y1="33" x2="193" y2="50" stroke="#94a3b8" stroke-width="1" marker-end="url(#arwArg)"/>
+            <text x="193" y="66" text-anchor="middle" font-size="8" fill="#64748b">모드</text>
+            <line x1="310" y1="33" x2="310" y2="50" stroke="#94a3b8" stroke-width="1" marker-end="url(#arwArg)"/>
+            <text x="310" y="66" text-anchor="middle" font-size="8" fill="#64748b">인코딩(한글)</text>
+        </svg>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="처리" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+        <div class="practice-head">따라해보세요 — with open() 읽기</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">먼저 메모장에서 <code>hello.txt</code>를 만들고 "안녕하세요"를 저장하세요. 그 다음 아래 코드로 읽어보세요.</div>
+                <div class="code"><span class="kw">with</span> <span class="fn">open</span>(<span class="str">"hello.txt"</span>, <span class="str">"r"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+    text = f.<span class="fn">read</span>()
+    <span class="fn">print</span>(text)</div>
+                <div class="practice-result">안녕하세요 출력, with 블록이 끝나면 f는 자동으로 닫힌다</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">파이썬으로 파일을 직접 만들고 읽어보세요.</div>
+                <div class="code"><span class="cmt"># 쓰기 → 읽기 순서</span>
+<span class="kw">with</span> <span class="fn">open</span>(<span class="str">"test.txt"</span>, <span class="str">"w"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+    f.<span class="fn">write</span>(<span class="str">"첫 번째 줄\n"</span>)
+    f.<span class="fn">write</span>(<span class="str">"두 번째 줄\n"</span>)
+
+<span class="kw">with</span> <span class="fn">open</span>(<span class="str">"test.txt"</span>, <span class="str">"r"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+    <span class="fn">print</span>(f.<span class="fn">read</span>())</div>
+                <div class="practice-result">첫 번째 줄 / 두 번째 줄 순서대로 출력된다</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc"><code>for line in f</code>로 줄마다 번호를 붙여 출력하세요.</div>
+                <div class="code"><span class="kw">with</span> <span class="fn">open</span>(<span class="str">"test.txt"</span>, <span class="str">"r"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+    <span class="kw">for</span> i, line <span class="kw">in</span> <span class="fn">enumerate</span>(f, <span class="num">1</span>):
+        <span class="fn">print</span>(<span class="str">f"{i}: {line.strip()}"</span>)</div>
+                <div class="practice-result">1: 첫 번째 줄 / 2: 두 번째 줄</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3페이지: 파일 모드 -->
+<div class="page">
+    <h2>파일 모드 — r / w / a / r+</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/database.png" alt="데이터" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>파일을 열 때 두 번째 인자로 모드를 지정합니다. 모드에 따라 읽기만 되거나 파일을 덮어쓰거나 기존 내용에 이어 쓸 수 있습니다.</p>
+
+    <table class="compare-table">
+        <tr>
+            <th>모드</th>
+            <th>이름</th>
+            <th>동작</th>
+            <th>파일 없으면?</th>
+        </tr>
+        <tr>
+            <td><code>r</code></td>
+            <td>읽기</td>
+            <td>읽기 전용, 수정 불가</td>
+            <td>오류 발생</td>
+        </tr>
+        <tr>
+            <td><code>w</code></td>
+            <td>쓰기</td>
+            <td>기존 내용 전부 삭제 후 새로 작성</td>
+            <td>새로 생성</td>
+        </tr>
+        <tr>
+            <td><code>a</code></td>
+            <td>추가</td>
+            <td>기존 내용 유지, 끝에 이어 쓰기</td>
+            <td>새로 생성</td>
+        </tr>
+        <tr>
+            <td><code>r+</code></td>
+            <td>읽기+쓰기</td>
+            <td>읽기와 쓰기 모두 가능</td>
+            <td>오류 발생</td>
+        </tr>
+    </table>
+
+    <!-- SVG: 모드별 파일 상태 변화 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 140" style="max-width:500px;width:100%">
+            <defs>
+                <marker id="arwMd" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <!-- 원본 파일 -->
+            <rect x="5" y="10" width="90" height="50" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+            <text x="50" y="28" text-anchor="middle" font-size="9" fill="#1e3a5f" font-weight="700">file.txt</text>
+            <text x="50" y="43" text-anchor="middle" font-size="8" fill="#64748b">Hello</text>
+            <text x="50" y="54" text-anchor="middle" font-size="8" fill="#64748b">World</text>
+            <text x="50" y="72" text-anchor="middle" font-size="8" fill="#94a3b8">원본</text>
+
+            <!-- w 모드 -->
+            <line x1="98" y1="35" x2="118" y2="60" stroke="#94a3b8" stroke-width="1" marker-end="url(#arwMd)"/>
+            <rect x="120" y="50" width="90" height="50" rx="6" fill="#fee2e2" stroke="#fca5a5" stroke-width="1.5"/>
+            <text x="165" y="68" text-anchor="middle" font-size="9" fill="#dc2626" font-weight="700">w 모드</text>
+            <text x="165" y="83" text-anchor="middle" font-size="8" fill="#64748b">새 내용</text>
+            <text x="165" y="112" text-anchor="middle" font-size="8" fill="#dc2626">기존 내용 삭제!</text>
+
+            <!-- a 모드 -->
+            <line x1="98" y1="35" x2="248" y2="60" stroke="#94a3b8" stroke-width="1" marker-end="url(#arwMd)"/>
+            <rect x="250" y="50" width="90" height="50" rx="6" fill="#f0fdf4" stroke="#86efac" stroke-width="1.5"/>
+            <text x="295" y="68" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">a 모드</text>
+            <text x="295" y="81" text-anchor="middle" font-size="8" fill="#64748b">Hello</text>
+            <text x="295" y="92" text-anchor="middle" font-size="8" fill="#64748b">World</text>
+            <text x="295" y="103" text-anchor="middle" font-size="8" fill="#166534">새 내용</text>
+            <text x="295" y="114" text-anchor="middle" font-size="8" fill="#166534">기존 유지+이어씀</text>
+
+            <!-- r 모드 -->
+            <line x1="98" y1="35" x2="380" y2="18" stroke="#94a3b8" stroke-width="1" marker-end="url(#arwMd)"/>
+            <rect x="385" y="5" width="110" height="50" rx="6" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1.5"/>
+            <text x="440" y="23" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">r 모드</text>
+            <text x="440" y="38" text-anchor="middle" font-size="8" fill="#64748b">Hello</text>
+            <text x="440" y="49" text-anchor="middle" font-size="8" fill="#64748b">World</text>
+            <text x="440" y="68" text-anchor="middle" font-size="8" fill="#1d4ed8">읽기 전용</text>
+        </svg>
+    </div>
+
+    <h3>모드별 코드 예시</h3>
+    <div class="code"><span class="cmt"># w 모드: 새로 쓰기 (기존 내용 사라짐!)</span>
+<span class="kw">with</span> <span class="fn">open</span>(<span class="str">"score.txt"</span>, <span class="str">"w"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+    f.<span class="fn">write</span>(<span class="str">"홍길동: 95\n"</span>)
+
+<span class="cmt"># a 모드: 이어쓰기 (기존 내용 유지)</span>
+<span class="kw">with</span> <span class="fn">open</span>(<span class="str">"score.txt"</span>, <span class="str">"a"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+    f.<span class="fn">write</span>(<span class="str">"이순신: 88\n"</span>)
+
+<span class="cmt"># r 모드: 읽기 전용</span>
+<span class="kw">with</span> <span class="fn">open</span>(<span class="str">"score.txt"</span>, <span class="str">"r"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+    <span class="fn">print</span>(f.<span class="fn">read</span>())</div>
+
+    <div class="output-box">홍길동: 95
+이순신: 88</div>
+
+    <!-- SVG: w와 a 차이 시각화 -->
+    <div style="text-align:center;margin:10px 0;">
+        <svg viewBox="0 0 500 60" style="max-width:500px;width:100%">
+            <rect x="5" y="5" width="235" height="50" rx="6" fill="#fff5f5" stroke="#fca5a5" stroke-width="1.5"/>
+            <text x="122" y="22" text-anchor="middle" font-size="10" fill="#dc2626" font-weight="700">w 모드 두 번 실행</text>
+            <text x="122" y="38" text-anchor="middle" font-size="9" fill="#64748b">1번: "홍길동: 95" 저장</text>
+            <text x="122" y="52" text-anchor="middle" font-size="9" fill="#dc2626">2번: "이순신: 88" 로 교체</text>
+            <rect x="260" y="5" width="235" height="50" rx="6" fill="#f0fdf4" stroke="#86efac" stroke-width="1.5"/>
+            <text x="377" y="22" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">a 모드 두 번 실행</text>
+            <text x="377" y="38" text-anchor="middle" font-size="9" fill="#64748b">1번: "홍길동: 95" 저장</text>
+            <text x="377" y="52" text-anchor="middle" font-size="9" fill="#166534">2번: "이순신: 88" 추가됨</text>
+        </svg>
+    </div>
+
+    <div class="info-box">
+        <div class="info-title">주의: 한글 파일은 encoding="utf-8" 필수</div>
+        <p>윈도우에서 기본 인코딩은 cp949입니다. 한글이 깨지지 않으려면 항상 <code>encoding="utf-8"</code>을 명시하세요. 파이썬 3에서 이 인수를 생략하면 시스템 기본값을 사용합니다.</p>
+    </div>
+</div>
+
+<!-- 4페이지: readlines / writelines -->
+<div class="page">
+    <h2>readlines / writelines</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p><code>read()</code>는 전체를 하나의 문자열로 읽지만, <code>readlines()</code>는 줄마다 리스트 원소로 분리해서 반환합니다. 반대로 <code>writelines()</code>는 리스트를 받아 파일에 이어 씁니다.</p>
+
+    <!-- SVG: readlines 동작 원리 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 110" style="max-width:500px;width:100%">
+            <defs>
+                <marker id="arwRl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <!-- 파일 -->
+            <rect x="5" y="15" width="130" height="80" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+            <text x="70" y="32" text-anchor="middle" font-size="9" fill="#1e3a5f" font-weight="700">scores.txt</text>
+            <text x="15" y="47" font-size="9" fill="#374151" font-family="JetBrains Mono,monospace">홍길동 95</text>
+            <text x="15" y="61" font-size="9" fill="#374151" font-family="JetBrains Mono,monospace">이순신 88</text>
+            <text x="15" y="75" font-size="9" fill="#374151" font-family="JetBrains Mono,monospace">강감찬 72</text>
+            <!-- 화살표 -->
+            <line x1="138" y1="55" x2="178" y2="55" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwRl)"/>
+            <text x="158" y="48" text-anchor="middle" font-size="8" fill="#3b82f6" font-weight="700">readlines()</text>
+            <!-- 리스트 -->
+            <rect x="182" y="10" width="180" height="95" rx="6" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1.5"/>
+            <text x="272" y="27" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">lines (리스트)</text>
+            <text x="192" y="43" font-size="9" fill="#374151" font-family="JetBrains Mono,monospace">[0] "홍길동 95\n"</text>
+            <text x="192" y="58" font-size="9" fill="#374151" font-family="JetBrains Mono,monospace">[1] "이순신 88\n"</text>
+            <text x="192" y="73" font-size="9" fill="#374151" font-family="JetBrains Mono,monospace">[2] "강감찬 72\n"</text>
+            <text x="192" y="95" font-size="8" fill="#94a3b8" font-family="JetBrains Mono,monospace">strip() 호출로 \n 제거</text>
+            <!-- strip 결과 -->
+            <line x1="365" y1="55" x2="385" y2="55" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwRl)"/>
+            <text x="374" y="48" text-anchor="middle" font-size="8" fill="#22c55e" font-weight="700">strip()</text>
+            <rect x="388" y="10" width="108" height="95" rx="6" fill="#f0fdf4" stroke="#86efac" stroke-width="1.5"/>
+            <text x="442" y="27" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">처리 가능</text>
+            <text x="394" y="43" font-size="9" fill="#374151" font-family="JetBrains Mono,monospace">"홍길동 95"</text>
+            <text x="394" y="58" font-size="9" fill="#374151" font-family="JetBrains Mono,monospace">"이순신 88"</text>
+            <text x="394" y="73" font-size="9" fill="#374151" font-family="JetBrains Mono,monospace">"강감찬 72"</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># readlines() — 줄 단위 리스트로 읽기</span>
+<span class="kw">with</span> <span class="fn">open</span>(<span class="str">"scores.txt"</span>, <span class="str">"r"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+    lines = f.<span class="fn">readlines</span>()          <span class="cmt"># ['홍길동 95\n', '이순신 88\n', ...]</span>
+
+<span class="kw">for</span> line <span class="kw">in</span> lines:
+    name, score = line.<span class="fn">strip</span>().<span class="fn">split</span>()
+    <span class="fn">print</span>(<span class="str">f"{name}의 점수: {score}점"</span>)
+
+<span class="cmt"># writelines() — 리스트를 파일에 쓰기</span>
+students = [<span class="str">"홍길동 95\n"</span>, <span class="str">"이순신 88\n"</span>, <span class="str">"강감찬 72\n"</span>]
+<span class="kw">with</span> <span class="fn">open</span>(<span class="str">"output.txt"</span>, <span class="str">"w"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+    f.<span class="fn">writelines</span>(students)          <span class="cmt"># 리스트 원소를 연속으로 씀</span></div>
+
+    <div class="output-box">홍길동의 점수: 95점
+이순신의 점수: 88점
+강감찬의 점수: 72점</div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요 — readlines / writelines</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">과목 리스트를 파일로 저장하고 <code>readlines()</code>로 읽어 몇 줄인지 출력하세요.</div>
+                <div class="code">subjects = [<span class="str">"수학\n"</span>, <span class="str">"영어\n"</span>, <span class="str">"과학\n"</span>, <span class="str">"국어\n"</span>]
+<span class="kw">with</span> <span class="fn">open</span>(<span class="str">"subjects.txt"</span>, <span class="str">"w"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+    f.<span class="fn">writelines</span>(subjects)
+
+<span class="kw">with</span> <span class="fn">open</span>(<span class="str">"subjects.txt"</span>, <span class="str">"r"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+    lines = f.<span class="fn">readlines</span>()
+    <span class="fn">print</span>(<span class="str">f"총 {len(lines)}개 과목"</span>)</div>
+                <div class="practice-result">총 4개 과목</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc"><code>readlines()</code>로 읽은 줄에서 번호와 내용을 출력하세요.</div>
+                <div class="code"><span class="kw">with</span> <span class="fn">open</span>(<span class="str">"subjects.txt"</span>, <span class="str">"r"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+    lines = f.<span class="fn">readlines</span>()
+
+<span class="kw">for</span> i, line <span class="kw">in</span> <span class="fn">enumerate</span>(lines, <span class="num">1</span>):
+    <span class="fn">print</span>(<span class="str">f"{i}번: {line.strip()}"</span>)</div>
+                <div class="practice-result">1번: 수학 / 2번: 영어 / 3번: 과학 / 4번: 국어</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">성적 데이터에서 70점 이상인 학생만 골라 새 파일에 저장하세요.</div>
+                <div class="code">scores = [<span class="str">"홍길동 95\n"</span>, <span class="str">"김철수 65\n"</span>, <span class="str">"이영희 82\n"</span>]
+<span class="kw">with</span> <span class="fn">open</span>(<span class="str">"scores.txt"</span>, <span class="str">"w"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+    f.<span class="fn">writelines</span>(scores)
+
+<span class="kw">with</span> <span class="fn">open</span>(<span class="str">"scores.txt"</span>, <span class="str">"r"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+    lines = f.<span class="fn">readlines</span>()
+
+passed = [l <span class="kw">for</span> l <span class="kw">in</span> lines <span class="kw">if</span> <span class="fn">int</span>(l.<span class="fn">strip</span>().<span class="fn">split</span>()[<span class="num">1</span>]) >= <span class="num">70</span>]
+<span class="kw">with</span> <span class="fn">open</span>(<span class="str">"passed.txt"</span>, <span class="str">"w"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+    f.<span class="fn">writelines</span>(passed)</div>
+                <div class="practice-result">passed.txt에 홍길동 95, 이영희 82만 저장됨</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 5페이지: 여러 파일 동시 열기 -->
+<div class="page">
+    <h2>여러 파일 동시에 열기</h2>
+    <p>하나의 <code>with</code>문에 쉼표(,)로 여러 파일을 동시에 열 수 있습니다. 한 파일을 읽으면서 다른 파일에 쓰는 패턴에 자주 쓰입니다.</p>
+
+    <!-- SVG: 두 파일 동시 열기 구조 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 100" style="max-width:500px;width:100%">
+            <defs>
+                <marker id="arwTw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <!-- 입력 파일 -->
+            <rect x="5" y="20" width="120" height="60" rx="8" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1.5"/>
+            <text x="65" y="40" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">input.txt</text>
+            <text x="65" y="56" text-anchor="middle" font-size="9" fill="#64748b">읽기 (r 모드)</text>
+            <text x="65" y="71" text-anchor="middle" font-size="9" fill="#94a3b8">as src</text>
+            <!-- with 박스 -->
+            <rect x="155" y="10" width="190" height="80" rx="8" fill="#1e3a5f"/>
+            <text x="250" y="34" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">with open(...) as src,</text>
+            <text x="250" y="50" text-anchor="middle" font-size="9" fill="#93c5fd">     open(...) as dst:</text>
+            <text x="250" y="68" text-anchor="middle" font-size="9" fill="#f9a8d4">동시에 두 파일 관리</text>
+            <text x="250" y="82" text-anchor="middle" font-size="8" fill="#64748b">블록 끝에 모두 자동 close</text>
+            <!-- 출력 파일 -->
+            <rect x="375" y="20" width="120" height="60" rx="8" fill="#f0fdf4" stroke="#86efac" stroke-width="1.5"/>
+            <text x="435" y="40" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">output.txt</text>
+            <text x="435" y="56" text-anchor="middle" font-size="9" fill="#64748b">쓰기 (w 모드)</text>
+            <text x="435" y="71" text-anchor="middle" font-size="9" fill="#94a3b8">as dst</text>
+            <!-- 화살표 -->
+            <line x1="128" y1="50" x2="152" y2="50" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwTw)"/>
+            <line x1="348" y1="50" x2="372" y2="50" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwTw)"/>
+        </svg>
+    </div>
+
+    <h3>파일 복사</h3>
+    <div class="code"><span class="cmt"># 두 파일 동시 열기: 파일 복사</span>
+<span class="kw">with</span> <span class="fn">open</span>(<span class="str">"input.txt"</span>, <span class="str">"r"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> src, \
+     <span class="fn">open</span>(<span class="str">"output.txt"</span>, <span class="str">"w"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> dst:
+    <span class="kw">for</span> line <span class="kw">in</span> src:
+        dst.<span class="fn">write</span>(line)              <span class="cmt"># 한 줄씩 복사</span>
+<span class="fn">print</span>(<span class="str">"복사 완료"</span>)</div>
+
+    <h3>내용 변환하면서 저장</h3>
+    <div class="code"><span class="cmt"># 원본 읽으면서 대문자로 변환해 저장</span>
+<span class="kw">with</span> <span class="fn">open</span>(<span class="str">"names.txt"</span>, <span class="str">"r"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> src, \
+     <span class="fn">open</span>(<span class="str">"names_upper.txt"</span>, <span class="str">"w"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> dst:
+    <span class="kw">for</span> line <span class="kw">in</span> src:
+        dst.<span class="fn">write</span>(line.<span class="fn">upper</span>())      <span class="cmt"># 대문자 변환 후 저장</span></div>
+
+    <!-- SVG: 세 파일 동시 열기 예 -->
+    <div style="text-align:center;margin:10px 0;">
+        <svg viewBox="0 0 500 70" style="max-width:500px;width:100%">
+            <rect x="5" y="5" width="490" height="60" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="250" y="23" text-anchor="middle" font-size="9" fill="#1e3a5f" font-weight="700">세 파일 동시 열기도 가능</text>
+            <text x="15" y="40" font-size="9" fill="#374151" font-family="JetBrains Mono,monospace">with open("a.txt","r") as a, open("b.txt","r") as b, open("c.txt","w") as c:</text>
+            <text x="15" y="57" font-size="9" fill="#64748b" font-family="JetBrains Mono,monospace">    # a, b 읽어서 c에 병합 가능</text>
+        </svg>
+    </div>
+
+    <h3>두 파일 병합</h3>
+
+    <!-- SVG: writelines vs write 차이 -->
+    <div style="text-align:center;margin:10px 0;">
+        <svg viewBox="0 0 500 62" style="max-width:500px;width:100%">
+            <rect x="5" y="5" width="235" height="52" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="122" y="23" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">write(문자열)</text>
+            <text x="122" y="38" text-anchor="middle" font-size="9" fill="#64748b">f.write("A\n")  f.write("B\n")</text>
+            <text x="122" y="52" text-anchor="middle" font-size="8" fill="#92400e">한 번에 하나씩 호출</text>
+            <rect x="260" y="5" width="235" height="52" rx="6" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1.5"/>
+            <text x="377" y="23" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">writelines(리스트)</text>
+            <text x="377" y="38" text-anchor="middle" font-size="9" fill="#64748b">f.writelines(["A\n","B\n"])</text>
+            <text x="377" y="52" text-anchor="middle" font-size="8" fill="#1d4ed8">리스트 한 번에 처리</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># kor.txt와 eng.txt를 합쳐 result.txt에 저장</span>
+<span class="kw">with</span> <span class="fn">open</span>(<span class="str">"kor.txt"</span>, <span class="str">"w"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+    f.<span class="fn">write</span>(<span class="str">"안녕\n반가워\n"</span>)
+<span class="kw">with</span> <span class="fn">open</span>(<span class="str">"eng.txt"</span>, <span class="str">"w"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+    f.<span class="fn">write</span>(<span class="str">"Hello\nHi\n"</span>)
+
+<span class="kw">with</span> <span class="fn">open</span>(<span class="str">"kor.txt"</span>, <span class="str">"r"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> a, \
+     <span class="fn">open</span>(<span class="str">"eng.txt"</span>, <span class="str">"r"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> b, \
+     <span class="fn">open</span>(<span class="str">"result.txt"</span>, <span class="str">"w"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> c:
+    c.<span class="fn">writelines</span>(a.<span class="fn">readlines</span>())
+    c.<span class="fn">writelines</span>(b.<span class="fn">readlines</span>())</div>
+
+    <div class="output-box">result.txt 내용:
+안녕
+반가워
+Hello
+Hi</div>
+</div>
+
+<!-- 6페이지: 실용 예제 + 문제 -->
+<div class="page">
+    <h2>실용 예제 — 성적 관리 프로그램</h2>
+    <p>지금까지 배운 내용을 조합해 성적을 저장하고 조회하는 프로그램을 만듭니다. <code>a</code> 모드로 성적을 누적 기록하고, <code>r</code> 모드로 읽어 평균을 계산합니다.</p>
+
+    <!-- SVG: 성적 관리 프로그램 흐름 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 80" style="max-width:500px;width:100%">
+            <defs>
+                <marker id="arwGr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="5" y="15" width="100" height="50" rx="8" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1.5"/>
+            <text x="55" y="35" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">성적 입력</text>
+            <text x="55" y="50" text-anchor="middle" font-size="8" fill="#64748b">이름 + 점수</text>
+            <line x1="108" y1="40" x2="128" y2="40" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwGr)"/>
+            <rect x="131" y="15" width="100" height="50" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="181" y="35" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">a 모드 저장</text>
+            <text x="181" y="50" text-anchor="middle" font-size="8" fill="#64748b">grades.txt 누적</text>
+            <line x1="234" y1="40" x2="254" y2="40" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwGr)"/>
+            <rect x="257" y="15" width="100" height="50" rx="8" fill="#f0fdf4" stroke="#86efac" stroke-width="1.5"/>
+            <text x="307" y="35" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">r 모드 읽기</text>
+            <text x="307" y="50" text-anchor="middle" font-size="8" fill="#64748b">readlines()</text>
+            <line x1="360" y1="40" x2="380" y2="40" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwGr)"/>
+            <rect x="383" y="15" width="112" height="50" rx="8" fill="#1e3a5f"/>
+            <text x="439" y="35" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">평균 계산 출력</text>
+            <text x="439" y="50" text-anchor="middle" font-size="8" fill="#93c5fd">sum / count</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># 성적 저장 함수</span>
+<span class="kw">def</span> <span class="fn">save_grade</span>(name, score):
+    <span class="kw">with</span> <span class="fn">open</span>(<span class="str">"grades.txt"</span>, <span class="str">"a"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+        f.<span class="fn">write</span>(<span class="str">f"{name} {score}\n"</span>)
+
+<span class="cmt"># 평균 계산 함수</span>
+<span class="kw">def</span> <span class="fn">show_average</span>():
+    <span class="kw">with</span> <span class="fn">open</span>(<span class="str">"grades.txt"</span>, <span class="str">"r"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+        lines = f.<span class="fn">readlines</span>()
+    scores = [<span class="fn">int</span>(l.<span class="fn">strip</span>().<span class="fn">split</span>()[<span class="num">1</span>]) <span class="kw">for</span> l <span class="kw">in</span> lines]
+    avg = <span class="fn">sum</span>(scores) / <span class="fn">len</span>(scores)
+    <span class="fn">print</span>(<span class="str">f"평균: {avg:.1f}점"</span>)
+
+<span class="cmt"># 사용</span>
+<span class="fn">save_grade</span>(<span class="str">"홍길동"</span>, <span class="num">95</span>)
+<span class="fn">save_grade</span>(<span class="str">"이순신"</span>, <span class="num">88</span>)
+<span class="fn">save_grade</span>(<span class="str">"강감찬"</span>, <span class="num">72</span>)
+<span class="fn">show_average</span>()</div>
+
+    <div class="output-box">평균: 85.0점</div>
+
+    <!-- 핵심 요약 -->
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>핵심 요약</h3>
+        <ul>
+            <li><code>with open(파일, 모드, encoding="utf-8") as f:</code> — 안전한 파일 열기, 자동 close</li>
+            <li>모드: <code>r</code> 읽기 / <code>w</code> 새로 쓰기 / <code>a</code> 이어 쓰기 / <code>r+</code> 읽기+쓰기</li>
+            <li><code>f.read()</code> 전체 문자열 / <code>f.readlines()</code> 줄마다 리스트 원소</li>
+            <li><code>f.write(str)</code> 문자열 하나 쓰기 / <code>f.writelines(list)</code> 리스트 이어 쓰기</li>
+            <li>여러 파일 동시: <code>with open(...) as a, open(...) as b:</code></li>
+            <li>한글 파일은 반드시 <code>encoding="utf-8"</code> 명시</li>
+        </ul>
+    </div>
+</div>
+
+<!-- 7페이지: 문제 -->
+<div class="page">
+    <h2>확인 문제</h2>
+
+    <!-- 문제 1 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">1</div>
+            <div class="problem-label">파일 모드 선택</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">아래 상황에 맞는 파일 모드를 고르세요. (r / w / a / r+)</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">(1)</span><span class="problem-example-value">기존 일기 파일에 오늘 일기를 이어서 쓰고 싶다.</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">(2)</span><span class="problem-example-value">설정 파일을 읽어서 값을 확인하고 싶다.</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">(3)</span><span class="problem-example-value">성적 파일을 완전히 새로 만들어 저장하고 싶다.</span></div>
+            </div>
+        </div>
+        <div class="problem-toggle">
+            <details>
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">이어쓰기 = a, 읽기만 = r, 새로 작성 = w</div>
+                </div>
+            </details>
+            <details>
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code">(1) a  — 기존 내용 유지, 끝에 추가
+(2) r  — 읽기 전용
+(3) w  — 기존 내용 삭제 후 새로 작성</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <!-- 문제 2 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">2</div>
+            <div class="problem-label">readlines()와 반복문 활용</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text"><code>fruits.txt</code> 파일에 과일 이름이 한 줄씩 있습니다. 파일을 읽어 각 줄 앞에 번호를 붙여 출력하는 코드를 작성하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">파일</span><span class="problem-example-value">사과 / 바나나 / 포도 (각 줄)</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">1. 사과  2. 바나나  3. 포도</span></div>
+            </div>
+        </div>
+        <div class="problem-toggle">
+            <details>
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">readlines()로 리스트 받은 뒤 enumerate(lines, 1)로 번호 붙이기. strip()으로 \n 제거.</div>
+                </div>
+            </details>
+            <details>
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code">with open("fruits.txt", "r", encoding="utf-8") as f:
+    lines = f.readlines()
+
+for i, line in enumerate(lines, 1):
+    print(f"{i}. {line.strip()}")</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <!-- 문제 3 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">3</div>
+            <div class="problem-label">두 파일 병합하기</div>
+            <span class="problem-diff hard">어려움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text"><code>part1.txt</code>와 <code>part2.txt</code>를 동시에 열어 두 파일의 내용을 합쳐 <code>merged.txt</code>에 저장하는 코드를 작성하세요. 각 파일에는 숫자가 한 줄씩 있습니다.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">part1</span><span class="problem-example-value">10 / 20 / 30</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">part2</span><span class="problem-example-value">40 / 50 / 60</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">merged</span><span class="problem-example-value">10 / 20 / 30 / 40 / 50 / 60</span></div>
+            </div>
+        </div>
+        <div class="problem-toggle">
+            <details>
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">with open(...) as a, open(...) as b, open(...) as c: 형태. readlines()로 각 파일 읽기 후 writelines()로 c에 두 번 쓰기.</div>
+                </div>
+            </details>
+            <details>
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code">with open("part1.txt", "r", encoding="utf-8") as a, \
+     open("part2.txt", "r", encoding="utf-8") as b, \
+     open("merged.txt", "w", encoding="utf-8") as c:
+    c.writelines(a.readlines())
+    c.writelines(b.readlines())</div>
+                </div>
+            </details>
+        </div>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

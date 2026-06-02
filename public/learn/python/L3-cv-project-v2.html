@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 프로젝트: 사진 필터 앱</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #0891b2; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 140px; font-weight: 900; color: rgba(8,145,178,0.1);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #0e7490; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #0891b2; font-weight: 900; }
+
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 16px; font-weight: 700; color: #1e3a5f; margin: 16px 0 8px; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+ul, ol { padding-left: 20px; margin-bottom: 12px; }
+li { font-size: 14px; color: #374151; line-height: 1.8; }
+
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.code .key { color: #fbbf24; }
+.code .val { color: #86efac; }
+
+.practice { margin: 20px 0; border-left: 4px solid #0891b2; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #0e7490; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #0891b2; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #0891b2; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '->'; color: #94a3b8; font-weight: 700; }
+
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; white-space: pre-wrap; }
+
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+.compare-table { width: 100%; border-collapse: collapse; margin: 14px 0; }
+.compare-table th { background: #1e3a5f; color: #fff; font-size: 13px; font-weight: 700; padding: 8px 12px; text-align: left; }
+.compare-table td { font-size: 13px; color: #334155; padding: 8px 12px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+.compare-table tr:last-child td { border-bottom: none; }
+.compare-table td:first-child { font-family: 'JetBrains Mono', monospace; color: #2563eb; font-weight: 600; }
+.compare-table tr:nth-child(even) td { background: #f8fafc; }
+
+.info-box { background: #ecfeff; border: 1.5px solid #a5f3fc; border-radius: 8px; padding: 12px 16px; margin: 14px 0; }
+.info-box .info-title { font-size: 13px; font-weight: 700; color: #0e7490; margin-bottom: 6px; }
+.info-box p { font-size: 13px; color: #164e63; margin: 0; }
+
+.divider { height: 1px; background: #e5e7eb; margin: 18px 0; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- =========================================================
+     1페이지: 표지
+     ========================================================= -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">PROJECT</div>
+        <div class="cover-label">Chapter L3-CV-5 — 컴퓨터 비전 프로젝트</div>
+        <h1 class="cover-title">사진 필터 앱<br>OpenCV 종합 프로젝트</h1>
+        <p class="cover-sub">지금까지 배운 모든 기술을 하나로 합칩니다. 흑백/블러/엣지/모자이크 필터 메뉴, 얼굴 자동 모자이크, 결과 저장까지 — 진짜 앱을 만들어봅니다.</p>
+
+        <!-- SVG 1: 앱 아키텍처 -->
+        <div style="margin:24px 0;">
+            <svg viewBox="0 0 520 140" style="max-width:520px;width:100%">
+                <rect x="10" y="10" width="500" height="120" rx="10" fill="#0f172a"/>
+                <!-- 입력 -->
+                <rect x="20" y="25" width="90" height="90" rx="8" fill="#1e3a5f"/>
+                <text x="65" y="52" text-anchor="middle" font-size="10" fill="#94a3b8" font-weight="700">입력</text>
+                <text x="65" y="68" text-anchor="middle" font-family="monospace" font-size="9" fill="#7dd3fc">photo.jpg</text>
+                <text x="65" y="84" text-anchor="middle" font-family="monospace" font-size="9" fill="#7dd3fc">imread()</text>
+                <!-- 필터 선택 메뉴 -->
+                <rect x="125" y="20" width="130" height="100" rx="8" fill="#374151"/>
+                <text x="190" y="38" text-anchor="middle" font-size="10" fill="#d1d5db" font-weight="700">필터 메뉴</text>
+                <text x="190" y="54" text-anchor="middle" font-size="9" fill="#9ca3af">1. 흑백</text>
+                <text x="190" y="68" text-anchor="middle" font-size="9" fill="#9ca3af">2. 블러</text>
+                <text x="190" y="82" text-anchor="middle" font-size="9" fill="#9ca3af">3. 엣지</text>
+                <text x="190" y="96" text-anchor="middle" font-size="9" fill="#9ca3af">4. 모자이크</text>
+                <text x="190" y="110" text-anchor="middle" font-size="9" fill="#f59e0b">5. 얼굴 모자이크</text>
+                <!-- 처리 -->
+                <rect x="270" y="25" width="110" height="90" rx="8" fill="#1d4ed8"/>
+                <text x="325" y="48" text-anchor="middle" font-size="10" fill="#bfdbfe" font-weight="700">처리</text>
+                <text x="325" y="64" text-anchor="middle" font-size="9" fill="#93c5fd">cvtColor</text>
+                <text x="325" y="78" text-anchor="middle" font-size="9" fill="#93c5fd">GaussianBlur</text>
+                <text x="325" y="92" text-anchor="middle" font-size="9" fill="#93c5fd">Canny / resize</text>
+                <text x="325" y="106" text-anchor="middle" font-size="9" fill="#93c5fd">detectMulti...</text>
+                <!-- 출력 -->
+                <rect x="395" y="25" width="105" height="90" rx="8" fill="#065f46"/>
+                <text x="447" y="48" text-anchor="middle" font-size="10" fill="#a7f3d0" font-weight="700">저장</text>
+                <text x="447" y="64" text-anchor="middle" font-size="9" fill="#6ee7b7">imwrite()</text>
+                <text x="447" y="80" text-anchor="middle" font-size="9" fill="#6ee7b7">output.jpg</text>
+                <text x="447" y="96" text-anchor="middle" font-size="9" fill="#6ee7b7">성공 메시지</text>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/monitor.png" alt="모니터" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 프로젝트에서 만드는 것</h3>
+            <ul>
+                <li>사용자가 1~5 중 필터를 선택하는 메뉴 인터페이스를 만듭니다.</li>
+                <li>흑백, 블러, 엣지, 모자이크 필터를 함수로 구현합니다.</li>
+                <li>얼굴을 자동 감지해서 해당 영역만 모자이크 처리합니다.</li>
+                <li>선택한 필터를 적용한 결과를 파일로 저장합니다.</li>
+                <li>한 파일에 모든 기능을 깔끔하게 통합하는 설계를 배웁니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- =========================================================
+     2페이지: 프로젝트 설계 + 모자이크 구현
+     ========================================================= -->
+<div class="page">
+    <h2>프로젝트 설계 — 함수 분리</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/laptop.png" alt="노트북" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>큰 프로그램은 기능별로 함수를 나눠서 만들어야 유지보수하기 쉽습니다. 이 프로젝트는 5개의 필터 함수 + 1개의 메인 함수로 구성합니다.</p>
+
+    <!-- SVG 2: 함수 구조도 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 520 110" style="max-width:520px;width:100%">
+            <defs>
+                <marker id="fn-arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <!-- main -->
+            <rect x="190" y="10" width="140" height="40" rx="8" fill="#0891b2"/>
+            <text x="260" y="28" text-anchor="middle" font-size="11" fill="#fff" font-weight="800">main()</text>
+            <text x="260" y="44" text-anchor="middle" font-size="9" fill="#bae6fd">필터 선택 + 처리 흐름</text>
+            <!-- 화살표들 -->
+            <line x1="200" y1="50" x2="50" y2="72" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#fn-arr)"/>
+            <line x1="220" y1="50" x2="130" y2="72" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#fn-arr)"/>
+            <line x1="260" y1="50" x2="260" y2="72" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#fn-arr)"/>
+            <line x1="300" y1="50" x2="390" y2="72" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#fn-arr)"/>
+            <line x1="320" y1="50" x2="470" y2="72" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#fn-arr)"/>
+            <!-- 함수들 -->
+            <rect x="10" y="74" width="80" height="32" rx="6" fill="#374151"/>
+            <text x="50" y="93" text-anchor="middle" font-family="monospace" font-size="9" fill="#86efac">gray()</text>
+            <rect x="100" y="74" width="80" height="32" rx="6" fill="#1d4ed8"/>
+            <text x="140" y="93" text-anchor="middle" font-family="monospace" font-size="9" fill="#bfdbfe">blur()</text>
+            <rect x="220" y="74" width="80" height="32" rx="6" fill="#0f172a"/>
+            <text x="260" y="93" text-anchor="middle" font-family="monospace" font-size="9" fill="#fbbf24">edge()</text>
+            <rect x="340" y="74" width="100" height="32" rx="6" fill="#4c1d95"/>
+            <text x="390" y="93" text-anchor="middle" font-family="monospace" font-size="9" fill="#ddd6fe">mosaic()</text>
+            <rect x="450" y="74" width="60" height="32" rx="6" fill="#7f1d1d"/>
+            <text x="480" y="86" text-anchor="middle" font-family="monospace" font-size="8" fill="#fca5a5">face_</text>
+            <text x="480" y="98" text-anchor="middle" font-family="monospace" font-size="8" fill="#fca5a5">mosaic()</text>
+        </svg>
+    </div>
+
+    <h3>모자이크 필터 구현</h3>
+    <p>모자이크는 이미지를 작게 줄였다가 다시 크게 늘리면 픽셀이 뭉개져서 만들어집니다. <code>cv2.resize()</code>를 활용합니다.</p>
+
+    <!-- SVG 3: 모자이크 원리 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 520 80" style="max-width:520px;width:100%">
+            <defs>
+                <marker id="mz-arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#4c1d95"/>
+                </marker>
+            </defs>
+            <text x="260" y="14" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="700">모자이크 = 축소 -> 확대 (픽셀화)</text>
+            <!-- 원본 -->
+            <rect x="10" y="20" width="80" height="50" rx="6" fill="#1e3a5f"/>
+            <text x="50" y="42" text-anchor="middle" font-size="10" fill="#7dd3fc">원본</text>
+            <text x="50" y="58" text-anchor="middle" font-size="8" fill="#64748b">400x300</text>
+            <!-- 화살표 + 축소 -->
+            <line x1="92" y1="45" x2="122" y2="45" stroke="#4c1d95" stroke-width="1.5" marker-end="url(#mz-arr)"/>
+            <text x="107" y="38" text-anchor="middle" font-size="8" fill="#c084fc">1/10 축소</text>
+            <!-- 작은 이미지 -->
+            <rect x="125" y="30" width="40" height="30" rx="4" fill="#4c1d95"/>
+            <text x="145" y="50" text-anchor="middle" font-size="8" fill="#ddd6fe">40x30</text>
+            <!-- 화살표 + 확대 -->
+            <line x1="167" y1="45" x2="197" y2="45" stroke="#4c1d95" stroke-width="1.5" marker-end="url(#mz-arr)"/>
+            <text x="182" y="38" text-anchor="middle" font-size="8" fill="#c084fc">원래 크기로</text>
+            <!-- 모자이크 이미지 -->
+            <rect x="200" y="20" width="80" height="50" rx="6" fill="#374151"/>
+            <!-- 픽셀 표현 -->
+            <rect x="204" y="24" width="18" height="18" fill="#3b82f6" opacity="0.6"/>
+            <rect x="222" y="24" width="18" height="18" fill="#22c55e" opacity="0.6"/>
+            <rect x="240" y="24" width="18" height="18" fill="#ef4444" opacity="0.6"/>
+            <rect x="258" y="24" width="18" height="18" fill="#f59e0b" opacity="0.6"/>
+            <rect x="204" y="42" width="18" height="18" fill="#a855f7" opacity="0.6"/>
+            <rect x="222" y="42" width="18" height="18" fill="#06b6d4" opacity="0.6"/>
+            <rect x="240" y="42" width="18" height="18" fill="#ec4899" opacity="0.6"/>
+            <rect x="258" y="42" width="18" height="18" fill="#84cc16" opacity="0.6"/>
+            <text x="240" y="82" text-anchor="middle" font-size="8" fill="#64748b">모자이크! 픽셀이 뭉개짐</text>
+            <!-- 코드 설명 -->
+            <rect x="300" y="20" width="210" height="50" rx="6" fill="#0f172a"/>
+            <text x="405" y="38" text-anchor="middle" font-family="monospace" font-size="9" fill="#67e8f9">small = cv2.resize(img, (w//10, h//10))</text>
+            <text x="405" y="54" text-anchor="middle" font-family="monospace" font-size="9" fill="#67e8f9">mosaic = cv2.resize(small, (w, h))</text>
+        </svg>
+    </div>
+
+    <div class="code">
+<span class="kw">import</span> cv2
+
+<span class="kw">def</span> <span class="fn">apply_mosaic</span>(img, scale=<span class="num">10</span>):
+    <span class="str">"""이미지를 모자이크 처리합니다."""</span>
+    h, w = img.shape[:<span class="num">2</span>]
+    <span class="cmt"># 1. 작게 축소 (픽셀 수 줄이기)</span>
+    small = cv2.<span class="fn">resize</span>(img, (w // scale, h // scale),
+                        interpolation=cv2.INTER_LINEAR)
+    <span class="cmt"># 2. 원래 크기로 확대 (픽셀 뭉개짐)</span>
+    mosaic = cv2.<span class="fn">resize</span>(small, (w, h),
+                         interpolation=cv2.INTER_NEAREST)
+    <span class="kw">return</span> mosaic
+    </div>
+</div>
+
+<!-- =========================================================
+     3페이지: 얼굴 모자이크 + 필터 앱 전체 코드
+     ========================================================= -->
+<div class="page">
+    <h2>얼굴 자동 모자이크</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>얼굴을 감지한 뒤 해당 영역 <strong>ROI(Region of Interest)</strong>만 잘라서 모자이크를 적용하고, 원본 이미지에 다시 붙여넣습니다.</p>
+
+    <!-- SVG 4: ROI 개념 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 520 90" style="max-width:520px;width:100%">
+            <defs>
+                <marker id="roi-arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#0891b2"/>
+                </marker>
+            </defs>
+            <text x="260" y="14" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="700">얼굴 영역(ROI) 잘라서 모자이크 후 붙이기</text>
+            <!-- 원본 이미지 -->
+            <rect x="10" y="22" width="130" height="60" rx="8" fill="#1e3a5f"/>
+            <!-- 얼굴 원 -->
+            <circle cx="75" cy="52" r="20" fill="#f97316" opacity="0.7"/>
+            <!-- 얼굴 테두리 -->
+            <rect x="55" y="32" width="40" height="40" fill="none" stroke="#22c55e" stroke-width="2" stroke-dasharray="4,2"/>
+            <text x="75" y="90" text-anchor="middle" font-size="9" fill="#64748b">원본 + 얼굴 감지</text>
+            <!-- 화살표 -->
+            <line x1="142" y1="52" x2="172" y2="52" stroke="#0891b2" stroke-width="2" marker-end="url(#roi-arr)"/>
+            <text x="157" y="44" text-anchor="middle" font-size="8" fill="#0891b2">ROI 추출</text>
+            <!-- ROI -->
+            <rect x="175" y="32" width="80" height="40" rx="4" fill="#374151" stroke="#22c55e" stroke-width="2"/>
+            <circle cx="215" cy="52" r="16" fill="#f97316" opacity="0.7"/>
+            <text x="215" y="82" text-anchor="middle" font-size="9" fill="#64748b">얼굴 ROI</text>
+            <!-- 화살표 -->
+            <line x1="257" y1="52" x2="287" y2="52" stroke="#0891b2" stroke-width="2" marker-end="url(#roi-arr)"/>
+            <text x="272" y="44" text-anchor="middle" font-size="8" fill="#0891b2">모자이크</text>
+            <!-- 모자이크 ROI -->
+            <rect x="290" y="32" width="80" height="40" rx="4" fill="#374151"/>
+            <rect x="292" y="34" width="18" height="18" fill="#3b82f6" opacity="0.6"/>
+            <rect x="310" y="34" width="18" height="18" fill="#ef4444" opacity="0.6"/>
+            <rect x="328" y="34" width="18" height="18" fill="#22c55e" opacity="0.6"/>
+            <rect x="346" y="34" width="18" height="18" fill="#fbbf24" opacity="0.6"/>
+            <rect x="292" y="52" width="18" height="18" fill="#a855f7" opacity="0.6"/>
+            <rect x="310" y="52" width="18" height="18" fill="#06b6d4" opacity="0.6"/>
+            <rect x="328" y="52" width="18" height="18" fill="#ec4899" opacity="0.6"/>
+            <rect x="346" y="52" width="18" height="18" fill="#f97316" opacity="0.6"/>
+            <text x="330" y="82" text-anchor="middle" font-size="9" fill="#64748b">모자이크 ROI</text>
+            <!-- 화살표 -->
+            <line x1="372" y1="52" x2="402" y2="52" stroke="#0891b2" stroke-width="2" marker-end="url(#roi-arr)"/>
+            <text x="387" y="44" text-anchor="middle" font-size="8" fill="#0891b2">붙이기</text>
+            <!-- 결과 -->
+            <rect x="405" y="22" width="105" height="60" rx="8" fill="#1e3a5f"/>
+            <rect x="425" y="32" width="55" height="40" rx="4" fill="#374151"/>
+            <rect x="427" y="34" width="12" height="12" fill="#3b82f6" opacity="0.7"/>
+            <rect x="439" y="34" width="12" height="12" fill="#ef4444" opacity="0.7"/>
+            <rect x="451" y="34" width="12" height="12" fill="#22c55e" opacity="0.7"/>
+            <rect x="463" y="34" width="12" height="12" fill="#fbbf24" opacity="0.7"/>
+            <text x="457" y="82" text-anchor="middle" font-size="9" fill="#64748b">얼굴만 모자이크!</text>
+        </svg>
+    </div>
+
+    <div class="code">
+<span class="kw">def</span> <span class="fn">apply_face_mosaic</span>(img):
+    <span class="str">"""얼굴 영역만 자동으로 모자이크 처리합니다."""</span>
+    result = img.<span class="fn">copy</span>()
+    gray = cv2.<span class="fn">cvtColor</span>(img, cv2.COLOR_BGR2GRAY)
+
+    cascade_path = cv2.data.haarcascades
+    face_cascade = cv2.<span class="fn">CascadeClassifier</span>(
+        cascade_path + <span class="str">"haarcascade_frontalface_default.xml"</span>
+    )
+    faces = face_cascade.<span class="fn">detectMultiScale</span>(gray, <span class="num">1.1</span>, <span class="num">5</span>)
+
+    <span class="kw">for</span> (x, y, w, h) <span class="kw">in</span> faces:
+        <span class="cmt"># ROI 추출 (얼굴 영역만 잘라내기)</span>
+        roi = result[y:y+h, x:x+w]
+        <span class="cmt"># ROI에 모자이크 적용</span>
+        small = cv2.<span class="fn">resize</span>(roi, (w//<span class="num">10</span>, h//<span class="num">10</span>))
+        mosaiced = cv2.<span class="fn">resize</span>(small, (w, h), interpolation=cv2.INTER_NEAREST)
+        <span class="cmt"># 원본에 붙이기</span>
+        result[y:y+h, x:x+w] = mosaiced
+
+    <span class="fn">print</span>(<span class="fn">f</span><span class="str">"{len(faces)}개 얼굴에 모자이크 적용"</span>)
+    <span class="kw">return</span> result
+    </div>
+
+    <!-- SVG 8: apply_face_mosaic 로직 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 520 60" style="max-width:520px;width:100%">
+            <text x="260" y="12" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">apply_face_mosaic 처리 단계</text>
+            <rect x="10" y="18" width="90" height="36" rx="6" fill="#1e3a5f"/>
+            <text x="55" y="32" text-anchor="middle" font-size="9" fill="#94a3b8">img.copy()</text>
+            <text x="55" y="48" text-anchor="middle" font-size="8" fill="#64748b">원본 복사</text>
+            <rect x="110" y="18" width="90" height="36" rx="6" fill="#374151"/>
+            <text x="155" y="32" text-anchor="middle" font-size="9" fill="#d1d5db">cvtColor(GRAY)</text>
+            <text x="155" y="48" text-anchor="middle" font-size="8" fill="#9ca3af">흑백 변환</text>
+            <rect x="210" y="18" width="90" height="36" rx="6" fill="#7f1d1d"/>
+            <text x="255" y="32" text-anchor="middle" font-size="9" fill="#fca5a5">detectMulti</text>
+            <text x="255" y="48" text-anchor="middle" font-size="8" fill="#fecaca">얼굴 감지</text>
+            <rect x="310" y="18" width="90" height="36" rx="6" fill="#4c1d95"/>
+            <text x="355" y="32" text-anchor="middle" font-size="9" fill="#ddd6fe">roi 추출</text>
+            <text x="355" y="48" text-anchor="middle" font-size="8" fill="#c4b5fd">result[y:y+h,...]</text>
+            <rect x="410" y="18" width="100" height="36" rx="6" fill="#065f46"/>
+            <text x="460" y="32" text-anchor="middle" font-size="9" fill="#a7f3d0">모자이크 붙이기</text>
+            <text x="460" y="48" text-anchor="middle" font-size="8" fill="#6ee7b7">result[...] = mosaiced</text>
+        </svg>
+    </div>
+
+    <div class="info-box">
+        <div class="info-title">NumPy 슬라이싱으로 ROI 접근</div>
+        <p><code>img[y:y+h, x:x+w]</code>는 NumPy 2D 슬라이싱입니다. 이미지의 특정 영역(ROI)을 잘라내거나 수정할 때 사용합니다.</p>
+    </div>
+</div>
+
+<!-- =========================================================
+     4페이지: 완성 코드 + 실습
+     ========================================================= -->
+<div class="page">
+    <h2>사진 필터 앱 — 완성 코드</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/magnifying-glass.png" alt="탐지" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+    <!-- SVG 5: 필터 메뉴 흐름도 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 520 70" style="max-width:520px;width:100%">
+            <text x="260" y="12" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">사용자 메뉴 흐름</text>
+            <rect x="10" y="18" width="80" height="44" rx="6" fill="#0891b2"/>
+            <text x="50" y="36" text-anchor="middle" font-size="9" fill="#fff">사진 로드</text>
+            <text x="50" y="52" text-anchor="middle" font-size="8" fill="#bae6fd">imread()</text>
+            <rect x="100" y="18" width="80" height="44" rx="6" fill="#374151"/>
+            <text x="140" y="36" text-anchor="middle" font-size="9" fill="#d1d5db">메뉴 출력</text>
+            <text x="140" y="52" text-anchor="middle" font-size="8" fill="#9ca3af">print(1~5)</text>
+            <rect x="190" y="18" width="80" height="44" rx="6" fill="#1d4ed8"/>
+            <text x="230" y="36" text-anchor="middle" font-size="9" fill="#bfdbfe">입력 받기</text>
+            <text x="230" y="52" text-anchor="middle" font-size="8" fill="#93c5fd">input()</text>
+            <rect x="280" y="18" width="80" height="44" rx="6" fill="#7f1d1d"/>
+            <text x="320" y="36" text-anchor="middle" font-size="9" fill="#fca5a5">필터 적용</text>
+            <text x="320" y="52" text-anchor="middle" font-size="8" fill="#fecaca">if/elif</text>
+            <rect x="370" y="18" width="80" height="44" rx="6" fill="#065f46"/>
+            <text x="410" y="36" text-anchor="middle" font-size="9" fill="#a7f3d0">결과 저장</text>
+            <text x="410" y="52" text-anchor="middle" font-size="8" fill="#6ee7b7">imwrite()</text>
+        </svg>
+    </div>
+
+    <div class="code">
+<span class="kw">import</span> cv2
+
+<span class="kw">def</span> <span class="fn">apply_gray</span>(img):
+    gray = cv2.<span class="fn">cvtColor</span>(img, cv2.COLOR_BGR2GRAY)
+    <span class="kw">return</span> cv2.<span class="fn">cvtColor</span>(gray, cv2.COLOR_GRAY2BGR)  <span class="cmt"># 3채널 유지</span>
+
+<span class="kw">def</span> <span class="fn">apply_blur</span>(img):
+    <span class="kw">return</span> cv2.<span class="fn">GaussianBlur</span>(img, (<span class="num">15</span>, <span class="num">15</span>), <span class="num">0</span>)
+
+<span class="kw">def</span> <span class="fn">apply_edge</span>(img):
+    gray = cv2.<span class="fn">cvtColor</span>(img, cv2.COLOR_BGR2GRAY)
+    edges = cv2.<span class="fn">Canny</span>(gray, <span class="num">50</span>, <span class="num">150</span>)
+    <span class="kw">return</span> cv2.<span class="fn">cvtColor</span>(edges, cv2.COLOR_GRAY2BGR)
+
+<span class="kw">def</span> <span class="fn">apply_mosaic</span>(img, scale=<span class="num">10</span>):
+    h, w = img.shape[:<span class="num">2</span>]
+    small = cv2.<span class="fn">resize</span>(img, (w//scale, h//scale))
+    <span class="kw">return</span> cv2.<span class="fn">resize</span>(small, (w, h), interpolation=cv2.INTER_NEAREST)
+
+<span class="kw">def</span> <span class="fn">main</span>():
+    img = cv2.<span class="fn">imread</span>(<span class="str">"photo.jpg"</span>)
+    <span class="kw">if</span> img <span class="kw">is</span> <span class="kw">None</span>:
+        <span class="fn">print</span>(<span class="str">"이미지를 찾을 수 없습니다."</span>)
+        <span class="kw">return</span>
+
+    <span class="fn">print</span>(<span class="str">"--- 사진 필터 앱 ---"</span>)
+    <span class="fn">print</span>(<span class="str">"1. 흑백  2. 블러  3. 엣지  4. 모자이크  5. 얼굴 모자이크"</span>)
+    choice = <span class="fn">input</span>(<span class="str">"필터 선택 (1-5): "</span>)
+
+    filters = {
+        <span class="str">"1"</span>: apply_gray,
+        <span class="str">"2"</span>: apply_blur,
+        <span class="str">"3"</span>: apply_edge,
+        <span class="str">"4"</span>: apply_mosaic,
+        <span class="str">"5"</span>: apply_face_mosaic,
+    }
+
+    <span class="kw">if</span> choice <span class="kw">in</span> filters:
+        result = filters[choice](img)
+        cv2.<span class="fn">imwrite</span>(<span class="str">"output.jpg"</span>, result)
+        <span class="fn">print</span>(<span class="str">"저장 완료: output.jpg"</span>)
+    <span class="kw">else</span>:
+        <span class="fn">print</span>(<span class="str">"잘못된 선택"</span>)
+
+<span class="fn">main</span>()
+    </div>
+
+    <!-- SVG 9: 필터 함수별 입출력 비교 -->
+    <div style="text-align:center;margin:10px 0;">
+        <svg viewBox="0 0 520 60" style="max-width:520px;width:100%">
+            <text x="260" y="12" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">각 필터 함수 입출력 채널 수</text>
+            <rect x="10" y="18" width="120" height="36" rx="6" fill="#374151"/>
+            <text x="70" y="32" text-anchor="middle" font-size="9" fill="#d1d5db">apply_gray()</text>
+            <text x="70" y="48" text-anchor="middle" font-size="8" fill="#9ca3af">3채널 -> GRAY -> 3채널</text>
+            <rect x="140" y="18" width="120" height="36" rx="6" fill="#1d4ed8"/>
+            <text x="200" y="32" text-anchor="middle" font-size="9" fill="#bfdbfe">apply_blur()</text>
+            <text x="200" y="48" text-anchor="middle" font-size="8" fill="#93c5fd">3채널 -> 3채널 (유지)</text>
+            <rect x="270" y="18" width="120" height="36" rx="6" fill="#0f172a"/>
+            <text x="330" y="32" text-anchor="middle" font-size="9" fill="#fbbf24">apply_edge()</text>
+            <text x="330" y="48" text-anchor="middle" font-size="8" fill="#fde68a">3채널 -> GRAY -> 3채널</text>
+            <rect x="400" y="18" width="110" height="36" rx="6" fill="#4c1d95"/>
+            <text x="455" y="32" text-anchor="middle" font-size="9" fill="#ddd6fe">apply_mosaic()</text>
+            <text x="455" y="48" text-anchor="middle" font-size="8" fill="#c4b5fd">3채널 -> 3채널 (유지)</text>
+        </svg>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/puzzle.png" alt="알고리즘" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">실습 1 — apply_gray 함수 테스트</div>
+                <div class="practice-desc">apply_gray 함수를 만들고 검정 캔버스에 적용해 shape를 확인하세요.</div>
+                <div class="code" style="margin:8px 0;">
+<span class="kw">import</span> cv2, numpy <span class="kw">as</span> np
+
+<span class="kw">def</span> <span class="fn">apply_gray</span>(img):
+    gray = cv2.<span class="fn">cvtColor</span>(img, cv2.COLOR_BGR2GRAY)
+    <span class="kw">return</span> cv2.<span class="fn">cvtColor</span>(gray, cv2.COLOR_GRAY2BGR)
+
+canvas = np.<span class="fn">zeros</span>((<span class="num">200</span>, <span class="num">300</span>, <span class="num">3</span>), dtype=np.uint8)
+canvas[:, :<span class="num">150</span>] = [<span class="num">200</span>, <span class="num">100</span>, <span class="num">50</span>]
+result = <span class="fn">apply_gray</span>(canvas)
+<span class="fn">print</span>(<span class="str">"gray 결과 shape:"</span>, result.shape)
+                </div>
+                <div class="practice-result">gray 결과 shape: (200, 300, 3)</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">실습 2 — apply_mosaic 함수 테스트</div>
+                <div class="practice-desc">apply_mosaic 함수를 만들고 그라디언트 이미지에 적용하세요.</div>
+                <div class="code" style="margin:8px 0;">
+<span class="kw">def</span> <span class="fn">apply_mosaic</span>(img, scale=<span class="num">10</span>):
+    h, w = img.shape[:<span class="num">2</span>]
+    small = cv2.<span class="fn">resize</span>(img, (w//scale, h//scale))
+    <span class="kw">return</span> cv2.<span class="fn">resize</span>(small, (w, h), interpolation=cv2.INTER_NEAREST)
+
+mosaic = <span class="fn">apply_mosaic</span>(canvas)
+cv2.<span class="fn">imwrite</span>(<span class="str">"mosaic.jpg"</span>, mosaic)
+<span class="fn">print</span>(<span class="str">"모자이크 저장 완료"</span>)
+                </div>
+                <div class="practice-result">모자이크 저장 완료</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">실습 3 — 딕셔너리로 필터 메뉴 만들기</div>
+                <div class="practice-desc">딕셔너리로 필터 선택 코드를 작성하세요.</div>
+                <div class="code" style="margin:8px 0;">
+filters = {
+    <span class="str">"1"</span>: apply_gray,
+    <span class="str">"2"</span>: apply_blur,
+    <span class="str">"3"</span>: apply_mosaic,
+}
+choice = <span class="str">"1"</span>   <span class="cmt"># 테스트: 흑백 선택</span>
+<span class="kw">if</span> choice <span class="kw">in</span> filters:
+    result = filters[choice](canvas)
+    <span class="fn">print</span>(<span class="str">"필터 적용 완료"</span>)
+                </div>
+                <div class="practice-result">필터 적용 완료</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- =========================================================
+     5페이지: 문제 + 핵심 요약
+     ========================================================= -->
+<div class="page">
+    <h2>실력 확인 문제</h2>
+
+    <!-- SVG 6: ROI 슬라이싱 구조 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 520 60" style="max-width:520px;width:100%">
+            <text x="260" y="12" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">NumPy ROI 슬라이싱 — img[y:y+h, x:x+w]</text>
+            <rect x="10" y="18" width="500" height="36" rx="6" fill="#0f172a"/>
+            <text x="20" y="33" font-family="monospace" font-size="10" fill="#c084fc">faces</text>
+            <text x="65" y="33" font-family="monospace" font-size="10" fill="#e2e8f0"> = [[100, 50, 120, 130]]  </text>
+            <text x="280" y="33" font-family="monospace" font-size="10" fill="#64748b"># x=100, y=50, w=120, h=130</text>
+            <text x="20" y="48" font-family="monospace" font-size="10" fill="#67e8f9">roi</text>
+            <text x="46" y="48" font-family="monospace" font-size="10" fill="#e2e8f0"> = result[</text>
+            <text x="110" y="48" font-family="monospace" font-size="10" fill="#fbbf24">50:50+130</text>
+            <text x="185" y="48" font-family="monospace" font-size="10" fill="#e2e8f0">, </text>
+            <text x="198" y="48" font-family="monospace" font-size="10" fill="#86efac">100:100+120</text>
+            <text x="288" y="48" font-family="monospace" font-size="10" fill="#e2e8f0">]  </text>
+            <text x="318" y="48" font-family="monospace" font-size="10" fill="#64748b"># [y:y+h, x:x+w]</text>
+        </svg>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q1</div>
+            <div class="problem-label">모자이크 원리 이해</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">모자이크 효과를 만드는 올바른 순서를 고르세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">보기</span>
+                    <span class="problem-example-value">(1) 원본 -> 확대 -> 축소<br>(2) 원본 -> 축소 -> 원래 크기로 확대<br>(3) 원본 -> 흑백 -> 블러 적용</span>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">모자이크는 이미지를 작게 줄이면 픽셀 정보가 손실되는 원리를 이용합니다. 줄인 후 다시 키우면 픽셀이 뭉개집니다.</div>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">(2) 원본 -> 축소 -> 원래 크기로 확대
+# 1/10 축소 -> 원래 크기 확대 = 픽셀 뭉개짐
+small = cv2.resize(img, (w//10, h//10))
+mosaic = cv2.resize(small, (w, h), interpolation=cv2.INTER_NEAREST)</div>
+            </div>
+        </details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q2</div>
+            <div class="problem-label">ROI 슬라이싱 코드 완성</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">faces 배열에서 첫 번째 얼굴의 ROI를 추출하는 코드를 완성하세요. faces = [[80, 60, 100, 120]]</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">빈칸</span>
+                    <span class="problem-example-value">x, y, w, h = 80, 60, 100, 120<br>roi = result[___, ___]</span>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">NumPy 이미지 슬라이싱: [y행:y+h행, x열:x+w열] 순서입니다.</div>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">x, y, w, h = 80, 60, 100, 120
+roi = result[y:y+h, x:x+w]
+# = result[60:180, 80:180]
+# 행(y축) 먼저, 열(x축) 나중에</div>
+            </div>
+        </details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q3</div>
+            <div class="problem-label">필터 앱에 세피아 필터 추가</div>
+            <span class="problem-diff hard">어려움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">세피아(Sepia) 필터는 흑백으로 변환 후 따뜻한 갈색 톤으로 컬러 채널을 조절합니다. apply_sepia 함수를 완성하고 메뉴에 추가하세요. (힌트: B*0.272 + G*0.534 + R*0.131 방식)</div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">cv2.transform()과 변환 행렬을 사용하거나, numpy를 이용해 각 채널 값을 직접 계산할 수 있습니다. np.clip()으로 255를 초과하는 값을 잘라냅니다.</div>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">import cv2
+import numpy as np
+
+def apply_sepia(img):
+    img_float = img.astype(np.float64)
+    sepia = np.zeros_like(img_float)
+    # BGR 순서로 변환 행렬 적용
+    sepia[:,:,0] = np.clip(
+        img_float[:,:,0]*0.272 + img_float[:,:,1]*0.534 + img_float[:,:,2]*0.131, 0, 255)
+    sepia[:,:,1] = np.clip(
+        img_float[:,:,0]*0.349 + img_float[:,:,1]*0.686 + img_float[:,:,2]*0.168, 0, 255)
+    sepia[:,:,2] = np.clip(
+        img_float[:,:,0]*0.393 + img_float[:,:,1]*0.769 + img_float[:,:,2]*0.189, 0, 255)
+    return sepia.astype(np.uint8)</div>
+            </div>
+        </details>
+    </div>
+
+    <!-- SVG 7: 전체 프로젝트 기술 스택 -->
+    <div style="text-align:center;margin:10px 0;">
+        <svg viewBox="0 0 520 55" style="max-width:520px;width:100%">
+            <text x="260" y="12" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">이 프로젝트에서 사용한 기술</text>
+            <rect x="10" y="18" width="90" height="30" rx="6" fill="#374151"/>
+            <text x="55" y="36" text-anchor="middle" font-size="9" fill="#d1d5db">imread / imwrite</text>
+            <rect x="110" y="18" width="90" height="30" rx="6" fill="#1d4ed8"/>
+            <text x="155" y="36" text-anchor="middle" font-size="9" fill="#bfdbfe">cvtColor / Blur</text>
+            <rect x="210" y="18" width="90" height="30" rx="6" fill="#0f172a"/>
+            <text x="255" y="36" text-anchor="middle" font-size="9" fill="#fbbf24">Canny / resize</text>
+            <rect x="310" y="18" width="100" height="30" rx="6" fill="#7f1d1d"/>
+            <text x="360" y="36" text-anchor="middle" font-size="9" fill="#fca5a5">CascadeClassifier</text>
+            <rect x="420" y="18" width="90" height="30" rx="6" fill="#4c1d95"/>
+            <text x="465" y="36" text-anchor="middle" font-size="9" fill="#ddd6fe">NumPy ROI</text>
+        </svg>
+    </div>
+
+    <!-- SVG 10: 프로젝트 확장 아이디어 -->
+    <div style="text-align:center;margin:10px 0;">
+        <svg viewBox="0 0 520 55" style="max-width:520px;width:100%">
+            <text x="260" y="12" text-anchor="middle" font-size="10" fill="#1e3a5f" font-weight="700">프로젝트 확장 아이디어</text>
+            <rect x="10" y="18" width="140" height="30" rx="6" fill="#0891b2"/>
+            <text x="80" y="36" text-anchor="middle" font-size="9" fill="#fff">밝기 자동 보정 추가</text>
+            <rect x="160" y="18" width="140" height="30" rx="6" fill="#7c3aed"/>
+            <text x="230" y="36" text-anchor="middle" font-size="9" fill="#fff">여러 필터 동시 적용</text>
+            <rect x="310" y="18" width="200" height="30" rx="6" fill="#065f46"/>
+            <text x="410" y="36" text-anchor="middle" font-size="9" fill="#a7f3d0">웹캠 실시간 필터 앱으로 확장</text>
+        </svg>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="처리" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>핵심 요약</h3>
+        <ul>
+            <li>모자이크 = <code>resize(img, small_size)</code> -> <code>resize(small, original_size, INTER_NEAREST)</code></li>
+            <li>ROI (Region of Interest) = <code>img[y:y+h, x:x+w]</code> NumPy 슬라이싱</li>
+            <li>얼굴 모자이크 = 감지 -> ROI 추출 -> 모자이크 적용 -> 원본에 붙이기</li>
+            <li>함수 분리 설계: 각 필터를 독립 함수로 만들면 유지보수 쉬움</li>
+            <li>딕셔너리 메뉴: <code>{"1": func1, "2": func2}[choice](img)</code></li>
+            <li>컨버전 주의: Canny/흑백 결과는 1채널 -> 저장 전 3채널로 변환</li>
+        </ul>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

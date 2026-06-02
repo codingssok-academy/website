@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Unit 76. 멀티파일 프로젝트 · Makefile — C 언어</title>
+    <link rel="stylesheet" href="../common.css">
+</head>
+
+<body>
+    <div class="wrap">
+        <div class="hdr">
+            <h1>Unit 76. 멀티파일 프로젝트 · Makefile</h1>
+            <div class="sub">분할 컴파일 · 헤더 설계 · extern · Makefile · 라이브러리</div>
+            <span class="unit-badge">Chapter 27 · C함정·실전</span>
+            <div class="level-bar"><span class="on"></span><span class="on"></span><span class="on"></span><span
+                    class="on"></span></div>
+            <div class="meta"><span class="tag pri">📁 프로젝트</span><span class="tag acc">📝 15문제</span><span
+                    class="tag">⏱ 50분</span></div>
+        </div>
+        <div class="stu-bar"><label>👤 이름 <input type="text" id="stu-name" placeholder="이름"></label><label>📅 날짜 <input
+                    type="date" id="stu-date"></label></div>
+        <div id="problems"></div>
+        <div class="submit-section">
+            <p>모든 문제를 풀었나요? 📨</p><button class="btn-submit" id="btn-submit">📄 제출하기</button>
+        </div>
+        <div class="modal-overlay" id="submit-modal">
+            <div class="modal-box">
+                <div class="modal-icon">✅</div>
+                <h3>제출 완료!</h3>
+                <p>학습지가 저장되었습니다.</p>
+                <div style="margin:12px 0"><span class="info-tag" id="modal-name"></span> <span class="info-tag"
+                        id="modal-date"></span> <span class="info-tag" id="modal-count"></span></div>
+                <p style="font-size:.78rem;color:var(--dim)">📁 <strong id="modal-filename"></strong></p><button
+                    class="btn-close-modal" id="btn-close-modal">확인</button>
+            </div>
+        </div>
+        <div class="pg"><a href="Unit75_C함정.html">← Unit 75</a><span class="tag active">Unit 76</span><a
+                href="../28_실전모의/Unit77_모의고사1.html">Unit 77 →</a></div>
+        <div class="ft">📁 멀티파일 프로젝트 · Unit 76</div>
+    </div>
+    <script>
+        const P = [
+            {
+                n: 1, t: "컴파일 과정 이해", d: 1,
+                q: `C 코드가 실행 파일이 되기까지의 4단계를 설명하세요.
+<pre class="code-c"><span class="cm">// main.c → ? → ? → ? → a.exe</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">1. 전처리 (Preprocessing)
+   gcc -E main.c → main.i
+   #include 삽입, #define 치환, 조건부 컴파일
+
+2. 컴파일 (Compilation)
+   gcc -S main.i → main.s
+   C코드 → 어셈블리어 (문법 검사, 최적화)
+
+3. 어셈블 (Assembly)
+   gcc -c main.s → main.o
+   어셈블리 → 기계어 (오브젝트 파일)
+
+4. 링크 (Linking)
+   gcc main.o → a.exe
+   오브젝트 + 라이브러리 → 실행 파일</pre>`},
+
+            {
+                n: 2, t: "분할 컴파일 기초", d: 2,
+                q: `프로젝트를 여러 파일로 분리하세요.
+<pre class="code-c"><span class="cm">// math_util.h — 함수 선언</span>
+<span class="cm">// math_util.c — 함수 정의</span>
+<span class="cm">// main.c — 사용</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c"><span class="cm">// math_util.h</span>
+#ifndef MATH_UTIL_H
+#define MATH_UTIL_H
+int add(int a, int b);
+int multiply(int a, int b);
+double power(double base, int exp);
+#endif
+
+<span class="cm">// math_util.c</span>
+#include "math_util.h"
+int add(int a, int b) { return a+b; }
+int multiply(int a, int b) { return a*b; }
+double power(double base, int exp) {
+    double r=1; for(int i=0;i<exp;i++) r*=base; return r;
+}
+
+<span class="cm">// main.c</span>
+#include &lt;stdio.h&gt;
+#include "math_util.h"
+int main() {
+    printf("%d\\n", add(3,5)); <span class="cm">// 8</span>
+}</pre><div class="trace">컴파일: gcc -c math_util.c main.c<br>링크: gcc math_util.o main.o -o app<br>또는: gcc math_util.c main.c -o app</div>`},
+
+            {
+                n: 3, t: "extern vs static", d: 2,
+                q: `extern과 static의 차이를 보여주세요.
+<pre class="code-c"><span class="cm">// 전역 변수의 외부 접근 제어</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c"><span class="cm">// file1.c</span>
+int globalVar = 42;      <span class="cm">// 외부 접근 가능</span>
+static int localVar = 10; <span class="cm">// 이 파일에서만!</span>
+void publicFunc() {}      <span class="cm">// 외부 접근 가능</span>
+static void helper() {}   <span class="cm">// 이 파일에서만!</span>
+
+<span class="cm">// file2.c</span>
+extern int globalVar;     <span class="cm">// file1의 변수 사용 선언</span>
+<span class="cm">// extern int localVar;   // ❌ 링크 에러!</span>
+extern void publicFunc(); <span class="cm">// file1의 함수 사용</span>
+<span class="cm">// helper();              // ❌ 접근 불가!</span></pre><div class="trace">extern: "다른 파일에 정의된 것 사용"<br>static: "이 파일에서만 사용"<br>→ 정보 은닉 (캡슐화)!</div>`},
+
+            {
+                n: 4, t: "헤더 파일 설계 원칙", d: 2,
+                q: `올바른 헤더 파일 작성 규칙을 설명하세요.
+<pre class="code-c"><span class="cm">// 헤더에 넣어야 할 것 / 넣으면 안 되는 것</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c"><span class="cm">✅ 헤더에 넣어야 할 것:</span>
+- 함수 프로토타입 (선언)
+- 구조체/공용체/열거형 타입 정의
+- typedef
+- 매크로 (#define)
+- extern 변수 선언
+- static inline 함수
+
+<span class="cm">❌ 헤더에 넣으면 안 되는 것:</span>
+- 함수 정의 (본체)  → 중복 정의 에러!
+- 전역 변수 정의    → 중복 정의 에러!
+- static 변수/함수  → 파일마다 복사됨!
+
+<span class="cm">// 예외: static inline은 OK!</span>
+static inline int min(int a, int b) {
+    return a < b ? a : b;
+}</pre>`},
+
+            {
+                n: 5, t: "기본 Makefile 작성", d: 2,
+                q: `Makefile의 기본 구조를 작성하세요.
+<pre class="code-c"><span class="cm">// target: dependencies</span>
+<span class="cm">//     recipe (TAB으로 시작!)</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">CC = gcc
+CFLAGS = -Wall -Wextra -g
+TARGET = myapp
+SRCS = main.c math_util.c string_util.c
+OBJS = $(SRCS:.c=.o)
+
+$(TARGET): $(OBJS)
+	$(CC) $(CFLAGS) -o $@ $^
+
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+clean:
+	rm -f $(OBJS) $(TARGET)
+
+.PHONY: clean</pre><div class="trace">$@ = 타겟 이름<br>$^ = 모든 의존성<br>$< = 첫 번째 의존성<br>⚠️ 레시피 줄은 반드시 TAB!</div>`},
+
+            {
+                n: 6, t: "헤더 의존성 관리", d: 2,
+                q: `헤더 파일이 변경되면 자동으로 재컴파일되게 하세요.
+<pre class="code-c"><span class="cm">// Makefile에서 헤더 의존성 추적</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c"><span class="cm"># 방법 1: 수동 의존성</span>
+main.o: main.c math_util.h config.h
+math_util.o: math_util.c math_util.h
+
+<span class="cm"># 방법 2: 자동 의존성 (gcc -MMD)</span>
+CFLAGS += -MMD -MP
+DEPS = $(OBJS:.o=.d)
+-include $(DEPS)
+
+<span class="cm"># -MMD: .d 파일 자동 생성</span>
+<span class="cm"># -MP: 더미 타겟 추가 (삭제된 헤더 처리)</span>
+<span class="cm"># -include: 파일 없어도 에러 안 남</span></pre>`},
+
+            {
+                n: 7, t: "정적 라이브러리 (.a)", d: 2,
+                q: `정적 라이브러리를 만들고 사용하세요.
+<pre class="code-c"><span class="cm">// libmath.a 생성 → 링크</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c"><span class="cm"># 1. 오브젝트 파일 컴파일</span>
+gcc -c add.c mul.c
+
+<span class="cm"># 2. 정적 라이브러리 생성</span>
+ar rcs libmath.a add.o mul.o
+
+<span class="cm"># 3. 사용 (링크)</span>
+gcc main.c -L. -lmath -o app
+<span class="cm"># -L.: 현재 디렉토리에서 라이브러리 검색</span>
+<span class="cm"># -lmath: libmath.a 링크</span></pre><div class="trace">ar: 아카이브<br>r(replace) c(create) s(index)<br>정적: 실행파일에 포함 → 크지만 독립적</div>`},
+
+            {
+                n: 8, t: "[출력예측] extern 변수", d: 2,
+                q: `<pre class="code-c"><span class="cm">// counter.c</span>
+int count = 0;
+void increment(void) { count++; }
+
+<span class="cm">// main.c</span>
+extern int count;
+extern void increment(void);
+int main() {
+    increment();
+    increment();
+    increment();
+    printf("%d\\n", count);
+}</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">3</div><div class="trace">extern: 다른 파일의 변수/함수 사용 선언<br>counter.c의 count를 main.c에서 접근<br>increment() 3번 → count=3</div>`
+            },
+
+            {
+                n: 9, t: "조건부 컴파일로 플랫폼 대응", d: 2,
+                q: `Windows/Linux/Mac에서 다른 코드를 실행하세요.
+<pre class="code-c"><span class="cm">// 크로스 플랫폼 코드 작성</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">#if defined(_WIN32) || defined(_WIN64)
+    #define OS_NAME "Windows"
+    #include &lt;windows.h&gt;
+    void clearScreen() { system("cls"); }
+#elif defined(__linux__)
+    #define OS_NAME "Linux"
+    #include &lt;unistd.h&gt;
+    void clearScreen() { system("clear"); }
+#elif defined(__APPLE__)
+    #define OS_NAME "macOS"
+    void clearScreen() { system("clear"); }
+#else
+    #error "Unsupported platform!"
+#endif
+
+printf("Running on %s\\n", OS_NAME);</pre>`},
+
+            {
+                n: 10, t: "전방 선언 (Forward Declaration)", d: 2,
+                q: `구조체의 전방 선언이 필요한 경우를 보여주세요.
+<pre class="code-c"><span class="cm">// 두 구조체가 서로를 참조하는 경우</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c"><span class="cm">// 상호 참조 문제:</span>
+struct Student; <span class="cm">// 전방 선언!</span>
+
+typedef struct {
+    char name[20];
+    struct Student *students; <span class="cm">// 포인터만 OK!</span>
+    int studentCount;
+} Teacher;
+
+typedef struct Student {
+    char name[20];
+    Teacher *teacher; <span class="cm">// 포인터만 OK!</span>
+} Student;</pre><div class="trace">전방 선언: "이런 구조체가 있을 거야"<br>단, 포인터만 사용 가능 (크기 모르므로)<br>실체(멤버 접근)는 정의 후에만!</div>`},
+
+            {
+                n: 11, t: "GCC 컴파일 옵션 총정리", d: 1,
+                q: `주요 GCC 옵션의 의미를 설명하세요.
+<pre class="code-c"><span class="cm">gcc -Wall -Wextra -Werror -O2 -g -std=c11 -o app main.c</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">-Wall    모든 기본 경고 켜기
+-Wextra  추가 경고 켜기
+-Werror  경고를 에러로 처리!
+-O0      최적화 없음 (디버깅용)
+-O2      표준 최적화
+-O3      최대 최적화
+-g       디버그 정보 포함 (gdb용)
+-std=c11 C11 표준 사용
+-o app   출력 파일명 지정
+-c       컴파일만 (링크 안 함)
+-E       전처리만
+-S       어셈블리까지만
+-I dir   헤더 검색 디렉토리 추가
+-L dir   라이브러리 검색 디렉토리
+-lname   라이브러리 링크</pre>`},
+
+            {
+                n: 12, t: "모듈 패턴 (Opaque Pointer)", d: 3,
+                q: `구현 은닉 패턴을 작성하세요.
+<pre class="code-c"><span class="cm">// 사용자에게 내부 구현을 숨기는 방법</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c"><span class="cm">// stack.h (공개 인터페이스)</span>
+typedef struct Stack Stack; <span class="cm">// 불투명 포인터!</span>
+Stack* stack_create(int capacity);
+void stack_push(Stack *s, int val);
+int stack_pop(Stack *s);
+void stack_destroy(Stack *s);
+
+<span class="cm">// stack.c (구현 은닉)</span>
+struct Stack {
+    int *data;   <span class="cm">// 내부 구조 숨겨짐!</span>
+    int top;
+    int capacity;
+};
+Stack* stack_create(int cap) {
+    Stack *s = malloc(sizeof(Stack));
+    s->data = malloc(cap * sizeof(int));
+    s->top=-1; s->capacity=cap; return s;
+}</pre><div class="trace">Opaque pointer: 헤더에 구조체 내부 없음!<br>→ 사용자는 포인터로만 조작<br>→ C의 OOP! (캡슐화)</div>`},
+
+            {
+                n: 13, t: "전역 상수 올바른 정의", d: 2,
+                q: `헤더에서 전역 상수를 올바르게 정의하세요.
+<pre class="code-c"><span class="cm">// 여러 파일에서 공유하는 상수 정의 방법</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c"><span class="cm">// 방법 1: #define (전통)</span>
+#define MAX_BUFFER 1024
+
+<span class="cm">// 방법 2: enum (정수 상수)</span>
+enum { MAX_STUDENTS = 100, MAX_NAME = 50 };
+
+<span class="cm">// 방법 3: extern const (변수형)</span>
+<span class="cm">// config.h</span>
+extern const double PI;
+<span class="cm">// config.c</span>
+const double PI = 3.14159265359;
+
+<span class="cm">// ❌ 잘못된 방법:</span>
+<span class="cm">// const int SIZE = 100; ← 헤더에 넣으면 중복 정의!</span></pre>`},
+
+            {
+                n: 14, t: "assert와 디버깅", d: 2,
+                q: `assert를 활용한 방어적 프로그래밍을 하세요.
+<pre class="code-c">#include &lt;assert.h&gt;
+<span class="cm">// 디버그 시 전제조건 검증</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">#include &lt;assert.h&gt;
+int divide(int a, int b) {
+    assert(b != 0 && "0으로 나눌 수 없음!");
+    return a / b;
+}
+void* safe_malloc(size_t size) {
+    assert(size > 0);
+    void *p = malloc(size);
+    assert(p != NULL && "malloc 실패!");
+    return p;
+}
+<span class="cm">// 릴리스에서 비활성화:</span>
+<span class="cm">// #define NDEBUG  (assert.h include 전에)</span>
+<span class="cm">// 또는: gcc -DNDEBUG</span></pre>`},
+
+            {
+                n: 15, t: "🏆 프로젝트 구조 설계", d: 2,
+                q: `계산기 프로젝트의 파일 구조를 설계하세요.
+<pre class="code-c"><span class="cm">// 기능: 사칙연산, 제곱근, 히스토리</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c"><span class="cm">프로젝트 구조:</span>
+calculator/
+├── Makefile
+├── include/
+│   ├── calc.h       <span class="cm">// 연산 함수 선언</span>
+│   ├── history.h    <span class="cm">// 히스토리 인터페이스</span>
+│   └── config.h     <span class="cm">// 전역 상수/설정</span>
+├── src/
+│   ├── main.c       <span class="cm">// 메인 루프, UI</span>
+│   ├── calc.c       <span class="cm">// 연산 구현</span>
+│   └── history.c    <span class="cm">// 히스토리 구현</span>
+└── tests/
+    └── test_calc.c  <span class="cm">// 유닛 테스트</span>
+
+<span class="cm">// Makefile:</span>
+CFLAGS = -Wall -Iinclude
+SRCS = src/main.c src/calc.c src/history.c
+$(TARGET): $(OBJS)
+	$(CC) $(CFLAGS) -o $@ $^ -lm</pre>`}
+        ];
+        const c = document.getElementById('problems'); P.forEach(p => { const dc = p.d <= 1 ? 'ez' : p.d <= 2 ? 'md' : 'hd'; const dots = Array.from({ length: 5 }, (_, i) => `<span${i < p.d ? ' class="on"' : ''}>​</span>`).join(''); c.innerHTML += `<div class="prob"><div class="prob-top"><div class="prob-num ${dc}">${p.n}</div><div class="prob-title">${p.t}</div><div class="diff-dots">${dots}</div></div><div class="prob-body"><div class="q">${p.q}</div><textarea class="write" placeholder="✍️ 답을 작성하세요" rows="8"></textarea><details class="ans"><summary>정답 및 해설 보기</summary><div class="ans-body">${p.a}</div></details></div></div>`; });
+    </script>
+    <script src="../submit.js"></script>
+    <script src="../../platform.js"></script>
+</body>
+
+</html>

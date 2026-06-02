@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 프로젝트 11: 윤년 판별기</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+/* ── 페이지 ── */
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+/* ── 챕터 표지 ── */
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 200px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 36px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+
+/* ── 본문 ── */
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 16px; font-weight: 700; color: #1e3a5f; margin: 16px 0 8px; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+
+/* ── 코드 블록 ── */
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 14px;
+    color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.code .op  { color: #f9a8d4; }
+
+/* ── 따라해보세요 ── */
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+
+/* ── 문제 ── */
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; white-space: pre-wrap; }
+
+/* ── 요약 ── */
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+/* ── 프로젝트 전용 ── */
+.project-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: linear-gradient(135deg, #1e3a5f, #2d5a8e);
+    color: #fff; font-size: 12px; font-weight: 700;
+    padding: 4px 14px; border-radius: 99px; margin-bottom: 12px;
+    letter-spacing: 0.5px;
+}
+.step-block { margin: 14px 0; }
+.step-row { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
+.step-num {
+    min-width: 28px; height: 28px; border-radius: 50%;
+    background: #1e3a5f; color: #fff; font-size: 12px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;
+}
+.step-text { font-size: 14px; color: #334155; line-height: 1.7; }
+.step-text strong { color: #1e3a5f; }
+
+.cond-rule {
+    background: #f8fafc; border: 1.5px solid #e2e8f0;
+    border-radius: 8px; padding: 12px 16px; margin: 10px 0;
+    font-size: 14px; color: #334155; line-height: 1.9;
+}
+.cond-rule .rule-item { display: flex; align-items: baseline; gap: 8px; padding: 2px 0; }
+.cond-rule .rule-num { font-size: 11px; font-weight: 700; color: #3b82f6; min-width: 18px; }
+.cond-rule code {
+    background: #e0e7ff; padding: 1px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #3730a3; font-weight: 600;
+}
+
+.extend-card {
+    border: 1.5px solid #e2e8f0; border-radius: 10px; margin: 14px 0; overflow: hidden;
+}
+.extend-card-head {
+    background: #f1f5f9; padding: 10px 16px;
+    font-size: 13px; font-weight: 700; color: #1e3a5f;
+    border-bottom: 1.5px solid #e2e8f0; display: flex; align-items: center; gap: 8px;
+}
+.extend-card-head .tag {
+    background: #1e3a5f; color: #fff; font-size: 10px;
+    padding: 2px 8px; border-radius: 99px;
+}
+.extend-card-body { padding: 12px 16px; }
+
+.output-box {
+    background: #0f172a; border-radius: 6px; padding: 10px 16px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #86efac; line-height: 1.8; margin-top: 8px;
+}
+.output-label { font-size: 11px; font-weight: 600; color: #94a3b8; margin-bottom: 4px; }
+
+.challenge-box {
+    background: linear-gradient(135deg, #eff6ff, #e0e7ff);
+    border: 1.5px solid #c7d2fe; border-radius: 10px;
+    padding: 16px 20px; margin: 14px 0;
+}
+.challenge-box h3 { font-size: 15px; font-weight: 800; color: #3730a3; margin-bottom: 10px; }
+.challenge-item { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 8px; }
+.challenge-star { font-size: 14px; color: #f59e0b; flex-shrink: 0; }
+.challenge-text { font-size: 14px; color: #1e1b4b; line-height: 1.7; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     PAGE 1 — COVER
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">PJ</div>
+        <div class="cover-label">Project 11</div>
+        <h1 class="cover-title">윤년 판별기<br>— 달력이 4년마다 달라지는 이유</h1>
+        <p class="cover-sub">복합 조건식 <code>&&</code>와 <code>||</code>를 실전에서 익히는 프로젝트. 연도를 입력받아 윤년인지 판별하고, 확장 기능까지 구현합니다.</p>
+
+        <!-- 달력 SVG -->
+        <div style="text-align:center; margin: 22px 0 18px;">
+            <svg viewBox="0 0 480 190" style="max-width:480px;width:100%">
+                <!-- 달력 몸체 -->
+                <rect x="20" y="18" width="180" height="155" rx="10" fill="#fff" stroke="#cbd5e1" stroke-width="1.5"/>
+                <!-- 달력 헤더 평년 -->
+                <rect x="20" y="18" width="180" height="34" rx="10" fill="#64748b"/>
+                <rect x="20" y="42" width="180" height="10" rx="0" fill="#64748b"/>
+                <text x="110" y="40" text-anchor="middle" font-size="13" fill="#fff" font-weight="800">2023 · 2월 (평년)</text>
+                <!-- 요일 -->
+                <text x="38"  y="66" font-size="9" fill="#94a3b8" font-weight="600">일</text>
+                <text x="60"  y="66" font-size="9" fill="#94a3b8" font-weight="600">월</text>
+                <text x="82"  y="66" font-size="9" fill="#94a3b8" font-weight="600">화</text>
+                <text x="104" y="66" font-size="9" fill="#94a3b8" font-weight="600">수</text>
+                <text x="126" y="66" font-size="9" fill="#94a3b8" font-weight="600">목</text>
+                <text x="148" y="66" font-size="9" fill="#94a3b8" font-weight="600">금</text>
+                <text x="170" y="66" font-size="9" fill="#94a3b8" font-weight="600">토</text>
+                <!-- 1주 -->
+                <text x="170" y="84" font-size="10" fill="#334155">1</text>
+                <text x="38"  y="101" font-size="10" fill="#334155">5</text>
+                <text x="60"  y="101" font-size="10" fill="#334155">6</text>
+                <text x="82"  y="101" font-size="10" fill="#334155">7</text>
+                <text x="104" y="101" font-size="10" fill="#334155">8</text>
+                <text x="126" y="101" font-size="10" fill="#334155">9</text>
+                <text x="148" y="101" font-size="10" fill="#334155">10</text>
+                <text x="168" y="101" font-size="10" fill="#334155">11</text>
+                <text x="38"  y="118" font-size="10" fill="#334155">12</text>
+                <text x="60"  y="118" font-size="10" fill="#334155">13</text>
+                <text x="82"  y="118" font-size="10" fill="#334155">14</text>
+                <text x="104" y="118" font-size="10" fill="#334155">15</text>
+                <text x="126" y="118" font-size="10" fill="#334155">16</text>
+                <text x="148" y="118" font-size="10" fill="#334155">17</text>
+                <text x="168" y="118" font-size="10" fill="#334155">18</text>
+                <text x="38"  y="135" font-size="10" fill="#334155">19</text>
+                <text x="60"  y="135" font-size="10" fill="#334155">20</text>
+                <text x="82"  y="135" font-size="10" fill="#334155">21</text>
+                <text x="104" y="135" font-size="10" fill="#334155">22</text>
+                <text x="126" y="135" font-size="10" fill="#334155">23</text>
+                <text x="148" y="135" font-size="10" fill="#334155">24</text>
+                <text x="168" y="135" font-size="10" fill="#334155">25</text>
+                <text x="38"  y="152" font-size="10" fill="#334155">26</text>
+                <text x="60"  y="152" font-size="10" fill="#334155">27</text>
+                <text x="82"  y="152" font-size="10" fill="#ef4444" font-weight="700">28</text>
+                <text x="70" y="170" font-size="10" fill="#64748b" font-weight="600">28일까지</text>
+
+                <!-- 달력 몸체 윤년 -->
+                <rect x="280" y="18" width="180" height="155" rx="10" fill="#fff" stroke="#3b82f6" stroke-width="2"/>
+                <rect x="280" y="18" width="180" height="34" rx="10" fill="#2d5a8e"/>
+                <rect x="280" y="42" width="180" height="10" rx="0" fill="#2d5a8e"/>
+                <text x="370" y="40" text-anchor="middle" font-size="13" fill="#fff" font-weight="800">2024 · 2월 (윤년)</text>
+                <text x="298"  y="66" font-size="9" fill="#94a3b8" font-weight="600">일</text>
+                <text x="320"  y="66" font-size="9" fill="#94a3b8" font-weight="600">월</text>
+                <text x="342"  y="66" font-size="9" fill="#94a3b8" font-weight="600">화</text>
+                <text x="364" y="66" font-size="9" fill="#94a3b8" font-weight="600">수</text>
+                <text x="386" y="66" font-size="9" fill="#94a3b8" font-weight="600">목</text>
+                <text x="408" y="66" font-size="9" fill="#94a3b8" font-weight="600">금</text>
+                <text x="428" y="66" font-size="9" fill="#94a3b8" font-weight="600">토</text>
+                <text x="428" y="84" font-size="10" fill="#334155">1</text>
+                <text x="298"  y="101" font-size="10" fill="#334155">4</text>
+                <text x="320"  y="101" font-size="10" fill="#334155">5</text>
+                <text x="342"  y="101" font-size="10" fill="#334155">6</text>
+                <text x="364" y="101" font-size="10" fill="#334155">7</text>
+                <text x="386" y="101" font-size="10" fill="#334155">8</text>
+                <text x="408" y="101" font-size="10" fill="#334155">9</text>
+                <text x="428" y="101" font-size="10" fill="#334155">10</text>
+                <text x="298"  y="118" font-size="10" fill="#334155">11</text>
+                <text x="320"  y="118" font-size="10" fill="#334155">12</text>
+                <text x="342"  y="118" font-size="10" fill="#334155">13</text>
+                <text x="364" y="118" font-size="10" fill="#334155">14</text>
+                <text x="386" y="118" font-size="10" fill="#334155">15</text>
+                <text x="408" y="118" font-size="10" fill="#334155">16</text>
+                <text x="428" y="118" font-size="10" fill="#334155">17</text>
+                <text x="298"  y="135" font-size="10" fill="#334155">18</text>
+                <text x="320"  y="135" font-size="10" fill="#334155">19</text>
+                <text x="342"  y="135" font-size="10" fill="#334155">20</text>
+                <text x="364" y="135" font-size="10" fill="#334155">21</text>
+                <text x="386" y="135" font-size="10" fill="#334155">22</text>
+                <text x="408" y="135" font-size="10" fill="#334155">23</text>
+                <text x="428" y="135" font-size="10" fill="#334155">24</text>
+                <text x="298"  y="152" font-size="10" fill="#334155">25</text>
+                <text x="320"  y="152" font-size="10" fill="#334155">26</text>
+                <text x="342"  y="152" font-size="10" fill="#334155">27</text>
+                <text x="364" y="152" font-size="10" fill="#334155">28</text>
+                <!-- 29일 강조 -->
+                <circle cx="388" cy="147" r="11" fill="#2d5a8e" opacity="0.15"/>
+                <text x="386" y="152" font-size="10" fill="#1d4ed8" font-weight="800">29</text>
+                <text x="330" y="170" font-size="10" fill="#1d4ed8" font-weight="700">29일까지 (하루 더!)</text>
+
+                <!-- 화살표 + 레이블 -->
+                <defs>
+                    <marker id="ma1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                    </marker>
+                </defs>
+                <line x1="205" y1="96" x2="274" y2="96" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#ma1)"/>
+                <text x="239" y="89" text-anchor="middle" font-size="9" fill="#64748b" font-weight="600">4년마다</text>
+            </svg>
+        </div>
+
+        <!-- 윤년 규칙 흐름도 -->
+        <p style="font-size:13px;color:#64748b;text-align:center;margin-bottom:10px;font-weight:600;">윤년 판별 규칙 흐름도</p>
+        <div style="text-align:center; margin: 0 0 18px;">
+            <svg viewBox="0 0 480 110" style="max-width:480px;width:100%">
+                <defs>
+                    <marker id="ma2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                    </marker>
+                    <marker id="ma3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#22c55e"/>
+                    </marker>
+                    <marker id="ma4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#ef4444"/>
+                    </marker>
+                </defs>
+                <!-- 4로 나뉘어? -->
+                <rect x="10" y="38" width="90" height="30" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="55" y="57" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">4로 나뉘어?</text>
+                <!-- NO -->
+                <line x1="10" y1="53" x2="2" y2="53" stroke="#ef4444" stroke-width="1.2"/>
+                <line x1="2" y1="53" x2="2" y2="100" stroke="#ef4444" stroke-width="1.2"/>
+                <line x1="2" y1="100" x2="430" y2="100" stroke="#ef4444" stroke-width="1.2" marker-end="url(#ma4)"/>
+                <text x="20" y="72" font-size="9" fill="#ef4444" font-weight="700">NO</text>
+                <!-- YES -->
+                <line x1="100" y1="53" x2="130" y2="53" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#ma2)"/>
+                <text x="112" y="47" font-size="9" fill="#22c55e" font-weight="700">YES</text>
+                <!-- 100으로 나뉘어? -->
+                <rect x="132" y="38" width="100" height="30" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="182" y="57" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">100으로 나뉘어?</text>
+                <!-- NO → 윤년 -->
+                <line x1="182" y1="38" x2="182" y2="20" stroke="#94a3b8" stroke-width="1.2"/>
+                <line x1="182" y1="20" x2="430" y2="20" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#ma2)"/>
+                <text x="200" y="16" font-size="9" fill="#22c55e" font-weight="700">NO → 윤년</text>
+                <!-- YES -->
+                <line x1="232" y1="53" x2="262" y2="53" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#ma2)"/>
+                <text x="244" y="47" font-size="9" fill="#ef4444" font-weight="700">YES</text>
+                <!-- 400으로 나뉘어? -->
+                <rect x="264" y="38" width="100" height="30" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="314" y="57" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">400으로 나뉘어?</text>
+                <!-- YES → 윤년 -->
+                <line x1="364" y1="53" x2="394" y2="53" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#ma2)"/>
+                <text x="367" y="47" font-size="9" fill="#22c55e" font-weight="700">YES</text>
+                <!-- 윤년 박스 -->
+                <rect x="396" y="10" width="78" height="28" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+                <text x="435" y="28" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="800">윤년</text>
+                <!-- 평년 박스 -->
+                <rect x="396" y="88" width="78" height="22" rx="6" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+                <text x="435" y="103" text-anchor="middle" font-size="11" fill="#dc2626" font-weight="800">평년</text>
+                <!-- NO → 평년 (400에서) -->
+                <line x1="314" y1="68" x2="314" y2="100" stroke="#ef4444" stroke-width="1.2" marker-end="url(#ma4)"/>
+                <text x="318" y="86" font-size="9" fill="#ef4444" font-weight="700">NO</text>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/lightbulb.png" alt="아이디어" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 프로젝트에서 배우는 것</h3>
+            <ul>
+                <li>윤년 규칙을 <code>&&</code>(AND)와 <code>||</code>(OR)로 표현할 수 있습니다.</li>
+                <li>복합 조건식을 단계적으로 분해해서 이해할 수 있습니다.</li>
+                <li><code>scanf</code>로 연도를 입력받아 판별 결과를 출력할 수 있습니다.</li>
+                <li>확장 기능(2월 일수, 범위 탐색, 다음 윤년)을 스스로 구현할 수 있습니다.</li>
+                <li>연산자 우선순위 <code>&&</code> &gt; <code>||</code>를 실전에서 체감합니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     PAGE 2 — 구현: 윤년 판별 단계 분해
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="page">
+    <div class="project-badge">Project 11 · 윤년 판별기</div>
+    <h2>윤년 규칙을 코드로 분해하기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+    <p>윤년(leap year) 규칙은 세 가지 조건이 조합됩니다. 한 번에 쓰기 전에, 각 조건을 따로 이해하고 합쳐봅시다.</p>
+
+    <div class="cond-rule">
+        <div class="rule-item"><span class="rule-num">규칙 1</span> <span>연도가 4로 나누어 떨어진다 — <code>y % 4 == 0</code></span></div>
+        <div class="rule-item"><span class="rule-num">규칙 2</span> <span>단, 100으로도 나누어 떨어지면 평년이다 — <code>y % 100 != 0</code></span></div>
+        <div class="rule-item"><span class="rule-num">규칙 3</span> <span>예외: 400으로 나누어 떨어지면 다시 윤년 — <code>y % 400 == 0</code></span></div>
+    </div>
+
+    <!-- 단계별 분해 SVG -->
+    <div style="text-align:center; margin: 16px 0;">
+        <svg viewBox="0 0 480 200" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="mb1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#3b82f6"/>
+                </marker>
+            </defs>
+            <!-- STEP 1 -->
+            <rect x="10" y="10" width="460" height="42" rx="8" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1.5"/>
+            <text x="20" y="26" font-size="10" fill="#1d4ed8" font-weight="800">STEP 1 — 4의 배수인가?</text>
+            <text x="20" y="43" font-size="11" fill="#334155" font-family="JetBrains Mono">if (y % 4 == 0)</text>
+            <text x="200" y="43" font-size="10" fill="#64748b">→ 2024: 2024÷4=506  나머지 0  → 조건 참</text>
+
+            <line x1="240" y1="52" x2="240" y2="66" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#mb1)"/>
+
+            <!-- STEP 2 -->
+            <rect x="10" y="68" width="460" height="42" rx="8" fill="#fefce8" stroke="#fde68a" stroke-width="1.5"/>
+            <text x="20" y="84" font-size="10" fill="#92400e" font-weight="800">STEP 2 — 100의 배수가 아닌가? (예외 거르기)</text>
+            <text x="20" y="101" font-size="11" fill="#334155" font-family="JetBrains Mono">y % 4 == 0 &amp;&amp; y % 100 != 0</text>
+            <text x="300" y="101" font-size="10" fill="#64748b">→ 1900: 100 배수 → 거짓</text>
+
+            <line x1="240" y1="110" x2="240" y2="124" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#mb1)"/>
+
+            <!-- STEP 3 -->
+            <rect x="10" y="126" width="460" height="42" rx="8" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1.5"/>
+            <text x="20" y="142" font-size="10" fill="#166534" font-weight="800">STEP 3 — 400의 배수라면 다시 윤년 (예외의 예외)</text>
+            <text x="20" y="159" font-size="11" fill="#334155" font-family="JetBrains Mono">(y%4==0 &amp;&amp; y%100!=0) || y%400==0</text>
+            <text x="355" y="159" font-size="10" fill="#166534" font-weight="700">→ 완성!</text>
+
+            <line x1="240" y1="168" x2="240" y2="182" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#mb1)"/>
+
+            <!-- 최종 식 -->
+            <rect x="60" y="184" width="360" height="14" rx="4" fill="#1e3a5f"/>
+            <text x="240" y="195" text-anchor="middle" font-size="10" fill="#93c5fd" font-family="JetBrains Mono" font-weight="700">(y%4==0 &amp;&amp; y%100!=0) || y%400==0</text>
+        </svg>
+    </div>
+
+    <h2>기본 구현 코드</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/monitor.png" alt="모니터" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>연도를 입력받아 윤년인지 판별하는 완전한 프로그램입니다.</p>
+    <div class="code"><span class="cmt">/* 윤년 판별기 v1 */</span>
+<span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+
+<span class="kw">int</span> <span class="fn">main</span>(<span class="kw">void</span>) {
+    <span class="kw">int</span> year;
+
+    <span class="fn">printf</span>(<span class="str">"연도를 입력하세요: "</span>);
+    <span class="fn">scanf</span>(<span class="str">"%d"</span>, <span class="op">&amp;</span>year);
+
+    <span class="cmt">/* 복합 조건: (4의 배수 AND 100의 배수 아님) OR 400의 배수 */</span>
+    <span class="kw">if</span> ((year <span class="op">%</span> <span class="num">4</span> <span class="op">==</span> <span class="num">0</span> <span class="op">&amp;&amp;</span> year <span class="op">%</span> <span class="num">100</span> <span class="op">!=</span> <span class="num">0</span>) <span class="op">||</span> year <span class="op">%</span> <span class="num">400</span> <span class="op">==</span> <span class="num">0</span>) {
+        <span class="fn">printf</span>(<span class="str">"%d년은 윤년입니다.\n"</span>, year);
+    } <span class="kw">else</span> {
+        <span class="fn">printf</span>(<span class="str">"%d년은 평년입니다.\n"</span>, year);
+    }
+
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+
+    <!-- 연산자 우선순위 시각화 -->
+    <div style="text-align:center; margin: 14px 0 10px;">
+        <svg viewBox="0 0 480 90" style="max-width:480px;width:100%">
+            <text x="240" y="14" text-anchor="middle" font-size="11" fill="#64748b" font-weight="700">연산자 우선순위: &amp;&amp; 먼저, || 나중</text>
+            <!-- 식 -->
+            <text x="10" y="44" font-size="13" fill="#e2e8f0" font-family="JetBrains Mono" fill="#0f172a">( year%4==0  </text>
+            <text x="152" y="44" font-size="13" fill="#7c3aed" font-family="JetBrains Mono" font-weight="700">&amp;&amp;</text>
+            <text x="177" y="44" font-size="13" fill="#0f172a" font-family="JetBrains Mono">  year%100!=0 )  </text>
+            <text x="350" y="44" font-size="13" fill="#dc2626" font-family="JetBrains Mono" font-weight="700">||</text>
+            <text x="375" y="44" font-size="13" fill="#0f172a" font-family="JetBrains Mono">  year%400==0</text>
+            <!-- && 묶음 표시 -->
+            <rect x="8" y="50" width="335" height="18" rx="4" fill="#ede9fe" opacity="0.7"/>
+            <text x="172" y="63" text-anchor="middle" font-size="10" fill="#6d28d9" font-weight="700">① 먼저 계산: 4 배수 AND 100 배수 아님</text>
+            <!-- || 묶음 표시 -->
+            <rect x="348" y="50" width="128" height="18" rx="4" fill="#fee2e2" opacity="0.7"/>
+            <text x="412" y="63" text-anchor="middle" font-size="10" fill="#dc2626" font-weight="700">② OR 연결</text>
+            <rect x="6" y="69" width="472" height="18" rx="4" fill="#dbeafe" opacity="0.5"/>
+            <text x="240" y="82" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">③ 전체 결과 = 윤년 여부</text>
+        </svg>
+    </div>
+
+    <!-- 검증 테이블 -->
+    <div style="margin: 10px 0;">
+        <p style="font-size:13px;font-weight:700;color:#1e3a5f;margin-bottom:6px;">대표 연도 검증</p>
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+            <thead>
+                <tr style="background:#f1f5f9;">
+                    <th style="padding:6px 10px;text-align:center;color:#1e3a5f;border:1px solid #e2e8f0;">연도</th>
+                    <th style="padding:6px 10px;text-align:center;color:#1e3a5f;border:1px solid #e2e8f0;">%4==0</th>
+                    <th style="padding:6px 10px;text-align:center;color:#1e3a5f;border:1px solid #e2e8f0;">%100!=0</th>
+                    <th style="padding:6px 10px;text-align:center;color:#1e3a5f;border:1px solid #e2e8f0;">%400==0</th>
+                    <th style="padding:6px 10px;text-align:center;color:#1e3a5f;border:1px solid #e2e8f0;">결과</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding:5px 10px;text-align:center;border:1px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-weight:700;">2024</td>
+                    <td style="padding:5px 10px;text-align:center;border:1px solid #e2e8f0;color:#166534;font-weight:700;">참</td>
+                    <td style="padding:5px 10px;text-align:center;border:1px solid #e2e8f0;color:#166534;font-weight:700;">참</td>
+                    <td style="padding:5px 10px;text-align:center;border:1px solid #e2e8f0;color:#94a3b8;">-</td>
+                    <td style="padding:5px 10px;text-align:center;border:1px solid #e2e8f0;background:#dbeafe;color:#1d4ed8;font-weight:800;">윤년</td>
+                </tr>
+                <tr style="background:#fafafa;">
+                    <td style="padding:5px 10px;text-align:center;border:1px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-weight:700;">1900</td>
+                    <td style="padding:5px 10px;text-align:center;border:1px solid #e2e8f0;color:#166534;font-weight:700;">참</td>
+                    <td style="padding:5px 10px;text-align:center;border:1px solid #e2e8f0;color:#dc2626;font-weight:700;">거짓</td>
+                    <td style="padding:5px 10px;text-align:center;border:1px solid #e2e8f0;color:#dc2626;font-weight:700;">거짓</td>
+                    <td style="padding:5px 10px;text-align:center;border:1px solid #e2e8f0;background:#fee2e2;color:#dc2626;font-weight:800;">평년</td>
+                </tr>
+                <tr>
+                    <td style="padding:5px 10px;text-align:center;border:1px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-weight:700;">2000</td>
+                    <td style="padding:5px 10px;text-align:center;border:1px solid #e2e8f0;color:#166534;font-weight:700;">참</td>
+                    <td style="padding:5px 10px;text-align:center;border:1px solid #e2e8f0;color:#dc2626;font-weight:700;">거짓</td>
+                    <td style="padding:5px 10px;text-align:center;border:1px solid #e2e8f0;color:#166534;font-weight:700;">참</td>
+                    <td style="padding:5px 10px;text-align:center;border:1px solid #e2e8f0;background:#dbeafe;color:#1d4ed8;font-weight:800;">윤년</td>
+                </tr>
+                <tr style="background:#fafafa;">
+                    <td style="padding:5px 10px;text-align:center;border:1px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-weight:700;">2023</td>
+                    <td style="padding:5px 10px;text-align:center;border:1px solid #e2e8f0;color:#dc2626;font-weight:700;">거짓</td>
+                    <td style="padding:5px 10px;text-align:center;border:1px solid #e2e8f0;color:#94a3b8;">-</td>
+                    <td style="padding:5px 10px;text-align:center;border:1px solid #e2e8f0;color:#dc2626;font-weight:700;">거짓</td>
+                    <td style="padding:5px 10px;text-align:center;border:1px solid #e2e8f0;background:#fee2e2;color:#dc2626;font-weight:800;">평년</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     PAGE 3 — 확장 기능 3가지
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="page">
+    <div class="project-badge">Project 11 · 확장 기능</div>
+    <h2>확장 기능 구현하기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/keyboard.png" alt="키보드" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>기본 판별에서 한 발 더 나아가 세 가지 실용적인 기능을 추가합니다. 각각 독립적으로 구현해 보세요.</p>
+
+    <!-- 확장 1 -->
+    <div class="extend-card">
+        <div class="extend-card-head">
+            <span class="tag">확장 1</span>
+            해당 연도 2월 일수 출력
+        </div>
+        <div class="extend-card-body">
+            <p style="font-size:14px;color:#475569;margin-bottom:8px;">윤년이면 29일, 평년이면 28일을 출력합니다. 삼항 연산자를 활용하면 한 줄로 처리할 수 있습니다.</p>
+            <div class="code"><span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+
+<span class="kw">int</span> <span class="fn">main</span>(<span class="kw">void</span>) {
+    <span class="kw">int</span> year, feb_days;
+
+    <span class="fn">printf</span>(<span class="str">"연도 입력: "</span>);
+    <span class="fn">scanf</span>(<span class="str">"%d"</span>, <span class="op">&amp;</span>year);
+
+    <span class="cmt">/* 윤년 판별 후 2월 일수 결정 */</span>
+    <span class="kw">int</span> is_leap = (year <span class="op">%</span> <span class="num">4</span> <span class="op">==</span> <span class="num">0</span> <span class="op">&amp;&amp;</span> year <span class="op">%</span> <span class="num">100</span> <span class="op">!=</span> <span class="num">0</span>) <span class="op">||</span> year <span class="op">%</span> <span class="num">400</span> <span class="op">==</span> <span class="num">0</span>;
+    feb_days = is_leap <span class="op">?</span> <span class="num">29</span> <span class="op">:</span> <span class="num">28</span>;
+
+    <span class="fn">printf</span>(<span class="str">"%d년 2월은 %d일까지 있습니다.\n"</span>, year, feb_days);
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+            <div class="output-label">실행 예시</div>
+            <div class="output-box">연도 입력: 2024
+2024년 2월은 29일까지 있습니다.</div>
+        </div>
+    </div>
+
+    <!-- 확장 1 개념 시각화 -->
+    <div style="text-align:center; margin: 4px 0 14px;">
+        <svg viewBox="0 0 480 56" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="mc1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#3b82f6"/>
+                </marker>
+            </defs>
+            <!-- is_leap -->
+            <rect x="10" y="12" width="120" height="28" rx="6" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1.5"/>
+            <text x="70" y="30" text-anchor="middle" font-size="11" fill="#1d4ed8" font-family="JetBrains Mono">is_leap = 1</text>
+            <line x1="130" y1="26" x2="158" y2="26" stroke="#3b82f6" stroke-width="1.2" marker-end="url(#mc1)"/>
+            <!-- 삼항 -->
+            <rect x="160" y="4" width="160" height="44" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="240" y="22" text-anchor="middle" font-size="10" fill="#64748b" font-weight="700">삼항 연산자</text>
+            <text x="240" y="40" text-anchor="middle" font-size="11" fill="#334155" font-family="JetBrains Mono">is_leap ? 29 : 28</text>
+            <line x1="320" y1="26" x2="348" y2="26" stroke="#3b82f6" stroke-width="1.2" marker-end="url(#mc1)"/>
+            <!-- 결과 -->
+            <rect x="350" y="10" width="120" height="30" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="410" y="30" text-anchor="middle" font-size="13" fill="#1d4ed8" font-weight="800">29일</text>
+        </svg>
+    </div>
+
+    <!-- 확장 2 -->
+    <div class="extend-card">
+        <div class="extend-card-head">
+            <span class="tag">확장 2</span>
+            연도 범위 입력 → 윤년 목록 출력
+        </div>
+        <div class="extend-card-body">
+            <p style="font-size:14px;color:#475569;margin-bottom:8px;">시작 연도와 끝 연도를 입력받아 그 사이의 모든 윤년을 나열합니다. <code>for</code> 반복문과 판별식을 조합합니다.</p>
+            <div class="code"><span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+
+<span class="kw">int</span> <span class="fn">main</span>(<span class="kw">void</span>) {
+    <span class="kw">int</span> start, end, y, count = <span class="num">0</span>;
+
+    <span class="fn">printf</span>(<span class="str">"시작 연도: "</span>); <span class="fn">scanf</span>(<span class="str">"%d"</span>, <span class="op">&amp;</span>start);
+    <span class="fn">printf</span>(<span class="str">"끝 연도: "</span>);   <span class="fn">scanf</span>(<span class="str">"%d"</span>, <span class="op">&amp;</span>end);
+
+    <span class="fn">printf</span>(<span class="str">"\n%d ~ %d 사이의 윤년:\n"</span>, start, end);
+
+    <span class="kw">for</span> (y = start; y <span class="op">&lt;=</span> end; y<span class="op">++</span>) {
+        <span class="kw">if</span> ((y <span class="op">%</span> <span class="num">4</span> <span class="op">==</span> <span class="num">0</span> <span class="op">&amp;&amp;</span> y <span class="op">%</span> <span class="num">100</span> <span class="op">!=</span> <span class="num">0</span>) <span class="op">||</span> y <span class="op">%</span> <span class="num">400</span> <span class="op">==</span> <span class="num">0</span>) {
+            <span class="fn">printf</span>(<span class="str">"  %d\n"</span>, y);
+            count<span class="op">++</span>;
+        }
+    }
+    <span class="fn">printf</span>(<span class="str">"총 %d개\n"</span>, count);
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+            <div class="output-label">실행 예시 (2000 ~ 2024)</div>
+            <div class="output-box">2000 ~ 2024 사이의 윤년:
+  2000
+  2004
+  2008
+  2012
+  2016
+  2020
+  2024
+총 7개</div>
+        </div>
+    </div>
+
+    <!-- 확장 3 -->
+    <div class="extend-card">
+        <div class="extend-card-head">
+            <span class="tag">확장 3</span>
+            다음 윤년까지 몇 년 남았는지 출력
+        </div>
+        <div class="extend-card-body">
+            <p style="font-size:14px;color:#475569;margin-bottom:8px;">입력한 연도가 윤년이면 0을 출력하고, 아니라면 다음 윤년까지 남은 해를 계산합니다.</p>
+            <div class="code"><span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+
+<span class="kw">int</span> <span class="fn">main</span>(<span class="kw">void</span>) {
+    <span class="kw">int</span> year, next, diff;
+
+    <span class="fn">printf</span>(<span class="str">"연도 입력: "</span>);
+    <span class="fn">scanf</span>(<span class="str">"%d"</span>, <span class="op">&amp;</span>year);
+
+    <span class="cmt">/* 현재 연도부터 위로 올라가며 첫 윤년 탐색 */</span>
+    next = year;
+    <span class="kw">while</span> (!((next <span class="op">%</span> <span class="num">4</span> <span class="op">==</span> <span class="num">0</span> <span class="op">&amp;&amp;</span> next <span class="op">%</span> <span class="num">100</span> <span class="op">!=</span> <span class="num">0</span>) <span class="op">||</span> next <span class="op">%</span> <span class="num">400</span> <span class="op">==</span> <span class="num">0</span>)) {
+        next<span class="op">++</span>;
+    }
+
+    diff = next <span class="op">-</span> year;
+    <span class="kw">if</span> (diff <span class="op">==</span> <span class="num">0</span>)
+        <span class="fn">printf</span>(<span class="str">"%d년은 윤년입니다!\n"</span>, year);
+    <span class="kw">else</span>
+        <span class="fn">printf</span>(<span class="str">"다음 윤년은 %d년, %d년 남았습니다.\n"</span>, next, diff);
+
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+            <div class="output-label">실행 예시</div>
+            <div class="output-box">연도 입력: 2026
+다음 윤년은 2028년, 2년 남았습니다.</div>
+        </div>
+    </div>
+
+    <!-- while 구조 시각화 -->
+    <div style="text-align:center; margin: 10px 0 0;">
+        <svg viewBox="0 0 480 62" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="md1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="10"  y="16" width="70"  height="28" rx="6" fill="#fee2e2" stroke="#fca5a5" stroke-width="1.5"/>
+            <text x="45"  y="34" text-anchor="middle" font-size="10" fill="#dc2626" font-weight="700">2026 (평년)</text>
+            <line x1="80" y1="30" x2="100" y2="30" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#md1)"/>
+            <text x="90" y="22" font-size="9" fill="#94a3b8">+1</text>
+            <rect x="102" y="16" width="70"  height="28" rx="6" fill="#fee2e2" stroke="#fca5a5" stroke-width="1.5"/>
+            <text x="137"  y="34" text-anchor="middle" font-size="10" fill="#dc2626" font-weight="700">2027 (평년)</text>
+            <line x1="172" y1="30" x2="192" y2="30" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#md1)"/>
+            <text x="182" y="22" font-size="9" fill="#94a3b8">+1</text>
+            <rect x="194" y="16" width="70"  height="28" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+            <text x="229"  y="34" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="800">2028 (윤년)</text>
+            <line x1="264" y1="30" x2="284" y2="30" stroke="#3b82f6" stroke-width="1.2" marker-end="url(#md1)"/>
+            <rect x="286" y="10" width="180" height="40" rx="6" fill="#f0fdf4" stroke="#86efac" stroke-width="1.5"/>
+            <text x="376" y="26" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">while 루프 종료</text>
+            <text x="376" y="44" text-anchor="middle" font-size="10" fill="#166534">2028 - 2026 = 2년 남음</text>
+        </svg>
+    </div>
+</div>
+
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     PAGE 4 — 전체 통합 코드 + 도전 문제
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="page">
+    <div class="project-badge">Project 11 · 전체 코드 + 도전</div>
+    <h2>통합 버전 — 메뉴 선택형 윤년 판별기</h2>
+    <p>세 가지 기능을 하나의 프로그램에 합쳐, 사용자가 원하는 기능을 선택할 수 있게 만듭니다.</p>
+
+    <div class="code"><span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+
+<span class="cmt">/* 윤년 판별 함수 (반환값: 1=윤년, 0=평년) */</span>
+<span class="kw">int</span> <span class="fn">is_leap_year</span>(<span class="kw">int</span> y) {
+    <span class="kw">return</span> (y <span class="op">%</span> <span class="num">4</span> <span class="op">==</span> <span class="num">0</span> <span class="op">&amp;&amp;</span> y <span class="op">%</span> <span class="num">100</span> <span class="op">!=</span> <span class="num">0</span>) <span class="op">||</span> y <span class="op">%</span> <span class="num">400</span> <span class="op">==</span> <span class="num">0</span>;
+}
+
+<span class="kw">int</span> <span class="fn">main</span>(<span class="kw">void</span>) {
+    <span class="kw">int</span> menu, year, start, end, y, count, next, diff;
+
+    <span class="fn">printf</span>(<span class="str">"=== 윤년 판별기 ===\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"1. 특정 연도 판별\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"2. 2월 일수 확인\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"3. 윤년 목록 출력\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"4. 다음 윤년까지 남은 해\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"선택: "</span>);
+    <span class="fn">scanf</span>(<span class="str">"%d"</span>, <span class="op">&amp;</span>menu);
+
+    <span class="kw">if</span> (menu <span class="op">==</span> <span class="num">1</span>) {
+        <span class="fn">printf</span>(<span class="str">"연도: "</span>); <span class="fn">scanf</span>(<span class="str">"%d"</span>, <span class="op">&amp;</span>year);
+        <span class="fn">printf</span>(<span class="str">"%d년 → %s\n"</span>, year, <span class="fn">is_leap_year</span>(year) <span class="op">?</span> <span class="str">"윤년"</span> <span class="op">:</span> <span class="str">"평년"</span>);
+
+    } <span class="kw">else if</span> (menu <span class="op">==</span> <span class="num">2</span>) {
+        <span class="fn">printf</span>(<span class="str">"연도: "</span>); <span class="fn">scanf</span>(<span class="str">"%d"</span>, <span class="op">&amp;</span>year);
+        <span class="fn">printf</span>(<span class="str">"%d년 2월: %d일\n"</span>, year, <span class="fn">is_leap_year</span>(year) <span class="op">?</span> <span class="num">29</span> <span class="op">:</span> <span class="num">28</span>);
+
+    } <span class="kw">else if</span> (menu <span class="op">==</span> <span class="num">3</span>) {
+        <span class="fn">printf</span>(<span class="str">"시작: "</span>); <span class="fn">scanf</span>(<span class="str">"%d"</span>, <span class="op">&amp;</span>start);
+        <span class="fn">printf</span>(<span class="str">"끝:   "</span>); <span class="fn">scanf</span>(<span class="str">"%d"</span>, <span class="op">&amp;</span>end);
+        count = <span class="num">0</span>;
+        <span class="kw">for</span> (y = start; y <span class="op">&lt;=</span> end; y<span class="op">++</span>)
+            <span class="kw">if</span> (<span class="fn">is_leap_year</span>(y)) { <span class="fn">printf</span>(<span class="str">"  %d\n"</span>, y); count<span class="op">++</span>; }
+        <span class="fn">printf</span>(<span class="str">"총 %d개\n"</span>, count);
+
+    } <span class="kw">else if</span> (menu <span class="op">==</span> <span class="num">4</span>) {
+        <span class="fn">printf</span>(<span class="str">"연도: "</span>); <span class="fn">scanf</span>(<span class="str">"%d"</span>, <span class="op">&amp;</span>year);
+        next = year;
+        <span class="kw">while</span> (!<span class="fn">is_leap_year</span>(next)) next<span class="op">++</span>;
+        diff = next <span class="op">-</span> year;
+        <span class="kw">if</span> (diff <span class="op">==</span> <span class="num">0</span>)  <span class="fn">printf</span>(<span class="str">"%d년은 윤년!\n"</span>, year);
+        <span class="kw">else</span>           <span class="fn">printf</span>(<span class="str">"다음 윤년 %d년, %d년 남음\n"</span>, next, diff);
+    }
+
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+
+    <!-- 함수 분리 시각화 -->
+    <div style="text-align:center; margin: 10px 0 16px;">
+        <svg viewBox="0 0 480 58" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="me1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#3b82f6"/>
+                </marker>
+            </defs>
+            <rect x="10" y="10" width="130" height="38" rx="6" fill="#ede9fe" stroke="#a78bfa" stroke-width="1.5"/>
+            <text x="75" y="26" text-anchor="middle" font-size="10" fill="#6d28d9" font-weight="800">is_leap_year(y)</text>
+            <text x="75" y="42" text-anchor="middle" font-size="9" fill="#7c3aed">판별 로직 한 곳에</text>
+            <line x1="140" y1="29" x2="162" y2="29" stroke="#3b82f6" stroke-width="1.2" marker-end="url(#me1)"/>
+            <rect x="164" y="4" width="300" height="50" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="314" y="18" text-anchor="middle" font-size="9" fill="#64748b" font-weight="700">main()에서 호출만</text>
+            <text x="200" y="34" font-size="9" fill="#334155" font-family="JetBrains Mono">is_leap_year(year)  → 1 또는 0</text>
+            <text x="200" y="48" font-size="9" fill="#94a3b8">중복 없이 재사용 가능 (DRY 원칙)</text>
+        </svg>
+    </div>
+
+    <!-- 핵심 정리 -->
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>핵심 정리</h3>
+        <ul>
+            <li><strong>윤년 조건:</strong> <code>(y%4==0 &amp;&amp; y%100!=0) || y%400==0</code></li>
+            <li><strong>&amp;&amp; 우선순위 &gt; ||</strong> — 괄호 없이 써도 되지만, 괄호로 명시하면 더 읽기 좋음</li>
+            <li><strong>반환값 활용:</strong> 판별식 자체가 0 또는 1이라 삼항 연산자와 잘 어울림</li>
+            <li><strong>함수 분리:</strong> <code>is_leap_year()</code>로 뽑으면 네 곳에서 동일 로직 재사용</li>
+            <li><strong>while 탐색:</strong> 다음 윤년처럼 "조건 만족할 때까지"는 while이 자연스러운 선택</li>
+        </ul>
+    </div>
+
+    <!-- 도전 문제 -->
+    <div class="challenge-box">
+        <h3>도전 문제</h3>
+        <div class="challenge-item">
+            <svg class="challenge-star" viewBox="0 0 16 16" width="16" height="16"><polygon points="8,1 10,6 15,6 11,9.5 12.5,14.5 8,11.5 3.5,14.5 5,9.5 1,6 6,6" fill="#f59e0b"/></svg>
+            <div class="challenge-text"><strong>기본:</strong> 2001 ~ 2100 범위에서 윤년이 몇 개인지 세고, 4년마다 정확히 한 번 오지 않는 해를 출력해 보세요. (힌트: 1900, 2100 같은 예외에 주목)</div>
+        </div>
+        <div class="challenge-item">
+            <svg class="challenge-star" viewBox="0 0 16 16" width="16" height="16"><polygon points="8,1 10,6 15,6 11,9.5 12.5,14.5 8,11.5 3.5,14.5 5,9.5 1,6 6,6" fill="#f59e0b"/></svg>
+            <svg class="challenge-star" viewBox="0 0 16 16" width="16" height="16"><polygon points="8,1 10,6 15,6 11,9.5 12.5,14.5 8,11.5 3.5,14.5 5,9.5 1,6 6,6" fill="#f59e0b"/></svg>
+            <div class="challenge-text"><strong>심화:</strong> 연도를 입력받아 그 해의 1월 1일이 무슨 요일인지 계산하는 프로그램을 만들어 보세요. (힌트: 1970년 1월 1일은 목요일, 윤년마다 하루씩 더 추가)</div>
+        </div>
+        <div class="challenge-item">
+            <svg class="challenge-star" viewBox="0 0 16 16" width="16" height="16"><polygon points="8,1 10,6 15,6 11,9.5 12.5,14.5 8,11.5 3.5,14.5 5,9.5 1,6 6,6" fill="#f59e0b"/></svg>
+            <svg class="challenge-star" viewBox="0 0 16 16" width="16" height="16"><polygon points="8,1 10,6 15,6 11,9.5 12.5,14.5 8,11.5 3.5,14.5 5,9.5 1,6 6,6" fill="#f59e0b"/></svg>
+            <svg class="challenge-star" viewBox="0 0 16 16" width="16" height="16"><polygon points="8,1 10,6 15,6 11,9.5 12.5,14.5 8,11.5 3.5,14.5 5,9.5 1,6 6,6" fill="#f59e0b"/></svg>
+            <div class="challenge-text"><strong>고급:</strong> 연도와 월, 일을 입력받아 "그 날짜가 해당 연도의 몇 번째 날인지" 출력하는 프로그램을 작성하세요. 각 달의 일수 배열과 윤년 조건을 함께 활용합니다.</div>
+        </div>
+    </div>
+
+    <!-- 문제 1 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q1</div>
+            <div class="problem-label">조건식 완성하기</div>
+            <div class="problem-diff medium">보통</div>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">아래 빈칸을 채워 윤년 판별 프로그램을 완성하세요.<br>힌트: 4의 배수이고 100의 배수가 아니거나, 400의 배수이면 윤년입니다.</div>
+            <div class="code"><span class="kw">if</span> ((year <span class="op">%</span> ___ <span class="op">==</span> <span class="num">0</span> <span class="op">&amp;&amp;</span> year <span class="op">%</span> ___ <span class="op">!=</span> <span class="num">0</span>) <span class="op">||</span> year <span class="op">%</span> ___ <span class="op">==</span> <span class="num">0</span>)</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <div class="problem-example-label">입력</div>
+                    <div class="problem-example-value">2000</div>
+                </div>
+                <div class="problem-example-row">
+                    <div class="problem-example-label">출력</div>
+                    <div class="problem-example-value">2000년은 윤년입니다.</div>
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code"><span style="color:#c084fc">if</span> ((year % <span style="color:#7dd3fc">4</span> == 0 && year % <span style="color:#7dd3fc">100</span> != 0) || year % <span style="color:#7dd3fc">400</span> == 0)</div>
+            </div>
+        </details>
+    </div>
+
+    <!-- 문제 2 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q2</div>
+            <div class="problem-label">오류 찾기</div>
+            <div class="problem-diff medium">보통</div>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">아래 코드는 1900년을 윤년이라고 잘못 판별합니다. 무엇이 문제인지 찾아 고치세요.</div>
+            <div class="code"><span class="kw">if</span> (year <span class="op">%</span> <span class="num">4</span> <span class="op">==</span> <span class="num">0</span> <span class="op">||</span> year <span class="op">%</span> <span class="num">400</span> <span class="op">==</span> <span class="num">0</span>)
+    <span class="fn">printf</span>(<span class="str">"윤년\n"</span>);</div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">100의 배수 예외 처리가 빠졌습니다. 1900은 4의 배수이므로 첫 조건을 통과하지만, 100의 배수라서 윤년이 아닙니다.</div>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code"><span style="color:#c084fc">if</span> ((year % <span style="color:#7dd3fc">4</span> == 0 <span style="color:#f9a8d4">&&</span> year % <span style="color:#7dd3fc">100</span> != 0) <span style="color:#f9a8d4">||</span> year % <span style="color:#7dd3fc">400</span> == 0)
+    printf("윤년\n");</div>
+                <div class="hint-text" style="margin-top:8px;">|| 를 &&로 바꾸고, 100 예외 조건 <code>year%100!=0</code>을 AND로 연결해야 합니다.</div>
+            </div>
+        </details>
+    </div>
+</div>
+
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="완성" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/flowchart.png" alt="흐름도" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+
+
+
+<script>
+(function(){
+  var KEY = 'cs_ans_' + location.pathname.replace(/[^a-zA-Z0-9]/g,'_');
+  var pagePath = location.pathname;
+  var userId = null;
+  try {
+    userId = window.parent?.localStorage?.getItem('codingssok_user_id')
+      || localStorage.getItem('codingssok_user_id');
+  } catch(e) {}
+
+  function save(){
+    var areas = document.querySelectorAll('textarea');
+    var saved = 0;
+    areas.forEach(function(ta, i){
+      if(ta.value.trim()) {
+        localStorage.setItem(KEY + '_' + i, ta.value);
+        saved++;
+      } else {
+        localStorage.removeItem(KEY + '_' + i);
+      }
+    });
+    if(saved > 0) showSaveIndicator();
+  }
+
+  function load(){
+    var areas = document.querySelectorAll('textarea');
+    var restored = 0;
+    areas.forEach(function(ta, i){
+      var val = localStorage.getItem(KEY + '_' + i);
+      if(val && val.trim()) {
+        ta.value = val;
+        ta.style.borderColor = '#10b981';
+        ta.style.boxShadow = '0 0 0 2px rgba(16,185,129,0.15)';
+        setTimeout(function(){ ta.style.borderColor = ''; ta.style.boxShadow = ''; }, 2000);
+        restored++;
+      }
+    });
+    if(restored > 0) showRestoreIndicator(restored);
+  }
+
+  function saveToDb(){
+    if(!userId) return;
+    var areas = document.querySelectorAll('textarea');
+    var answers = [];
+    areas.forEach(function(ta, i){
+      if(ta.value.trim()) answers.push({ field_index: i, answer_text: ta.value });
+    });
+    if(answers.length === 0) return;
+    fetch('/api/answers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId, page_path: pagePath, answers: answers })
+    }).catch(function(){});
+  }
+
+  function loadFromDb(){
+    if(!userId) return;
+    fetch('/api/answers?user_id=' + encodeURIComponent(userId) + '&page_path=' + encodeURIComponent(pagePath))
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(!d.answers || !d.answers.length) return;
+        var areas = document.querySelectorAll('textarea');
+        d.answers.forEach(function(a){
+          if(areas[a.field_index] && a.answer_text) {
+            areas[a.field_index].value = a.answer_text;
+            localStorage.setItem(KEY + '_' + a.field_index, a.answer_text);
+          }
+        });
+      }).catch(function(){});
+  }
+
+  function showSaveIndicator(){
+    var el = document.getElementById('cs-save-ind');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'cs-save-ind';
+      el.style.cssText = 'position:fixed;bottom:16px;right:16px;padding:6px 14px;border-radius:8px;background:#0f172a;color:#22c55e;font-size:11px;font-weight:700;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+      document.body.appendChild(el);
+    }
+    el.textContent = '\u2713 \uB2F5\uC548 \uC800\uC7A5\uB428'; // ✓ 답안 저장됨
+    el.style.opacity = '1';
+    setTimeout(function(){ el.style.opacity = '0'; }, 1500);
+  }
+
+  function showRestoreIndicator(n){
+    var el = document.getElementById('cs-save-ind');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'cs-save-ind';
+      el.style.cssText = 'position:fixed;bottom:16px;right:16px;padding:6px 14px;border-radius:8px;background:#0f172a;color:#3b82f6;font-size:11px;font-weight:700;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+      document.body.appendChild(el);
+    }
+    el.textContent = '\u21BB ' + n + '\uAC1C \uB2F5\uC548 \uBCF5\uC6D0'; // ↻ n개 답안 복원
+    el.style.color = '#3b82f6';
+    el.style.opacity = '1';
+    setTimeout(function(){ el.style.opacity = '0'; }, 2500);
+  }
+
+  var t = null;
+  document.addEventListener('input', function(e){
+    if(e.target.tagName === 'TEXTAREA'){
+      clearTimeout(t);
+      t = setTimeout(function(){ save(); saveToDb(); }, 300);
+    }
+  });
+  document.addEventListener('change', function(e){
+    if(e.target.tagName === 'TEXTAREA'){ save(); saveToDb(); }
+  });
+  document.addEventListener('focusout', function(e){
+    if(e.target.tagName === 'TEXTAREA'){ save(); saveToDb(); }
+  });
+  window.addEventListener('beforeunload', function(){ save(); saveToDb(); });
+
+  // 즉시 로드
+  load();
+  loadFromDb();
+})();
+</script>
+</body>
+</html>

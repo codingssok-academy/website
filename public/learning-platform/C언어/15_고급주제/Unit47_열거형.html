@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Unit 47. 열거형과 typedef — C 언어 코딩 도장</title>
+    <link rel="stylesheet" href="../common.css">
+</head>
+
+<body>
+    <div class="wrap">
+        <div class="hdr">
+            <h1>Unit 47. 열거형과 고급 자료형</h1>
+            <div class="sub">enum · typedef · volatile · restrict · 자료형 한정자</div>
+            <span class="unit-badge">Chapter 15 · 고급 주제</span>
+            <div class="level-bar"><span class="on"></span><span class="on"></span><span class="on"></span></div>
+            <div class="meta"><span class="tag pri">🖥️ C언어</span><span class="tag acc">📝 15문제</span><span
+                    class="tag">⏱ 25~35분</span></div>
+        </div>
+        <div class="stu-bar"><label>👤 이름 <input type="text" id="stu-name" placeholder="이름"></label><label>📅 날짜 <input
+                    type="date" id="stu-date"></label></div>
+        <div class="learn">
+            <h2><span class="ico" style="background:rgba(168,85,247,.15)">🏷️</span> enum = 이름 붙인 정수 상수</h2>
+            <p>가독성을 높이는 열거형! 매직 넘버 대신 의미 있는 이름을.</p>
+        </div>
+        <div id="problems"></div>
+        <div class="submit-section">
+            <p>모든 문제를 풀었나요? 📨</p><button class="btn-submit" id="btn-submit">📄 제출하기</button>
+        </div>
+        <div class="modal-overlay" id="submit-modal">
+            <div class="modal-box">
+                <div class="modal-icon">✅</div>
+                <h3>제출 완료!</h3>
+                <p>학습지가 저장되었습니다.</p>
+                <div style="margin:12px 0"><span class="info-tag" id="modal-name"></span> <span class="info-tag"
+                        id="modal-date"></span> <span class="info-tag" id="modal-count"></span></div>
+                <p style="font-size:.78rem;color:var(--dim)">📁 <strong id="modal-filename"></strong></p><button
+                    class="btn-close-modal" id="btn-close-modal">확인</button>
+            </div>
+        </div>
+        <div class="pg"><a href="../14_전처리기/Unit46_헤더파일.html">← Unit 46</a><span class="tag active">Unit 47</span><a
+                href="Unit48_메모리관리.html">Unit 48 →</a></div>
+        <div class="ft">🖥️ C 언어 코딩 도장 · Unit 47 · 열거형</div>
+    </div>
+    <script>
+        const P = [
+            {
+                n: 1, t: "enum 선언", d: 1,
+                q: `열거형을 선언하세요.<pre class="code-c">enum Color { RED, GREEN, BLUE };
+enum Color c = GREEN;
+printf("%d\\n", c);</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">1</div><div class="trace">RED=0, GREEN=1, BLUE=2<br>자동으로 0부터 번호 부여!</div>`
+            },
+
+            {
+                n: 2, t: "enum 값 지정", d: 1,
+                q: `시작 값을 지정하세요.<pre class="code-c">enum Month { JAN=1, FEB, MAR, APR };
+printf("%d %d %d %d\\n", JAN, FEB, MAR, APR);</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">1 2 3 4</div><div class="trace">JAN=1로 시작 → 이후 자동 증가</div>`
+            },
+
+            {
+                n: 3, t: "typedef + enum", d: 2,
+                q: `typedef로 enum을 간편하게 쓰세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">typedef enum { UP, DOWN, LEFT, RIGHT } Direction;
+Direction dir = UP;
+switch (dir) {
+    case UP:    printf("위\\n"); break;
+    case DOWN:  printf("아래\\n"); break;
+    case LEFT:  printf("왼\\n"); break;
+    case RIGHT: printf("오른\\n"); break;
+}</pre>`},
+
+            {
+                n: 4, t: "enum과 비트 플래그", d: 3,
+                q: `enum으로 비트 플래그를 만드세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">typedef enum {
+    PERM_READ    = 1,   <span class="cm">// 001</span>
+    PERM_WRITE   = 2,   <span class="cm">// 010</span>
+    PERM_EXECUTE = 4    <span class="cm">// 100</span>
+} Permission;
+
+int perm = PERM_READ | PERM_WRITE;
+if (perm & PERM_READ)  printf("읽기 가능\\n");
+if (perm & PERM_WRITE) printf("쓰기 가능\\n");</pre>`},
+
+            {
+                n: 5, t: "typedef 활용", d: 2,
+                q: `typedef로 복잡한 타입을 간단하게 만드세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">typedef unsigned long long ull;
+typedef int (*FuncPtr)(int, int);  <span class="cm">// 함수 포인터</span>
+
+ull bigNum = 123456789012345ULL;
+int add(int a, int b) { return a+b; }
+FuncPtr f = add;
+printf("%d\\n", f(3,5)); <span class="cm">// 8</span></pre>`},
+
+            {
+                n: 6, t: "const vs #define", d: 2,
+                q: `const와 #define의 차이를 설명하세요.`,
+                a: `<span class="key">정답</span><div class="trace">#define PI 3.14 → <span class="val">텍스트 치환</span> (타입 없음)<br>const double PI = 3.14; → <span class="val">변수</span> (타입 있음)<br><br>const 장점:<br>✅ 타입 검사 가능<br>✅ 디버거에서 이름 확인<br>✅ 스코프 규칙 적용</div>`
+            },
+
+            {
+                n: 7, t: "volatile 키워드", d: 3,
+                q: `volatile은 언제 사용하나요?`,
+                a: `<span class="key">정답</span><pre class="code-c">volatile int sensorValue;
+<span class="cm">// 하드웨어/다른 스레드가 값을 바꿀 수 있음</span>
+while (sensorValue == 0) { }
+<span class="cm">// volatile 없으면 컴파일러가 최적화로</span>
+<span class="cm">// sensorValue를 캐시하여 무한루프!</span></pre><div class="trace">volatile = "이 값은 예고 없이 변할 수 있어!"<br>컴파일러 최적화 방지</div>`},
+
+            {
+                n: 8, t: "size_t와 ptrdiff_t", d: 2,
+                q: `size_t의 용도를 설명하세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">size_t len = strlen("Hello"); <span class="cm">// 5</span>
+printf("크기: %zu\\n", sizeof(int));
+
+int arr[] = {10,20,30};
+int *p1 = &arr[0], *p2 = &arr[2];
+ptrdiff_t diff = p2 - p1; <span class="cm">// 2</span></pre><div class="trace">size_t: unsigned, 크기/길이용<br>ptrdiff_t: signed, 포인터 차이용</div>`},
+
+            {
+                n: 9, t: "심사: 상태 머신", d: 3,
+                q: `enum으로 간단한 상태 머신을 만드세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">typedef enum { IDLE, RUNNING, PAUSED, STOPPED } State;
+
+State state = IDLE;
+void transition(State *s, char cmd) {
+    switch (*s) {
+    case IDLE:    if (cmd=='s') *s=RUNNING; break;
+    case RUNNING: if (cmd=='p') *s=PAUSED;
+                  if (cmd=='x') *s=STOPPED; break;
+    case PAUSED:  if (cmd=='r') *s=RUNNING; break;
+    case STOPPED: break;
+    }
+}</pre>`},
+
+            {
+                n: 10, t: "심사: 에러 코드 enum", d: 2,
+                q: `에러 코드를 enum으로 정의하세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">typedef enum {
+    ERR_NONE = 0,
+    ERR_FILE_NOT_FOUND = -1,
+    ERR_PERMISSION = -2,
+    ERR_MEMORY = -3
+} ErrorCode;
+
+ErrorCode openFile(const char *path) {
+    FILE *fp = fopen(path, "r");
+    if (!fp) return ERR_FILE_NOT_FOUND;
+    fclose(fp);
+    return ERR_NONE;
+}</pre>`},
+
+            {
+                n: 11, t: "심사: 복합 리터럴", d: 3,
+                q: `복합 리터럴(compound literal)로 임시 구조체를 만드세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">typedef struct { int x, y; } Point;
+
+void print(Point p) { printf("(%d,%d)\\n", p.x, p.y); }
+
+print((Point){3, 5});  <span class="cm">// 임시 Point 생성!</span></pre><div class="trace">(타입){초기값} = 이름 없는 임시 변수<br>C99부터 지원</div>`},
+
+            {
+                n: 12, t: "심사: 가변 길이 배열", d: 2,
+                q: `실행 시점에 배열 크기를 정하세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">int n;
+scanf("%d", &n);
+int arr[n]; <span class="cm">// VLA (Variable Length Array)</span>
+for (int i=0;i<n;i++) arr[i] = i*10;</pre><div class="trace">C99: 가변 길이 배열 지원<br><span class="err">주의: 스택에 할당 → 큰 크기 위험!</span><br>대안: malloc 사용</div>`},
+
+            {
+                n: 13, t: "심사: 지정 초기화", d: 2,
+                q: `C99 지정 초기화를 사용하세요.`,
+                a: `<span class="key">정답</span><pre class="code-c"><span class="cm">// 배열 지정 초기화</span>
+int arr[5] = {[2]=30, [4]=50};
+<span class="cm">// {0, 0, 30, 0, 50}</span>
+
+<span class="cm">// 구조체 지정 초기화</span>
+typedef struct { char name[20]; int age; } Person;
+Person p = {.age=15, .name="Alice"};
+<span class="cm">// 순서 무관!</span></pre>`},
+
+            {
+                n: 14, t: "심사: 제네릭 선택 (_Generic)", d: 3,
+                q: `C11 _Generic으로 타입별 분기하세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">#define TYPE_NAME(x) _Generic((x), \\
+    int: "int", \\
+    double: "double", \\
+    char*: "string", \\
+    default: "other")
+
+int a = 42;
+printf("%s\\n", TYPE_NAME(a));     <span class="cm">// int</span>
+printf("%s\\n", TYPE_NAME(3.14));  <span class="cm">// double</span></pre>`},
+
+            {
+                n: 15, t: "🏆 Unit 47 종합", d: 2,
+                q: `다음 코드의 출력을 쓰세요.<pre class="code-c">typedef enum { MON=1,TUE,WED,THU,FRI,SAT,SUN } Day;
+Day d = WED;
+printf("%d\\n", d);
+printf("%s\\n", d<=FRI ? "평일" : "주말");</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">3<br>평일</div><div class="trace">MON=1→TUE=2→WED=3<br>WED(3) <= FRI(5) → 참 → "평일"</div>`
+            }
+        ];
+        const c = document.getElementById('problems'); P.forEach(p => { const dc = p.d <= 1 ? 'ez' : p.d <= 2 ? 'md' : 'hd'; const dots = Array.from({ length: 5 }, (_, i) => `<span${i < p.d ? ' class="on"' : ''}>​</span>`).join(''); c.innerHTML += `<div class="prob"><div class="prob-top"><div class="prob-num ${dc}">${p.n}</div><div class="prob-title">${p.t}</div><div class="diff-dots">${dots}</div></div><div class="prob-body"><div class="q">${p.q}</div><textarea class="write" placeholder="✍️ 답을 작성하세요"></textarea><details class="ans"><summary>정답 및 해설 보기</summary><div class="ans-body">${p.a}</div></details></div></div>`; });
+    </script>
+    <script src="../submit.js"></script>
+    <script src="../../platform.js"></script>
+</body>
+
+</html>

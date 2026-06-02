@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 메모 저장하기</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+.cover { display: flex; min-height: 297mm; padding: 0; }
+.cover-sidebar { width: 10px; background: #1e3a5f; flex-shrink: 0; }
+.cover-accent { width: 7px; background: #e6a817; flex-shrink: 0; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 160px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 14px;
+    color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; white-space: pre-wrap; }
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- 1페이지: 표지 -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">FILE</div>
+        <div class="cover-label">L2 Project 05</div>
+        <h1 class="cover-title">메모 저장하기</h1>
+        <p class="cover-sub">파일에 메모를 쓰고 읽는 파일 I/O 기능을 배웁니다. append 모드로 기존 내용을 유지하면서 메모를 추가합니다.</p>
+        <!-- SVG 1: 학습 로드맵 -->
+        <div style="margin:20px 0;">
+            <svg viewBox="0 0 460 55" style="max-width:460px;width:100%">
+                <rect x="5" y="10" width="90" height="30" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="50" y="30" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">open() 쓰기</text>
+                <line x1="100" y1="25" x2="120" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="125" y="10" width="90" height="30" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="170" y="30" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">append 모드</text>
+                <line x1="220" y1="25" x2="240" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="245" y="10" width="90" height="30" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="290" y="30" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">open() 읽기</text>
+                <line x1="340" y1="25" x2="360" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="365" y="10" width="90" height="30" rx="6" fill="#eff6ff" stroke="#6366f1" stroke-width="1.5"/>
+                <text x="410" y="30" text-anchor="middle" font-size="10" fill="#4338ca" font-weight="700">with 문</text>
+            </svg>
+        </div>
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/database.png" alt="데이터베이스" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 프로젝트에서 배우는 것</h3>
+            <ul>
+                <li>open()으로 파일을 열고 write()로 내용을 쓸 수 있습니다.</li>
+                <li>'a' 모드(append)로 기존 내용을 유지하면서 추가할 수 있습니다.</li>
+                <li>'r' 모드(read)로 파일 내용을 읽을 수 있습니다.</li>
+                <li>with 문으로 파일을 안전하게 자동 닫을 수 있습니다.</li>
+                <li>readlines()로 줄별로 나눠 읽는 방법을 이해합니다.</li>
+            </ul>
+        </div>
+        <!-- SVG 2: 파일 모드 비교 -->
+        <div style="margin:20px 0;">
+            <svg viewBox="0 0 460 65" style="max-width:460px;width:100%">
+                <rect x="10" y="5" width="440" height="55" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+                <text x="230" y="22" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="800">파일 열기 모드</text>
+                <rect x="20" y="28" width="95" height="24" rx="5" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+                <text x="67" y="44" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">'r' — 읽기</text>
+                <rect x="125" y="28" width="95" height="24" rx="5" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+                <text x="172" y="44" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">'w' — 덮어쓰기</text>
+                <rect x="230" y="28" width="95" height="24" rx="5" fill="#f0fdf4" stroke="#22c55e" stroke-width="1"/>
+                <text x="277" y="44" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">'a' — 추가(append)</text>
+                <rect x="335" y="28" width="115" height="24" rx="5" fill="#eff6ff" stroke="#6366f1" stroke-width="1"/>
+                <text x="392" y="44" text-anchor="middle" font-size="9" fill="#4338ca" font-weight="700">'x' — 새로 만들기</text>
+            </svg>
+        </div>
+    </div>
+</div>
+
+<!-- 2페이지: 파일 쓰기 -->
+<div class="page">
+    <h2>파일에 쓰기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/folder.png" alt="데이터" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p><code>open(파일명, 'w')</code>로 파일을 쓰기 모드로 열면 새 파일이 만들어지거나 기존 파일을 덮어씁니다. <code>with</code> 문을 쓰면 작업 후 파일이 자동으로 닫힙니다.</p>
+
+    <!-- SVG 3: with 문 구조 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="70" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="24" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="800">with 문의 장점</text>
+            <rect x="20" y="30" width="190" height="36" rx="6" fill="#fff4f4" stroke="#ef4444" stroke-width="1"/>
+            <text x="115" y="46" text-anchor="middle" font-size="9" fill="#dc2626" font-weight="700">without with (위험)</text>
+            <text x="115" y="60" text-anchor="middle" font-size="8" fill="#64748b">f.close() 잊으면 파일 손상</text>
+            <rect x="250" y="30" width="190" height="36" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1"/>
+            <text x="345" y="46" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">with 문 (안전)</text>
+            <text x="345" y="60" text-anchor="middle" font-size="8" fill="#64748b">블록 끝나면 자동으로 닫힘</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># 파일에 쓰기 — 'w' 모드 (덮어쓰기)</span>
+<span class="kw">with</span> <span class="fn">open</span>(<span class="str">"memo.txt"</span>, <span class="str">"w"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+    f.write(<span class="str">"첫 번째 메모\n"</span>)
+    f.write(<span class="str">"파이썬 공부 중\n"</span>)
+
+<span class="fn">print</span>(<span class="str">"memo.txt 파일이 저장되었습니다."</span>)
+
+<span class="cmt"># 파일 읽기 — 'r' 모드</span>
+<span class="kw">with</span> <span class="fn">open</span>(<span class="str">"memo.txt"</span>, <span class="str">"r"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+    content = f.read()
+    <span class="fn">print</span>(content)</div>
+
+    <!-- SVG 4: w vs a 모드 차이 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="210" height="70" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="115" y="22" text-anchor="middle" font-size="10" fill="#dc2626" font-weight="700">'w' 모드 — 덮어쓰기</text>
+            <text x="115" y="38" text-anchor="middle" font-size="9" fill="#64748b">파일: "안녕하세요"</text>
+            <text x="115" y="52" text-anchor="middle" font-size="9" fill="#dc2626">쓰기 후 → "새 내용만"</text>
+            <text x="115" y="66" text-anchor="middle" font-size="8" fill="#94a3b8">기존 내용 사라짐!</text>
+            <rect x="240" y="5" width="210" height="70" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="345" y="22" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">'a' 모드 — 추가</text>
+            <text x="345" y="38" text-anchor="middle" font-size="9" fill="#64748b">파일: "안녕하세요"</text>
+            <text x="345" y="52" text-anchor="middle" font-size="9" fill="#166534">쓰기 후 → "안녕하세요새 내용"</text>
+            <text x="345" y="66" text-anchor="middle" font-size="8" fill="#16a34a">기존 내용 유지!</text>
+        </svg>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="완성" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">with open으로 hello.txt 파일을 만들고 "안녕하세요"를 써보세요.</div>
+                <div class="code"><span class="kw">with</span> <span class="fn">open</span>(<span class="str">"hello.txt"</span>, <span class="str">"w"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+    f.write(<span class="str">"안녕하세요!\n"</span>)
+<span class="fn">print</span>(<span class="str">"저장 완료"</span>)</div>
+                <div class="practice-result">hello.txt 파일 생성됨</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">방금 만든 hello.txt를 'r' 모드로 열어 내용을 출력하세요.</div>
+                <div class="code"><span class="kw">with</span> <span class="fn">open</span>(<span class="str">"hello.txt"</span>, <span class="str">"r"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+    content = f.read()
+    <span class="fn">print</span>(content)</div>
+                <div class="practice-result">안녕하세요! 출력</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">'a' 모드로 hello.txt에 "반갑습니다"를 추가하고 다시 읽어보세요.</div>
+                <div class="code"><span class="kw">with</span> <span class="fn">open</span>(<span class="str">"hello.txt"</span>, <span class="str">"a"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+    f.write(<span class="str">"반갑습니다!\n"</span>)
+<span class="cmt"># 다시 읽기</span>
+<span class="kw">with</span> <span class="fn">open</span>(<span class="str">"hello.txt"</span>, <span class="str">"r"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+    <span class="fn">print</span>(f.read())</div>
+                <div class="practice-result">두 줄 모두 출력됨</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3페이지: 메모 앱 -->
+<div class="page">
+    <h2>메모 저장 앱 만들기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/hard-drive.png" alt="저장소" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p><code>'a'</code> 모드(append)를 쓰면 기존 내용은 그대로 두고 새 내용을 끝에 추가합니다. 메모장처럼 계속 내용을 쌓을 수 있습니다.</p>
+
+    <!-- SVG 5: append 모드 시각화 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 100" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="90" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="24" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="800">append 모드 동작</text>
+            <rect x="20" y="30" width="120" height="55" rx="6" fill="#fff" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="80" y="48" text-anchor="middle" font-size="9" fill="#64748b" font-weight="700">memo.txt (기존)</text>
+            <text x="80" y="63" text-anchor="middle" font-size="8" fill="#475569">오늘 공부 열심히!</text>
+            <text x="80" y="75" text-anchor="middle" font-size="8" fill="#475569">파이썬 재미있다</text>
+            <text x="165" y="58" text-anchor="middle" font-size="12" fill="#f59e0b" font-weight="700">+</text>
+            <rect x="175" y="30" width="120" height="55" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="235" y="48" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">새 메모</text>
+            <text x="235" y="63" text-anchor="middle" font-size="8" fill="#1d4ed8">내일은 파일 I/O!</text>
+            <text x="310" y="58" text-anchor="middle" font-size="12" fill="#f59e0b" font-weight="700">=</text>
+            <rect x="320" y="30" width="120" height="55" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="380" y="48" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">memo.txt (업데이트)</text>
+            <text x="380" y="61" text-anchor="middle" font-size="7" fill="#166534">오늘 공부 열심히!</text>
+            <text x="380" y="72" text-anchor="middle" font-size="7" fill="#166534">파이썬 재미있다</text>
+            <text x="380" y="83" text-anchor="middle" font-size="7" fill="#16a34a" font-weight="700">내일은 파일 I/O!</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">def</span> <span class="fn">save_memo</span>(text):
+    <span class="str">"""메모를 파일에 추가 저장"""</span>
+    <span class="kw">with</span> <span class="fn">open</span>(<span class="str">"memos.txt"</span>, <span class="str">"a"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+        f.write(text + <span class="str">"\n"</span>)
+
+<span class="kw">def</span> <span class="fn">load_memos</span>():
+    <span class="str">"""저장된 메모 모두 읽기"""</span>
+    <span class="kw">with</span> <span class="fn">open</span>(<span class="str">"memos.txt"</span>, <span class="str">"r"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+        lines = f.readlines()
+    <span class="kw">for</span> i, line <span class="kw">in</span> <span class="fn">enumerate</span>(lines, <span class="num">1</span>):
+        <span class="fn">print</span>(<span class="str">f"{i}. {line.strip()}"</span>)
+
+<span class="cmt"># 메모 저장 테스트</span>
+<span class="fn">save_memo</span>(<span class="str">"오늘 파이썬 공부 완료!"</span>)
+<span class="fn">save_memo</span>(<span class="str">"내일은 파일 I/O 복습"</span>)
+<span class="fn">load_memos</span>()</div>
+
+    <!-- SVG 6: readlines 결과 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 380 80" style="max-width:380px;width:100%">
+            <rect x="10" y="5" width="360" height="70" rx="8" fill="#0f172a"/>
+            <text x="20" y="26" font-family="monospace" font-size="11" fill="#e2e8f0">1. 오늘 파이썬 공부 완료!</text>
+            <text x="20" y="46" font-family="monospace" font-size="11" fill="#e2e8f0">2. 내일은 파일 I/O 복습</text>
+            <text x="20" y="66" font-family="monospace" font-size="11" fill="#64748b">--- 2개의 메모 ---</text>
+        </svg>
+    </div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">save_memo()로 메모 3개를 저장하고 load_memos()로 읽어보세요.</div>
+                <div class="practice-result">번호와 함께 3개 메모 출력</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">readlines()로 읽은 리스트의 길이로 메모 개수를 출력하세요.</div>
+                <div class="code"><span class="kw">with</span> <span class="fn">open</span>(<span class="str">"memos.txt"</span>, <span class="str">"r"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+    lines = f.readlines()
+<span class="fn">print</span>(<span class="str">f"메모 {len(lines)}개 저장됨"</span>)</div>
+                <div class="practice-result">메모 3개 저장됨</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">strip()의 역할을 확인하세요. \n 없이 깔끔하게 출력됩니다.</div>
+                <div class="code">line = <span class="str">"안녕하세요\n"</span>
+<span class="fn">print</span>(line)          <span class="cmt"># \n 포함</span>
+<span class="fn">print</span>(line.strip())  <span class="cmt"># \n 제거</span></div>
+                <div class="practice-result">strip()으로 공백/줄바꿈 제거</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 4페이지: 완성 코드 -->
+<div class="page">
+    <h2>완성: 메모 저장 프로그램</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="처리" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>메뉴로 쓰기/읽기를 선택하는 완전한 메모 앱을 만듭니다.</p>
+
+    <!-- SVG 7: 완성 구조 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 50" style="max-width:460px;width:100%">
+            <rect x="5" y="8" width="440" height="35" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <rect x="15" y="15" width="100" height="20" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="65" y="28" text-anchor="middle" font-size="8" fill="#1d4ed8" font-weight="600">1. 메모 작성 (a)</text>
+            <rect x="125" y="15" width="100" height="20" rx="4" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+            <text x="175" y="28" text-anchor="middle" font-size="8" fill="#92400e" font-weight="600">2. 전체 읽기 (r)</text>
+            <rect x="235" y="15" width="100" height="20" rx="4" fill="#f0fdf4" stroke="#22c55e" stroke-width="1"/>
+            <text x="285" y="28" text-anchor="middle" font-size="8" fill="#166534" font-weight="600">3. 메모 개수</text>
+            <rect x="345" y="15" width="105" height="20" rx="4" fill="#eff6ff" stroke="#6366f1" stroke-width="1"/>
+            <text x="397" y="28" text-anchor="middle" font-size="8" fill="#4338ca" font-weight="600">4. 종료</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">import</span> os
+
+MEMO_FILE = <span class="str">"memos.txt"</span>
+
+<span class="kw">def</span> <span class="fn">add_memo</span>(text):
+    <span class="kw">with</span> <span class="fn">open</span>(MEMO_FILE, <span class="str">"a"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+        f.write(text + <span class="str">"\n"</span>)
+    <span class="fn">print</span>(<span class="str">"메모가 저장되었습니다!"</span>)
+
+<span class="kw">def</span> <span class="fn">show_memos</span>():
+    <span class="kw">if</span> <span class="kw">not</span> os.path.exists(MEMO_FILE):
+        <span class="fn">print</span>(<span class="str">"저장된 메모가 없습니다."</span>)
+        <span class="kw">return</span>
+    <span class="kw">with</span> <span class="fn">open</span>(MEMO_FILE, <span class="str">"r"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+        lines = f.readlines()
+    <span class="fn">print</span>(<span class="str">f"\n--- 메모 목록 ({len(lines)}개) ---"</span>)
+    <span class="kw">for</span> i, line <span class="kw">in</span> <span class="fn">enumerate</span>(lines, <span class="num">1</span>):
+        <span class="fn">print</span>(<span class="str">f"{i}. {line.strip()}"</span>)
+
+<span class="kw">while</span> <span class="kw">True</span>:
+    <span class="fn">print</span>(<span class="str">"\n1.메모 추가  2.전체 보기  3.종료"</span>)
+    choice = <span class="fn">input</span>(<span class="str">"선택: "</span>)
+    <span class="kw">if</span> choice == <span class="str">"1"</span>:
+        text = <span class="fn">input</span>(<span class="str">"메모: "</span>)
+        <span class="fn">add_memo</span>(text)
+    <span class="kw">elif</span> choice == <span class="str">"2"</span>:
+        <span class="fn">show_memos</span>()
+    <span class="kw">elif</span> choice == <span class="str">"3"</span>:
+        <span class="fn">print</span>(<span class="str">"종료!"</span>); <span class="kw">break</span></div>
+
+    <!-- SVG 8: os.path.exists 설명 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 380 55" style="max-width:380px;width:100%">
+            <rect x="10" y="5" width="360" height="45" rx="8" fill="#0f172a"/>
+            <text x="20" y="26" font-family="monospace" font-size="10" fill="#64748b"># 파일이 존재하는지 확인</text>
+            <text x="20" y="44" font-family="monospace" font-size="10" fill="#c084fc">if</text>
+            <text x="36" y="44" font-family="monospace" font-size="10" fill="#67e8f9"> os.path</text>
+            <text x="96" y="44" font-family="monospace" font-size="10" fill="#e2e8f0">.exists("memo.txt"):  </text>
+            <text x="260" y="44" font-family="monospace" font-size="10" fill="#64748b">True/False</text>
+        </svg>
+    </div>
+</div>
+
+<!-- 5페이지: 문제 -->
+<div class="page">
+    <h2>직접 풀어보세요</h2>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q1</div>
+            <div class="problem-label">줄 수 세기</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">텍스트 파일을 만들고 3줄을 쓴 후 readlines()로 읽어 줄 수를 출력하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">파일에 3줄이 있습니다.</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle"><summary>힌트 보기</summary><div class="problem-toggle-content"><div class="hint-text">with open("test.txt","w") as f: f.write("줄1\n줄2\n줄3\n"), readlines()로 읽어 len() 사용</div></div></details>
+        <details class="problem-toggle"><summary>정답 확인</summary><div class="problem-toggle-content"><div class="answer-code">with open("test.txt", "w", encoding="utf-8") as f:
+    f.write("첫째 줄\n둘째 줄\n셋째 줄\n")
+with open("test.txt", "r", encoding="utf-8") as f:
+    lines = f.readlines()
+print(f"파일에 {len(lines)}줄이 있습니다.")</div></div></details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q2</div>
+            <div class="problem-label">점수 파일 저장</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">이름과 점수를 입력받아 "이름:점수" 형식으로 파일에 저장하고, 전체 내용을 읽어 출력하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">파일</span><span class="problem-example-value">김민준:92</span></div>
+                <div class="problem-example-row"><span class="problem-example-label"></span><span class="problem-example-value">이서연:85</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle"><summary>힌트 보기</summary><div class="problem-toggle-content"><div class="hint-text">f.write(f"{name}:{score}\n") 형식으로 저장, read()로 전체 읽기</div></div></details>
+        <details class="problem-toggle"><summary>정답 확인</summary><div class="problem-toggle-content"><div class="answer-code">students = [("김민준", 92), ("이서연", 85)]
+with open("scores.txt", "w", encoding="utf-8") as f:
+    for name, score in students:
+        f.write(f"{name}:{score}\n")
+with open("scores.txt", "r", encoding="utf-8") as f:
+    print(f.read())</div></div></details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q3</div>
+            <div class="problem-label">메모 검색 기능 추가</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">memos.txt에서 키워드를 포함하는 메모만 출력하는 함수를 만드세요. readlines()로 읽은 뒤 각 줄에 키워드가 있는지 in으로 확인합니다.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">키워드</span><span class="problem-example-value">"파이썬"</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">"파이썬"이 포함된 메모만 출력</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle"><summary>힌트 보기</summary><div class="problem-toggle-content"><div class="hint-text">for line in lines: if keyword in line: print(line.strip())</div></div></details>
+        <details class="problem-toggle"><summary>정답 확인</summary><div class="problem-toggle-content"><div class="answer-code">def search_memo(keyword):
+    with open("memos.txt", "r", encoding="utf-8") as f:
+        lines = f.readlines()
+    found = [l.strip() for l in lines if keyword in l]
+    for i, m in enumerate(found, 1):
+        print(f"{i}. {m}")
+    print(f"'{keyword}' 포함 메모: {len(found)}개")
+
+search_memo("파이썬")</div></div></details>
+    </div>
+</div>
+
+<!-- 6페이지: 핵심 요약 -->
+<div class="page">
+    <h2>핵심 요약</h2>
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>이 유닛에서 배운 것</h3>
+        <ul>
+            <li><code>open(파일명, 모드, encoding="utf-8")</code>로 파일을 연다</li>
+            <li><code>'r'</code>: 읽기, <code>'w'</code>: 덮어쓰기, <code>'a'</code>: 끝에 추가</li>
+            <li><code>with open() as f:</code>로 파일을 열면 블록 끝에서 자동으로 닫힌다</li>
+            <li><code>f.write(텍스트)</code>: 파일에 쓰기, <code>f.read()</code>: 전체 읽기</li>
+            <li><code>f.readlines()</code>: 줄별로 나눈 리스트로 읽기</li>
+            <li><code>line.strip()</code>: 앞뒤 공백과 줄바꿈 문자 제거</li>
+        </ul>
+    </div>
+
+    <!-- SVG 9: 파일 I/O 흐름 -->
+    <div style="text-align:center;margin:20px 0;">
+        <svg viewBox="0 0 460 65" style="max-width:460px;width:100%">
+            <rect x="5" y="10" width="100" height="40" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="55" y="28" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">프로그램</text>
+            <text x="55" y="42" text-anchor="middle" font-size="8" fill="#64748b">텍스트 데이터</text>
+            <line x1="110" y1="30" x2="130" y2="30" stroke="#22c55e" stroke-width="2"/>
+            <text x="140" y="24" text-anchor="middle" font-size="8" fill="#166534" font-weight="700">write('a')</text>
+            <line x1="150" y1="30" x2="170" y2="30" stroke="#22c55e" stroke-width="2"/>
+            <rect x="175" y="10" width="110" height="40" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="230" y="28" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">memos.txt</text>
+            <text x="230" y="42" text-anchor="middle" font-size="8" fill="#64748b">파일 시스템</text>
+            <line x1="290" y1="30" x2="310" y2="30" stroke="#3b82f6" stroke-width="2"/>
+            <text x="320" y="24" text-anchor="middle" font-size="8" fill="#1d4ed8" font-weight="700">read('r')</text>
+            <line x1="330" y1="30" x2="350" y2="30" stroke="#3b82f6" stroke-width="2"/>
+            <rect x="355" y="10" width="100" height="40" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="405" y="28" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">프로그램</text>
+            <text x="405" y="42" text-anchor="middle" font-size="8" fill="#64748b">읽은 내용</text>
+        </svg>
+    </div>
+
+    <!-- SVG 10: with 문 코드 요약 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 65" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="210" height="55" rx="8" fill="#0f172a" stroke="#334155" stroke-width="1.5"/>
+            <text x="115" y="22" text-anchor="middle" font-size="10" fill="#64748b">쓰기 (append)</text>
+            <text x="30" y="40" font-family="monospace" font-size="9" fill="#c084fc">with</text>
+            <text x="58" y="40" font-family="monospace" font-size="9" fill="#67e8f9"> open</text>
+            <text x="90" y="40" font-family="monospace" font-size="9" fill="#e2e8f0">("f","a") as f:</text>
+            <text x="30" y="55" font-family="monospace" font-size="9" fill="#e2e8f0">  f.</text>
+            <text x="52" y="55" font-family="monospace" font-size="9" fill="#67e8f9">write</text>
+            <text x="84" y="55" font-family="monospace" font-size="9" fill="#86efac">(text)</text>
+            <rect x="240" y="5" width="210" height="55" rx="8" fill="#0f172a" stroke="#334155" stroke-width="1.5"/>
+            <text x="345" y="22" text-anchor="middle" font-size="10" fill="#64748b">읽기</text>
+            <text x="260" y="40" font-family="monospace" font-size="9" fill="#c084fc">with</text>
+            <text x="288" y="40" font-family="monospace" font-size="9" fill="#67e8f9"> open</text>
+            <text x="320" y="40" font-family="monospace" font-size="9" fill="#e2e8f0">("f","r") as f:</text>
+            <text x="260" y="55" font-family="monospace" font-size="9" fill="#e2e8f0">  lines = f.</text>
+            <text x="330" y="55" font-family="monospace" font-size="9" fill="#67e8f9">readlines</text>
+            <text x="400" y="55" font-family="monospace" font-size="9" fill="#e2e8f0">()</text>
+        </svg>
+    </div>
+
+    <!-- SVG 11: 모드 비교 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 50" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="40" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <rect x="20" y="12" width="130" height="26" rx="5" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="85" y="30" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">'r' 읽기 (없으면 오류)</text>
+            <rect x="160" y="12" width="130" height="26" rx="5" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+            <text x="225" y="30" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">'w' 쓰기 (덮어씀)</text>
+            <rect x="300" y="12" width="140" height="26" rx="5" fill="#f0fdf4" stroke="#22c55e" stroke-width="1"/>
+            <text x="370" y="30" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">'a' 추가 (append)</text>
+        </svg>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

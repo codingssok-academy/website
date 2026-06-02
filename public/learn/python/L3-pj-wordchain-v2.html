@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 프로젝트: 끝말잇기 게임</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute; bottom: 10mm; right: 16mm;
+    font-size: 10px; color: #94a3b8; font-weight: 600;
+}
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #ef4444; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark { position: absolute; top: -10px; right: -15px; font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3); line-height: 1; pointer-events: none; }
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #ef4444; font-weight: 900; }
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 16px; font-weight: 700; color: #1e3a5f; margin: 18px 0 10px; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #2563eb; font-weight: 600; }
+ul, ol { margin: 0 0 12px 20px; }
+li { font-size: 14px; color: #374151; line-height: 1.8; }
+.code { background: #0f172a; border-radius: 8px; padding: 16px 20px; font-family: 'JetBrains Mono', monospace; font-size: 13.5px; color: #e2e8f0; line-height: 1.85; margin: 14px 0; overflow-x: auto; white-space: pre-wrap; }
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.code .dec { color: #f9a8d4; }
+.practice { margin: 20px 0; border-left: 4px solid #ef4444; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #991b1b; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #ef4444; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #ef4444; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; white-space: pre-wrap; }
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+.step-box { border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 14px 18px; margin: 14px 0; background: #fff; }
+.step-label { font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+.step-title { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 8px; }
+.output-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #334155; line-height: 1.7; margin: 10px 0; white-space: pre-wrap; }
+.compare-table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13px; }
+.compare-table th { background: #1e3a5f; color: #fff; padding: 8px 12px; text-align: left; font-weight: 700; }
+.compare-table td { padding: 7px 12px; border-bottom: 1px solid #e2e8f0; color: #374151; }
+.compare-table tr:nth-child(even) td { background: #f8fafc; }
+.compare-table code { background: #e0e7ff; padding: 1px 5px; border-radius: 3px; font-family: 'JetBrains Mono', monospace; color: #3730a3; font-size: 12px; }
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- 1페이지: 표지 -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">PJ</div>
+        <div class="cover-label">L3 — Project</div>
+        <h1 class="cover-title">프로젝트:<br>끝말잇기 게임</h1>
+        <p class="cover-sub">컴퓨터와 플레이어가 번갈아 단어를 잇는 게임. set으로 사용 단어를 추적하고, 컴퓨터 AI가 자동으로 대응합니다.</p>
+
+        <div style="margin:24px 0;">
+            <svg viewBox="0 0 500 155" style="max-width:500px;width:100%">
+                <defs>
+                    <marker id="arwWC" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                    </marker>
+                </defs>
+                <rect x="165" y="57" width="170" height="42" rx="8" fill="#1e3a5f"/>
+                <text x="250" y="75" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">wordchain.py</text>
+                <text x="250" y="90" text-anchor="middle" font-size="9" fill="#fca5a5">완성 목표</text>
+                <rect x="5" y="5" width="130" height="36" rx="6" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+                <text x="70" y="19" text-anchor="middle" font-size="9" fill="#991b1b" font-weight="700">단어 목록 (리스트)</text>
+                <text x="70" y="33" text-anchor="middle" font-size="8" fill="#64748b">컴퓨터가 쓸 단어 pool</text>
+                <line x1="138" y1="23" x2="163" y2="68" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwWC)"/>
+                <rect x="365" y="5" width="130" height="36" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="430" y="19" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">사용 단어 추적</text>
+                <text x="430" y="33" text-anchor="middle" font-size="8" fill="#64748b">set으로 이미 쓴 단어</text>
+                <line x1="362" y1="23" x2="337" y2="68" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwWC)"/>
+                <rect x="5" y="112" width="130" height="36" rx="6" fill="#d1fae5" stroke="#10b981" stroke-width="1.5"/>
+                <text x="70" y="126" text-anchor="middle" font-size="9" fill="#065f46" font-weight="700">끝글자 검사</text>
+                <text x="70" y="140" text-anchor="middle" font-size="8" fill="#64748b">word[-1] == next[0]</text>
+                <line x1="138" y1="130" x2="163" y2="90" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwWC)"/>
+                <rect x="365" y="112" width="130" height="36" rx="6" fill="#ede9fe" stroke="#8b5cf6" stroke-width="1.5"/>
+                <text x="430" y="126" text-anchor="middle" font-size="9" fill="#6d28d9" font-weight="700">컴퓨터 AI 응답</text>
+                <text x="430" y="140" text-anchor="middle" font-size="8" fill="#64748b">단어 목록에서 자동 선택</text>
+                <line x1="362" y1="130" x2="337" y2="90" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwWC)"/>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/laptop.png" alt="노트북" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 프로젝트에서 만드는 것</h3>
+            <ul>
+                <li><code>set</code>으로 이미 사용된 단어를 추적해 중복 사용을 막을 수 있습니다.</li>
+                <li>문자열 인덱싱(<code>word[-1]</code>, <code>word[0]</code>)으로 끝글자와 첫글자를 비교합니다.</li>
+                <li>리스트 comprehension으로 컴퓨터의 다음 단어 후보를 필터링합니다.</li>
+                <li>while 게임 루프로 게임 흐름을 제어하고 승패를 판단합니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- 2페이지: 핵심 개념 + Step 1 -->
+<div class="page">
+    <h2>핵심 개념 — 문자열 인덱싱과 set</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+    <h3>끝말잇기의 핵심 규칙</h3>
+    <p>이전 단어의 마지막 글자(<code>word[-1]</code>)와 새 단어의 첫 글자(<code>next_word[0]</code>)가 같아야 합니다.</p>
+
+    <div style="margin:14px 0;">
+        <svg viewBox="0 0 500 85" style="max-width:500px;width:100%">
+            <rect x="0" y="5" width="500" height="75" rx="8" fill="#1e3a5f"/>
+            <!-- 사과 -->
+            <rect x="20" y="20" width="70" height="40" rx="6" fill="#ef4444"/>
+            <text x="55" y="37" text-anchor="middle" font-size="12" fill="#fff" font-weight="700">사과</text>
+            <text x="55" y="53" text-anchor="middle" font-size="9" fill="#fca5a5">[-1] = "과"</text>
+            <!-- 화살표 -->
+            <text x="105" y="45" font-size="18" fill="#94a3b8">→</text>
+            <!-- 과자 -->
+            <rect x="135" y="20" width="70" height="40" rx="6" fill="#f59e0b"/>
+            <text x="170" y="37" text-anchor="middle" font-size="12" fill="#fff" font-weight="700">과자</text>
+            <text x="170" y="53" text-anchor="middle" font-size="9" fill="#fde68a">[0]="과" [-1]="자"</text>
+            <!-- 화살표 -->
+            <text x="220" y="45" font-size="18" fill="#94a3b8">→</text>
+            <!-- 자동차 -->
+            <rect x="250" y="20" width="80" height="40" rx="6" fill="#10b981"/>
+            <text x="290" y="37" text-anchor="middle" font-size="12" fill="#fff" font-weight="700">자동차</text>
+            <text x="290" y="53" text-anchor="middle" font-size="9" fill="#6ee7b7">[0]="자" [-1]="차"</text>
+            <!-- 화살표 -->
+            <text x="345" y="45" font-size="18" fill="#94a3b8">→</text>
+            <!-- 차선 -->
+            <rect x="375" y="20" width="70" height="40" rx="6" fill="#8b5cf6"/>
+            <text x="410" y="37" text-anchor="middle" font-size="12" fill="#fff" font-weight="700">차선</text>
+            <text x="410" y="53" text-anchor="middle" font-size="9" fill="#c4b5fd">[0]="차"</text>
+        </svg>
+    </div>
+
+    <h3>사용된 단어 추적 — set 활용</h3>
+    <p>이미 사용한 단어를 <code>set</code>에 저장합니다. 새 단어가 set에 있으면 중복 사용으로 패배합니다.</p>
+
+    <div style="margin:14px 0;">
+        <svg viewBox="0 0 500 65" style="max-width:500px;width:100%">
+            <rect x="0" y="5" width="500" height="55" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="20" y="28" font-size="11" fill="#374151" font-family="monospace">used = set()  # 게임 시작</text>
+            <text x="20" y="44" font-size="11" fill="#374151" font-family="monospace">used.add("사과")  →  used.add("과자")  →  used = {"사과","과자"}</text>
+            <text x="20" y="57" font-size="10" fill="#ef4444" font-family="monospace">→ "사과" in used == True  ⇒ 중복! 패배</text>
+        </svg>
+    </div>
+
+    <div class="step-box">
+        <div class="step-label">Step 1</div>
+        <div class="step-title">끝글자 검사 함수 만들기</div>
+        <p>이전 단어와 새 단어의 연결이 올바른지, 중복인지 검사하는 함수를 만듭니다.</p>
+    </div>
+
+    <div class="code"><span class="kw">def</span> <span class="fn">is_valid</span>(prev_word, new_word, used):
+    <span class="cmt"># 중복 검사</span>
+    <span class="kw">if</span> new_word <span class="kw">in</span> used:
+        <span class="kw">return</span> <span class="kw">False</span>, <span class="str">"이미 사용된 단어입니다!"</span>
+    <span class="cmt"># 끝글자 검사</span>
+    <span class="kw">if</span> prev_word[<span class="num">-1</span>] != new_word[<span class="num">0</span>]:
+        <span class="kw">return</span> <span class="kw">False</span>, <span class="fn">f</span><span class="str">"{prev_word[-1]}로 시작해야 합니다!"</span>
+    <span class="kw">return</span> <span class="kw">True</span>, <span class="str">"OK"</span>
+
+<span class="cmt"># 테스트</span>
+used = {<span class="str">"사과"</span>}
+<span class="fn">print</span>(<span class="fn">is_valid</span>(<span class="str">"사과"</span>, <span class="str">"과자"</span>, used))   <span class="cmt"># (True, "OK")</span>
+<span class="fn">print</span>(<span class="fn">is_valid</span>(<span class="str">"사과"</span>, <span class="str">"사과"</span>, used))   <span class="cmt"># (False, "이미 사용된...")</span>
+<span class="fn">print</span>(<span class="fn">is_valid</span>(<span class="str">"사과"</span>, <span class="str">"바나나"</span>, used)) <span class="cmt"># (False, "과로 시작해야...")</span></div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/lightbulb.png" alt="아이디어" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">STEP 1</div>
+                <div class="practice-desc">wordchain.py를 만들고 <code>is_valid(prev, new, used)</code> 함수를 작성하세요.</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">STEP 2</div>
+                <div class="practice-desc">테스트 코드로 함수가 올바르게 작동하는지 확인하세요. 세 가지 경우를 모두 테스트하세요.</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">STEP 3</div>
+                <div class="practice-desc"><code>word[-1]</code>과 <code>word[0]</code>이 각각 무엇을 의미하는지 REPL에서 직접 확인하세요.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3페이지: Step 2 컴퓨터 AI + Step 3 게임 루프 -->
+<div class="page">
+    <h2>Step 2 — 컴퓨터 AI 응답 만들기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/flowchart.png" alt="흐름" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+    <p>단어 목록에서 끝글자로 시작하고 아직 사용하지 않은 단어를 골라 컴퓨터가 자동으로 대답합니다.</p>
+
+    <div class="code">word_pool = [
+    <span class="str">"사과"</span>, <span class="str">"과자"</span>, <span class="str">"자동차"</span>, <span class="str">"차선"</span>, <span class="str">"선물"</span>,
+    <span class="str">"물고기"</span>, <span class="str">"기차"</span>, <span class="str">"차갑다"</span>, <span class="str">"다람쥐"</span>, <span class="str">"쥐포"</span>,
+    <span class="str">"포도"</span>, <span class="str">"도서관"</span>, <span class="str">"관람객"</span>, <span class="str">"객실"</span>, <span class="str">"실내"</span>,
+]
+
+<span class="kw">def</span> <span class="fn">computer_turn</span>(prev_word, used):
+    last_char = prev_word[<span class="num">-1</span>]
+    candidates = [
+        w <span class="kw">for</span> w <span class="kw">in</span> word_pool
+        <span class="kw">if</span> w[<span class="num">0</span>] == last_char <span class="kw">and</span> w <span class="kw">not in</span> used
+    ]
+    <span class="kw">if not</span> candidates:
+        <span class="kw">return</span> <span class="kw">None</span>      <span class="cmt"># 컴퓨터가 이을 단어 없음 → 패배</span>
+    <span class="kw">import</span> random
+    chosen = random.<span class="fn">choice</span>(candidates)
+    used.<span class="fn">add</span>(chosen)
+    <span class="kw">return</span> chosen</div>
+
+    <div style="margin:14px 0;">
+        <svg viewBox="0 0 500 75" style="max-width:500px;width:100%">
+            <rect x="0" y="5" width="500" height="65" rx="8" fill="#1e3a5f"/>
+            <text x="20" y="26" font-size="10" fill="#fca5a5" font-weight="700" font-family="monospace">computer_turn("과자", used) 흐름</text>
+            <text x="20" y="44" font-size="10" fill="#e2e8f0" font-family="monospace">last_char = "자"</text>
+            <text x="20" y="59" font-size="10" fill="#86efac" font-family="monospace">candidates = ["자동차", "자전거", ...]  →  random.choice() → "자동차"</text>
+        </svg>
+    </div>
+
+    <h2 style="margin-top:18px;">Step 3 — 게임 루프</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/keyboard.png" alt="키보드" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+    <p>플레이어와 컴퓨터가 번갈아 단어를 입력합니다. 잘못된 단어를 입력하거나 컴퓨터가 대답하지 못하면 게임이 끝납니다.</p>
+
+    <div class="code">used = <span class="fn">set</span>()
+current_word = <span class="str">"사과"</span>
+used.<span class="fn">add</span>(current_word)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"컴퓨터: {current_word}"</span>)
+
+<span class="kw">while</span> <span class="kw">True</span>:
+    <span class="cmt"># 플레이어 차례</span>
+    player = <span class="fn">input</span>(<span class="str">"내 차례: "</span>).strip()
+    ok, msg = <span class="fn">is_valid</span>(current_word, player, used)
+    <span class="kw">if not</span> ok:
+        <span class="fn">print</span>(<span class="fn">f</span><span class="str">"패배! {msg}"</span>)
+        <span class="kw">break</span>
+    used.<span class="fn">add</span>(player)
+    current_word = player
+
+    <span class="cmt"># 컴퓨터 차례</span>
+    computer = <span class="fn">computer_turn</span>(current_word, used)
+    <span class="kw">if</span> computer <span class="kw">is</span> <span class="kw">None</span>:
+        <span class="fn">print</span>(<span class="str">"컴퓨터가 이을 단어를 찾지 못했어요. 승리!"</span>)
+        <span class="kw">break</span>
+    <span class="fn">print</span>(<span class="fn">f</span><span class="str">"컴퓨터: {computer}"</span>)
+    current_word = computer</div>
+
+    <div class="output-box">컴퓨터: 사과
+내 차례: 과자
+컴퓨터: 자동차
+내 차례: 자전거
+패배! 자로 시작해야 합니다!  ← 아, "차"로 시작해야 했는데!</div>
+
+    <div style="margin:14px 0;">
+        <svg viewBox="0 0 500 60" style="max-width:500px;width:100%">
+            <rect x="0" y="5" width="500" height="50" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="20" y="25" font-size="11" fill="#374151" font-weight="700">게임 종료 조건</text>
+            <text x="20" y="42" font-size="10" fill="#374151" font-family="monospace">1. 플레이어가 틀린 단어 입력  2. 컴퓨터가 이을 단어 없음  3. "그만" 입력</text>
+        </svg>
+    </div>
+
+    <div style="margin:14px 0;">
+        <svg viewBox="0 0 500 55" style="max-width:500px;width:100%">
+            <rect x="0" y="5" width="500" height="45" rx="8" fill="#1e3a5f"/>
+            <text x="20" y="25" font-size="10" fill="#6ee7b7" font-weight="700" font-family="monospace">computer_turn 핵심: list comprehension 필터</text>
+            <text x="20" y="40" font-size="10" fill="#e2e8f0" font-family="monospace">[w for w in word_pool if w[0] == last_char and w not in used]</text>
+        </svg>
+    </div>
+
+    <div style="margin:14px 0;">
+        <svg viewBox="0 0 500 50" style="max-width:500px;width:100%">
+            <rect x="0" y="5" width="500" height="40" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="20" y="23" font-size="11" fill="#374151" font-weight="700">used set 역할</text>
+            <text x="20" y="37" font-size="10" fill="#64748b" font-family="monospace">사용된 단어 저장  →  중복 입력 차단  →  컴퓨터 후보에서 제외</text>
+        </svg>
+    </div>
+</div>
+
+<!-- 4페이지: 문제 -->
+<div class="page">
+    <h2>실전 문제</h2>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q1</div>
+            <div class="problem-label">word[-1]과 word[0]의 값 구하기</div>
+            <div class="problem-diff easy">쉬움</div>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text"><code>word = "자동차"</code>일 때, <code>word[0]</code>과 <code>word[-1]</code>의 값을 각각 구하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">word</span>
+                    <span class="problem-example-value">"자동차"</span>
+                </div>
+                <div class="problem-example-row">
+                    <span class="problem-example-label">결과</span>
+                    <span class="problem-example-value">word[0] = ?,  word[-1] = ?</span>
+                </div>
+            </div>
+            <details class="problem-toggle">
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">word[0]은 첫 번째 글자, word[-1]은 마지막 글자입니다. "자동차"는 3글자입니다.</div>
+                </div>
+            </details>
+            <details class="problem-toggle">
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code">word[0] = "자"
+word[-1] = "차"</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q2</div>
+            <div class="problem-label">단어 후보 필터링 — list comprehension</div>
+            <div class="problem-diff medium">보통</div>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">아래 word_pool에서 "자"로 시작하고 아직 used에 없는 단어를 list comprehension으로 구하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">pool</span>
+                    <span class="problem-example-value">["사과","과자","자동차","자전거","동차"]</span>
+                </div>
+                <div class="problem-example-row">
+                    <span class="problem-example-label">used</span>
+                    <span class="problem-example-value">{"자동차"}</span>
+                </div>
+                <div class="problem-example-row">
+                    <span class="problem-example-label">결과</span>
+                    <span class="problem-example-value">["자전거"]</span>
+                </div>
+            </div>
+            <details class="problem-toggle">
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">[w for w in word_pool if w[0] == "자" and w not in used]</div>
+                </div>
+            </details>
+            <details class="problem-toggle">
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code">candidates = [w for w in word_pool if w[0] == "자" and w not in used]
+# 결과: ["자전거"]</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q3</div>
+            <div class="problem-label">"그만" 입력 시 게임 종료 기능 추가</div>
+            <div class="problem-diff hard">어려움</div>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">플레이어가 "그만"을 입력하면 현재까지 사용한 단어 수를 출력하고 게임을 종료하도록 게임 루프를 수정하세요.</div>
+            <details class="problem-toggle">
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">player == "그만" 조건을 추가하고 len(used)로 사용 단어 수를 출력하세요.</div>
+                </div>
+            </details>
+            <details class="problem-toggle">
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code">player = input("내 차례: ").strip()
+if player == "그만":
+    print(f"게임 종료! 총 {len(used)}개 단어를 사용했습니다.")
+    break</div>
+                </div>
+            </details>
+        </div>
+    </div>
+</div>
+
+<!-- 5페이지: 핵심 요약 -->
+<div class="page">
+    <h2>전체 흐름 정리</h2>
+
+    <div style="margin:14px 0;">
+        <svg viewBox="0 0 500 120" style="max-width:500px;width:100%">
+            <defs>
+                <marker id="arwFlow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="10" y="10" width="100" height="30" rx="6" fill="#ef4444"/>
+            <text x="60" y="28" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">게임 시작</text>
+            <line x1="115" y1="25" x2="135" y2="25" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwFlow)"/>
+            <rect x="140" y="10" width="110" height="30" rx="6" fill="#1e3a5f"/>
+            <text x="195" y="28" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">플레이어 입력</text>
+            <line x1="255" y1="25" x2="275" y2="25" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwFlow)"/>
+            <rect x="280" y="10" width="100" height="30" rx="6" fill="#f59e0b"/>
+            <text x="330" y="28" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">is_valid() 검사</text>
+            <line x1="385" y1="25" x2="405" y2="25" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwFlow)"/>
+            <rect x="410" y="10" width="80" height="30" rx="6" fill="#dc2626"/>
+            <text x="450" y="28" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">실패? 패배</text>
+            <line x1="330" y1="45" x2="330" y2="65" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwFlow)"/>
+            <rect x="250" y="70" width="160" height="30" rx="6" fill="#8b5cf6"/>
+            <text x="330" y="88" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">computer_turn() 응답</text>
+            <line x1="245" y1="85" x2="225" y2="85" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwFlow)"/>
+            <rect x="80" y="70" width="140" height="30" rx="6" fill="#10b981"/>
+            <text x="150" y="88" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">답 없음? 승리</text>
+            <line x1="150" y1="105" x2="150" y2="115" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwFlow)"/>
+            <text x="150" y="118" text-anchor="middle" font-size="8" fill="#64748b">다시 플레이어 차례</text>
+        </svg>
+    </div>
+
+    <div style="margin:14px 0;">
+        <svg viewBox="0 0 500 60" style="max-width:500px;width:100%">
+            <rect x="0" y="5" width="500" height="50" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="20" y="25" font-size="11" fill="#374151" font-weight="700">set vs list 비교</text>
+            <text x="20" y="42" font-size="10" fill="#64748b" font-family="monospace">set: 중복 없음, "x in set" O(1) 빠름   |   list: 중복 가능, "x in list" O(n) 느림</text>
+        </svg>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="완성" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>핵심 요약</h3>
+        <ul>
+            <li><strong>word[-1]</strong> — 문자열의 마지막 글자 (끝말잇기 핵심)</li>
+            <li><strong>word[0]</strong> — 문자열의 첫 번째 글자</li>
+            <li><strong>set</strong> — 중복 없는 컬렉션, <code>in</code> 검사가 리스트보다 빠름</li>
+            <li><strong>list comprehension</strong> — <code>[w for w in pool if 조건]</code> 으로 후보 필터링</li>
+            <li><strong>random.choice(candidates)</strong> — 후보 중 무작위 선택으로 컴퓨터 AI 구현</li>
+            <li><strong>while True + break</strong> — 게임 루프 패턴, 종료 조건에서 break</li>
+        </ul>
+    </div>
+
+    <div style="margin:14px 0;">
+        <svg viewBox="0 0 500 60" style="max-width:500px;width:100%">
+            <rect x="0" y="5" width="160" height="50" rx="8" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="80" y="27" text-anchor="middle" font-size="10" fill="#991b1b" font-weight="700">word[-1] / word[0]</text>
+            <text x="80" y="43" text-anchor="middle" font-size="9" fill="#64748b">끝글자 연결 검사</text>
+            <rect x="170" y="5" width="160" height="50" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="250" y="27" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">set + in 연산자</text>
+            <text x="250" y="43" text-anchor="middle" font-size="9" fill="#64748b">빠른 중복 검사</text>
+            <rect x="340" y="5" width="160" height="50" rx="8" fill="#ede9fe" stroke="#8b5cf6" stroke-width="1.5"/>
+            <text x="420" y="27" text-anchor="middle" font-size="10" fill="#6d28d9" font-weight="700">list comprehension</text>
+            <text x="420" y="43" text-anchor="middle" font-size="9" fill="#64748b">후보 단어 필터링</text>
+        </svg>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

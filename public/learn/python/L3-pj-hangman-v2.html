@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 프로젝트: 행맨 게임</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 16px; font-weight: 700; color: #1e3a5f; margin: 18px 0 10px; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+ul, ol { margin: 0 0 12px 20px; }
+li { font-size: 14px; color: #374151; line-height: 1.8; }
+
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13.5px;
+    color: #e2e8f0; line-height: 1.85; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.code .dec { color: #f9a8d4; }
+
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '->'; color: #94a3b8; font-weight: 700; }
+
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; white-space: pre-wrap; }
+
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+.step-box { border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 14px 18px; margin: 14px 0; background: #fff; }
+.step-label { font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+.step-title { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 8px; }
+
+.output-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #334155; line-height: 1.7; margin: 10px 0; white-space: pre-wrap; }
+
+.compare-table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13px; }
+.compare-table th { background: #1e3a5f; color: #fff; padding: 8px 12px; text-align: left; font-weight: 700; }
+.compare-table td { padding: 7px 12px; border-bottom: 1px solid #e2e8f0; color: #374151; }
+.compare-table tr:nth-child(even) td { background: #f8fafc; }
+.compare-table code { background: #e0e7ff; padding: 1px 5px; border-radius: 3px; font-family: 'JetBrains Mono', monospace; color: #3730a3; font-size: 12px; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- 1페이지: 표지 -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">PJ</div>
+        <div class="cover-label">L3 — Project</div>
+        <h1 class="cover-title">프로젝트:<br>행맨 게임</h1>
+        <p class="cover-sub">랜덤으로 단어를 뽑아 한 글자씩 맞추는 행맨 게임을 만듭니다. ASCII 아트로 행맨을 그리고, 남은 목숨을 표시하며, 게임 전체 흐름을 함수로 구현합니다.</p>
+
+        <!-- SVG: 게임 전체 흐름도 -->
+        <div style="margin:24px 0;">
+            <svg viewBox="0 0 500 160" style="max-width:500px;width:100%">
+                <defs>
+                    <marker id="arwCov" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                    </marker>
+                </defs>
+                <!-- Step 1 -->
+                <rect x="5" y="20" width="110" height="50" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="60" y="40" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">random.choice</text>
+                <text x="60" y="56" text-anchor="middle" font-size="9" fill="#374151">단어 리스트에서</text>
+                <text x="60" y="68" text-anchor="middle" font-size="9" fill="#374151">랜덤 단어 선택</text>
+                <line x1="118" y1="45" x2="138" y2="45" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+                <!-- Step 2 -->
+                <rect x="141" y="20" width="110" height="50" rx="8" fill="#1e3a5f"/>
+                <text x="196" y="40" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">_ _ _ _ 표시</text>
+                <text x="196" y="56" text-anchor="middle" font-size="9" fill="#93c5fd">맞춘 글자 공개</text>
+                <text x="196" y="68" text-anchor="middle" font-size="9" fill="#93c5fd">나머지는 _ 유지</text>
+                <line x1="254" y1="45" x2="274" y2="45" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+                <!-- Step 3 -->
+                <rect x="277" y="20" width="110" height="50" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="332" y="40" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">글자 입력</text>
+                <text x="332" y="56" text-anchor="middle" font-size="9" fill="#374151">맞으면 공개</text>
+                <text x="332" y="68" text-anchor="middle" font-size="9" fill="#374151">틀리면 목숨 -1</text>
+                <line x1="390" y1="45" x2="410" y2="45" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+                <!-- Step 4 -->
+                <rect x="413" y="20" width="82" height="50" rx="8" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+                <text x="454" y="40" text-anchor="middle" font-size="10" fill="#991b1b" font-weight="700">ASCII 아트</text>
+                <text x="454" y="56" text-anchor="middle" font-size="9" fill="#374151">목숨 6개</text>
+                <text x="454" y="68" text-anchor="middle" font-size="9" fill="#374151">단계별 그림</text>
+                <!-- 결과 -->
+                <rect x="150" y="95" width="200" height="55" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="250" y="115" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">게임 종료</text>
+                <text x="250" y="131" text-anchor="middle" font-size="9" fill="#374151">전부 맞추면 승리</text>
+                <text x="250" y="145" text-anchor="middle" font-size="9" fill="#374151">목숨 0 = 패배</text>
+                <line x1="250" y1="73" x2="250" y2="93" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCov)"/>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/gamepad.png" alt="게임" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 프로젝트에서 만드는 것</h3>
+            <ul>
+                <li><code>random.choice()</code>로 단어 리스트에서 랜덤 단어를 선택할 수 있습니다.</li>
+                <li>리스트 컴프리헨션으로 맞춘 글자와 <code>_</code>를 조합해 현재 상태를 표시할 수 있습니다.</li>
+                <li>ASCII 아트 리스트로 목숨 단계(6개)에 따라 행맨 그림을 출력할 수 있습니다.</li>
+                <li><code>set</code>으로 이미 입력한 글자를 추적하고 중복 입력을 방지할 수 있습니다.</li>
+                <li>게임 루프(<code>while</code>)로 승리/패배 조건을 판별할 수 있습니다.</li>
+                <li>전체 게임을 함수로 분리해 깔끔한 코드 구조를 만들 수 있습니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- 2페이지: 데이터 구조 & ASCII 아트 -->
+<div class="page">
+    <h2>Step 1 — 단어 목록과 ASCII 아트 준비</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="우승" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>행맨 게임에는 두 가지 핵심 데이터가 필요합니다. 첫째, 랜덤으로 뽑을 <strong>단어 리스트</strong>, 둘째, 목숨 단계에 따라 표시할 <strong>ASCII 아트 리스트</strong>입니다.</p>
+
+    <!-- SVG: 목숨 6단계 시각화 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 500 100" style="max-width:500px;width:100%">
+            <!-- 6단계 박스 -->
+            <rect x="5" y="8" width="70" height="78" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="40" y="28" text-anchor="middle" font-size="9" fill="#64748b" font-weight="700">6목숨</text>
+            <text x="40" y="52" text-anchor="middle" font-size="18" fill="#94a3b8" font-weight="700">|</text>
+            <text x="40" y="72" text-anchor="middle" font-size="9" fill="#94a3b8">기둥만</text>
+
+            <rect x="83" y="8" width="70" height="78" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="118" y="28" text-anchor="middle" font-size="9" fill="#64748b" font-weight="700">5목숨</text>
+            <text x="118" y="48" text-anchor="middle" font-size="10" fill="#94a3b8">---</text>
+            <text x="118" y="60" text-anchor="middle" font-size="10" fill="#94a3b8">|</text>
+            <text x="118" y="75" text-anchor="middle" font-size="9" fill="#94a3b8">머리 등장</text>
+
+            <rect x="161" y="8" width="70" height="78" rx="6" fill="#fef9c3" stroke="#eab308" stroke-width="1.5"/>
+            <text x="196" y="28" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">4목숨</text>
+            <text x="196" y="44" text-anchor="middle" font-size="10" fill="#374151">  O</text>
+            <text x="196" y="58" text-anchor="middle" font-size="10" fill="#374151">  |</text>
+            <text x="196" y="72" text-anchor="middle" font-size="9" fill="#92400e">몸통 추가</text>
+
+            <rect x="239" y="8" width="70" height="78" rx="6" fill="#fef9c3" stroke="#eab308" stroke-width="1.5"/>
+            <text x="274" y="28" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">3목숨</text>
+            <text x="274" y="44" text-anchor="middle" font-size="10" fill="#374151">  O</text>
+            <text x="274" y="58" text-anchor="middle" font-size="10" fill="#374151"> /|</text>
+            <text x="274" y="72" text-anchor="middle" font-size="9" fill="#92400e">왼팔 추가</text>
+
+            <rect x="317" y="8" width="70" height="78" rx="6" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="352" y="28" text-anchor="middle" font-size="9" fill="#991b1b" font-weight="700">2목숨</text>
+            <text x="352" y="44" text-anchor="middle" font-size="10" fill="#374151">  O</text>
+            <text x="352" y="58" text-anchor="middle" font-size="10" fill="#374151"> /|\</text>
+            <text x="352" y="72" text-anchor="middle" font-size="9" fill="#991b1b">양팔 완성</text>
+
+            <rect x="395" y="8" width="100" height="78" rx="6" fill="#fee2e2" stroke="#ef4444" stroke-width="2"/>
+            <text x="445" y="28" text-anchor="middle" font-size="9" fill="#991b1b" font-weight="700">0목숨 (패배)</text>
+            <text x="445" y="44" text-anchor="middle" font-size="10" fill="#374151">  O</text>
+            <text x="445" y="56" text-anchor="middle" font-size="10" fill="#374151"> /|\</text>
+            <text x="445" y="68" text-anchor="middle" font-size="10" fill="#374151"> / \</text>
+            <text x="445" y="82" text-anchor="middle" font-size="9" fill="#991b1b">다리까지 완성</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">import</span> random
+
+<span class="cmt"># 단어 목록 (영어 단어 — 중학생 수준)</span>
+WORDS = [
+    <span class="str">"python"</span>, <span class="str">"computer"</span>, <span class="str">"keyboard"</span>, <span class="str">"monitor"</span>, <span class="str">"internet"</span>,
+    <span class="str">"program"</span>, <span class="str">"function"</span>, <span class="str">"variable"</span>, <span class="str">"student"</span>, <span class="str">"school"</span>
+]
+
+<span class="cmt"># ASCII 아트 — 목숨 6 → 0 순서 (인덱스 0이 완성된 행맨)</span>
+HANGMAN = [
+<span class="str">"""
+  +---+
+  |   |
+  O   |
+ /|\\  |
+ / \\  |
+      |
+========"""</span>,
+<span class="str">"""
+  +---+
+  |   |
+  O   |
+ /|\\  |
+ /    |
+      |
+========"""</span>,
+<span class="str">"""
+  +---+
+  |   |
+  O   |
+ /|\\  |
+      |
+      |
+========"""</span>,
+<span class="str">"""
+  +---+
+  |   |
+  O   |
+ /|   |
+      |
+      |
+========"""</span>,
+<span class="str">"""
+  +---+
+  |   |
+  O   |
+  |   |
+      |
+      |
+========"""</span>,
+<span class="str">"""
+  +---+
+  |   |
+  O   |
+      |
+      |
+      |
+========"""</span>,
+<span class="str">"""
+  +---+
+  |   |
+      |
+      |
+      |
+      |
+========"""</span>
+]
+
+<span class="cmt"># 테스트: 단어 뽑기</span>
+word = random.<span class="fn">choice</span>(WORDS)
+<span class="fn">print</span>(<span class="str">f"뽑힌 단어: {word} (길이: {len(word)})"</span>)
+<span class="fn">print</span>(HANGMAN[<span class="num">6</span>])  <span class="cmt"># 목숨 6 = 빈 교수대</span></div>
+
+    <div class="output-box">뽑힌 단어: program (길이: 7)
+
+  +---+
+  |   |
+      |
+      |
+      |
+      |
+========</div>
+
+    <!-- SVG: HANGMAN 리스트 인덱스 구조 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 500 56" style="max-width:500px;width:100%">
+            <rect x="5" y="8" width="490" height="40" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="20" y="24" font-size="9" fill="#1e3a5f" font-weight="700">HANGMAN 리스트 인덱스:</text>
+            <text x="20" y="40" font-size="9" fill="#64748b">인덱스 0 = 완성 행맨(패배)   인덱스 6 = 빈 교수대(시작)</text>
+            <text x="290" y="24" font-size="9" fill="#1e3a5f" font-weight="700">목숨 계산:</text>
+            <text x="290" y="40" font-size="9" fill="#64748b">HANGMAN[목숨]  목숨 6 = 시작, 0 = 패배</text>
+        </svg>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+        <div class="practice-head">따라해보세요 — Step 1</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">WORDS 리스트와 HANGMAN 아트를 입력하고 랜덤 단어를 뽑아 출력하세요.</div>
+                <div class="code">word = random.<span class="fn">choice</span>(WORDS)
+<span class="fn">print</span>(<span class="str">f"단어 길이: {len(word)}"</span>)</div>
+                <div class="practice-result">단어 길이: 숫자가 출력되면 성공</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">목숨 3일 때의 ASCII 아트를 출력하세요 (인덱스 3).</div>
+                <div class="code"><span class="fn">print</span>(HANGMAN[<span class="num">3</span>])</div>
+                <div class="practice-result">왼팔이 있는 행맨 그림 출력</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">for 루프로 모든 HANGMAN 단계를 순서대로 출력해 보세요.</div>
+                <div class="code"><span class="kw">for</span> i, stage <span class="kw">in</span> <span class="fn">enumerate</span>(HANGMAN):
+    <span class="fn">print</span>(<span class="str">f"--- 목숨 {6 - i} ---"</span>)
+    <span class="fn">print</span>(stage)</div>
+                <div class="practice-result">7단계 행맨 아트가 모두 출력됨</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3페이지: 핵심 로직 -->
+<div class="page">
+    <h2>Step 2 — 게임 핵심 로직</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/flowchart.png" alt="게임 흐름" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>게임의 핵심은 세 가지 함수입니다. <code>get_display()</code>로 현재 상태를 <code>_ p _ t h _ n</code> 형태로 표시하고, <code>check_win()</code>으로 승리를 판별하며, 메인 루프에서 입력을 받아 처리합니다.</p>
+
+    <!-- SVG: get_display 함수 동작 원리 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 500 90" style="max-width:500px;width:100%">
+            <defs>
+                <marker id="arwDisp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <!-- 입력 -->
+            <rect x="5" y="20" width="140" height="55" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="75" y="38" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">입력</text>
+            <text x="75" y="52" text-anchor="middle" font-size="9" fill="#374151">word = "python"</text>
+            <text x="75" y="66" text-anchor="middle" font-size="9" fill="#374151">guessed = {'p','t','h'}</text>
+            <line x1="148" y1="47" x2="168" y2="47" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwDisp)"/>
+            <!-- 처리 -->
+            <rect x="171" y="8" width="160" height="80" rx="8" fill="#1e3a5f"/>
+            <text x="251" y="28" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">get_display()</text>
+            <text x="251" y="44" text-anchor="middle" font-size="9" fill="#93c5fd">각 글자 순회</text>
+            <text x="251" y="58" text-anchor="middle" font-size="9" fill="#93c5fd">guessed에 있으면 글자</text>
+            <text x="251" y="72" text-anchor="middle" font-size="9" fill="#93c5fd">없으면 _</text>
+            <line x1="334" y1="47" x2="354" y2="47" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwDisp)"/>
+            <!-- 출력 -->
+            <rect x="357" y="20" width="138" height="55" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="426" y="38" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">출력</text>
+            <text x="426" y="52" text-anchor="middle" font-size="9" fill="#374151">"p _ t h _ n"</text>
+            <text x="426" y="66" text-anchor="middle" font-size="9" fill="#64748b">join으로 합치기</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">def</span> <span class="fn">get_display</span>(word, guessed):
+    <span class="str">"""맞춘 글자는 표시, 나머지는 _ 로 반환"""</span>
+    <span class="kw">return</span> <span class="str">" "</span>.<span class="fn">join</span>(c <span class="kw">if</span> c <span class="kw">in</span> guessed <span class="kw">else</span> <span class="str">"_"</span> <span class="kw">for</span> c <span class="kw">in</span> word)
+
+<span class="kw">def</span> <span class="fn">check_win</span>(word, guessed):
+    <span class="str">"""단어의 모든 글자를 맞췄으면 True"""</span>
+    <span class="kw">return</span> <span class="fn">all</span>(c <span class="kw">in</span> guessed <span class="kw">for</span> c <span class="kw">in</span> word)
+
+<span class="cmt"># 테스트</span>
+word = <span class="str">"python"</span>
+guessed = {<span class="str">"p"</span>, <span class="str">"t"</span>, <span class="str">"h"</span>}
+<span class="fn">print</span>(<span class="fn">get_display</span>(word, guessed))
+<span class="fn">print</span>(<span class="fn">check_win</span>(word, guessed))
+
+guessed = {<span class="str">"p"</span>, <span class="str">"y"</span>, <span class="str">"t"</span>, <span class="str">"h"</span>, <span class="str">"o"</span>, <span class="str">"n"</span>}
+<span class="fn">print</span>(<span class="fn">check_win</span>(word, guessed))</div>
+
+    <div class="output-box">p _ t h _ n
+False
+True</div>
+
+    <!-- SVG: all() 함수 동작 설명 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 500 60" style="max-width:500px;width:100%">
+            <rect x="5" y="8" width="490" height="44" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="20" y="26" font-size="9" fill="#92400e" font-weight="700">all() 함수:</text>
+            <text x="20" y="42" font-size="9" fill="#374151">iterable 안의 모든 값이 True이면 True 반환 — 하나라도 False이면 False</text>
+            <text x="290" y="26" font-size="9" fill="#92400e" font-weight="700">set 사용 이유:</text>
+            <text x="290" y="42" font-size="9" fill="#374151">중복 없이 입력한 글자 추적 — O(1) 검색 속도</text>
+        </svg>
+    </div>
+
+    <h3>메인 게임 루프</h3>
+    <div class="code"><span class="kw">def</span> <span class="fn">play_hangman</span>():
+    word = random.<span class="fn">choice</span>(WORDS)
+    guessed = <span class="fn">set</span>()      <span class="cmt"># 입력한 글자 집합</span>
+    lives = <span class="num">6</span>            <span class="cmt"># 남은 목숨</span>
+    wrong = <span class="fn">set</span>()        <span class="cmt"># 틀린 글자 집합</span>
+
+    <span class="fn">print</span>(<span class="str">"=== 행맨 게임 시작! ==="</span>)
+
+    <span class="kw">while</span> lives > <span class="num">0</span>:
+        <span class="fn">print</span>(HANGMAN[lives])
+        <span class="fn">print</span>(<span class="str">f"단어: {get_display(word, guessed)}"</span>)
+        <span class="fn">print</span>(<span class="str">f"남은 목숨: {lives}  틀린 글자: {', '.join(sorted(wrong))}"</span>)
+
+        <span class="kw">if</span> <span class="fn">check_win</span>(word, guessed):
+            <span class="fn">print</span>(<span class="str">f"축하! '{word}' 완성!"</span>)
+            <span class="kw">return</span>
+
+        guess = <span class="fn">input</span>(<span class="str">"글자 입력: "</span>).<span class="fn">lower</span>().<span class="fn">strip</span>()
+
+        <span class="kw">if</span> <span class="fn">len</span>(guess) != <span class="num">1</span> <span class="kw">or not</span> guess.<span class="fn">isalpha</span>():
+            <span class="fn">print</span>(<span class="str">"알파벳 한 글자만 입력하세요."</span>)
+            <span class="kw">continue</span>
+        <span class="kw">if</span> guess <span class="kw">in</span> guessed:
+            <span class="fn">print</span>(<span class="str">"이미 입력한 글자입니다."</span>)
+            <span class="kw">continue</span>
+
+        guessed.<span class="fn">add</span>(guess)
+        <span class="kw">if</span> guess <span class="kw">in</span> word:
+            <span class="fn">print</span>(<span class="str">f"'{guess}' 맞았어요!"</span>)
+        <span class="kw">else</span>:
+            wrong.<span class="fn">add</span>(guess)
+            lives -= <span class="num">1</span>
+            <span class="fn">print</span>(<span class="str">f"'{guess}' 틀렸어요. 목숨 -{lives}"</span>)
+
+    <span class="fn">print</span>(HANGMAN[<span class="num">0</span>])
+    <span class="fn">print</span>(<span class="str">f"게임 오버. 정답은 '{word}'"</span>)
+
+<span class="fn">play_hangman</span>()</div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요 — Step 2</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc"><code>get_display</code> 함수를 입력하고, 단어 "school"에서 's', 'o', 'l'을 맞춘 상태를 출력하세요.</div>
+                <div class="code">w = <span class="str">"school"</span>
+g = {<span class="str">"s"</span>, <span class="str">"o"</span>, <span class="str">"l"</span>}
+<span class="fn">print</span>(<span class="fn">get_display</span>(w, g))</div>
+                <div class="practice-result">s _ _ o o l 출력됨</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc"><code>check_win</code>을 테스트하세요. "cat"에서 c, a, t를 모두 맞추면 True여야 합니다.</div>
+                <div class="code"><span class="fn">print</span>(<span class="fn">check_win</span>(<span class="str">"cat"</span>, {<span class="str">"c"</span>, <span class="str">"a"</span>, <span class="str">"t"</span>}))</div>
+                <div class="practice-result">True 출력</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">완성된 <code>play_hangman()</code>을 실행해 실제로 게임을 해보세요.</div>
+                <div class="code"><span class="fn">play_hangman</span>()</div>
+                <div class="practice-result">게임이 실행되고 입력창이 나타남</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 4페이지: 문제 -->
+<div class="page">
+    <h2>연습 문제</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q1</div>
+            <div class="problem-label">get_display 함수 완성하기</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">단어 <code>"monitor"</code>에서 <code>{"m", "o", "n"}</code>을 맞춘 상태일 때, <code>get_display("monitor", {"m", "o", "n"})</code>의 출력 결과를 쓰세요. (글자 사이는 공백으로 구분)</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">단어</span><span class="problem-example-value">monitor</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">맞춘 것</span><span class="problem-example-value">m, o, n</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">?</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">monitor의 각 글자: m-o-n-i-t-o-r. 맞춘 글자(m, o, n)는 그대로, 나머지(i, t, r)는 _ 로 표시됩니다.</div>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">m o n _ _ o _</div>
+            </div>
+        </details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q2</div>
+            <div class="problem-label">목숨 감소 로직 수정</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">현재 게임에서 틀린 글자를 입력하면 <code>lives -= 1</code>로 목숨이 줄어듭니다. 이 코드를 수정해서, 목숨이 0이 되기 <strong>전에</strong> 경고 메시지 <code>"마지막 목숨입니다!"</code>를 출력하도록 수정하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">조건</span><span class="problem-example-value">lives가 1일 때 틀리면 경고 출력 후 lives -= 1</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">lives를 먼저 줄이기 전에 if lives == 1: 조건을 확인하세요.</div>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">if guess not in word:
+    wrong.add(guess)
+    if lives == 1:
+        print("마지막 목숨입니다!")
+    lives -= 1</div>
+            </div>
+        </details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q3</div>
+            <div class="problem-label">힌트 기능 추가</div>
+            <span class="problem-diff hard">어려움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">게임 도중 사용자가 글자 대신 <code>"hint"</code>를 입력하면, 단어에서 아직 맞추지 않은 글자 중 하나를 랜덤으로 알려주는 힌트 기능을 추가하세요. 힌트는 게임 당 최대 2번만 사용 가능합니다.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">입력</span><span class="problem-example-value">hint</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">힌트: 'y'가 단어에 있습니다! (힌트 1/2 사용)</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">아직 맞추지 않은 글자 목록: [c for c in word if c not in guessed]. random.choice로 하나 선택하세요.</div>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">hint_count = 0  # 함수 시작 부분에 추가
+
+# 입력 처리 부분에 추가:
+if guess == "hint":
+    if hint_count >= 2:
+        print("힌트를 모두 사용했습니다.")
+    else:
+        remaining = [c for c in word if c not in guessed]
+        if remaining:
+            h = random.choice(remaining)
+            hint_count += 1
+            print(f"힌트: '{h}'가 단어에 있습니다! (힌트 {hint_count}/2 사용)")
+    continue</div>
+            </div>
+        </details>
+    </div>
+
+    <!-- SVG: 게임 상태 흐름 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 500 70" style="max-width:500px;width:100%">
+            <defs>
+                <marker id="arwFlow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="5" y="15" width="90" height="40" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="50" y="30" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">글자 입력</text>
+            <text x="50" y="46" text-anchor="middle" font-size="8" fill="#374151">input()</text>
+            <line x1="98" y1="35" x2="118" y2="35" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwFlow)"/>
+            <rect x="121" y="15" width="100" height="40" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="171" y="30" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">word 안에 있나?</text>
+            <text x="171" y="46" text-anchor="middle" font-size="8" fill="#374151">if guess in word</text>
+            <line x1="224" y1="30" x2="244" y2="24" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwFlow)"/>
+            <line x1="224" y1="40" x2="244" y2="46" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwFlow)"/>
+            <rect x="247" y="8" width="90" height="28" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="292" y="26" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">guessed 추가</text>
+            <rect x="247" y="44" width="90" height="28" rx="6" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="292" y="58" text-anchor="middle" font-size="9" fill="#991b1b" font-weight="700">lives -= 1</text>
+            <line x1="340" y1="22" x2="360" y2="35" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwFlow)"/>
+            <line x1="340" y1="58" x2="360" y2="48" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwFlow)"/>
+            <rect x="363" y="15" width="100" height="40" rx="6" fill="#1e3a5f"/>
+            <text x="413" y="30" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">상태 출력</text>
+            <text x="413" y="46" text-anchor="middle" font-size="8" fill="#93c5fd">ASCII 아트 갱신</text>
+        </svg>
+    </div>
+
+    <!-- SVG: set vs list 비교 -->
+    <div style="text-align:center;margin:10px 0;">
+        <svg viewBox="0 0 500 60" style="max-width:500px;width:100%">
+            <rect x="5" y="8" width="230" height="44" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="120" y="24" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">set (집합) 사용</text>
+            <text x="120" y="40" text-anchor="middle" font-size="8" fill="#374151">중복 자동 제거 / in 검색 O(1) / add()로 추가</text>
+            <rect x="265" y="8" width="230" height="44" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="380" y="24" text-anchor="middle" font-size="10" fill="#64748b" font-weight="700">list (리스트) 사용시</text>
+            <text x="380" y="40" text-anchor="middle" font-size="8" fill="#94a3b8">중복 가능 / in 검색 O(n) / 덜 효율적</text>
+        </svg>
+    </div>
+
+    <!-- SVG: random.choice 동작 -->
+    <div style="text-align:center;margin:10px 0;">
+        <svg viewBox="0 0 500 56" style="max-width:500px;width:100%">
+            <rect x="5" y="8" width="490" height="40" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="20" y="24" font-size="9" fill="#1e3a5f" font-weight="700">random.choice(seq):</text>
+            <text x="20" y="40" font-size="9" fill="#374151">시퀀스(리스트, 튜플, 문자열)에서 무작위로 하나 선택 반환 — 빈 시퀀스면 IndexError</text>
+        </svg>
+    </div>
+
+    <!-- SVG: 행맨 게임 승패 조건 -->
+    <div style="text-align:center;margin:10px 0;">
+        <svg viewBox="0 0 500 56" style="max-width:500px;width:100%">
+            <rect x="5" y="8" width="230" height="40" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="120" y="24" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">승리 조건</text>
+            <text x="120" y="40" text-anchor="middle" font-size="8" fill="#374151">all(c in guessed for c in word) == True</text>
+            <rect x="265" y="8" width="230" height="40" rx="8" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="380" y="24" text-anchor="middle" font-size="9" fill="#991b1b" font-weight="700">패배 조건</text>
+            <text x="380" y="40" text-anchor="middle" font-size="8" fill="#374151">lives == 0 (while 루프 종료)</text>
+        </svg>
+    </div>
+
+    <!-- SVG: 완성된 게임 구조 요약 -->
+    <div style="text-align:center;margin:10px 0;">
+        <svg viewBox="0 0 500 64" style="max-width:500px;width:100%">
+            <rect x="5" y="8" width="110" height="48" rx="6" fill="#1e3a5f"/>
+            <text x="60" y="26" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">WORDS 리스트</text>
+            <text x="60" y="42" text-anchor="middle" font-size="8" fill="#93c5fd">단어 저장</text>
+            <rect x="125" y="8" width="110" height="48" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="180" y="26" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">HANGMAN 리스트</text>
+            <text x="180" y="42" text-anchor="middle" font-size="8" fill="#374151">ASCII 7단계</text>
+            <rect x="245" y="8" width="110" height="48" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="300" y="26" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">guessed set</text>
+            <text x="300" y="42" text-anchor="middle" font-size="8" fill="#374151">입력 글자 추적</text>
+            <rect x="365" y="8" width="130" height="48" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="430" y="26" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">play_hangman()</text>
+            <text x="430" y="42" text-anchor="middle" font-size="8" fill="#374151">게임 루프 실행</text>
+        </svg>
+    </div>
+
+    <!-- 핵심 요약 -->
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/lightbulb.png" alt="아이디어" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>핵심 요약</h3>
+        <ul>
+            <li><code>random.choice(리스트)</code> — 리스트에서 무작위로 하나 선택</li>
+            <li><code>set</code> — 중복 없는 집합. 글자 추적에 최적 (in 검색 O(1))</li>
+            <li>리스트 컴프리헨션 + 조건식 — <code>c if c in guessed else "_"</code></li>
+            <li><code>all(조건 for x in iterable)</code> — 모두 True이면 True</li>
+            <li>ASCII 아트는 삼중 따옴표 문자열로 작성, 리스트에 저장</li>
+            <li>게임 루프: <code>while lives > 0</code> + 승리 조건으로 종료</li>
+        </ul>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

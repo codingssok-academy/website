@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Unit 38. 문자열 변환 — C 언어 코딩 도장</title>
+    <link rel="stylesheet" href="../common.css">
+</head>
+
+<body>
+    <div class="wrap">
+        <div class="hdr">
+            <h1>Unit 38. 문자열 ↔ 숫자 변환</h1>
+            <div class="sub">atoi · atof · strtol · sprintf · 진법 변환</div>
+            <span class="unit-badge">Chapter 09 · 문자열</span>
+            <div class="level-bar"><span class="on"></span><span class="on"></span><span></span></div>
+            <div class="meta"><span class="tag pri">🖥️ C언어</span><span class="tag acc">📝 10문제</span><span
+                    class="tag">⏱ 20~30분</span></div>
+        </div>
+        <div class="stu-bar"><label>👤 이름 <input type="text" id="stu-name" placeholder="이름"></label><label>📅 날짜 <input
+                    type="date" id="stu-date"></label></div>
+        <div class="learn">
+            <h2><span class="ico" style="background:rgba(16,185,129,.15)">🔄</span> 문자열 ↔ 숫자 변환</h2>
+            <p><code>#include &lt;stdlib.h&gt;</code> 필요. 문자열을 숫자로, 숫자를 문자열로!</p>
+        </div>
+        <div id="problems"></div>
+        <div class="submit-section">
+            <p>모든 문제를 풀었나요? 📨</p><button class="btn-submit" id="btn-submit">📄 제출하기</button>
+        </div>
+        <div class="modal-overlay" id="submit-modal">
+            <div class="modal-box">
+                <div class="modal-icon">✅</div>
+                <h3>제출 완료!</h3>
+                <p>학습지가 저장되었습니다.</p>
+                <div style="margin:12px 0"><span class="info-tag" id="modal-name"></span> <span class="info-tag"
+                        id="modal-date"></span> <span class="info-tag" id="modal-count"></span></div>
+                <p style="font-size:.78rem;color:var(--dim)">📁 <strong id="modal-filename"></strong></p><button
+                    class="btn-close-modal" id="btn-close-modal">확인</button>
+            </div>
+        </div>
+        <div class="pg"><a href="Unit37_문자열함수.html">← Unit 37</a><span class="tag active">Unit 38</span><a
+                href="../10_포인터/Unit39_포인터기초.html">Unit 39 →</a></div>
+        <div class="ft">🖥️ C 언어 코딩 도장 · Unit 38 · 문자열 변환</div>
+    </div>
+    <script>
+        const P = [
+            {
+                n: 1, t: "atoi — 문자열→정수", d: 1,
+                q: `다음 코드의 출력을 쓰세요.<pre class="code-c">#include &lt;stdlib.h&gt;
+printf("%d\\n", atoi("42"));
+printf("%d\\n", atoi("  -7"));
+printf("%d\\n", atoi("12abc"));
+printf("%d\\n", atoi("abc"));</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">42<br>-7<br>12<br>0</div><div class="trace">atoi: 앞의 공백 무시, 숫자만 읽음<br>"12abc" → 12 (abc 무시)<br>"abc" → 변환 실패 → 0</div>`
+            },
+
+            {
+                n: 2, t: "atof — 문자열→실수", d: 1,
+                q: `다음 코드의 출력을 쓰세요.<pre class="code-c">printf("%f\\n", atof("3.14"));
+printf("%f\\n", atof("1.5e2"));</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">3.140000<br>150.000000</div><div class="trace">atof: 문자열을 double로 변환<br>1.5e2 = 1.5 × 10² = 150</div>`
+            },
+
+            {
+                n: 3, t: "strtol — 진법 변환", d: 2,
+                q: `16진수 문자열을 정수로 변환하세요.<pre class="code-c">long n1 = strtol("FF", NULL, 16);
+long n2 = strtol("1010", NULL, 2);
+long n3 = strtol("77", NULL, 8);
+printf("%ld %ld %ld\\n", n1, n2, n3);</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">255 10 63</div><div class="trace">strtol(문자열, 끝포인터, 진법)<br>16진수 FF = 255<br>2진수 1010 = 10<br>8진수 77 = 63</div>`
+            },
+
+            {
+                n: 4, t: "sprintf — 숫자→문자열", d: 1,
+                q: `정수를 문자열로 변환하세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">int num = 42;
+char str[20];
+sprintf(str, "%d", num);
+printf("문자열: [%s]\\n", str);
+printf("길이: %zu\\n", strlen(str));</pre><div class="output-box">문자열: [42]<br>길이: 2</div>`},
+
+            {
+                n: 5, t: "snprintf — 안전한 변환", d: 2,
+                q: `snprintf의 장점은?`,
+                a: `<span class="key">정답</span><pre class="code-c">char buf[5];
+snprintf(buf, sizeof(buf), "%d", 12345678);
+printf("[%s]\\n", buf); <span class="cm">// [1234]</span></pre><div class="trace">snprintf(buf, 최대크기, 포맷, ...)<br>버퍼 크기만큼만 쓰기 → <span class="val">오버플로우 방지!</span></div>`},
+
+            {
+                n: 6, t: "직접 구현: 문자→숫자", d: 2,
+                q: `'0'~'9' 문자를 숫자로 바꾸는 원리를 설명하세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">char c = '7';
+int n = c - '0';  <span class="cm">// '7'-'0' = 55-48 = 7</span></pre><div class="trace">ASCII에서 '0'=48, '1'=49 ... '9'=57<br>c - '0' = 실제 숫자값!</div>`},
+
+            {
+                n: 7, t: "심사: 직접 atoi 구현", d: 3,
+                q: `atoi 함수를 직접 구현하세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">int my_atoi(char *s) {
+    int result = 0, sign = 1, i = 0;
+    while (s[i] == ' ') i++;
+    if (s[i]=='-') { sign=-1; i++; }
+    else if (s[i]=='+') i++;
+    while (s[i]>='0' && s[i]<='9') {
+        result = result*10 + (s[i]-'0');
+        i++;
+    }
+    return sign * result;
+}</pre>`},
+
+            {
+                n: 8, t: "심사: 숫자→2진수 문자열", d: 3,
+                q: `정수를 2진수 문자열로 변환하세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">int n = 42;
+char bin[33]; int idx = 0;
+while (n > 0) {
+    bin[idx++] = (n % 2) + '0';
+    n /= 2;
+}
+bin[idx] = '\\0';
+<span class="cm">// 뒤집기</span>
+for (int i=0;i<idx/2;i++) {
+    char t=bin[i]; bin[i]=bin[idx-1-i]; bin[idx-1-i]=t;
+}
+printf("%s\\n", bin); <span class="cm">// 101010</span></pre>`},
+
+            {
+                n: 9, t: "심사: 문자열 숫자 판별", d: 2,
+                q: `문자열이 유효한 정수인지 확인하세요.`,
+                a: `<span class="key">정답</span><pre class="code-c">int isNumber(char *s) {
+    int i = 0;
+    if (s[0]=='-'||s[0]=='+') i++;
+    if (s[i]=='\\0') return 0;
+    while (s[i]) {
+        if (s[i]<'0'||s[i]>'9') return 0;
+        i++;
+    }
+    return 1;
+}
+<span class="cm">// isNumber("123")→1, isNumber("12a")→0</span></pre>`},
+
+            {
+                n: 10, t: "🏆 Unit 38 종합", d: 2,
+                q: `다음 함수들을 올바른 헤더와 함께 매칭하세요.<pre class="code-c">atoi, atof, strtol    → &lt;???&gt;
+strlen, strcpy, strcmp → &lt;???&gt;
+printf, scanf         → &lt;???&gt;
+toupper, isdigit      → &lt;???&gt;</pre>`,
+                a: `<span class="key">정답</span><div class="trace">atoi, atof, strtol → <span class="val">&lt;stdlib.h&gt;</span><br>strlen, strcpy, strcmp → <span class="val">&lt;string.h&gt;</span><br>printf, scanf → <span class="val">&lt;stdio.h&gt;</span><br>toupper, isdigit → <span class="val">&lt;ctype.h&gt;</span></div>`
+            }
+        ];
+        const c = document.getElementById('problems'); P.forEach(p => { const dc = p.d <= 1 ? 'ez' : p.d <= 2 ? 'md' : 'hd'; const dots = Array.from({ length: 5 }, (_, i) => `<span${i < p.d ? ' class="on"' : ''}>​</span>`).join(''); c.innerHTML += `<div class="prob"><div class="prob-top"><div class="prob-num ${dc}">${p.n}</div><div class="prob-title">${p.t}</div><div class="diff-dots">${dots}</div></div><div class="prob-body"><div class="q">${p.q}</div><textarea class="write" placeholder="✍️ 답을 작성하세요"></textarea><details class="ans"><summary>정답 및 해설 보기</summary><div class="ans-body">${p.a}</div></details></div></div>`; });
+    </script>
+    <script src="../submit.js"></script>
+    <script src="../../platform.js"></script>
+</body>
+
+</html>

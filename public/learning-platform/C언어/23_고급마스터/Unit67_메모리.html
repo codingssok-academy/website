@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Unit 67. 동적 메모리 + 고급 포인터 — C 언어</title>
+    <link rel="stylesheet" href="../common.css">
+</head>
+
+<body>
+    <div class="wrap">
+        <div class="hdr">
+            <h1>Unit 67. 동적 메모리 + 고급 포인터</h1>
+            <div class="sub">malloc/calloc/realloc/free · void 포인터 · 함수 포인터 배열</div>
+            <span class="unit-badge">Chapter 23 · 고급 마스터</span>
+            <div class="level-bar"><span class="on"></span><span class="on"></span><span class="on"></span><span
+                    class="on"></span></div>
+            <div class="meta"><span class="tag pri">🧠 메모리</span><span class="tag acc">📝 15문제</span><span class="tag">⏱
+                    50분</span></div>
+        </div>
+        <div class="stu-bar"><label>👤 이름 <input type="text" id="stu-name" placeholder="이름"></label><label>📅 날짜 <input
+                    type="date" id="stu-date"></label></div>
+        <div id="problems"></div>
+        <div class="submit-section">
+            <p>모든 문제를 풀었나요? 📨</p><button class="btn-submit" id="btn-submit">📄 제출하기</button>
+        </div>
+        <div class="modal-overlay" id="submit-modal">
+            <div class="modal-box">
+                <div class="modal-icon">✅</div>
+                <h3>제출 완료!</h3>
+                <p>학습지가 저장되었습니다.</p>
+                <div style="margin:12px 0"><span class="info-tag" id="modal-name"></span> <span class="info-tag"
+                        id="modal-date"></span> <span class="info-tag" id="modal-count"></span></div>
+                <p style="font-size:.78rem;color:var(--dim)">📁 <strong id="modal-filename"></strong></p><button
+                    class="btn-close-modal" id="btn-close-modal">확인</button>
+            </div>
+        </div>
+        <div class="pg"><a href="../22_자료구조심화/Unit66_스택큐트리.html">← Unit 66</a><span class="tag active">Unit 67</span><a
+                href="Unit68_마스터테스트.html">Unit 68 →</a></div>
+        <div class="ft">🧠 동적 메모리 + 고급 포인터 · Unit 67</div>
+    </div>
+    <script>
+        const P = [
+            {
+                n: 1, t: "malloc 기본", d: 2,
+                q: `정수 N개를 위한 동적 배열을 할당하세요.
+<pre class="code-c">int n = 5;
+int *arr = <span class="cm">/* ? */</span>;
+<span class="cm">// arr[0]~arr[4] 사용 가능하게</span>
+<span class="cm">// 다 쓴 후 해제</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">int *arr = (int*)malloc(n * sizeof(int));
+if (arr == NULL) { printf("할당 실패!"); return 1; }
+for (int i=0; i<n; i++) arr[i] = i * 10;
+free(arr); <span class="cm">// 반드시 해제!</span></pre><div class="trace">malloc: 초기화 안 됨 (쓰레기값!)<br>반환값 NULL 체크 필수<br>free 후 arr 사용 금지 (댕글링)</div>`},
+
+            {
+                n: 2, t: "calloc vs malloc", d: 2,
+                q: `calloc으로 0으로 초기화된 배열을 할당하세요.
+<pre class="code-c">int *a = (int*)malloc(5 * sizeof(int));
+int *b = <span class="cm">/* calloc으로 같은 크기 */</span>;
+<span class="cm">// a와 b의 차이는?</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">int *b = (int*)calloc(5, sizeof(int));</pre><div class="trace"><span class="val">malloc</span>: 초기화 안 됨 (쓰레기값)<br><span class="val">calloc</span>: 0으로 초기화!<br><br>calloc(개수, 크기) = malloc(개수×크기) + memset(0)</div>`
+            },
+
+            {
+                n: 3, t: "realloc 크기 변경", d: 2,
+                q: `배열을 5개에서 10개로 확장하세요.
+<pre class="code-c">int *arr = (int*)malloc(5 * sizeof(int));
+for (int i=0;i<5;i++) arr[i] = i;
+<span class="cm">// 10개로 확장 (기존 값 유지!)</span>
+arr = <span class="cm">/* ? */</span>;</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">int *temp = (int*)realloc(arr, 10 * sizeof(int));
+if (temp) arr = temp;
+else { printf("확장 실패!"); free(arr); }</pre><div class="trace">⚠️ realloc(arr, ...) 직접 대입 금지!<br>실패 시 arr이 NULL이 되어 원본도 잃음<br>→ temp에 받고 NULL 체크 후 대입</div>`},
+
+            {
+                n: 4, t: "2차원 동적 배열", d: 3,
+                q: `N×M 크기의 2차원 배열을 동적 할당하세요.
+<pre class="code-c">int n=3, m=4;
+<span class="cm">// int **arr 형태로 n×m 배열 할당</span>
+<span class="cm">// 사용 후 해제</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c"><span class="cm">// 할당</span>
+int **arr = (int**)malloc(n * sizeof(int*));
+for (int i=0; i<n; i++)
+    arr[i] = (int*)malloc(m * sizeof(int));
+
+<span class="cm">// 사용</span>
+arr[1][2] = 42;
+
+<span class="cm">// 해제 (역순!)</span>
+for (int i=0; i<n; i++) free(arr[i]);
+free(arr);</pre><div class="trace">포인터 배열 → 각 행을 개별 할당<br>해제: 행 먼저 free → 배열 포인터 free<br>순서 틀리면 메모리 누수!</div>`},
+
+            {
+                n: 5, t: "메모리 누수 찾기", d: 2,
+                q: `아래 코드의 메모리 누수를 찾고 고치세요.
+<pre class="code-c">void process() {
+    int *a = (int*)malloc(100 * sizeof(int));
+    int *b = (int*)malloc(200 * sizeof(int));
+    if (a[0] == 0) return;  <span class="cm">// 🐛</span>
+    free(a);
+    free(b);
+}</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">void process() {
+    int *a = (int*)malloc(100 * sizeof(int));
+    int *b = (int*)malloc(200 * sizeof(int));
+    if (a[0] == 0) {
+        <span class="err">free(a); free(b);</span> <span class="cm">// 수정!</span>
+        return;
+    }
+    free(a);
+    free(b);
+}</pre><div class="trace">원래 코드: 조건부 return에서 free 없음!<br>→ a, b 모두 메모리 누수<br>모든 탈출 경로에서 free 필수!</div>`},
+
+            {
+                n: 6, t: "void 포인터 (제네릭)", d: 2,
+                q: `void*를 사용한 범용 swap 함수를 작성하세요.
+<pre class="code-c">void genericSwap(void *a, void *b, size_t size) {
+    <span class="cm">// 어떤 타입이든 교환</span>
+}</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">void genericSwap(void *a, void *b, size_t size) {
+    void *temp = malloc(size);
+    memcpy(temp, a, size);
+    memcpy(a, b, size);
+    memcpy(b, temp, size);
+    free(temp);
+}
+<span class="cm">// 사용:</span>
+int x=10, y=20;
+genericSwap(&x, &y, sizeof(int));
+double a=1.5, b=2.5;
+genericSwap(&a, &b, sizeof(double));</pre><div class="trace">void*: 어떤 타입이든 가리킬 수 있음<br>size: 바이트 수로 크기 전달<br>memcpy: 메모리 복사 (바이트 단위)</div>`},
+
+            {
+                n: 7, t: "함수 포인터 배열", d: 3,
+                q: `사칙연산 함수 포인터 배열을 만드세요.
+<pre class="code-c">int add(int a,int b){return a+b;}
+int sub(int a,int b){return a-b;}
+int mul(int a,int b){return a*b;}
+int divi(int a,int b){return a/b;}
+<span class="cm">// 함수 포인터 배열로 선택 호출</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">int main() {
+    int (*ops[4])(int,int) = {add,sub,mul,divi};
+    char *names[] = {"+","-","*","/"};
+    for (int i=0;i<4;i++)
+        printf("10 %s 3 = %d\\n", names[i], ops[i](10,3));
+}</pre><div class="trace">int (*ops[4])(int,int): 4개 함수포인터 배열<br>ops[0](10,3) = add(10,3) = 13<br>배열 인덱스로 함수 선택 가능!</div>`},
+
+            {
+                n: 8, t: "콜백 함수 패턴", d: 3,
+                q: `콜백 함수를 받는 forEach를 작성하세요.
+<pre class="code-c"><span class="cm">// 배열의 각 원소에 함수를 적용</span>
+void forEach(int arr[], int n, void (*fn)(int)) {
+    <span class="cm">/* ? */</span>
+}
+void printDouble(int x) { printf("%d ", x*2); }</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">void forEach(int arr[], int n, void (*fn)(int)) {
+    for (int i=0; i<n; i++) fn(arr[i]);
+}
+int main() {
+    int a[] = {1,2,3,4,5};
+    forEach(a, 5, printDouble); <span class="cm">// 2 4 6 8 10</span>
+}</pre><div class="trace">콜백: 함수를 인자로 전달<br>forEach가 각 원소에 fn 적용<br>함수형 프로그래밍 스타일!</div>`},
+
+            {
+                n: 9, t: "문자열 동적 복사 (strdup)", d: 2,
+                q: `문자열을 동적 할당으로 복사하는 함수를 작성하세요.
+<pre class="code-c">char* myStrdup(const char *s) {
+    <span class="cm">// malloc + strcpy</span>
+}</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">char* myStrdup(const char *s) {
+    int len = strlen(s);
+    char *copy = (char*)malloc(len + 1);
+    if (copy) strcpy(copy, s);
+    return copy;
+}
+<span class="cm">// 사용:</span>
+char *s = myStrdup("Hello");
+printf("%s", s);
+free(s); <span class="cm">// 반드시 해제!</span></pre><div class="trace">strlen+1: '\\0' 포함!<br>호출자가 free 책임</div>`},
+
+            {
+                n: 10, t: "구조체 동적 배열", d: 2,
+                q: `학생 구조체 배열을 동적으로 할당하세요.
+<pre class="code-c">typedef struct { char name[20]; int score; } Student;
+<span class="cm">// n명의 학생 배열 할당, 입력, 출력, 해제</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">int n = 3;
+Student *students = (Student*)malloc(n*sizeof(Student));
+for (int i=0;i<n;i++) {
+    sprintf(students[i].name, "학생%d", i+1);
+    students[i].score = 80 + i*5;
+}
+for (int i=0;i<n;i++)
+    printf("%s: %d\\n", students[i].name, students[i].score);
+free(students);</pre>`},
+
+            {
+                n: 11, t: "[출력예측] 포인터 산술", d: 3,
+                q: `아래 코드의 출력을 쓰세요.
+<pre class="code-c">int a[] = {10,20,30,40,50};
+int *p = a;
+int *q = a + 3;
+printf("%d\\n", *p);
+printf("%d\\n", *(p+2));
+printf("%d\\n", q - p);
+printf("%d\\n", p[4]);
+printf("%ld\\n", (long)q - (long)p);</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">10<br>30<br>3<br>50<br>12</div><div class="trace">*p = a[0] = 10<br>*(p+2) = a[2] = 30<br>q-p = 3 (포인터 차이 = 원소 수!)<br>p[4] = *(p+4) = a[4] = 50<br>(long)q-(long)p = 3*sizeof(int) = 12바이트</div>`
+            },
+
+            {
+                n: 12, t: "const 포인터 이해", d: 2,
+                q: `다음 선언의 차이를 설명하세요.
+<pre class="code-c">const int *p1;      <span class="cm">// (A)</span>
+int * const p2;     <span class="cm">// (B)</span>
+const int * const p3; <span class="cm">// (C)</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">(A) const int *p1;
+    <span class="cm">→ 값 변경 불가, 주소 변경 가능</span>
+    <span class="cm">→ *p1 = 10; ❌  p1 = &b; ✅</span>
+
+(B) int * const p2;
+    <span class="cm">→ 값 변경 가능, 주소 변경 불가</span>
+    <span class="cm">→ *p2 = 10; ✅  p2 = &b; ❌</span>
+
+(C) const int * const p3;
+    <span class="cm">→ 둘 다 불가</span>
+    <span class="cm">→ *p3 = 10; ❌  p3 = &b; ❌</span></pre><div class="trace"><span class="val">팁</span>: const가 * 왼쪽 → 값 보호<br>const가 * 오른쪽 → 포인터 보호</div>`},
+
+            {
+                n: 13, t: "비트필드 구조체", d: 2,
+                q: `비트필드를 사용한 구조체를 작성하세요.
+<pre class="code-c"><span class="cm">// 색상: R(5bit), G(6bit), B(5bit) = 16bit</span>
+typedef struct {
+    <span class="cm">// 비트필드 사용</span>
+} RGB565;</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">typedef struct {
+    unsigned short r : 5;
+    unsigned short g : 6;
+    unsigned short b : 5;
+} RGB565;
+<span class="cm">// 사용:</span>
+RGB565 color;
+color.r = 31; <span class="cm">// 최대 2^5-1 = 31</span>
+color.g = 63; <span class="cm">// 최대 2^6-1 = 63</span>
+color.b = 31;
+printf("size: %lu\\n", sizeof(RGB565)); <span class="cm">// 2바이트!</span></pre>`},
+
+            {
+                n: 14, t: "errno와 에러 처리", d: 2,
+                q: `파일 열기 실패 시 에러 메시지를 출력하세요.
+<pre class="code-c">#include &lt;errno.h&gt;
+<span class="cm">// 파일 열기 + 에러 처리 패턴</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">#include &lt;stdio.h&gt;
+#include &lt;errno.h&gt;
+#include &lt;string.h&gt;
+int main() {
+    FILE *f = fopen("없는파일.txt", "r");
+    if (f == NULL) {
+        printf("에러 코드: %d\\n", errno);
+        printf("메시지: %s\\n", strerror(errno));
+        perror("fopen 실패"); <span class="cm">// 자동 메시지</span>
+        return 1;
+    }
+    fclose(f);
+    return 0;
+}</pre><div class="trace">errno: 전역 에러 번호<br>strerror: 번호→메시지<br>perror: 접두사+메시지 자동 출력</div>`},
+
+            {
+                n: 15, t: "🏆 제네릭 동적 배열 (Vector)", d: 4,
+                q: `자동으로 크기가 늘어나는 동적 배열을 구현하세요.
+<pre class="code-c">typedef struct {
+    int *data; int size; int capacity;
+} Vector;
+void vecInit(Vector *v) { <span class="cm">/* ? */</span> }
+void vecPush(Vector *v, int val) { <span class="cm">/* ? */</span> }
+int vecGet(Vector *v, int i) { <span class="cm">/* ? */</span> }
+void vecFree(Vector *v) { <span class="cm">/* ? */</span> }</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">void vecInit(Vector *v) {
+    v->capacity = 4;
+    v->size = 0;
+    v->data = (int*)malloc(4 * sizeof(int));
+}
+void vecPush(Vector *v, int val) {
+    if (v->size == v->capacity) {
+        v->capacity *= 2; <span class="cm">// 2배 확장!</span>
+        v->data = (int*)realloc(v->data,
+                    v->capacity * sizeof(int));
+    }
+    v->data[v->size++] = val;
+}
+int vecGet(Vector *v, int i) { return v->data[i]; }
+void vecFree(Vector *v) { free(v->data); v->data=NULL; }</pre><div class="trace">C++의 std::vector와 동일 원리!<br>가득 차면 2배 확장 (amortized O(1))<br>실무에서 가장 많이 쓰는 패턴</div>`}
+        ];
+        const c = document.getElementById('problems'); P.forEach(p => { const dc = p.d <= 1 ? 'ez' : p.d <= 2 ? 'md' : 'hd'; const dots = Array.from({ length: 5 }, (_, i) => `<span${i < p.d ? ' class="on"' : ''}>​</span>`).join(''); c.innerHTML += `<div class="prob"><div class="prob-top"><div class="prob-num ${dc}">${p.n}</div><div class="prob-title">${p.t}</div><div class="diff-dots">${dots}</div></div><div class="prob-body"><div class="q">${p.q}</div><textarea class="write" placeholder="✍️ 답을 작성하세요" rows="8"></textarea><details class="ans"><summary>정답 및 해설 보기</summary><div class="ans-body">${p.a}</div></details></div></div>`; });
+    </script>
+    <script src="../submit.js"></script>
+    <script src="../../platform.js"></script>
+</body>
+
+</html>

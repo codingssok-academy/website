@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 소수 판별</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 16px; font-weight: 700; color: #1e3a5f; margin: 16px 0 8px; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 14px;
+    color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+.formula-box { background: #f0f9ff; border: 1.5px solid #7dd3fc; border-radius: 10px; padding: 14px 18px; margin: 14px 0; }
+.formula-box .formula-title { font-size: 13px; font-weight: 700; color: #0369a1; margin-bottom: 8px; }
+.formula-box .formula-row { font-size: 14px; color: #0c4a6e; line-height: 1.8; font-family: 'JetBrains Mono', monospace; }
+
+.info-box { background: #fefce8; border: 1.5px solid #fcd34d; border-radius: 8px; padding: 12px 16px; margin: 12px 0; }
+.info-box .info-title { font-size: 12px; font-weight: 700; color: #92400e; margin-bottom: 6px; }
+.info-box .info-text { font-size: 13px; color: #78350f; line-height: 1.7; }
+
+.prime-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; margin: 12px 0; }
+.prime-cell { width: 100%; aspect-ratio: 1; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }
+.cell-prime { background: #dbeafe; color: #1d4ed8; border: 1.5px solid #3b82f6; }
+.cell-comp  { background: #f1f5f9; color: #94a3b8; border: 1.5px solid #e2e8f0; }
+.cell-one   { background: #fef3c7; color: #92400e; border: 1.5px solid #f59e0b; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- ===== 표지 ===== -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">11</div>
+        <div class="cover-label">Unit 11 · Level 4 — 반복문 심화</div>
+        <h1 class="cover-title">소수 판별</h1>
+        <p class="cover-sub">약수가 1과 자신뿐인 수, 소수를 판별하는 알고리즘을 단계적으로 최적화하며 이해합니다.</p>
+        <div style="margin:24px 0;">
+            <svg viewBox="0 0 520 60" style="max-width:520px;width:100%">
+                <rect x="5" y="10" width="120" height="36" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="65" y="32" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">소수란?</text>
+                <line x1="130" y1="28" x2="148" y2="28" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="153" y="10" width="120" height="36" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="213" y="32" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">기본 판별 O(n)</text>
+                <line x1="278" y1="28" x2="296" y2="28" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="301" y="10" width="130" height="36" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="366" y="32" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">최적화 O(sqrt(n))</text>
+                <line x1="436" y1="28" x2="454" y2="28" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="459" y="10" width="55" height="36" rx="6" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+                <text x="486" y="32" text-anchor="middle" font-size="10" fill="#dc2626" font-weight="700">체</text>
+            </svg>
+        </div>
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="반복" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 유닛에서 배우는 것</h3>
+            <ul>
+                <li>소수의 정의를 말하고 소수와 합성수를 구분할 수 있습니다.</li>
+                <li>2부터 n-1까지 나눠보는 기본 소수 판별 알고리즘을 코드로 작성할 수 있습니다.</li>
+                <li>sqrt(n)까지만 확인해도 되는 이유를 설명할 수 있습니다.</li>
+                <li>최적화된 소수 판별 코드를 작성할 수 있습니다.</li>
+                <li>에라토스테네스의 체 개념을 이해하고 원리를 설명할 수 있습니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- ===== p2: 소수 개념 ===== -->
+<div class="page">
+    <h2>소수(Prime Number)란?</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/clock.png" alt="반복 시간" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p><strong>소수</strong>는 1보다 큰 정수 중에서 <strong>약수가 오직 1과 자기 자신뿐</strong>인 수입니다. 2, 3, 5, 7, 11, 13 ...이 소수입니다.</p>
+
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 160" style="max-width:460px;width:100%">
+            <!-- 소수 예시 -->
+            <rect x="10" y="8" width="200" height="145" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="110" y="28" text-anchor="middle" font-size="12" fill="#166534" font-weight="700">소수 (Prime)</text>
+            <!-- 5의 약수 -->
+            <text x="110" y="50" text-anchor="middle" font-size="11" fill="#374151">5의 약수: 1, 5</text>
+            <rect x="30" y="58" width="24" height="20" rx="3" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="42" y="72" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">1</text>
+            <rect x="62" y="58" width="24" height="20" rx="3" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="74" y="72" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">5</text>
+            <text x="110" y="96" text-anchor="middle" font-size="10" fill="#64748b">약수 2개 → 소수</text>
+            <!-- 7의 약수 -->
+            <text x="110" y="116" text-anchor="middle" font-size="11" fill="#374151">7의 약수: 1, 7</text>
+            <rect x="30" y="124" width="24" height="20" rx="3" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="42" y="138" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">1</text>
+            <rect x="62" y="124" width="24" height="20" rx="3" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="74" y="138" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">7</text>
+            <text x="110" y="150" text-anchor="middle" font-size="10" fill="#64748b">약수 2개 → 소수</text>
+            <!-- 합성수 예시 -->
+            <rect x="250" y="8" width="200" height="145" rx="8" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="350" y="28" text-anchor="middle" font-size="12" fill="#dc2626" font-weight="700">합성수 (Composite)</text>
+            <!-- 12의 약수 -->
+            <text x="350" y="50" text-anchor="middle" font-size="11" fill="#374151">12의 약수: 1,2,3,4,6,12</text>
+            <rect x="264" y="58" width="20" height="20" rx="3" fill="#fecaca" stroke="#ef4444" stroke-width="1"/>
+            <text x="274" y="72" text-anchor="middle" font-size="9" fill="#dc2626" font-weight="700">1</text>
+            <rect x="288" y="58" width="20" height="20" rx="3" fill="#fecaca" stroke="#ef4444" stroke-width="1"/>
+            <text x="298" y="72" text-anchor="middle" font-size="9" fill="#dc2626" font-weight="700">2</text>
+            <rect x="312" y="58" width="20" height="20" rx="3" fill="#fecaca" stroke="#ef4444" stroke-width="1"/>
+            <text x="322" y="72" text-anchor="middle" font-size="9" fill="#dc2626" font-weight="700">3</text>
+            <rect x="336" y="58" width="20" height="20" rx="3" fill="#fecaca" stroke="#ef4444" stroke-width="1"/>
+            <text x="346" y="72" text-anchor="middle" font-size="9" fill="#dc2626" font-weight="700">4</text>
+            <rect x="360" y="58" width="20" height="20" rx="3" fill="#fecaca" stroke="#ef4444" stroke-width="1"/>
+            <text x="370" y="72" text-anchor="middle" font-size="9" fill="#dc2626" font-weight="700">6</text>
+            <rect x="384" y="58" width="24" height="20" rx="3" fill="#fecaca" stroke="#ef4444" stroke-width="1"/>
+            <text x="396" y="72" text-anchor="middle" font-size="9" fill="#dc2626" font-weight="700">12</text>
+            <text x="350" y="96" text-anchor="middle" font-size="10" fill="#64748b">약수 6개 → 합성수</text>
+            <!-- 1은 소수 아님 -->
+            <rect x="264" y="108" width="172" height="38" rx="6" fill="#fffbeb" stroke="#fcd34d" stroke-width="1.5"/>
+            <text x="350" y="124" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">주의: 1은 소수가 아님</text>
+            <text x="350" y="140" text-anchor="middle" font-size="9" fill="#78350f">약수가 1뿐 (2개가 아님)</text>
+        </svg>
+    </div>
+
+    <h3>100 이하 소수 목록</h3>
+    <div class="prime-grid">
+        <div class="prime-cell cell-one">1</div>
+        <div class="prime-cell cell-prime">2</div>
+        <div class="prime-cell cell-prime">3</div>
+        <div class="prime-cell cell-comp">4</div>
+        <div class="prime-cell cell-prime">5</div>
+        <div class="prime-cell cell-comp">6</div>
+        <div class="prime-cell cell-prime">7</div>
+        <div class="prime-cell cell-comp">8</div>
+        <div class="prime-cell cell-comp">9</div>
+        <div class="prime-cell cell-comp">10</div>
+        <div class="prime-cell cell-prime">11</div>
+        <div class="prime-cell cell-comp">12</div>
+        <div class="prime-cell cell-prime">13</div>
+        <div class="prime-cell cell-comp">14</div>
+        <div class="prime-cell cell-comp">15</div>
+        <div class="prime-cell cell-comp">16</div>
+        <div class="prime-cell cell-prime">17</div>
+        <div class="prime-cell cell-comp">18</div>
+        <div class="prime-cell cell-prime">19</div>
+        <div class="prime-cell cell-comp">20</div>
+        <div class="prime-cell cell-comp">21</div>
+        <div class="prime-cell cell-comp">22</div>
+        <div class="prime-cell cell-prime">23</div>
+        <div class="prime-cell cell-comp">24</div>
+        <div class="prime-cell cell-comp">25</div>
+        <div class="prime-cell cell-comp">26</div>
+        <div class="prime-cell cell-comp">27</div>
+        <div class="prime-cell cell-comp">28</div>
+        <div class="prime-cell cell-prime">29</div>
+        <div class="prime-cell cell-comp">30</div>
+    </div>
+    <p style="font-size:12px;color:#64748b;margin-top:4px;">파란색 = 소수 / 회색 = 합성수 / 노란색 = 1(소수 아님)</p>
+</div>
+
+<!-- ===== p3: 기본 판별 알고리즘 ===== -->
+<div class="page">
+    <h2>기본 소수 판별 알고리즘</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/flowchart.png" alt="흐름도" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>소수를 판별하는 가장 직관적인 방법은 <strong>2부터 n-1까지 모두 나눠보는</strong> 것입니다. 한 번이라도 나누어지면 소수가 아닙니다.</p>
+
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 140" style="max-width:460px;width:100%">
+            <!-- 순서도 -->
+            <rect x="170" y="5" width="120" height="26" rx="6" fill="#1e3a5f"/>
+            <text x="230" y="22" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">n 입력</text>
+            <line x1="230" y1="31" x2="230" y2="44" stroke="#94a3b8" stroke-width="1.5"/>
+            <rect x="170" y="45" width="120" height="26" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="230" y="62" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">i = 2 부터 n-1 까지</text>
+            <line x1="230" y1="71" x2="230" y2="84" stroke="#94a3b8" stroke-width="1.5"/>
+            <!-- 마름모 -->
+            <polygon points="230,85 310,108 230,131 150,108" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="230" y="112" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">n % i == 0?</text>
+            <!-- Yes 분기 -->
+            <line x1="310" y1="108" x2="400" y2="108" stroke="#ef4444" stroke-width="1.5"/>
+            <rect x="400" y="96" width="50" height="24" rx="5" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="425" y="112" text-anchor="middle" font-size="9" fill="#dc2626" font-weight="700">소수 아님</text>
+            <text x="355" y="103" text-anchor="middle" font-size="9" fill="#ef4444">Yes</text>
+            <!-- No 분기 -->
+            <line x1="230" y1="131" x2="230" y2="144" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="218" y="142" font-size="9" fill="#22c55e">No(모두)</text>
+            <rect x="170" y="130" width="120" height="20" rx="5" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="230" y="144" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">소수!</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt">// 기본 소수 판별 — O(n)</span>
+<span class="kw">int</span> n, is_prime = <span class="num">1</span>;   <span class="cmt">// is_prime=1 이면 소수라고 가정</span>
+<span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;n);
+
+<span class="kw">if</span> (n &lt; <span class="num">2</span>) {
+    is_prime = <span class="num">0</span>;         <span class="cmt">// 2 미만은 소수 아님</span>
+} <span class="kw">else</span> {
+    <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">2</span>; i &lt;= n - <span class="num">1</span>; i++) {
+        <span class="kw">if</span> (n % i == <span class="num">0</span>) {    <span class="cmt">// 나누어지면</span>
+            is_prime = <span class="num">0</span>;    <span class="cmt">// 소수 아님</span>
+            <span class="kw">break</span>;           <span class="cmt">// 더 볼 필요 없음</span>
+        }
+    }
+}
+
+<span class="kw">if</span> (is_prime) <span class="fn">printf</span>(<span class="str">"%d는 소수\n"</span>, n);
+<span class="kw">else</span>          <span class="fn">printf</span>(<span class="str">"%d는 소수 아님\n"</span>, n);</div>
+
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 460 70" style="max-width:460px;width:100%">
+            <text x="20" y="16" font-size="12" fill="#1e3a5f" font-weight="700">n = 13 판별 과정</text>
+            <rect x="20" y="22" width="420" height="40" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="40" text-anchor="middle" font-size="11" fill="#374151">i=2: 13%2=1 (통과) / i=3: 13%3=1 (통과) / ... / i=12: 13%12=1 (통과)</text>
+            <text x="230" y="56" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">모든 i에서 나누어지지 않음 → 13은 소수</text>
+        </svg>
+    </div>
+
+    <h3>break의 역할 — 조기 종료</h3>
+    <p><code>break</code>는 한 번이라도 나누어지면 루프를 바로 멈추게 합니다. 6이 소수인지 보면, i=2에서 6%2=0이 되어 즉시 종료합니다. 불필요한 반복을 줄이는 중요한 테크닉입니다.</p>
+</div>
+
+<!-- ===== p4: sqrt 최적화 + 에라토스테네스 ===== -->
+<div class="page">
+    <h2>sqrt(n) 최적화 & 에라토스테네스의 체</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+    <h3>왜 sqrt(n)까지만 확인해도 될까?</h3>
+    <p>n의 약수는 반드시 <strong>쌍</strong>으로 존재합니다. 예를 들어 36 = 6×6이므로, 한쪽이 6보다 크면 나머지 한쪽은 6보다 작습니다. sqrt(36)=6 이하에서 이미 모든 약수가 발견됩니다.</p>
+
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 120" style="max-width:460px;width:100%">
+            <!-- 36 약수 쌍 -->
+            <rect x="10" y="8" width="440" height="105" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="26" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="700">36의 약수 쌍 분석</text>
+            <!-- 쌍들 -->
+            <rect x="30" y="35" width="36" height="20" rx="3" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="48" y="49" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">1</text>
+            <text x="75" y="49" font-size="14" fill="#94a3b8">×</text>
+            <rect x="88" y="35" width="36" height="20" rx="3" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="106" y="49" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">36</text>
+
+            <rect x="140" y="35" width="36" height="20" rx="3" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="158" y="49" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">2</text>
+            <text x="185" y="49" font-size="14" fill="#94a3b8">×</text>
+            <rect x="198" y="35" width="36" height="20" rx="3" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="216" y="49" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">18</text>
+
+            <rect x="250" y="35" width="36" height="20" rx="3" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="268" y="49" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">3</text>
+            <text x="295" y="49" font-size="14" fill="#94a3b8">×</text>
+            <rect x="308" y="35" width="36" height="20" rx="3" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="326" y="49" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">12</text>
+
+            <rect x="360" y="35" width="36" height="20" rx="3" fill="#fefce8" stroke="#f59e0b" stroke-width="1"/>
+            <text x="378" y="49" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">6</text>
+            <text x="405" y="49" font-size="14" fill="#94a3b8">×</text>
+            <rect x="418" y="35" width="36" height="20" rx="3" fill="#fefce8" stroke="#f59e0b" stroke-width="1"/>
+            <text x="436" y="49" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">6</text>
+
+            <line x1="30" y1="66" x2="440" y2="66" stroke="#e2e8f0" stroke-width="1"/>
+            <text x="230" y="82" text-anchor="middle" font-size="11" fill="#374151">sqrt(36) = 6 이하만 확인하면 모든 약수 쌍 발견 가능</text>
+            <rect x="30" y="90" width="400" height="18" rx="4" fill="#dbeafe"/>
+            <text x="230" y="103" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">i &lt;= sqrt(n) 으로 루프 범위 줄이기 → 훨씬 빠름</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt">// 최적화 소수 판별 — O(sqrt(n))</span>
+<span class="fn">#include</span> <span class="str">&lt;math.h&gt;</span>   <span class="cmt">// sqrt() 사용 위해</span>
+
+<span class="kw">int</span> n, is_prime = <span class="num">1</span>;
+<span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;n);
+
+<span class="kw">if</span> (n &lt; <span class="num">2</span>) {
+    is_prime = <span class="num">0</span>;
+} <span class="kw">else</span> {
+    <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">2</span>; i * i &lt;= n; i++) {  <span class="cmt">// i*i &lt;= n 이 sqrt(n)과 같음</span>
+        <span class="kw">if</span> (n % i == <span class="num">0</span>) {
+            is_prime = <span class="num">0</span>;
+            <span class="kw">break</span>;
+        }
+    }
+}
+<span class="fn">printf</span>(<span class="str">"%d: %s\n"</span>, n, is_prime ? <span class="str">"소수"</span> : <span class="str">"소수 아님"</span>);</div>
+
+    <div class="info-box">
+        <div class="info-title">i*i &lt;= n 과 i &lt;= sqrt(n) 은 같은 의미</div>
+        <div class="info-text">sqrt() 함수를 쓰면 실수 오차가 생길 수 있습니다. i*i &lt;= n 으로 쓰는 것이 더 안전하고 빠릅니다.</div>
+    </div>
+
+    <h3>에라토스테네스의 체 개념</h3>
+    <p>1부터 100까지 소수를 <strong>한꺼번에</strong> 구하려면 에라토스테네스의 체를 씁니다. 소수의 배수를 순서대로 지워나가는 방식입니다.</p>
+
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 460 90" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="80" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="22" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="700">에라토스테네스의 체 3단계</text>
+            <rect x="20" y="30" width="130" height="46" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="85" y="47" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">1단계</text>
+            <text x="85" y="63" text-anchor="middle" font-size="9" fill="#374151">2의 배수 전부 제거</text>
+            <text x="85" y="75" text-anchor="middle" font-size="9" fill="#374151">4,6,8,10...</text>
+            <rect x="165" y="30" width="130" height="46" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="230" y="47" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">2단계</text>
+            <text x="230" y="63" text-anchor="middle" font-size="9" fill="#374151">3의 배수 전부 제거</text>
+            <text x="230" y="75" text-anchor="middle" font-size="9" fill="#374151">6,9,12,15...</text>
+            <rect x="310" y="30" width="130" height="46" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="375" y="47" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">결과</text>
+            <text x="375" y="63" text-anchor="middle" font-size="9" fill="#374151">남은 수 = 모두 소수</text>
+            <text x="375" y="75" text-anchor="middle" font-size="9" fill="#374151">2,3,5,7,11,13...</text>
+        </svg>
+    </div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/calculator.png" alt="계산" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">n=97이 소수인지 i*i &lt;= n 조건으로 확인해보세요. 루프가 몇 번 돌아가나요?</div>
+                <div class="practice-result">sqrt(97) ≈ 9.8, 즉 i=2~9까지 8번만 체크</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== p5: 문제 ===== -->
+<div class="page">
+    <h2>연습 문제</h2>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">1</div>
+            <div class="problem-label">소수/합성수 구분</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">다음 중 소수를 모두 고르세요: 1, 2, 4, 11, 15, 17, 21, 29</div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">소수: 2, 11, 17, 29 (1은 소수 아님, 4=2×2, 15=3×5, 21=3×7)</div>
+            </div>
+        </details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">2</div>
+            <div class="problem-label">n=25 소수 판별 추적</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">i*i &lt;= 25 조건으로 25를 판별할 때, 루프에서 i가 몇일 때 나누어지나요?</div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">i=5일 때 25%5=0 → 소수 아님. sqrt(25)=5이므로 i=2,3,4,5 까지 확인</div>
+            </div>
+        </details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">3</div>
+            <div class="problem-label">2~50 소수 출력</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">2부터 50까지의 모든 소수를 출력하는 코드를 작성하세요. (바깥 루프: n=2~50, 안쪽: 소수 판별)</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">2 3 5 7 11 13 17 19 23 29 31 37 41 43 47</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code"><span style="color:#c084fc">for</span> (<span style="color:#c084fc">int</span> n=2; n&lt;=50; n++) {
+    <span style="color:#c084fc">int</span> ok=1;
+    <span style="color:#c084fc">for</span> (<span style="color:#c084fc">int</span> i=2; i*i&lt;=n; i++)
+        <span style="color:#c084fc">if</span> (n%i==0) { ok=0; <span style="color:#c084fc">break</span>; }
+    <span style="color:#c084fc">if</span> (ok) <span style="color:#67e8f9">printf</span>(<span style="color:#86efac">"%d "</span>, n);
+}</div>
+            </div>
+        </details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">4</div>
+            <div class="problem-label">기본 vs 최적화 비교</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">n=10000에서 기본 알고리즘(2~n-1)과 최적화(2~sqrt(n))의 루프 횟수를 각각 구하세요.</div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">기본: 최대 9998번 / 최적화: sqrt(10000)=100, 최대 99번 → 약 100배 빠름</div>
+            </div>
+        </details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">5</div>
+            <div class="problem-label">소수 개수 카운팅</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">1부터 100까지 소수의 개수를 세는 코드를 작성하고, 결과를 쓰세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">25개</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code"><span style="color:#c084fc">int</span> cnt=0;
+<span style="color:#c084fc">for</span> (<span style="color:#c084fc">int</span> n=2; n&lt;=100; n++) {
+    <span style="color:#c084fc">int</span> ok=1;
+    <span style="color:#c084fc">for</span> (<span style="color:#c084fc">int</span> i=2; i*i&lt;=n; i++)
+        <span style="color:#c084fc">if</span>(n%i==0){ok=0;<span style="color:#c084fc">break</span>;}
+    <span style="color:#c084fc">if</span>(ok) cnt++;
+}
+<span style="color:#67e8f9">printf</span>(<span style="color:#86efac">"%d개\n"</span>, cnt);  <span style="color:#64748b">// 25개</span></div>
+            </div>
+        </details>
+    </div>
+
+    <div class="summary" style="margin-top:16px;">
+        <h3>Unit 11 핵심 정리</h3>
+        <ul>
+            <li>소수 = 약수가 1과 자신뿐인 수 (1은 소수 아님)</li>
+            <li>기본 판별: 2 ~ n-1 까지 나눠보기 (O(n))</li>
+            <li>최적화: 2 ~ sqrt(n) 까지만 (O(sqrt(n))) — i*i &lt;= n 조건 사용</li>
+            <li>나누어지는 순간 break; 로 조기 종료</li>
+            <li>에라토스테네스의 체: 소수의 배수를 차례로 지워서 범위 내 소수 한꺼번에 구하기</li>
+        </ul>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+
+
+
+<script>
+(function(){
+  var KEY = 'cs_ans_' + location.pathname.replace(/[^a-zA-Z0-9]/g,'_');
+  var pagePath = location.pathname;
+  var userId = null;
+  try {
+    userId = window.parent?.localStorage?.getItem('codingssok_user_id')
+      || localStorage.getItem('codingssok_user_id');
+  } catch(e) {}
+
+  function save(){
+    var areas = document.querySelectorAll('textarea');
+    var saved = 0;
+    areas.forEach(function(ta, i){
+      if(ta.value.trim()) {
+        localStorage.setItem(KEY + '_' + i, ta.value);
+        saved++;
+      } else {
+        localStorage.removeItem(KEY + '_' + i);
+      }
+    });
+    if(saved > 0) showSaveIndicator();
+  }
+
+  function load(){
+    var areas = document.querySelectorAll('textarea');
+    var restored = 0;
+    areas.forEach(function(ta, i){
+      var val = localStorage.getItem(KEY + '_' + i);
+      if(val && val.trim()) {
+        ta.value = val;
+        ta.style.borderColor = '#10b981';
+        ta.style.boxShadow = '0 0 0 2px rgba(16,185,129,0.15)';
+        setTimeout(function(){ ta.style.borderColor = ''; ta.style.boxShadow = ''; }, 2000);
+        restored++;
+      }
+    });
+    if(restored > 0) showRestoreIndicator(restored);
+  }
+
+  function saveToDb(){
+    if(!userId) return;
+    var areas = document.querySelectorAll('textarea');
+    var answers = [];
+    areas.forEach(function(ta, i){
+      if(ta.value.trim()) answers.push({ field_index: i, answer_text: ta.value });
+    });
+    if(answers.length === 0) return;
+    fetch('/api/answers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId, page_path: pagePath, answers: answers })
+    }).catch(function(){});
+  }
+
+  function loadFromDb(){
+    if(!userId) return;
+    fetch('/api/answers?user_id=' + encodeURIComponent(userId) + '&page_path=' + encodeURIComponent(pagePath))
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(!d.answers || !d.answers.length) return;
+        var areas = document.querySelectorAll('textarea');
+        d.answers.forEach(function(a){
+          if(areas[a.field_index] && a.answer_text) {
+            areas[a.field_index].value = a.answer_text;
+            localStorage.setItem(KEY + '_' + a.field_index, a.answer_text);
+          }
+        });
+      }).catch(function(){});
+  }
+
+  function showSaveIndicator(){
+    var el = document.getElementById('cs-save-ind');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'cs-save-ind';
+      el.style.cssText = 'position:fixed;bottom:16px;right:16px;padding:6px 14px;border-radius:8px;background:#0f172a;color:#22c55e;font-size:11px;font-weight:700;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+      document.body.appendChild(el);
+    }
+    el.textContent = '\u2713 \uB2F5\uC548 \uC800\uC7A5\uB428'; // ✓ 답안 저장됨
+    el.style.opacity = '1';
+    setTimeout(function(){ el.style.opacity = '0'; }, 1500);
+  }
+
+  function showRestoreIndicator(n){
+    var el = document.getElementById('cs-save-ind');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'cs-save-ind';
+      el.style.cssText = 'position:fixed;bottom:16px;right:16px;padding:6px 14px;border-radius:8px;background:#0f172a;color:#3b82f6;font-size:11px;font-weight:700;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+      document.body.appendChild(el);
+    }
+    el.textContent = '\u21BB ' + n + '\uAC1C \uB2F5\uC548 \uBCF5\uC6D0'; // ↻ n개 답안 복원
+    el.style.color = '#3b82f6';
+    el.style.opacity = '1';
+    setTimeout(function(){ el.style.opacity = '0'; }, 2500);
+  }
+
+  var t = null;
+  document.addEventListener('input', function(e){
+    if(e.target.tagName === 'TEXTAREA'){
+      clearTimeout(t);
+      t = setTimeout(function(){ save(); saveToDb(); }, 300);
+    }
+  });
+  document.addEventListener('change', function(e){
+    if(e.target.tagName === 'TEXTAREA'){ save(); saveToDb(); }
+  });
+  document.addEventListener('focusout', function(e){
+    if(e.target.tagName === 'TEXTAREA'){ save(); saveToDb(); }
+  });
+  window.addEventListener('beforeunload', function(){ save(); saveToDb(); });
+
+  // 즉시 로드
+  load();
+  loadFromDb();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 프로젝트: 이름 궁합 테스트</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute; bottom: 10mm; right: 16mm;
+    font-size: 10px; color: #94a3b8; font-weight: 600;
+}
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #ec4899; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark { position: absolute; top: -10px; right: -15px; font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3); line-height: 1; pointer-events: none; }
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #ec4899; font-weight: 900; }
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 16px; font-weight: 700; color: #1e3a5f; margin: 18px 0 10px; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #2563eb; font-weight: 600; }
+ul, ol { margin: 0 0 12px 20px; }
+li { font-size: 14px; color: #374151; line-height: 1.8; }
+.code { background: #0f172a; border-radius: 8px; padding: 16px 20px; font-family: 'JetBrains Mono', monospace; font-size: 13.5px; color: #e2e8f0; line-height: 1.85; margin: 14px 0; overflow-x: auto; white-space: pre-wrap; }
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.code .dec { color: #f9a8d4; }
+.practice { margin: 20px 0; border-left: 4px solid #ec4899; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #9d174d; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #ec4899; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #ec4899; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; white-space: pre-wrap; }
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+.step-box { border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 14px 18px; margin: 14px 0; background: #fff; }
+.step-label { font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+.step-title { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 8px; }
+.output-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #334155; line-height: 1.7; margin: 10px 0; white-space: pre-wrap; }
+.compare-table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13px; }
+.compare-table th { background: #1e3a5f; color: #fff; padding: 8px 12px; text-align: left; font-weight: 700; }
+.compare-table td { padding: 7px 12px; border-bottom: 1px solid #e2e8f0; color: #374151; }
+.compare-table tr:nth-child(even) td { background: #f8fafc; }
+.compare-table code { background: #e0e7ff; padding: 1px 5px; border-radius: 3px; font-family: 'JetBrains Mono', monospace; color: #3730a3; font-size: 12px; }
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- 1페이지: 표지 -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">PJ</div>
+        <div class="cover-label">L3 — Project</div>
+        <h1 class="cover-title">프로젝트:<br>이름 궁합 테스트</h1>
+        <p class="cover-sub">두 이름의 자음과 모음을 분석해 점수를 계산하고, f-string으로 A~F 등급의 결과를 출력합니다.</p>
+
+        <div style="margin:24px 0;">
+            <svg viewBox="0 0 500 155" style="max-width:500px;width:100%">
+                <defs>
+                    <marker id="arwCP" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                    </marker>
+                </defs>
+                <rect x="165" y="57" width="170" height="42" rx="8" fill="#1e3a5f"/>
+                <text x="250" y="75" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">compatibility.py</text>
+                <text x="250" y="90" text-anchor="middle" font-size="9" fill="#fbcfe8">완성 목표</text>
+                <rect x="5" y="5" width="130" height="36" rx="6" fill="#fce7f3" stroke="#ec4899" stroke-width="1.5"/>
+                <text x="70" y="19" text-anchor="middle" font-size="9" fill="#9d174d" font-weight="700">자음/모음 분리</text>
+                <text x="70" y="33" text-anchor="middle" font-size="8" fill="#64748b">유니코드 분해 알고리즘</text>
+                <line x1="138" y1="23" x2="163" y2="68" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCP)"/>
+                <rect x="365" y="5" width="130" height="36" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="430" y="19" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">점수 계산</text>
+                <text x="430" y="33" text-anchor="middle" font-size="8" fill="#64748b">자음/모음 일치 합산</text>
+                <line x1="362" y1="23" x2="337" y2="68" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCP)"/>
+                <rect x="5" y="112" width="130" height="36" rx="6" fill="#d1fae5" stroke="#10b981" stroke-width="1.5"/>
+                <text x="70" y="126" text-anchor="middle" font-size="9" fill="#065f46" font-weight="700">등급 결정 (A~F)</text>
+                <text x="70" y="140" text-anchor="middle" font-size="8" fill="#64748b">점수 범위로 등급 매핑</text>
+                <line x1="138" y1="130" x2="163" y2="90" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCP)"/>
+                <rect x="365" y="112" width="130" height="36" rx="6" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="430" y="126" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">f-string 출력</text>
+                <text x="430" y="140" text-anchor="middle" font-size="8" fill="#64748b">결과 포맷팅</text>
+                <line x1="362" y1="130" x2="337" y2="90" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwCP)"/>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/gamepad.png" alt="게임" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 프로젝트에서 만드는 것</h3>
+            <ul>
+                <li>한글 유니코드 원리를 이해하고 자음/모음을 추출하는 알고리즘을 구현합니다.</li>
+                <li>두 이름의 자음/모음 일치 비율로 궁합 점수를 계산합니다.</li>
+                <li>점수 범위에 따라 A~F 등급을 부여하는 조건문을 작성합니다.</li>
+                <li>f-string으로 이름, 점수, 등급, 메시지를 깔끔하게 포맷합니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- 2페이지: 핵심 개념 한글 유니코드 -->
+<div class="page">
+    <h2>핵심 개념 — 한글 유니코드 분해</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="우승" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+    <p>한글 글자 하나는 초성(자음) + 중성(모음) + 종성(자음)으로 이루어집니다. 유니코드 계산으로 이를 분리할 수 있습니다.</p>
+
+    <div style="margin:14px 0;">
+        <svg viewBox="0 0 500 100" style="max-width:500px;width:100%">
+            <rect x="0" y="5" width="500" height="90" rx="8" fill="#1e3a5f"/>
+            <text x="20" y="26" font-size="10" fill="#fbcfe8" font-weight="700">한글 유니코드 구조</text>
+            <!-- 가 -->
+            <rect x="20" y="32" width="60" height="50" rx="6" fill="#ec4899"/>
+            <text x="50" y="55" text-anchor="middle" font-size="22" fill="#fff" font-weight="900">김</text>
+            <text x="50" y="75" text-anchor="middle" font-size="8" fill="#fce7f3">ord("김") = 44608</text>
+            <!-- 공식 -->
+            <text x="95" y="60" font-size="16" fill="#94a3b8">→</text>
+            <rect x="120" y="35" width="260" height="45" rx="6" fill="#0f172a" stroke="#334155" stroke-width="1"/>
+            <text x="250" y="53" text-anchor="middle" font-size="9" fill="#86efac" font-family="monospace">(ord(c) - 0xAC00)</text>
+            <text x="250" y="67" text-anchor="middle" font-size="9" fill="#e2e8f0" font-family="monospace">초성 index = (값 // 28) // 21</text>
+            <!-- 결과 -->
+            <text x="392" y="60" font-size="16" fill="#94a3b8">→</text>
+            <rect x="412" y="35" width="80" height="45" rx="6" fill="#ec4899"/>
+            <text x="452" y="55" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">초성: "ㄱ"</text>
+            <text x="452" y="70" text-anchor="middle" font-size="9" fill="#fce7f3">모음: "ㅣ"</text>
+        </svg>
+    </div>
+
+    <h3>간단한 접근법 — 자모 카운팅</h3>
+    <p>정확한 분해 대신, 두 이름에서 같은 글자가 몇 개나 겹치는지 세는 방식으로도 궁합 점수를 만들 수 있습니다. 더 간단하고 직관적입니다.</p>
+
+    <div style="margin:14px 0;">
+        <svg viewBox="0 0 500 80" style="max-width:500px;width:100%">
+            <rect x="0" y="5" width="500" height="70" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="20" y="28" font-size="11" fill="#374151" font-weight="700">공통 글자 세기</text>
+            <text x="20" y="45" font-size="11" fill="#374151" font-family="monospace">이름1: "김민준"  이름2: "김서현"</text>
+            <text x="20" y="62" font-size="11" fill="#ec4899" font-family="monospace">공통: "김" → 1개  →  score = 1/3 = 33%</text>
+        </svg>
+    </div>
+
+    <div class="step-box">
+        <div class="step-label">Step 1</div>
+        <div class="step-title">이름 점수 계산 함수</div>
+        <p>두 이름의 공통 글자 수와 자음/모음 기반 점수를 합산합니다.</p>
+    </div>
+
+    <div class="code"><span class="kw">def</span> <span class="fn">name_score</span>(name):
+    <span class="cmt"># 이름 각 글자의 ord() 값을 합산해 점수 생성</span>
+    total = <span class="fn">sum</span>(<span class="fn">ord</span>(c) <span class="kw">for</span> c <span class="kw">in</span> name)
+    <span class="kw">return</span> total % <span class="num">100</span>
+
+<span class="kw">def</span> <span class="fn">common_chars</span>(name1, name2):
+    <span class="cmt"># 두 이름에서 공통 글자 수 계산</span>
+    s1 = <span class="fn">set</span>(name1)
+    s2 = <span class="fn">set</span>(name2)
+    <span class="kw">return</span> <span class="fn">len</span>(s1 & s2)       <span class="cmt"># 교집합 크기</span>
+
+<span class="cmt"># 테스트</span>
+<span class="fn">print</span>(<span class="fn">name_score</span>(<span class="str">"김민준"</span>))      <span class="cmt"># 예: 72</span>
+<span class="fn">print</span>(<span class="fn">common_chars</span>(<span class="str">"김민준"</span>, <span class="str">"김서현"</span>))  <span class="cmt"># 1</span></div>
+
+    <div style="margin:14px 0;">
+        <svg viewBox="0 0 500 55" style="max-width:500px;width:100%">
+            <rect x="0" y="5" width="500" height="45" rx="8" fill="#1e3a5f"/>
+            <text x="20" y="25" font-size="10" fill="#fbcfe8" font-weight="700" font-family="monospace">set 교집합 연산자: &amp;</text>
+            <text x="20" y="40" font-size="10" fill="#e2e8f0" font-family="monospace">{"김","민","준"} &amp; {"김","서","현"}  =  {"김"}  →  len() = 1</text>
+        </svg>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">STEP 1</div>
+                <div class="practice-desc">compatibility.py를 만들고 <code>name_score(name)</code> 함수를 작성하세요. ord() 합산 후 % 100을 반환합니다.</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">STEP 2</div>
+                <div class="practice-desc"><code>common_chars(name1, name2)</code> 함수를 만들고 set 교집합(<code>&amp;</code>)으로 공통 글자 수를 반환하세요.</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">STEP 3</div>
+                <div class="practice-desc">두 함수를 테스트해보고, "김민준"과 "김서현"의 공통 글자가 몇 개인지 확인하세요.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3페이지: Step 2 점수 계산 + 등급 -->
+<div class="page">
+    <h2>Step 2 — 궁합 점수 및 등급 계산</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/flowchart.png" alt="게임 흐름" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+    <p>두 이름의 name_score 차이와 common_chars를 합산해 최종 궁합 점수를 만들고, 점수 범위에 따라 A~F 등급을 부여합니다.</p>
+
+    <div class="code"><span class="kw">def</span> <span class="fn">get_grade</span>(score):
+    <span class="kw">if</span> score >= <span class="num">90</span>:  <span class="kw">return</span> <span class="str">"A"</span>, <span class="str">"완벽한 궁합! 천생연분이에요."</span>
+    <span class="kw">elif</span> score >= <span class="num">75</span>: <span class="kw">return</span> <span class="str">"B"</span>, <span class="str">"좋은 궁합! 잘 맞는 편이에요."</span>
+    <span class="kw">elif</span> score >= <span class="num">60</span>: <span class="kw">return</span> <span class="str">"C"</span>, <span class="str">"보통 궁합. 노력하면 잘 맞을 거예요."</span>
+    <span class="kw">elif</span> score >= <span class="num">45</span>: <span class="kw">return</span> <span class="str">"D"</span>, <span class="str">"조금 어려워요. 서로를 이해하는 시간이 필요해요."</span>
+    <span class="kw">elif</span> score >= <span class="num">30</span>: <span class="kw">return</span> <span class="str">"E"</span>, <span class="str">"많이 다른 편이에요. 차이를 인정하면 좋아질 거예요."</span>
+    <span class="kw">else</span>:           <span class="kw">return</span> <span class="str">"F"</span>, <span class="str">"지금은 시기가 아닌 것 같아요."</span>
+
+<span class="kw">def</span> <span class="fn">compatibility</span>(name1, name2):
+    s1 = <span class="fn">name_score</span>(name1)
+    s2 = <span class="fn">name_score</span>(name2)
+    common = <span class="fn">common_chars</span>(name1, name2)
+    diff = <span class="fn">abs</span>(s1 - s2)
+    score = <span class="num">100</span> - diff + common * <span class="num">5</span>
+    score = <span class="fn">max</span>(<span class="num">0</span>, <span class="fn">min</span>(<span class="num">100</span>, score))
+    grade, msg = <span class="fn">get_grade</span>(score)
+    <span class="kw">return</span> score, grade, msg</div>
+
+    <div style="margin:14px 0;">
+        <svg viewBox="0 0 500 90" style="max-width:500px;width:100%">
+            <rect x="0" y="5" width="500" height="80" rx="8" fill="#1e3a5f"/>
+            <text x="20" y="26" font-size="10" fill="#fbcfe8" font-weight="700">등급 범위 시각화</text>
+            <!-- A -->
+            <rect x="20" y="33" width="60" height="40" rx="5" fill="#ec4899"/>
+            <text x="50" y="52" text-anchor="middle" font-size="12" fill="#fff" font-weight="900">A</text>
+            <text x="50" y="67" text-anchor="middle" font-size="8" fill="#fce7f3">90~100</text>
+            <!-- B -->
+            <rect x="90" y="33" width="60" height="40" rx="5" fill="#f59e0b"/>
+            <text x="120" y="52" text-anchor="middle" font-size="12" fill="#fff" font-weight="900">B</text>
+            <text x="120" y="67" text-anchor="middle" font-size="8" fill="#fef3c7">75~89</text>
+            <!-- C -->
+            <rect x="160" y="33" width="60" height="40" rx="5" fill="#10b981"/>
+            <text x="190" y="52" text-anchor="middle" font-size="12" fill="#fff" font-weight="900">C</text>
+            <text x="190" y="67" text-anchor="middle" font-size="8" fill="#d1fae5">60~74</text>
+            <!-- D -->
+            <rect x="230" y="33" width="60" height="40" rx="5" fill="#3b82f6"/>
+            <text x="260" y="52" text-anchor="middle" font-size="12" fill="#fff" font-weight="900">D</text>
+            <text x="260" y="67" text-anchor="middle" font-size="8" fill="#dbeafe">45~59</text>
+            <!-- E -->
+            <rect x="300" y="33" width="60" height="40" rx="5" fill="#8b5cf6"/>
+            <text x="330" y="52" text-anchor="middle" font-size="12" fill="#fff" font-weight="900">E</text>
+            <text x="330" y="67" text-anchor="middle" font-size="8" fill="#ede9fe">30~44</text>
+            <!-- F -->
+            <rect x="370" y="33" width="60" height="40" rx="5" fill="#64748b"/>
+            <text x="400" y="52" text-anchor="middle" font-size="12" fill="#fff" font-weight="900">F</text>
+            <text x="400" y="67" text-anchor="middle" font-size="8" fill="#f1f5f9">0~29</text>
+        </svg>
+    </div>
+
+    <h3>f-string으로 결과 출력</h3>
+    <p>f-string의 형식 지정자로 점수를 소수점 없이, 등급을 강조해서 출력합니다.</p>
+
+    <div class="code">name1 = <span class="fn">input</span>(<span class="str">"첫 번째 이름: "</span>)
+name2 = <span class="fn">input</span>(<span class="str">"두 번째 이름: "</span>)
+score, grade, msg = <span class="fn">compatibility</span>(name1, name2)
+
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"{'='*30}"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">" {name1} X {name2} 궁합 결과"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"{'='*30}"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">" 점수: {score:3d}점  등급: {grade}"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">" {msg}"</span>)</div>
+
+    <div class="output-box">==============================
+ 김민준 X 이서연 궁합 결과
+==============================
+ 점수:  85점  등급: B
+ 좋은 궁합! 잘 맞는 편이에요.</div>
+</div>
+
+<!-- 4페이지: 문제 -->
+<div class="page">
+    <h2>실전 문제</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q1</div>
+            <div class="problem-label">set 교집합으로 공통 글자 구하기</div>
+            <div class="problem-diff easy">쉬움</div>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">아래 두 이름에서 set 교집합 연산으로 공통 글자 집합을 구하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">이름1</span>
+                    <span class="problem-example-value">"박지민" → set = {"박","지","민"}</span>
+                </div>
+                <div class="problem-example-row">
+                    <span class="problem-example-label">이름2</span>
+                    <span class="problem-example-value">"이지현" → set = {"이","지","현"}</span>
+                </div>
+                <div class="problem-example-row">
+                    <span class="problem-example-label">교집합</span>
+                    <span class="problem-example-value">?</span>
+                </div>
+            </div>
+            <details class="problem-toggle">
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">두 set에서 공통으로 들어있는 원소를 찾으세요. & 연산자를 사용합니다.</div>
+                </div>
+            </details>
+            <details class="problem-toggle">
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code">{"지"}  # "지"만 두 이름에 공통으로 있음
+len({"지"}) = 1</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q2</div>
+            <div class="problem-label">f-string 형식 지정자 활용</div>
+            <div class="problem-diff medium">보통</div>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text"><code>score = 87.5</code>일 때, 아래 형식으로 출력되도록 f-string을 작성하세요: <code>" 점수: 87.5점"</code></div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">형식</span>
+                    <span class="problem-example-value">소수점 1자리, 앞에 공백 1개</span>
+                </div>
+            </div>
+            <details class="problem-toggle">
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">f-string에서 {score:.1f}는 소수점 1자리로 출력합니다.</div>
+                </div>
+            </details>
+            <details class="problem-toggle">
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code">print(f" 점수: {score:.1f}점")</div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q3</div>
+            <div class="problem-label">멀티 궁합 — 여러 쌍 동시 비교</div>
+            <div class="problem-diff hard">어려움</div>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">이름 목록에서 모든 쌍의 궁합을 계산하고 가장 점수가 높은 쌍을 출력하는 코드를 작성하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">입력</span>
+                    <span class="problem-example-value">names = ["김민준", "이서연", "박지민", "최수호"]</span>
+                </div>
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력</span>
+                    <span class="problem-example-value">가장 궁합 좋은 쌍과 점수 출력</span>
+                </div>
+            </div>
+            <details class="problem-toggle">
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">이중 for 반복문으로 모든 쌍을 순회하고 max 점수와 쌍을 기록하세요.</div>
+                </div>
+            </details>
+            <details class="problem-toggle">
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code">names = ["김민준", "이서연", "박지민", "최수호"]
+best_score = -1
+best_pair = None
+for i in range(len(names)):
+    for j in range(i+1, len(names)):
+        score, grade, _ = compatibility(names[i], names[j])
+        if score > best_score:
+            best_score = score
+            best_pair = (names[i], names[j], grade)
+print(f"최고 궁합: {best_pair[0]} X {best_pair[1]} ({best_pair[2]}등급, {best_score}점)")</div>
+                </div>
+            </details>
+        </div>
+    </div>
+</div>
+
+<!-- 5페이지: 핵심 요약 -->
+<div class="page">
+    <h2>핵심 요약 — 이름 궁합 테스트 완성</h2>
+
+    <div style="margin:14px 0;">
+        <svg viewBox="0 0 500 70" style="max-width:500px;width:100%">
+            <rect x="0" y="5" width="500" height="60" rx="8" fill="#0f172a"/>
+            <text x="20" y="25" font-size="11" fill="#94a3b8" font-family="monospace">첫 번째 이름: 김민준</text>
+            <text x="20" y="40" font-size="11" fill="#94a3b8" font-family="monospace">두 번째 이름: 이서연</text>
+            <text x="20" y="55" font-size="11" fill="#fbcfe8" font-family="monospace">점수:  85점  등급: B  ─  좋은 궁합! 잘 맞는 편이에요.</text>
+        </svg>
+    </div>
+
+    <div style="margin:14px 0;">
+        <svg viewBox="0 0 500 75" style="max-width:500px;width:100%">
+            <rect x="0" y="5" width="500" height="65" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="20" y="28" font-size="11" fill="#374151" font-weight="700">점수 계산 공식</text>
+            <text x="20" y="46" font-size="10" fill="#ec4899" font-family="monospace">score = 100 - abs(name_score(n1) - name_score(n2)) + common*5</text>
+            <text x="20" y="62" font-size="10" fill="#64748b" font-family="monospace">→ max(0, min(100, score)) 로 0~100 범위 고정</text>
+        </svg>
+    </div>
+
+    <div style="margin:14px 0;">
+        <svg viewBox="0 0 500 55" style="max-width:500px;width:100%">
+            <rect x="0" y="5" width="500" height="45" rx="8" fill="#1e3a5f"/>
+            <text x="20" y="25" font-size="10" fill="#fbcfe8" font-weight="700" font-family="monospace">f-string 형식 지정자 정리</text>
+            <text x="20" y="40" font-size="10" fill="#e2e8f0" font-family="monospace">{n:3d} = 3자리 정수   {n:.1f} = 소수점1자리   {s:=^30} = 가운데 정렬</text>
+        </svg>
+    </div>
+
+    <div style="margin:14px 0;">
+        <svg viewBox="0 0 500 55" style="max-width:500px;width:100%">
+            <rect x="0" y="5" width="500" height="45" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="20" y="25" font-size="11" fill="#374151" font-weight="700">다중 반환값 패턴</text>
+            <text x="20" y="40" font-size="10" fill="#64748b" font-family="monospace">def get_grade(score): return "A", "완벽한 궁합!"  →  grade, msg = get_grade(95)</text>
+        </svg>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/lightbulb.png" alt="아이디어" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>핵심 요약</h3>
+        <ul>
+            <li><strong>ord(c)</strong> — 문자를 유니코드 정수로 변환, 이름 기반 점수 생성에 활용</li>
+            <li><strong>set(이름)</strong> — 문자열의 각 글자를 원소로 갖는 집합 생성</li>
+            <li><strong>set1 &amp; set2</strong> — 두 set의 교집합, 공통 글자 찾기</li>
+            <li><strong>abs(a - b)</strong> — 두 점수 차이의 절댓값</li>
+            <li><strong>max(0, min(100, score))</strong> — 값을 0~100 범위로 clamp</li>
+            <li><strong>f-string {n:.1f}</strong> — 소수점 자리수 지정 출력</li>
+            <li><strong>다중 반환값</strong> — <code>return a, b, c</code>로 여러 값을 한 번에 반환</li>
+        </ul>
+    </div>
+
+    <div style="margin:14px 0;">
+        <svg viewBox="0 0 500 55" style="max-width:500px;width:100%">
+            <rect x="0" y="5" width="155" height="45" rx="8" fill="#fce7f3" stroke="#ec4899" stroke-width="1.5"/>
+            <text x="77" y="25" text-anchor="middle" font-size="10" fill="#9d174d" font-weight="700">set 교집합 &amp;</text>
+            <text x="77" y="39" text-anchor="middle" font-size="9" fill="#64748b">공통 글자 카운팅</text>
+            <rect x="172" y="5" width="155" height="45" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="249" y="25" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">점수 clamp</text>
+            <text x="249" y="39" text-anchor="middle" font-size="9" fill="#64748b">max/min으로 범위 고정</text>
+            <rect x="344" y="5" width="155" height="45" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="421" y="25" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">f-string 포맷</text>
+            <text x="421" y="39" text-anchor="middle" font-size="9" fill="#64748b">깔끔한 결과 출력</text>
+        </svg>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Unit 64. 정렬 응용 + 탐색 — C 언어</title>
+    <link rel="stylesheet" href="../common.css">
+</head>
+
+<body>
+    <div class="wrap">
+        <div class="hdr">
+            <h1>Unit 64. 정렬 응용 + 탐색</h1>
+            <div class="sub">이진탐색 · 좌표압축 · K번째 수 · upper/lower bound</div>
+            <span class="unit-badge">Chapter 21 · 정렬</span>
+            <div class="level-bar"><span class="on"></span><span class="on"></span><span class="on"></span><span
+                    class="on"></span></div>
+            <div class="meta"><span class="tag pri">🔍 탐색</span><span class="tag acc">📝 15문제</span><span class="tag">⏱
+                    50분</span></div>
+        </div>
+        <div class="stu-bar"><label>👤 이름 <input type="text" id="stu-name" placeholder="이름"></label><label>📅 날짜 <input
+                    type="date" id="stu-date"></label></div>
+        <div id="problems"></div>
+        <div class="submit-section">
+            <p>모든 문제를 풀었나요? 📨</p><button class="btn-submit" id="btn-submit">📄 제출하기</button>
+        </div>
+        <div class="modal-overlay" id="submit-modal">
+            <div class="modal-box">
+                <div class="modal-icon">✅</div>
+                <h3>제출 완료!</h3>
+                <p>학습지가 저장되었습니다.</p>
+                <div style="margin:12px 0"><span class="info-tag" id="modal-name"></span> <span class="info-tag"
+                        id="modal-date"></span> <span class="info-tag" id="modal-count"></span></div>
+                <p style="font-size:.78rem;color:var(--dim)">📁 <strong id="modal-filename"></strong></p><button
+                    class="btn-close-modal" id="btn-close-modal">확인</button>
+            </div>
+        </div>
+        <div class="pg"><a href="Unit63_정렬구현.html">← Unit 63</a><span class="tag active">Unit 64</span><a
+                href="../22_자료구조심화/Unit65_연결리스트.html">Unit 65 →</a></div>
+        <div class="ft">🔍 정렬 응용 + 탐색 · Unit 64</div>
+    </div>
+    <script>
+        const P = [
+            {
+                n: 1, t: "이진 탐색 반복문 버전", d: 2,
+                q: `정렬된 배열에서 target을 찾는 이진 탐색 (반복문).
+<pre class="code-c">int bSearch(int a[], int n, int t) {
+    <span class="cm">// 찾으면 인덱스, 없으면 -1</span>
+}</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">int bSearch(int a[], int n, int t) {
+    int lo=0, hi=n-1;
+    while (lo <= hi) {
+        int mid = lo + (hi-lo)/2;
+        if (a[mid]==t) return mid;
+        if (a[mid]<t) lo=mid+1;
+        else hi=mid-1;
+    }
+    return -1;
+}</pre><div class="trace">lo+(hi-lo)/2 → 오버플로우 방지!<br>(lo+hi)/2와 같지만 더 안전</div>`},
+
+            {
+                n: 2, t: "이진 탐색 재귀 버전", d: 2,
+                q: `같은 이진 탐색을 재귀로 작성하세요.
+<pre class="code-c">int bSearchRec(int a[], int lo, int hi, int t) {
+    <span class="cm">// 재귀 버전</span>
+}</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">int bSearchRec(int a[], int lo, int hi, int t) {
+    if (lo > hi) return -1;
+    int mid = lo + (hi-lo)/2;
+    if (a[mid]==t) return mid;
+    if (a[mid]<t) return bSearchRec(a, mid+1, hi, t);
+    return bSearchRec(a, lo, mid-1, t);
+}</pre>`},
+
+            {
+                n: 3, t: "Lower Bound 구현", d: 3,
+                q: `target 이상인 첫 번째 위치를 찾으세요.
+<pre class="code-c"><span class="cm">// {1,2,4,4,4,7,9}, target=4 → index 2</span>
+<span class="cm">// {1,2,4,4,4,7,9}, target=5 → index 5</span>
+int lowerBound(int a[], int n, int t) {
+    <span class="cm">// t 이상인 첫 번째 인덱스</span>
+}</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">int lowerBound(int a[], int n, int t) {
+    int lo=0, hi=n;
+    while (lo < hi) {
+        int mid = lo + (hi-lo)/2;
+        if (a[mid] < t) lo = mid + 1;
+        else hi = mid;
+    }
+    return lo;
+}</pre><div class="trace">lo &lt; hi (≤가 아님!)<br>a[mid] < t → lo = mid+1<br>≥t면 hi = mid (mid 포함!)</div>`},
+
+            {
+                n: 4, t: "Upper Bound 구현", d: 3,
+                q: `target 초과인 첫 번째 위치를 찾으세요.
+<pre class="code-c"><span class="cm">// {1,2,4,4,4,7,9}, target=4 → index 5</span>
+int upperBound(int a[], int n, int t) {
+    <span class="cm">// t 초과인 첫 번째 인덱스</span>
+}</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">int upperBound(int a[], int n, int t) {
+    int lo=0, hi=n;
+    while (lo < hi) {
+        int mid = lo + (hi-lo)/2;
+        if (a[mid] <= t) lo = mid + 1;
+        else hi = mid;
+    }
+    return lo;
+}</pre><div class="trace">lower와 차이: &lt; → ≤ 하나 차이!<br>target 개수 = upper - lower</div>`},
+
+            {
+                n: 5, t: "K번째 작은 수", d: 2,
+                q: `N개의 수에서 K번째로 작은 수를 구하세요.
+<pre class="code-c"><span class="cm">입력: 5개 수 {4,1,3,5,2}, K=3</span>
+<span class="cm">출력: 3</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+int cmp(const void*a,const void*b){return *(int*)a-*(int*)b;}
+int main() {
+    int a[]={4,1,3,5,2}, k=3;
+    qsort(a, 5, sizeof(int), cmp);
+    printf("%d", a[k-1]); <span class="cm">// 0-indexed!</span>
+}</pre>`},
+
+            {
+                n: 6, t: "[출력예측] 이진 탐색 추적", d: 2,
+                q: `다음 코드의 출력을 쓰세요.
+<pre class="code-c">int a[] = {2,5,8,12,16,23,38,56,72,91};
+int lo=0, hi=9, cnt=0;
+int t = 23;
+while (lo <= hi) {
+    int mid=(lo+hi)/2;
+    cnt++;
+    printf("lo=%d hi=%d mid=%d\\n", lo, hi, mid);
+    if (a[mid]==t) { printf("Found in %d steps",cnt); break; }
+    if (a[mid]<t) lo=mid+1;
+    else hi=mid-1;
+}</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">lo=0 hi=9 mid=4<br>lo=5 hi=9 mid=7<br>lo=5 hi=6 mid=5<br>Found in 3 steps</div><div class="trace">mid=4: a[4]=16 < 23 → lo=5<br>mid=7: a[7]=56 > 23 → hi=6<br>mid=5: a[5]=23 == 23 → Found!<br>10개에서 3번만에 찾음 (log₂10≈3.3)</div>`
+            },
+
+            {
+                n: 7, t: "좌표 압축", d: 3,
+                q: `N개의 수를 좌표 압축하세요. (순위로 변환)
+<pre class="code-c"><span class="cm">{100, 50, 300, 50, 200}</span>
+<span class="cm">→ {1, 0, 3, 0, 2}</span>
+<span class="cm">(정렬·중복제거 후 이진탐색으로 순위 매핑)</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+int cmp(const void*a,const void*b){return *(int*)a-*(int*)b;}
+int main() {
+    int a[]={100,50,300,50,200}, n=5;
+    int sorted[5], unique[5], un=0;
+
+    for (int i=0;i<n;i++) sorted[i]=a[i];
+    qsort(sorted, n, sizeof(int), cmp);
+
+    unique[un++]=sorted[0];
+    for (int i=1;i<n;i++)
+        if (sorted[i]!=sorted[i-1]) unique[un++]=sorted[i];
+
+    for (int i=0;i<n;i++) {
+        int lo=0, hi=un-1;
+        while (lo<=hi) {
+            int mid=(lo+hi)/2;
+            if (unique[mid]==a[i]) { printf("%d ",mid); break; }
+            if (unique[mid]<a[i]) lo=mid+1; else hi=mid-1;
+        }
+    }
+}</pre>`},
+
+            {
+                n: 8, t: "소수 체 (에라토스테네스)", d: 2,
+                q: `1~N 사이의 모든 소수를 구하는 체를 작성하세요.
+<pre class="code-c">void sieve(int n) {
+    <span class="cm">// 에라토스테네스의 체</span>
+    <span class="cm">// n=30 → 2 3 5 7 11 13 17 19 23 29</span>
+}</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">void sieve(int n) {
+    int is_prime[10001];
+    for (int i=0;i<=n;i++) is_prime[i]=1;
+    is_prime[0]=is_prime[1]=0;
+    for (int i=2;i*i<=n;i++)
+        if (is_prime[i])
+            for (int j=i*i;j<=n;j+=i)
+                is_prime[j]=0;
+    for (int i=2;i<=n;i++)
+        if (is_prime[i]) printf("%d ",i);
+}</pre><div class="trace">j=i*i부터 시작 (최적화!)<br>2의 배수, 3의 배수... 제거<br>O(n log log n)</div>`},
+
+            {
+                n: 9, t: "최대공약수 (유클리드 호제법)", d: 2,
+                q: `두 수의 GCD를 구하세요. 최소공배수도!
+<pre class="code-c">int gcd(int a, int b) { <span class="cm">// 재귀</span> }
+int lcm(int a, int b) { <span class="cm">// GCD 활용</span> }
+<span class="cm">// gcd(12,18)=6, lcm(12,18)=36</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">int gcd(int a, int b) {
+    if (b == 0) return a;
+    return gcd(b, a % b);
+}
+int lcm(int a, int b) {
+    return a / gcd(a,b) * b;
+}</pre><div class="trace">gcd(12,18)→gcd(18,12)→gcd(12,6)→gcd(6,0)→6<br>lcm = a*b/gcd → 오버플로 방지: a/gcd*b</div>`},
+
+            {
+                n: 10, t: "피보나치 (DP vs 재귀)", d: 2,
+                q: `피보나치 수를 메모이제이션으로 효율적으로 구하세요.
+<pre class="code-c"><span class="cm">// 순수 재귀: O(2^n) → 매우 느림!</span>
+<span class="cm">// 메모이제이션: O(n) → 빠름!</span>
+int memo[100] = {0};
+int fib(int n) { <span class="cm">/* ... */</span> }</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">int memo[100] = {0};
+int fib(int n) {
+    if (n <= 1) return n;
+    if (memo[n]) return memo[n];
+    return memo[n] = fib(n-1) + fib(n-2);
+}
+<span class="cm">// 반복문 버전 (Bottom-Up DP)</span>
+int fibDP(int n) {
+    int dp[100];
+    dp[0]=0; dp[1]=1;
+    for (int i=2;i<=n;i++) dp[i]=dp[i-1]+dp[i-2];
+    return dp[n];
+}</pre>`},
+
+            {
+                n: 11, t: "거듭제곱 빠르게 (분할정복)", d: 3,
+                q: `a^n mod m을 O(log n)으로 구하세요.
+<pre class="code-c">long long power(long long a, long long n, long long m) {
+    <span class="cm">// 빠른 거듭제곱</span>
+}
+<span class="cm">// power(2, 10, 1000) = 1024</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">long long power(long long a, long long n, long long m) {
+    long long result = 1;
+    a %= m;
+    while (n > 0) {
+        if (n & 1) result = result * a % m;
+        a = a * a % m;
+        n >>= 1;
+    }
+    return result;
+}</pre><div class="trace">2^10: 10=1010(2진)<br>a^1→skip, a^2→곱, a^4→skip, a^8→곱<br>= a^2 * a^8 = a^10<br>O(log n)!</div>`},
+
+            {
+                n: 12, t: "재귀: 하노이 탑", d: 3,
+                q: `하노이 탑 함수를 작성하세요.
+<pre class="code-c">void hanoi(int n, char from, char to, char via) {
+    <span class="cm">// n개 원판을 from에서 to로 (via 경유)</span>
+}
+<span class="cm">// hanoi(3, 'A', 'C', 'B');</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">void hanoi(int n, char from, char to, char via) {
+    if (n == 1) {
+        printf("%c -> %c\\n", from, to);
+        return;
+    }
+    hanoi(n-1, from, via, to);
+    printf("%c -> %c\\n", from, to);
+    hanoi(n-1, via, to, from);
+}</pre><div class="trace">n=3: 7번 이동<br>n개: 2^n - 1번 이동</div>`},
+
+            {
+                n: 13, t: "2차원 배열 회전 (90도)", d: 3,
+                q: `N×N 배열을 시계 방향 90도 회전하세요.
+<pre class="code-c"><span class="cm">// 회전 전:     회전 후:</span>
+<span class="cm">// 1 2 3       7 4 1</span>
+<span class="cm">// 4 5 6       8 5 2</span>
+<span class="cm">// 7 8 9       9 6 3</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">void rotate90(int a[][100], int n) {
+    int temp[100][100];
+    for (int i=0;i<n;i++)
+        for (int j=0;j<n;j++)
+            temp[j][n-1-i] = a[i][j];
+    for (int i=0;i<n;i++)
+        for (int j=0;j<n;j++)
+            a[i][j] = temp[i][j];
+}</pre><div class="trace">규칙: a[i][j] → temp[j][n-1-i]<br>(0,0)→(0,2), (0,1)→(1,2), (0,2)→(2,2)</div>`},
+
+            {
+                n: 14, t: "순열 생성 (재귀)", d: 3,
+                q: `{1,2,3}의 모든 순열을 출력하세요.
+<pre class="code-c">void permute(int a[], int l, int r) {
+    <span class="cm">// 모든 순열 출력</span>
+}
+<span class="cm">// 출력: 1 2 3, 1 3 2, 2 1 3, 2 3 1, 3 2 1, 3 1 2</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">void swap(int *a, int *b) {int t=*a;*a=*b;*b=t;}
+void permute(int a[], int l, int r) {
+    if (l == r) {
+        for (int i=0;i<=r;i++) printf("%d ",a[i]);
+        printf("\\n");
+        return;
+    }
+    for (int i = l; i <= r; i++) {
+        swap(&a[l], &a[i]);
+        permute(a, l+1, r);
+        swap(&a[l], &a[i]); <span class="cm">// 복원!</span>
+    }
+}</pre>`},
+
+            {
+                n: 15, t: "🏆 N-Queen 문제 (백트래킹)", d: 4,
+                q: `N×N 체스판에 N개의 퀸을 서로 공격 못하게 놓는 방법 수를 구하세요.
+<pre class="code-c"><span class="cm">// N=4 → 2가지</span>
+<span class="cm">// N=8 → 92가지</span>
+int col[20]; <span class="cm">// col[i] = i행의 퀸 열 번호</span>
+int count = 0;
+void solve(int row, int n) {
+    <span class="cm">// 백트래킹으로 모든 배치 탐색</span>
+}</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">int col[20], count=0;
+int isSafe(int row, int c) {
+    for (int i=0;i<row;i++)
+        if (col[i]==c || abs(col[i]-c)==abs(i-row))
+            return 0;
+    return 1;
+}
+void solve(int row, int n) {
+    if (row == n) { count++; return; }
+    for (int c=0;c<n;c++) {
+        if (isSafe(row, c)) {
+            col[row] = c;
+            solve(row+1, n);
+        }
+    }
+}</pre><div class="trace">같은 열: col[i]==c<br>대각선: |col[i]-c| == |i-row|<br>백트래킹: 유망하지 않으면 가지치기!</div>`}
+        ];
+        const c = document.getElementById('problems'); P.forEach(p => { const dc = p.d <= 1 ? 'ez' : p.d <= 2 ? 'md' : 'hd'; const dots = Array.from({ length: 5 }, (_, i) => `<span${i < p.d ? ' class="on"' : ''}>​</span>`).join(''); c.innerHTML += `<div class="prob"><div class="prob-top"><div class="prob-num ${dc}">${p.n}</div><div class="prob-title">${p.t}</div><div class="diff-dots">${dots}</div></div><div class="prob-body"><div class="q">${p.q}</div><textarea class="write" placeholder="✍️ 답을 작성하세요" rows="8"></textarea><details class="ans"><summary>정답 및 해설 보기</summary><div class="ans-body">${p.a}</div></details></div></div>`; });
+    </script>
+    <script src="../submit.js"></script>
+    <script src="../../platform.js"></script>
+</body>
+
+</html>

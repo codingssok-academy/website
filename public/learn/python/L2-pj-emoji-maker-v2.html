@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 텍스트 이모티콘 만들기</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+.cover { display: flex; min-height: 297mm; padding: 0; }
+.cover-sidebar { width: 10px; background: #1e3a5f; flex-shrink: 0; }
+.cover-accent { width: 7px; background: #e6a817; flex-shrink: 0; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 160px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 34px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 14px;
+    color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; white-space: pre-wrap; }
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- 1페이지: 표지 -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">DICT</div>
+        <div class="cover-label">L2 Project 08</div>
+        <h1 class="cover-title">텍스트 이모티콘 만들기</h1>
+        <p class="cover-sub">딕셔너리로 텍스트 이모티콘을 변환하고, 사용자가 커스텀 이모티콘을 추가할 수 있는 프로그램을 만듭니다.</p>
+        <!-- SVG 1: 학습 로드맵 -->
+        <div style="margin:20px 0;">
+            <svg viewBox="0 0 460 55" style="max-width:460px;width:100%">
+                <rect x="5" y="10" width="90" height="30" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="50" y="30" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">딕셔너리 만들기</text>
+                <line x1="100" y1="25" x2="120" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="125" y="10" width="90" height="30" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="170" y="30" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">키로 조회</text>
+                <line x1="220" y1="25" x2="240" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="245" y="10" width="90" height="30" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="290" y="30" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">get() 사용</text>
+                <line x1="340" y1="25" x2="360" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="365" y="10" width="90" height="30" rx="6" fill="#eff6ff" stroke="#6366f1" stroke-width="1.5"/>
+                <text x="410" y="30" text-anchor="middle" font-size="10" fill="#4338ca" font-weight="700">커스텀 추가</text>
+            </svg>
+        </div>
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 프로젝트에서 배우는 것</h3>
+            <ul>
+                <li>딕셔너리로 키-값 쌍의 이모티콘 변환 테이블을 만들 수 있습니다.</li>
+                <li>dict[key]로 값을 조회하고 dict.get(key, 기본값)으로 안전하게 찾을 수 있습니다.</li>
+                <li>dict[key] = value로 새 항목을 추가할 수 있습니다.</li>
+                <li>for key, value in dict.items()로 모든 항목을 순회할 수 있습니다.</li>
+                <li>문자열 replace()로 여러 이모티콘을 한 번에 변환할 수 있습니다.</li>
+            </ul>
+        </div>
+        <!-- SVG 2: 딕셔너리 구조 -->
+        <div style="margin:20px 0;">
+            <svg viewBox="0 0 460 70" style="max-width:460px;width:100%">
+                <rect x="10" y="5" width="440" height="60" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+                <text x="230" y="22" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="800">이모티콘 딕셔너리 구조</text>
+                <rect x="20" y="28" width="85" height="28" rx="5" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+                <text x="62" y="43" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">":)" → "웃음"</text>
+                <rect x="115" y="28" width="95" height="28" rx="5" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+                <text x="162" y="43" text-anchor="middle" font-size="11" fill="#92400e" font-weight="700">":D" → "크게웃음"</text>
+                <rect x="220" y="28" width="85" height="28" rx="5" fill="#f0fdf4" stroke="#22c55e" stroke-width="1"/>
+                <text x="262" y="43" text-anchor="middle" font-size="11" fill="#166534" font-weight="700">":(" → "슬픔"</text>
+                <rect x="315" y="28" width="130" height="28" rx="5" fill="#eff6ff" stroke="#6366f1" stroke-width="1"/>
+                <text x="380" y="43" text-anchor="middle" font-size="11" fill="#4338ca" font-weight="700">커스텀 추가 가능</text>
+            </svg>
+        </div>
+    </div>
+</div>
+
+<!-- 2페이지: 딕셔너리 기초 -->
+<div class="page">
+    <h2>이모티콘 딕셔너리 만들기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/monitor.png" alt="모니터" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>딕셔너리는 <code>{"키": "값"}</code> 형태로 만듭니다. 이모티콘 텍스트를 키로, 한글 설명을 값으로 저장합니다.</p>
+
+    <!-- SVG 3: 딕셔너리 키-값 쌍 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="70" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="22" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="800">딕셔너리 조회 방법</text>
+            <rect x="20" y="28" width="200" height="32" rx="6" fill="#fff4f4" stroke="#ef4444" stroke-width="1"/>
+            <text x="120" y="44" text-anchor="middle" font-size="9" fill="#dc2626" font-weight="700">emoticons[":)"]</text>
+            <text x="120" y="57" text-anchor="middle" font-size="8" fill="#64748b">없으면 KeyError 오류!</text>
+            <rect x="240" y="28" width="200" height="32" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1"/>
+            <text x="340" y="44" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">emoticons.get(":)", "없음")</text>
+            <text x="340" y="57" text-anchor="middle" font-size="8" fill="#64748b">없으면 기본값 반환 (안전)</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># 이모티콘 변환 딕셔너리</span>
+emoticons = {
+    <span class="str">":)"</span>: <span class="str">"웃는얼굴"</span>,
+    <span class="str">":D"</span>: <span class="str">"활짝웃음"</span>,
+    <span class="str">":("</span>: <span class="str">"슬픔"</span>,
+    <span class="str">":P"</span>: <span class="str">"혀내밀기"</span>,
+    <span class="str">";&gt;_&lt;"</span>: <span class="str">"화남"</span>,
+    <span class="str">":O"</span>: <span class="str">"놀람"</span>,
+    <span class="str">"^^"</span>: <span class="str">"기쁨"</span>,
+    <span class="str">"T_T"</span>: <span class="str">"펑펑울음"</span>,
+}
+
+<span class="cmt"># 키로 값 조회</span>
+code = <span class="str">":)"</span>
+name = emoticons.get(code, <span class="str">"알 수 없는 이모티콘"</span>)
+<span class="fn">print</span>(<span class="str">f"{code} = {name}"</span>)  <span class="cmt"># :) = 웃는얼굴</span></div>
+
+    <!-- SVG 4: get() vs [] 비교 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 380 60" style="max-width:380px;width:100%">
+            <rect x="10" y="5" width="360" height="50" rx="8" fill="#0f172a"/>
+            <text x="20" y="26" font-family="monospace" font-size="11" fill="#e2e8f0">emoticons.get(</text>
+            <text x="140" y="26" font-family="monospace" font-size="11" fill="#86efac">":)"</text>
+            <text x="164" y="26" font-family="monospace" font-size="11" fill="#e2e8f0">,</text>
+            <text x="172" y="26" font-family="monospace" font-size="11" fill="#86efac"> "없음"</text>
+            <text x="222" y="26" font-family="monospace" font-size="11" fill="#e2e8f0">)</text>
+            <text x="20" y="46" font-family="monospace" font-size="11" fill="#64748b"># :) 없으면 "없음" 반환, 오류 없음</text>
+        </svg>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="완성" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">emoticons 딕셔너리를 만들고 ":)" 와 "^^"를 get()으로 조회하세요.</div>
+                <div class="code">emoticons = {<span class="str">":)"</span>: <span class="str">"웃는얼굴"</span>, <span class="str">"^^"</span>: <span class="str">"기쁨"</span>}
+<span class="fn">print</span>(emoticons.get(<span class="str">":)"</span>, <span class="str">"없음"</span>))  <span class="cmt"># 웃는얼굴</span>
+<span class="fn">print</span>(emoticons.get(<span class="str">":X"</span>, <span class="str">"없음"</span>))  <span class="cmt"># 없음</span></div>
+                <div class="practice-result">없는 키면 "없음" 출력</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">딕셔너리에 새 항목을 추가하고 for 루프로 모두 출력하세요.</div>
+                <div class="code">emoticons[<span class="str">":-*"</span>] = <span class="str">"뽀뽀"</span>
+<span class="kw">for</span> code, name <span class="kw">in</span> emoticons.items():
+    <span class="fn">print</span>(<span class="str">f"{code} → {name}"</span>)</div>
+                <div class="practice-result">모든 이모티콘 출력</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">len()으로 딕셔너리에 이모티콘이 몇 개 있는지 출력하세요.</div>
+                <div class="code"><span class="fn">print</span>(<span class="str">f"등록된 이모티콘: {len(emoticons)}개"</span>)</div>
+                <div class="practice-result">등록된 이모티콘: 3개</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3페이지: 변환 기능 -->
+<div class="page">
+    <h2>문장에서 이모티콘 변환하기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="패턴" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>입력 문장에서 이모티콘을 찾아 한글로 바꿔주는 함수를 만듭니다. 문자열 <code>replace()</code>와 딕셔너리를 함께 활용합니다.</p>
+
+    <!-- SVG 5: replace() 동작 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 70" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="60" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="22" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="800">문자열 replace() 동작</text>
+            <rect x="20" y="28" width="190" height="28" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="115" y="46" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">"안녕 :) 잘 지내?"</text>
+            <text x="220" y="42" text-anchor="middle" font-size="14" fill="#f59e0b" font-weight="700">→</text>
+            <rect x="240" y="28" width="190" height="28" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1"/>
+            <text x="335" y="46" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">"안녕 웃는얼굴 잘 지내?"</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">def</span> <span class="fn">convert_emoticons</span>(text):
+    <span class="str">"""문장 속 이모티콘을 한글로 변환"""</span>
+    result = text
+    <span class="kw">for</span> code, name <span class="kw">in</span> emoticons.items():
+        result = result.replace(code, name)
+    <span class="kw">return</span> result
+
+<span class="cmt"># 테스트</span>
+sentence = <span class="str">"오늘 기분 좋다 :) 날씨도 좋고 ^^"</span>
+converted = <span class="fn">convert_emoticons</span>(sentence)
+<span class="fn">print</span>(<span class="str">f"원본: {sentence}"</span>)
+<span class="fn">print</span>(<span class="str">f"변환: {converted}"</span>)</div>
+
+    <!-- SVG 6: 변환 결과 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 380 75" style="max-width:380px;width:100%">
+            <rect x="10" y="5" width="360" height="65" rx="8" fill="#0f172a"/>
+            <text x="20" y="26" font-family="monospace" font-size="10" fill="#94a3b8">원본: 오늘 기분 좋다 :) 날씨도 좋고 ^^</text>
+            <text x="20" y="46" font-family="monospace" font-size="10" fill="#86efac">변환: 오늘 기분 좋다 웃는얼굴 날씨도 좋고 기쁨</text>
+        </svg>
+    </div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">convert_emoticons 함수를 만들고 "T_T 슬프다"를 변환해보세요.</div>
+                <div class="practice-result">펑펑울음 슬프다</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">한 문장에 이모티콘이 2개 이상 있을 때도 잘 변환되는지 확인하세요.</div>
+                <div class="code">text = <span class="str">":) 오늘 너무 좋아 :D 정말!"</span>
+<span class="fn">print</span>(<span class="fn">convert_emoticons</span>(text))</div>
+                <div class="practice-result">웃는얼굴 오늘 너무 좋아 활짝웃음 정말!</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">변환 결과에서 이모티콘이 몇 개 변환됐는지 카운트하는 함수를 만드세요.</div>
+                <div class="code"><span class="kw">def</span> <span class="fn">count_emoticons</span>(text):
+    count = <span class="num">0</span>
+    <span class="kw">for</span> code <span class="kw">in</span> emoticons:
+        <span class="kw">if</span> code <span class="kw">in</span> text:
+            count += <span class="num">1</span>
+    <span class="kw">return</span> count</div>
+                <div class="practice-result">문장 속 이모티콘 수 반환</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 4페이지: 완성 코드 -->
+<div class="page">
+    <h2>완성: 이모티콘 메이커 프로그램</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/clock.png" alt="반복" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>변환, 목록 보기, 커스텀 추가 기능을 갖춘 완전한 이모티콘 메이커를 만듭니다.</p>
+
+    <!-- SVG 7: 완성 구조 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 460 50" style="max-width:460px;width:100%">
+            <rect x="5" y="8" width="440" height="35" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <rect x="15" y="15" width="100" height="20" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="65" y="28" text-anchor="middle" font-size="8" fill="#1d4ed8" font-weight="600">1. 문장 변환</text>
+            <rect x="125" y="15" width="100" height="20" rx="4" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+            <text x="175" y="28" text-anchor="middle" font-size="8" fill="#92400e" font-weight="600">2. 목록 보기</text>
+            <rect x="235" y="15" width="100" height="20" rx="4" fill="#f0fdf4" stroke="#22c55e" stroke-width="1"/>
+            <text x="285" y="28" text-anchor="middle" font-size="8" fill="#166534" font-weight="600">3. 커스텀 추가</text>
+            <rect x="345" y="15" width="105" height="20" rx="4" fill="#eff6ff" stroke="#6366f1" stroke-width="1"/>
+            <text x="397" y="28" text-anchor="middle" font-size="8" fill="#4338ca" font-weight="600">4. 종료</text>
+        </svg>
+    </div>
+
+    <div class="code">emoticons = {
+    <span class="str">":)"</span>: <span class="str">"웃는얼굴"</span>, <span class="str">":D"</span>: <span class="str">"활짝웃음"</span>, <span class="str">":("</span>: <span class="str">"슬픔"</span>,
+    <span class="str">":P"</span>: <span class="str">"혀내밀기"</span>, <span class="str">":O"</span>: <span class="str">"놀람"</span>, <span class="str">"^^"</span>: <span class="str">"기쁨"</span>, <span class="str">"T_T"</span>: <span class="str">"펑펑울음"</span>,
+}
+
+<span class="kw">def</span> <span class="fn">convert</span>(text):
+    result = text
+    <span class="kw">for</span> code, name <span class="kw">in</span> emoticons.items():
+        result = result.replace(code, name)
+    <span class="kw">return</span> result
+
+<span class="kw">while</span> <span class="kw">True</span>:
+    <span class="fn">print</span>(<span class="str">"\n1.변환  2.목록  3.추가  4.종료"</span>)
+    choice = <span class="fn">input</span>(<span class="str">"선택: "</span>)
+
+    <span class="kw">if</span> choice == <span class="str">"1"</span>:
+        text = <span class="fn">input</span>(<span class="str">"문장 입력: "</span>)
+        <span class="fn">print</span>(<span class="str">f"변환: {convert(text)}"</span>)
+    <span class="kw">elif</span> choice == <span class="str">"2"</span>:
+        <span class="fn">print</span>(<span class="str">"\n--- 이모티콘 목록 ---"</span>)
+        <span class="kw">for</span> code, name <span class="kw">in</span> emoticons.items():
+            <span class="fn">print</span>(<span class="str">f"  {code} → {name}"</span>)
+    <span class="kw">elif</span> choice == <span class="str">"3"</span>:
+        code = <span class="fn">input</span>(<span class="str">"이모티콘 코드 (예: :3): "</span>)
+        name = <span class="fn">input</span>(<span class="str">"이름 (예: 고양이): "</span>)
+        emoticons[code] = name
+        <span class="fn">print</span>(<span class="str">f"{code} → {name} 추가 완료!"</span>)
+    <span class="kw">elif</span> choice == <span class="str">"4"</span>:
+        <span class="fn">print</span>(<span class="str">"종료!"</span>); <span class="kw">break</span></div>
+
+    <!-- SVG 8: 실행 화면 -->
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 380 70" style="max-width:380px;width:100%">
+            <rect x="10" y="5" width="360" height="60" rx="8" fill="#0f172a"/>
+            <text x="20" y="26" font-family="monospace" font-size="10" fill="#94a3b8">문장 입력: 오늘 :) 날씨 ^^ 최고야 :D</text>
+            <text x="20" y="46" font-family="monospace" font-size="10" fill="#86efac">변환: 오늘 웃는얼굴 날씨 기쁨 최고야 활짝웃음</text>
+        </svg>
+    </div>
+</div>
+
+<!-- 5페이지: 문제 -->
+<div class="page">
+    <h2>직접 풀어보세요</h2>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q1</div>
+            <div class="problem-label">딕셔너리 뒤집기</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">emoticons 딕셔너리의 키와 값을 서로 바꾼 새 딕셔너리를 만들어 "웃는얼굴"을 키로 조회하세요. 딕셔너리 컴프리헨션으로 한 줄에 만들 수 있습니다.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">입력</span><span class="problem-example-value">"웃는얼굴"</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">":)"</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle"><summary>힌트 보기</summary><div class="problem-toggle-content"><div class="hint-text">reversed_dict = {v: k for k, v in emoticons.items()} 딕셔너리 컴프리헨션 사용</div></div></details>
+        <details class="problem-toggle"><summary>정답 확인</summary><div class="problem-toggle-content"><div class="answer-code">reversed_dict = {v: k for k, v in emoticons.items()}
+print(reversed_dict.get("웃는얼굴", "없음"))  # :)</div></div></details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q2</div>
+            <div class="problem-label">이모티콘 포함 여부 확인</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">문장을 입력받아 그 문장에 등록된 이모티콘이 포함되어 있으면 "이모티콘 {개수}개 발견", 없으면 "이모티콘 없음"을 출력하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">입력</span><span class="problem-example-value">안녕 :) 잘 지내 ^^</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">이모티콘 2개 발견</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle"><summary>힌트 보기</summary><div class="problem-toggle-content"><div class="hint-text">count = sum(1 for code in emoticons if code in text)</div></div></details>
+        <details class="problem-toggle"><summary>정답 확인</summary><div class="problem-toggle-content"><div class="answer-code">text = input("문장: ")
+count = sum(1 for code in emoticons if code in text)
+if count > 0:
+    print(f"이모티콘 {count}개 발견")
+else:
+    print("이모티콘 없음")</div></div></details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q3</div>
+            <div class="problem-label">최다 사용 이모티콘 찾기</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">여러 문장을 담은 리스트에서 각 이모티콘의 사용 빈도를 딕셔너리로 집계하고, 가장 많이 사용된 이모티콘을 출력하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">최다 사용: :) (3회)</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle"><summary>힌트 보기</summary><div class="problem-toggle-content"><div class="hint-text">freq = {code: 0 for code in emoticons} 초기화, for sentence in sentences: for code in emoticons: if code in sentence: freq[code] += 1</div></div></details>
+        <details class="problem-toggle"><summary>정답 확인</summary><div class="problem-toggle-content"><div class="answer-code">sentences = ["오늘 :) 좋다", ":) 날씨도 :D", "T_T 힘들어", ":) ^^"]
+freq = {code: 0 for code in emoticons}
+for s in sentences:
+    for code in emoticons:
+        if code in s:
+            freq[code] += 1
+best = max(freq, key=freq.get)
+print(f"최다 사용: {best} ({freq[best]}회)")</div></div></details>
+    </div>
+</div>
+
+<!-- 6페이지: 핵심 요약 -->
+<div class="page">
+    <h2>핵심 요약</h2>
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>이 유닛에서 배운 것</h3>
+        <ul>
+            <li><code>{"키": "값"}</code> 형태로 딕셔너리를 만든다</li>
+            <li><code>dict[키]</code>: 값 조회 (없으면 KeyError), <code>dict.get(키, 기본값)</code>: 안전 조회</li>
+            <li><code>dict[키] = 값</code>: 새 항목 추가 또는 기존 값 수정</li>
+            <li><code>for k, v in dict.items():</code>로 모든 키-값 쌍을 순회한다</li>
+            <li><code>문자열.replace(찾을것, 바꿀것)</code>으로 문자열 안의 텍스트를 교체한다</li>
+            <li>딕셔너리는 데이터를 이름으로 저장하고 빠르게 찾을 때 사용한다</li>
+        </ul>
+    </div>
+
+    <!-- SVG 9: 딕셔너리 메서드 정리 -->
+    <div style="text-align:center;margin:20px 0;">
+        <svg viewBox="0 0 460 65" style="max-width:460px;width:100%">
+            <rect x="5" y="5" width="440" height="55" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="22" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="800">딕셔너리 주요 메서드</text>
+            <rect x="15" y="28" width="95" height="24" rx="5" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="62" y="44" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">.get(k, 기본)</text>
+            <rect x="120" y="28" width="95" height="24" rx="5" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+            <text x="167" y="44" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">.items()</text>
+            <rect x="225" y="28" width="95" height="24" rx="5" fill="#f0fdf4" stroke="#22c55e" stroke-width="1"/>
+            <text x="272" y="44" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">.keys()</text>
+            <rect x="330" y="28" width="115" height="24" rx="5" fill="#eff6ff" stroke="#6366f1" stroke-width="1"/>
+            <text x="387" y="44" text-anchor="middle" font-size="9" fill="#4338ca" font-weight="700">.values()</text>
+        </svg>
+    </div>
+
+    <!-- SVG 10: replace 체인 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 65" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="55" rx="8" fill="#0f172a" stroke="#334155" stroke-width="1.5"/>
+            <text x="30" y="24" font-family="monospace" font-size="10" fill="#64748b"># 모든 이모티콘 순서대로 변환</text>
+            <text x="30" y="42" font-family="monospace" font-size="10" fill="#c084fc">for</text>
+            <text x="52" y="42" font-family="monospace" font-size="10" fill="#e2e8f0"> code, name</text>
+            <text x="128" y="42" font-family="monospace" font-size="10" fill="#c084fc"> in</text>
+            <text x="148" y="42" font-family="monospace" font-size="10" fill="#67e8f9"> emoticons</text>
+            <text x="218" y="42" font-family="monospace" font-size="10" fill="#e2e8f0">.items():</text>
+            <text x="30" y="57" font-family="monospace" font-size="10" fill="#e2e8f0">    result = result.</text>
+            <text x="170" y="57" font-family="monospace" font-size="10" fill="#67e8f9">replace</text>
+            <text x="212" y="57" font-family="monospace" font-size="10" fill="#e2e8f0">(code, name)</text>
+        </svg>
+    </div>
+
+    <!-- SVG 11: 딕셔너리 사용 케이스 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 60" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="50" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="22" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="800">딕셔너리를 쓰면 좋은 상황</text>
+            <rect x="20" y="28" width="130" height="20" rx="5" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="85" y="42" text-anchor="middle" font-size="8" fill="#1d4ed8" font-weight="600">코드 → 이름 변환 테이블</text>
+            <rect x="160" y="28" width="130" height="20" rx="5" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+            <text x="225" y="42" text-anchor="middle" font-size="8" fill="#92400e" font-weight="600">항목별 카운트/통계</text>
+            <rect x="300" y="28" width="150" height="20" rx="5" fill="#f0fdf4" stroke="#22c55e" stroke-width="1"/>
+            <text x="375" y="42" text-anchor="middle" font-size="8" fill="#166534" font-weight="600">설정값/매핑 정보 저장</text>
+        </svg>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

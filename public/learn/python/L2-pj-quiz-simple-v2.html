@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 간단 퀴즈 게임</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+.page { width: 210mm; min-height: 297mm; margin: 16px auto; padding: 18mm 20mm 15mm 22mm; background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: relative; page-break-after: always; }
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after { content: counter(pagenum); position: absolute; bottom: 10mm; right: 16mm; font-size: 10px; color: #94a3b8; font-weight: 600; }
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark { position: absolute; top: -10px; right: -15px; font-size: 200px; font-weight: 900; color: rgba(180,195,212,0.3); line-height: 1; pointer-events: none; }
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #2563eb; font-weight: 600; }
+.code { background: #0f172a; border-radius: 8px; padding: 16px 20px; font-family: 'JetBrains Mono', monospace; font-size: 14px; color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap; }
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; white-space: pre-wrap; }
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- 1페이지: 표지 -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">QUIZ</div>
+        <div class="cover-label">Project 08</div>
+        <h1 class="cover-title">간단 퀴즈 게임</h1>
+        <p class="cover-sub">if/elif로 정답을 체크하고 점수를 합산해 최종 등급을 출력하는 퀴즈 게임입니다.</p>
+        <!-- SVG 1: 로드맵 -->
+        <div style="margin:20px 0;">
+            <svg viewBox="0 0 460 55" style="max-width:460px;width:100%">
+                <rect x="5" y="10" width="90" height="30" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="50" y="30" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">문제 출력</text>
+                <line x1="100" y1="25" x2="115" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="120" y="10" width="90" height="30" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="165" y="30" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">input() 답 입력</text>
+                <line x1="215" y1="25" x2="230" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="235" y="10" width="90" height="30" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="280" y="30" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">if/elif 정답 체크</text>
+                <line x1="330" y1="25" x2="345" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="350" y="10" width="105" height="30" rx="6" fill="#eff6ff" stroke="#6366f1" stroke-width="1.5"/>
+                <text x="402" y="30" text-anchor="middle" font-size="9" fill="#4338ca" font-weight="700">점수 합산 + 등급</text>
+            </svg>
+        </div>
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/gamepad.png" alt="게임" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 프로젝트에서 배우는 것</h3>
+            <ul>
+                <li>if/elif로 정답을 체크하고 점수를 더할 수 있습니다.</li>
+                <li>점수 변수를 누적해 최종 점수를 계산할 수 있습니다.</li>
+                <li>점수 범위에 따라 등급을 출력할 수 있습니다.</li>
+                <li>여러 문제를 순서대로 출력하는 프로그램을 만들 수 있습니다.</li>
+                <li>문자열 비교로 정답을 판정하는 방법을 배웁니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- 2페이지: 퀴즈 구조 -->
+<div class="page">
+    <h2>퀴즈 게임 구조 설계</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="우승" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>퀴즈 게임은 문제 출력 → 답 입력 → 정답 체크 → 점수 합산 → 다음 문제의 흐름으로 반복됩니다.</p>
+
+    <!-- SVG 2: 퀴즈 흐름도 -->
+    <div style="text-align:center;margin:20px 0;">
+        <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+            <rect x="5" y="15" width="80" height="50" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="45" y="38" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">Q1 출력</text>
+            <text x="45" y="54" text-anchor="middle" font-size="8" fill="#64748b">print()</text>
+            <line x1="90" y1="40" x2="110" y2="40" stroke="#94a3b8" stroke-width="1.5"/>
+            <rect x="113" y="15" width="80" height="50" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="153" y="38" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">답 입력</text>
+            <text x="153" y="54" text-anchor="middle" font-size="8" fill="#64748b">input()</text>
+            <line x1="196" y1="40" x2="216" y2="40" stroke="#94a3b8" stroke-width="1.5"/>
+            <rect x="219" y="15" width="80" height="50" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="259" y="38" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">정답 체크</text>
+            <text x="259" y="54" text-anchor="middle" font-size="8" fill="#64748b">if/else</text>
+            <line x1="303" y1="40" x2="323" y2="40" stroke="#94a3b8" stroke-width="1.5"/>
+            <rect x="326" y="15" width="80" height="50" rx="8" fill="#eff6ff" stroke="#6366f1" stroke-width="1.5"/>
+            <text x="366" y="38" text-anchor="middle" font-size="10" fill="#4338ca" font-weight="700">점수 += 1</text>
+            <text x="366" y="54" text-anchor="middle" font-size="8" fill="#64748b">score</text>
+            <text x="430" y="40" text-anchor="middle" font-size="18" fill="#94a3b8">→</text>
+            <text x="452" y="44" text-anchor="middle" font-size="8" fill="#64748b">Q2...</text>
+        </svg>
+    </div>
+
+    <p>가장 단순한 퀴즈부터 시작합니다. 답을 입력받아 <code>if</code>로 정답과 비교합니다.</p>
+
+    <div class="code"><span class="cmt"># 퀴즈 1문제 예시</span>
+score = <span class="num">0</span>
+
+<span class="fn">print</span>(<span class="str">"Q1. 파이썬을 만든 사람의 이름은?"</span>)
+answer = <span class="fn">input</span>(<span class="str">"답: "</span>)
+
+<span class="kw">if</span> answer == <span class="str">"귀도"</span> <span class="kw">or</span> answer == <span class="str">"귀도 반 로섬"</span>:
+    <span class="fn">print</span>(<span class="str">"정답!"</span>)
+    score += <span class="num">1</span>
+<span class="kw">else</span>:
+    <span class="fn">print</span>(<span class="str">"오답! 정답은 귀도 반 로섬입니다."</span>)
+
+<span class="fn">print</span>(<span class="str">f"현재 점수: {score}점"</span>)</div>
+
+    <!-- SVG 3: 정답 비교 방법 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 70" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="60" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="24" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="800">정답 처리 팁</text>
+            <text x="30" y="44" font-size="10" fill="#334155">여러 답 허용: if ans == "귀도" or ans == "귀도 반 로섬"</text>
+            <text x="30" y="60" font-size="10" fill="#334155">대소문자 무시: if ans.lower() == "python"</text>
+        </svg>
+    </div>
+
+    <!-- SVG 4: 점수 누적 시각화 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 55" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="45" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="24" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="800">점수 누적 패턴</text>
+            <text x="30" y="44" font-family="monospace" font-size="10" fill="#e2e8f0">score = 0   →   (정답 시) score += 1   →   3문제 후 score = 2 (2점)</text>
+        </svg>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">퀴즈 1문제를 만들고 정답 여부를 출력하세요.</div>
+                <div class="code">score = <span class="num">0</span>
+<span class="fn">print</span>(<span class="str">"Q: 2 + 3은?"</span>)
+ans = <span class="fn">input</span>(<span class="str">"답: "</span>)
+<span class="kw">if</span> ans == <span class="str">"5"</span>:
+    <span class="fn">print</span>(<span class="str">"정답!"</span>)
+    score += <span class="num">1</span>
+<span class="kw">else</span>:
+    <span class="fn">print</span>(<span class="str">"오답!"</span>)
+<span class="fn">print</span>(<span class="str">f"점수: {score}"</span>)</div>
+                <div class="practice-result">5 입력 시 정답! 점수: 1</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">문제 2개를 연속으로 출력하고 점수를 누적하세요.</div>
+                <div class="code">score = <span class="num">0</span>
+<span class="fn">print</span>(<span class="str">"Q1: 파이썬 확장자는?"</span>)
+<span class="kw">if</span> <span class="fn">input</span>(<span class="str">"답: "</span>) == <span class="str">".py"</span>: score += <span class="num">1</span>
+<span class="fn">print</span>(<span class="str">"Q2: 3 * 4는?"</span>)
+<span class="kw">if</span> <span class="fn">input</span>(<span class="str">"답: "</span>) == <span class="str">"12"</span>: score += <span class="num">1</span>
+<span class="fn">print</span>(<span class="str">f"총 점수: {score}/2"</span>)</div>
+                <div class="practice-result">두 문제 결과가 합산됩니다</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">점수에 따라 다른 메시지를 출력해보세요.</div>
+                <div class="code">score = <span class="num">2</span>  <span class="cmt"># 테스트용</span>
+<span class="kw">if</span> score >= <span class="num">3</span>:
+    <span class="fn">print</span>(<span class="str">"A 등급 — 완벽!"</span>)
+<span class="kw">elif</span> score >= <span class="num">2</span>:
+    <span class="fn">print</span>(<span class="str">"B 등급 — 잘했어요!"</span>)
+<span class="kw">else</span>:
+    <span class="fn">print</span>(<span class="str">"C 등급 — 더 노력해요"</span>)</div>
+                <div class="practice-result">score 2이면 B 등급 출력</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3페이지: 완성 퀴즈 게임 -->
+<div class="page">
+    <h2>완성: 5문제 퀴즈 게임</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/flowchart.png" alt="게임 흐름" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>파이썬 기초 5문제로 구성된 완성 퀴즈 게임입니다. 점수에 따라 S/A/B/C 등급을 출력합니다.</p>
+
+    <!-- SVG 5: 등급 기준 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 60" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="50" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="24" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="800">점수 등급 기준 (5문제)</text>
+            <text x="65" y="44" text-anchor="middle" font-size="10" fill="#7c3aed">5점 — S등급</text>
+            <text x="185" y="44" text-anchor="middle" font-size="10" fill="#166534">4점 — A등급</text>
+            <text x="300" y="44" text-anchor="middle" font-size="10" fill="#1d4ed8">3점 — B등급</text>
+            <text x="410" y="44" text-anchor="middle" font-size="10" fill="#64748b">2점 이하 — C등급</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># 5문제 퀴즈 게임 완성 버전</span>
+score = <span class="num">0</span>
+<span class="fn">print</span>(<span class="str">"=== 파이썬 기초 퀴즈 ==="</span>)
+<span class="fn">print</span>(<span class="str">"총 5문제입니다.\n"</span>)
+
+<span class="cmt"># Q1</span>
+<span class="fn">print</span>(<span class="str">"Q1. 파이썬에서 화면에 출력하는 함수는?"</span>)
+a1 = <span class="fn">input</span>(<span class="str">"답: "</span>)
+<span class="kw">if</span> a1 == <span class="str">"print"</span> <span class="kw">or</span> a1 == <span class="str">"print()"</span>:
+    <span class="fn">print</span>(<span class="str">"정답!\n"</span>)
+    score += <span class="num">1</span>
+<span class="kw">else</span>:
+    <span class="fn">print</span>(<span class="str">"오답! 정답: print()\n"</span>)
+
+<span class="cmt"># Q2</span>
+<span class="fn">print</span>(<span class="str">"Q2. 10 // 3 의 결과는?"</span>)
+a2 = <span class="fn">input</span>(<span class="str">"답: "</span>)
+<span class="kw">if</span> a2 == <span class="str">"3"</span>:
+    <span class="fn">print</span>(<span class="str">"정답!\n"</span>)
+    score += <span class="num">1</span>
+<span class="kw">else</span>:
+    <span class="fn">print</span>(<span class="str">"오답! 정답: 3 (정수 나눗셈의 몫)\n"</span>)
+
+<span class="cmt"># Q3</span>
+<span class="fn">print</span>(<span class="str">"Q3. 문자열을 정수로 변환하는 함수는?"</span>)
+a3 = <span class="fn">input</span>(<span class="str">"답: "</span>)
+<span class="kw">if</span> a3 == <span class="str">"int"</span> <span class="kw">or</span> a3 == <span class="str">"int()"</span>:
+    <span class="fn">print</span>(<span class="str">"정답!\n"</span>)
+    score += <span class="num">1</span>
+<span class="kw">else</span>:
+    <span class="fn">print</span>(<span class="str">"오답! 정답: int()\n"</span>)
+
+<span class="cmt"># Q4, Q5는 생략 (같은 패턴)</span>
+score += <span class="num">2</span>  <span class="cmt"># Q4, Q5 임시 점수</span>
+
+<span class="fn">print</span>(<span class="str">f"\n최종 점수: {score}/5"</span>)
+<span class="kw">if</span> score == <span class="num">5</span>:
+    <span class="fn">print</span>(<span class="str">"S등급 — 파이썬 천재!"</span>)
+<span class="kw">elif</span> score >= <span class="num">4</span>:
+    <span class="fn">print</span>(<span class="str">"A등급 — 훌륭해요!"</span>)
+<span class="kw">elif</span> score >= <span class="num">3</span>:
+    <span class="fn">print</span>(<span class="str">"B등급 — 잘했어요!"</span>)
+<span class="kw">else</span>:
+    <span class="fn">print</span>(<span class="str">"C등급 — 더 공부해봐요!"</span>)</div>
+
+    <!-- SVG 6: 실행 예시 화면 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 380 130" style="max-width:380px;width:100%">
+            <rect x="10" y="5" width="360" height="120" rx="8" fill="#0f172a"/>
+            <text x="20" y="24" font-family="monospace" font-size="10" fill="#e2e8f0">=== 파이썬 기초 퀴즈 ===</text>
+            <text x="20" y="42" font-family="monospace" font-size="10" fill="#94a3b8">Q1. 화면에 출력하는 함수는?</text>
+            <text x="20" y="58" font-family="monospace" font-size="10" fill="#94a3b8">답: <tspan fill="#86efac">print</tspan></text>
+            <text x="20" y="74" font-family="monospace" font-size="10" fill="#86efac">정답!</text>
+            <line x1="20" y1="82" x2="360" y2="82" stroke="#334155" stroke-width="0.5"/>
+            <text x="20" y="100" font-family="monospace" font-size="10" fill="#e2e8f0">최종 점수: 4/5</text>
+            <text x="20" y="118" font-family="monospace" font-size="10" fill="#7dd3fc">A등급 — 훌륭해요!</text>
+        </svg>
+    </div>
+
+    <!-- SVG 7: 퀴즈 5문제 목록 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="70" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="24" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="800">완성 퀴즈 5문제 목록</text>
+            <text x="30" y="42" font-size="10" fill="#334155">Q1. 출력 함수   Q2. // 연산자   Q3. int() 변환</text>
+            <text x="30" y="58" font-size="10" fill="#334155">Q4. 파이썬 확장자(.py)   Q5. input() 반환 타입(str)</text>
+            <text x="30" y="72" font-size="9" fill="#64748b">각 1점, 총 5점 만점</text>
+        </svg>
+    </div>
+</div>
+
+<!-- 4페이지: 문제 -->
+<div class="page">
+    <h2>직접 풀어보세요</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q1</div>
+            <div class="problem-label">1문제 퀴즈</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">퀴즈 1문제를 만드세요. 문제: "10 % 3은?" / 정답: "1". 맞으면 "정답! 1점", 틀리면 "오답! 정답은 1입니다." 출력.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">입력</span><span class="problem-example-value">1</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">정답! 1점</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle"><summary>힌트 보기</summary><div class="problem-toggle-content"><div class="hint-text">print("Q. 10 % 3은?"), ans = input("답: "), if ans == "1": print("정답! 1점")</div></div></details>
+        <details class="problem-toggle"><summary>정답 확인</summary><div class="problem-toggle-content"><div class="answer-code">print("Q. 10 % 3은?")
+ans = input("답: ")
+if ans == "1":
+    print("정답! 1점")
+else:
+    print("오답! 정답은 1입니다.")</div></div></details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q2</div>
+            <div class="problem-label">3문제 퀴즈 + 점수</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">문제 3개를 만들고 점수를 누적해서 "X/3점" 형식으로 출력하세요. 문제는 자유롭게 만들어도 됩니다.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">3문제 후 "총 점수: 2/3점" 출력</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle"><summary>힌트 보기</summary><div class="problem-toggle-content"><div class="hint-text">score = 0, 3번 if ans == 정답: score += 1, 마지막에 print(f"총 점수: {score}/3점")</div></div></details>
+        <details class="problem-toggle"><summary>정답 확인</summary><div class="problem-toggle-content"><div class="answer-code">score = 0
+print("Q1. 2+2는?")
+if input("답: ") == "4": score += 1
+print("Q2. 파이썬 입력 함수는?")
+if input("답: ") == "input": score += 1
+print("Q3. True의 반대는?")
+if input("답: ") == "False": score += 1
+print(f"총 점수: {score}/3점")</div></div></details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q3</div>
+            <div class="problem-label">점수 등급 출력</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">5문제 퀴즈 후 점수에 따라 S(5점)/A(4점)/B(3점)/C(2점 이하) 등급을 출력하는 완성 프로그램을 만드세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">총 점수: 4/5 → A등급</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle"><summary>힌트 보기</summary><div class="problem-toggle-content"><div class="hint-text">5문제 출제 후, if score == 5: "S등급" elif score >= 4: "A등급" elif score >= 3: "B등급" else: "C등급"</div></div></details>
+        <details class="problem-toggle"><summary>정답 확인</summary><div class="problem-toggle-content"><div class="answer-code">score = 0
+questions = [
+    ("2 + 3은?", "5"),
+    ("파이썬 출력 함수는?", "print"),
+    ("10 // 3은?", "3"),
+    ("파이썬 파일 확장자는?", ".py"),
+    ("int('5')의 결과 타입은?", "int")
+]
+for i, (q, correct) in enumerate(questions):
+    print(f"Q{i+1}. {q}")
+    if input("답: ") == correct:
+        score += 1
+if score == 5:
+    grade = "S등급 — 완벽!"
+elif score >= 4:
+    grade = "A등급 — 훌륭해요!"
+elif score >= 3:
+    grade = "B등급 — 잘했어요!"
+else:
+    grade = "C등급 — 더 공부해봐요!"
+print(f"총 점수: {score}/5 → {grade}")</div></div></details>
+    </div>
+</div>
+
+<!-- 5페이지: 핵심 요약 -->
+<div class="page">
+    <h2>핵심 요약</h2>
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/lightbulb.png" alt="아이디어" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>이 유닛에서 배운 것</h3>
+        <ul>
+            <li>문자열 비교: <code>if answer == "정답"</code>으로 정답을 체크한다</li>
+            <li>점수 누적: 정답 시 <code>score += 1</code>로 1점씩 더한다</li>
+            <li>여러 정답 허용: <code>or</code>로 두 가지 이상의 정답을 처리한다</li>
+            <li>등급 판정: <code>if/elif/else</code>로 점수 범위에 따라 등급을 출력한다</li>
+            <li>문제를 순서대로 나열하면 퀴즈 게임을 만들 수 있다</li>
+            <li><code>input()</code>은 항상 문자열을 반환 — 숫자 정답도 문자열로 비교해야 함</li>
+        </ul>
+    </div>
+
+    <!-- SVG 8: 퀴즈 게임 전체 구조 -->
+    <div style="text-align:center;margin:20px 0;">
+        <svg viewBox="0 0 460 65" style="max-width:460px;width:100%">
+            <rect x="5" y="5" width="450" height="55" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="24" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="800">퀴즈 게임 패턴</text>
+            <text x="30" y="44" font-family="monospace" font-size="10" fill="#67e8f9">score</text>
+            <text x="80" y="44" font-family="monospace" font-size="10" fill="#e2e8f0"> = 0   Q1...Q5 (</text>
+            <text x="205" y="44" font-family="monospace" font-size="10" fill="#c084fc">if</text>
+            <text x="222" y="44" font-family="monospace" font-size="10" fill="#e2e8f0"> 정답:</text>
+            <text x="272" y="44" font-family="monospace" font-size="10" fill="#67e8f9">score</text>
+            <text x="322" y="44" font-family="monospace" font-size="10" fill="#c084fc"> +=</text>
+            <text x="342" y="44" font-family="monospace" font-size="10" fill="#7dd3fc"> 1</text>
+            <text x="362" y="44" font-family="monospace" font-size="10" fill="#e2e8f0">)  →  등급 출력</text>
+        </svg>
+    </div>
+
+    <!-- SVG 9: input()은 항상 문자열 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 65" style="max-width:460px;width:100%">
+            <rect x="5" y="5" width="450" height="55" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="24" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="800">input()은 항상 문자열!</text>
+            <text x="30" y="44" font-size="10" fill="#dc2626">틀림: if int(input()) == 5</text>
+            <text x="250" y="44" font-size="10" fill="#166534">올바름: if input() == "5"</text>
+            <text x="30" y="58" font-size="9" fill="#64748b">숫자를 묻는 퀴즈라도 input() 결과는 문자열이므로 ""로 감싸서 비교</text>
+        </svg>
+    </div>
+
+    <!-- SVG 10: 등급 판정 if/elif 구조 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 60" style="max-width:460px;width:100%">
+            <rect x="5" y="5" width="450" height="50" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="24" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="800">등급 판정 코드 구조</text>
+            <text x="30" y="44" font-family="monospace" font-size="10" fill="#c084fc">if</text>
+            <text x="52" y="44" font-family="monospace" font-size="10" fill="#e2e8f0"> s==5: S   </text>
+            <text x="130" y="44" font-family="monospace" font-size="10" fill="#c084fc">elif</text>
+            <text x="158" y="44" font-family="monospace" font-size="10" fill="#e2e8f0"> s>=4: A   </text>
+            <text x="240" y="44" font-family="monospace" font-size="10" fill="#c084fc">elif</text>
+            <text x="268" y="44" font-family="monospace" font-size="10" fill="#e2e8f0"> s>=3: B   </text>
+            <text x="350" y="44" font-family="monospace" font-size="10" fill="#c084fc">else</text>
+            <text x="380" y="44" font-family="monospace" font-size="10" fill="#e2e8f0">: C</text>
+        </svg>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

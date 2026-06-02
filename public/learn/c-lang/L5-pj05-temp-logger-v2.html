@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 온도 기록기</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+.page { width: 210mm; min-height: 297mm; margin: 16px auto; padding: 18mm 20mm 15mm 22mm; background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: relative; page-break-after: always; }
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after { content: counter(pagenum); position: absolute; bottom: 10mm; right: 16mm; font-size: 10px; color: #94a3b8; font-weight: 600; }
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark { position: absolute; top: -10px; right: -15px; font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3); line-height: 1; pointer-events: none; }
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #2563eb; font-weight: 600; }
+.code { background: #0f172a; border-radius: 8px; padding: 16px 20px; font-family: 'JetBrains Mono', monospace; font-size: 14px; color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap; }
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fce7f3; color: #9d174d; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<div class="page cover">
+  <div class="cover-sidebar"></div>
+  <div class="cover-accent"></div>
+  <div class="cover-body">
+    <div class="cover-watermark">P5</div>
+    <div class="cover-label">Project 05 · Level 5</div>
+    <h1 class="cover-title">온도 기록기</h1>
+    <p class="cover-sub">7일 동안의 온도를 float 배열에 저장하고, 평균 온도와 최고·최저 온도가 있는 요일을 출력합니다.</p>
+    <div style="margin:24px 0;">
+      <svg viewBox="0 0 460 110" style="max-width:460px;width:100%">
+        <text x="230" y="16" text-anchor="middle" font-size="11" fill="#64748b" font-weight="600">7일 온도 꺾은선 그래프</text>
+        <!-- 꺾은선 -->
+        <polyline points="35,72 95,52 155,68 215,30 275,55 335,78 395,45" fill="none" stroke="#3b82f6" stroke-width="2.5"/>
+        <circle cx="35" cy="72" r="4" fill="#3b82f6"/>
+        <circle cx="95" cy="52" r="4" fill="#3b82f6"/>
+        <circle cx="155" cy="68" r="4" fill="#3b82f6"/>
+        <circle cx="215" cy="30" r="6" fill="#f59e0b" stroke="#fff" stroke-width="2"/>
+        <circle cx="275" cy="55" r="4" fill="#3b82f6"/>
+        <circle cx="335" cy="78" r="6" fill="#3b82f6" stroke="#ef4444" stroke-width="2"/>
+        <circle cx="395" cy="45" r="4" fill="#3b82f6"/>
+        <!-- 레이블 -->
+        <text x="35" y="86" text-anchor="middle" font-size="9" fill="#64748b">월</text>
+        <text x="95" y="86" text-anchor="middle" font-size="9" fill="#64748b">화</text>
+        <text x="155" y="86" text-anchor="middle" font-size="9" fill="#64748b">수</text>
+        <text x="215" y="86" text-anchor="middle" font-size="9" fill="#92400e" font-weight="800">목</text>
+        <text x="275" y="86" text-anchor="middle" font-size="9" fill="#64748b">금</text>
+        <text x="335" y="86" text-anchor="middle" font-size="9" fill="#dc2626" font-weight="800">토</text>
+        <text x="395" y="86" text-anchor="middle" font-size="9" fill="#64748b">일</text>
+        <!-- 값 -->
+        <text x="35" y="65" text-anchor="middle" font-size="8" fill="#374151">22.5</text>
+        <text x="95" y="45" text-anchor="middle" font-size="8" fill="#374151">25.0</text>
+        <text x="155" y="61" text-anchor="middle" font-size="8" fill="#374151">23.3</text>
+        <text x="215" y="23" text-anchor="middle" font-size="8" fill="#92400e" font-weight="700">30.1</text>
+        <text x="275" y="48" text-anchor="middle" font-size="8" fill="#374151">24.8</text>
+        <text x="335" y="93" text-anchor="middle" font-size="8" fill="#dc2626" font-weight="700">20.2</text>
+        <text x="395" y="38" text-anchor="middle" font-size="8" fill="#374151">26.7</text>
+        <line x1="20" y1="90" x2="420" y2="90" stroke="#e2e8f0" stroke-width="1"/>
+      </svg>
+    </div>
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/calculator.png" alt="계산기" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+      <h3>이 프로젝트에서 배우는 것</h3>
+      <ul>
+        <li>float 배열로 실수 데이터를 저장하는 방법을 익힙니다.</li>
+        <li>문자열 배열로 요일 이름을 저장하고 출력합니다.</li>
+        <li>float 비교 연산으로 최고/최저를 찾습니다.</li>
+        <li>평균 이상/이하 요일을 필터링합니다.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+  <h2>float 배열과 문자열 배열</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/keyboard.png" alt="키보드" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+  <p>온도는 소수점이 있으므로 float 배열을 씁니다. 요일 이름은 문자열 포인터 배열로 저장합니다.</p>
+  <div style="text-align:center;margin:14px 0;">
+    <svg viewBox="0 0 460 90" style="max-width:460px;width:100%">
+      <text x="230" y="16" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="800">float 배열과 문자열 배열 대응</text>
+      <text x="10" y="38" font-size="9" fill="#64748b">temp:</text>
+      <rect x="50" y="26" width="55" height="22" rx="3" fill="#dbeafe" stroke="#3b82f6"/><text x="77" y="41" text-anchor="middle" font-size="9" fill="#1d4ed8">22.5</text>
+      <rect x="110" y="26" width="55" height="22" rx="3" fill="#dbeafe" stroke="#3b82f6"/><text x="137" y="41" text-anchor="middle" font-size="9" fill="#1d4ed8">25.0</text>
+      <rect x="170" y="26" width="55" height="22" rx="3" fill="#dbeafe" stroke="#3b82f6"/><text x="197" y="41" text-anchor="middle" font-size="9" fill="#1d4ed8">23.3</text>
+      <rect x="230" y="26" width="55" height="22" rx="3" fill="#fefce8" stroke="#f59e0b" stroke-width="2"/><text x="257" y="41" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">30.1</text>
+      <rect x="290" y="26" width="55" height="22" rx="3" fill="#dbeafe" stroke="#3b82f6"/><text x="317" y="41" text-anchor="middle" font-size="9" fill="#1d4ed8">24.8</text>
+      <!-- 요일 -->
+      <text x="10" y="70" font-size="9" fill="#64748b">days:</text>
+      <rect x="50" y="58" width="55" height="22" rx="3" fill="#f1f5f9"/><text x="77" y="73" text-anchor="middle" font-size="9" fill="#374151">"월"</text>
+      <rect x="110" y="58" width="55" height="22" rx="3" fill="#f1f5f9"/><text x="137" y="73" text-anchor="middle" font-size="9" fill="#374151">"화"</text>
+      <rect x="170" y="58" width="55" height="22" rx="3" fill="#f1f5f9"/><text x="197" y="73" text-anchor="middle" font-size="9" fill="#374151">"수"</text>
+      <rect x="230" y="58" width="55" height="22" rx="3" fill="#fefce8"/><text x="257" y="73" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">"목"</text>
+      <rect x="290" y="58" width="55" height="22" rx="3" fill="#f1f5f9"/><text x="317" y="73" text-anchor="middle" font-size="9" fill="#374151">"금"</text>
+    </svg>
+  </div>
+  <div class="code"><span class="kw">float</span> temp[<span class="num">7</span>];
+<span class="kw">char</span> *days[<span class="num">7</span>] = {<span class="str">"월"</span>, <span class="str">"화"</span>, <span class="str">"수"</span>, <span class="str">"목"</span>, <span class="str">"금"</span>, <span class="str">"토"</span>, <span class="str">"일"</span>};
+
+<span class="fn">printf</span>(<span class="str">"7일 온도 입력 (소수 가능):\n"</span>);
+<span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; <span class="num">7</span>; i++) {
+    <span class="fn">printf</span>(<span class="str">"%s요일: "</span>, days[i]);
+    <span class="fn">scanf</span>(<span class="str">"%f"</span>, &amp;temp[i]);  <span class="cmt">// float 입력은 %f</span>
+}</div>
+  <h2>평균, 최고, 최저 계산</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="계산 로직" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+  <div class="code"><span class="kw">float</span> sum = <span class="num">0</span>;
+<span class="kw">float</span> maxT = temp[<span class="num">0</span>], minT = temp[<span class="num">0</span>];
+<span class="kw">int</span> maxD = <span class="num">0</span>, minD = <span class="num">0</span>;
+
+<span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; <span class="num">7</span>; i++) {
+    sum += temp[i];
+    <span class="kw">if</span> (temp[i] &gt; maxT) { maxT = temp[i]; maxD = i; }
+    <span class="kw">if</span> (temp[i] &lt; minT) { minT = temp[i]; minD = i; }
+}
+<span class="kw">float</span> avg = sum / <span class="num">7</span>;  <span class="cmt">// float/int = float (형변환 불필요)</span>
+
+<span class="fn">printf</span>(<span class="str">"평균: %.1f°C\n"</span>, avg);
+<span class="fn">printf</span>(<span class="str">"최고: %.1f°C (%s요일)\n"</span>, maxT, days[maxD]);
+<span class="fn">printf</span>(<span class="str">"최저: %.1f°C (%s요일)\n"</span>, minT, days[minD]);</div>
+  <div class="practice">
+    <div class="practice-head">따라해보세요</div>
+    <div class="practice-body">
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/database.png" alt="데이터베이스" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="완성" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+      <div class="practice-item">
+        <div class="practice-num">1</div>
+        <div class="practice-desc">float sum에서 float/7은 자동으로 float입니다. int sum이라면 어떻게 해야 할까요?</div>
+        <div class="practice-result">(float)sum / 7 또는 sum / 7.0f 로 강제 변환</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+  <h2>완성 코드 & 평균 이상 요일 출력</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/monitor.png" alt="모니터" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+  <div class="code">#<span class="kw">include</span> <span class="str">&lt;stdio.h&gt;</span>
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="kw">float</span> temp[<span class="num">7</span>] = {<span class="num">22.5</span>, <span class="num">25.0</span>, <span class="num">23.3</span>, <span class="num">30.1</span>, <span class="num">24.8</span>, <span class="num">20.2</span>, <span class="num">26.7</span>};
+    <span class="kw">char</span> *days[<span class="num">7</span>] = {<span class="str">"월"</span>,<span class="str">"화"</span>,<span class="str">"수"</span>,<span class="str">"목"</span>,<span class="str">"금"</span>,<span class="str">"토"</span>,<span class="str">"일"</span>};
+
+    <span class="kw">float</span> sum=<span class="num">0</span>, maxT=temp[<span class="num">0</span>], minT=temp[<span class="num">0</span>];
+    <span class="kw">int</span> maxD=<span class="num">0</span>, minD=<span class="num">0</span>;
+
+    <span class="kw">for</span> (<span class="kw">int</span> i=<span class="num">0</span>;i&lt;<span class="num">7</span>;i++) {
+        sum += temp[i];
+        <span class="kw">if</span>(temp[i]&gt;maxT){maxT=temp[i];maxD=i;}
+        <span class="kw">if</span>(temp[i]&lt;minT){minT=temp[i];minD=i;}
+    }
+    <span class="kw">float</span> avg = sum / <span class="num">7</span>;
+
+    <span class="fn">printf</span>(<span class="str">"평균: %.1f°C\n"</span>, avg);
+    <span class="fn">printf</span>(<span class="str">"최고: %.1f°C (%s요일)\n"</span>, maxT, days[maxD]);
+    <span class="fn">printf</span>(<span class="str">"최저: %.1f°C (%s요일)\n"</span>, minT, days[minD]);
+
+    <span class="fn">printf</span>(<span class="str">"평균 이상인 요일: "</span>);
+    <span class="kw">for</span> (<span class="kw">int</span> i=<span class="num">0</span>;i&lt;<span class="num">7</span>;i++)
+        <span class="kw">if</span> (temp[i] &gt;= avg) <span class="fn">printf</span>(<span class="str">"%s요일 "</span>, days[i]);
+    <span class="fn">printf</span>(<span class="str">"\n"</span>);
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+  <div style="text-align:center;margin:14px 0;">
+    <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+      <rect x="10" y="8" width="440" height="68" rx="8" fill="#0f172a"/>
+      <text x="30" y="30" font-size="10" fill="#67e8f9" font-family="JetBrains Mono">평균: 24.7°C</text>
+      <text x="30" y="46" font-size="10" fill="#f59e0b" font-family="JetBrains Mono">최고: 30.1°C (목요일)</text>
+      <text x="30" y="62" font-size="10" fill="#ef4444" font-family="JetBrains Mono">최저: 20.2°C (토요일)</text>
+    </svg>
+  </div>
+</div>
+
+<div class="page">
+  <h2>연습 문제</h2>
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">1</div>
+      <div class="problem-label">온도 변화량 출력</div>
+      <span class="problem-diff medium">중간</span>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">전날 대비 온도 변화량(오늘 - 어제)을 각 요일에 출력하세요. 첫 날(월요일)은 제외합니다.</div>
+      <div class="problem-example">
+        <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">화: +2.5  수: -1.7  목: +6.8  ...</span></div>
+      </div>
+      <details class="problem-toggle">
+        <summary>힌트 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="hint-text">for(i=1; i&lt;7; i++) { float diff = temp[i] - temp[i-1]; printf ... }</div>
+          <div class="answer-code"><span class="kw">for</span>(<span class="kw">int</span> i=<span class="num">1</span>;i&lt;<span class="num">7</span>;i++){
+  <span class="kw">float</span> d=temp[i]-temp[i-<span class="num">1</span>];
+  <span class="fn">printf</span>(<span class="str">"%s: %+.1f\n"</span>,days[i],d);
+}</div>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">2</div>
+      <div class="problem-label">폭염 경보 출력</div>
+      <span class="problem-diff easy">쉬움</span>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">온도가 28°C 이상인 날에 "폭염 경보!" 메시지를 함께 출력하세요.</div>
+      <div class="problem-example">
+        <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">목요일 30.1°C [폭염 경보!]</span></div>
+      </div>
+      <details class="problem-toggle">
+        <summary>정답 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="answer-code"><span class="kw">for</span>(<span class="kw">int</span> i=<span class="num">0</span>;i&lt;<span class="num">7</span>;i++){
+  <span class="fn">printf</span>(<span class="str">"%s %.1f°C"</span>,days[i],temp[i]);
+  <span class="kw">if</span>(temp[i]&gt;=<span class="num">28.0</span>) <span class="fn">printf</span>(<span class="str">" [폭염!]"</span>);
+  <span class="fn">printf</span>(<span class="str">"\n"</span>);
+}</div>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">3</div>
+      <div class="problem-label">기온 내림차순 정렬</div>
+      <span class="problem-diff hard">어려움</span>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">7일 기온을 높은 순서대로 정렬하여 출력하세요. 요일 이름도 함께 정렬합니다. (버블 정렬 사용)</div>
+      <div class="problem-example">
+        <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">1위: 목요일 30.1°C</span></div>
+      </div>
+      <details class="problem-toggle">
+        <summary>힌트 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="hint-text">temp 배열과 days 배열을 동시에 교환(swap)해야 합니다. float tmp; char* tmpDay; 두 임시 변수가 필요합니다.</div>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+    <h3>핵심 정리</h3>
+    <ul>
+      <li>float 배열: <code>float temp[7]</code>, scanf는 <code>%f</code>, printf는 <code>%.1f</code></li>
+      <li>문자열 포인터 배열: <code>char *days[7] = {"월",...}</code></li>
+      <li>float/int = float (int끼리 나눌 때만 형변환 필요)</li>
+      <li>이전값 참조: <code>temp[i] - temp[i-1]</code> (i=1부터 시작)</li>
+      <li>%+.1f 형식: 양수면 +, 음수면 - 자동 출력</li>
+    </ul>
+  </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

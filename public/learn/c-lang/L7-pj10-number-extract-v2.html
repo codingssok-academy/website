@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>L7-PJ10 숫자 추출</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:#e8edf2;font-family:'Noto Sans KR',sans-serif;counter-reset:page;}
+  .page{width:210mm;min-height:297mm;margin:16px auto;padding:18mm 20mm 15mm 22mm;background:#fff;box-shadow:0 2px 12px rgba(0,0,0,.12);position:relative;overflow:hidden;}
+  .page::after{content:counter(page);counter-increment:page;position:absolute;bottom:10mm;right:20mm;font-size:9pt;color:#94a3b8;}
+
+  .cover{display:flex;height:100%;gap:0;}
+  .cover-sidebar{width:10px;background:#1e3a5f;border-radius:3px 0 0 3px;flex-shrink:0;}
+  .cover-accent{width:7px;background:#e6a817;flex-shrink:0;}
+  .cover-body{flex:1;padding:0 0 0 28px;display:flex;flex-direction:column;justify-content:space-between;}
+  .cover-top{padding-top:20px;}
+  .badge-row{display:flex;gap:8px;align-items:center;margin-bottom:16px;}
+  .badge{padding:4px 12px;border-radius:20px;font-size:9pt;font-weight:700;}
+  .badge-chapter{background:#1e3a5f;color:#fff;}
+  .badge-project{background:#e6a817;color:#1e3a5f;}
+  .badge-level{background:#f0f4f8;color:#475569;border:1px solid #cbd5e1;}
+  .cover-title{font-size:26pt;font-weight:900;color:#1e3a5f;line-height:1.15;margin-bottom:8px;}
+  .cover-subtitle{font-size:13pt;color:#e6a817;font-weight:700;margin-bottom:20px;}
+  .cover-desc{font-size:10.5pt;color:#475569;line-height:1.8;background:#f8fafc;padding:14px 18px;border-left:4px solid #1e3a5f;border-radius:0 6px 6px 0;}
+  .cover-svg{margin:20px 0;}
+  .cover-goals{margin-top:16px;}
+  .cover-goals h3{font-size:10pt;font-weight:700;color:#1e3a5f;margin-bottom:10px;}
+  .goal-item{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:9.5pt;color:#334155;}
+  .goal-dot{width:8px;height:8px;border-radius:50%;background:#e6a817;flex-shrink:0;}
+  .cover-bottom{border-top:2px solid #f1f5f9;padding-top:14px;display:flex;justify-content:space-between;align-items:center;}
+  .cover-meta{font-size:8.5pt;color:#94a3b8;}
+
+  .section-title{font-size:15pt;font-weight:900;color:#1e3a5f;border-bottom:3px solid #e6a817;padding-bottom:6px;margin-bottom:18px;}
+  .sub-title{font-size:11.5pt;font-weight:700;color:#1e3a5f;margin:18px 0 10px;}
+  p{font-size:9.5pt;color:#334155;line-height:1.9;margin-bottom:10px;}
+
+  .code{background:#0f172a;border-radius:8px;padding:14px 18px;margin:12px 0;font-family:'JetBrains Mono',monospace;font-size:8.5pt;line-height:1.8;overflow-x:auto;}
+  .code .kw{color:#c084fc;}.code .fn{color:#67e8f9;}.code .str{color:#86efac;}
+  .code .num{color:#7dd3fc;}.code .cmt{color:#64748b;}.code .var{color:#fbbf24;}
+  .code .op{color:#f472b6;}.code .pp{color:#fb923c;}
+
+  .tip{background:#fffbeb;border:1px solid #fcd34d;border-left:4px solid #e6a817;border-radius:6px;padding:12px 16px;margin:12px 0;font-size:9pt;color:#78350f;}
+  .info{background:#eff6ff;border:1px solid #93c5fd;border-left:4px solid #3b82f6;border-radius:6px;padding:12px 16px;margin:12px 0;font-size:9pt;color:#1e3a8a;}
+
+  .problem-box{border:2px solid #1e3a5f;border-radius:8px;margin:14px 0;overflow:hidden;}
+  .problem-head{background:#1e3a5f;color:#fff;padding:8px 16px;font-size:9.5pt;font-weight:700;display:flex;justify-content:space-between;align-items:center;}
+  .problem-body{padding:14px 16px;}
+  .problem-body p{margin:0 0 8px;font-size:9.5pt;}
+  details summary{cursor:pointer;font-size:9pt;color:#1e3a5f;font-weight:700;margin-top:10px;padding:6px 10px;background:#f0f4f8;border-radius:4px;}
+  details[open] summary{background:#dbeafe;}
+  .answer{padding:10px 12px;background:#f8fafc;border-radius:4px;margin-top:6px;font-size:9pt;color:#334155;}
+  .answer .code{margin:6px 0;font-size:8pt;}
+
+  .svg-wrap{margin:14px 0;text-align:center;}
+  .summary-box{background:#f0f4f8;border-radius:8px;padding:16px 20px;margin:14px 0;}
+  .summary-box h3{font-size:10pt;font-weight:700;color:#1e3a5f;margin-bottom:10px;}
+  .summary-item{display:flex;gap:10px;margin-bottom:7px;font-size:9pt;color:#334155;}
+  .summary-label{background:#1e3a5f;color:#fff;padding:2px 8px;border-radius:3px;font-size:8pt;font-weight:700;white-space:nowrap;}
+
+  @media print{body{background:#fff;}.page{margin:0;box-shadow:none;page-break-after:always;}}
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- PAGE 1: COVER -->
+<div class="page">
+  <div class="cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+      <div class="cover-top">
+        <div class="badge-row">
+          <span class="badge badge-chapter">L7 문자열</span>
+          <span class="badge badge-project">PROJECT 10</span>
+          <span class="badge badge-level">중급</span>
+        </div>
+        <div class="cover-title">문자열에서<br>숫자만 추출</div>
+        <div class="cover-subtitle">isdigit — 숫자 필터링 패턴</div>
+        <div class="cover-desc">
+          "abc123def456"에서 숫자만 뽑아내면 "123456"이 된다.<br>
+          <b>isdigit()</b>으로 각 글자가 숫자인지 확인하고, 숫자만 새 배열에 복사하는 방식이다.<br>
+          전화번호 정제, 가격 추출, 데이터 파싱 등 실무에서 자주 사용되는 패턴이다.
+        </div>
+
+        <div class="cover-svg">
+          <svg width="400" height="110" viewBox="0 0 400 110">
+            <!-- Input string character by character -->
+            <text x="10" y="16" font-size="9" fill="#94a3b8" font-family="'Noto Sans KR'">입력: "abc123def456"</text>
+            <rect x="10" y="22" width="26" height="26" rx="3" fill="#fef2f2" stroke="#fca5a5"/>
+            <text x="23" y="40" text-anchor="middle" font-size="12" fill="#dc2626" font-family="'JetBrains Mono'" font-weight="700">a</text>
+            <rect x="40" y="22" width="26" height="26" rx="3" fill="#fef2f2" stroke="#fca5a5"/>
+            <text x="53" y="40" text-anchor="middle" font-size="12" fill="#dc2626" font-family="'JetBrains Mono'" font-weight="700">b</text>
+            <rect x="70" y="22" width="26" height="26" rx="3" fill="#fef2f2" stroke="#fca5a5"/>
+            <text x="83" y="40" text-anchor="middle" font-size="12" fill="#dc2626" font-family="'JetBrains Mono'" font-weight="700">c</text>
+            <rect x="100" y="22" width="26" height="26" rx="3" fill="#f0fdf4" stroke="#22c55e" stroke-width="2"/>
+            <text x="113" y="40" text-anchor="middle" font-size="12" fill="#15803d" font-family="'JetBrains Mono'" font-weight="700">1</text>
+            <rect x="130" y="22" width="26" height="26" rx="3" fill="#f0fdf4" stroke="#22c55e" stroke-width="2"/>
+            <text x="143" y="40" text-anchor="middle" font-size="12" fill="#15803d" font-family="'JetBrains Mono'" font-weight="700">2</text>
+            <rect x="160" y="22" width="26" height="26" rx="3" fill="#f0fdf4" stroke="#22c55e" stroke-width="2"/>
+            <text x="173" y="40" text-anchor="middle" font-size="12" fill="#15803d" font-family="'JetBrains Mono'" font-weight="700">3</text>
+            <rect x="190" y="22" width="26" height="26" rx="3" fill="#fef2f2" stroke="#fca5a5"/>
+            <text x="203" y="40" text-anchor="middle" font-size="12" fill="#dc2626" font-family="'JetBrains Mono'" font-weight="700">d</text>
+            <rect x="220" y="22" width="26" height="26" rx="3" fill="#fef2f2" stroke="#fca5a5"/>
+            <text x="233" y="40" text-anchor="middle" font-size="12" fill="#dc2626" font-family="'JetBrains Mono'" font-weight="700">e</text>
+            <rect x="250" y="22" width="26" height="26" rx="3" fill="#fef2f2" stroke="#fca5a5"/>
+            <text x="263" y="40" text-anchor="middle" font-size="12" fill="#dc2626" font-family="'JetBrains Mono'" font-weight="700">f</text>
+            <rect x="280" y="22" width="26" height="26" rx="3" fill="#f0fdf4" stroke="#22c55e" stroke-width="2"/>
+            <text x="293" y="40" text-anchor="middle" font-size="12" fill="#15803d" font-family="'JetBrains Mono'" font-weight="700">4</text>
+            <rect x="310" y="22" width="26" height="26" rx="3" fill="#f0fdf4" stroke="#22c55e" stroke-width="2"/>
+            <text x="323" y="40" text-anchor="middle" font-size="12" fill="#15803d" font-family="'JetBrains Mono'" font-weight="700">5</text>
+            <rect x="340" y="22" width="26" height="26" rx="3" fill="#f0fdf4" stroke="#22c55e" stroke-width="2"/>
+            <text x="353" y="40" text-anchor="middle" font-size="12" fill="#15803d" font-family="'JetBrains Mono'" font-weight="700">6</text>
+            <!-- Filter result -->
+            <text x="10" y="72" font-size="9" fill="#94a3b8" font-family="'Noto Sans KR'">숫자만 추출 → isdigit() 필터</text>
+            <rect x="10" y="80" width="220" height="26" rx="5" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="120" y="98" text-anchor="middle" font-size="13" font-weight="700" fill="#15803d" font-family="'JetBrains Mono'">"123456"</text>
+          </svg>
+        </div>
+
+        <div class="cover-goals">
+          <h3>학습 목표</h3>
+          <div class="goal-item"><div class="goal-dot"></div><span>isdigit()으로 숫자 문자 필터링</span></div>
+          <div class="goal-item"><div class="goal-dot"></div><span>숫자 문자열을 정수로 변환(atoi)하여 합산</span></div>
+          <div class="goal-item"><div class="goal-dot"></div><span>전화번호에서 숫자만 추출하는 실용적 응용</span></div>
+          <div class="goal-item"><div class="goal-dot"></div><span>연속된 숫자 그룹 추출 패턴</span></div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;margin:12px 0 8px;">
+            <img src="/images/learn/computer-basics/keyboard.png" alt="키보드 - 문자열 입력" style="width:36px;height:36px;object-fit:contain;background:#fff;border-radius:8px;">
+            <img src="/images/learn/c-lang/book.png" alt="교재 - 문자열 개념 학습" style="width:36px;height:36px;object-fit:contain;background:#fff;border-radius:8px;">
+            <img src="/images/learn/c-lang/notebook.png" alt="노트북 - 문자열 기록" style="width:36px;height:36px;object-fit:contain;background:#fff;border-radius:8px;">
+            <img src="/images/learn/c-lang/lock.png" alt="자물쇠 - 문자열 보안 처리" style="width:36px;height:36px;object-fit:contain;background:#fff;border-radius:8px;">
+        </div>
+<div class="cover-bottom">
+        <div class="cover-meta">코딩쏙 C언어 · L7 문자열 · PJ-10</div>
+        <div class="cover-meta">isdigit Filter Pattern</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 2: 구현 -->
+<div class="page">
+  <div style="display:flex;align-items:center;gap:8px;margin:10px 0 6px;padding:6px 12px;background:#eff6ff;border-radius:6px;">
+    <img src="/images/learn/computer-basics/keyboard.png" alt="키보드 - 문자열 입력" style="width:26px;height:26px;object-fit:contain;background:#fff;border-radius:8px;">
+</div>
+<div class="section-title">숫자 추출 구현</div>
+
+  <div style="display:flex;align-items:center;gap:8px;margin:8px 0 4px;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트북 - 문자열 기록" style="width:22px;height:22px;object-fit:contain;opacity:0.85;background:#fff;border-radius:8px;">
+</div>
+<div class="sub-title">기본 — 숫자 문자만 추출</div>
+  <div class="code">
+<span class="pp">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="pp">#include</span> <span class="str">&lt;string.h&gt;</span>
+<span class="pp">#include</span> <span class="str">&lt;ctype.h&gt;</span>
+
+<span class="kw">void</span> <span class="fn">extract_digits</span>(<span class="kw">char</span> <span class="var">src</span>[], <span class="kw">char</span> <span class="var">result</span>[]) {
+    <span class="kw">int</span> <span class="var">j</span> = <span class="num">0</span>;
+    <span class="kw">for</span> (<span class="kw">int</span> <span class="var">i</span> = <span class="num">0</span>; <span class="var">src</span>[<span class="var">i</span>]; <span class="var">i</span><span class="op">++</span>) {
+        <span class="kw">if</span> (<span class="fn">isdigit</span>(<span class="var">src</span>[<span class="var">i</span>])) {
+            <span class="var">result</span>[<span class="var">j</span><span class="op">++</span>] = <span class="var">src</span>[<span class="var">i</span>];
+        }
+    }
+    <span class="var">result</span>[<span class="var">j</span>] = <span class="str">'\0'</span>;
+}
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="kw">char</span> <span class="var">input</span>[<span class="num">100</span>], <span class="var">digits</span>[<span class="num">100</span>];
+    <span class="fn">printf</span>(<span class="str">"문자열 입력: "</span>);
+    <span class="fn">fgets</span>(<span class="var">input</span>, <span class="kw">sizeof</span>(<span class="var">input</span>), <span class="var">stdin</span>);
+    <span class="var">input</span>[<span class="fn">strcspn</span>(<span class="var">input</span>, <span class="str">"\n"</span>)] = <span class="str">'\0'</span>;
+
+    <span class="fn">extract_digits</span>(<span class="var">input</span>, <span class="var">digits</span>);
+    <span class="fn">printf</span>(<span class="str">"추출된 숫자: %s\n"</span>, <span class="var">digits</span>);
+    <span class="fn">printf</span>(<span class="str">"정수값: %d\n"</span>, <span class="fn">atoi</span>(<span class="var">digits</span>));  <span class="cmt">// 문자열 → 정수</span>
+    <span class="kw">return</span> <span class="num">0</span>;
+}
+  </div>
+
+  <div class="sub-title">전화번호 정제</div>
+  <p>"010-1234-5678" 또는 "(010) 1234-5678" 형식에서 숫자만 추출하면 "01012345678"이 된다. extract_digits 함수를 그대로 사용한다.</p>
+
+  <div class="svg-wrap">
+    <svg width="480" height="60" viewBox="0 0 480 60">
+      <rect x="10" y="10" width="180" height="30" rx="4" fill="#f8fafc" stroke="#e2e8f0"/>
+      <text x="100" y="30" text-anchor="middle" font-size="11" fill="#334155" font-family="'JetBrains Mono'">"010-1234-5678"</text>
+      <path d="M195 25 L235 25" fill="none" stroke="#e6a817" stroke-width="2" marker-end="url(#na)"/>
+      <text x="215" y="19" text-anchor="middle" font-size="8" fill="#e6a817" font-family="'Noto Sans KR'">추출</text>
+      <rect x="240" y="10" width="180" height="30" rx="4" fill="#f0fdf4" stroke="#22c55e"/>
+      <text x="330" y="30" text-anchor="middle" font-size="11" fill="#15803d" font-family="'JetBrains Mono'">"01012345678"</text>
+      <defs><marker id="na" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#e6a817"/></marker></defs>
+    </svg>
+  </div>
+
+  <div class="sub-title">연속된 숫자 그룹 추출 (digit_sum)</div>
+  <div class="code">
+<span class="cmt">// "price: 150, qty: 3" → 숫자들의 합 계산</span>
+<span class="kw">int</span> <span class="fn">sum_all_numbers</span>(<span class="kw">char</span> <span class="var">str</span>[]) {
+    <span class="kw">int</span> <span class="var">total</span> = <span class="num">0</span>, <span class="var">num</span> = <span class="num">0</span>, <span class="var">in_num</span> = <span class="num">0</span>;
+    <span class="kw">for</span> (<span class="kw">int</span> <span class="var">i</span> = <span class="num">0</span>; <span class="var">str</span>[<span class="var">i</span>]; <span class="var">i</span><span class="op">++</span>) {
+        <span class="kw">if</span> (<span class="fn">isdigit</span>(<span class="var">str</span>[<span class="var">i</span>])) {
+            <span class="var">num</span> = <span class="var">num</span> <span class="op">*</span> <span class="num">10</span> <span class="op">+</span> (<span class="var">str</span>[<span class="var">i</span>] <span class="op">-</span> <span class="str">'0'</span>);  <span class="cmt">// 자릿수 합산</span>
+            <span class="var">in_num</span> = <span class="num">1</span>;
+        } <span class="kw">else if</span> (<span class="var">in_num</span>) {
+            <span class="var">total</span> <span class="op">+=</span> <span class="var">num</span>;   <span class="cmt">// 숫자 그룹 끝 → 누적</span>
+            <span class="var">num</span> = <span class="num">0</span>; <span class="var">in_num</span> = <span class="num">0</span>;
+        }
+    }
+    <span class="kw">if</span> (<span class="var">in_num</span>) <span class="var">total</span> <span class="op">+=</span> <span class="var">num</span>;   <span class="cmt">// 마지막 숫자 처리</span>
+    <span class="kw">return</span> <span class="var">total</span>;
+}
+<span class="cmt">// "price: 150, qty: 3" → 150 + 3 = 153</span>
+  </div>
+
+  <div class="info"><b>자릿수 합산 패턴:</b> num = num * 10 + (c - '0')는 문자를 정수로 직접 변환하는 고전적 패턴이다. '1','5','0' 처리: 0*10+1=1 → 1*10+5=15 → 15*10+0=150.</div>
+</div>
+
+<!-- PAGE 3: 응용 -->
+<div class="page">
+  <div style="display:flex;align-items:center;gap:8px;margin:10px 0 6px;padding:6px 12px;background:#eff6ff;border-radius:6px;">
+    <img src="/images/learn/c-lang/book.png" alt="교재 - 문자열 개념 학습" style="width:26px;height:26px;object-fit:contain;background:#fff;border-radius:8px;">
+</div>
+<div class="section-title">응용 — 수식 파서</div>
+
+  <div class="sub-title">문자열에서 숫자들을 추출해 합산</div>
+  <div class="code">
+<span class="pp">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="pp">#include</span> <span class="str">&lt;ctype.h&gt;</span>
+<span class="pp">#include</span> <span class="str">&lt;string.h&gt;</span>
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="kw">char</span> <span class="var">line</span>[<span class="num">200</span>];
+    <span class="fn">printf</span>(<span class="str">"문장 입력 (예: score1=90, score2=85): "</span>);
+    <span class="fn">fgets</span>(<span class="var">line</span>, <span class="kw">sizeof</span>(<span class="var">line</span>), <span class="var">stdin</span>);
+
+    <span class="kw">int</span> <span class="var">nums</span>[<span class="num">20</span>], <span class="var">cnt</span> = <span class="num">0</span>;
+    <span class="kw">int</span> <span class="var">num</span> = <span class="num">0</span>, <span class="var">in_num</span> = <span class="num">0</span>;
+
+    <span class="kw">for</span> (<span class="kw">int</span> <span class="var">i</span> = <span class="num">0</span>; <span class="var">line</span>[<span class="var">i</span>]; <span class="var">i</span><span class="op">++</span>) {
+        <span class="kw">if</span> (<span class="fn">isdigit</span>(<span class="var">line</span>[<span class="var">i</span>])) {
+            <span class="var">num</span> = <span class="var">num</span> <span class="op">*</span> <span class="num">10</span> <span class="op">+</span> (<span class="var">line</span>[<span class="var">i</span>] <span class="op">-</span> <span class="str">'0'</span>);
+            <span class="var">in_num</span> = <span class="num">1</span>;
+        } <span class="kw">else if</span> (<span class="var">in_num</span>) {
+            <span class="var">nums</span>[<span class="var">cnt</span><span class="op">++</span>] = <span class="var">num</span>;
+            <span class="var">num</span> = <span class="num">0</span>; <span class="var">in_num</span> = <span class="num">0</span>;
+        }
+    }
+    <span class="kw">if</span> (<span class="var">in_num</span>) <span class="var">nums</span>[<span class="var">cnt</span><span class="op">++</span>] = <span class="var">num</span>;
+
+    <span class="kw">int</span> <span class="var">total</span> = <span class="num">0</span>;
+    <span class="fn">printf</span>(<span class="str">"추출된 숫자: "</span>);
+    <span class="kw">for</span> (<span class="kw">int</span> <span class="var">i</span> = <span class="num">0</span>; <span class="var">i</span> <span class="op">&lt;</span> <span class="var">cnt</span>; <span class="var">i</span><span class="op">++</span>) {
+        <span class="fn">printf</span>(<span class="str">"%d "</span>, <span class="var">nums</span>[<span class="var">i</span>]);
+        <span class="var">total</span> <span class="op">+=</span> <span class="var">nums</span>[<span class="var">i</span>];
+    }
+    <span class="fn">printf</span>(<span class="str">"\n합계: %d, 평균: %.1f\n"</span>, <span class="var">total</span>, (<span class="kw">float</span>)<span class="var">total</span>/<span class="var">cnt</span>);
+    <span class="kw">return</span> <span class="num">0</span>;
+}
+  </div>
+
+  <div class="sub-title">실행 예시</div>
+  <div class="svg-wrap">
+    <svg width="480" height="80" viewBox="0 0 480 80">
+      <rect x="10" y="10" width="460" height="60" rx="6" fill="#0f172a" stroke="#334155"/>
+      <text x="24" y="30" font-size="9.5" fill="#94a3b8" font-family="'JetBrains Mono'">문장 입력: score1=90, score2=85, score3=78</text>
+      <text x="24" y="48" font-size="9.5" fill="#67e8f9" font-family="'JetBrains Mono'">추출된 숫자: 1 90 2 85 3 78</text>
+      <text x="24" y="64" font-size="9" fill="#94a3b8" font-family="'JetBrains Mono'">→ 주의: "score1"의 "1"도 추출됨!</text>
+    </svg>
+  </div>
+
+  <div class="tip"><b>한계점 주의:</b> "score1=90"에서 1, 90 모두 추출된다. 순수 숫자만 필요하다면 숫자 앞뒤가 알파벳이 아닌지 추가로 확인해야 한다.</div>
+</div>
+
+<!-- PAGE 4: 연습 문제 -->
+<div class="page">
+  <div class="section-title">연습 문제</div>
+
+  <div class="problem-box">
+    <div class="problem-head"><span>Q1. 결과 예측</span><span style="font-weight:400;font-size:8.5pt;"></span></div>
+    <div class="problem-body">
+      <p>extract_digits("phone: 010-1234") 의 결과는?</p>
+      <details><summary>정답 보기</summary><div class="answer">"0101234" — 숫자 0,1,0,1,2,3,4 추출 (하이픈 제외)</div></details>
+    </div>
+  </div>
+
+  <div class="problem-box">
+    <div class="problem-head"><span>Q2. 개념 확인</span><span style="font-weight:400;font-size:8.5pt;"></span></div>
+    <div class="problem-body">
+      <p>isdigit('3') = 1, isdigit('a') = 0. 그렇다면 isdigit(' '), isdigit('\0'), isdigit('9')의 값은?</p>
+      <details><summary>정답 보기</summary><div class="answer">isdigit(' ')=0, isdigit('\0')=0, isdigit('9')=1 (비0 값)</div></details>
+    </div>
+  </div>
+
+  <div class="problem-box">
+    <div class="problem-head"><span>Q3. 코드 완성</span><span style="font-weight:400;font-size:8.5pt;"></span></div>
+    <div class="problem-body">
+      <p>"abc" 같은 숫자 없는 문자열이 입력될 때 0을 출력하도록 방어 코드를 추가하시오.</p>
+      <details><summary>정답 보기</summary><div class="answer">
+        <div class="code">
+<span class="fn">extract_digits</span>(<span class="var">input</span>, <span class="var">digits</span>);
+<span class="kw">if</span>(<span class="fn">strlen</span>(<span class="var">digits</span>)==<span class="num">0</span>)
+    <span class="fn">printf</span>(<span class="str">"숫자 없음 → 0\n"</span>);
+<span class="kw">else</span>
+    <span class="fn">printf</span>(<span class="str">"%d\n"</span>, <span class="fn">atoi</span>(<span class="var">digits</span>));
+        </div>
+      </div></details>
+    </div>
+  </div>
+
+  <div class="problem-box">
+    <div class="problem-head"><span>Q4. 응용</span><span style="font-weight:400;font-size:8.5pt;"></span></div>
+    <div class="problem-body">
+      <p>"Hello 42 World 8"에서 숫자만 추출하여 곱한 결과를 출력하는 프로그램을 작성하시오. (42 × 8 = 336)</p>
+      <details><summary>정답 보기</summary><div class="answer">숫자 그룹 추출 패턴으로 nums 배열에 저장. for 루프에서 product *= nums[i]로 누적 곱셈.</div></details>
+    </div>
+  </div>
+
+  <div class="problem-box">
+    <div class="problem-head"><span>Q5. 도전</span><span style="font-weight:400;font-size:8.5pt;"></span></div>
+    <div class="problem-body">
+      <p>학생 성적 문자열 "Alice:95, Bob:87, Charlie:92"를 파싱하여 각 학생의 이름과 점수를 분리 출력하고 평균을 계산하시오.</p>
+      <details><summary>정답 보기</summary><div class="answer">strtok으로 ","로 분리 → 각 토큰에서 ":"로 다시 분리 → 이름(strcmp)과 점수(atoi) 추출.</div></details>
+    </div>
+  </div>
+
+  <div class="summary-box">
+    <h3>핵심 정리</h3>
+    <div class="summary-item"><span class="summary-label">isdigit</span><span>숫자 문자('0'~'9')이면 비0 반환, 아니면 0</span></div>
+    <div class="summary-item"><span class="summary-label">필터링</span><span>isdigit 조건 + 별도 배열에 복사 → \0 추가</span></div>
+    <div class="summary-item"><span class="summary-label">변환</span><span>num = num*10 + (c-'0') 로 문자열 → 정수 직접 변환</span></div>
+    <div class="summary-item"><span class="summary-label">in_num</span><span>숫자 그룹 경계 감지 플래그 — 연속된 숫자 처리</span></div>
+  </div>
+
+    <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:20px;padding-top:10px;border-top:1px solid #f1f5f9;">
+        <img src="/images/learn/c-lang/code-screen.png" alt="코드 화면 - 문자열 처리 코드" style="width:22px;height:22px;object-fit:contain;opacity:0.6;background:#fff;border-radius:8px;">
+        <span style="font-size:10px;color:#cbd5e1;">코딩쏙 C언어</span>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Unit 71. 문자열 처리 심화 — C 언어</title>
+    <link rel="stylesheet" href="../common.css">
+</head>
+
+<body>
+    <div class="wrap">
+        <div class="hdr">
+            <h1>Unit 71. 문자열 처리 심화</h1>
+            <div class="sub">strtok · sscanf · sprintf · 문자열 파싱 · 정규패턴 대안</div>
+            <span class="unit-badge">Chapter 25 · 문자열·파일</span>
+            <div class="level-bar"><span class="on"></span><span class="on"></span><span class="on"></span></div>
+            <div class="meta"><span class="tag pri">📝 문자열</span><span class="tag acc">📝 15문제</span><span class="tag">⏱
+                    50분</span></div>
+        </div>
+        <div class="stu-bar"><label>👤 이름 <input type="text" id="stu-name" placeholder="이름"></label><label>📅 날짜 <input
+                    type="date" id="stu-date"></label></div>
+        <div id="problems"></div>
+        <div class="submit-section">
+            <p>모든 문제를 풀었나요? 📨</p><button class="btn-submit" id="btn-submit">📄 제출하기</button>
+        </div>
+        <div class="modal-overlay" id="submit-modal">
+            <div class="modal-box">
+                <div class="modal-icon">✅</div>
+                <h3>제출 완료!</h3>
+                <p>학습지가 저장되었습니다.</p>
+                <div style="margin:12px 0"><span class="info-tag" id="modal-name"></span> <span class="info-tag"
+                        id="modal-date"></span> <span class="info-tag" id="modal-count"></span></div>
+                <p style="font-size:.78rem;color:var(--dim)">📁 <strong id="modal-filename"></strong></p><button
+                    class="btn-close-modal" id="btn-close-modal">확인</button>
+            </div>
+        </div>
+        <div class="pg"><a href="../24_전처리기비트/Unit70_비트연산.html">← Unit 70</a><span class="tag active">Unit 71</span><a
+                href="Unit72_파일IO심화.html">Unit 72 →</a></div>
+        <div class="ft">📝 문자열 처리 심화 · Unit 71</div>
+    </div>
+    <script>
+        const P = [
+            {
+                n: 1, t: "strtok 토큰 분리", d: 2,
+                q: `CSV 형식 문자열을 쉼표로 분리하세요.
+<pre class="code-c">char str[] = "Kim,90,Seoul,M";
+<span class="cm">// 결과: Kim / 90 / Seoul / M</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">char str[] = "Kim,90,Seoul,M";
+char *tok = strtok(str, ",");
+while (tok != NULL) {
+    printf("%s\\n", tok);
+    tok = strtok(NULL, ",");
+}</pre><div class="trace">strtok(str, ",") → 첫 토큰<br>strtok(NULL, ",") → 다음 토큰<br>⚠️ 원본 str 파괴됨! (쉼표→'\\0')<br>⚠️ static 상태 → 스레드 안전 ✕</div>`},
+
+            {
+                n: 2, t: "sscanf 형식 파싱", d: 2,
+                q: `문자열에서 데이터를 추출하세요.
+<pre class="code-c">char line[] = "Student: Kim Age: 20 Score: 95.5";
+char name[20]; int age; float score;
+<span class="cm">// sscanf로 파싱</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">sscanf(line, "Student: %s Age: %d Score: %f",
+       name, &age, &score);
+printf("%s, %d, %.1f", name, age, score);
+<span class="cm">// Kim, 20, 95.5</span></pre><div class="trace">sscanf: 문자열에서 scanf처럼 읽기!<br>scanf는 stdin, sscanf는 문자열에서<br>반환값 = 성공적으로 읽은 항목 수</div>`},
+
+            {
+                n: 3, t: "sprintf로 문자열 구성", d: 2,
+                q: `sprintf로 포맷된 문자열을 만드세요.
+<pre class="code-c">char buf[100];
+int year=2026, month=2, day=11;
+<span class="cm">// "2026-02-11" 형식으로</span>
+<span class="cm">// 안전한 snprintf 버전도!</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c"><span class="cm">// sprintf (오버플로 위험!)</span>
+sprintf(buf, "%04d-%02d-%02d", year, month, day);
+
+<span class="cm">// snprintf (안전! 크기 제한)</span>
+snprintf(buf, sizeof(buf), "%04d-%02d-%02d",
+         year, month, day);
+printf("%s", buf); <span class="cm">// 2026-02-11</span></pre><div class="trace">sprintf: printf처럼 + 문자열에 저장<br>snprintf: 버퍼 크기 제한 → 안전!<br>%04d: 4자리, 0 패딩</div>`},
+
+            {
+                n: 4, t: "strstr 부분 문자열 검색", d: 2,
+                q: `문자열에서 특정 패턴을 찾는 함수를 활용하세요.
+<pre class="code-c">char *text = "Hello, World! Hello, C!";
+<span class="cm">// "Hello" 등장 횟수 세기</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">int countOccurrences(const char *text, const char *pat) {
+    int count = 0;
+    const char *p = text;
+    int len = strlen(pat);
+    while ((p = strstr(p, pat)) != NULL) {
+        count++;
+        p += len; <span class="cm">// 겹치지 않게</span>
+    }
+    return count;
+}
+printf("%d", countOccurrences(text, "Hello")); <span class="cm">// 2</span></pre>`},
+
+            {
+                n: 5, t: "문자열 뒤집기 (단어 단위)", d: 3,
+                q: `문자열의 단어 순서를 뒤집으세요.
+<pre class="code-c"><span class="cm">// "Hello World C" → "C World Hello"</span>
+void reverseWords(char *s) {
+    <span class="cm">// 힌트: 전체 뒤집기 → 각 단어 뒤집기</span>
+}</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">void reverseStr(char *s, int l, int r) {
+    while (l < r) { char t=s[l]; s[l++]=s[r]; s[r--]=t; }
+}
+void reverseWords(char *s) {
+    int n = strlen(s);
+    reverseStr(s, 0, n-1); <span class="cm">// 전체 뒤집기</span>
+    int start = 0;
+    for (int i = 0; i <= n; i++) {
+        if (i==n || s[i]==' ') {
+            reverseStr(s, start, i-1); <span class="cm">// 단어 뒤집기</span>
+            start = i + 1;
+        }
+    }
+}</pre><div class="trace">"Hello World C"<br>→ "C dlroW olleH" (전체 뒤집기)<br>→ "C World Hello" (각 단어 뒤집기)</div>`},
+
+            {
+                n: 6, t: "memcpy / memmove / memset", d: 2,
+                q: `메모리 조작 함수 3종 사용법을 보여주세요.
+<pre class="code-c"><span class="cm">// memcpy: 복사 (겹치면 위험!)</span>
+<span class="cm">// memmove: 안전한 복사 (겹쳐도 OK)</span>
+<span class="cm">// memset: 메모리 채우기</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">int src[] = {1,2,3,4,5};
+int dst[5];
+
+<span class="cm">// 복사</span>
+memcpy(dst, src, 5*sizeof(int));
+
+<span class="cm">// 겹치는 영역 안전 복사</span>
+memmove(src+1, src, 3*sizeof(int));
+<span class="cm">// {1,1,2,3,5}</span>
+
+<span class="cm">// 0으로 초기화</span>
+memset(dst, 0, 5*sizeof(int));
+
+<span class="cm">// ⚠️ memset은 바이트 단위!</span>
+memset(dst, 1, 5*sizeof(int));
+<span class="cm">// 1이 아닌 0x01010101 = 16843009!</span></pre>`},
+
+            {
+                n: 7, t: "문자열→정수 변환 비교", d: 2,
+                q: `atoi, strtol, sscanf의 차이를 비교하세요.
+<pre class="code-c">char *s = "  42abc";
+<span class="cm">// 각 함수로 변환했을 때 결과와 에러 처리</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c"><span class="cm">// atoi: 간단하지만 에러 감지 불가</span>
+int a = atoi(s); <span class="cm">// 42</span>
+
+<span class="cm">// strtol: 에러 감지 가능! (추천)</span>
+char *end;
+long b = strtol(s, &end, 10);
+printf("값: %ld, 남은: '%s'\\n", b, end);
+<span class="cm">// 값: 42, 남은: 'abc'</span>
+
+if (*end != '\\0') printf("완전한 숫자 아님!");
+
+<span class="cm">// sscanf: 반환값으로 성공 확인</span>
+int c;
+if (sscanf(s, "%d", &c) == 1)
+    printf("%d\\n", c); <span class="cm">// 42</span></pre><div class="trace"><span class="val">strtol 추천!</span><br>- 에러 감지 (end 포인터)<br>- 진법 지정 (2/8/10/16)<br>- 범위 체크 (errno)</div>`},
+
+            {
+                n: 8, t: "KMP 문자열 매칭 기초", d: 3,
+                q: `KMP 알고리즘의 실패 함수를 구현하세요.
+<pre class="code-c"><span class="cm">// "ABCABD"의 실패 함수 계산</span>
+void computeLPS(char *pat, int *lps, int m) {
+    <span class="cm">// lps[i] = pat[0..i]의 최대 접두사=접미사 길이</span>
+}</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">void computeLPS(char *pat, int *lps, int m) {
+    lps[0] = 0;
+    int len = 0, i = 1;
+    while (i < m) {
+        if (pat[i] == pat[len]) {
+            lps[i++] = ++len;
+        } else {
+            if (len) len = lps[len-1];
+            else lps[i++] = 0;
+        }
+    }
+}
+<span class="cm">// "ABCABD" → lps = {0,0,0,1,2,0}</span></pre><div class="trace">brute force: O(nm)<br>KMP: O(n+m)!<br>실패 함수로 불필요한 비교 건너뜀</div>`},
+
+            {
+                n: 9, t: "[출력예측] 문자열 함수 조합", d: 2,
+                q: `<pre class="code-c">char s[50] = "Hello";
+strcat(s, ", ");
+strncat(s, "World!!!", 5);
+printf("%s\\n", s);
+printf("%d\\n", strcmp("abc", "abd"));
+printf("%d\\n", strncmp("abc", "abd", 2));
+printf("%p\\n", strchr(s, 'W') != NULL ? "Y" : "N");</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">Hello, World<br>-1 (또는 음수)<br>0<br>Y</div><div class="trace">strncat: 최대 5문자만 이어붙이기<br>"World!!!" 중 "World"만!<br><br>strcmp("abc","abd"): 'c'&lt;'d' → 음수<br>strncmp 2글자: "ab"=="ab" → 0<br>strchr: 'W' 찾음 → Y</div>`
+            },
+
+            {
+                n: 10, t: "문자열에서 숫자 모두 추출", d: 2,
+                q: `문자열에서 모든 숫자를 추출하세요.
+<pre class="code-c"><span class="cm">// "abc123def456ghi78" → 123, 456, 78</span>
+int extractNumbers(char *s, int nums[]) {
+    <span class="cm">// 추출된 숫자 개수 반환</span>
+}</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">int extractNumbers(char *s, int nums[]) {
+    int count = 0, i = 0;
+    while (s[i]) {
+        if (s[i]>='0' && s[i]<='9') {
+            int num = 0;
+            while (s[i]>='0' && s[i]<='9')
+                num = num*10 + (s[i++]-'0');
+            nums[count++] = num;
+        } else i++;
+    }
+    return count;
+}</pre>`},
+
+            {
+                n: 11, t: "문자열 압축 (RLE)", d: 2,
+                q: `런렝스 인코딩(RLE)을 구현하세요.
+<pre class="code-c"><span class="cm">// "aaabbbccdd" → "a3b3c2d2"</span>
+void rle(char *s, char *out) {
+    <span class="cm">// 연속 문자 카운팅</span>
+}</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">void rle(char *s, char *out) {
+    int j = 0;
+    for (int i = 0; s[i]; ) {
+        char c = s[i];
+        int count = 0;
+        while (s[i] == c) { count++; i++; }
+        out[j++] = c;
+        j += sprintf(out+j, "%d", count);
+    }
+    out[j] = '\\0';
+}</pre>`},
+
+            {
+                n: 12, t: "문자열 회문 검사", d: 2,
+                q: `문자열이 회문(팰린드롬)인지 검사하세요.
+<pre class="code-c"><span class="cm">// "racecar" → 회문!</span>
+<span class="cm">// 공백/대소문자 무시 버전도!</span>
+int isPalindrome(char *s) { <span class="cm">/* ? */</span> }</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">int isPalindrome(char *s) {
+    int l=0, r=strlen(s)-1;
+    while (l < r) {
+        while (l<r && !isalnum(s[l])) l++;
+        while (l<r && !isalnum(s[r])) r--;
+        if (tolower(s[l]) != tolower(s[r])) return 0;
+        l++; r--;
+    }
+    return 1;
+}
+<span class="cm">// isPalindrome("A man, a plan, a canal: Panama") → 1!</span></pre>`},
+
+            {
+                n: 13, t: "itoa 직접 구현", d: 2,
+                q: `정수를 문자열로 변환하세요 (음수 포함).
+<pre class="code-c">void myItoa(int n, char *buf) {
+    <span class="cm">// 42 → "42", -123 → "-123"</span>
+}</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">void myItoa(int n, char *buf) {
+    int i = 0, neg = 0;
+    if (n < 0) { neg = 1; n = -n; }
+    if (n == 0) buf[i++] = '0';
+    while (n > 0) {
+        buf[i++] = '0' + n%10;
+        n /= 10;
+    }
+    if (neg) buf[i++] = '-';
+    buf[i] = '\\0';
+    <span class="cm">// 뒤집기</span>
+    for (int l=0,r=i-1; l<r; l++,r--) {
+        char t=buf[l]; buf[l]=buf[r]; buf[r]=t;
+    }
+}</pre>`},
+
+            {
+                n: 14, t: "wide 문자열 (wchar_t)", d: 2,
+                q: `유니코드 문자열을 다루는 방법을 보여주세요.
+<pre class="code-c"><span class="cm">// 한글 등 멀티바이트 처리</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">#include &lt;wchar.h&gt;
+#include &lt;locale.h&gt;
+int main() {
+    setlocale(LC_ALL, ""); <span class="cm">// 로케일 설정!</span>
+    wchar_t ws[] = L"안녕하세요";
+    wprintf(L"길이: %lu\\n", wcslen(ws)); <span class="cm">// 5</span>
+    wprintf(L"문자열: %ls\\n", ws);
+
+    <span class="cm">// mbstowcs: 멀티바이트 → 와이드</span>
+    char *mb = "Hello 세계";
+    wchar_t wbuf[50];
+    mbstowcs(wbuf, mb, 50);
+    wprintf(L"%ls\\n", wbuf);
+}</pre>`},
+
+            {
+                n: 15, t: "🏆 CSV 파서 구현", d: 3,
+                q: `CSV 한 줄을 파싱하는 함수를 작성하세요.
+<pre class="code-c"><span class="cm">// "Kim,20,\"Seoul, Korea\",95"</span>
+<span class="cm">// → {"Kim", "20", "Seoul, Korea", "95"}</span>
+<span class="cm">// 따옴표 안의 쉼표 처리!</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">int parseCSV(char *line, char fields[][100]) {
+    int f=0, i=0, j=0, inQuote=0;
+    while (line[i]) {
+        if (line[i]=='"') { inQuote = !inQuote; i++; }
+        else if (line[i]==',' && !inQuote) {
+            fields[f][j] = '\\0';
+            f++; j=0; i++;
+        } else {
+            fields[f][j++] = line[i++];
+        }
+    }
+    fields[f][j] = '\\0';
+    return f + 1;
+}</pre><div class="trace">inQuote 플래그로 따옴표 상태 추적!<br>따옴표 안의 쉼표는 구분자가 아님<br>실무 CSV 파싱의 핵심 로직</div>`}
+        ];
+        const c = document.getElementById('problems'); P.forEach(p => { const dc = p.d <= 1 ? 'ez' : p.d <= 2 ? 'md' : 'hd'; const dots = Array.from({ length: 5 }, (_, i) => `<span${i < p.d ? ' class="on"' : ''}>​</span>`).join(''); c.innerHTML += `<div class="prob"><div class="prob-top"><div class="prob-num ${dc}">${p.n}</div><div class="prob-title">${p.t}</div><div class="diff-dots">${dots}</div></div><div class="prob-body"><div class="q">${p.q}</div><textarea class="write" placeholder="✍️ 답을 작성하세요" rows="8"></textarea><details class="ans"><summary>정답 및 해설 보기</summary><div class="ans-body">${p.a}</div></details></div></div>`; });
+    </script>
+    <script src="../submit.js"></script>
+    <script src="../../platform.js"></script>
+</body>
+
+</html>

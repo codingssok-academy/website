@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 동적 2차원 배열</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+.page { width: 210mm; min-height: 297mm; margin: 16px auto; padding: 18mm 20mm 15mm 22mm; background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: relative; page-break-after: always; }
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after { content: counter(pagenum); position: absolute; bottom: 10mm; right: 16mm; font-size: 10px; color: #94a3b8; font-weight: 600; }
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark { position: absolute; top: -10px; right: -15px; font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3); line-height: 1; pointer-events: none; }
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #2563eb; font-weight: 600; }
+.code { background: #0f172a; border-radius: 8px; padding: 16px 20px; font-family: 'JetBrains Mono', monospace; font-size: 14px; color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap; }
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fce7f3; color: #9d174d; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+.info-box { background: #eff6ff; border-left: 4px solid #3b82f6; border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 14px 0; font-size: 14px; color: #1e40af; }
+.warn-box { background: #fff7ed; border-left: 4px solid #f59e0b; border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 14px 0; font-size: 14px; color: #92400e; }
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<div class="page cover">
+  <div class="cover-sidebar"></div>
+  <div class="cover-accent"></div>
+  <div class="cover-body">
+    <div class="cover-watermark">L10</div>
+    <div class="cover-label">Chapter 10 · Unit 07</div>
+    <h1 class="cover-title">동적 2차원 배열<br>malloc 이중 포인터</h1>
+    <p class="cover-sub">포인터 배열(int**)로 2차원 배열을 동적으로 할당하는 방법을 배웁니다. 행과 열을 따로 할당하고 해제하는 패턴을 익힙니다.</p>
+    <div style="margin:20px 0;">
+      <svg viewBox="0 0 500 60" style="max-width:500px;width:100%">
+        <rect x="5" y="10" width="90" height="35" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+        <text x="50" y="32" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">int** 선언</text>
+        <line x1="100" y1="27" x2="115" y2="27" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#cv1)"/>
+        <rect x="120" y="10" width="100" height="35" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+        <text x="170" y="32" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">행(rows) 할당</text>
+        <line x1="225" y1="27" x2="240" y2="27" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#cv1)"/>
+        <rect x="245" y="10" width="100" height="35" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+        <text x="295" y="32" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">열(cols) 할당</text>
+        <line x1="350" y1="27" x2="365" y2="27" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#cv1)"/>
+        <rect x="370" y="10" width="80" height="35" rx="6" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+        <text x="410" y="32" text-anchor="middle" font-size="10" fill="#dc2626" font-weight="700">역순 해제</text>
+        <line x1="455" y1="27" x2="470" y2="27" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#cv1)"/>
+        <rect x="475" y="10" width="20" height="35" rx="6" fill="#eff6ff" stroke="#6366f1" stroke-width="1.5"/>
+        <text x="485" y="32" text-anchor="middle" font-size="9" fill="#4338ca" font-weight="700">완료</text>
+        <defs><marker id="cv1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker></defs>
+      </svg>
+    </div>
+    <div class="cover-goals">
+      <h3>이 유닛에서 배우는 것</h3>
+      <ul>
+        <li>int** 이중 포인터의 의미를 이해합니다.</li>
+        <li>행 배열과 각 열 배열을 따로 할당합니다.</li>
+        <li>arr[i][j]로 2D 배열처럼 접근합니다.</li>
+        <li>해제 시 열 먼저, 행 나중에 역순 해제합니다.</li>
+        <li>동적 2D 배열로 행렬을 다룹니다.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+  <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/computer-basics/ram.png" alt="RAM - 동적 메모리 할당 공간" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>동적 2차원 배열 — 구조 이해</h2>
+  <p>2차원 배열을 동적으로 만들려면 <code>int**</code>(포인터의 포인터)를 사용합니다. 먼저 행(row) 포인터 배열을 만들고, 각 행마다 열(column)을 할당합니다.</p>
+  <div style="text-align:center;margin:18px 0;">
+    <svg viewBox="0 0 460 180" style="max-width:460px;width:100%">
+      <text x="10" y="20" font-size="11" fill="#374151" font-weight="700">int **arr → 행 포인터 배열 → 각 행의 데이터</text>
+      <rect x="10" y="30" width="60" height="35" rx="5" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+      <text x="40" y="48" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="800">arr</text>
+      <text x="40" y="62" text-anchor="middle" font-size="9" fill="#64748b">int**</text>
+      <path d="M75,47 L100,47" stroke="#3b82f6" stroke-width="2" marker-end="url(#d2a)"/>
+      <rect x="105" y="30" width="50" height="30" rx="4" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+      <text x="130" y="50" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">arr[0]</text>
+      <rect x="105" y="68" width="50" height="30" rx="4" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+      <text x="130" y="88" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">arr[1]</text>
+      <rect x="105" y="106" width="50" height="30" rx="4" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+      <text x="130" y="126" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">arr[2]</text>
+      <path d="M160,45 L185,45" stroke="#22c55e" stroke-width="1.5" marker-end="url(#d2b)"/>
+      <path d="M160,83 L185,83" stroke="#22c55e" stroke-width="1.5" marker-end="url(#d2b)"/>
+      <path d="M160,121 L185,121" stroke="#22c55e" stroke-width="1.5" marker-end="url(#d2b)"/>
+      <rect x="190" y="30" width="35" height="30" rx="3" fill="#dcfce7" stroke="#22c55e" stroke-width="1"/>
+      <text x="207" y="50" text-anchor="middle" font-size="10" fill="#166534">1</text>
+      <rect x="230" y="30" width="35" height="30" rx="3" fill="#dcfce7" stroke="#22c55e" stroke-width="1"/>
+      <text x="247" y="50" text-anchor="middle" font-size="10" fill="#166534">2</text>
+      <rect x="270" y="30" width="35" height="30" rx="3" fill="#dcfce7" stroke="#22c55e" stroke-width="1"/>
+      <text x="287" y="50" text-anchor="middle" font-size="10" fill="#166534">3</text>
+      <rect x="190" y="68" width="35" height="30" rx="3" fill="#dcfce7" stroke="#22c55e" stroke-width="1"/>
+      <text x="207" y="88" text-anchor="middle" font-size="10" fill="#166534">4</text>
+      <rect x="230" y="68" width="35" height="30" rx="3" fill="#dcfce7" stroke="#22c55e" stroke-width="1"/>
+      <text x="247" y="88" text-anchor="middle" font-size="10" fill="#166534">5</text>
+      <rect x="270" y="68" width="35" height="30" rx="3" fill="#dcfce7" stroke="#22c55e" stroke-width="1"/>
+      <text x="287" y="88" text-anchor="middle" font-size="10" fill="#166534">6</text>
+      <rect x="190" y="106" width="35" height="30" rx="3" fill="#dcfce7" stroke="#22c55e" stroke-width="1"/>
+      <text x="207" y="126" text-anchor="middle" font-size="10" fill="#166534">7</text>
+      <rect x="230" y="106" width="35" height="30" rx="3" fill="#dcfce7" stroke="#22c55e" stroke-width="1"/>
+      <text x="247" y="126" text-anchor="middle" font-size="10" fill="#166534">8</text>
+      <rect x="270" y="106" width="35" height="30" rx="3" fill="#dcfce7" stroke="#22c55e" stroke-width="1"/>
+      <text x="287" y="126" text-anchor="middle" font-size="10" fill="#166534">9</text>
+      <text x="197" y="25" text-anchor="middle" font-size="9" fill="#94a3b8">[0]</text>
+      <text x="237" y="25" text-anchor="middle" font-size="9" fill="#94a3b8">[1]</text>
+      <text x="277" y="25" text-anchor="middle" font-size="9" fill="#94a3b8">[2]</text>
+      <text x="340" y="45" font-size="10" fill="#374151">arr[0][0..2] = 1,2,3</text>
+      <text x="340" y="83" font-size="10" fill="#374151">arr[1][0..2] = 4,5,6</text>
+      <text x="340" y="121" font-size="10" fill="#374151">arr[2][0..2] = 7,8,9</text>
+      <defs>
+        <marker id="d2a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#3b82f6"/></marker>
+        <marker id="d2b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#22c55e"/></marker>
+      </defs>
+    </svg>
+  </div>
+  <div class="code"><span class="cmt">// 3행 3열 동적 2차원 배열</span>
+<span class="kw">int</span> rows = <span class="num">3</span>, cols = <span class="num">3</span>;
+
+<span class="cmt">// 1단계: 행 포인터 배열 할당</span>
+<span class="kw">int</span> **arr = (<span class="kw">int</span>**)<span class="fn">malloc</span>(<span class="kw">sizeof</span>(<span class="kw">int</span>*) * rows);
+
+<span class="cmt">// 2단계: 각 행에 열 할당</span>
+<span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; rows; i++) {
+    arr[i] = (<span class="kw">int</span>*)<span class="fn">malloc</span>(<span class="kw">sizeof</span>(<span class="kw">int</span>) * cols);
+}</div>
+</div>
+
+<div class="page">
+  <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/computer-basics/cpu.png" alt="CPU - 동적 메모리 처리 장치" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>동적 2D 배열 — 사용과 해제</h2>
+  <div class="code"><span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="kw">#include</span> <span class="str">&lt;stdlib.h&gt;</span>
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="kw">int</span> rows = <span class="num">3</span>, cols = <span class="num">3</span>;
+
+    <span class="cmt">// 할당</span>
+    <span class="kw">int</span> **arr = (<span class="kw">int</span>**)<span class="fn">malloc</span>(<span class="kw">sizeof</span>(<span class="kw">int</span>*) * rows);
+    <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; rows; i++)
+        arr[i] = (<span class="kw">int</span>*)<span class="fn">malloc</span>(<span class="kw">sizeof</span>(<span class="kw">int</span>) * cols);
+
+    <span class="cmt">// 값 채우기</span>
+    <span class="kw">int</span> val = <span class="num">1</span>;
+    <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; rows; i++)
+        <span class="kw">for</span> (<span class="kw">int</span> j = <span class="num">0</span>; j &lt; cols; j++)
+            arr[i][j] = val++;
+
+    <span class="cmt">// 출력</span>
+    <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; rows; i++) {
+        <span class="kw">for</span> (<span class="kw">int</span> j = <span class="num">0</span>; j &lt; cols; j++)
+            <span class="fn">printf</span>(<span class="str">"%3d"</span>, arr[i][j]);
+        <span class="fn">printf</span>(<span class="str">"\n"</span>);
+    }
+
+    <span class="cmt">// 해제 — 열 먼저, 행 나중에!</span>
+    <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; rows; i++) {
+        <span class="fn">free</span>(arr[i]);   <span class="cmt">// 각 행의 열 해제</span>
+        arr[i] = <span class="num">NULL</span>;
+    }
+    <span class="fn">free</span>(arr);        <span class="cmt">// 행 포인터 배열 해제</span>
+    arr = <span class="num">NULL</span>;
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+  <div class="warn-box">해제 순서: 열(arr[i]) 먼저 free → 행(arr) 나중에 free. 반대로 하면 행 포인터를 잃어버려 열을 해제할 수 없습니다!</div>
+  <div style="display:flex;align-items:center;gap:6px;margin:14px 0 4px;">
+        <img src="/images/learn/computer-basics/hard-drive.png" alt="하드 드라이브 - 메모리 저장 개념" style="width:24px;height:24px;object-fit:contain;background:#fff;border-radius:8px;">
+        <span style="font-size:12px;color:#1d4ed8;font-weight:600;">실습 구역</span>
+    </div>
+<div class="practice">
+    <div class="practice-head">따라해보세요</div>
+    <div class="practice-body">
+      <div class="practice-item">
+        <div class="practice-num">1</div>
+        <div class="practice-desc">2행 4열 동적 2D 배열을 만들고 행의 합을 출력하세요.</div>
+        <div class="code"><span class="kw">int</span> **m = (<span class="kw">int</span>**)<span class="fn">malloc</span>(<span class="kw">sizeof</span>(<span class="kw">int</span>*)*<span class="num">2</span>);
+<span class="kw">for</span>(<span class="kw">int</span> i=<span class="num">0</span>;i&lt;<span class="num">2</span>;i++) m[i]=(<span class="kw">int</span>*)<span class="fn">malloc</span>(<span class="kw">sizeof</span>(<span class="kw">int</span>)*<span class="num">4</span>);
+<span class="kw">for</span>(<span class="kw">int</span> i=<span class="num">0</span>;i&lt;<span class="num">2</span>;i++) <span class="kw">for</span>(<span class="kw">int</span> j=<span class="num">0</span>;j&lt;<span class="num">4</span>;j++) m[i][j]=i*<span class="num">4</span>+j+<span class="num">1</span>;
+<span class="kw">for</span>(<span class="kw">int</span> i=<span class="num">0</span>;i&lt;<span class="num">2</span>;i++) {
+    <span class="kw">int</span> s=<span class="num">0</span>;
+    <span class="kw">for</span>(<span class="kw">int</span> j=<span class="num">0</span>;j&lt;<span class="num">4</span>;j++) s+=m[i][j];
+    <span class="fn">printf</span>(<span class="str">"%d행 합: %d\n"</span>,i,s);
+    <span class="fn">free</span>(m[i]);
+}
+<span class="fn">free</span>(m);</div>
+        <div class="practice-result">0행 합: 10, 1행 합: 26 출력됩니다</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+  <div style="display:flex;align-items:center;gap:8px;margin:16px 0 4px;padding:6px 12px;background:#f1f5f9;border-radius:6px;border-left:3px solid #3b82f6;">
+        <img src="/images/learn/computer-basics/hard-drive.png" alt="하드 드라이브 - 메모리 저장 개념" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:8px;">
+    </div>
+<h2>연습 문제</h2>
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">1</div>
+      <div class="problem-label">이중 포인터 의미</div>
+      <div class="problem-diff easy">쉬움</div>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">int** 타입이 의미하는 것은?<br>① int 두 개를 저장<br>② int 포인터를 가리키는 포인터<br>③ 2차원 정수<br>④ double 타입 포인터</div>
+      <details class="problem-toggle">
+        <summary>힌트 / 정답 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="answer-code">정답: ②
+int** 는 int*를 가리키는 포인터입니다.
+즉 행 포인터들의 배열을 관리하는 데 사용됩니다.</div>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">2</div>
+      <div class="problem-label">행 할당 코드</div>
+      <div class="problem-diff medium">보통</div>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">int** arr에서 4개의 행을 할당하는 코드를 작성하세요.</div>
+      <details class="problem-toggle">
+        <summary>힌트 / 정답 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="answer-code">int **arr = (int**)malloc(sizeof(int*) * 4);</div>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">3</div>
+      <div class="problem-label">해제 순서</div>
+      <div class="problem-diff medium">보통</div>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">동적 2D 배열(int** arr, rows행)을 해제하는 올바른 순서는?<br>① free(arr) 먼저, 그 다음 for문으로 free(arr[i])<br>② for문으로 free(arr[i]) 먼저, 그 다음 free(arr)<br>③ 한 번에 free(arr) 만 호출<br>④ 순서 상관없음</div>
+      <details class="problem-toggle">
+        <summary>힌트 / 정답 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="answer-code">정답: ②
+열(arr[i]) 먼저 해제 → 행(arr) 나중에 해제.
+행을 먼저 해제하면 arr[i]에 접근할 수 없습니다.</div>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">4</div>
+      <div class="problem-label">2D 배열 원소 접근</div>
+      <div class="problem-diff medium">보통</div>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">int** arr에서 2행 3열(0-indexed: arr[2][3])에 값 99를 넣는 코드를 작성하세요.</div>
+      <details class="problem-toggle">
+        <summary>힌트 / 정답 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="answer-code">arr[2][3] = 99;
+// 또는 *(arr[2] + 3) = 99;</div>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">5</div>
+      <div class="problem-label">전체 코드 작성</div>
+      <div class="problem-diff hard">어려움</div>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">행과 열 수를 입력받아 동적 2D 배열을 만들고 1~rows*cols 값을 채운 뒤 출력하고 해제하는 완전한 코드를 작성하세요.</div>
+      <details class="problem-toggle">
+        <summary>힌트 / 정답 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="answer-code">int rows, cols;
+scanf("%d %d", &rows, &cols);
+int **arr = (int**)malloc(sizeof(int*)*rows);
+for (int i=0; i&lt;rows; i++)
+    arr[i] = (int*)malloc(sizeof(int)*cols);
+int v=1;
+for (int i=0; i&lt;rows; i++)
+    for (int j=0; j&lt;cols; j++) arr[i][j]=v++;
+for (int i=0; i&lt;rows; i++) {
+    for (int j=0; j&lt;cols; j++) printf("%3d", arr[i][j]);
+    printf("\n");
+}
+for (int i=0; i&lt;rows; i++) { free(arr[i]); arr[i]=NULL; }
+free(arr); arr=NULL;</div>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;margin:16px 0 6px;padding:8px 14px;background:#f0f9ff;border-radius:6px;border:1px solid #bae6fd;">
+        <img src="/images/learn/computer-basics/ram.png" alt="RAM - 동적 메모리 할당 공간" style="width:28px;height:28px;object-fit:contain;background:#fff;border-radius:8px;">
+        <img src="/images/learn/computer-basics/cpu.png" alt="CPU - 동적 메모리 처리 장치" style="width:28px;height:28px;object-fit:contain;background:#fff;border-radius:8px;">
+        <span style="font-size:12px;color:#0369a1;font-weight:600;">핵심 정리</span>
+    </div>
+<div class="summary">
+    <h3>핵심 정리</h3>
+    <ul>
+      <li>int** — 행 포인터들의 배열을 가리키는 포인터</li>
+      <li>할당 순서 — 행 포인터 배열 먼저, 각 행의 열 나중</li>
+      <li>접근 — arr[i][j] 로 일반 2D 배열과 동일</li>
+      <li>해제 순서 — 열(arr[i]) 먼저, 행(arr) 나중 (역순)</li>
+    </ul>
+  </div>
+
+    <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:20px;padding-top:10px;border-top:1px solid #f1f5f9;">
+        <img src="/images/learn/c-lang/binary-code.png" alt="이진 코드 - 메모리 할당 구조" style="width:22px;height:22px;object-fit:contain;opacity:0.6;background:#fff;border-radius:8px;">
+        <span style="font-size:10px;color:#cbd5e1;">코딩쏙 C언어</span>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 재귀 함수</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+/* -- 페이지 -- */
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+/* -- 표지 -- */
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+
+/* -- 본문 -- */
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 16px; font-weight: 700; color: #1e3a5f; margin: 18px 0 10px; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+ul, ol { margin: 0 0 12px 20px; }
+li { font-size: 14px; color: #374151; line-height: 1.8; }
+
+/* -- 코드 블록 -- */
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13.5px;
+    color: #e2e8f0; line-height: 1.85; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.code .dec { color: #f9a8d4; }
+
+/* -- 출력 박스 -- */
+.output-box {
+    background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px;
+    padding: 10px 14px; font-family: 'JetBrains Mono', monospace;
+    font-size: 13px; color: #334155; line-height: 1.7; margin: 10px 0;
+}
+
+/* -- 따라해보세요 -- */
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+
+/* -- 문제 -- */
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+.answer-code .kw { color: #c084fc; }
+.answer-code .fn { color: #67e8f9; }
+.answer-code .str { color: #86efac; }
+.answer-code .num { color: #7dd3fc; }
+.answer-code .cmt { color: #64748b; }
+
+/* -- 핵심 요약 -- */
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+/* -- 경고 박스 -- */
+.warn-box { background: #fff7f7; border: 1.5px solid #fca5a5; border-radius: 8px; padding: 12px 16px; margin: 14px 0; }
+.warn-box-title { font-size: 13px; font-weight: 800; color: #dc2626; margin-bottom: 6px; }
+.warn-box p { font-size: 13px; color: #7f1d1d; margin: 0; }
+
+/* -- 팁 박스 -- */
+.tip-box { background: #eff6ff; border: 1.5px solid #93c5fd; border-radius: 8px; padding: 12px 16px; margin: 14px 0; }
+.tip-box-title { font-size: 13px; font-weight: 800; color: #1d4ed8; margin-bottom: 6px; }
+.tip-box p { font-size: 13px; color: #1e3a5f; margin: 0; }
+
+/* -- 비교 테이블 -- */
+.compare-table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13px; }
+.compare-table th { background: #1e3a5f; color: #fff; padding: 8px 12px; text-align: left; font-weight: 700; }
+.compare-table td { padding: 7px 12px; border-bottom: 1px solid #e2e8f0; color: #374151; }
+.compare-table tr:nth-child(even) td { background: #f8fafc; }
+.compare-table code { background: #e0e7ff; padding: 1px 5px; border-radius: 3px; font-family: 'JetBrains Mono', monospace; color: #3730a3; font-size: 12px; }
+
+/* -- 추적 테이블 -- */
+.trace-table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13px; font-family: 'JetBrains Mono', monospace; }
+.trace-table th { background: #1e3a5f; color: #fff; padding: 7px 10px; text-align: center; font-weight: 700; }
+.trace-table td { padding: 6px 10px; border-bottom: 1px solid #e2e8f0; text-align: center; color: #334155; }
+.trace-table tr:nth-child(even) td { background: #f8fafc; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- 1페이지: 표지 -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">51</div>
+        <div class="cover-label">L3 — Unit 51 · 알고리즘 기초</div>
+        <h1 class="cover-title">재귀 함수<br>— 자기 자신을 호출하는 함수</h1>
+        <p class="cover-sub">함수가 스스로를 다시 부르는 신기한 구조, 재귀(recursion)를 배웁니다. 팩토리얼과 피보나치 수열로 개념을 익히고, 종료 조건(base case)이 왜 반드시 필요한지 확인합니다.</p>
+
+        <!-- SVG: 재귀 개념 시각화 -->
+        <div style="margin:24px 0; text-align:center;">
+            <svg viewBox="0 0 500 190" style="max-width:500px;width:100%;">
+                <defs>
+                    <marker id="arwCov" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#2d5a8e"/>
+                    </marker>
+                    <marker id="arwRet" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#16a34a"/>
+                    </marker>
+                </defs>
+                <!-- 호출 스택 표현 -->
+                <rect x="20" y="10" width="160" height="36" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="100" y="24" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">factorial(4)</text>
+                <text x="100" y="38" text-anchor="middle" font-size="9" fill="#64748b">4 * factorial(3)</text>
+                <line x1="100" y1="48" x2="100" y2="58" stroke="#2d5a8e" stroke-width="1.5" marker-end="url(#arwCov)"/>
+                <rect x="40" y="60" width="140" height="36" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="110" y="74" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">factorial(3)</text>
+                <text x="110" y="88" text-anchor="middle" font-size="9" fill="#64748b">3 * factorial(2)</text>
+                <line x1="110" y1="98" x2="110" y2="108" stroke="#2d5a8e" stroke-width="1.5" marker-end="url(#arwCov)"/>
+                <rect x="60" y="110" width="120" height="36" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="120" y="124" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">factorial(2)</text>
+                <text x="120" y="138" text-anchor="middle" font-size="9" fill="#64748b">2 * factorial(1)</text>
+                <line x1="120" y1="148" x2="120" y2="158" stroke="#2d5a8e" stroke-width="1.5" marker-end="url(#arwCov)"/>
+                <rect x="80" y="160" width="100" height="26" rx="6" fill="#dcfce7" stroke="#22c55e" stroke-width="2"/>
+                <text x="130" y="177" text-anchor="middle" font-size="10" fill="#166534" font-weight="800">factorial(1) = 1</text>
+                <!-- 반환 화살표 -->
+                <text x="230" y="180" font-size="9" fill="#16a34a" font-weight="700">base case!</text>
+                <text x="230" y="75" font-size="9" fill="#64748b">호출</text>
+                <text x="370" y="75" font-size="9" fill="#16a34a" font-weight="700">반환</text>
+                <!-- 반환 경로 -->
+                <path d="M260,160 Q340,160 340,130 Q340,90 340,60 Q340,30 260,30" fill="none" stroke="#16a34a" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arwRet)"/>
+                <text x="355" y="100" font-size="9" fill="#16a34a" font-weight="700" transform="rotate(90,355,100)">1→2→6→24</text>
+                <text x="440" y="170" font-size="12" fill="#1e3a5f" font-weight="900">= 24</text>
+                <text x="440" y="186" font-size="9" fill="#64748b">4! 결과</text>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/flowchart.png" alt="알고리즘" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 유닛에서 배우는 것</h3>
+            <ul>
+                <li>재귀(recursion)가 무엇인지, 어떻게 함수가 자기 자신을 호출하는지 이해합니다.</li>
+                <li>종료 조건(base case)이 왜 반드시 있어야 하는지 알 수 있습니다.</li>
+                <li>팩토리얼(n!)을 재귀로 구현하고 호출 흐름을 추적합니다.</li>
+                <li>피보나치 수열을 재귀로 구현합니다.</li>
+                <li>재귀와 반복문(for/while)을 비교해 언제 어느 쪽이 나은지 판단합니다.</li>
+                <li>무한 재귀가 왜 위험한지, <code>RecursionError</code>를 직접 확인합니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- 2페이지: 재귀란 무엇인가 -->
+<div class="page">
+    <h2>재귀(Recursion)란?</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/magnifying-glass.png" alt="탐색" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>재귀는 <strong>함수가 자기 자신을 다시 호출</strong>하는 방법입니다. 큰 문제를 같은 구조의 작은 문제로 쪼개고, 더 이상 쪼갤 수 없을 때 답을 반환합니다.</p>
+
+    <!-- SVG: 재귀 구조 다이어그램 -->
+    <div style="text-align:center; margin:16px 0;">
+        <svg viewBox="0 0 500 100" style="max-width:500px;width:100%;">
+            <defs>
+                <marker id="arwBlue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#3b82f6"/>
+                </marker>
+            </defs>
+            <rect x="5" y="30" width="120" height="40" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+            <text x="65" y="47" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="800">함수 호출</text>
+            <text x="65" y="62" text-anchor="middle" font-size="9" fill="#64748b">func(n)</text>
+            <line x1="128" y1="50" x2="158" y2="50" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#arwBlue)"/>
+            <rect x="161" y="20" width="178" height="60" rx="8" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.5"/>
+            <text x="250" y="38" text-anchor="middle" font-size="10" fill="#374151" font-weight="700">조건 확인</text>
+            <text x="250" y="53" text-anchor="middle" font-size="9" fill="#64748b">base case?</text>
+            <text x="250" y="67" text-anchor="middle" font-size="9" fill="#64748b">아니면 자기 호출</text>
+            <!-- base case 분기 -->
+            <line x1="340" y1="50" x2="370" y2="25" stroke="#22c55e" stroke-width="1.5" marker-end="url(#arwBlue)"/>
+            <rect x="373" y="8" width="120" height="32" rx="6" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="433" y="22" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">base case</text>
+            <text x="433" y="34" text-anchor="middle" font-size="9" fill="#166534">값 반환 (종료)</text>
+            <!-- recursive 분기 -->
+            <line x1="340" y1="50" x2="370" y2="75" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#arwBlue)"/>
+            <rect x="373" y="60" width="120" height="32" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="433" y="74" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">recursive case</text>
+            <text x="433" y="86" text-anchor="middle" font-size="9" fill="#92400e">func(n-1) 호출</text>
+        </svg>
+    </div>
+
+    <p>모든 재귀 함수는 반드시 두 가지를 가집니다.</p>
+    <ul>
+        <li><strong>종료 조건(base case)</strong> — 재귀를 멈추는 조건. 없으면 무한 루프처럼 영원히 호출됩니다.</li>
+        <li><strong>재귀 호출(recursive case)</strong> — 문제를 조금 더 작게 만들어 자기 자신을 다시 부릅니다.</li>
+    </ul>
+
+    <h3>가장 간단한 예시 — 카운트다운</h3>
+    <div class="code"><span class="kw">def</span> <span class="fn">countdown</span>(n):
+    <span class="kw">if</span> n == <span class="num">0</span>:          <span class="cmt"># base case: n이 0이면 멈춤</span>
+        <span class="fn">print</span>(<span class="str">"발사!"</span>)
+        <span class="kw">return</span>
+    <span class="fn">print</span>(n)
+    <span class="fn">countdown</span>(n - <span class="num">1</span>)    <span class="cmt"># recursive case: n을 1 줄여서 다시 호출</span>
+
+<span class="fn">countdown</span>(<span class="num">3</span>)</div>
+
+    <div class="output-box">3
+2
+1
+발사!</div>
+
+    <!-- SVG: countdown 호출 흐름 -->
+    <div style="text-align:center; margin:14px 0;">
+        <svg viewBox="0 0 500 64" style="max-width:500px;width:100%;">
+            <defs>
+                <marker id="arwFlow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="5" y="14" width="100" height="36" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="55" y="30" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">countdown(3)</text>
+            <text x="55" y="44" text-anchor="middle" font-size="9" fill="#64748b">print 3</text>
+            <line x1="108" y1="32" x2="128" y2="32" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwFlow)"/>
+            <rect x="131" y="14" width="100" height="36" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="181" y="30" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">countdown(2)</text>
+            <text x="181" y="44" text-anchor="middle" font-size="9" fill="#64748b">print 2</text>
+            <line x1="234" y1="32" x2="254" y2="32" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwFlow)"/>
+            <rect x="257" y="14" width="100" height="36" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="307" y="30" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">countdown(1)</text>
+            <text x="307" y="44" text-anchor="middle" font-size="9" fill="#64748b">print 1</text>
+            <line x1="360" y1="32" x2="380" y2="32" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwFlow)"/>
+            <rect x="383" y="14" width="112" height="36" rx="6" fill="#dcfce7" stroke="#22c55e" stroke-width="2"/>
+            <text x="439" y="30" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">countdown(0)</text>
+            <text x="439" y="44" text-anchor="middle" font-size="9" fill="#166534">print "발사!" 종료</text>
+        </svg>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/calculator.png" alt="계산" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+        <div class="practice-head">따라해보세요 — 카운트다운</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc"><code>countdown(5)</code>를 실행하고 출력 결과를 확인하세요. 숫자가 5부터 1까지 출력되고 "발사!"로 끝나는지 봅니다.</div>
+                <div class="practice-result">5 4 3 2 1 발사! 순서로 출력되면 성공</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc"><code>countdown</code>를 수정해서 <strong>올라가는 카운트업</strong>으로 바꿔보세요. print를 재귀 호출 뒤에 쓰면 됩니다.</div>
+                <div class="code"><span class="kw">def</span> <span class="fn">countup</span>(n):
+    <span class="kw">if</span> n == <span class="num">0</span>:
+        <span class="kw">return</span>
+    <span class="fn">countup</span>(n - <span class="num">1</span>)   <span class="cmt"># 먼저 재귀 호출</span>
+    <span class="fn">print</span>(n)          <span class="cmt"># 돌아올 때 출력</span>
+
+<span class="fn">countup</span>(<span class="num">3</span>)</div>
+                <div class="practice-result">1 2 3 순서로 출력되면 성공</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3페이지: 팩토리얼 -->
+<div class="page">
+    <h2>팩토리얼 — n!</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/clock.png" alt="복잡도" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>팩토리얼은 <strong>1부터 n까지 모든 정수를 곱한 값</strong>입니다. 수학에서 <code>n!</code>으로 씁니다.</p>
+
+    <!-- SVG: 팩토리얼 수식 -->
+    <div style="text-align:center; margin:14px 0;">
+        <svg viewBox="0 0 500 70" style="max-width:500px;width:100%;">
+            <rect x="5" y="5" width="490" height="60" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="250" y="28" text-anchor="middle" font-size="13" fill="#1e3a5f" font-weight="800">4! = 4 × 3 × 2 × 1 = 24</text>
+            <text x="250" y="50" text-anchor="middle" font-size="11" fill="#64748b">= 4 × (3!)  →  재귀로 표현 가능!</text>
+        </svg>
+    </div>
+
+    <p>팩토리얼의 핵심은 <code>n! = n × (n-1)!</code> 이라는 것입니다. 즉, 큰 팩토리얼을 작은 팩토리얼로 표현할 수 있어서 재귀와 딱 맞습니다.</p>
+
+    <div class="code"><span class="kw">def</span> <span class="fn">factorial</span>(n):
+    <span class="kw">if</span> n == <span class="num">1</span>:            <span class="cmt"># base case: 1! = 1</span>
+        <span class="kw">return</span> <span class="num">1</span>
+    <span class="kw">return</span> n * <span class="fn">factorial</span>(n - <span class="num">1</span>)  <span class="cmt"># recursive case</span>
+
+<span class="fn">print</span>(<span class="fn">factorial</span>(<span class="num">4</span>))   <span class="cmt"># 24</span>
+<span class="fn">print</span>(<span class="fn">factorial</span>(<span class="num">5</span>))   <span class="cmt"># 120</span></div>
+
+    <div class="output-box">24
+120</div>
+
+    <h3>재귀 공식 구조</h3>
+    <!-- SVG: 재귀 공식 분해 -->
+    <div style="text-align:center; margin:12px 0;">
+        <svg viewBox="0 0 500 64" style="max-width:500px;width:100%;">
+            <rect x="5" y="5" width="490" height="54" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="250" y="24" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="800">n! = n × (n-1)!</text>
+            <text x="90" y="48" text-anchor="middle" font-size="10" fill="#dc2626" font-weight="700">recursive case</text>
+            <line x1="90" y1="40" x2="60" y2="32" stroke="#dc2626" stroke-width="1" stroke-dasharray="3,2"/>
+            <text x="250" y="48" text-anchor="middle" font-size="10" fill="#7c3aed" font-weight="700">더 작은 같은 문제</text>
+            <line x1="250" y1="40" x2="310" y2="30" stroke="#7c3aed" stroke-width="1" stroke-dasharray="3,2"/>
+            <text x="420" y="48" text-anchor="middle" font-size="10" fill="#16a34a" font-weight="700">base case: 1! = 1</text>
+        </svg>
+    </div>
+
+    <h3>호출 추적 (factorial(4))</h3>
+    <p>실제로 어떤 순서로 실행되는지 표로 확인해봅니다.</p>
+
+    <table class="trace-table">
+        <thead>
+            <tr><th>호출 순서</th><th>함수</th><th>조건</th><th>반환값</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>1번째</td><td>factorial(4)</td><td>4 != 1 → 재귀</td><td>4 × factorial(3)</td></tr>
+            <tr><td>2번째</td><td>factorial(3)</td><td>3 != 1 → 재귀</td><td>3 × factorial(2)</td></tr>
+            <tr><td>3번째</td><td>factorial(2)</td><td>2 != 1 → 재귀</td><td>2 × factorial(1)</td></tr>
+            <tr><td>4번째</td><td>factorial(1)</td><td>1 == 1 → base case</td><td>1 (종료)</td></tr>
+            <tr><td>거슬러 올라가며 계산</td><td colspan="2">2×1=2, 3×2=6, 4×6=24</td><td><strong>24</strong></td></tr>
+        </tbody>
+    </table>
+
+    <!-- SVG: 호출 스택 시각화 -->
+    <div style="text-align:center; margin:14px 0;">
+        <svg viewBox="0 0 500 130" style="max-width:500px;width:100%;">
+            <defs>
+                <marker id="arwDown" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#3b82f6"/>
+                </marker>
+                <marker id="arwUp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#16a34a"/>
+                </marker>
+            </defs>
+            <!-- 왼쪽: 호출 내려가기 -->
+            <text x="100" y="14" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">호출 (내려가기)</text>
+            <rect x="20" y="20" width="160" height="24" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="100" y="36" text-anchor="middle" font-size="9" fill="#1d4ed8">factorial(4) — 4 * ?</text>
+            <line x1="100" y1="44" x2="100" y2="48" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#arwDown)"/>
+            <rect x="30" y="50" width="140" height="24" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="100" y="66" text-anchor="middle" font-size="9" fill="#1d4ed8">factorial(3) — 3 * ?</text>
+            <line x1="100" y1="74" x2="100" y2="78" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#arwDown)"/>
+            <rect x="40" y="80" width="120" height="24" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="100" y="96" text-anchor="middle" font-size="9" fill="#1d4ed8">factorial(2) — 2 * ?</text>
+            <line x1="100" y1="104" x2="100" y2="108" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#arwDown)"/>
+            <rect x="50" y="110" width="100" height="16" rx="4" fill="#dcfce7" stroke="#22c55e" stroke-width="2"/>
+            <text x="100" y="122" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">factorial(1) = 1</text>
+            <!-- 오른쪽: 반환 올라가기 -->
+            <text x="380" y="14" text-anchor="middle" font-size="10" fill="#16a34a" font-weight="700">반환 (올라가기)</text>
+            <rect x="300" y="20" width="160" height="24" rx="4" fill="#dcfce7" stroke="#22c55e" stroke-width="1"/>
+            <text x="380" y="36" text-anchor="middle" font-size="9" fill="#166534">factorial(4) = 24</text>
+            <line x1="380" y1="50" x2="380" y2="46" stroke="#16a34a" stroke-width="1.5" marker-end="url(#arwUp)"/>
+            <rect x="310" y="50" width="140" height="24" rx="4" fill="#dcfce7" stroke="#22c55e" stroke-width="1"/>
+            <text x="380" y="66" text-anchor="middle" font-size="9" fill="#166534">factorial(3) = 6</text>
+            <line x1="380" y1="80" x2="380" y2="76" stroke="#16a34a" stroke-width="1.5" marker-end="url(#arwUp)"/>
+            <rect x="320" y="80" width="120" height="24" rx="4" fill="#dcfce7" stroke="#22c55e" stroke-width="1"/>
+            <text x="380" y="96" text-anchor="middle" font-size="9" fill="#166534">factorial(2) = 2</text>
+            <line x1="380" y1="110" x2="380" y2="106" stroke="#16a34a" stroke-width="1.5" marker-end="url(#arwUp)"/>
+            <rect x="330" y="110" width="100" height="16" rx="4" fill="#dcfce7" stroke="#22c55e" stroke-width="2"/>
+            <text x="380" y="122" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">factorial(1) = 1</text>
+        </svg>
+    </div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요 — 팩토리얼</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc"><code>factorial</code> 함수를 입력하고 <code>factorial(6)</code>과 <code>factorial(10)</code>을 실행하세요.</div>
+                <div class="practice-result">720, 3628800 이 출력되면 성공</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">base case를 <code>n == 0</code>일 때 1을 반환하도록 수정해보세요. <code>0!</code>은 수학적으로 1입니다.</div>
+                <div class="code"><span class="kw">def</span> <span class="fn">factorial</span>(n):
+    <span class="kw">if</span> n == <span class="num">0</span>:
+        <span class="kw">return</span> <span class="num">1</span>
+    <span class="kw">return</span> n * <span class="fn">factorial</span>(n - <span class="num">1</span>)</div>
+                <div class="practice-result">factorial(0) = 1, factorial(4) = 24 이면 성공</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 4페이지: 피보나치 + 종료 조건 -->
+<div class="page">
+    <h2>피보나치 수열</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="처리" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>피보나치 수열은 앞 두 수를 더해서 다음 수를 만드는 수열입니다. <code>1, 1, 2, 3, 5, 8, 13, 21 ...</code></p>
+
+    <!-- SVG: 피보나치 시각화 -->
+    <div style="text-align:center; margin:14px 0;">
+        <svg viewBox="0 0 500 56" style="max-width:500px;width:100%;">
+            <defs>
+                <marker id="arwFib" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#8b5cf6"/>
+                </marker>
+            </defs>
+            <rect x="5" y="8" width="40" height="40" rx="6" fill="#ede9fe" stroke="#8b5cf6" stroke-width="1.5"/>
+            <text x="25" y="32" text-anchor="middle" font-size="14" fill="#7c3aed" font-weight="800">1</text>
+            <rect x="55" y="8" width="40" height="40" rx="6" fill="#ede9fe" stroke="#8b5cf6" stroke-width="1.5"/>
+            <text x="75" y="32" text-anchor="middle" font-size="14" fill="#7c3aed" font-weight="800">1</text>
+            <line x1="98" y1="28" x2="108" y2="28" stroke="#8b5cf6" stroke-width="1.5" marker-end="url(#arwFib)"/>
+            <rect x="111" y="8" width="40" height="40" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="131" y="32" text-anchor="middle" font-size="14" fill="#1d4ed8" font-weight="800">2</text>
+            <rect x="161" y="8" width="40" height="40" rx="6" fill="#ede9fe" stroke="#8b5cf6" stroke-width="1.5"/>
+            <text x="181" y="32" text-anchor="middle" font-size="14" fill="#7c3aed" font-weight="800">3</text>
+            <line x1="204" y1="28" x2="214" y2="28" stroke="#8b5cf6" stroke-width="1.5" marker-end="url(#arwFib)"/>
+            <rect x="217" y="8" width="40" height="40" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="237" y="32" text-anchor="middle" font-size="14" fill="#1d4ed8" font-weight="800">5</text>
+            <rect x="267" y="8" width="40" height="40" rx="6" fill="#ede9fe" stroke="#8b5cf6" stroke-width="1.5"/>
+            <text x="287" y="32" text-anchor="middle" font-size="14" fill="#7c3aed" font-weight="800">8</text>
+            <line x1="310" y1="28" x2="320" y2="28" stroke="#8b5cf6" stroke-width="1.5" marker-end="url(#arwFib)"/>
+            <rect x="323" y="8" width="40" height="40" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="343" y="32" text-anchor="middle" font-size="14" fill="#1d4ed8" font-weight="800">13</text>
+            <text x="430" y="32" text-anchor="middle" font-size="16" fill="#94a3b8">...</text>
+            <!-- 화살표 설명 -->
+            <text x="25" y="54" text-anchor="middle" font-size="7" fill="#94a3b8">base</text>
+            <text x="75" y="54" text-anchor="middle" font-size="7" fill="#94a3b8">base</text>
+        </svg>
+    </div>
+
+    <p>규칙: <code>fib(n) = fib(n-1) + fib(n-2)</code>. base case는 <code>n == 1</code>이나 <code>n == 2</code>일 때 1을 반환합니다.</p>
+
+    <div class="code"><span class="kw">def</span> <span class="fn">fib</span>(n):
+    <span class="kw">if</span> n <= <span class="num">2</span>:           <span class="cmt"># base case: 1번째, 2번째는 모두 1</span>
+        <span class="kw">return</span> <span class="num">1</span>
+    <span class="kw">return</span> <span class="fn">fib</span>(n - <span class="num">1</span>) + <span class="fn">fib</span>(n - <span class="num">2</span>)   <span class="cmt"># recursive case</span>
+
+<span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">1</span>, <span class="num">9</span>):
+    <span class="fn">print</span>(<span class="str">f"fib({i}) = {<span class="fn">fib</span>(i)}"</span>)</div>
+
+    <div class="output-box">fib(1) = 1
+fib(2) = 1
+fib(3) = 2
+fib(4) = 3
+fib(5) = 5
+fib(6) = 8
+fib(7) = 13
+fib(8) = 21</div>
+
+    <h2 style="margin-top:22px;">종료 조건(Base Case)이 없으면?</h2>
+    <p>base case가 없으면 함수가 영원히 자기 자신을 호출합니다. Python은 일정 깊이 이상 호출되면 자동으로 <code>RecursionError</code>를 발생시킵니다.</p>
+
+    <div class="code"><span class="cmt"># base case 없는 잘못된 예시</span>
+<span class="kw">def</span> <span class="fn">bad_func</span>(n):
+    <span class="fn">print</span>(n)
+    <span class="fn">bad_func</span>(n - <span class="num">1</span>)   <span class="cmt"># 절대 멈추지 않음!</span>
+
+<span class="fn">bad_func</span>(<span class="num">5</span>)           <span class="cmt"># RecursionError: maximum recursion depth exceeded</span></div>
+
+    <div class="warn-box">
+        <div class="warn-box-title">무한 재귀 경고</div>
+        <p>Python의 기본 재귀 한도는 약 1000번입니다. 그 이상 호출되면 <code>RecursionError</code>가 발생합니다. 재귀 함수를 만들 때는 <strong>항상 base case가 반드시 도달 가능한지</strong> 확인하세요.</p>
+    </div>
+
+    <!-- SVG: 무한 재귀 vs 정상 재귀 비교 -->
+    <div style="text-align:center; margin:14px 0;">
+        <svg viewBox="0 0 500 80" style="max-width:500px;width:100%;">
+            <!-- 무한 재귀 -->
+            <rect x="5" y="5" width="230" height="70" rx="8" fill="#fff7f7" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="120" y="22" text-anchor="middle" font-size="10" fill="#dc2626" font-weight="800">무한 재귀 (잘못된 예)</text>
+            <text x="120" y="38" text-anchor="middle" font-size="9" fill="#7f1d1d">func(5) → func(4) → func(3) → ...</text>
+            <text x="120" y="52" text-anchor="middle" font-size="9" fill="#7f1d1d">... → func(-100) → ...</text>
+            <text x="120" y="67" text-anchor="middle" font-size="9" fill="#dc2626" font-weight="700">RecursionError!</text>
+            <!-- 정상 재귀 -->
+            <rect x="265" y="5" width="230" height="70" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="380" y="22" text-anchor="middle" font-size="10" fill="#16a34a" font-weight="800">정상 재귀 (올바른 예)</text>
+            <text x="380" y="38" text-anchor="middle" font-size="9" fill="#166534">func(5) → func(4) → func(3)</text>
+            <text x="380" y="52" text-anchor="middle" font-size="9" fill="#166534">→ func(2) → func(1) = 1 (종료)</text>
+            <text x="380" y="67" text-anchor="middle" font-size="9" fill="#16a34a" font-weight="700">정상 종료</text>
+        </svg>
+    </div>
+</div>
+
+<!-- 5페이지: 재귀 vs 반복문 비교 -->
+<div class="page">
+    <h2>재귀 vs 반복문 비교</h2>
+    <p>재귀로 짤 수 있는 것은 대부분 <code>for</code>/<code>while</code>로도 짤 수 있습니다. 어떤 차이가 있는지 팩토리얼로 직접 비교해봅니다.</p>
+
+    <h3>팩토리얼 — 재귀 버전</h3>
+    <div class="code"><span class="kw">def</span> <span class="fn">factorial_recursive</span>(n):
+    <span class="kw">if</span> n == <span class="num">1</span>:
+        <span class="kw">return</span> <span class="num">1</span>
+    <span class="kw">return</span> n * <span class="fn">factorial_recursive</span>(n - <span class="num">1</span>)</div>
+
+    <h3>팩토리얼 — 반복문 버전</h3>
+    <div class="code"><span class="kw">def</span> <span class="fn">factorial_loop</span>(n):
+    result = <span class="num">1</span>
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">1</span>, n + <span class="num">1</span>):
+        result *= i
+    <span class="kw">return</span> result</div>
+
+    <table class="compare-table">
+        <thead>
+            <tr><th>항목</th><th>재귀</th><th>반복문</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>코드 길이</td>
+                <td>짧고 수학식과 비슷</td>
+                <td>조금 길지만 명확</td>
+            </tr>
+            <tr>
+                <td>속도</td>
+                <td>함수 호출 비용이 있어 느릴 수 있음</td>
+                <td>일반적으로 더 빠름</td>
+            </tr>
+            <tr>
+                <td>메모리</td>
+                <td>호출마다 스택 사용</td>
+                <td>변수 하나로 처리</td>
+            </tr>
+            <tr>
+                <td>무한 루프 위험</td>
+                <td>base case 실수 시 <code>RecursionError</code></td>
+                <td>조건 실수 시 무한 루프</td>
+            </tr>
+            <tr>
+                <td>가독성</td>
+                <td>수학적 정의와 1:1 대응</td>
+                <td>절차가 명확</td>
+            </tr>
+            <tr>
+                <td>언제 유리</td>
+                <td>트리, 폴더 탐색 등 구조가 재귀적일 때</td>
+                <td>단순 반복, 성능이 중요할 때</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- SVG: 재귀 vs 반복문 속도/메모리 개념 비교 -->
+    <div style="text-align:center; margin:14px 0;">
+        <svg viewBox="0 0 500 70" style="max-width:500px;width:100%;">
+            <rect x="5" y="5" width="230" height="60" rx="8" fill="#ede9fe" stroke="#8b5cf6" stroke-width="1.5"/>
+            <text x="120" y="24" text-anchor="middle" font-size="10" fill="#7c3aed" font-weight="800">재귀 — 호출 스택 쌓임</text>
+            <rect x="20" y="32" width="30" height="16" rx="3" fill="#8b5cf6"/>
+            <rect x="55" y="32" width="30" height="16" rx="3" fill="#8b5cf6"/>
+            <rect x="90" y="32" width="30" height="16" rx="3" fill="#8b5cf6"/>
+            <rect x="125" y="32" width="30" height="16" rx="3" fill="#a78bfa"/>
+            <rect x="160" y="32" width="30" height="16" rx="3" fill="#c4b5fd"/>
+            <text x="20" y="62" font-size="8" fill="#64748b">f(5) f(4) f(3) f(2) f(1)</text>
+            <rect x="265" y="5" width="230" height="60" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="380" y="24" text-anchor="middle" font-size="10" fill="#16a34a" font-weight="800">반복문 — 변수 하나로 처리</text>
+            <rect x="280" y="32" width="200" height="16" rx="3" fill="#86efac"/>
+            <text x="380" y="44" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">result *= i (한 칸만 사용)</text>
+            <text x="380" y="60" text-anchor="middle" font-size="8" fill="#64748b">메모리 훨씬 적게 사용</text>
+        </svg>
+    </div>
+
+    <div class="tip-box">
+        <div class="tip-box-title">언제 재귀를 쓸까?</div>
+        <p>파일 폴더 안에 또 폴더가 있고, 그 안에 또 폴더가 있는 구조처럼 <strong>문제가 스스로 비슷한 구조를 반복할 때</strong> 재귀가 자연스럽습니다. 단순히 1부터 n까지 더하는 것은 반복문이 훨씬 낫습니다.</p>
+    </div>
+
+    <!-- SVG: 폴더 구조 재귀 예시 -->
+    <div style="text-align:center; margin:14px 0;">
+        <svg viewBox="0 0 500 110" style="max-width:500px;width:100%;">
+            <rect x="5" y="5" width="490" height="100" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="20" y="22" font-size="10" fill="#1e3a5f" font-weight="800">폴더 탐색 — 재귀가 자연스러운 예</text>
+            <!-- 폴더 트리 -->
+            <rect x="20" y="30" width="80" height="22" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="60" y="45" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">projects/</text>
+            <line x1="60" y1="52" x2="60" y2="62" stroke="#94a3b8" stroke-width="1"/>
+            <line x1="60" y1="62" x2="30" y2="62" stroke="#94a3b8" stroke-width="1"/>
+            <line x1="60" y1="62" x2="90" y2="62" stroke="#94a3b8" stroke-width="1"/>
+            <line x1="30" y1="62" x2="30" y2="70" stroke="#94a3b8" stroke-width="1"/>
+            <line x1="90" y1="62" x2="90" y2="70" stroke="#94a3b8" stroke-width="1"/>
+            <rect x="5" y="70" width="50" height="20" rx="4" fill="#f0fdf4" stroke="#22c55e" stroke-width="1"/>
+            <text x="30" y="84" text-anchor="middle" font-size="8" fill="#166534">python/</text>
+            <rect x="65" y="70" width="50" height="20" rx="4" fill="#f0fdf4" stroke="#22c55e" stroke-width="1"/>
+            <text x="90" y="84" text-anchor="middle" font-size="8" fill="#166534">java/</text>
+            <line x1="30" y1="90" x2="30" y2="98" stroke="#94a3b8" stroke-width="1"/>
+            <rect x="10" y="98" width="40" height="10" rx="2" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+            <text x="30" y="107" text-anchor="middle" font-size="7" fill="#92400e">app.py</text>
+            <!-- 설명 -->
+            <text x="200" y="45" font-size="9" fill="#374151">폴더 안에 폴더가 있고,</text>
+            <text x="200" y="60" font-size="9" fill="#374151">그 안에 또 폴더나 파일이 있는</text>
+            <text x="200" y="75" font-size="9" fill="#374151">구조는 재귀로 탐색하는 것이</text>
+            <text x="200" y="90" font-size="9" fill="#1d4ed8" font-weight="700">훨씬 자연스럽습니다.</text>
+        </svg>
+    </div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요 — 비교 실습</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">재귀 버전과 반복문 버전의 팩토리얼을 모두 실행해서 <code>factorial_recursive(6)</code>과 <code>factorial_loop(6)</code>이 같은 값을 내는지 확인하세요.</div>
+                <div class="practice-result">둘 다 720 이 출력되면 성공</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">1부터 n까지의 합을 구하는 함수를 재귀 버전과 반복문 버전으로 각각 작성해보세요. <code>sum_n(5)</code>는 15입니다.</div>
+                <div class="practice-result">재귀와 반복문 모두 15를 반환하면 성공</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 6페이지: 문제 + 핵심 요약 -->
+<div class="page">
+    <h2>연습 문제</h2>
+
+    <!-- 문제 1 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">1</div>
+            <div class="problem-label">거듭제곱 재귀 — power(base, exp)</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">
+                <code>power(base, exp)</code> 함수를 재귀로 작성하세요. <code>base</code>를 <code>exp</code>번 곱한 값을 반환합니다. base case는 <code>exp == 0</code>일 때 1을 반환하는 것입니다.
+            </div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">입력</span>
+                    <span class="problem-example-value">power(2, 3)</span>
+                </div>
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력</span>
+                    <span class="problem-example-value">8</span>
+                </div>
+                <div class="problem-example-row">
+                    <span class="problem-example-label">입력</span>
+                    <span class="problem-example-value">power(3, 4)</span>
+                </div>
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력</span>
+                    <span class="problem-example-value">81</span>
+                </div>
+            </div>
+            <details class="problem-toggle">
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">2^3 = 2 * 2^2 = 2 * (2 * 2^1) = ... 처럼 exp를 1씩 줄여가면 됩니다. base case는 exp가 0일 때.</div>
+                </div>
+            </details>
+            <details class="problem-toggle">
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code"><span class="kw">def</span> <span class="fn">power</span>(base, exp):
+    <span class="kw">if</span> exp == <span class="num">0</span>:
+        <span class="kw">return</span> <span class="num">1</span>
+    <span class="kw">return</span> base * <span class="fn">power</span>(base, exp - <span class="num">1</span>)
+
+<span class="fn">print</span>(<span class="fn">power</span>(<span class="num">2</span>, <span class="num">3</span>))   <span class="cmt"># 8</span>
+<span class="fn">print</span>(<span class="fn">power</span>(<span class="num">3</span>, <span class="num">4</span>))   <span class="cmt"># 81</span></div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <!-- 문제 2 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">2</div>
+            <div class="problem-label">문자열 뒤집기 재귀 — reverse_str(s)</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">
+                문자열을 재귀로 뒤집는 <code>reverse_str(s)</code>를 작성하세요. base case는 문자열 길이가 0이나 1일 때 그대로 반환하는 것입니다. 재귀 호출에서는 첫 글자를 맨 뒤로 보냅니다.
+            </div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">입력</span>
+                    <span class="problem-example-value">reverse_str("hello")</span>
+                </div>
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력</span>
+                    <span class="problem-example-value">"olleh"</span>
+                </div>
+            </div>
+            <details class="problem-toggle">
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">reverse_str("hello") = reverse_str("ello") + "h" 처럼 나머지를 뒤집고 첫 글자를 맨 뒤에 붙이면 됩니다.</div>
+                </div>
+            </details>
+            <details class="problem-toggle">
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code"><span class="kw">def</span> <span class="fn">reverse_str</span>(s):
+    <span class="kw">if</span> <span class="fn">len</span>(s) <= <span class="num">1</span>:
+        <span class="kw">return</span> s
+    <span class="kw">return</span> <span class="fn">reverse_str</span>(s[<span class="num">1</span>:]) + s[<span class="num">0</span>]
+
+<span class="fn">print</span>(<span class="fn">reverse_str</span>(<span class="str">"hello"</span>))   <span class="cmt"># olleh</span></div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <!-- 문제 3 -->
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">3</div>
+            <div class="problem-label">리스트 합계 재귀 — sum_list(lst)</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">
+                리스트의 모든 원소 합을 재귀로 계산하는 <code>sum_list(lst)</code>를 작성하세요. base case는 리스트가 비어 있을 때 0을 반환하는 것입니다.
+            </div>
+            <div class="problem-example">
+                <div class="problem-example-row">
+                    <span class="problem-example-label">입력</span>
+                    <span class="problem-example-value">sum_list([1, 2, 3, 4, 5])</span>
+                </div>
+                <div class="problem-example-row">
+                    <span class="problem-example-label">출력</span>
+                    <span class="problem-example-value">15</span>
+                </div>
+            </div>
+            <details class="problem-toggle">
+                <summary>힌트 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="hint-text">sum_list([1,2,3,4,5]) = 1 + sum_list([2,3,4,5]). 첫 원소 + 나머지 리스트의 합.</div>
+                </div>
+            </details>
+            <details class="problem-toggle">
+                <summary>정답 보기</summary>
+                <div class="problem-toggle-content">
+                    <div class="answer-code"><span class="kw">def</span> <span class="fn">sum_list</span>(lst):
+    <span class="kw">if</span> <span class="fn">len</span>(lst) == <span class="num">0</span>:
+        <span class="kw">return</span> <span class="num">0</span>
+    <span class="kw">return</span> lst[<span class="num">0</span>] + <span class="fn">sum_list</span>(lst[<span class="num">1</span>:])
+
+<span class="fn">print</span>(<span class="fn">sum_list</span>([<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>, <span class="num">5</span>]))  <span class="cmt"># 15</span></div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <!-- 핵심 요약 -->
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>핵심 요약</h3>
+        <ul>
+            <li><strong>재귀</strong>는 함수가 자기 자신을 다시 호출하는 방법입니다.</li>
+            <li><strong>base case</strong>(종료 조건)는 반드시 있어야 합니다. 없으면 <code>RecursionError</code>가 발생합니다.</li>
+            <li><strong>recursive case</strong>는 문제를 더 작게 만들어 자기 자신을 호출합니다.</li>
+            <li><strong>팩토리얼</strong> : <code>n! = n × (n-1)!</code>, base case는 <code>n == 1</code>이면 1 반환.</li>
+            <li><strong>피보나치</strong> : <code>fib(n) = fib(n-1) + fib(n-2)</code>, base case는 <code>n &lt;= 2</code>이면 1 반환.</li>
+            <li>재귀는 구조가 반복적인 문제(트리, 폴더)에 자연스럽고, 단순 반복은 반복문이 유리합니다.</li>
+        </ul>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

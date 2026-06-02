@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 지뢰 찾기 맵</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+.page { width: 210mm; min-height: 297mm; margin: 16px auto; padding: 18mm 20mm 15mm 22mm; background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: relative; page-break-after: always; }
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after { content: counter(pagenum); position: absolute; bottom: 10mm; right: 16mm; font-size: 10px; color: #94a3b8; font-weight: 600; }
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark { position: absolute; top: -10px; right: -15px; font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3); line-height: 1; pointer-events: none; }
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #2563eb; font-weight: 600; }
+.code { background: #0f172a; border-radius: 8px; padding: 16px 20px; font-family: 'JetBrains Mono', monospace; font-size: 14px; color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap; }
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fce7f3; color: #9d174d; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<div class="page cover">
+  <div class="cover-sidebar"></div>
+  <div class="cover-accent"></div>
+  <div class="cover-body">
+    <div class="cover-watermark">P12</div>
+    <div class="cover-label">Project 12 · Level 5</div>
+    <h1 class="cover-title">지뢰 찾기 맵</h1>
+    <p class="cover-sub">5×5 2차원 배열에 지뢰를 랜덤 배치하고, 각 칸 주변 8방향의 지뢰 개수를 계산하여 맵을 완성합니다.</p>
+    <div style="margin:24px 0;">
+      <svg viewBox="0 0 460 130" style="max-width:460px;width:100%">
+        <text x="120" y="16" text-anchor="middle" font-size="11" fill="#64748b" font-weight="600">지뢰 맵 → 숫자 맵</text>
+        <!-- 지뢰 맵 -->
+        <text x="60" y="32" text-anchor="middle" font-size="10" fill="#374151" font-weight="700">지뢰 배치</text>
+        <rect x="10" y="38" width="100" height="86" rx="6" fill="#f8fafc" stroke="#e2e8f0"/>
+        <text x="30" y="58" text-anchor="middle" font-size="12" fill="#374151">.</text>
+        <text x="50" y="58" text-anchor="middle" font-size="12" fill="#ef4444" font-weight="900">*</text>
+        <text x="70" y="58" text-anchor="middle" font-size="12" fill="#374151">.</text>
+        <text x="90" y="58" text-anchor="middle" font-size="12" fill="#374151">.</text>
+        <text x="30" y="75" text-anchor="middle" font-size="12" fill="#374151">.</text>
+        <text x="50" y="75" text-anchor="middle" font-size="12" fill="#374151">.</text>
+        <text x="70" y="75" text-anchor="middle" font-size="12" fill="#374151">.</text>
+        <text x="90" y="75" text-anchor="middle" font-size="12" fill="#ef4444" font-weight="900">*</text>
+        <text x="30" y="92" text-anchor="middle" font-size="12" fill="#ef4444" font-weight="900">*</text>
+        <text x="50" y="92" text-anchor="middle" font-size="12" fill="#374151">.</text>
+        <text x="70" y="92" text-anchor="middle" font-size="12" fill="#374151">.</text>
+        <text x="90" y="92" text-anchor="middle" font-size="12" fill="#374151">.</text>
+        <!-- 화살표 -->
+        <text x="130" y="82" text-anchor="middle" font-size="18" fill="#94a3b8">→</text>
+        <!-- 숫자 맵 -->
+        <text x="290" y="32" text-anchor="middle" font-size="10" fill="#374151" font-weight="700">숫자 맵</text>
+        <rect x="165" y="38" width="100" height="86" rx="6" fill="#f8fafc" stroke="#e2e8f0"/>
+        <text x="185" y="58" text-anchor="middle" font-size="12" fill="#1d4ed8" font-weight="700">1</text>
+        <text x="205" y="58" text-anchor="middle" font-size="12" fill="#ef4444" font-weight="900">*</text>
+        <text x="225" y="58" text-anchor="middle" font-size="12" fill="#1d4ed8" font-weight="700">1</text>
+        <text x="245" y="58" text-anchor="middle" font-size="12" fill="#1d4ed8" font-weight="700">1</text>
+        <text x="185" y="75" text-anchor="middle" font-size="12" fill="#1d4ed8" font-weight="700">2</text>
+        <text x="205" y="75" text-anchor="middle" font-size="12" fill="#1d4ed8" font-weight="700">2</text>
+        <text x="225" y="75" text-anchor="middle" font-size="12" fill="#1d4ed8" font-weight="700">2</text>
+        <text x="245" y="75" text-anchor="middle" font-size="12" fill="#ef4444" font-weight="900">*</text>
+        <text x="185" y="92" text-anchor="middle" font-size="12" fill="#ef4444" font-weight="900">*</text>
+        <text x="205" y="92" text-anchor="middle" font-size="12" fill="#1d4ed8" font-weight="700">1</text>
+        <text x="225" y="92" text-anchor="middle" font-size="12" fill="#1d4ed8" font-weight="700">1</text>
+        <text x="245" y="92" text-anchor="middle" font-size="12" fill="#1d4ed8" font-weight="700">1</text>
+        <!-- 8방향 설명 -->
+        <rect x="320" y="38" width="130" height="86" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+        <text x="385" y="58" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">8방향 탐색</text>
+        <text x="385" y="74" text-anchor="middle" font-size="9" fill="#374151">dr[]={-1,-1,-1,0,</text>
+        <text x="385" y="88" text-anchor="middle" font-size="9" fill="#374151">0,1,1,1}</text>
+        <text x="385" y="102" text-anchor="middle" font-size="9" fill="#374151">dc[]={-1,0,1,-1,</text>
+        <text x="385" y="116" text-anchor="middle" font-size="9" fill="#374151">1,-1,0,1}</text>
+      </svg>
+    </div>
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/gamepad.png" alt="게임" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+      <h3>이 프로젝트에서 배우는 것</h3>
+      <ul>
+        <li>2차원 배열에 랜덤 지뢰를 배치합니다.</li>
+        <li>8방향 탐색 배열(dr, dc)을 활용하는 패턴을 익힙니다.</li>
+        <li>배열 경계 체크로 범위 초과를 방지합니다.</li>
+        <li>중첩 for문으로 전체 맵을 처리합니다.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+  <h2>지뢰 랜덤 배치</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="우승" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+  <p>mine 배열에 지뢰 위치를 표시합니다. 0은 일반 칸, 1은 지뢰입니다. 이미 지뢰가 있는 칸은 건너뜁니다.</p>
+  <div class="code">#<span class="kw">include</span> <span class="str">&lt;stdio.h&gt;</span>
+#<span class="kw">include</span> <span class="str">&lt;stdlib.h&gt;</span>
+#<span class="kw">include</span> <span class="str">&lt;time.h&gt;</span>
+#<span class="kw">define</span> N <span class="num">5</span>
+#<span class="kw">define</span> MINES <span class="num">5</span>
+
+<span class="kw">int</span> mine[N][N] = {<span class="num">0</span>};
+<span class="kw">int</span> numMap[N][N] = {<span class="num">0</span>};
+
+<span class="fn">srand</span>(<span class="fn">time</span>(<span class="num">NULL</span>));
+<span class="kw">int</span> placed = <span class="num">0</span>;
+<span class="kw">while</span> (placed &lt; MINES) {
+    <span class="kw">int</span> r = <span class="fn">rand</span>() % N;
+    <span class="kw">int</span> c = <span class="fn">rand</span>() % N;
+    <span class="kw">if</span> (!mine[r][c]) {
+        mine[r][c] = <span class="num">1</span>;
+        placed++;
+    }
+}</div>
+  <h2>8방향 탐색으로 숫자 계산</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/flowchart.png" alt="게임 흐름" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+  <p>방향 배열 dr, dc를 사용하면 8방향을 간결하게 탐색할 수 있습니다. 경계 밖은 건너뜁니다.</p>
+  <div style="text-align:center;margin:14px 0;">
+    <svg viewBox="0 0 460 100" style="max-width:460px;width:100%">
+      <text x="230" y="16" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="800">8방향 dr/dc 배열 — (r,c) 기준</text>
+      <!-- 9칸 그리드 -->
+      <rect x="145" y="24" width="35" height="30" rx="3" fill="#fef2f2" stroke="#ef4444"/><text x="162" y="44" text-anchor="middle" font-size="9" fill="#dc2626">(-1,-1)</text>
+      <rect x="183" y="24" width="35" height="30" rx="3" fill="#fef2f2" stroke="#ef4444"/><text x="200" y="44" text-anchor="middle" font-size="9" fill="#dc2626">(-1,0)</text>
+      <rect x="221" y="24" width="35" height="30" rx="3" fill="#fef2f2" stroke="#ef4444"/><text x="238" y="44" text-anchor="middle" font-size="9" fill="#dc2626">(-1,+1)</text>
+      <rect x="145" y="57" width="35" height="30" rx="3" fill="#fef2f2" stroke="#ef4444"/><text x="162" y="77" text-anchor="middle" font-size="9" fill="#dc2626">(0,-1)</text>
+      <rect x="183" y="57" width="35" height="30" rx="3" fill="#1e3a5f"/><text x="200" y="77" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">기준</text>
+      <rect x="221" y="57" width="35" height="30" rx="3" fill="#fef2f2" stroke="#ef4444"/><text x="238" y="77" text-anchor="middle" font-size="9" fill="#dc2626">(0,+1)</text>
+      <rect x="145" y="90" width="35" height="8" rx="2" fill="#fef2f2" stroke="#ef4444"/>
+      <!-- 코드 설명 -->
+      <text x="40" y="40" font-size="9" fill="#374151" font-weight="700">dr[]:</text>
+      <text x="80" y="40" font-size="9" fill="#dc2626" font-family="JetBrains Mono">{-1,-1,-1,0,0,1,1,1}</text>
+      <text x="40" y="58" font-size="9" fill="#374151" font-weight="700">dc[]:</text>
+      <text x="80" y="58" font-size="9" fill="#dc2626" font-family="JetBrains Mono">{-1,0,1,-1,1,-1,0,1}</text>
+      <text x="40" y="78" font-size="9" fill="#374151">for d=0..7:</text>
+      <text x="80" y="92" font-size="9" fill="#374151">nr=r+dr[d], nc=c+dc[d]</text>
+    </svg>
+  </div>
+  <div class="code"><span class="kw">int</span> dr[] = {-<span class="num">1</span>,-<span class="num">1</span>,-<span class="num">1</span>, <span class="num">0</span>, <span class="num">0</span>, <span class="num">1</span>, <span class="num">1</span>, <span class="num">1</span>};
+<span class="kw">int</span> dc[] = {-<span class="num">1</span>, <span class="num">0</span>, <span class="num">1</span>,-<span class="num">1</span>, <span class="num">1</span>,-<span class="num">1</span>, <span class="num">0</span>, <span class="num">1</span>};
+
+<span class="kw">for</span> (<span class="kw">int</span> r=<span class="num">0</span>;r&lt;N;r++) {
+    <span class="kw">for</span> (<span class="kw">int</span> c=<span class="num">0</span>;c&lt;N;c++) {
+        <span class="kw">if</span> (mine[r][c]) { numMap[r][c]=-<span class="num">1</span>; <span class="kw">continue</span>; }
+        <span class="kw">int</span> cnt=<span class="num">0</span>;
+        <span class="kw">for</span> (<span class="kw">int</span> d=<span class="num">0</span>;d&lt;<span class="num">8</span>;d++) {
+            <span class="kw">int</span> nr=r+dr[d], nc=c+dc[d];
+            <span class="kw">if</span>(nr&gt;=<span class="num">0</span>&amp;&amp;nr&lt;N&amp;&amp;nc&gt;=<span class="num">0</span>&amp;&amp;nc&lt;N&amp;&amp;mine[nr][nc]) cnt++;
+        }
+        numMap[r][c] = cnt;
+    }
+}</div>
+</div>
+
+<div class="page">
+  <h2>맵 출력 & 완성 코드</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+  <div class="code"><span class="kw">void</span> <span class="fn">printMap</span>() {
+    <span class="fn">printf</span>(<span class="str">"\n=== 지뢰 찾기 맵 ===\n"</span>);
+    <span class="kw">for</span>(<span class="kw">int</span> r=<span class="num">0</span>;r&lt;N;r++){
+        <span class="kw">for</span>(<span class="kw">int</span> c=<span class="num">0</span>;c&lt;N;c++){
+            <span class="kw">if</span>(numMap[r][c]==-<span class="num">1</span>) <span class="fn">printf</span>(<span class="str">" * "</span>);
+            <span class="kw">else if</span>(numMap[r][c]==<span class="num">0</span>) <span class="fn">printf</span>(<span class="str">" . "</span>);
+            <span class="kw">else</span> <span class="fn">printf</span>(<span class="str">"%2d "</span>, numMap[r][c]);
+        }
+        <span class="fn">printf</span>(<span class="str">"\n"</span>);
+    }
+}</div>
+  <div style="text-align:center;margin:14px 0;">
+    <svg viewBox="0 0 460 100" style="max-width:460px;width:100%">
+      <rect x="10" y="8" width="440" height="88" rx="8" fill="#0f172a"/>
+      <text x="30" y="30" font-size="10" fill="#86efac" font-family="JetBrains Mono">=== 지뢰 찾기 맵 ===</text>
+      <text x="30" y="46" font-size="10" fill="#e2e8f0" font-family="JetBrains Mono"> 1  *  1  1  1</text>
+      <text x="30" y="62" font-size="10" fill="#e2e8f0" font-family="JetBrains Mono"> 2  2  2  *  1</text>
+      <text x="30" y="78" font-size="10" fill="#ef4444" font-family="JetBrains Mono"> *  1  1  1  .</text>
+    </svg>
+  </div>
+  <div class="practice">
+    <div class="practice-head">따라해보세요</div>
+    <div class="practice-body">
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/database.png" alt="데이터베이스" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/lightbulb.png" alt="아이디어" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+      <div class="practice-item">
+        <div class="practice-num">1</div>
+        <div class="practice-desc">MINES 상수를 5에서 10으로 바꿔 더 많은 지뢰를 배치해보세요. 숫자들이 어떻게 달라지는지 관찰합니다.</div>
+        <div class="practice-result">지뢰가 많을수록 숫자 값이 커집니다</div>
+      </div>
+    </div>
+  </div>
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">1</div>
+      <div class="problem-label">지뢰 개수 출력</div>
+      <span class="problem-diff easy">쉬움</span>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">전체 맵에서 실제로 배치된 지뢰의 개수를 카운트해서 출력하세요.</div>
+      <div class="problem-example">
+        <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">지뢰 개수: 5개</span></div>
+      </div>
+      <details class="problem-toggle">
+        <summary>정답 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="answer-code"><span class="kw">int</span> cnt=<span class="num">0</span>;
+<span class="kw">for</span>(<span class="kw">int</span> r=<span class="num">0</span>;r&lt;N;r++)
+  <span class="kw">for</span>(<span class="kw">int</span> c=<span class="num">0</span>;c&lt;N;c++)
+    <span class="kw">if</span>(mine[r][c]) cnt++;
+<span class="fn">printf</span>(<span class="str">"지뢰: %d개\n"</span>,cnt);</div>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">2</div>
+      <div class="problem-label">가장 위험한 칸 찾기</div>
+      <span class="problem-diff medium">중간</span>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">숫자 맵에서 지뢰가 아닌 칸 중 주변 지뢰 수가 가장 많은 칸(가장 위험한 칸)의 위치를 출력하세요.</div>
+      <div class="problem-example">
+        <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">가장 위험한 칸: (1,1) = 3개 지뢰</span></div>
+      </div>
+      <details class="problem-toggle">
+        <summary>힌트 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="hint-text">numMap에서 -1이 아닌 값 중 최대값 탐색. 최대값을 가진 위치(r,c)를 함께 기록.</div>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+    <h3>핵심 정리</h3>
+    <ul>
+      <li>지뢰 배열: mine[N][N], 0=일반, 1=지뢰</li>
+      <li>8방향 배열: dr[8], dc[8]로 방향 표현</li>
+      <li>경계 체크: nr&gt;=0 &amp;&amp; nr&lt;N &amp;&amp; nc&gt;=0 &amp;&amp; nc&lt;N</li>
+      <li>지뢰 칸 숫자: numMap에 -1 저장</li>
+      <li>지뢰 중복 배치 방지: while + if(!mine[r][c])</li>
+    </ul>
+  </div>
+</div>
+
+<div class="page">
+  <h2>심화 — 더 큰 맵 (10×10)</h2>
+  <p>N 상수를 10으로 바꾸면 10×10 맵으로 확장됩니다. #define만 수정하면 됩니다.</p>
+  <div style="text-align:center;margin:14px 0;">
+    <svg viewBox="0 0 460 120" style="max-width:460px;width:100%">
+      <text x="230" y="16" text-anchor="middle" font-size="12" fill="#1e3a5f" font-weight="800">10×10 맵 — #define N 10, MINES 15</text>
+      <!-- 10x10 그리드 미니 표현 -->
+      <rect x="30" y="24" width="200" height="90" rx="6" fill="#f8fafc" stroke="#e2e8f0"/>
+      <text x="130" y="72" text-anchor="middle" font-size="10" fill="#94a3b8">10×10 = 100칸</text>
+      <text x="130" y="88" text-anchor="middle" font-size="9" fill="#94a3b8">지뢰 15개 = 15% 밀도</text>
+      <!-- 격자 표시 -->
+      <line x1="50" y1="30" x2="50" y2="108" stroke="#e2e8f0" stroke-width="0.5"/>
+      <line x1="70" y1="30" x2="70" y2="108" stroke="#e2e8f0" stroke-width="0.5"/>
+      <line x1="90" y1="30" x2="90" y2="108" stroke="#e2e8f0" stroke-width="0.5"/>
+      <line x1="110" y1="30" x2="110" y2="108" stroke="#e2e8f0" stroke-width="0.5"/>
+      <line x1="130" y1="30" x2="130" y2="108" stroke="#e2e8f0" stroke-width="0.5"/>
+      <line x1="150" y1="30" x2="150" y2="108" stroke="#e2e8f0" stroke-width="0.5"/>
+      <line x1="170" y1="30" x2="170" y2="108" stroke="#e2e8f0" stroke-width="0.5"/>
+      <line x1="190" y1="30" x2="190" y2="108" stroke="#e2e8f0" stroke-width="0.5"/>
+      <line x1="210" y1="30" x2="210" y2="108" stroke="#e2e8f0" stroke-width="0.5"/>
+      <line x1="36" y1="46" x2="224" y2="46" stroke="#e2e8f0" stroke-width="0.5"/>
+      <line x1="36" y1="62" x2="224" y2="62" stroke="#e2e8f0" stroke-width="0.5"/>
+      <line x1="36" y1="78" x2="224" y2="78" stroke="#e2e8f0" stroke-width="0.5"/>
+      <line x1="36" y1="94" x2="224" y2="94" stroke="#e2e8f0" stroke-width="0.5"/>
+      <!-- 지뢰 표시 -->
+      <text x="60" y="44" text-anchor="middle" font-size="8" fill="#ef4444">*</text>
+      <text x="140" y="60" text-anchor="middle" font-size="8" fill="#ef4444">*</text>
+      <text x="100" y="76" text-anchor="middle" font-size="8" fill="#ef4444">*</text>
+      <text x="180" y="92" text-anchor="middle" font-size="8" fill="#ef4444">*</text>
+      <!-- 설명 -->
+      <rect x="260" y="24" width="190" height="90" rx="6" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.5"/>
+      <text x="355" y="45" text-anchor="middle" font-size="11" fill="#92400e" font-weight="800">확장 방법</text>
+      <text x="270" y="62" font-size="9" fill="#374151">#define N 10 으로 변경</text>
+      <text x="270" y="76" font-size="9" fill="#374151">#define MINES 15 으로 변경</text>
+      <text x="270" y="90" font-size="9" fill="#374151">나머지 코드는 그대로!</text>
+      <text x="270" y="104" font-size="9" fill="#166534" font-weight="700">N만 바꾸면 모든 크기 지원</text>
+    </svg>
+  </div>
+  <div class="code"><span class="cmt">// 이 두 줄만 바꾸면 됩니다</span>
+#<span class="kw">define</span> N <span class="num">10</span>      <span class="cmt">// 5 → 10</span>
+#<span class="kw">define</span> MINES <span class="num">15</span>  <span class="cmt">// 5 → 15</span></div>
+  <div class="problem">
+    <div class="problem-head">
+      <div class="problem-badge">3</div>
+      <div class="problem-label">안전 지대 찾기</div>
+      <span class="problem-diff hard">어려움</span>
+    </div>
+    <div class="problem-body">
+      <div class="problem-text">주변 지뢰 수가 0인 칸(안전 지대)을 모두 찾아 개수와 위치를 출력하세요.</div>
+      <div class="problem-example">
+        <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">안전지대: (0,3) (2,4) ... 총 N개</span></div>
+      </div>
+      <details class="problem-toggle">
+        <summary>힌트 보기</summary>
+        <div class="problem-toggle-content">
+          <div class="hint-text">numMap[r][c] == 0 인 칸이 안전 지대입니다. for문으로 전체 맵 순회하면서 조건 체크.</div>
+        </div>
+      </details>
+    </div>
+  </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

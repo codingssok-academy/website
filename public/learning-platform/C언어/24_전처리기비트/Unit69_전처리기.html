@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Unit 69. 전처리기 완전정복 — C 언어</title>
+    <link rel="stylesheet" href="../common.css">
+</head>
+
+<body>
+    <div class="wrap">
+        <div class="hdr">
+            <h1>Unit 69. 전처리기 완전정복</h1>
+            <div class="sub">#define · #ifdef · 가변인자 매크로 · #pragma · 매크로 함정</div>
+            <span class="unit-badge">Chapter 24 · 전처리기·비트</span>
+            <div class="level-bar"><span class="on"></span><span class="on"></span><span class="on"></span><span
+                    class="on"></span></div>
+            <div class="meta"><span class="tag pri">⚙️ 전처리기</span><span class="tag acc">📝 15문제</span><span
+                    class="tag">⏱ 45분</span></div>
+        </div>
+        <div class="stu-bar"><label>👤 이름 <input type="text" id="stu-name" placeholder="이름"></label><label>📅 날짜 <input
+                    type="date" id="stu-date"></label></div>
+        <div id="problems"></div>
+        <div class="submit-section">
+            <p>모든 문제를 풀었나요? 📨</p><button class="btn-submit" id="btn-submit">📄 제출하기</button>
+        </div>
+        <div class="modal-overlay" id="submit-modal">
+            <div class="modal-box">
+                <div class="modal-icon">✅</div>
+                <h3>제출 완료!</h3>
+                <p>학습지가 저장되었습니다.</p>
+                <div style="margin:12px 0"><span class="info-tag" id="modal-name"></span> <span class="info-tag"
+                        id="modal-date"></span> <span class="info-tag" id="modal-count"></span></div>
+                <p style="font-size:.78rem;color:var(--dim)">📁 <strong id="modal-filename"></strong></p><button
+                    class="btn-close-modal" id="btn-close-modal">확인</button>
+            </div>
+        </div>
+        <div class="pg"><a href="../23_고급마스터/Unit68_마스터테스트.html">← Unit 68</a><span class="tag active">Unit 69</span><a
+                href="Unit70_비트연산.html">Unit 70 →</a></div>
+        <div class="ft">⚙️ 전처리기 완전정복 · Unit 69</div>
+    </div>
+    <script>
+        const P = [
+            {
+                n: 1, t: "#define 객체형 매크로", d: 1,
+                q: `아래 매크로 사용 결과를 쓰세요.
+<pre class="code-c">#define PI 3.14159
+#define MAX_SIZE 100
+#define GREETING "Hello, World!"
+
+printf("%.2f\\n", PI);
+printf("%d\\n", MAX_SIZE);
+printf("%s\\n", GREETING);</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">3.14<br>100<br>Hello, World!</div><div class="trace">객체형 매크로: 단순 텍스트 치환!<br>컴파일 전에 전처리기가 대체<br>⚠️ 세미콜론(;) 붙이지 않음!</div>`
+            },
+
+            {
+                n: 2, t: "#define 함수형 매크로 함정", d: 3,
+                q: `아래 코드의 출력을 쓰세요.
+<pre class="code-c">#define SQUARE(x) x*x
+#define SAFE_SQ(x) ((x)*(x))
+
+int a = 5;
+printf("%d\\n", SQUARE(a+1));
+printf("%d\\n", SAFE_SQ(a+1));
+printf("%d\\n", SQUARE(++a));</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">11<br>36<br>미정의(UB)</div><div class="trace">SQUARE(a+1) → a+1*a+1 = 5+1*5+1 = 5+5+1 = 11<br>⚠️ 의도: (a+1)*(a+1) = 36<br><br>SAFE_SQ(a+1) → ((a+1)*(a+1)) = 36 ✅<br><br>SQUARE(++a) → ++a*++a = 💣<br><span class="err">매크로에 부작용 있는 인수 금지!</span></div>`
+            },
+
+            {
+                n: 3, t: "#define 다중행 매크로", d: 2,
+                q: `다중행 매크로를 올바르게 작성하세요.
+<pre class="code-c"><span class="cm">// swap 매크로 작성 (do-while 패턴)</span>
+#define SWAP(a, b, type) <span class="cm">/* ? */</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">#define SWAP(a, b, type) do { \\
+    type _tmp = (a);           \\
+    (a) = (b);                 \\
+    (b) = _tmp;                \\
+} while(0)
+
+<span class="cm">// 사용:</span>
+int x=3, y=5;
+SWAP(x, y, int);
+printf("%d %d", x, y); <span class="cm">// 5 3</span></pre><div class="trace">do {...} while(0) 패턴!<br>→ if문 안에서도 안전하게 사용 가능<br>각 줄 끝에 \\ (줄 연속)</div>`},
+
+            {
+                n: 4, t: "#과 ## 연산자 (Stringizing/Concatenation)", d: 3,
+                q: `# 과 ## 연산자의 출력을 쓰세요.
+<pre class="code-c">#define STR(x) #x
+#define CONCAT(a, b) a##b
+#define PRINT_VAR(var) printf(#var " = %d\\n", var)
+
+int xy = 42;
+printf("%s\\n", STR(Hello World));
+int z = CONCAT(x, y);
+printf("%d\\n", z);
+int abc = 100;
+PRINT_VAR(abc);</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">Hello World<br>42<br>abc = 100</div><div class="trace">#x → "x" (문자열화!)<br>STR(Hello World) → "Hello World"<br><br>a##b → ab (토큰 연결!)<br>CONCAT(x,y) → xy → 42<br><br>PRINT_VAR(abc) → printf("abc" " = %d\\n", abc)<br>→ "abc = %d\\n" (문자열 자동 연결)</div>`
+            },
+
+            {
+                n: 5, t: "조건부 컴파일 (#ifdef/#ifndef)", d: 2,
+                q: `아래 코드의 출력을 쓰세요.
+<pre class="code-c">#define DEBUG
+#define VERSION 2
+
+int main() {
+#ifdef DEBUG
+    printf("디버그 모드\\n");
+#else
+    printf("릴리스 모드\\n");
+#endif
+
+#if VERSION >= 2
+    printf("v2 이상\\n");
+#elif VERSION == 1
+    printf("v1\\n");
+#else
+    printf("알 수 없음\\n");
+#endif
+}</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">디버그 모드<br>v2 이상</div><div class="trace">#ifdef DEBUG → DEBUG 정의됨 → 참<br>#if VERSION >= 2 → 2 >= 2 → 참<br><br>릴리스 빌드: #undef DEBUG 또는<br>컴파일 시 -DDEBUG 플래그 제거</div>`
+            },
+
+            {
+                n: 6, t: "#ifndef 헤더 가드", d: 2,
+                q: `헤더 파일의 중복 포함 방지 패턴을 작성하세요.
+<pre class="code-c"><span class="cm">// myheader.h 파일</span>
+<span class="cm">// 중복 포함 방지 패턴 2가지</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c"><span class="cm">// 방법 1: 전통적 헤더 가드</span>
+#ifndef MYHEADER_H
+#define MYHEADER_H
+
+void myFunc(void);
+typedef struct { int x, y; } Point;
+
+#endif <span class="cm">// MYHEADER_H</span>
+
+<span class="cm">// 방법 2: #pragma once (비표준이지만 대부분 지원)</span>
+#pragma once
+
+void myFunc(void);
+typedef struct { int x, y; } Point;</pre><div class="trace">#ifndef: 정의 안 됐으면 → 정의하고 내용 포함<br>두 번째 포함 시: 이미 정의됨 → 건너뜀<br>#pragma once: 더 간단하지만 비표준</div>`},
+
+            {
+                n: 7, t: "가변 인자 매크로 (__VA_ARGS__)", d: 3,
+                q: `디버그 로그 매크로를 작성하세요.
+<pre class="code-c"><span class="cm">// LOG("값: %d, %d", a, b) 처럼 사용</span>
+<span class="cm">// 파일명, 줄번호 자동 포함</span>
+#define LOG(fmt, ...) <span class="cm">/* ? */</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">#define LOG(fmt, ...) \\
+    printf("[%s:%d] " fmt "\\n", \\
+           __FILE__, __LINE__, ##__VA_ARGS__)
+
+<span class="cm">// 사용:</span>
+int x = 42;
+LOG("x = %d", x);
+<span class="cm">// 출력: [main.c:10] x = 42</span>
+
+LOG("시작!");
+<span class="cm">// 출력: [main.c:12] 시작!</span></pre><div class="trace">__VA_ARGS__: 가변 인자 전달<br>##__VA_ARGS__: 인자 없을 때 쉼표 제거<br>__FILE__: 현재 파일명<br>__LINE__: 현재 줄 번호</div>`},
+
+            {
+                n: 8, t: "미리 정의된 매크로", d: 2,
+                q: `다음 출력을 예측하세요.
+<pre class="code-c">printf("파일: %s\\n", __FILE__);
+printf("줄: %d\\n", __LINE__);
+printf("날짜: %s\\n", __DATE__);
+printf("시간: %s\\n", __TIME__);
+printf("함수: %s\\n", __func__);</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c"><span class="cm">// 출력 (예시):</span>
+파일: main.c
+줄: 5
+날짜: Feb 11 2026
+시간: 15:30:00
+함수: main</pre><div class="trace">__FILE__: 소스 파일 이름<br>__LINE__: 현재 줄 번호<br>__DATE__: 컴파일 날짜<br>__TIME__: 컴파일 시간<br>__func__: 현재 함수 이름 (C99)</div>`},
+
+            {
+                n: 9, t: "매크로 vs inline 함수", d: 2,
+                q: `매크로와 inline 함수의 차이를 비교하세요.
+<pre class="code-c">#define MAX_M(a,b) ((a)>(b)?(a):(b))
+static inline int max_f(int a, int b) {
+    return a > b ? a : b;
+}
+<span class="cm">// 각각의 장단점은?</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c"><span class="cm">매크로 #define:</span>
+✅ 타입 무관 (제네릭)
+❌ 타입 검사 없음
+❌ 부작용 위험 (MAX_M(a++, b))
+❌ 디버깅 어려움
+
+<span class="cm">inline 함수:</span>
+✅ 타입 검사 있음
+✅ 부작용 없음 (인자 한 번 평가)
+✅ 디버깅 가능
+❌ 특정 타입에만 동작</pre><div class="trace"><span class="val">원칙</span>: 가능하면 inline 함수 사용!<br>매크로는 제네릭이 필요할 때만</div>`},
+
+            {
+                n: 10, t: "[출력예측] 매크로 전개 순서", d: 3,
+                q: `<pre class="code-c">#define A 2
+#define B (A+3)
+#define C (B*B)
+
+printf("%d\\n", C);
+printf("%d\\n", A+C);
+printf("%d\\n", C/B);</pre>`,
+                a: `<span class="key">정답</span><div class="output-box">25<br>27<br>5</div><div class="trace">B → (2+3) = 5<br>C → ((2+3)*(2+3)) = 5*5 = 25<br>A+C → 2+25 = 27<br>C/B → 25/5 = 5<br><br>괄호 덕분에 제대로 동작!<br>괄호 없었으면: 2+3*2+3 = 11</div>`
+            },
+
+            {
+                n: 11, t: "#error와 #warning", d: 2,
+                q: `조건부 컴파일 에러를 발생시키세요.
+<pre class="code-c"><span class="cm">// PLATFORM이 정의 안 되면 컴파일 에러</span>
+<span class="cm">// BUFFER_SIZE가 256 미만이면 경고</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">#ifndef PLATFORM
+    #error "PLATFORM must be defined! (WINDOWS/LINUX/MAC)"
+#endif
+
+#if BUFFER_SIZE < 256
+    #warning "BUFFER_SIZE is too small, recommended >= 256"
+#endif</pre><div class="trace">#error: 컴파일 중단 + 에러 메시지<br>#warning: 경고만 (컴파일 계속)</div>`},
+
+            {
+                n: 12, t: "매크로로 배열 크기 구하기", d: 2,
+                q: `배열 크기를 안전하게 구하는 매크로를 작성하세요.
+<pre class="code-c"><span class="cm">// 포인터에 사용하면 컴파일 에러 발생하게!</span>
+#define ARRAY_SIZE(arr) <span class="cm">/* ? */</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c"><span class="cm">// 기본 버전:</span>
+#define ARRAY_SIZE(arr) (sizeof(arr)/sizeof(arr[0]))
+
+<span class="cm">// 안전 버전 (GCC/Clang):</span>
+#define SAFE_ARRAY_SIZE(arr) \\
+    (sizeof(arr)/sizeof(arr[0]) + \\
+     sizeof(char[1-2*!!((void*)(arr)==(void*)&(arr))]))
+
+<span class="cm">// 사용:</span>
+int a[10];
+printf("%lu", ARRAY_SIZE(a)); <span class="cm">// 10 ✅</span>
+
+<span class="cm">// 주의: 포인터에 사용하면 잘못된 값!</span>
+int *p = a;
+printf("%lu", ARRAY_SIZE(p)); <span class="cm">// 💣 2 (64bit)</span></pre>`},
+
+            {
+                n: 13, t: "#undef 사용법", d: 2,
+                q: `매크로 재정의와 해제를 보여주세요.
+<pre class="code-c">#define SIZE 10
+printf("%d\\n", SIZE);
+#undef SIZE
+#define SIZE 20
+printf("%d\\n", SIZE);
+<span class="cm">// #undef 없이 재정의하면?</span></pre>`,
+                a: `<span class="key">정답</span><div class="output-box">10<br>20</div><div class="trace">#undef: 매크로 정의 해제<br>재정의 전에 #undef 필수!<br>안 하면 컴파일러 경고 발생</div>`
+            },
+
+            {
+                n: 14, t: "_Generic (C11 제네릭 선택)", d: 3,
+                q: `C11의 _Generic으로 타입별 함수를 선택하세요.
+<pre class="code-c"><span class="cm">// print_val(x)가 타입에 따라 다른 포맷 사용</span>
+#define print_val(x) _Generic((x), <span class="cm">/* ? */</span>)</pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">#define print_val(x) _Generic((x), \\
+    int: printf("%d\\n", x),          \\
+    float: printf("%.2f\\n", x),      \\
+    double: printf("%.4f\\n", x),     \\
+    char*: printf("%s\\n", x),        \\
+    default: printf("unknown\\n")     \\
+)
+
+<span class="cm">// 사용:</span>
+print_val(42);       <span class="cm">// 42</span>
+print_val(3.14f);    <span class="cm">// 3.14</span>
+print_val("Hello");  <span class="cm">// Hello</span></pre><div class="trace">_Generic: C11 타입 추론!<br>컴파일 타임에 타입 결정<br>C++의 function overloading 대안</div>`},
+
+            {
+                n: 15, t: "🏆 X-Macro 기법", d: 4,
+                q: `X-Macro로 enum과 문자열 배열을 자동 생성하세요.
+<pre class="code-c"><span class="cm">// 색상 enum과 이름 문자열을 한 번에!</span>
+<span class="cm">// COLOR_RED=0, COLOR_GREEN=1, COLOR_BLUE=2</span>
+<span class="cm">// "RED", "GREEN", "BLUE"</span></pre>`,
+                a: `<span class="key">정답</span><pre class="code-c">#define COLOR_LIST \\
+    X(RED)         \\
+    X(GREEN)       \\
+    X(BLUE)        \\
+    X(YELLOW)
+
+<span class="cm">// enum 생성</span>
+#define X(name) COLOR_##name,
+enum Color { COLOR_LIST COLOR_COUNT };
+#undef X
+
+<span class="cm">// 문자열 배열 생성</span>
+#define X(name) #name,
+const char *colorNames[] = { COLOR_LIST };
+#undef X
+
+<span class="cm">// 사용:</span>
+printf("%s = %d\\n", colorNames[COLOR_RED], COLOR_RED);
+<span class="cm">// "RED = 0"</span>
+printf("총 %d색\\n", COLOR_COUNT); <span class="cm">// 4</span></pre><div class="trace">X-Macro: 리스트를 한 곳에서 관리!<br>enum 추가 시 한 줄만 추가하면 됨<br>실무에서 상태/에러코드 관리에 사용</div>`}
+        ];
+        const c = document.getElementById('problems'); P.forEach(p => { const dc = p.d <= 1 ? 'ez' : p.d <= 2 ? 'md' : 'hd'; const dots = Array.from({ length: 5 }, (_, i) => `<span${i < p.d ? ' class="on"' : ''}>​</span>`).join(''); c.innerHTML += `<div class="prob"><div class="prob-top"><div class="prob-num ${dc}">${p.n}</div><div class="prob-title">${p.t}</div><div class="diff-dots">${dots}</div></div><div class="prob-body"><div class="q">${p.q}</div><textarea class="write" placeholder="✍️ 답을 작성하세요" rows="8"></textarea><details class="ans"><summary>정답 및 해설 보기</summary><div class="ans-body">${p.a}</div></details></div></div>`; });
+    </script>
+    <script src="../submit.js"></script>
+    <script src="../../platform.js"></script>
+</body>
+
+</html>

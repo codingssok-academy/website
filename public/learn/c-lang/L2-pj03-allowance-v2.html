@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 프로젝트: 용돈 계산기</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute;
+    bottom: 10mm;
+    right: 16mm;
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 260px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 38px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '\2022'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 14px;
+    color: #e2e8f0; line-height: 1.8; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '\2192'; color: #94a3b8; font-weight: 700; }
+
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-example { background: #f8fafc; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.problem-example-row { display: flex; gap: 16px; font-size: 13px; padding: 3px 0; }
+.problem-example-label { color: #94a3b8; font-weight: 600; min-width: 36px; }
+.problem-example-value { font-family: 'JetBrains Mono', monospace; color: #0f172a; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle summary::marker { display: none; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+
+.pj-badge { display: inline-block; background: #1e3a5f; color: #e6a817; font-size: 12px; font-weight: 800; padding: 3px 12px; border-radius: 99px; margin-bottom: 12px; }
+.output-box { background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 14px 18px; margin: 14px 0; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #1e3a5f; line-height: 2; }
+
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- 1페이지: 표지 -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">P3</div>
+        <div class="cover-label">Level 2a - Project 03</div>
+        <h1 class="cover-title">용돈 계산기</h1>
+        <p class="cover-sub">주간 용돈을 입력받아 월간, 연간 용돈을 계산하는 프로그램을 만듭니다. 곱셈 연산을 활용합니다.</p>
+
+        <!-- SVG 1: 용돈 증가 그래프 -->
+        <div style="margin:20px 0;">
+            <svg viewBox="0 0 460 140" style="max-width:460px;width:100%">
+                <rect x="10" y="5" width="440" height="130" rx="12" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+                <text x="230" y="25" text-anchor="middle" font-size="13" fill="#1e3a5f" font-weight="800">용돈이 불어나는 과정 (주급 5,000원 기준)</text>
+                <!-- 바 차트 -->
+                <rect x="60" y="95" width="60" height="30" rx="4" fill="#3b82f6"/>
+                <text x="90" y="88" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">1주</text>
+                <text x="90" y="115" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">5,000</text>
+                <rect x="150" y="65" width="60" height="60" rx="4" fill="#f59e0b"/>
+                <text x="180" y="58" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">1개월</text>
+                <text x="180" y="100" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">20,000</text>
+                <rect x="240" y="35" width="60" height="90" rx="4" fill="#22c55e"/>
+                <text x="270" y="30" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">1년</text>
+                <text x="270" y="85" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">260,000</text>
+                <line x1="50" y1="125" x2="420" y2="125" stroke="#e2e8f0" stroke-width="1"/>
+            </svg>
+        </div>
+
+        <!-- SVG 2: 계산 흐름도 -->
+        <div style="margin:16px 0;">
+            <svg viewBox="0 0 460 60" style="max-width:460px;width:100%">
+                <rect x="5" y="10" width="100" height="40" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="55" y="35" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">주급 입력</text>
+                <line x1="110" y1="30" x2="135" y2="30" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="140" y="10" width="100" height="40" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="190" y="28" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">x4 = 월급</text>
+                <text x="190" y="42" text-anchor="middle" font-size="9" fill="#92400e">x52 = 연봉</text>
+                <line x1="245" y1="30" x2="270" y2="30" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="275" y="10" width="100" height="40" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="325" y="35" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">결과 출력</text>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/calculator.png" alt="계산기" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>프로젝트 목표</h3>
+            <ul>
+                <li>곱셈 연산자(*)를 사용해 계산할 수 있습니다.</li>
+                <li>scanf로 입력받은 값으로 여러 계산을 수행합니다.</li>
+                <li>하나의 입력에서 여러 결과를 출력하는 프로그램을 만듭니다.</li>
+                <li>저축 목표 계산으로 응용할 수 있습니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- 2페이지: 곱셈 개념 + 따라하기 -->
+<div class="page">
+    <div class="pj-badge">PROJECT 03</div>
+    <h2>Step 1. 곱셈으로 계산하기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/keyboard.png" alt="키보드" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>C언어에서 곱셈은 <code>*</code> 기호를 사용합니다. 주간 용돈에 4를 곱하면 월간, 52를 곱하면 연간 용돈이 됩니다.</p>
+
+    <!-- SVG 3: 곱셈 연산자 설명 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="70" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="25" text-anchor="middle" font-size="13" fill="#1e3a5f" font-weight="800">C언어 사칙연산</text>
+            <rect x="30" y="35" width="85" height="30" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="72" y="55" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">+ 더하기</text>
+            <rect x="130" y="35" width="85" height="30" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1"/>
+            <text x="172" y="55" text-anchor="middle" font-size="11" fill="#92400e" font-weight="700">- 빼기</text>
+            <rect x="230" y="35" width="85" height="30" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="272" y="55" text-anchor="middle" font-size="11" fill="#166534" font-weight="800">* 곱하기</text>
+            <rect x="330" y="35" width="85" height="30" rx="6" fill="#fef2f2" stroke="#ef4444" stroke-width="1"/>
+            <text x="372" y="55" text-anchor="middle" font-size="11" fill="#dc2626" font-weight="700">/ 나누기</text>
+        </svg>
+    </div>
+
+    <!-- SVG 4: 주급 -> 월급 -> 연봉 계산 과정 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+            <rect x="10" y="15" width="110" height="50" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="65" y="35" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">weekly</text>
+            <text x="65" y="52" text-anchor="middle" font-size="14" fill="#1e3a5f" font-weight="900">5000</text>
+            <text x="140" y="44" text-anchor="middle" font-size="12" fill="#94a3b8">x4</text>
+            <line x1="125" y1="40" x2="155" y2="40" stroke="#94a3b8" stroke-width="1.5"/>
+            <rect x="160" y="15" width="110" height="50" rx="8" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="215" y="35" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">monthly</text>
+            <text x="215" y="52" text-anchor="middle" font-size="14" fill="#1e3a5f" font-weight="900">20000</text>
+            <text x="295" y="44" text-anchor="middle" font-size="12" fill="#94a3b8">x52</text>
+            <rect x="310" y="15" width="140" height="50" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="380" y="35" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">yearly</text>
+            <text x="380" y="52" text-anchor="middle" font-size="14" fill="#1e3a5f" font-weight="900">260000</text>
+        </svg>
+    </div>
+
+    <p>한 달은 약 4주, 1년은 52주입니다. 주급에 4를 곱하면 월급, 52를 곱하면 연봉을 계산할 수 있습니다.</p>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/cpu.png" alt="CPU" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/trophy.png" alt="완성" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+            <div class="practice-item">
+                <div class="practice-num">1</div>
+                <div class="practice-desc">주급을 입력받아 변수에 저장해보세요.</div>
+                <div class="code"><span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="kw">int</span> weekly;
+    <span class="fn">printf</span>(<span class="str">"주간 용돈(원): "</span>);
+    <span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;weekly);
+    <span class="fn">printf</span>(<span class="str">"입력한 주급: %d원\n"</span>, weekly);
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+                <div class="practice-result">5000 입력 시 "입력한 주급: 5000원"</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">2</div>
+                <div class="practice-desc">월급과 연봉을 계산해보세요.</div>
+                <div class="code"><span class="kw">int</span> monthly = weekly * <span class="num">4</span>;
+<span class="kw">int</span> yearly = weekly * <span class="num">52</span>;
+<span class="fn">printf</span>(<span class="str">"월간 용돈: %d원\n"</span>, monthly);
+<span class="fn">printf</span>(<span class="str">"연간 용돈: %d원\n"</span>, yearly);</div>
+                <div class="practice-result">5000원 입력 시 월간 20000원, 연간 260000원</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">3</div>
+                <div class="practice-desc">하루 용돈도 계산해보세요. (주급 / 7)</div>
+                <div class="code"><span class="kw">int</span> daily = weekly / <span class="num">7</span>;
+<span class="fn">printf</span>(<span class="str">"하루 용돈: %d원\n"</span>, daily);</div>
+                <div class="practice-result">5000 / 7 = 714원 (정수 나눗셈, 소수점 버림)</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SVG 5: 정수 나눗셈 주의 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 460 50" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="40" rx="8" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="30" y="30" font-size="11" fill="#dc2626" font-weight="800">주의!</text>
+            <text x="80" y="30" font-size="11" fill="#7f1d1d">int 나눗셈은 소수점 아래를 버린다: 5000 / 7 = 714 (714.28... 아님)</text>
+        </svg>
+    </div>
+</div>
+
+<!-- 3페이지: 완성 코드 + 문제 -->
+<div class="page">
+    <div class="pj-badge">PROJECT 03</div>
+    <h2>Step 2. 완성 코드</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="계산 로직" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>입력받은 주급으로 하루, 월간, 연간 용돈을 모두 계산하는 프로그램입니다.</p>
+
+    <!-- SVG 6: 코드 흐름 -->
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 460 50" style="max-width:460px;width:100%">
+            <rect x="5" y="10" width="80" height="30" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="45" y="30" text-anchor="middle" font-size="9" fill="#1d4ed8" font-weight="700">변수 선언</text>
+            <line x1="90" y1="25" x2="105" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+            <rect x="110" y="10" width="80" height="30" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="150" y="30" text-anchor="middle" font-size="9" fill="#92400e" font-weight="700">scanf</text>
+            <line x1="195" y1="25" x2="210" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+            <rect x="215" y="10" width="80" height="30" rx="6" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+            <text x="255" y="30" text-anchor="middle" font-size="9" fill="#dc2626" font-weight="700">* 곱셈</text>
+            <line x1="300" y1="25" x2="315" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+            <rect x="320" y="10" width="80" height="30" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="360" y="30" text-anchor="middle" font-size="9" fill="#166534" font-weight="700">printf</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>
+
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="cmt">/* 용돈 계산기 */</span>
+    <span class="kw">int</span> weekly;
+    <span class="kw">int</span> daily, monthly, yearly;
+
+    <span class="fn">printf</span>(<span class="str">"========================\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"     용돈 계산기\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"========================\n"</span>);
+
+    <span class="fn">printf</span>(<span class="str">"주간 용돈(원): "</span>);
+    <span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;weekly);
+
+    daily = weekly / <span class="num">7</span>;
+    monthly = weekly * <span class="num">4</span>;
+    yearly = weekly * <span class="num">52</span>;
+
+    <span class="fn">printf</span>(<span class="str">"------------------------\n"</span>);
+    <span class="fn">printf</span>(<span class="str">"하루 용돈:\t%d원\n"</span>, daily);
+    <span class="fn">printf</span>(<span class="str">"월간 용돈:\t%d원\n"</span>, monthly);
+    <span class="fn">printf</span>(<span class="str">"연간 용돈:\t%d원\n"</span>, yearly);
+    <span class="fn">printf</span>(<span class="str">"========================\n"</span>);
+
+    <span class="kw">return</span> <span class="num">0</span>;
+}</div>
+
+    <div class="output-box">
+========================<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;용돈 계산기<br>
+========================<br>
+주간 용돈(원): 5000<br>
+------------------------<br>
+하루 용돈:&nbsp;&nbsp;&nbsp;&nbsp;714원<br>
+월간 용돈:&nbsp;&nbsp;&nbsp;&nbsp;20000원<br>
+연간 용돈:&nbsp;&nbsp;&nbsp;&nbsp;260000원<br>
+========================
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q1</div>
+            <div class="problem-label">계산 예측하기</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">주급이 10000원일 때 월간 용돈과 연간 용돈은?</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">monthly</span><span class="problem-example-value">____원</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">yearly</span><span class="problem-example-value">____원</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">monthly = 10000 * 4, yearly = 10000 * 52</div>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">monthly = 40000원
+yearly = 520000원</div>
+            </div>
+        </details>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q2</div>
+            <div class="problem-label">코드 작성하기</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">주급이 8000원일 때 3개월 용돈을 계산하는 코드를 작성하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">3개월 용돈: ____원</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">월급 = weekly * 4, 3개월 = 월급 * 3</div>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">int weekly = 8000;
+int threeMonths = weekly * 4 * 3;
+printf("3개월 용돈: %d원\n", threeMonths);
+// 출력: 3개월 용돈: 96000원</div>
+            </div>
+        </details>
+    </div>
+</div>
+
+<!-- 4페이지: 응용 + 요약 -->
+<div class="page">
+    <div class="pj-badge">PROJECT 03</div>
+    <h2>Step 3. 응용하기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/monitor.png" alt="모니터" style="max-width:60px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>저축 목표를 설정하고, 몇 주가 걸리는지 계산하는 프로그램으로 확장합니다.</p>
+
+    <!-- SVG 7: 저축 목표 다이어그램 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 90" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="80" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="230" y="25" text-anchor="middle" font-size="13" fill="#1e3a5f" font-weight="800">저축 목표 계산</text>
+            <rect x="30" y="35" width="120" height="40" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="90" y="52" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">목표: 100,000원</text>
+            <text x="90" y="66" text-anchor="middle" font-size="9" fill="#3b82f6">goal = 100000</text>
+            <text x="175" y="58" text-anchor="middle" font-size="14" fill="#94a3b8">/</text>
+            <rect x="190" y="35" width="120" height="40" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1"/>
+            <text x="250" y="52" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">주급: 5,000원</text>
+            <text x="250" y="66" text-anchor="middle" font-size="9" fill="#f59e0b">weekly = 5000</text>
+            <text x="335" y="58" text-anchor="middle" font-size="14" fill="#94a3b8">=</text>
+            <rect x="350" y="35" width="90" height="40" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1"/>
+            <text x="395" y="52" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">20주</text>
+            <text x="395" y="66" text-anchor="middle" font-size="9" fill="#22c55e">약 5개월</text>
+        </svg>
+    </div>
+
+    <div class="practice">
+        <div class="practice-head">응용 따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">4</div>
+                <div class="practice-desc">저축 목표와 주급을 입력받아 필요한 주 수를 계산해보세요.</div>
+                <div class="code"><span class="kw">int</span> goal, weekly, weeks;
+<span class="fn">printf</span>(<span class="str">"저축 목표(원): "</span>);
+<span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;goal);
+<span class="fn">printf</span>(<span class="str">"주간 용돈(원): "</span>);
+<span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;weekly);
+weeks = goal / weekly;
+<span class="fn">printf</span>(<span class="str">"필요한 기간: %d주\n"</span>, weeks);</div>
+                <div class="practice-result">목표 100000, 주급 5000 시 "20주"</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SVG 8: 용돈 인상 비교 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 80" style="max-width:460px;width:100%">
+            <rect x="10" y="10" width="210" height="60" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="115" y="32" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="800">현재 용돈</text>
+            <text x="115" y="52" text-anchor="middle" font-size="12" fill="#1e3a5f">주 5,000 -> 연 260,000</text>
+            <rect x="240" y="10" width="210" height="60" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="345" y="32" text-anchor="middle" font-size="11" fill="#166534" font-weight="800">인상 후</text>
+            <text x="345" y="52" text-anchor="middle" font-size="12" fill="#1e3a5f">주 7,000 -> 연 364,000</text>
+        </svg>
+    </div>
+
+    <!-- SVG 9: 곱셈 연산 정리 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 60" style="max-width:460px;width:100%">
+            <rect x="10" y="5" width="440" height="50" rx="8" fill="#0f172a"/>
+            <text x="30" y="25" font-family="monospace" font-size="12" fill="#c084fc">int</text>
+            <text x="60" y="25" font-family="monospace" font-size="12" fill="#e2e8f0"> result = a </text>
+            <text x="160" y="25" font-family="monospace" font-size="12" fill="#f59e0b">*</text>
+            <text x="172" y="25" font-family="monospace" font-size="12" fill="#e2e8f0"> b;</text>
+            <text x="30" y="45" font-family="monospace" font-size="11" fill="#64748b">// a 곱하기 b의 결과를 result에 저장</text>
+        </svg>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q3</div>
+            <div class="problem-label">도전: 용돈 인상 비교</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <div class="problem-text">현재 주급과 인상된 주급을 입력받아, 연간 차이를 계산하세요.</div>
+            <div class="problem-example">
+                <div class="problem-example-row"><span class="problem-example-label">입력</span><span class="problem-example-value">현재: 5000, 인상: 7000</span></div>
+                <div class="problem-example-row"><span class="problem-example-label">출력</span><span class="problem-example-value">연간 차이: 104000원</span></div>
+            </div>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="hint-text">각각 52를 곱해서 연간 금액을 구하고, 빼면 됩니다. (7000-5000)*52 = 104000</div>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">int now, raised, diff;
+printf("현재 주급: "); scanf("%d", &amp;now);
+printf("인상 주급: "); scanf("%d", &amp;raised);
+diff = (raised - now) * 52;
+printf("연간 차이: %d원\n", diff);</div>
+            </div>
+        </details>
+    </div>
+
+    <!-- SVG 10: 최종 흐름 -->
+    <div style="text-align:center;margin:16px 0;">
+        <svg viewBox="0 0 460 50" style="max-width:460px;width:100%">
+            <rect x="5" y="10" width="100" height="30" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="55" y="30" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">scanf 입력</text>
+            <line x1="110" y1="25" x2="135" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+            <rect x="140" y="10" width="100" height="30" rx="6" fill="#fefce8" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="190" y="30" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">* / 연산</text>
+            <line x1="245" y1="25" x2="270" y2="25" stroke="#94a3b8" stroke-width="1.5"/>
+            <rect x="275" y="10" width="100" height="30" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="325" y="30" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">printf 출력</text>
+        </svg>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>핵심 요약</h3>
+        <ul>
+            <li><code>*</code>는 곱셈, <code>/</code>는 나눗셈 연산자이다</li>
+            <li>int끼리 나누면 소수점 아래는 버려진다 (정수 나눗셈)</li>
+            <li>하나의 입력으로 여러 계산 결과를 만들 수 있다</li>
+            <li>변수에 계산 결과를 저장하면 나중에 다시 쓸 수 있다</li>
+            <li>괄호 ()로 계산 순서를 지정할 수 있다</li>
+        </ul>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+
+
+
+<script>
+(function(){
+  var KEY = 'cs_ans_' + location.pathname.replace(/[^a-zA-Z0-9]/g,'_');
+  var pagePath = location.pathname;
+  var userId = null;
+  try {
+    userId = window.parent?.localStorage?.getItem('codingssok_user_id')
+      || localStorage.getItem('codingssok_user_id');
+  } catch(e) {}
+
+  function save(){
+    var areas = document.querySelectorAll('textarea');
+    var saved = 0;
+    areas.forEach(function(ta, i){
+      if(ta.value.trim()) {
+        localStorage.setItem(KEY + '_' + i, ta.value);
+        saved++;
+      } else {
+        localStorage.removeItem(KEY + '_' + i);
+      }
+    });
+    if(saved > 0) showSaveIndicator();
+  }
+
+  function load(){
+    var areas = document.querySelectorAll('textarea');
+    var restored = 0;
+    areas.forEach(function(ta, i){
+      var val = localStorage.getItem(KEY + '_' + i);
+      if(val && val.trim()) {
+        ta.value = val;
+        ta.style.borderColor = '#10b981';
+        ta.style.boxShadow = '0 0 0 2px rgba(16,185,129,0.15)';
+        setTimeout(function(){ ta.style.borderColor = ''; ta.style.boxShadow = ''; }, 2000);
+        restored++;
+      }
+    });
+    if(restored > 0) showRestoreIndicator(restored);
+  }
+
+  function saveToDb(){
+    if(!userId) return;
+    var areas = document.querySelectorAll('textarea');
+    var answers = [];
+    areas.forEach(function(ta, i){
+      if(ta.value.trim()) answers.push({ field_index: i, answer_text: ta.value });
+    });
+    if(answers.length === 0) return;
+    fetch('/api/answers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId, page_path: pagePath, answers: answers })
+    }).catch(function(){});
+  }
+
+  function loadFromDb(){
+    if(!userId) return;
+    fetch('/api/answers?user_id=' + encodeURIComponent(userId) + '&page_path=' + encodeURIComponent(pagePath))
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(!d.answers || !d.answers.length) return;
+        var areas = document.querySelectorAll('textarea');
+        d.answers.forEach(function(a){
+          if(areas[a.field_index] && a.answer_text) {
+            areas[a.field_index].value = a.answer_text;
+            localStorage.setItem(KEY + '_' + a.field_index, a.answer_text);
+          }
+        });
+      }).catch(function(){});
+  }
+
+  function showSaveIndicator(){
+    var el = document.getElementById('cs-save-ind');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'cs-save-ind';
+      el.style.cssText = 'position:fixed;bottom:16px;right:16px;padding:6px 14px;border-radius:8px;background:#0f172a;color:#22c55e;font-size:11px;font-weight:700;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+      document.body.appendChild(el);
+    }
+    el.textContent = '\u2713 \uB2F5\uC548 \uC800\uC7A5\uB428'; // ✓ 답안 저장됨
+    el.style.opacity = '1';
+    setTimeout(function(){ el.style.opacity = '0'; }, 1500);
+  }
+
+  function showRestoreIndicator(n){
+    var el = document.getElementById('cs-save-ind');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'cs-save-ind';
+      el.style.cssText = 'position:fixed;bottom:16px;right:16px;padding:6px 14px;border-radius:8px;background:#0f172a;color:#3b82f6;font-size:11px;font-weight:700;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+      document.body.appendChild(el);
+    }
+    el.textContent = '\u21BB ' + n + '\uAC1C \uB2F5\uC548 \uBCF5\uC6D0'; // ↻ n개 답안 복원
+    el.style.color = '#3b82f6';
+    el.style.opacity = '1';
+    setTimeout(function(){ el.style.opacity = '0'; }, 2500);
+  }
+
+  var t = null;
+  document.addEventListener('input', function(e){
+    if(e.target.tagName === 'TEXTAREA'){
+      clearTimeout(t);
+      t = setTimeout(function(){ save(); saveToDb(); }, 300);
+    }
+  });
+  document.addEventListener('change', function(e){
+    if(e.target.tagName === 'TEXTAREA'){ save(); saveToDb(); }
+  });
+  document.addEventListener('focusout', function(e){
+    if(e.target.tagName === 'TEXTAREA'){ save(); saveToDb(); }
+  });
+  window.addEventListener('beforeunload', function(){ save(); saveToDb(); });
+
+  // 즉시 로드
+  load();
+  loadFromDb();
+})();
+</script>
+</body>
+</html>

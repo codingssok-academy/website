@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>L8-PJ06 포인터로 배열 순회(p++ 패턴)</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #e2e8f0; font-family: 'Noto Sans KR', sans-serif; }
+  .page { width: 210mm; min-height: 297mm; background: white; margin: 0 auto 12px; padding: 18mm 20mm 15mm 22mm; position: relative; overflow: hidden; page-break-after: always; counter-increment: pagenum; }
+  .cover-sidebar { position: absolute; left: 0; top: 0; bottom: 0; width: 10px; background: #1e3a5f; }
+  .cover-accent  { position: absolute; left: 10px; top: 0; bottom: 0; width: 7px; background: #0891b2; }
+  .page::after { content: counter(pagenum); position: absolute; bottom: 10mm; right: 15mm; font-size: 10px; color: #94a3b8; font-family: 'JetBrains Mono', monospace; }
+  .page::before { content: 'PJ'; position: absolute; right: 18mm; top: 12mm; font-size: 72px; font-weight: 900; color: rgba(8,145,178,0.04); font-family: 'JetBrains Mono', monospace; pointer-events: none; }
+  .cover-header { display: flex; gap: 6px; align-items: center; margin-bottom: 8mm; }
+  .cover-chapter-badge { background: #0e7490; color: white; font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+  .cover-unit-badge { background: #ecfeff; color: #0891b2; font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 20px; border: 1px solid #a5f3fc; }
+  .cover-title { font-size: 28px; font-weight: 900; color: #0c4a6e; line-height: 1.25; margin-bottom: 4px; }
+  .cover-subtitle { font-size: 13px; color: #0891b2; font-weight: 500; margin-bottom: 6mm; }
+  .cover-desc { font-size: 11.5px; color: #475569; line-height: 1.75; background: #f0f9ff; padding: 10px 14px; border-left: 3px solid #0891b2; border-radius: 0 6px 6px 0; margin-bottom: 6mm; }
+  .cover-meta { display: flex; gap: 8px; flex-wrap: wrap; }
+  .cover-meta span { background: #f1f5f9; border: 1px solid #e2e8f0; padding: 3px 10px; border-radius: 12px; font-size: 10px; color: #64748b; }
+  .section-title { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 800; color: #0c4a6e; margin-bottom: 8px; padding-bottom: 5px; border-bottom: 2px solid #e0f2fe; }
+  .section-title .icon { background: #0891b2; color: white; width: 24px; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 13px; }
+  .code { background: #0f172a; border-radius: 8px; padding: 12px 15px; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; line-height: 1.7; color: #e2e8f0; margin: 8px 0; position: relative; }
+  .code-label { position: absolute; top: 6px; right: 10px; font-size: 9px; color: #475569; font-family: 'JetBrains Mono', monospace; }
+  .code .kw { color: #c084fc; } .code .fn { color: #67e8f9; } .code .str { color: #86efac; }
+  .code .num { color: #7dd3fc; } .code .cmt { color: #64748b; font-style: italic; }
+  .code .ptr { color: #fbbf24; }
+  .output-box { background: #0f172a; border: 1px solid #1e3a5f; border-radius: 8px; padding: 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: #86efac; margin: 8px 0; }
+  .output-box .prompt { color: #64748b; } .output-box .label { color: #7dd3fc; }
+  .info-box { background: #f0f9ff; border-left: 3px solid #0891b2; border-radius: 0 6px 6px 0; padding: 8px 12px; margin: 6px 0; font-size: 11px; color: #0c4a6e; line-height: 1.6; }
+  .challenge { background: linear-gradient(135deg, #ecfeff 0%, #f0f9ff 100%); border: 1.5px solid #67e8f9; border-radius: 10px; padding: 12px 15px; margin: 8px 0; }
+  .challenge h3 { font-size: 13px; font-weight: 800; color: #0891b2; margin-bottom: 8px; }
+  .challenge-item { background: white; border: 1px solid #e0f2fe; border-radius: 6px; padding: 8px 12px; margin: 5px 0; font-size: 11px; }
+  .challenge-item .num { display: inline-block; background: #0891b2; color: white; width: 18px; height: 18px; border-radius: 50%; font-size: 10px; font-weight: 700; text-align: center; line-height: 18px; margin-right: 6px; }
+  .problem { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 14px; margin: 6px 0; }
+  .problem summary { font-size: 11.5px; font-weight: 700; color: #0c4a6e; cursor: pointer; list-style: none; display: flex; align-items: flex-start; gap: 6px; }
+  .problem summary::marker { display: none; }
+  .problem .q-num { background: #0891b2; color: white; width: 20px; height: 20px; border-radius: 50%; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .answer { margin-top: 8px; padding: 8px 10px; background: #ecfeff; border-radius: 6px; font-size: 11px; color: #0c4a6e; line-height: 1.6; border: 1px solid #a5f3fc; }
+  .summary-box { background: linear-gradient(135deg, #0c4a6e 0%, #0e7490 100%); color: white; border-radius: 10px; padding: 12px 15px; margin: 8px 0; }
+  .summary-box h3 { font-size: 13px; font-weight: 800; margin-bottom: 8px; color: #7dd3fc; }
+  .summary-box ul { list-style: none; padding: 0; }
+  .summary-box ul li { font-size: 11px; line-height: 1.75; padding-left: 12px; position: relative; }
+  .summary-box ul li::before { content: '→'; position: absolute; left: 0; color: #67e8f9; }
+  body { counter-reset: pagenum; }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- PAGE 1: 커버 -->
+<div class="page">
+  <div class="cover-sidebar"></div>
+  <div class="cover-accent"></div>
+  <div class="cover-header">
+    <span class="cover-chapter-badge">CHAPTER 8</span>
+    <span class="cover-unit-badge">PROJECT 06</span>
+  </div>
+  <div class="cover-title">포인터로<br>배열 순회</div>
+  <div class="cover-subtitle">Array Traversal with p++ Pattern</div>
+  <div class="cover-desc">
+    배열을 순회하는 데 인덱스(arr[i]) 대신 포인터(p++)를 쓸 수 있다.<br>
+    p++는 포인터를 다음 원소로 이동시킨다. 문자열 처리, 메모리 복사 등 C의 핵심 패턴이다.
+  </div>
+
+  <!-- 커버 SVG: p++ 이동 애니메이션 -->
+  <svg width="100%" height="200" viewBox="0 0 520 200">
+    <defs>
+      <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+        <path d="M0,0 L0,6 L8,3 z" fill="#0891b2"/>
+      </marker>
+    </defs>
+
+    <!-- 배열 메모리 시각화 -->
+    <text x="10" y="18" font-family="Noto Sans KR" font-size="11" fill="#0c4a6e" font-weight="700">p++ 패턴: 포인터가 차례로 이동하며 순회</text>
+
+    <!-- 배열 원소들 (5개) -->
+    <rect x="10"  y="28" width="52" height="44" rx="5" fill="#fef9c3" stroke="#f59e0b" stroke-width="2.5"/>
+    <text x="36" y="42" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#64748b">0x1000</text>
+    <text x="36" y="58" text-anchor="middle" font-family="JetBrains Mono" font-size="18" font-weight="700" fill="#d97706">10</text>
+    <text x="36" y="72" text-anchor="middle" font-family="JetBrains Mono" font-size="8.5" fill="#d97706">arr[0]</text>
+
+    <rect x="68"  y="28" width="52" height="44" rx="5" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5"/>
+    <text x="94" y="42" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#64748b">0x1004</text>
+    <text x="94" y="58" text-anchor="middle" font-family="JetBrains Mono" font-size="18" font-weight="700" fill="#334155">20</text>
+    <text x="94" y="72" text-anchor="middle" font-family="JetBrains Mono" font-size="8.5" fill="#64748b">arr[1]</text>
+
+    <rect x="126" y="28" width="52" height="44" rx="5" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5"/>
+    <text x="152" y="42" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#64748b">0x1008</text>
+    <text x="152" y="58" text-anchor="middle" font-family="JetBrains Mono" font-size="18" font-weight="700" fill="#334155">30</text>
+    <text x="152" y="72" text-anchor="middle" font-family="JetBrains Mono" font-size="8.5" fill="#64748b">arr[2]</text>
+
+    <rect x="184" y="28" width="52" height="44" rx="5" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5"/>
+    <text x="210" y="42" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#64748b">0x100c</text>
+    <text x="210" y="58" text-anchor="middle" font-family="JetBrains Mono" font-size="18" font-weight="700" fill="#334155">40</text>
+    <text x="210" y="72" text-anchor="middle" font-family="JetBrains Mono" font-size="8.5" fill="#64748b">arr[3]</text>
+
+    <rect x="242" y="28" width="52" height="44" rx="5" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5"/>
+    <text x="268" y="42" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#64748b">0x1010</text>
+    <text x="268" y="58" text-anchor="middle" font-family="JetBrains Mono" font-size="18" font-weight="700" fill="#334155">50</text>
+    <text x="268" y="72" text-anchor="middle" font-family="JetBrains Mono" font-size="8.5" fill="#64748b">arr[4]</text>
+
+    <!-- p 현재 위치 화살표 -->
+    <text x="36" y="90" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#f59e0b" font-weight="700">↑ p</text>
+    <text x="36" y="102" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#d97706">*p=10</text>
+
+    <!-- p++ 이동 단계들 -->
+    <path d="M36,108 Q65,120 94,108" stroke="#0891b2" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+    <text x="65" y="125" text-anchor="middle" font-family="JetBrains Mono" font-size="8.5" fill="#0891b2">p++</text>
+
+    <path d="M94,108 Q123,120 152,108" stroke="#0891b2" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+    <text x="123" y="125" text-anchor="middle" font-family="JetBrains Mono" font-size="8.5" fill="#0891b2">p++</text>
+
+    <path d="M152,108 Q181,120 210,108" stroke="#0891b2" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+    <text x="181" y="125" text-anchor="middle" font-family="JetBrains Mono" font-size="8.5" fill="#0891b2">p++</text>
+
+    <path d="M210,108 Q239,120 268,108" stroke="#0891b2" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+    <text x="239" y="125" text-anchor="middle" font-family="JetBrains Mono" font-size="8.5" fill="#0891b2">p++</text>
+
+    <!-- 코드 비교 -->
+    <text x="10" y="148" font-family="Noto Sans KR" font-size="11" fill="#0c4a6e" font-weight="700">두 방법 비교 — 결과 동일!</text>
+
+    <rect x="10" y="156" width="235" height="40" rx="6" fill="#0f172a"/>
+    <text x="18" y="170" font-family="Noto Sans KR" font-size="9" fill="#64748b">인덱스 방식</text>
+    <text x="18" y="184" font-family="JetBrains Mono" font-size="9.5" fill="#c084fc">for</text>
+    <text x="40" y="184" font-family="JetBrains Mono" font-size="9.5" fill="#e2e8f0"> (i=0; i&lt;n; i++) printf("%d ", arr[i]);</text>
+
+    <rect x="255" y="156" width="255" height="40" rx="6" fill="#0f172a"/>
+    <text x="263" y="170" font-family="Noto Sans KR" font-size="9" fill="#0891b2">포인터 방식 (p++)</text>
+    <text x="263" y="184" font-family="JetBrains Mono" font-size="9.5" fill="#c084fc">for</text>
+    <text x="285" y="184" font-family="JetBrains Mono" font-size="9.5" fill="#e2e8f0"> (p=arr; p&lt;arr+n; p++) printf("%d ", *p);</text>
+  </svg>
+
+  <div class="cover-meta">
+    <span>난이도 </span>
+    <span>p++ 순회 패턴</span>
+    <span>배열과 포인터 동등성</span>
+    <span>종료 조건 이해</span>
+  </div>
+</div>
+
+<!-- PAGE 2: 원리 + p++ 동작 -->
+<div class="page">
+  <div class="cover-sidebar"></div>
+  <div class="cover-accent"></div>
+
+  <div style="display:flex;align-items:center;gap:8px;margin:10px 0 6px;padding:6px 12px;background:#eff6ff;border-radius:6px;">
+    <img src="/images/learn/computer-basics/cpu.png" alt="CPU - 포인터와 메모리 처리" style="width:26px;height:26px;object-fit:contain;background:#fff;border-radius:8px;">
+</div>
+<div class="section-title">
+    <div class="icon"></div>
+    p++ 이 실제로 하는 일
+  </div>
+
+  <!-- p++ 주소 계산 SVG -->
+  <svg width="100%" height="120" viewBox="0 0 520 120">
+    <defs>
+      <marker id="arrB" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto">
+        <path d="M0,0 L0,6 L7,3 z" fill="#0891b2"/>
+      </marker>
+    </defs>
+
+    <text x="10" y="16" font-family="Noto Sans KR" font-size="10" fill="#0c4a6e" font-weight="700">int 배열에서 p++: 주소가 4씩 증가 (int = 4바이트)</text>
+
+    <!-- 주소 증가 표 -->
+    <rect x="10" y="24" width="500" height="88" rx="8" fill="#f8fafc" stroke="#e2e8f0"/>
+    <rect x="10" y="24" width="500" height="22" rx="8" fill="#0891b2"/>
+    <rect x="10" y="38" width="500" height="8" fill="#0891b2"/>
+    <text x="80" y="39" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="white" font-weight="700">p의 상태</text>
+    <text x="200" y="39" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="white" font-weight="700">p의 값 (주소)</text>
+    <text x="330" y="39" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="white" font-weight="700">*p (값)</text>
+    <text x="440" y="39" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="white" font-weight="700">조작</text>
+    <line x1="140" y1="46" x2="140" y2="112" stroke="#e2e8f0"/>
+    <line x1="265" y1="46" x2="265" y2="112" stroke="#e2e8f0"/>
+    <line x1="380" y1="46" x2="380" y2="112" stroke="#e2e8f0"/>
+    <line x1="10" y1="62" x2="510" y2="62" stroke="#e2e8f0"/>
+    <line x1="10" y1="78" x2="510" y2="78" stroke="#e2e8f0"/>
+    <line x1="10" y1="94" x2="510" y2="94" stroke="#e2e8f0"/>
+
+    <text x="80" y="57" text-anchor="middle" font-family="JetBrains Mono" font-size="9.5" fill="#d97706">p = arr (초기)</text>
+    <text x="200" y="57" text-anchor="middle" font-family="JetBrains Mono" font-size="9.5" fill="#334155">0x1000</text>
+    <text x="330" y="57" text-anchor="middle" font-family="JetBrains Mono" font-size="9.5" fill="#16a34a">10</text>
+    <text x="440" y="57" text-anchor="middle" font-family="JetBrains Mono" font-size="9.5" fill="#64748b">printf("%d", *p)</text>
+
+    <text x="80" y="73" text-anchor="middle" font-family="JetBrains Mono" font-size="9.5" fill="#d97706">p++ (1회)</text>
+    <text x="200" y="73" text-anchor="middle" font-family="JetBrains Mono" font-size="9.5" fill="#334155">0x1004 (+4)</text>
+    <text x="330" y="73" text-anchor="middle" font-family="JetBrains Mono" font-size="9.5" fill="#16a34a">20</text>
+    <text x="440" y="73" text-anchor="middle" font-family="JetBrains Mono" font-size="9.5" fill="#64748b">printf("%d", *p)</text>
+
+    <text x="80" y="89" text-anchor="middle" font-family="JetBrains Mono" font-size="9.5" fill="#d97706">p++ (2회)</text>
+    <text x="200" y="89" text-anchor="middle" font-family="JetBrains Mono" font-size="9.5" fill="#334155">0x1008 (+4)</text>
+    <text x="330" y="89" text-anchor="middle" font-family="JetBrains Mono" font-size="9.5" fill="#16a34a">30</text>
+    <text x="440" y="89" text-anchor="middle" font-family="JetBrains Mono" font-size="9.5" fill="#64748b">printf("%d", *p)</text>
+
+    <text x="80" y="105" text-anchor="middle" font-family="JetBrains Mono" font-size="9.5" fill="#64748b">... (계속)</text>
+    <text x="200" y="105" text-anchor="middle" font-family="JetBrains Mono" font-size="9.5" fill="#94a3b8">0x100c, 0x1010</text>
+    <text x="330" y="105" text-anchor="middle" font-family="JetBrains Mono" font-size="9.5" fill="#16a34a">40, 50</text>
+  </svg>
+
+  <div class="section-title" style="margin-top:6px">
+    <div class="icon"></div>
+    다양한 순회 패턴 코드
+  </div>
+
+  <div class="code">
+    <span class="code-label">traverse.c</span>
+    <span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span><br>
+    <br>
+    <span class="kw">int</span> <span class="fn">main</span>() {<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">int</span> arr[] = {<span class="num">10</span>, <span class="num">20</span>, <span class="num">30</span>, <span class="num">40</span>, <span class="num">50</span>};<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">int</span> n = <span class="kw">sizeof</span>(arr) / <span class="kw">sizeof</span>(arr[<span class="num">0</span>]);<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">int</span> <span class="ptr">*p</span>;<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="cmt">/* 방법 1: 기본 p++ 순회 */</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">printf</span>(<span class="str">"방법1: "</span>);<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">for</span> (<span class="ptr">p</span> = arr; <span class="ptr">p</span> &lt; arr + n; <span class="ptr">p</span>++)<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">printf</span>(<span class="str">"%d "</span>, <span class="ptr">*p</span>);<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">printf</span>(<span class="str">"\n"</span>);<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="cmt">/* 방법 2: while + p++ */</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">printf</span>(<span class="str">"방법2: "</span>);<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="ptr">p</span> = arr;<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">while</span> (<span class="ptr">p</span> &lt; arr + n)<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">printf</span>(<span class="str">"%d "</span>, <span class="ptr">*p</span>++);<span class="cmt">  // 출력 후 이동</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">printf</span>(<span class="str">"\n"</span>);<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="cmt">/* 방법 3: 역순 순회 (p--) */</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">printf</span>(<span class="str">"역순:  "</span>);<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">for</span> (<span class="ptr">p</span> = arr + n - <span class="num">1</span>; <span class="ptr">p</span> &gt;= arr; <span class="ptr">p</span>--)<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">printf</span>(<span class="str">"%d "</span>, <span class="ptr">*p</span>);<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">printf</span>(<span class="str">"\n"</span>);<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="cmt">/* 방법 4: 포인터로 합산 */</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">int</span> sum = <span class="num">0</span>;<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">for</span> (<span class="ptr">p</span> = arr; <span class="ptr">p</span> &lt; arr + n; <span class="ptr">p</span>++)<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sum += <span class="ptr">*p</span>;<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">printf</span>(<span class="str">"합계: %d\n"</span>, sum);<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">return</span> <span class="num">0</span>;<br>
+    }
+  </div>
+
+  <div class="output-box">
+    <span class="prompt">$ gcc traverse.c -o traverse &amp;&amp; ./traverse</span><br>
+    <span class="label">방법1:</span> 10 20 30 40 50<br>
+    <span class="label">방법2:</span> 10 20 30 40 50<br>
+    <span class="label">역순: </span> 50 40 30 20 10<br>
+    <span class="label">합계:</span> 150
+  </div>
+</div>
+
+<!-- PAGE 3: 함수로 분리 + 종료 조건 -->
+<div class="page">
+  <div class="cover-sidebar"></div>
+  <div class="cover-accent"></div>
+
+  <div style="display:flex;align-items:center;gap:8px;margin:10px 0 6px;padding:6px 12px;background:#eff6ff;border-radius:6px;">
+    <img src="/images/learn/computer-basics/ram.png" alt="RAM - 포인터가 가리키는 메모리" style="width:26px;height:26px;object-fit:contain;background:#fff;border-radius:8px;">
+</div>
+<div class="section-title">
+    <div class="icon"></div>
+    p++ 패턴을 함수로 분리
+  </div>
+
+  <div class="code">
+    <span class="code-label">ptr_func.c</span>
+    <span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span><br>
+    <br>
+    <span class="cmt">/* 포인터 순회로 합계 계산 */</span><br>
+    <span class="kw">int</span> <span class="fn">sum_array</span>(<span class="kw">int</span> <span class="ptr">*p</span>, <span class="kw">int</span> n) {<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">int</span> total = <span class="num">0</span>;<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">int</span> <span class="ptr">*end</span> = <span class="ptr">p</span> + n;  <span class="cmt">// 끝 주소 미리 계산</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">while</span> (<span class="ptr">p</span> &lt; <span class="ptr">end</span>)<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;total += <span class="ptr">*p</span>++;  <span class="cmt">// 값 더하고 이동</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">return</span> total;<br>
+    }<br>
+    <br>
+    <span class="cmt">/* 포인터로 배열 출력 */</span><br>
+    <span class="kw">void</span> <span class="fn">print_array</span>(<span class="kw">int</span> <span class="ptr">*p</span>, <span class="kw">int</span> n) {<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">printf</span>(<span class="str">"[ "</span>);<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">for</span> (<span class="kw">int</span> <span class="ptr">*end</span> = <span class="ptr">p</span> + n; <span class="ptr">p</span> &lt; <span class="ptr">end</span>; <span class="ptr">p</span>++)<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">printf</span>(<span class="str">"%d "</span>, <span class="ptr">*p</span>);<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">printf</span>(<span class="str">"]"</span>);<br>
+    }<br>
+    <br>
+    <span class="cmt">/* 포인터로 배열 값 2배로 */</span><br>
+    <span class="kw">void</span> <span class="fn">double_array</span>(<span class="kw">int</span> <span class="ptr">*p</span>, <span class="kw">int</span> n) {<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; n; i++, <span class="ptr">p</span>++)<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="ptr">*p</span> *= <span class="num">2</span>;<br>
+    }
+  </div>
+
+  <!-- 종료 조건 SVG -->
+  <svg width="100%" height="80" viewBox="0 0 520 80">
+    <rect x="10" y="8" width="500" height="64" rx="8" fill="#f8fafc" stroke="#e2e8f0"/>
+    <text x="260" y="26" text-anchor="middle" font-family="Noto Sans KR" font-size="11" fill="#0c4a6e" font-weight="700">p++ 순회 종료 조건 3가지</text>
+    <rect x="20" y="34" width="145" height="30" rx="6" fill="#ecfeff" stroke="#67e8f9"/>
+    <text x="92" y="44" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#0891b2">p &lt; arr + n</text>
+    <text x="92" y="58" text-anchor="middle" font-family="Noto Sans KR" font-size="9" fill="#0c4a6e">원소 개수 기반</text>
+    <rect x="185" y="34" width="145" height="30" rx="6" fill="#fef9c3" stroke="#fbbf24"/>
+    <text x="257" y="44" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#d97706">*p != '\0'</text>
+    <text x="257" y="58" text-anchor="middle" font-family="Noto Sans KR" font-size="9" fill="#0c4a6e">문자열(null 종료)</text>
+    <rect x="350" y="34" width="150" height="30" rx="6" fill="#fce7f3" stroke="#f9a8d4"/>
+    <text x="425" y="44" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#9d174d">p &lt; end_ptr</text>
+    <text x="425" y="58" text-anchor="middle" font-family="Noto Sans KR" font-size="9" fill="#0c4a6e">끝 포인터 기반</text>
+  </svg>
+
+  <div class="info-box">
+    <strong>주의:</strong> 배열 이름 arr은 상수 포인터이므로 arr++ 불가! 반드시 <code>int *p = arr;</code>처럼 별도 포인터 변수를 만들어야 한다.
+  </div>
+</div>
+
+<!-- PAGE 4: 도전 과제 + 연습문제 -->
+<div class="page">
+  <div class="cover-sidebar"></div>
+  <div class="cover-accent"></div>
+
+  <div style="display:flex;align-items:center;gap:8px;margin:12px 0 6px;padding:7px 12px;background:#fefce8;border-radius:6px;border-left:3px solid #f59e0b;">
+    <img src="/images/learn/c-lang/binary-code.png" alt="이진 코드 - 메모리 주소 표현" style="width:24px;height:24px;object-fit:contain;background:#fff;border-radius:8px;">
+    <span style="font-size:12px;color:#92400e;font-weight:600;">도전 과제</span>
+</div>
+<div class="challenge">
+    <h3>도전 과제</h3>
+    <div class="challenge-item">
+      <span class="num">1</span>
+      <strong>포인터로 배열 복사:</strong> <code>void copy_array(int *src, int *dst, int n)</code> — p++ 패턴으로 src → dst 복사.
+    </div>
+    <div class="challenge-item">
+      <span class="num">2</span>
+      <strong>짝수만 출력:</strong> <code>void print_even(int *p, int n)</code> — 배열을 순회하며 짝수만 출력.
+    </div>
+    <div class="challenge-item">
+      <span class="num">3</span>
+      <strong>두 배열 합산:</strong> <code>void add_arrays(int *a, int *b, int *result, int n)</code> — a[i]+b[i]를 result[i]에 저장.
+    </div>
+  </div>
+
+  <div class="section-title" style="margin-top:10px">
+    <div class="icon"></div>
+    연습문제
+  </div>
+
+  <details class="problem">
+    <summary><span class="q-num">1</span> <code>p++</code>과 <code>(*p)++</code>의 차이는?</summary>
+    <div class="answer">p++: 포인터 p가 다음 원소 주소로 이동. *p의 값은 변하지 않음.<br>
+    (*p)++: p가 가리키는 값을 1 증가. 포인터 p의 위치는 변하지 않음.<br>
+    *p++ = *(p++): 현재 *p를 읽고, p를 다음으로 이동.</div>
+  </details>
+
+  <details class="problem">
+    <summary><span class="q-num">2</span> <code>for (p = arr; p &lt; arr + n; p++)</code>에서 종료 조건 <code>p &lt; arr + n</code>이 의미하는 것은?</summary>
+    <div class="answer">arr + n은 배열의 마지막 원소 다음 주소(경계 밖). p가 이 주소에 도달하면 순회 종료. 예: n=5이면 arr+5 = &amp;arr[5]로, 이 주소에는 접근하지 않는다.</div>
+  </details>
+
+  <details class="problem">
+    <summary><span class="q-num">3</span> <code>while (*p != '\0') p++;</code>는 무엇을 하는가?</summary>
+    <div class="answer">문자열의 끝(null 문자 '\0')을 찾는 코드. 문자열 길이 계산 함수(strlen)의 핵심 원리. p는 문자열 끝에 위치하게 되므로 p - start가 문자열 길이다.</div>
+  </details>
+
+  <details class="problem">
+    <summary><span class="q-num">4</span> 역순 순회에서 <code>p = arr + n - 1</code>로 초기화하는 이유는?</summary>
+    <div class="answer">n=5이면 arr+n = arr[5](경계 밖). 마지막 원소는 arr[4] = arr + 4 = arr + n - 1. 역순 시작점이므로 -1을 빼야 한다.</div>
+  </details>
+
+  <details class="problem">
+    <summary><span class="q-num">5</span> <code>int *p = arr;</code> 대신 <code>arr++</code>를 직접 쓰면 왜 오류가 나는가?</summary>
+    <div class="answer">배열 이름 arr은 첫 원소의 주소를 나타내는 상수 포인터다. 상수이므로 값(주소)을 변경할 수 없다. arr++는 arr의 값을 바꾸려는 시도이므로 컴파일 오류가 발생한다. 별도 포인터 변수 p에 복사해야 한다.</div>
+  </details>
+
+  <div class="summary-box">
+    <h3>이번 프로젝트 핵심</h3>
+    <ul>
+      <li>p++는 다음 원소 주소로 이동 (int면 +4바이트)</li>
+      <li>for (p=arr; p&lt;arr+n; p++) 패턴이 기본형</li>
+      <li>배열 이름은 상수라 arr++ 불가 — int *p = arr; 로 복사</li>
+      <li>*p++는 값을 읽고 나서 이동하는 단축 표현</li>
+      <li>문자열 순회는 *p != '\0' 조건 사용</li>
+    </ul>
+  </div>
+
+    <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:20px;padding-top:10px;border-top:1px solid #f1f5f9;">
+        <img src="/images/learn/c-lang/code-screen.png" alt="코드 화면 - 포인터 코드 예시" style="width:22px;height:22px;object-fit:contain;opacity:0.6;background:#fff;border-radius:8px;">
+        <span style="font-size:10px;color:#cbd5e1;">코딩쏙 C언어</span>
+    </div>
+</div>
+
+
+<div style="display:flex;align-items:center;gap:10px;margin:16px 0;padding:10px 16px;background:#f8fafc;border-radius:8px;border:1px solid #e5e7eb;">
+    <img src="/images/learn/computer-basics/cpu.png" alt="CPU - 포인터와 메모리 처리" style="width:32px;height:32px;object-fit:contain;background:#fff;border-radius:8px;">
+</div>
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;"><button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>

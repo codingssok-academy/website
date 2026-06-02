@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>코딩쏙 — 프로젝트: 음악 플레이리스트 관리</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #e8eaed; }
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    padding: 18mm 20mm 15mm 22mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: relative;
+    page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+body { counter-reset: pagenum; }
+.page { counter-increment: pagenum; }
+.page::after {
+    content: counter(pagenum);
+    position: absolute; bottom: 10mm; right: 16mm;
+    font-size: 10px; color: #94a3b8; font-weight: 600;
+}
+.cover { display: flex; min-height: 297mm; }
+.cover-sidebar { width: 10px; background: #1e3a5f; }
+.cover-accent { width: 7px; background: #e6a817; }
+.cover-body { flex: 1; padding: 60px 50px; position: relative; }
+.cover-watermark {
+    position: absolute; top: -10px; right: -15px;
+    font-size: 200px; font-weight: 900; color: rgba(180,195,212,0.3);
+    line-height: 1; pointer-events: none;
+}
+.cover-label { font-size: 14px; font-weight: 500; color: #2d5a8e; letter-spacing: 2px; margin-bottom: 4px; }
+.cover-title { font-size: 36px; font-weight: 900; color: #1e3a5f; line-height: 1.2; margin-bottom: 10px; }
+.cover-sub { font-size: 15px; color: #6b7280; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+.cover-goals { margin-top: 20px; }
+.cover-goals h3 { font-size: 17px; font-weight: 800; color: #1e3a5f; margin-bottom: 14px; }
+.cover-goals li { font-size: 14px; color: #374151; line-height: 1.8; padding: 4px 0 4px 20px; position: relative; }
+.cover-goals li::before { content: '•'; position: absolute; left: 4px; color: #3b82f6; font-weight: 900; }
+h2 { font-size: 20px; font-weight: 800; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+h3 { font-size: 16px; font-weight: 700; color: #1e3a5f; margin: 18px 0 10px; }
+p { font-size: 15px; color: #374151; line-height: 1.75; margin: 0 0 12px; }
+p code, li code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #2563eb; font-weight: 600;
+}
+ul, ol { margin: 0 0 12px 20px; }
+li { font-size: 14px; color: #374151; line-height: 1.8; }
+.code {
+    background: #0f172a; border-radius: 8px; padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: #e2e8f0; line-height: 1.85; margin: 14px 0; overflow-x: auto; white-space: pre-wrap;
+}
+.code .kw { color: #c084fc; }
+.code .fn { color: #67e8f9; }
+.code .str { color: #86efac; }
+.code .num { color: #7dd3fc; }
+.code .cmt { color: #64748b; }
+.code .dec { color: #f9a8d4; }
+.practice { margin: 20px 0; border-left: 4px solid #3b82f6; background: #fff; border-radius: 0 10px 10px 0; }
+.practice-head { padding: 10px 18px; font-size: 14px; font-weight: 800; color: #1d4ed8; display: flex; align-items: center; gap: 6px; }
+.practice-head::before { content: ''; width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; display: inline-block; }
+.practice-body { padding: 0 18px 14px; }
+.practice-item { margin-bottom: 16px; }
+.practice-num { font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 4px; }
+.practice-desc { font-size: 14px; color: #475569; margin-bottom: 8px; }
+.practice-result { font-size: 12px; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.practice-result::before { content: '→'; color: #94a3b8; font-weight: 700; }
+.problem { margin: 20px 0; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.problem-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: #fafbfc; border-bottom: 1.5px solid #e2e8f0; border-radius: 12px 12px 0 0; }
+.problem-badge { width: 30px; height: 30px; background: linear-gradient(135deg,#f59e0b,#eab308); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.problem-label { font-size: 14px; font-weight: 700; color: #92400e; flex: 1; }
+.problem-diff { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.problem-diff.easy { background: #dcfce7; color: #166534; }
+.problem-diff.medium { background: #fef3c7; color: #92400e; }
+.problem-diff.hard { background: #fee2e2; color: #991b1b; }
+.problem-body { padding: 14px 18px; }
+.problem-text { font-size: 14px; color: #334155; line-height: 1.7; margin-bottom: 10px; }
+.problem-toggle { border-top: 1px solid #f1f5f9; }
+.problem-toggle summary { padding: 9px 18px; font-size: 12px; font-weight: 600; color: #94a3b8; cursor: pointer; list-style: none; }
+.problem-toggle summary:hover { color: #64748b; }
+.problem-toggle-content { padding: 0 18px 12px; }
+.hint-text { background: #fffbeb; padding: 8px 12px; border-radius: 6px; color: #92400e; font-size: 13px; }
+.answer-code { background: #0f172a; border-radius: 6px; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e2e8f0; line-height: 1.7; white-space: pre-wrap; }
+.summary { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin: 16px 0; }
+.summary h3 { font-size: 15px; font-weight: 800; color: #1e3a5f; margin-bottom: 10px; }
+.summary li { font-size: 14px; color: #334155; line-height: 1.8; padding: 2px 0; }
+.output-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #334155; line-height: 1.7; margin: 10px 0; white-space: pre-wrap; }
+@media print { body { background: #fff; } .page { box-shadow: none; margin: 0; } }
+  img { background: #ffffff !important; }
+</style>
+</head>
+<body>
+
+<!-- 1페이지: 표지 -->
+<div class="page cover">
+    <div class="cover-sidebar"></div>
+    <div class="cover-accent"></div>
+    <div class="cover-body">
+        <div class="cover-watermark">PL</div>
+        <div class="cover-label">L3 — Project</div>
+        <h1 class="cover-title">프로젝트:<br>음악 플레이리스트<br>관리</h1>
+        <p class="cover-sub">Song 클래스, Playlist 클래스 설계 — 추가/삭제/셔플/검색, JSON 저장, 재생시간 합계까지 완성하는 실전 OOP 프로젝트.</p>
+
+        <div style="margin:24px 0;">
+            <svg viewBox="0 0 500 150" style="max-width:500px;width:100%">
+                <defs>
+                    <marker id="arwPL" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                    </marker>
+                </defs>
+                <!-- Song 클래스 -->
+                <rect x="5" y="10" width="140" height="80" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <rect x="5" y="10" width="140" height="28" rx="8" fill="#3b82f6"/>
+                <text x="75" y="29" text-anchor="middle" font-size="12" fill="#fff" font-weight="700">class Song</text>
+                <text x="20" y="54" font-size="9" fill="#374151">title, artist, duration</text>
+                <text x="20" y="68" font-size="9" fill="#64748b">__str__(), to_dict()</text>
+                <text x="20" y="80" font-size="9" fill="#64748b">from_dict()</text>
+                <line x1="148" y1="50" x2="168" y2="50" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwPL)"/>
+                <!-- Playlist 클래스 -->
+                <rect x="170" y="10" width="160" height="80" rx="8" fill="#1e3a5f"/>
+                <text x="250" y="32" text-anchor="middle" font-size="12" fill="#fff" font-weight="700">class Playlist</text>
+                <text x="185" y="52" font-size="9" fill="#93c5fd">name, songs(Song 리스트)</text>
+                <text x="185" y="66" font-size="9" fill="#93c5fd">add() / remove() / search()</text>
+                <text x="185" y="80" font-size="9" fill="#93c5fd">shuffle() / total_time()</text>
+                <line x1="333" y1="50" x2="353" y2="50" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwPL)"/>
+                <!-- JSON 저장 -->
+                <rect x="355" y="10" width="140" height="80" rx="8" fill="#fef9c3" stroke="#f59e0b" stroke-width="1.5"/>
+                <text x="425" y="32" text-anchor="middle" font-size="12" fill="#92400e" font-weight="700">JSON 저장</text>
+                <text x="370" y="52" font-size="9" fill="#374151">json.dump() → 파일 저장</text>
+                <text x="370" y="66" font-size="9" fill="#374151">json.load() → 파일 읽기</text>
+                <text x="370" y="80" font-size="9" fill="#64748b">to_dict() 활용</text>
+                <!-- 기능 요약 -->
+                <rect x="60" y="102" width="380" height="40" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+                <text x="250" y="118" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">핵심 기능</text>
+                <text x="250" y="134" text-anchor="middle" font-size="9" fill="#64748b">추가 · 삭제 · 검색 · 셔플 · 재생시간 합계 · JSON 저장/불러오기</text>
+            </svg>
+        </div>
+
+        <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/database.png" alt="데이터" style="max-width:100px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="cover-goals">
+            <h3>이 프로젝트에서 만드는 것</h3>
+            <ul>
+                <li><code>Song</code> 클래스에 제목, 아티스트, 재생시간 속성을 정의할 수 있습니다.</li>
+                <li><code>Playlist</code> 클래스로 곡 추가/삭제/검색/셔플 기능을 구현할 수 있습니다.</li>
+                <li><code>sum()</code>으로 전체 재생시간 합계를 초 단위로 계산할 수 있습니다.</li>
+                <li><code>json.dump()</code>와 <code>json.load()</code>로 플레이리스트를 파일에 저장/복원합니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- 2페이지: Song 클래스 -->
+<div class="page">
+    <h2>Step 1 — Song 클래스 설계</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/folder.png" alt="구조" style="max-width:90px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p><code>Song</code> 클래스는 노래 한 곡의 정보를 담습니다. 제목(<code>title</code>), 아티스트(<code>artist</code>), 재생시간(<code>duration</code>, 초 단위)을 속성으로 갖습니다.</p>
+
+    <div style="text-align:center;margin:14px 0;">
+        <svg viewBox="0 0 480 90" style="max-width:480px;width:100%">
+            <rect x="5" y="5" width="230" height="80" rx="8" fill="#f8fafc" stroke="#3b82f6" stroke-width="1.5"/>
+            <rect x="5" y="5" width="230" height="26" rx="8" fill="#3b82f6"/>
+            <text x="120" y="23" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">class Song — 속성</text>
+            <text x="20" y="46" font-size="9" fill="#374151" font-weight="700">title</text>
+            <text x="60" y="46" font-size="9" fill="#64748b">문자열 — 곡 제목</text>
+            <text x="20" y="60" font-size="9" fill="#374151" font-weight="700">artist</text>
+            <text x="60" y="60" font-size="9" fill="#64748b">문자열 — 아티스트명</text>
+            <text x="20" y="74" font-size="9" fill="#374151" font-weight="700">duration</text>
+            <text x="70" y="74" font-size="9" fill="#64748b">정수 — 재생시간(초)</text>
+            <rect x="255" y="5" width="220" height="80" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <rect x="255" y="5" width="220" height="26" rx="8" fill="#1e3a5f"/>
+            <text x="365" y="23" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">class Song — 메서드</text>
+            <text x="270" y="46" font-size="9" fill="#374151" font-weight="700">__str__(self)</text>
+            <text x="270" y="60" font-size="9" fill="#64748b">제목 - 아티스트 (분:초) 형태</text>
+            <text x="270" y="74" font-size="9" fill="#374151" font-weight="700">to_dict() / from_dict()</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># Step 1: Song 클래스</span>
+<span class="kw">class</span> <span class="fn">Song</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="dec">self</span>, title, artist, duration):
+        <span class="dec">self</span>.title    = title     <span class="cmt"># 곡 제목</span>
+        <span class="dec">self</span>.artist   = artist    <span class="cmt"># 아티스트</span>
+        <span class="dec">self</span>.duration = duration  <span class="cmt"># 재생시간(초)</span>
+
+    <span class="kw">def</span> <span class="fn">__str__</span>(<span class="dec">self</span>):
+        mins = <span class="dec">self</span>.duration // <span class="num">60</span>
+        secs = <span class="dec">self</span>.duration %  <span class="num">60</span>
+        <span class="kw">return</span> <span class="str">f"{self.title} - {self.artist} ({mins}:{secs:02d})"</span>
+
+    <span class="kw">def</span> <span class="fn">to_dict</span>(<span class="dec">self</span>):
+        <span class="kw">return</span> {
+            <span class="str">"title"</span>:    <span class="dec">self</span>.title,
+            <span class="str">"artist"</span>:   <span class="dec">self</span>.artist,
+            <span class="str">"duration"</span>: <span class="dec">self</span>.duration,
+        }
+
+    <span class="kw">@classmethod</span>
+    <span class="kw">def</span> <span class="fn">from_dict</span>(cls, d):
+        <span class="kw">return</span> <span class="fn">cls</span>(d[<span class="str">"title"</span>], d[<span class="str">"artist"</span>], d[<span class="str">"duration"</span>])
+
+<span class="cmt"># 테스트</span>
+s = <span class="fn">Song</span>(<span class="str">"Dynamite"</span>, <span class="str">"BTS"</span>, <span class="num">199</span>)
+<span class="fn">print</span>(s)  <span class="cmt"># Dynamite - BTS (3:19)</span></div>
+
+    <div style="text-align:center;margin:10px 0;">
+        <svg viewBox="0 0 480 50" style="max-width:480px;width:100%">
+            <rect x="5" y="5" width="470" height="40" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="20" y="22" font-size="10" fill="#1e3a5f" font-weight="700">분:초 변환 공식</text>
+            <text x="20" y="36" font-size="9" fill="#64748b" font-family="JetBrains Mono, monospace">duration=199  →  199 // 60 = 3분  199 % 60 = 19초  →  "3:19"</text>
+        </svg>
+    </div>
+
+    <div style="text-align:center;margin:10px 0;">
+        <svg viewBox="0 0 480 50" style="max-width:480px;width:100%">
+            <rect x="5" y="5" width="470" height="40" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="20" y="22" font-size="10" fill="#1e3a5f" font-weight="700">classmethod 패턴</text>
+            <text x="20" y="36" font-size="9" fill="#64748b" font-family="JetBrains Mono, monospace">@classmethod  def from_dict(cls, d): return cls(d["title"], d["artist"], d["duration"])</text>
+        </svg>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/gear.png" alt="처리" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">STEP 01</div>
+                <div class="practice-desc">Song 객체 3개를 만들고 각각 <code>print()</code>로 출력해보세요. (제목, 아티스트, 재생시간 자유롭게)</div>
+                <div class="practice-result">제목 - 아티스트 (분:초) 형태로 출력됩니다.</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">STEP 02</div>
+                <div class="practice-desc"><code>to_dict()</code>를 호출해서 딕셔너리로 변환하고, <code>from_dict()</code>로 다시 Song 객체를 복원해보세요.</div>
+                <div class="practice-result">d = s.to_dict() → Song.from_dict(d) 사이클 확인.</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">STEP 03</div>
+                <div class="practice-desc">Song 클래스에 <code>is_long()</code> 메서드를 추가하세요. duration이 240초(4분) 이상이면 True를 반환합니다.</div>
+                <div class="practice-result">s.is_long() → True/False 출력.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3페이지: Playlist 클래스 -->
+<div class="page">
+    <h2>Step 2 — Playlist 클래스: 추가/삭제/검색/셔플</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/computer-basics/hard-drive.png" alt="저장소" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p><code>Playlist</code> 클래스는 <code>Song</code> 객체들의 리스트를 관리합니다. <code>random.shuffle()</code>로 곡 순서를 섞고, 제목 키워드로 곡을 검색할 수 있습니다.</p>
+
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 480 70" style="max-width:480px;width:100%">
+            <rect x="5" y="5" width="470" height="60" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="20" y="24" font-size="10" fill="#1e3a5f" font-weight="700">Playlist 메서드 정리</text>
+            <rect x="20" y="32" width="70" height="22" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+            <text x="55" y="47" text-anchor="middle" font-size="8" fill="#1d4ed8" font-weight="700">add(song)</text>
+            <rect x="100" y="32" width="80" height="22" rx="4" fill="#fff1f2" stroke="#f43f5e" stroke-width="1"/>
+            <text x="140" y="47" text-anchor="middle" font-size="8" fill="#be123c" font-weight="700">remove(title)</text>
+            <rect x="190" y="32" width="80" height="22" rx="4" fill="#fef9c3" stroke="#f59e0b" stroke-width="1"/>
+            <text x="230" y="47" text-anchor="middle" font-size="8" fill="#92400e" font-weight="700">search(keyword)</text>
+            <rect x="280" y="32" width="70" height="22" rx="4" fill="#f0fdf4" stroke="#22c55e" stroke-width="1"/>
+            <text x="315" y="47" text-anchor="middle" font-size="8" fill="#166534" font-weight="700">shuffle()</text>
+            <rect x="360" y="32" width="100" height="22" rx="4" fill="#e0e7ff" stroke="#6366f1" stroke-width="1"/>
+            <text x="410" y="47" text-anchor="middle" font-size="8" fill="#3730a3" font-weight="700">total_time()</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># Step 2: Playlist 클래스</span>
+<span class="kw">import</span> random
+
+<span class="kw">class</span> <span class="fn">Playlist</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="dec">self</span>, name):
+        <span class="dec">self</span>.name  = name
+        <span class="dec">self</span>.songs = []         <span class="cmt"># Song 객체 리스트</span>
+
+    <span class="kw">def</span> <span class="fn">add</span>(<span class="dec">self</span>, song):
+        <span class="dec">self</span>.songs.<span class="fn">append</span>(song)
+        <span class="fn">print</span>(<span class="str">f"추가: {song.title}"</span>)
+
+    <span class="kw">def</span> <span class="fn">remove</span>(<span class="dec">self</span>, title):
+        <span class="kw">for</span> i, s <span class="kw">in</span> <span class="fn">enumerate</span>(<span class="dec">self</span>.songs):
+            <span class="kw">if</span> s.title == title:
+                <span class="dec">self</span>.songs.<span class="fn">pop</span>(i)
+                <span class="fn">print</span>(<span class="str">f"삭제: {title}"</span>)
+                <span class="kw">return</span>
+        <span class="fn">print</span>(<span class="str">f"'{title}' 곡을 찾을 수 없습니다."</span>)
+
+    <span class="kw">def</span> <span class="fn">search</span>(<span class="dec">self</span>, keyword):
+        results = [s <span class="kw">for</span> s <span class="kw">in</span> <span class="dec">self</span>.songs <span class="kw">if</span> keyword.<span class="fn">lower</span>() <span class="kw">in</span> s.title.<span class="fn">lower</span>()]
+        <span class="kw">return</span> results
+
+    <span class="kw">def</span> <span class="fn">shuffle</span>(<span class="dec">self</span>):
+        random.<span class="fn">shuffle</span>(<span class="dec">self</span>.songs)
+        <span class="fn">print</span>(<span class="str">"셔플 완료!"</span>)
+
+    <span class="kw">def</span> <span class="fn">total_time</span>(<span class="dec">self</span>):
+        total = <span class="fn">sum</span>(s.duration <span class="kw">for</span> s <span class="kw">in</span> <span class="dec">self</span>.songs)
+        mins  = total // <span class="num">60</span>
+        secs  = total %  <span class="num">60</span>
+        <span class="kw">return</span> <span class="str">f"{mins}분 {secs}초"</span>
+
+    <span class="kw">def</span> <span class="fn">show</span>(<span class="dec">self</span>):
+        <span class="fn">print</span>(<span class="str">f"--- {self.name} ({len(self.songs)}곡) ---"</span>)
+        <span class="kw">for</span> i, s <span class="kw">in</span> <span class="fn">enumerate</span>(<span class="dec">self</span>.songs, <span class="num">1</span>):
+            <span class="fn">print</span>(<span class="str">f"  {i}. {s}"</span>)
+        <span class="fn">print</span>(<span class="str">f"  총 재생시간: {self.total_time()}"</span>)</div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q1</div>
+            <div class="problem-label">Playlist 사용 실습</div>
+            <span class="problem-diff easy">쉬움</span>
+        </div>
+        <div class="problem-body">
+            <p class="problem-text">Playlist 객체를 만들고 Song을 5곡 추가한 뒤 <code>show()</code>로 출력하고, <code>shuffle()</code>로 섞은 뒤 다시 출력하세요. 순서가 바뀌었나요?</p>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <p class="hint-text">pl = Playlist("내 플리") 생성 후 pl.add(Song(...)) 5회 반복하세요.</p>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">pl = Playlist("내 플리")
+pl.add(Song("Dynamite", "BTS", 199))
+pl.add(Song("Blinding Lights", "Weeknd", 200))
+pl.show()
+pl.shuffle()
+pl.show()</div>
+            </div>
+        </details>
+    </div>
+</div>
+
+<!-- 4페이지: JSON 저장 -->
+<div class="page">
+    <h2>Step 3 — JSON으로 플레이리스트 저장/불러오기</h2>
+<div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/code-screen.png" alt="코드" style="max-width:70px;height:auto;background:#fff;border-radius:8px;">
+</div>
+    <p>플레이리스트를 <code>json.dump()</code>로 파일에 저장하고 <code>json.load()</code>로 다시 불러옵니다. Song 클래스의 <code>to_dict()</code>와 <code>from_dict()</code>를 활용합니다.</p>
+
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 480 80" style="max-width:480px;width:100%">
+            <defs>
+                <marker id="arwJS" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+                </marker>
+            </defs>
+            <rect x="5" y="15" width="110" height="50" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="60" y="36" text-anchor="middle" font-size="10" fill="#1d4ed8" font-weight="700">Playlist 객체</text>
+            <text x="60" y="52" text-anchor="middle" font-size="9" fill="#374151">songs 리스트</text>
+            <line x1="118" y1="40" x2="138" y2="40" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwJS)"/>
+            <text x="128" y="34" font-size="7" fill="#64748b" text-anchor="middle">to_dict()</text>
+            <rect x="140" y="15" width="110" height="50" rx="8" fill="#1e3a5f"/>
+            <text x="195" y="36" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">딕셔너리 리스트</text>
+            <text x="195" y="52" text-anchor="middle" font-size="9" fill="#93c5fd">[{}, {}, ...]</text>
+            <line x1="253" y1="40" x2="273" y2="40" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwJS)"/>
+            <text x="263" y="34" font-size="7" fill="#64748b" text-anchor="middle">json.dump</text>
+            <rect x="275" y="15" width="100" height="50" rx="8" fill="#fef9c3" stroke="#f59e0b" stroke-width="1.5"/>
+            <text x="325" y="36" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700">playlist.json</text>
+            <text x="325" y="52" text-anchor="middle" font-size="9" fill="#374151">파일 저장 완료</text>
+            <line x1="378" y1="40" x2="398" y2="40" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arwJS)"/>
+            <text x="388" y="34" font-size="7" fill="#64748b" text-anchor="middle">json.load</text>
+            <rect x="400" y="15" width="75" height="50" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="437" y="36" text-anchor="middle" font-size="10" fill="#166534" font-weight="700">복원됨</text>
+            <text x="437" y="52" text-anchor="middle" font-size="9" fill="#374151">from_dict</text>
+        </svg>
+    </div>
+
+    <div style="text-align:center;margin:10px 0;">
+        <svg viewBox="0 0 480 50" style="max-width:480px;width:100%">
+            <rect x="5" y="5" width="470" height="40" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="20" y="22" font-size="10" fill="#1e3a5f" font-weight="700">json.dump / json.load 차이</text>
+            <text x="20" y="36" font-size="9" fill="#64748b">json.dump(data, f) — 객체 → 파일 저장  /  json.load(f) — 파일 → 객체 복원</text>
+        </svg>
+    </div>
+
+    <div class="code"><span class="cmt"># Step 3: JSON 저장/불러오기</span>
+<span class="kw">import</span> json
+
+<span class="kw">def</span> <span class="fn">save_playlist</span>(playlist, filename):
+    data = {
+        <span class="str">"name"</span>:  playlist.name,
+        <span class="str">"songs"</span>: [s.<span class="fn">to_dict</span>() <span class="kw">for</span> s <span class="kw">in</span> playlist.songs],
+    }
+    <span class="kw">with</span> <span class="fn">open</span>(filename, <span class="str">"w"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+        json.<span class="fn">dump</span>(data, f, ensure_ascii=<span class="kw">False</span>, indent=<span class="num">2</span>)
+    <span class="fn">print</span>(<span class="str">f"저장 완료: {filename}"</span>)
+
+<span class="kw">def</span> <span class="fn">load_playlist</span>(filename):
+    <span class="kw">with</span> <span class="fn">open</span>(filename, <span class="str">"r"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+        data = json.<span class="fn">load</span>(f)
+    pl = <span class="fn">Playlist</span>(data[<span class="str">"name"</span>])
+    <span class="kw">for</span> d <span class="kw">in</span> data[<span class="str">"songs"</span>]:
+        pl.songs.<span class="fn">append</span>(Song.<span class="fn">from_dict</span>(d))
+    <span class="fn">print</span>(<span class="str">f"불러오기 완료: {len(pl.songs)}곡"</span>)
+    <span class="kw">return</span> pl</div>
+
+    <div class="practice">
+        <div class="practice-head">따라해보세요</div>
+        <div class="practice-body">
+            <div class="practice-item">
+                <div class="practice-num">STEP 01</div>
+                <div class="practice-desc">Playlist에 Song 3곡을 추가하고 <code>save_playlist(pl, "my_playlist.json")</code>로 저장한 뒤 파일 내용을 메모장으로 확인하세요.</div>
+                <div class="practice-result">JSON 파일에 곡 정보가 저장됩니다.</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">STEP 02</div>
+                <div class="practice-desc"><code>load_playlist("my_playlist.json")</code>으로 불러온 뒤 <code>show()</code>로 출력해보세요.</div>
+                <div class="practice-result">저장했던 곡들이 그대로 복원됩니다.</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-num">STEP 03</div>
+                <div class="practice-desc"><code>search("love")</code>를 호출해서 제목에 "love"가 포함된 곡들을 찾아보세요. 결과를 for 루프로 출력하세요.</div>
+                <div class="practice-result">검색어가 포함된 Song 객체 리스트가 반환됩니다.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q2</div>
+            <div class="problem-label">재생시간 기준 정렬</div>
+            <span class="problem-diff medium">보통</span>
+        </div>
+        <div class="problem-body">
+            <p class="problem-text">Playlist 클래스에 <code>sort_by_duration()</code> 메서드를 추가하세요. <code>songs</code> 리스트를 재생시간 기준 오름차순으로 정렬합니다. (<code>list.sort(key=...)</code> 활용)</p>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <p class="hint-text">self.songs.sort(key=lambda s: s.duration) 패턴을 사용하세요.</p>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">def sort_by_duration(self):
+    self.songs.sort(key=lambda s: s.duration)
+    print("재생시간 오름차순 정렬 완료")</div>
+            </div>
+        </details>
+    </div>
+</div>
+
+<!-- 5페이지: 완성 + 연습문제 -->
+<div class="page">
+    <h2>Step 4 — 완성: 플레이리스트 앱 실행</h2>
+    <p>지금까지 만든 클래스를 활용해 메뉴 기반 플레이리스트 앱을 완성합니다.</p>
+
+    <div class="code"><span class="cmt"># 완성 — 메뉴 기반 실행</span>
+<span class="kw">def</span> <span class="fn">run_app</span>():
+    pl = <span class="fn">Playlist</span>(<span class="str">"내 플레이리스트"</span>)
+
+    <span class="kw">while True</span>:
+        <span class="fn">print</span>(<span class="str">"\n1.추가  2.삭제  3.검색  4.셔플  5.보기  6.저장  7.불러오기  0.종료"</span>)
+        choice = <span class="fn">input</span>(<span class="str">"선택: "</span>).<span class="fn">strip</span>()
+
+        <span class="kw">if</span> choice == <span class="str">"1"</span>:
+            t = <span class="fn">input</span>(<span class="str">"제목: "</span>)
+            a = <span class="fn">input</span>(<span class="str">"아티스트: "</span>)
+            d = <span class="fn">int</span>(<span class="fn">input</span>(<span class="str">"재생시간(초): "</span>))
+            pl.<span class="fn">add</span>(<span class="fn">Song</span>(t, a, d))
+        <span class="kw">elif</span> choice == <span class="str">"2"</span>:
+            t = <span class="fn">input</span>(<span class="str">"삭제할 곡 제목: "</span>)
+            pl.<span class="fn">remove</span>(t)
+        <span class="kw">elif</span> choice == <span class="str">"3"</span>:
+            kw = <span class="fn">input</span>(<span class="str">"검색어: "</span>)
+            results = pl.<span class="fn">search</span>(kw)
+            <span class="fn">print</span>(<span class="str">f"검색 결과: {len(results)}곡"</span>)
+            <span class="kw">for</span> s <span class="kw">in</span> results: <span class="fn">print</span>(<span class="str">f"  - {s}"</span>)
+        <span class="kw">elif</span> choice == <span class="str">"4"</span>: pl.<span class="fn">shuffle</span>()
+        <span class="kw">elif</span> choice == <span class="str">"5"</span>: pl.<span class="fn">show</span>()
+        <span class="kw">elif</span> choice == <span class="str">"6"</span>: <span class="fn">save_playlist</span>(pl, <span class="str">"playlist.json"</span>)
+        <span class="kw">elif</span> choice == <span class="str">"7"</span>: pl = <span class="fn">load_playlist</span>(<span class="str">"playlist.json"</span>)
+        <span class="kw">elif</span> choice == <span class="str">"0"</span>: <span class="kw">break</span>
+
+<span class="fn">run_app</span>()</div>
+
+    <div style="text-align:center;margin:12px 0;">
+        <svg viewBox="0 0 480 50" style="max-width:480px;width:100%">
+            <rect x="5" y="5" width="470" height="40" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="20" y="22" font-size="10" fill="#1e3a5f" font-weight="700">sum() 제너레이터 표현식 패턴</text>
+            <text x="20" y="36" font-size="9" fill="#64748b" font-family="JetBrains Mono, monospace">sum(s.duration for s in songs)  →  모든 Song의 duration 합계</text>
+        </svg>
+    </div>
+
+    <div class="problem">
+        <div class="problem-head">
+            <div class="problem-badge">Q3</div>
+            <div class="problem-label">아티스트별 곡 개수</div>
+            <span class="problem-diff hard">어려움</span>
+        </div>
+        <div class="problem-body">
+            <p class="problem-text">Playlist에 <code>artist_count()</code> 메서드를 추가하세요. 각 아티스트가 몇 곡 있는지 딕셔너리로 반환합니다. 예: <code>{"BTS": 2, "Weeknd": 1}</code></p>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid #f1f5f9;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px;">내 답안</div>
+            <textarea style="width:100%;min-height:80px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:'JetBrains Mono',monospace;font-size:13px;color:#0f172a;background:#f8fafc;resize:vertical;box-sizing:border-box;line-height:1.6;" placeholder="여기에 답을 입력하세요..."></textarea>
+        </div>
+        <details class="problem-toggle">
+            <summary>힌트 보기</summary>
+            <div class="problem-toggle-content">
+                <p class="hint-text">빈 딕셔너리를 만들고 songs를 순회하며 artist를 키로 카운트합니다. count[s.artist] = count.get(s.artist, 0) + 1 패턴을 사용하세요.</p>
+            </div>
+        </details>
+        <details class="problem-toggle">
+            <summary>정답 보기</summary>
+            <div class="problem-toggle-content">
+                <div class="answer-code">def artist_count(self):
+    count = {}
+    for s in self.songs:
+        count[s.artist] = count.get(s.artist, 0) + 1
+    return count</div>
+            </div>
+        </details>
+    </div>
+
+    <div style="text-align:center;margin:10px 0;">
+        <svg viewBox="0 0 480 50" style="max-width:480px;width:100%">
+            <rect x="5" y="5" width="470" height="40" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="20" y="22" font-size="10" fill="#1e3a5f" font-weight="700">아티스트별 카운트 패턴</text>
+            <text x="20" y="36" font-size="9" fill="#64748b" font-family="JetBrains Mono, monospace">count[artist] = count.get(artist, 0) + 1  →  {"BTS": 2, "Weeknd": 1}</text>
+        </svg>
+    </div>
+
+    <div style="text-align:center;margin:10px 0;">
+        <svg viewBox="0 0 480 50" style="max-width:480px;width:100%">
+            <rect x="5" y="5" width="470" height="40" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+            <text x="20" y="22" font-size="10" fill="#1e3a5f" font-weight="700">메뉴 기반 앱 구조</text>
+            <text x="20" y="36" font-size="9" fill="#64748b">while True → input() → if/elif 분기 → 기능 실행 → break로 종료</text>
+        </svg>
+    </div>
+
+    <div style="text-align:center;margin:14px 0;">
+    <img src="/images/learn/c-lang/notebook.png" alt="노트" style="max-width:80px;height:auto;background:#fff;border-radius:8px;">
+</div>
+<div class="summary">
+        <h3>핵심 요약</h3>
+        <ul>
+            <li><code>Song</code> 클래스: title, artist, duration 속성 + <code>__str__</code>, <code>to_dict</code>, <code>from_dict</code> 메서드.</li>
+            <li><code>Playlist</code> 클래스: <code>add/remove/search/shuffle/total_time</code>으로 곡 관리.</li>
+            <li><code>sum(s.duration for s in songs)</code> — 제너레이터 표현식으로 합계 계산.</li>
+            <li><code>json.dump()</code>로 저장, <code>json.load()</code>로 불러오기, <code>to_dict/from_dict</code>로 변환.</li>
+            <li><code>list.sort(key=lambda s: s.duration)</code> — key 함수로 정렬 기준 지정.</li>
+        </ul>
+    </div>
+</div>
+
+
+<!-- 학습 완료 네비게이션 -->
+<div id="lesson-nav" style="position:sticky;bottom:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,transparent 0%,#fff 20%);display:flex;justify-content:center;gap:10px;z-index:100;">
+    <button onclick="window.parent.postMessage({type:'unit-complete'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#22c55e;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.3);">
+        <span style="font-size:18px;">✓</span> 학습 완료
+    </button>
+    <button onclick="window.parent.postMessage({type:'next-unit'},'*')" style="padding:10px 24px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(59,130,246,0.3);">
+        다음 유닛 <span style="font-size:18px;">→</span>
+    </button>
+</div>
+</body>
+</html>
