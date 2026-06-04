@@ -13,6 +13,7 @@ import { createClient } from "@supabase/supabase-js";
 import { stripHtml, truncate } from "@/lib/text-utils";
 import { verifyParentSessionToken, PARENT_SESSION_COOKIE } from "@/lib/parent-session";
 import { createClient as createServerSupabase } from "@/lib/supabase/server";
+import { normalizeStudentName } from "@/lib/student-family";
 
 // jsdom 체인은 text-utils로 끊었음. lazy dynamic import는 매 요청마다 module load
 // 4-5초 비용 → static import 복귀. cold start 1-2초 + 그 후 호출 즉시.
@@ -41,6 +42,12 @@ function setCachedDash(name: string, data: any) {
         const oldest = [...dashCache.entries()].sort((a, b) => a[1].ts - b[1].ts)[0];
         if (oldest) dashCache.delete(oldest[0]);
     }
+}
+
+function parentSessionAllowsName(parentSession: ReturnType<typeof verifyParentSessionToken>, name: string) {
+    if (!parentSession) return false;
+    const requestedName = normalizeStudentName(name);
+    return (parentSession.studentNames || []).some(studentName => normalizeStudentName(studentName) === requestedName);
 }
 
 // createClient는 GET handler 안 lazy dynamic import에서 destructure됨 (scope 격리)
@@ -120,13 +127,18 @@ export async function GET(req: NextRequest) {
     const parentToken = req.cookies.get(PARENT_SESSION_COOKIE)?.value;
     const parentSession = parentToken ? verifyParentSessionToken(parentToken) : null;
     if (parentSession?.studentId) {
-        const { data: studentProfile } = await sb
-            .from("profiles")
-            .select("display_name")
-            .eq("id", parentSession.studentId)
-            .maybeSingle();
-        if (studentProfile?.display_name === name) {
+        if (parentSessionAllowsName(parentSession, name)) {
             isAuthorized = true;
+        } else {
+            const { data: studentProfile } = await sb
+                .from("profiles")
+                .select("display_name,name")
+                .eq("id", parentSession.studentId)
+                .maybeSingle();
+            const profileName = studentProfile?.display_name || studentProfile?.name || "";
+            if (normalizeStudentName(profileName) === normalizeStudentName(name)) {
+                isAuthorized = true;
+            }
         }
     }
 

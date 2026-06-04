@@ -5,6 +5,7 @@ export const PIN_COURSE = '__parent_pin__'
 export interface ParentAccessProfile {
     id: string
     name: string | null
+    display_name?: string | null
     email: string | null
     level?: number | null
     total_xp?: number | null
@@ -17,7 +18,7 @@ export function generateParentPin(): string {
 }
 
 async function findProfileByParentQuery(
-    supabase: SupabaseClient<any>,
+    supabase: SupabaseClient,
     studentQuery: string
 ): Promise<ParentAccessProfile | null> {
     const q = studentQuery.trim()
@@ -27,6 +28,9 @@ async function findProfileByParentQuery(
         const { data } = await supabase.from('profiles').select('*').eq('email', q).maybeSingle()
         if (data) return data as ParentAccessProfile
     }
+
+    const { data: byDisplayName } = await supabase.from('profiles').select('*').eq('display_name', q).maybeSingle()
+    if (byDisplayName) return byDisplayName as ParentAccessProfile
 
     const { data: byName } = await supabase.from('profiles').select('*').eq('name', q).maybeSingle()
     if (byName) return byName as ParentAccessProfile
@@ -40,7 +44,7 @@ async function findProfileByParentQuery(
 }
 
 export async function verifyParentPin(
-    supabase: SupabaseClient<any>,
+    supabase: SupabaseClient,
     studentQuery: string,
     pin: string
 ): Promise<ParentAccessProfile | null> {

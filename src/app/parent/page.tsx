@@ -10,8 +10,6 @@ import PullToRefresh from "./components/ui/PullToRefresh";
 import { hapticCelebration } from "./components/ui/haptic";
 import { useParentDashboard } from "./hooks/useParentDashboard";
 
-const STUDENT_KEY = "codingssok_parent_student";
-
 // ─── Design Tokens ──────────────────────────────────────────────────────────
 const T = {
     radius: { sm: 12, md: 18, lg: 22, xl: 28 },
@@ -82,7 +80,7 @@ interface V2Data {
 
 // ─── Main Component ─────────────────────────────────────────────────────────
 export default function ParentHomePage() {
-    const { data, loading, name, refresh } = useParentDashboard();
+    const { data, loading, name, allowedNames, selectStudent, refresh } = useParentDashboard();
 
     const theme = useMemo(getTimeTheme, []);
 
@@ -154,6 +152,49 @@ export default function ParentHomePage() {
                                 {line}
                             </div>
                         ))}
+                    </motion.div>
+                )}
+
+                {allowedNames.length > 1 && (
+                    <motion.div
+                        initial={{ y: 10, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 0.32 }}
+                        style={{
+                            marginTop: 14,
+                            display: "flex",
+                            gap: 6,
+                            padding: 4,
+                            borderRadius: 14,
+                            background: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.04)",
+                            border: `1px solid ${theme.cardBorder}`,
+                        }}
+                    >
+                        {allowedNames.map(student => {
+                            const active = student === name;
+                            return (
+                                <button
+                                    key={student}
+                                    type="button"
+                                    onClick={() => selectStudent(student)}
+                                    disabled={active}
+                                    style={{
+                                        flex: 1,
+                                        border: "none",
+                                        borderRadius: 10,
+                                        padding: "9px 10px",
+                                        background: active ? theme.textColor : "transparent",
+                                        color: active ? theme.bg : theme.textColor,
+                                        fontSize: 13,
+                                        fontWeight: 800,
+                                        fontFamily: "inherit",
+                                        cursor: active ? "default" : "pointer",
+                                    }}
+                                >
+                                    {student}
+                                </button>
+                            );
+                        })}
                     </motion.div>
                 )}
             </motion.div>

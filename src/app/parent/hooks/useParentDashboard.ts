@@ -10,8 +10,13 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import {
+    STUDENT_KEY,
+    clearParentStudentAccess,
+    readAllowedStudentNames,
+    selectAllowedStudent,
+} from "../lib/studentAccess";
 
-const STUDENT_KEY = "codingssok_parent_student";
 const CACHE_KEY = "codingssok_dash_cache";
 const CACHE_TTL = 5 * 60 * 1000; // 5분 — sessionStorage 캐시 (탭 닫으면 초기화)
 
@@ -65,6 +70,7 @@ export function useParentDashboard() {
     const [data, setData] = useState<DashboardData | null>(null);
     const [loading, setLoading] = useState(true);
     const [name, setName] = useState("");
+    const [allowedNames, setAllowedNames] = useState<string[]>([]);
     const mountedRef = useRef(true);
     const abortRef = useRef<AbortController | null>(null);
 
@@ -81,6 +87,7 @@ export function useParentDashboard() {
     useEffect(() => {
         const stored = localStorage.getItem(STUDENT_KEY) ?? "";
         setName(stored);
+        setAllowedNames(readAllowedStudentNames(stored));
         if (!stored) { setLoading(false); return; }
 
         // 캐시 먼저 반환
@@ -109,6 +116,14 @@ export function useParentDashboard() {
             );
             const json = await res.json();
             if (controller.signal.aborted || !mountedRef.current) return;
+            if (res.status === 403) {
+                clearParentStudentAccess();
+                sessionStorage.removeItem(CACHE_KEY);
+                setData(null);
+                setName("");
+                setAllowedNames([]);
+                return;
+            }
             setData(json);
             setCache(studentName, json);
         } catch (err: unknown) {
@@ -124,7 +139,7 @@ export function useParentDashboard() {
         }
     }, []);
 
-    // 이름 변경 시 fetch
+    // 학생 선택 시 fetch
     useEffect(() => {
         if (!name) return;
         const cached = getCache(name);
@@ -146,5 +161,13 @@ export function useParentDashboard() {
         if (name) await fetchDashboard(name, false);
     }, [name, fetchDashboard]);
 
-    return { data, loading, name, refresh };
+    const selectStudent = useCallback((studentName: string) => {
+        if (!selectAllowedStudent(studentName, name)) return;
+        sessionStorage.removeItem(CACHE_KEY);
+        setData(null);
+        setName(studentName);
+        setAllowedNames(readAllowedStudentNames(studentName));
+    }, [name]);
+
+    return { data, loading, name, allowedNames, selectStudent, refresh };
 }

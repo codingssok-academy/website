@@ -7,6 +7,8 @@ const PARENT_SESSION_TTL_MS = 1000 * 60 * 60 * 12
 
 export interface ParentSessionPayload {
     studentId: string
+    studentIds?: string[]
+    studentNames?: string[]
     parentName: string
     issuedAt: number
     expiresAt: number
@@ -33,11 +35,15 @@ function sign(payload: string) {
 
 export function createParentSessionToken(input: {
     studentId: string
+    studentIds?: string[]
+    studentNames?: string[]
     parentName?: string | null
 }) {
     const now = Date.now()
     const payload: ParentSessionPayload = {
         studentId: input.studentId,
+        studentIds: input.studentIds?.filter(Boolean).slice(0, 5),
+        studentNames: input.studentNames?.map(name => name.trim()).filter(Boolean).slice(0, 5),
         parentName: (input.parentName || '').trim().slice(0, 60),
         issuedAt: now,
         expiresAt: now + PARENT_SESSION_TTL_MS,

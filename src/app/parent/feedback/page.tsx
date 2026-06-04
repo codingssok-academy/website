@@ -2,8 +2,7 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-
-const STUDENT_KEY = "codingssok_parent_student";
+import { STUDENT_KEY, clearParentStudentAccess } from "../lib/studentAccess";
 
 interface FeedbackFile {
     name: string;
@@ -366,8 +365,6 @@ export default function ParentFeedbackPage() {
     const [studentName, setStudentName] = useState("");
     const [loading, setLoading] = useState(true);
     const [result, setResult] = useState<LookupResult | null>(null);
-    const [overrideName, setOverrideName] = useState("");
-    const [showNameInput, setShowNameInput] = useState(false);
 
     useEffect(() => {
         const stored = localStorage.getItem(STUDENT_KEY) ?? "";
@@ -382,6 +379,12 @@ export default function ParentFeedbackPage() {
                 cache: "no-store",
             });
             const data = await res.json();
+            if (res.status === 403) {
+                clearParentStudentAccess();
+                setStudentName("");
+                setResult(null);
+                return;
+            }
             setResult(data);
         } catch {
             setResult({ found: false, message: "서버 연결 오류" });
@@ -405,15 +408,6 @@ export default function ParentFeedbackPage() {
         return () => window.clearInterval(interval);
     }, [studentName, search]);
 
-    const handleOverrideSearch = () => {
-        const trimmed = overrideName.trim();
-        if (trimmed.length < 2) return;
-        localStorage.setItem(STUDENT_KEY, trimmed);
-        setStudentName(trimmed);
-        setShowNameInput(false);
-        setOverrideName("");
-    };
-
     return (
         <div style={{ padding: "20px 16px 8px", maxWidth: 480, margin: "0 auto" }}>
             {/* Title row */}
@@ -433,94 +427,7 @@ export default function ParentFeedbackPage() {
                         {studentName ? `${studentName} 학생` : "피드백 조회"}
                     </div>
                 </div>
-                <button
-                    onClick={() => setShowNameInput(prev => !prev)}
-                    style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 4,
-                        padding: "8px 12px",
-                        borderRadius: 12,
-                        border: "1.5px solid #e2e8f0",
-                        background: "#fff",
-                        fontSize: 12,
-                        fontWeight: 700,
-                        color: "#64748b",
-                        cursor: "pointer",
-                        fontFamily: "inherit",
-                    }}
-                >
-                    <span
-                        className="material-symbols-outlined"
-                        style={{ fontSize: 15 }}
-                    >
-                        search
-                    </span>
-                    이름 변경
-                </button>
             </div>
-
-            {/* Name override input */}
-            <AnimatePresence>
-                {showNameInput && (
-                    <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.22 }}
-                        style={{ overflow: "hidden", marginBottom: 16 }}
-                    >
-                        <div
-                            style={{
-                                background: "#fff",
-                                borderRadius: 16,
-                                padding: "16px",
-                                border: "1px solid #e2e8f0",
-                                display: "flex",
-                                gap: 8,
-                            }}
-                        >
-                            <input
-                                value={overrideName}
-                                onChange={e => setOverrideName(e.target.value)}
-                                onKeyDown={e => { if (e.key === "Enter") handleOverrideSearch(); }}
-                                placeholder="학생 이름 입력"
-                                autoFocus
-                                style={{
-                                    flex: 1,
-                                    padding: "11px 14px",
-                                    borderRadius: 12,
-                                    border: "1.5px solid #e2e8f0",
-                                    fontSize: 14,
-                                    fontWeight: 600,
-                                    outline: "none",
-                                    fontFamily: "inherit",
-                                }}
-                            />
-                            <button
-                                onClick={handleOverrideSearch}
-                                disabled={overrideName.trim().length < 2}
-                                style={{
-                                    padding: "11px 18px",
-                                    borderRadius: 12,
-                                    border: "none",
-                                    background:
-                                        overrideName.trim().length >= 2
-                                            ? "linear-gradient(135deg, #2563eb, #1d4ed8)"
-                                            : "#e2e8f0",
-                                    color: overrideName.trim().length >= 2 ? "#fff" : "#94a3b8",
-                                    fontSize: 13,
-                                    fontWeight: 800,
-                                    cursor: overrideName.trim().length >= 2 ? "pointer" : "default",
-                                    fontFamily: "inherit",
-                                }}
-                            >
-                                확인
-                            </button>
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
 
             {/* Loading skeletons */}
             {loading && (

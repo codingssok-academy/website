@@ -8,6 +8,10 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { verifyParentSessionToken, PARENT_SESSION_COOKIE } from "@/lib/parent-session";
+import { createClient as createServerSupabase } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { normalizeStudentName } from "@/lib/student-family";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -26,6 +30,43 @@ const NO_STORE_HEADERS = {
 
 function jsonNoStore(body: unknown, init?: { status?: number }) {
     return NextResponse.json(body, { ...init, headers: NO_STORE_HEADERS });
+}
+
+async function isAuthorizedParentLookup(req: NextRequest, name: string) {
+    const requestedName = normalizeStudentName(name);
+    const parentToken = req.cookies.get(PARENT_SESSION_COOKIE)?.value;
+    const parentSession = parentToken ? verifyParentSessionToken(parentToken) : null;
+
+    if (parentSession?.studentNames?.some(studentName => normalizeStudentName(studentName) === requestedName)) {
+        return true;
+    }
+
+    if (parentSession?.studentId) {
+        const adminClient = createAdminClient();
+        if (adminClient) {
+            const { data: profile } = await adminClient
+                .from("profiles")
+                .select("display_name,name")
+                .eq("id", parentSession.studentId)
+                .maybeSingle();
+            const profileName = profile?.display_name || profile?.name || "";
+            if (normalizeStudentName(profileName) === requestedName) return true;
+        }
+    }
+
+    try {
+        const userClient = await createServerSupabase();
+        const { data: { user } } = await userClient.auth.getUser();
+        if (!user) return false;
+        const { data: teacherProfile } = await userClient
+            .from("profiles")
+            .select("role")
+            .eq("id", user.id)
+            .maybeSingle();
+        return teacherProfile?.role === "teacher" || teacherProfile?.role === "admin";
+    } catch {
+        return false;
+    }
 }
 
 const ACTIVE_PAGE_LIMIT = 5;
@@ -122,6 +163,10 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({ error: "요청이 너무 많습니다" }, { status: 429 });
         }
     } catch { /* Redis 없어도 동작 */ }
+
+    if (!(await isAuthorizedParentLookup(req, name))) {
+        return jsonNoStore({ error: "권한이 없습니다." }, { status: 403 });
+    }
 
     if (!NOTION_KEY || !FEEDBACK_DB) {
         return jsonNoStore({ error: "서비스 일시 중단" }, { status: 503 });

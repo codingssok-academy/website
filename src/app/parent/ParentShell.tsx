@@ -7,8 +7,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import ParentBottomNav from "./ParentBottomNav";
 import ParentNameGate from "./ParentNameGate";
 import { installGlobalErrorHandler } from "@/lib/error-reporter";
-
-const STUDENT_KEY = "codingssok_parent_student";
+import {
+    PARENT_STUDENT_CHANGED_EVENT,
+    STUDENT_KEY,
+    saveParentStudentAccess,
+} from "./lib/studentAccess";
 
 export default function ParentShell({ children }: { children: React.ReactNode }) {
     useEffect(() => { installGlobalErrorHandler(); }, []);
@@ -22,8 +25,17 @@ export default function ParentShell({ children }: { children: React.ReactNode })
         setBooting(false);
     }, []);
 
+    useEffect(() => {
+        const handleStudentChange = (event: Event) => {
+            const nextName = (event as CustomEvent<string>).detail;
+            setStudentName(nextName || "");
+        };
+        window.addEventListener(PARENT_STUDENT_CHANGED_EVENT, handleStudentChange);
+        return () => window.removeEventListener(PARENT_STUDENT_CHANGED_EVENT, handleStudentChange);
+    }, []);
+
     const handleNameSet = (name: string) => {
-        localStorage.setItem(STUDENT_KEY, name);
+        saveParentStudentAccess(name);
         setStudentName(name);
     };
 

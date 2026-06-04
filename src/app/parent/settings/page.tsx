@@ -1,10 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
-const STUDENT_KEY = "codingssok_parent_student";
-const CODE_VERIFIED_KEY = "codingssok_code_verified";
-const HW_CHECK_KEY = "codingssok_hw_last_check";
+import { STUDENT_KEY } from "../lib/studentAccess";
 const APP_VERSION = "2.0.0";
 
 const cardClass = "bg-white rounded-[20px] overflow-hidden shadow-[0_1px_8px_rgba(0,0,0,0.06),0_0_0_1px_rgba(226,232,240,0.8)]";
@@ -16,14 +13,6 @@ export default function ParentSettingsPage() {
     useEffect(() => {
         setStudentName(localStorage.getItem(STUDENT_KEY) ?? "");
     }, []);
-
-    const handleClearData = () => {
-        if (!confirm("저장된 모든 데이터를 지우고 처음 화면으로 돌아갑니다.")) return;
-        localStorage.removeItem(STUDENT_KEY);
-        localStorage.removeItem(CODE_VERIFIED_KEY);
-        localStorage.removeItem(HW_CHECK_KEY);
-        window.location.href = "/parent";
-    };
 
     return (
         <div className="px-4 pt-5 pb-2 max-w-[480px] mx-auto">
@@ -57,28 +46,6 @@ export default function ParentSettingsPage() {
                 <div className={cardClass}>
                     <SettingsRow icon="info" iconBg="bg-blue-50" iconColor="text-blue-600" label="버전" value={`v${APP_VERSION}`} />
                     <SettingsRow icon="school" iconBg="bg-green-50" iconColor="text-green-600" label="서비스" value="코딩쏙 학부모 앱" divider={false} />
-                </div>
-            </section>
-
-            {/* Data */}
-            <section>
-                <div className={sectionLabel}>데이터</div>
-                <div className={cardClass}>
-                    <button
-                        onClick={handleClearData}
-                        className="w-full flex items-center gap-3.5 px-5 py-4 bg-transparent border-none cursor-pointer text-left font-[inherit] min-h-[60px]"
-                    >
-                        <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center shrink-0">
-                            <span className="material-symbols-outlined text-xl text-red-500" style={{ fontVariationSettings: "'FILL' 1" }}>
-                                delete
-                            </span>
-                        </div>
-                        <div className="flex-1">
-                            <div className="text-sm font-bold text-red-500">데이터 초기화</div>
-                            <div className="text-[11px] text-slate-400 mt-0.5">저장된 학생 이름을 지웁니다</div>
-                        </div>
-                        <span className="material-symbols-outlined text-lg text-slate-300">chevron_right</span>
-                    </button>
                 </div>
             </section>
 
