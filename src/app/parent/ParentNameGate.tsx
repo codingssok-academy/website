@@ -47,7 +47,9 @@ export default function ParentNameGate({ onNameSet }: Props) {
         setError("");
 
         try {
-            const res = await fetch(`/api/parent/lookup?name=${encodeURIComponent(trimmed)}`);
+            const res = await fetch(`/api/parent/lookup?name=${encodeURIComponent(trimmed)}`, {
+                cache: "no-store",
+            });
             const data = await res.json();
             if (data.found) {
                 hapticLight();

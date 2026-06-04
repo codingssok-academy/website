@@ -9,13 +9,24 @@
 
 import { NextRequest, NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+export const fetchCache = "force-no-store";
+
 const NOTION_KEY = process.env.NOTION_API_KEY || "";
-const FEEDBACK_DB = "3279bd0e-91c9-802f-b0bf-e8336861f74c";
+const FEEDBACK_DB = process.env.NOTION_FEEDBACK_DB_ID || "3279bd0e-91c9-802f-b0bf-e8336861f74c";
 const HEADERS = {
     "Authorization": `Bearer ${NOTION_KEY}`,
     "Notion-Version": "2022-06-28",
     "Content-Type": "application/json",
 };
+const NO_STORE_HEADERS = {
+    "Cache-Control": "no-store, no-cache, must-revalidate",
+};
+
+function jsonNoStore(body: unknown, init?: { status?: number }) {
+    return NextResponse.json(body, { ...init, headers: NO_STORE_HEADERS });
+}
 
 const ACTIVE_PAGE_LIMIT = 5;
 
@@ -23,7 +34,7 @@ async function fetchWithTimeout(url: string, options: RequestInit, ms: number): 
     const ac = new AbortController();
     const t = setTimeout(() => ac.abort(), ms);
     try {
-        return await fetch(url, { ...options, signal: ac.signal });
+        return await fetch(url, { ...options, signal: ac.signal, cache: "no-store" });
     } finally {
         clearTimeout(t);
     }
@@ -112,8 +123,8 @@ export async function GET(req: NextRequest) {
         }
     } catch { /* Redis 없어도 동작 */ }
 
-    if (!NOTION_KEY) {
-        return NextResponse.json({ error: "서비스 일시 중단" }, { status: 503 });
+    if (!NOTION_KEY || !FEEDBACK_DB) {
+        return jsonNoStore({ error: "서비스 일시 중단" }, { status: 503 });
     }
 
     try {
@@ -139,7 +150,7 @@ export async function GET(req: NextRequest) {
         const pages = queryData.results || [];
 
         if (pages.length === 0) {
-            return NextResponse.json({
+            return jsonNoStore({
                 found: false,
                 message: `"${name}" 학생의 피드백을 찾을 수 없습니다.`,
             });
@@ -171,7 +182,7 @@ export async function GET(req: NextRequest) {
             })
         );
 
-        return NextResponse.json({
+        return jsonNoStore({
             found: true,
             studentName: name,
             totalFeedbacks: pages.filter((p: any) => p.properties["피드백 상태"]?.status?.name === "완료").length,

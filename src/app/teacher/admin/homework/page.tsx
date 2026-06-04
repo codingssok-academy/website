@@ -60,16 +60,17 @@ export default function HomeworkAdminPage() {
             const hwUrl = name
                 ? `/api/homework?student_name=${encodeURIComponent(name)}`
                 : "/api/homework";
+            const fetchJson = (url: string) => fetch(url, { cache: "no-store" }).then(r => r.json());
 
             // 전체 모드: all-notion API, 학생 모드: v2 dashboard
             const [hwRes, notionData, compRes] = await Promise.all([
-                fetch(hwUrl).then(r => r.json()),
+                fetchJson(hwUrl),
                 name
-                    ? fetch(`/api/parent/v2/dashboard?name=${encodeURIComponent(name)}`).then(r => r.json())
-                    : fetch("/api/homework/all-notion").then(r => r.json()),
+                    ? fetchJson(`/api/parent/v2/dashboard?name=${encodeURIComponent(name)}&includeNotion=1&fresh=1`)
+                    : fetchJson("/api/homework/all-notion"),
                 name
-                    ? fetch(`/api/homework/complete?student_name=${encodeURIComponent(name)}`).then(r => r.json())
-                    : fetch("/api/homework/complete").then(r => r.json()),
+                    ? fetchJson(`/api/homework/complete?student_name=${encodeURIComponent(name)}`)
+                    : fetchJson("/api/homework/complete"),
             ]);
 
             const completedRefs = new Set(compRes.refs || []);

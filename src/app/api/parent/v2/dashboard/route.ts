@@ -17,17 +17,12 @@ import { createClient as createServerSupabase } from "@/lib/supabase/server";
 // jsdom 체인은 text-utils로 끊었음. lazy dynamic import는 매 요청마다 module load
 // 4-5초 비용 → static import 복귀. cold start 1-2초 + 그 후 호출 즉시.
 export const runtime = 'nodejs';
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+export const fetchCache = "force-no-store";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-
-// ─── Notion 캐시 (SWR: fresh 5분 / stale 60분) ─────────────────────────────
-// fresh: 그대로 반환
-// stale: 즉시 반환 + 백그라운드 갱신 → 다음 호출에서 fresh
-// miss: 동기 fetch (cold start 첫 사용자만)
-const notionCache = new Map<string, { data: any; ts: number }>();
-const FRESH_TTL = 5 * 60 * 1000;        // 5분
-const STALE_TTL = 60 * 60 * 1000;       // 1시간
 
 // ─── Dashboard response 캐시 (lambda in-memory) ─────────────────────────────
 // 같은 학생 30초 cache → 두 번째 호출부터 0ms 응답.
@@ -48,26 +43,6 @@ function setCachedDash(name: string, data: any) {
     }
 }
 
-type CacheLookup = { data: any; fresh: boolean } | null;
-
-function getCachedNotion(key: string): CacheLookup {
-    const entry = notionCache.get(key);
-    if (!entry) return null;
-    const age = Date.now() - entry.ts;
-    if (age < FRESH_TTL) return { data: entry.data, fresh: true };
-    if (age < STALE_TTL) return { data: entry.data, fresh: false };
-    return null;
-}
-
-function setCachedNotion(key: string, data: any) {
-    notionCache.set(key, { data, ts: Date.now() });
-    // 오래된 캐시 정리 (100개 초과 시)
-    if (notionCache.size > 100) {
-        const oldest = [...notionCache.entries()].sort((a, b) => a[1].ts - b[1].ts)[0];
-        if (oldest) notionCache.delete(oldest[0]);
-    }
-}
-
 // createClient는 GET handler 안 lazy dynamic import에서 destructure됨 (scope 격리)
 // service client 생성은 handler 진입 후 직접 호출.
 
@@ -78,6 +53,24 @@ const NOTION_HEADERS = {
     "Notion-Version": "2022-06-28",
     "Content-Type": "application/json",
 };
+const NO_STORE_HEADERS = {
+    "Cache-Control": "no-store, no-cache, must-revalidate",
+};
+
+type NotionHomeworkResult = {
+    feedbacks: { id: string; date: string | null; status: string }[];
+    notionHomeworks: {
+        id: string;
+        source: "notion";
+        title: string;
+        description: string;
+        date: string | null;
+        files: { name: string; url: string; type: string }[];
+        status: "pending";
+    }[];
+};
+
+const EMPTY_NOTION_RESULT: NotionHomeworkResult = { feedbacks: [], notionHomeworks: [] };
 
 function getText(richText: any[]): string {
     return (richText || []).map((t: any) => t.plain_text).join("");
@@ -105,6 +98,8 @@ export async function GET(req: NextRequest) {
     if (/[<>"';&\\]/.test(name)) {
         return NextResponse.json({ error: "잘못된 문자 포함" }, { status: 400 });
     }
+    const includeNotion = req.nextUrl.searchParams.get("includeNotion") === "1";
+    const bypassCache = req.nextUrl.searchParams.get("fresh") === "1" || includeNotion;
 
     // Rate limit: IP당 1분에 60회 (탭 전환 + 백그라운드 갱신 대응)
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
@@ -158,11 +153,13 @@ export async function GET(req: NextRequest) {
     }
 
     // ── Lambda in-memory cache hit (30초) — Supabase 7 query 비용 0 ──
-    const cachedDash = getCachedDash(name);
-    if (cachedDash) {
-        return NextResponse.json(cachedDash, {
-            headers: { "Cache-Control": "private, max-age=60, stale-while-revalidate=120", "X-Cache": "HIT" },
-        });
+    if (!bypassCache) {
+        const cachedDash = getCachedDash(name);
+        if (cachedDash) {
+            return NextResponse.json(cachedDash, {
+                headers: { ...NO_STORE_HEADERS, "X-Cache": "HIT" },
+            });
+        }
     }
 
     // 1. Find profile by display_name
@@ -175,9 +172,7 @@ export async function GET(req: NextRequest) {
     const profile = profiles?.[0] ?? null;
     const userId = profile?.id;
 
-    // 2. Parallel fetch — Supabase만 (노션은 별도 endpoint /api/parent/v2/notion-feedbacks로 분리)
-    // 담당자 '앱 출시 — 느려터지면 어쩌잔겨' 명시: 노션 fetch가 토큰 stale 시 매번 5초 timeout
-    // 까지 대기 → 학부모 페이지 첫 진입 5초+. 분리해서 dashboard는 0.5초 안에 응답.
+    // 2. Parallel fetch — 기본은 Supabase만. includeNotion=1일 때만 Notion을 후속 조회.
     const [xpResult, progressResult, activityResult, codeResult, announcementResult, notesResult] = await Promise.all([
         // XP history (last 30 days)
         userId
@@ -260,6 +255,9 @@ export async function GET(req: NextRequest) {
     );
 
     const progress = (progressResult as any)?.data;
+    const notionResult: NotionHomeworkResult = includeNotion
+        ? await fetchNotionWithHomework(name, 20)
+        : EMPTY_NOTION_RESULT;
 
     const responseObj = {
         found: !!profile,
@@ -287,7 +285,8 @@ export async function GET(req: NextRequest) {
             totalMinutes: totalStudyMinutes,
             recent: activities.slice(0, 10),
         },
-        feedbacks: [] as any[],
+        feedbacks: notionResult.feedbacks,
+        notionHomeworks: notionResult.notionHomeworks,
         announcements: ((announcementResult as any)?.data || []).map((a: any) => ({
             id: a.id,
             title: truncate(stripHtml(a.title || ""), 100),
@@ -308,12 +307,9 @@ export async function GET(req: NextRequest) {
             created_at: c.created_at,
         })),
     };
-    setCachedDash(name, responseObj);
+    if (!bypassCache) setCachedDash(name, responseObj);
     return NextResponse.json(responseObj, {
-        headers: {
-            "Cache-Control": "private, max-age=60, stale-while-revalidate=120",
-            "X-Cache": "MISS",
-        },
+        headers: { ...NO_STORE_HEADERS, "X-Cache": "MISS" },
     });
     } catch (err: any) {
         // 진단용: 500 에러 stack을 Vercel 로그 + 응답 body 양쪽에 남김
@@ -333,27 +329,9 @@ export async function GET(req: NextRequest) {
     }
 }
 
-async function fetchNotionWithHomework(name: string, limit: number) {
-    if (!NOTION_KEY) return { feedbacks: [], notionHomeworks: [] };
-
-    const cacheKey = `notion-hw:${name}:${limit}`;
-    const cached = getCachedNotion(cacheKey);
-
-    // fresh hit — 즉시 반환
-    if (cached?.fresh) return cached.data;
-
-    // stale hit — 즉시 반환 + 백그라운드 갱신 (fire-and-forget)
-    if (cached) {
-        fetchNotionFresh(name, limit, cacheKey).catch(() => {});
-        return cached.data;
-    }
-
-    // miss — 담당자 명시 "느려터졌어 진짜" 핵심 fix:
-    // 동기 fetch 제거 → 백그라운드 fetch + 빈 데이터 즉시 반환.
-    // 첫 사용자는 노션 데이터 못 보지만 응답 즉시. 새로고침 시 fresh hit.
-    // 노션 토큰 stale/네트워크 지연으로 30초+ blocking 방지.
-    fetchNotionFresh(name, limit, cacheKey).catch(() => {});
-    return { feedbacks: [], notionHomeworks: [] };
+async function fetchNotionWithHomework(name: string, limit: number): Promise<NotionHomeworkResult> {
+    if (!NOTION_KEY || !FEEDBACK_DB) return EMPTY_NOTION_RESULT;
+    return fetchNotionFresh(name, limit);
 }
 
 // 노션 fetch 안전망: 5초 timeout 강제 (백그라운드 갱신도 hang 방지)
@@ -361,13 +339,13 @@ async function fetchWithTimeout(url: string, init: RequestInit, ms = 5000): Prom
     const ctrl = new AbortController();
     const id = setTimeout(() => ctrl.abort(), ms);
     try {
-        return await fetch(url, { ...init, signal: ctrl.signal });
+        return await fetch(url, { ...init, signal: ctrl.signal, cache: "no-store" });
     } finally {
         clearTimeout(id);
     }
 }
 
-async function fetchNotionFresh(name: string, limit: number, cacheKey: string) {
+async function fetchNotionFresh(name: string, limit: number): Promise<NotionHomeworkResult> {
     try {
         const res = await fetchWithTimeout(`https://api.notion.com/v1/databases/${FEEDBACK_DB}/query`, {
             method: "POST",
@@ -378,7 +356,7 @@ async function fetchNotionFresh(name: string, limit: number, cacheKey: string) {
                 page_size: limit,
             }),
         }, 5000);
-        if (!res.ok) return { feedbacks: [], notionHomeworks: [] };
+        if (!res.ok) return EMPTY_NOTION_RESULT;
         const data = await res.json();
 
         const activePages = (data.results || [])
@@ -416,14 +394,12 @@ async function fetchNotionFresh(name: string, limit: number, cacheKey: string) {
                 description: d.homework,
                 date: d.date,
                 files: d.files,
-                status: "pending",
+                status: "pending" as const,
             }));
 
-        const result = { feedbacks, notionHomeworks };
-        setCachedNotion(cacheKey, result);
-        return result;
+        return { feedbacks, notionHomeworks };
     } catch {
-        return { feedbacks: [], notionHomeworks: [] };
+        return EMPTY_NOTION_RESULT;
     }
 }
 

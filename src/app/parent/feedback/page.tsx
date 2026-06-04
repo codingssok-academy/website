@@ -374,23 +374,35 @@ export default function ParentFeedbackPage() {
         setStudentName(stored);
     }, []);
 
-    const search = useCallback(async (name: string) => {
+    const search = useCallback(async (name: string, isBackground = false) => {
         if (!name || name.length < 2) return;
-        setLoading(true);
+        if (!isBackground) setLoading(true);
         try {
-            const res = await fetch(`/api/parent/lookup?name=${encodeURIComponent(name)}`);
+            const res = await fetch(`/api/parent/lookup?name=${encodeURIComponent(name)}`, {
+                cache: "no-store",
+            });
             const data = await res.json();
             setResult(data);
         } catch {
             setResult({ found: false, message: "서버 연결 오류" });
         } finally {
-            setLoading(false);
+            if (!isBackground) setLoading(false);
         }
     }, []);
 
     useEffect(() => {
         if (studentName) search(studentName);
         else setLoading(false);
+    }, [studentName, search]);
+
+    useEffect(() => {
+        if (!studentName) return;
+        const interval = window.setInterval(() => {
+            if (document.visibilityState === "visible") {
+                void search(studentName, true);
+            }
+        }, 30_000);
+        return () => window.clearInterval(interval);
     }, [studentName, search]);
 
     const handleOverrideSearch = () => {

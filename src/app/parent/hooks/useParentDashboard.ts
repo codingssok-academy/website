@@ -104,8 +104,8 @@ export function useParentDashboard() {
 
         try {
             const res = await fetch(
-                `/api/parent/v2/dashboard?name=${encodeURIComponent(studentName)}`,
-                { signal: controller.signal }
+                `/api/parent/v2/dashboard?name=${encodeURIComponent(studentName)}&fresh=1`,
+                { signal: controller.signal, cache: "no-store" }
             );
             const json = await res.json();
             if (controller.signal.aborted || !mountedRef.current) return;
@@ -129,6 +129,16 @@ export function useParentDashboard() {
         if (!name) return;
         const cached = getCache(name);
         fetchDashboard(name, !!cached);
+    }, [name, fetchDashboard]);
+
+    useEffect(() => {
+        if (!name) return;
+        const interval = window.setInterval(() => {
+            if (document.visibilityState === "visible") {
+                void fetchDashboard(name, true);
+            }
+        }, 30_000);
+        return () => window.clearInterval(interval);
     }, [name, fetchDashboard]);
 
     // 수동 리프레시
