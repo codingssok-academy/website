@@ -10,15 +10,21 @@ interface FeedbackFile {
     type: string;
 }
 
+interface FeedbackExtraSection {
+    title: string;
+    content: string;
+}
+
 interface Feedback {
     id: string;
     date: string | null;
     status: string;
-    studentName: string;
     contentLearned: string;
+    homework: string;
     attitude: string;
     understanding: string;
     notes: string;
+    extraSections?: FeedbackExtraSection[];
     files?: FeedbackFile[];
 }
 
@@ -88,6 +94,7 @@ function FeedbackSection({
 
 function FeedbackCard({ fb, index }: { fb: Feedback; index: number }) {
     const [expanded, setExpanded] = useState(index === 0);
+    const preview = fb.contentLearned || fb.homework || fb.notes || fb.extraSections?.[0]?.content || "";
 
     return (
         <motion.div
@@ -146,7 +153,7 @@ function FeedbackCard({ fb, index }: { fb: Feedback; index: number }) {
                         <div style={{ fontSize: 14, fontWeight: 800, color: "#0f172a" }}>
                             {fb.date ?? "날짜 미지정"}
                         </div>
-                        {fb.contentLearned && (
+                        {preview && (
                             <div
                                 style={{
                                     fontSize: 11,
@@ -158,7 +165,7 @@ function FeedbackCard({ fb, index }: { fb: Feedback; index: number }) {
                                     whiteSpace: "nowrap",
                                 }}
                             >
-                                {fb.contentLearned.split("\n")[0]}
+                                {preview.split("\n")[0]}
                             </div>
                         )}
                     </div>
@@ -214,6 +221,15 @@ function FeedbackCard({ fb, index }: { fb: Feedback; index: number }) {
                                     bg="#eff6ff"
                                 />
                             )}
+                            {fb.homework && (
+                                <FeedbackSection
+                                    icon="assignment"
+                                    title="과제"
+                                    content={fb.homework}
+                                    color="#9333ea"
+                                    bg="#faf5ff"
+                                />
+                            )}
                             {fb.attitude && (
                                 <FeedbackSection
                                     icon="sentiment_satisfied"
@@ -241,6 +257,16 @@ function FeedbackCard({ fb, index }: { fb: Feedback; index: number }) {
                                     bg="#f8fafc"
                                 />
                             )}
+                            {fb.extraSections?.map(section => (
+                                <FeedbackSection
+                                    key={section.title}
+                                    icon="notes"
+                                    title={section.title}
+                                    content={section.content}
+                                    color="#475569"
+                                    bg="#f8fafc"
+                                />
+                            ))}
 
                             {/* PDF/image attachments */}
                             {fb.files && fb.files.length > 0 && (

@@ -15,16 +15,14 @@ const TABS: Tab[] = [
     { href: "/parent", label: "홈", icon: "home", matchExact: true },
     { href: "/parent/growth", label: "성장", icon: "trending_up" },
     { href: "/parent/feedback", label: "피드백", icon: "rate_review" },
-    { href: "/parent/parents-day", label: "어버이날", icon: "favorite" },
     { href: "/parent/settings", label: "설정", icon: "settings" },
 ];
 
 interface Props {
-    studentName: string;
     hwBadge?: number;
 }
 
-export default function ParentBottomNav({ studentName, hwBadge = 0 }: Props) {
+export default function ParentBottomNav({ hwBadge = 0 }: Props) {
     const pathname = usePathname();
 
     const isActive = (tab: Tab) =>

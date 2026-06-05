@@ -384,7 +384,7 @@ async function fetchNotionFresh(name: string, limit: number): Promise<NotionHome
                     id: p.id,
                     date: p.properties["피드백 날짜"]?.date?.start || null,
                     status: p.properties["피드백 상태"]?.status?.name || "시작 전",
-                    homework: sections["과제"]?.trim() || "",
+                    homework: findSection(sections, ["과제", "숙제", "오늘의 과제"]),
                     files,
                 };
             })
@@ -431,16 +431,31 @@ async function fetchBlocks(pageId: string): Promise<any[]> {
     }
 }
 
+const SECTION_HEADING_TYPES = new Set(["heading_1", "heading_2", "heading_3"]);
+
+function normalizeSectionTitle(title: string) {
+    return title.replace(/\s+/g, "").trim();
+}
+
+function findSection(sections: Record<string, string>, candidates: string[]) {
+    const normalizedCandidates = candidates.map(normalizeSectionTitle);
+    const entry = Object.entries(sections).find(([title]) =>
+        normalizedCandidates.includes(normalizeSectionTitle(title))
+    );
+    return entry?.[1]?.trim() || "";
+}
+
 function parseSections(blocks: any[]): Record<string, string> {
     const sections: Record<string, string> = {};
     let current = "";
     for (const block of blocks) {
         const type = block.type;
         const text = getText(block[type]?.rich_text);
-        if (type === "heading_2" && text) {
+        if (SECTION_HEADING_TYPES.has(type) && text) {
             current = text.replace(/^\d+\.\s*/, "").trim();
-        } else if (current && text) {
-            sections[current] = (sections[current] || "") + text + "\n";
+        } else if (text) {
+            const sectionName = current || "기타 내용";
+            sections[sectionName] = (sections[sectionName] || "") + text + "\n";
         }
     }
     return sections;

@@ -93,7 +93,7 @@ export default function ParentShell({ children }: { children: React.ReactNode })
                 </AnimatePresence>
             </main>
 
-            <ParentBottomNav studentName={studentName} />
+            <ParentBottomNav />
         </div>
     );
 }

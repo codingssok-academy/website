@@ -69,7 +69,7 @@ async function isAuthorizedParentLookup(req: NextRequest, name: string) {
     }
 }
 
-const ACTIVE_PAGE_LIMIT = 5;
+const ACTIVE_PAGE_LIMIT = 20;
 
 async function fetchWithTimeout(url: string, options: RequestInit, ms: number): Promise<Response> {
     const ac = new AbortController();
@@ -88,6 +88,40 @@ function getText(richText: any[]): string {
 interface PageContent {
     sections: Record<string, string>;
     files: { name: string; url: string; type: string }[];
+}
+
+const SECTION_HEADING_TYPES = new Set(["heading_1", "heading_2", "heading_3"]);
+const LEARNED_SECTION_NAMES = ["배운 내용", "배운내용"];
+const HOMEWORK_SECTION_NAMES = ["과제", "숙제", "오늘의 과제"];
+const ATTITUDE_SECTION_NAMES = ["수업 태도", "수업태도"];
+const UNDERSTANDING_SECTION_NAMES = ["이해도 및 성취도", "이해도", "성취도"];
+const NOTES_SECTION_NAMES = ["특이사항", "특이 사항", "전달사항", "전달 사항"];
+const KNOWN_SECTION_NAMES = [
+    ...LEARNED_SECTION_NAMES,
+    ...HOMEWORK_SECTION_NAMES,
+    ...ATTITUDE_SECTION_NAMES,
+    ...UNDERSTANDING_SECTION_NAMES,
+    ...NOTES_SECTION_NAMES,
+];
+
+function normalizeSectionTitle(title: string) {
+    return title.replace(/\s+/g, "").trim();
+}
+
+function findSection(sections: Record<string, string>, candidates: string[]) {
+    const normalizedCandidates = candidates.map(normalizeSectionTitle);
+    const entry = Object.entries(sections).find(([title]) =>
+        normalizedCandidates.includes(normalizeSectionTitle(title))
+    );
+    return entry?.[1]?.trim() || "";
+}
+
+function getExtraSections(sections: Record<string, string>) {
+    const knownTitles = new Set(KNOWN_SECTION_NAMES.map(normalizeSectionTitle));
+    return Object.entries(sections)
+        .map(([title, content]) => ({ title: title.trim(), content: content.trim() }))
+        .filter(section => section.title && section.content)
+        .filter(section => !knownTitles.has(normalizeSectionTitle(section.title)));
 }
 
 function extractFile(block: any): { name: string; url: string; type: string } | null {
@@ -132,10 +166,11 @@ async function getPageContent(pageId: string): Promise<PageContent> {
         const type = block.type;
 
         const text = getText(block[type]?.rich_text);
-        if (type === "heading_2" && text) {
+        if (SECTION_HEADING_TYPES.has(type) && text) {
             currentSection = text.replace(/^\d+\.\s*/, "").trim();
-        } else if (currentSection && text) {
-            sections[currentSection] = (sections[currentSection] || "") + text + "\n";
+        } else if (text) {
+            const sectionName = currentSection || "기타 내용";
+            sections[sectionName] = (sections[sectionName] || "") + text + "\n";
         }
 
         const file = extractFile(block);
@@ -205,8 +240,7 @@ export async function GET(req: NextRequest) {
             .slice(0, ACTIVE_PAGE_LIMIT)
             .filter((p: any) => p.properties["피드백 상태"]?.status?.name !== "시작 전");
 
-        // 담당자 명시 '숙제 기능 + 모든 내용 다 없애' — supabase student_homework 쿼리 제거,
-        // 노션 피드백의 '과제' section도 응답에서 제외.
+        // Notion 피드백 본문은 학생 이름을 제외하고 가능한 모든 작성 섹션을 응답한다.
         const feedbacks = await Promise.all(
             activePage.map(async (page: any) => {
                 const props = page.properties;
@@ -215,12 +249,13 @@ export async function GET(req: NextRequest) {
                     id: page.id,
                     date: props["피드백 날짜"]?.date?.start || null,
                     status: props["피드백 상태"]?.status?.name || "시작 전",
-                    studentName: getText(props["학생 이름"]?.rich_text),
                     title: getText(props["3.19"]?.title),
-                    contentLearned: sections["배운 내용"]?.trim() || "",
-                    attitude: sections["수업 태도"]?.trim() || "",
-                    understanding: sections["이해도 및 성취도"]?.trim() || "",
-                    notes: sections["특이사항"]?.trim() || "",
+                    contentLearned: findSection(sections, LEARNED_SECTION_NAMES),
+                    homework: findSection(sections, HOMEWORK_SECTION_NAMES),
+                    attitude: findSection(sections, ATTITUDE_SECTION_NAMES),
+                    understanding: findSection(sections, UNDERSTANDING_SECTION_NAMES),
+                    notes: findSection(sections, NOTES_SECTION_NAMES),
+                    extraSections: getExtraSections(sections),
                     files,
                     url: page.url,
                 };
