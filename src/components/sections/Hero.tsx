@@ -7,7 +7,6 @@ import {
     useTransform,
     useSpring,
 } from "framer-motion";
-import { ArrowDown, Route } from "lucide-react";
 
 /* ══════════════════════════════════════════
    Hero — 화이트 배경 이미지 + 다크 텍스트
@@ -16,19 +15,7 @@ import { ArrowDown, Route } from "lucide-react";
 const ease = [0.25, 0.1, 0, 1] as const;
 
 const heroMobileStyles = `
-.hero-title {
-  font-size: 64px;
-}
-.hero-copy {
-  font-size: 17px;
-}
 @media (max-width: 480px) {
-  .hero-title {
-    font-size: 38px !important;
-  }
-  .hero-copy {
-    font-size: 15px !important;
-  }
   .hero-cta-wrap {
     flex-direction: column !important;
     align-items: stretch !important;
@@ -74,9 +61,7 @@ export default function Hero() {
             style={{
                 position: "relative",
                 width: "100%",
-                height: "88vh",
-                minHeight: 560,
-                maxHeight: 860,
+                height: "100vh",
                 overflow: "hidden",
                 background: "#0f172a",
             }}
@@ -126,24 +111,24 @@ export default function Hero() {
                             padding: "6px 16px",
                             borderRadius: 99,
                             border: "1px solid rgba(255,255,255,0.25)",
-                            letterSpacing: 0,
+                            letterSpacing: "0.04em",
                             background: "rgba(255,255,255,0.1)",
                             backdropFilter: "blur(12px)",
                         }}
                     >
-                        대전 관평동 차세대 코딩학원
+                        대전 관평동 코딩 전문 학원
                     </span>
                 </motion.div>
 
                 {/* 헤드라인 */}
                 <motion.h1
-                    className="hero-title"
                     style={{
+                        fontSize: "clamp(36px, 7.5vw, 76px)",
                         fontWeight: 800,
                         lineHeight: 1.1,
-                        letterSpacing: 0,
+                        letterSpacing: "-0.035em",
                         margin: "0 0 24px",
-                        maxWidth: 820,
+                        maxWidth: 700,
                         color: "#ffffff",
                     }}
                 >
@@ -153,7 +138,7 @@ export default function Hero() {
                         transition={{ duration: 0.8, delay: 0.5, ease }}
                         style={{ display: "block" }}
                     >
-                        코딩쏙
+                        코딩, 제대로 배우면
                     </motion.span>
                     <motion.span
                         initial={{ opacity: 0, y: 30 }}
@@ -161,34 +146,34 @@ export default function Hero() {
                         transition={{ duration: 0.8, delay: 0.8, ease }}
                         style={{
                             display: "block",
-                            background: "linear-gradient(135deg, #38bdf8, #fbbf24)",
+                            background: "linear-gradient(135deg, #2563eb, #1e40af)",
                             WebkitBackgroundClip: "text",
                             WebkitTextFillColor: "transparent",
                             backgroundClip: "text",
                         }}
                     >
-                        차세대 코딩학원
+                        다릅니다.
                     </motion.span>
                 </motion.h1>
 
                 {/* 서브 카피 */}
                 <motion.p
-                    className="hero-copy"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ duration: 1, delay: 1.2, ease }}
                     style={{
+                        fontSize: "clamp(14px, 1.5vw, 17px)",
                         color: "rgba(255,255,255,0.75)",
                         lineHeight: 1.7,
                         margin: "0 0 40px",
                         fontWeight: 400,
-                        letterSpacing: 0,
-                        maxWidth: 620,
+                        letterSpacing: "-0.01em",
+                        maxWidth: 440,
                     }}
                 >
-                    AI가 만든 코드도 이해하고, 고치고, 자기 결과물로 증명하는 학원.
+                    C / Python 텍스트코딩 중심.
                     <br />
-                    진단 테스트부터 공통기초, 성향별 트랙, 학부모 성장 리포트까지 연결합니다.
+                    정보올림피아드, 자격증, 프로젝트까지.
                 </motion.p>
 
                 {/* CTA */}
@@ -200,31 +185,6 @@ export default function Hero() {
                     style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}
                 >
                     <motion.a
-                        href="#growth-platform"
-                        whileHover={{ scale: 1.03 }}
-                        whileTap={{ scale: 0.97 }}
-                        style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            gap: 8,
-                            padding: "14px 30px",
-                            borderRadius: 12,
-                            background: "#ffffff",
-                            color: "#0f172a",
-                            fontSize: 15,
-                            fontWeight: 800,
-                            textDecoration: "none",
-                            letterSpacing: 0,
-                            cursor: "pointer",
-                            border: "1px solid rgba(255,255,255,0.8)",
-                            minHeight: 48,
-                        }}
-                    >
-                        <Route size={18} />
-                        성장 플랫폼 보기
-                    </motion.a>
-                    <motion.a
                         href="#curriculum"
                         whileHover={{ scale: 1.03 }}
                         whileTap={{ scale: 0.97 }}
@@ -232,22 +192,20 @@ export default function Hero() {
                         style={{
                             display: "inline-flex",
                             alignItems: "center",
-                            gap: 8,
                             padding: "14px 32px",
                             borderRadius: 12,
                             background: "rgba(255,255,255,0.15)",
                             backdropFilter: "blur(12px)",
                             color: "#fff",
                             fontSize: 15,
-                            fontWeight: 800,
+                            fontWeight: 500,
                             textDecoration: "none",
-                            letterSpacing: 0,
+                            letterSpacing: "-0.01em",
                             cursor: "pointer",
                             border: "1px solid rgba(255,255,255,0.25)",
                             minHeight: 48,
                         }}
                     >
-                        <ArrowDown size={18} />
                         커리큘럼 보기
                     </motion.a>
                 </motion.div>
@@ -274,9 +232,8 @@ export default function Hero() {
                 {/* 숫자 */}
                 <div className="hero-stats" style={{ display: "flex", gap: "clamp(24px, 4vw, 48px)" }}>
                     {[
-                        { val: "6", label: "성장 단계" },
-                        { val: "4", label: "성향별 트랙" },
-                        { val: "10", label: "기록 메뉴" },
+                        { val: "40+", label: "수강생" },
+                        { val: "8", label: "코스" },
                     ].map((s, i) => (
                         <motion.div
                             key={s.label}
@@ -285,10 +242,10 @@ export default function Hero() {
                             transition={{ delay: 2.2 + i * 0.15, duration: 0.6, ease }}
                         >
                             <div style={{
-                                fontSize: 28,
+                                fontSize: "clamp(20px, 2.5vw, 28px)",
                                 fontWeight: 700,
                                 color: "#ffffff",
-                                letterSpacing: 0,
+                                letterSpacing: "-0.02em",
                                 lineHeight: 1,
                             }}>
                                 {s.val}
@@ -298,7 +255,7 @@ export default function Hero() {
                                 color: "rgba(255,255,255,0.5)",
                                 fontWeight: 500,
                                 marginTop: 4,
-                                letterSpacing: 0,
+                                letterSpacing: "0.05em",
                             }}>
                                 {s.label}
                             </div>
@@ -321,7 +278,7 @@ export default function Hero() {
                         fontSize: 10,
                         fontWeight: 500,
                         color: "rgba(255,255,255,0.5)",
-                        letterSpacing: 0,
+                        letterSpacing: "0.15em",
                         textTransform: "uppercase" as const,
                     }}>
                         Scroll
