@@ -1,0 +1,30 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { describe, expect, it } from "vitest";
+
+const root = process.cwd();
+
+function read(relativePath: string) {
+  return readFileSync(join(root, relativePath), "utf8");
+}
+
+describe("learning platform routing", () => {
+  it("opens the course and book list from the learning platform entry", () => {
+    const learningPage = read("src/app/dashboard/learning/page.tsx");
+    const coursesPage = read("src/app/dashboard/learning/courses/page.tsx");
+
+    expect(learningPage).toContain('redirect("/dashboard/learning/courses")');
+    expect(coursesPage).toContain("COURSES");
+    expect(coursesPage).toContain("/dashboard/learning/courses/");
+    expect(coursesPage).not.toContain('router.replace("/dashboard/learning")');
+  });
+
+  it("does not force admin or teacher accounts into the track assignment center", () => {
+    const layout = read("src/app/dashboard/learning/layout.tsx");
+
+    expect(layout).not.toContain('window.location.replace("/dashboard/learning/admin")');
+    expect(layout).not.toContain('href="/dashboard/learning/admin"');
+    expect(layout).not.toContain('href: "/dashboard/learning/admin"');
+    expect(layout).not.toContain('"/dashboard/learning/admin" : "/"');
+  });
+});

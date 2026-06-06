@@ -18,7 +18,6 @@ import { XPToast } from "@/components/ui/XPToast";
 import { useStudyTimer } from "@/hooks/useStudyTimer";
 import { useGamificationSync } from "@/lib/gamification-sync";
 import { recordMissionClaim } from "@/lib/reward-engine";
-import { isGrowthOsAdminName } from "@/lib/growth-os-client";
 import { PageTransition } from "@/components/motion/page-transition";
 import { GlowPulse } from "@/components/motion/motion";
 import { Spotlight, MorphingGradient } from "@/components/motion/premium";
@@ -143,33 +142,15 @@ const NAV_ITEMS = [
     { icon: "cast", label: "라이브 수업", href: "/dashboard/learning/live" },
 ];
 
-const ADMIN_NAV_ITEMS = [
-    { icon: "route", label: "트랙 배정", href: "/dashboard/learning/admin" },
-    { icon: "admin_panel_settings", label: "관리자 페이지", href: "/teacher/admin" },
-];
-
-function isGrowthAdminUser(user?: { role?: string; name?: string | null } | null) {
-    return user?.role === "teacher" || user?.role === "admin" || isGrowthOsAdminName(user?.name);
-}
-
-function isAllowedAdminLearningPath(pathname: string) {
-    return pathname.startsWith("/dashboard/learning/admin") || pathname.startsWith("/dashboard/learning/analytics");
-}
-
 /* ── Auth Guard ── */
 function AuthGate({ children }: { children: ReactNode }) {
     const { user, loading } = useAuth();
-    const pathname = usePathname();
     useEffect(() => {
         if (loading) return;
         if (!user) {
             window.location.href = "/login";
-            return;
         }
-        if (isGrowthAdminUser(user) && !isAllowedAdminLearningPath(pathname)) {
-            window.location.replace("/dashboard/learning/admin");
-        }
-    }, [loading, pathname, user]);
+    }, [loading, user]);
     if (loading) return (
         <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#fff", position: "relative", overflow: "hidden" }}>
             <motion.div
@@ -195,7 +176,6 @@ function AuthGate({ children }: { children: ReactNode }) {
         </div>
     );
     if (!user) return null;
-    if (isGrowthAdminUser(user) && !isAllowedAdminLearningPath(pathname)) return null;
     return <>{children}</>;
 }
 
@@ -246,8 +226,8 @@ function LeftSidebar({ progress, addXP, hasLive }: { progress: import("@/hooks/u
     const pathname = usePathname();
     const { user, signOut } = useAuth();
     const isActive = (href: string) => href === "/dashboard/learning" ? pathname === href : pathname.startsWith(href);
-    const isAdmin = isGrowthAdminUser(user);
-    const allItems = isAdmin ? ADMIN_NAV_ITEMS : NAV_ITEMS;
+    const allItems = NAV_ITEMS;
+    const isAdmin = false;
 
     // 읽지 않은 알림 (채팅)
     const unreadBadges: Record<string, number> = {
@@ -584,7 +564,7 @@ function Navbar({ onMenuOpen, xp, level, tier }: { onMenuOpen: () => void; xp: n
     const { user, signOut } = useAuth();
     const [scrolled, setScrolled] = useState(false);
     const activeEffect = useProfileEffect();
-    const isAdmin = isGrowthAdminUser(user);
+    const isAdmin = false;
     // 숙제 기능 제거됨
 
     useEffect(() => {
@@ -611,7 +591,7 @@ function Navbar({ onMenuOpen, xp, level, tier }: { onMenuOpen: () => void; xp: n
             <div style={{ maxWidth: 1800, margin: "0 auto", padding: "0 24px" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", height: 76, alignItems: "center" }}>
                     {/* Logo → 홈페이지 */}
-                    <Link href={isAdmin ? "/dashboard/learning/admin" : "/"}>
+                    <Link href="/dashboard/learning/courses">
                     <motion.div
                         whileHover={{ scale: 1.02 }}
                         transition={{ type: "spring", stiffness: 400, damping: 25 }}
@@ -677,7 +657,7 @@ function Navbar({ onMenuOpen, xp, level, tier }: { onMenuOpen: () => void; xp: n
                         {/* Admin Button */}
                         {isAdmin ? (
                             <>
-                            <a href="/dashboard/learning/admin" style={{
+                            <a href="/teacher/admin" style={{
                                 display: 'flex', alignItems: 'center', gap: 6,
                                 padding: '8px 16px', borderRadius: 10,
                                 background: 'linear-gradient(135deg, #2563eb, #0ea5e9)',
@@ -777,7 +757,7 @@ function MobileDrawer({ isOpen, onClose, hasLive }: { isOpen: boolean; onClose: 
     const pathname = usePathname();
     const { user, signOut } = useAuth();
     const isActive = (href: string) => href === "/dashboard/learning" ? pathname === href : pathname.startsWith(href);
-    const allItems = isGrowthAdminUser(user) ? ADMIN_NAV_ITEMS : NAV_ITEMS;
+    const allItems = NAV_ITEMS;
     return (
         <AnimatePresence>
             {isOpen && (
