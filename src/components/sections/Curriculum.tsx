@@ -123,8 +123,8 @@ export default function Curriculum() {
         <section id="curriculum" className="curr-section">
             <div className="curr-wrap">
                 <header className="curr-head">
-                    <span className="curr-kicker">커리큘럼 V2</span>
-                    <h2>진도는 문법 목록이 아니라 사용 능력이다</h2>
+                    <span className="curr-kicker">커리큘럼</span>
+                    <h2>아이에게 맞는 경로로 탄탄하게 배웁니다</h2>
                     <p>
                         코딩쏙은 먼저 공통기초로 기준을 맞추고, 4주 체크와 성향 분석 뒤 A/B/C/D 트랙을 추천한다.
                         학생은 코드, 설명, 수정, AI 비교, 결과물로 성장했다는 증거를 남긴다.

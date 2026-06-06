@@ -12,7 +12,6 @@ import TechMarquee from "@/components/sections/TechMarquee";
 import WhyUs from "@/components/sections/WhyUs";
 import Philosophy from "@/components/sections/Philosophy";
 import PromoShowcase from "@/components/sections/PromoShowcase";
-import GrowthPlatformV2 from "@/components/sections/GrowthPlatformV2";
 import Teachers from "@/components/sections/Teachers";
 import Curriculum from "@/components/sections/Curriculum";
 import Schedule from "@/components/sections/Schedule";
@@ -45,7 +44,6 @@ export default function Home() {
             {/* Hero + LivePulseSection: 블로그 실데이터 + 실시간 학습 카운터 */}
             <Hero />
             <LivePulseSection />
-            <GrowthPlatformV2 />
             <TechMarquee />
             <WhyUs />
             <Philosophy />
