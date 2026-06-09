@@ -27,6 +27,9 @@ export const env = {
     get PARENT_SESSION_SECRET() {
         return process.env.PARENT_SESSION_SECRET || ''
     },
+    get PARENT_PORTAL_SHARED_PIN() {
+        return process.env.PARENT_PORTAL_SHARED_PIN || ''
+    },
     get VAPID_PUBLIC_KEY() {
         return process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || ''
     },

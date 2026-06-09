@@ -2,7 +2,7 @@
  * /api/parent/lookup?name=학생이름
  *
  * 노션 피드백 DB에서 해당 학생의 피드백을 가져온다.
- * 로그인 불필요. 학생 이름 매칭만으로 조회.
+ * 학부모 세션에서 허용된 학생 이름만 조회.
  *
  * 담당자 명시 "노션 자료 로딩 너무 길어" — 직렬 child block fetch 제거 + 모든 fetch에 timeout.
  */
@@ -12,18 +12,17 @@ import { verifyParentSessionToken, PARENT_SESSION_COOKIE } from "@/lib/parent-se
 import { createClient as createServerSupabase } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { normalizeStudentName } from "@/lib/student-family";
+import {
+    fetchWithTimeout,
+    getNotionFeedbackHeaders,
+    isNotionFeedbackConfigured,
+    queryNotionFeedbackPagesByStudent,
+} from "@/lib/notion-feedback";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 export const fetchCache = "force-no-store";
 
-const NOTION_KEY = process.env.NOTION_API_KEY || "";
-const FEEDBACK_DB = process.env.NOTION_FEEDBACK_DB_ID || "3279bd0e-91c9-802f-b0bf-e8336861f74c";
-const HEADERS = {
-    "Authorization": `Bearer ${NOTION_KEY}`,
-    "Notion-Version": "2022-06-28",
-    "Content-Type": "application/json",
-};
 const NO_STORE_HEADERS = {
     "Cache-Control": "no-store, no-cache, must-revalidate",
 };
@@ -66,18 +65,6 @@ async function isAuthorizedParentLookup(req: NextRequest, name: string) {
         return teacherProfile?.role === "teacher" || teacherProfile?.role === "admin";
     } catch {
         return false;
-    }
-}
-
-const ACTIVE_PAGE_LIMIT = 20;
-
-async function fetchWithTimeout(url: string, options: RequestInit, ms: number): Promise<Response> {
-    const ac = new AbortController();
-    const t = setTimeout(() => ac.abort(), ms);
-    try {
-        return await fetch(url, { ...options, signal: ac.signal, cache: "no-store" });
-    } finally {
-        clearTimeout(t);
     }
 }
 
@@ -149,7 +136,7 @@ async function getPageContent(pageId: string): Promise<PageContent> {
     try {
         res = await fetchWithTimeout(
             `https://api.notion.com/v1/blocks/${pageId}/children?page_size=100`,
-            { headers: HEADERS },
+            { headers: getNotionFeedbackHeaders() },
             3500,
         );
     } catch {
@@ -203,31 +190,12 @@ export async function GET(req: NextRequest) {
         return jsonNoStore({ error: "권한이 없습니다." }, { status: 403 });
     }
 
-    if (!NOTION_KEY || !FEEDBACK_DB) {
+    if (!isNotionFeedbackConfigured()) {
         return jsonNoStore({ error: "서비스 일시 중단" }, { status: 503 });
     }
 
     try {
-        const queryRes = await fetchWithTimeout(
-            `https://api.notion.com/v1/databases/${FEEDBACK_DB}/query`,
-            {
-                method: "POST",
-                headers: HEADERS,
-                body: JSON.stringify({
-                    filter: { property: "학생 이름", rich_text: { equals: name } },
-                    sorts: [{ property: "피드백 날짜", direction: "descending" }],
-                    page_size: 20,
-                }),
-            },
-            5000,
-        );
-
-        if (!queryRes.ok) {
-            return NextResponse.json({ error: "노션 조회 실패" }, { status: 502 });
-        }
-
-        const queryData = await queryRes.json();
-        const pages = queryData.results || [];
+        const pages = await queryNotionFeedbackPagesByStudent(name);
 
         if (pages.length === 0) {
             return jsonNoStore({
@@ -236,9 +204,7 @@ export async function GET(req: NextRequest) {
             });
         }
 
-        const activePage = pages
-            .slice(0, ACTIVE_PAGE_LIMIT)
-            .filter((p: any) => p.properties["피드백 상태"]?.status?.name !== "시작 전");
+        const activePage = pages.filter((p: any) => p.properties["피드백 상태"]?.status?.name !== "시작 전");
 
         // Notion 피드백 본문은 학생 이름을 제외하고 가능한 모든 작성 섹션을 응답한다.
         const feedbacks = await Promise.all(

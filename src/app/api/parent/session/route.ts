@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { verifyParentPin } from "@/lib/parent-auth";
 import { createParentSessionToken, setParentSessionCookie } from "@/lib/parent-session";
 import { getLinkedStudentNames } from "@/lib/student-family";
+import { createNotionStudentId, verifyNotionParentAccess } from "@/lib/notion-feedback";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -73,32 +74,50 @@ export async function POST(req: NextRequest) {
         } catch { /* Redis가 없어도 인증 자체는 계속 진행 */ }
 
         const adminClient = createAdminClient();
-        if (!adminClient) {
-            return NextResponse.json({ success: false, error: "서버 설정 오류입니다." }, { status: 503, headers: NO_STORE_HEADERS });
+        if (adminClient) {
+            const profile = await verifyParentPin(adminClient, studentName, pin);
+            if (profile) {
+                const canonicalName = canonicalStudentName(profile, studentName);
+                const allowedStudents = getLinkedStudentNames(canonicalName);
+                const linkedProfiles = await loadLinkedProfiles(adminClient, allowedStudents, profile);
+                const token = createParentSessionToken({
+                    studentId: profile.id,
+                    studentIds: linkedProfiles.map(item => item.id),
+                    studentNames: allowedStudents,
+                    parentName: canonicalName,
+                });
+
+                const response = NextResponse.json({
+                    success: true,
+                    studentName: canonicalName,
+                    allowedStudents,
+                }, { headers: NO_STORE_HEADERS });
+                setParentSessionCookie(response, token);
+                return response;
+            }
         }
 
-        const profile = await verifyParentPin(adminClient, studentName, pin);
-        if (!profile) {
-            return NextResponse.json({ success: false, error: "학생 이름 또는 학부모 인증번호가 맞지 않습니다." }, { status: 401, headers: NO_STORE_HEADERS });
+        const notionAccess = await verifyNotionParentAccess(studentName, pin);
+        if (notionAccess) {
+            const canonicalName = canonicalStudentName(notionAccess, studentName);
+            const allowedStudents = getLinkedStudentNames(canonicalName);
+            const token = createParentSessionToken({
+                studentId: notionAccess.id,
+                studentIds: allowedStudents.map(createNotionStudentId),
+                studentNames: allowedStudents,
+                parentName: canonicalName,
+            });
+
+            const response = NextResponse.json({
+                success: true,
+                studentName: canonicalName,
+                allowedStudents,
+            }, { headers: NO_STORE_HEADERS });
+            setParentSessionCookie(response, token);
+            return response;
         }
 
-        const canonicalName = canonicalStudentName(profile, studentName);
-        const allowedStudents = getLinkedStudentNames(canonicalName);
-        const linkedProfiles = await loadLinkedProfiles(adminClient, allowedStudents, profile);
-        const token = createParentSessionToken({
-            studentId: profile.id,
-            studentIds: linkedProfiles.map(item => item.id),
-            studentNames: allowedStudents,
-            parentName: canonicalName,
-        });
-
-        const response = NextResponse.json({
-            success: true,
-            studentName: canonicalName,
-            allowedStudents,
-        }, { headers: NO_STORE_HEADERS });
-        setParentSessionCookie(response, token);
-        return response;
+        return NextResponse.json({ success: false, error: "학생 이름 또는 학부모 인증번호가 맞지 않습니다." }, { status: 401, headers: NO_STORE_HEADERS });
     } catch (error) {
         const message = error instanceof Error ? error.message : "";
         return NextResponse.json({
