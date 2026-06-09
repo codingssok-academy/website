@@ -15,10 +15,10 @@ export default function ParentNotFound() {
                 주소가 잘못되었거나 삭제된 페이지입니다.
             </p>
             <Link
-                href="/parent"
-                className="inline-block px-8 py-3 rounded-[14px] bg-gradient-to-br from-blue-600 to-blue-700 text-white text-sm font-bold no-underline"
+                href="/parent/feedback"
+                className="inline-block px-8 py-3 rounded-[8px] bg-blue-600 text-white text-sm font-bold no-underline"
             >
-                홈으로 이동
+                피드백으로 이동
             </Link>
         </div>
     );

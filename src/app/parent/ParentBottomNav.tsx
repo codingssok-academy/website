@@ -12,8 +12,6 @@ interface Tab {
 }
 
 const TABS: Tab[] = [
-    { href: "/parent", label: "홈", icon: "home", matchExact: true },
-    { href: "/parent/growth", label: "성장", icon: "trending_up" },
     { href: "/parent/feedback", label: "피드백", icon: "rate_review" },
     { href: "/parent/settings", label: "설정", icon: "settings" },
 ];
@@ -46,20 +44,20 @@ export default function ParentBottomNav({ hwBadge = 0 }: Props) {
                         href={tab.href}
                         aria-label={tab.label}
                         aria-current={active ? "page" : undefined}
-                        className={`flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 no-underline relative min-h-[48px] transition-colors duration-150 ${active ? "text-blue-600" : "text-slate-400"}`}
+                        className={`flex-1 flex flex-col items-center justify-center gap-1 py-1.5 no-underline relative min-h-[48px] transition-colors duration-150 ${active ? "text-blue-600" : "text-slate-400"}`}
                         style={{ WebkitTapHighlightColor: "transparent" }}
                     >
                         {active && (
                             <motion.div
                                 layoutId="parent-nav-indicator"
-                                className="absolute top-0 left-1/2 -translate-x-1/2 w-7 h-[3px] rounded-b bg-blue-600"
+                                className="absolute top-0 left-1/2 -translate-x-1/2 w-10 h-[3px] rounded-b bg-blue-600"
                                 transition={{ type: "spring", stiffness: 420, damping: 36 }}
                             />
                         )}
 
                         <span className="relative inline-flex">
                             <motion.span
-                                className="material-symbols-outlined text-[22px] leading-none"
+                                className="material-symbols-outlined text-[24px] leading-none"
                                 animate={{
                                     scale: active ? 1.1 : 1,
                                     fontVariationSettings: active ? "'FILL' 1" : "'FILL' 0",
@@ -81,7 +79,7 @@ export default function ParentBottomNav({ hwBadge = 0 }: Props) {
                             )}
                         </span>
 
-                        <span className={`text-[10px] leading-none font-[Pretendard,sans-serif] ${active ? "font-bold" : "font-medium"}`}>
+                        <span className={`text-[11px] leading-none font-[Pretendard,sans-serif] ${active ? "font-bold" : "font-semibold"}`}>
                             {tab.label}
                         </span>
                     </Link>

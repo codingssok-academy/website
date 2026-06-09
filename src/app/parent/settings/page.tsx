@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
+import { Info, ShieldCheck, UserRound } from "lucide-react";
 import { STUDENT_KEY } from "../lib/studentAccess";
-const APP_VERSION = "2.0.0";
 
-const cardClass = "bg-white rounded-[20px] overflow-hidden shadow-[0_1px_8px_rgba(0,0,0,0.06),0_0_0_1px_rgba(226,232,240,0.8)]";
-const sectionLabel = "text-[11px] font-extrabold text-slate-500 uppercase tracking-wider mb-2.5 pl-1";
+const APP_VERSION = "2.0.0";
 
 export default function ParentSettingsPage() {
     const [studentName, setStudentName] = useState("");
@@ -15,59 +14,190 @@ export default function ParentSettingsPage() {
     }, []);
 
     return (
-        <div className="px-4 pt-5 pb-2 max-w-[480px] mx-auto">
-            {/* Header */}
-            <div className="mb-7">
-                <div className="text-[13px] text-slate-500 font-semibold mb-0.5">앱 설정</div>
-                <div className="text-xl font-black text-slate-900">설정</div>
-            </div>
+        <div style={pageStyle}>
+            <header style={headerStyle}>
+                <div style={eyebrowStyle}>앱 설정</div>
+                <h1 style={titleStyle}>설정</h1>
+            </header>
 
-            {/* Student info */}
-            <section className="mb-5">
-                <div className={sectionLabel}>학생 정보</div>
-                <div className={cardClass}>
-                    <div className="flex items-center gap-3.5 px-5 py-4">
-                        <div className="w-11 h-11 rounded-[14px] bg-blue-50 flex items-center justify-center shrink-0">
-                            <span className="material-symbols-outlined text-2xl text-blue-600" style={{ fontVariationSettings: "'FILL' 1" }}>
-                                person
-                            </span>
-                        </div>
-                        <div className="flex-1">
-                            <div className="text-[11px] text-slate-500 font-semibold mb-0.5">현재 학생</div>
-                            <div className="text-base font-extrabold text-slate-900">{studentName || "\u2014"}</div>
-                        </div>
+            <section style={cardStyle}>
+                <div style={studentRowStyle}>
+                    <div style={primaryIconStyle}>
+                        <UserRound size={23} strokeWidth={2.4} />
+                    </div>
+                    <div style={studentTextStyle}>
+                        <div style={labelStyle}>연결된 학생</div>
+                        <div style={studentNameStyle}>{studentName || "-"}</div>
                     </div>
                 </div>
             </section>
 
-            {/* App info */}
-            <section className="mb-5">
-                <div className={sectionLabel}>앱 정보</div>
-                <div className={cardClass}>
-                    <SettingsRow icon="info" iconBg="bg-blue-50" iconColor="text-blue-600" label="버전" value={`v${APP_VERSION}`} />
-                    <SettingsRow icon="school" iconBg="bg-green-50" iconColor="text-green-600" label="서비스" value="코딩쏙 학부모 앱" divider={false} />
-                </div>
+            <section style={infoCardStyle}>
+                <SettingsRow
+                    icon={<Info size={20} strokeWidth={2.3} />}
+                    label="버전"
+                    value={`v${APP_VERSION}`}
+                />
+                <SettingsRow
+                    icon={<ShieldCheck size={20} strokeWidth={2.3} />}
+                    label="서비스"
+                    value="코딩쏙 학부모 앱"
+                    divider={false}
+                />
             </section>
 
-            <div className="text-center mt-8 text-[11px] text-slate-300 font-semibold">
-                코딩쏙 학부모 앱 v{APP_VERSION}
-            </div>
+            <div style={footerStyle}>코딩쏙 학부모 앱 v{APP_VERSION}</div>
         </div>
     );
 }
 
-function SettingsRow({ icon, iconBg, iconColor, label, value, divider = true }: {
-    icon: string; iconBg: string; iconColor: string; label: string; value: string; divider?: boolean;
+function SettingsRow({
+    icon,
+    label,
+    value,
+    divider = true,
+}: {
+    icon: ReactNode;
+    label: string;
+    value: string;
+    divider?: boolean;
 }) {
     return (
-        <div className={`flex items-center gap-3.5 px-5 py-3.5 ${divider ? "border-b border-slate-50" : ""}`}>
-            <div className={`w-10 h-10 rounded-xl ${iconBg} flex items-center justify-center shrink-0`}>
-                <span className={`material-symbols-outlined text-xl ${iconColor}`} style={{ fontVariationSettings: "'FILL' 1" }}>
-                    {icon}
-                </span>
-            </div>
-            <div className="text-sm font-bold text-gray-700 flex-1">{label}</div>
-            <div className="text-[13px] text-slate-500 font-semibold">{value}</div>
+        <div style={{ ...rowStyle, borderBottom: divider ? "1px solid #f1f5f9" : "none" }}>
+            <div style={secondaryIconStyle}>{icon}</div>
+            <div style={rowLabelStyle}>{label}</div>
+            <div style={rowValueStyle}>{value}</div>
         </div>
     );
 }
+
+const pageStyle: CSSProperties = {
+    maxWidth: 480,
+    margin: "0 auto",
+    padding: "20px 16px 16px",
+};
+
+const headerStyle: CSSProperties = {
+    marginBottom: 20,
+};
+
+const eyebrowStyle: CSSProperties = {
+    fontSize: 12,
+    fontWeight: 800,
+    color: "#64748b",
+    lineHeight: 1.35,
+};
+
+const titleStyle: CSSProperties = {
+    margin: "2px 0 0",
+    fontSize: 28,
+    lineHeight: 1.15,
+    fontWeight: 950,
+    color: "#020617",
+};
+
+const cardStyle: CSSProperties = {
+    marginBottom: 14,
+    padding: 16,
+    borderRadius: 8,
+    background: "#fff",
+    border: "1px solid #e2e8f0",
+    boxShadow: "0 1px 10px rgba(15,23,42,0.06)",
+};
+
+const studentRowStyle: CSSProperties = {
+    display: "flex",
+    alignItems: "center",
+    gap: 14,
+    minHeight: 54,
+};
+
+const primaryIconStyle: CSSProperties = {
+    width: 50,
+    height: 50,
+    borderRadius: 8,
+    background: "#2563eb",
+    color: "#fff",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+};
+
+const studentTextStyle: CSSProperties = {
+    minWidth: 0,
+    flex: 1,
+};
+
+const labelStyle: CSSProperties = {
+    fontSize: 12,
+    fontWeight: 800,
+    color: "#64748b",
+    lineHeight: 1.35,
+};
+
+const studentNameStyle: CSSProperties = {
+    marginTop: 2,
+    fontSize: 28,
+    lineHeight: 1.12,
+    fontWeight: 950,
+    color: "#020617",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+};
+
+const infoCardStyle: CSSProperties = {
+    marginBottom: 14,
+    overflow: "hidden",
+    borderRadius: 8,
+    background: "#fff",
+    border: "1px solid #e2e8f0",
+    boxShadow: "0 1px 10px rgba(15,23,42,0.06)",
+};
+
+const rowStyle: CSSProperties = {
+    minHeight: 58,
+    display: "flex",
+    alignItems: "center",
+    gap: 12,
+    padding: "10px 14px",
+};
+
+const secondaryIconStyle: CSSProperties = {
+    width: 38,
+    height: 38,
+    borderRadius: 8,
+    background: "#f1f5f9",
+    color: "#334155",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+};
+
+const rowLabelStyle: CSSProperties = {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: 900,
+    color: "#1e293b",
+};
+
+const rowValueStyle: CSSProperties = {
+    maxWidth: "58%",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+    textAlign: "right",
+    fontSize: 13,
+    fontWeight: 800,
+    color: "#64748b",
+};
+
+const footerStyle: CSSProperties = {
+    marginTop: 22,
+    textAlign: "center",
+    fontSize: 11,
+    fontWeight: 800,
+    color: "#cbd5e1",
+};
