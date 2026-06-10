@@ -968,9 +968,10 @@ function LearningLayoutInner({ children }: { children: ReactNode }) {
 
     // 3D 대시보드 + 코스 상세 페이지에서는 레이아웃 크롬 없이 전체화면
     const isMainDashboard = pathname === "/dashboard/learning";
+    const isCourseList = pathname === "/dashboard/learning/courses";
     const isCourseDetail = pathname.startsWith("/dashboard/learning/courses/");
     const isLivePage = pathname.startsWith("/dashboard/learning/live");
-    const isFullscreen = isMainDashboard || isCourseDetail || isLivePage;
+    const isFullscreen = isMainDashboard || isCourseList || isCourseDetail || isLivePage;
 
     return (
         <AuthProvider>
