@@ -13,7 +13,8 @@ describe("parent notion feedback access", () => {
     const sessionRoute = read("src/app/api/parent/session/route.ts");
     const notionFeedback = read("src/lib/notion-feedback.ts");
 
-    expect(sessionRoute).toContain("verifyNotionParentAccess");
+    expect(sessionRoute).toContain("getNotionParentAccess");
+    expect(sessionRoute).toContain("notionResult.exists");
     expect(sessionRoute).toContain("createNotionStudentId");
     expect(notionFeedback).toContain("학부모 인증번호");
     expect(notionFeedback).toContain("PARENT_PORTAL_SHARED_PIN");

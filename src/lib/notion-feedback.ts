@@ -20,6 +20,11 @@ export interface NotionParentAccess {
     email: null;
 }
 
+export interface NotionParentAccessResult {
+    exists: boolean;
+    access: NotionParentAccess | null;
+}
+
 export function createNotionStudentId(name: string) {
     return `notion:${normalizeStudentName(name)}`;
 }
@@ -127,25 +132,35 @@ export async function verifyNotionParentAccess(
     studentName: string,
     pin: string,
 ): Promise<NotionParentAccess | null> {
+    return (await getNotionParentAccess(studentName, pin)).access;
+}
+
+export async function getNotionParentAccess(
+    studentName: string,
+    pin: string,
+): Promise<NotionParentAccessResult> {
     const sharedPin = env.PARENT_PORTAL_SHARED_PIN.trim();
     const normalizedName = normalizeStudentName(studentName);
-    if (!normalizedName) return null;
+    if (!normalizedName) return { exists: false, access: null };
 
     const pages = await queryNotionFeedbackPagesByStudent(studentName.trim(), {
         pageSize: 100,
         timeoutMs: 4000,
     });
-    if (pages.length === 0) return null;
+    if (pages.length === 0) return { exists: false, access: null };
 
     const matchesNotionPin = pages.some(page => hasMatchingNotionParentPin(page, pin));
     const matchesSharedPin = Boolean(sharedPin && pin === sharedPin);
-    if (!matchesNotionPin && !matchesSharedPin) return null;
+    if (!matchesNotionPin && !matchesSharedPin) return { exists: true, access: null };
 
     const displayName = studentName.trim();
     return {
-        id: createNotionStudentId(displayName),
-        name: displayName,
-        display_name: displayName,
-        email: null,
+        exists: true,
+        access: {
+            id: createNotionStudentId(displayName),
+            name: displayName,
+            display_name: displayName,
+            email: null,
+        },
     };
 }
