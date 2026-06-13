@@ -25,6 +25,10 @@ function normalizeName(input: unknown) {
     return typeof input === "string" ? input.trim().replace(/\s+/g, "") : "";
 }
 
+function getAccountRoleForName(name: string) {
+    return ["구자현", "장민"].includes(normalizeName(name)) ? "admin" : "student";
+}
+
 function normalizeParentCode(input: unknown) {
     return typeof input === "string" ? input.replace(/\D/g, "").slice(0, 5) : "";
 }
@@ -180,6 +184,7 @@ export async function POST(request: NextRequest) {
 
         const email = buildStudentAuthEmail(student.id);
         const password = buildStudentAuthPassword(student.id, pin);
+        const accountRole = getAccountRoleForName(name);
         const existingUser = await findAuthUserByEmail(adminClient, email);
         let authUserId = existingUser?.id || student.auth_user_id || "";
 
@@ -188,8 +193,8 @@ export async function POST(request: NextRequest) {
                 email,
                 password,
                 email_confirm: true,
-                user_metadata: { name, role: "student" },
-                app_metadata: { role: "student" },
+                user_metadata: { name, role: accountRole },
+                app_metadata: { role: accountRole },
             });
             if (error) throw new Error(error.message);
         } else {
@@ -197,8 +202,8 @@ export async function POST(request: NextRequest) {
                 email,
                 password,
                 email_confirm: true,
-                user_metadata: { name, role: "student" },
-                app_metadata: { role: "student" },
+                user_metadata: { name, role: accountRole },
+                app_metadata: { role: accountRole },
             });
             if (error || !data.user) throw new Error(error?.message || "학생 인증 계정을 만들지 못했습니다.");
             authUserId = data.user.id;
@@ -212,7 +217,7 @@ export async function POST(request: NextRequest) {
                     email,
                     name,
                     display_name: name,
-                    role: "student",
+                    role: accountRole,
                     updated_at: new Date().toISOString(),
                 },
                 { onConflict: "id" },

@@ -162,7 +162,7 @@ async function loadBaseData(adminClient: AdminClient) {
     const [studentsRes, profilesRes, progressRes] = await Promise.all([
         adminClient
             .from('students')
-            .select('id, name, birthday, grade, class, avatar, pin, auth_user_id, created_at')
+            .select('id, name, birthday, grade, class, avatar, pin, auth_user_id, status, created_at')
             .order('name', { ascending: true }),
         adminClient.from('profiles').select('id, name, display_name, email, role'),
         adminClient

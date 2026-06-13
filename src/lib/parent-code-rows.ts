@@ -9,6 +9,7 @@ export type ParentCodeStudentRow = {
     avatar?: string | null
     pin?: string | null
     auth_user_id?: string | null
+    status?: string | null
     created_at?: string | null
 }
 
@@ -66,6 +67,8 @@ export function buildParentCodeRows(input: {
     const rows = new Map<string, ParentCodeRow>()
 
     for (const student of input.students) {
+        if (student.status === 'deactivated' || student.class === 'admin') continue
+
         const profile = findProfileForParentCodeStudent(student, input.profiles)
         const progressPin = profile ? progressByUserId.get(profile.id) : null
         const baseline = findReferenceParentCode(student.name)

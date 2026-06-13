@@ -28,6 +28,10 @@ function normalizeName(input: unknown) {
   return typeof input === "string" ? input.trim().replace(/\s+/g, "") : "";
 }
 
+function getAccountRoleForName(name: string) {
+  return ["구자현", "장민"].includes(normalizeName(name)) ? "admin" : "student";
+}
+
 function normalizePin(input: unknown) {
   return typeof input === "string" ? input.replace(/\D/g, "").slice(0, 5) : "";
 }
@@ -135,7 +139,7 @@ async function loadBaseData(admin = createAdmin()) {
   const [studentsRes, profilesRes, progressRes] = await Promise.all([
     admin
       .from("students")
-      .select("id, name, birthday, grade, class, avatar, pin, auth_user_id, created_at")
+      .select("id, name, birthday, grade, class, avatar, pin, auth_user_id, status, created_at")
       .order("name", { ascending: true }),
     admin.from("profiles").select("id, name, display_name, email, role"),
     admin
@@ -152,7 +156,9 @@ async function loadBaseData(admin = createAdmin()) {
 
   return {
     success: true,
-    students: studentsRes.data || [],
+    students: (studentsRes.data || []).filter((student) =>
+      student.status !== "deactivated" && student.class !== "admin"
+    ),
     profiles,
     progress: progressRes.data || [],
     warning: profilesRes.error?.message || progressRes.error?.message || null,
@@ -228,6 +234,7 @@ async function handleStudentSignup(body: Record<string, unknown>) {
 
   const email = buildStudentAuthEmail(student.id);
   const password = buildStudentAuthPassword(student.id, studentPin);
+  const accountRole = getAccountRoleForName(name);
   const existingByEmail = await findAuthUserByEmail(admin, email);
   let authUserId = existingByEmail?.id || student.auth_user_id || "";
 
@@ -236,8 +243,8 @@ async function handleStudentSignup(body: Record<string, unknown>) {
       email,
       password,
       email_confirm: true,
-      user_metadata: { name, role: "student" },
-      app_metadata: { role: "student" },
+      user_metadata: { name, role: accountRole },
+      app_metadata: { role: accountRole },
     });
     if (error) throw new HttpError(500, error.message);
   } else {
@@ -245,8 +252,8 @@ async function handleStudentSignup(body: Record<string, unknown>) {
       email,
       password,
       email_confirm: true,
-      user_metadata: { name, role: "student" },
-      app_metadata: { role: "student" },
+      user_metadata: { name, role: accountRole },
+      app_metadata: { role: accountRole },
     });
     if (error || !data.user) {
       throw new HttpError(500, error?.message || "학생 인증 계정을 만들지 못했습니다.");
@@ -260,7 +267,7 @@ async function handleStudentSignup(body: Record<string, unknown>) {
       email,
       name,
       display_name: name,
-      role: "student",
+      role: accountRole,
       approval_status: "approved",
       updated_at: new Date().toISOString(),
     },
@@ -312,7 +319,7 @@ async function upsertStudentCode(input: {
   const admin = input.admin;
   const { data: students, error: studentsError } = await admin
     .from("students")
-    .select("id, name, birthday, grade, class, avatar, pin, auth_user_id, created_at")
+    .select("id, name, birthday, grade, class, avatar, pin, auth_user_id, status, created_at")
     .eq("name", input.name)
     .limit(5);
   if (studentsError) throw new HttpError(500, studentsError.message);

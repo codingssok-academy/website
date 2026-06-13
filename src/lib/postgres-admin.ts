@@ -58,7 +58,7 @@ export async function getProfileRoleFromDatabase(userId: string) {
 export async function loadParentCodeBaseDataFromDatabase() {
     const [students, profiles, progress] = await Promise.all([
         databaseQuery<ParentCodeStudentRow>(
-            'select id, name, birthday, grade, "class", avatar, pin, auth_user_id, created_at from public.students order by name asc',
+            'select id, name, birthday, grade, "class", avatar, pin, auth_user_id, status, created_at from public.students order by name asc',
         ),
         databaseQuery<ParentCodeProfileRow>(
             'select id, name, display_name, email, role from public.profiles',
@@ -119,7 +119,7 @@ export async function upsertStudentCodeInDatabase(input: {
                 pin = $6,
                 auth_user_id = $7
             where id = $1
-            returning id, name, birthday, grade, "class", avatar, pin, auth_user_id, created_at
+            returning id, name, birthday, grade, "class", avatar, pin, auth_user_id, status, created_at
             `,
             [
                 input.id,
@@ -138,7 +138,7 @@ export async function upsertStudentCodeInDatabase(input: {
         `
         insert into public.students (name, birthday, grade, "class", pin, auth_user_id)
         values ($1, $2, $3, $4, $5, $6)
-        returning id, name, birthday, grade, "class", avatar, pin, auth_user_id, created_at
+        returning id, name, birthday, grade, "class", avatar, pin, auth_user_id, status, created_at
         `,
         [
             input.name,

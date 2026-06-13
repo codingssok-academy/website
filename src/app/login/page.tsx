@@ -115,7 +115,6 @@ export default function LoginPage() {
       .update({
         name: student.name,
         display_name: student.name,
-        role: "student",
       })
       .eq("id", authUser.id);
 
