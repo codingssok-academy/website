@@ -21,6 +21,7 @@ export default function ParentNameGate({ onNameSet }: Props) {
     const submit = async () => {
         const studentName = name.trim().replace(/\s+/g, "");
         const parentPin = pin.replace(/\D/g, "").slice(0, 5);
+
         if (studentName.length < 2 || parentPin.length !== 5 || loading) return;
 
         setLoading(true);
@@ -33,9 +34,11 @@ export default function ParentNameGate({ onNameSet }: Props) {
                 body: JSON.stringify({ name: studentName, pin: parentPin }),
             });
             const data = await res.json();
+
             if (!res.ok || !data.success) {
                 throw new Error(data.error || "학생 이름 또는 학부모 인증번호가 맞지 않습니다.");
             }
+
             hapticLight();
             localStorage.setItem(PARENT_VERIFIED_KEY, "true");
             onNameSet(studentName);
@@ -76,11 +79,9 @@ export default function ParentNameGate({ onNameSet }: Props) {
                         style={{ objectFit: "contain", margin: "0 auto 20px" }}
                         priority
                     />
-                    <div style={{ fontSize: 16, fontWeight: 800, color: "#1f3b64", marginBottom: 10 }}>
-                        학부모 포털
-                    </div>
                     <div style={{ fontSize: 14, color: "#64748b", lineHeight: 1.7 }}>
-                        자녀의 학습 현황을 확인하려면<br />
+                        자녀의 학습 현황을 확인하려면
+                        <br />
                         학생 이름과 학부모 인증번호를 입력해주세요.
                     </div>
                 </div>
@@ -190,29 +191,28 @@ const labelStyle: CSSProperties = {
 
 const inputStyle: CSSProperties = {
     width: "100%",
-    minHeight: 54,
-    border: "1.5px solid #dbe3ef",
+    height: 54,
+    border: "1px solid #dbe5f2",
     borderRadius: 14,
-    background: "#f8fafc",
-    color: "#081326",
-    fontSize: 18,
+    padding: "0 15px",
+    background: "#f9fbff",
+    color: "#0f172a",
+    fontSize: 16,
     fontWeight: 800,
     outline: "none",
-    padding: "0 16px",
-    boxSizing: "border-box",
     fontFamily: "inherit",
 };
 
 const errorMarkStyle: CSSProperties = {
-    width: 18,
-    height: 18,
-    borderRadius: 999,
+    width: 16,
+    height: 16,
+    borderRadius: "50%",
+    background: "#ef4444",
+    color: "#ffffff",
     display: "inline-flex",
     alignItems: "center",
     justifyContent: "center",
-    background: "#ef4444",
-    color: "#ffffff",
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: 900,
     flexShrink: 0,
 };

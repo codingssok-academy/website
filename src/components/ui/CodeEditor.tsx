@@ -23,7 +23,7 @@ const MonacoEditor = dynamic(() => import("@monaco-editor/react"), {
    Types
    ───────────────────────────────────────── */
 
-type Language = "python" | "c" | "cpp";
+type Language = "python" | "c" | "cpp" | "lua";
 
 interface CodeEditorProps {
   language?: Language;
@@ -63,6 +63,12 @@ const LANG_CONFIG: Record<Language, { label: string; monaco: string; defaultCode
     monaco: "cpp",
     defaultCode:
       '#include <iostream>\nusing namespace std;\n\nint main() {\n    int n;\n    cout << "Enter a number: ";\n    cin >> n;\n    cout << "You entered: " << n << endl;\n    return 0;\n}',
+  },
+  lua: {
+    label: "Luau",
+    monaco: "lua",
+    defaultCode:
+      'local message = "Hello, Roblox!"\nprint(message)',
   },
 };
 
@@ -160,6 +166,13 @@ const SNIPPETS: Record<Language, { label: string; code: string }[]> = {
     {
       label: "Math",
       code: '#include <iostream>\n#include <cmath>\nusing namespace std;\n\nint main() {\n    cout << "sqrt(2) = " << sqrt(2.0) << endl;\n    cout << "pow(2, 10) = " << pow(2, 10) << endl;\n    cout << "abs(-5) = " << abs(-5) << endl;\n    return 0;\n}',
+    },
+  ],
+  lua: [
+    { label: "Hello", code: 'print("Hello, Roblox!")' },
+    {
+      label: "Part",
+      code: 'local part = Instance.new("Part")\npart.Size = Vector3.new(4, 1, 4)\npart.Position = Vector3.new(0, 5, 0)\npart.Parent = workspace',
     },
   ],
 };

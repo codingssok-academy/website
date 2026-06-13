@@ -8,7 +8,6 @@ interface Tab {
     href: string;
     label: string;
     icon: string;
-    matchExact?: boolean;
 }
 
 const TABS: Tab[] = [
@@ -19,12 +18,9 @@ const TABS: Tab[] = [
 export default function ParentBottomNav() {
     const pathname = usePathname();
 
-    const isActive = (tab: Tab) =>
-        tab.matchExact ? pathname === tab.href : pathname.startsWith(tab.href);
-
     return (
         <nav
-            aria-label="하단 탭 메뉴"
+            aria-label="하단 메뉴"
             className="fixed bottom-0 left-0 right-0 z-[500] flex items-stretch backdrop-blur-[24px] border-t border-slate-200/70"
             style={{
                 height: "calc(60px + env(safe-area-inset-bottom, 0px))",
@@ -33,7 +29,8 @@ export default function ParentBottomNav() {
             }}
         >
             {TABS.map(tab => {
-                const active = isActive(tab);
+                const active = pathname.startsWith(tab.href);
+
                 return (
                     <Link
                         key={tab.href}
@@ -51,19 +48,17 @@ export default function ParentBottomNav() {
                             />
                         )}
 
-                        <span className="relative inline-flex">
-                            <motion.span
-                                className="material-symbols-outlined text-[22px] leading-none"
-                                animate={{
-                                    scale: active ? 1.1 : 1,
-                                    fontVariationSettings: active ? "'FILL' 1" : "'FILL' 0",
-                                }}
-                                transition={{ type: "spring", stiffness: 300, damping: 22 }}
-                                style={{ fontVariationSettings: active ? "'FILL' 1" : "'FILL' 0" }}
-                            >
-                                {tab.icon}
-                            </motion.span>
-                        </span>
+                        <motion.span
+                            className="material-symbols-outlined text-[22px] leading-none"
+                            animate={{
+                                scale: active ? 1.1 : 1,
+                                fontVariationSettings: active ? "'FILL' 1" : "'FILL' 0",
+                            }}
+                            transition={{ type: "spring", stiffness: 300, damping: 22 }}
+                            style={{ fontVariationSettings: active ? "'FILL' 1" : "'FILL' 0" }}
+                        >
+                            {tab.icon}
+                        </motion.span>
 
                         <span className={`text-[10px] leading-none font-[Pretendard,sans-serif] ${active ? "font-bold" : "font-medium"}`}>
                             {tab.label}

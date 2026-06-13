@@ -5,14 +5,17 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import ParentBottomNav from "./ParentBottomNav";
 import ParentNameGate from "./ParentNameGate";
 import { installGlobalErrorHandler } from "@/lib/error-reporter";
 import { clearParentClientAuth, PARENT_STUDENT_KEY, PARENT_VERIFIED_KEY } from "@/lib/parent-client-auth";
 
 export default function ParentShell({ children }: { children: React.ReactNode }) {
-    useEffect(() => { installGlobalErrorHandler(); }, []);
+    useEffect(() => {
+        installGlobalErrorHandler();
+    }, []);
+
     const [studentName, setStudentName] = useState<string | null>(null);
     const [booting, setBooting] = useState(true);
     const pathname = usePathname();
@@ -20,12 +23,14 @@ export default function ParentShell({ children }: { children: React.ReactNode })
     useEffect(() => {
         const stored = localStorage.getItem(PARENT_STUDENT_KEY) ?? "";
         const verified = localStorage.getItem(PARENT_VERIFIED_KEY) === "true";
+
         if (!stored || !verified) {
             clearParentClientAuth();
             setStudentName(null);
         } else {
             setStudentName(stored);
         }
+
         setBooting(false);
     }, []);
 
@@ -49,7 +54,6 @@ export default function ParentShell({ children }: { children: React.ReactNode })
 
     return (
         <div className="min-h-dvh bg-slate-50 font-[Pretendard,'Noto_Sans_KR',sans-serif] flex flex-col">
-            {/* Top header */}
             <header
                 className="sticky top-0 z-[100] backdrop-blur-[20px] border-b border-slate-200/70 px-5 flex items-end"
                 style={{
@@ -74,7 +78,6 @@ export default function ParentShell({ children }: { children: React.ReactNode })
                 </div>
             </header>
 
-            {/* Page content */}
             <main className="flex-1 overflow-y-auto" style={{ paddingBottom: "calc(64px + env(safe-area-inset-bottom, 0px))" }}>
                 <AnimatePresence mode="wait">
                     <motion.div

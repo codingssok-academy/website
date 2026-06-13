@@ -1,7 +1,7 @@
 /**
  * 코딩쏙 C++ — 49 unit × 5 page = 245 슬라이드 (raw 매핑 + PNG 순서 검증 완료)
  *
- * 검증 요약: raw slide order and missing slide notes were checked during import.
+ * 검증 보고서: src/data/courses/cpp-raw-verification.md
  *
  * 책 구조 (실제 슬라이드 헤더 기반):
  *   - 1권 'C++ 입문 여정' (50 page) → raw/01,02,05~12 (10 unit, raw/03,04 중복 skip)
@@ -12,11 +12,11 @@
  * 검증 완료 (2026-04-28 직접 PNG Read 23장):
  *   ✅ 1권 50 page 완성 (raw/12 = p46~50)
  *   ✅ 2권 raw/21 = p46~50 종합 실습 완성 (p21~25만 누락)
- *   ✅ 3권 vol3/07 = 비교 연산자 p31~35 담당자 ChatGPT로 추가 완료 (2026-04-28)
+ *   ✅ 3권 vol3/07 = 비교 연산자 p31~35 자현 ChatGPT로 추가 완료 (2026-04-28)
  *   🔴 raw/05 PNG 순서 어긋남 (1=p11, 2=p15, 3=p12, 4=p14, 5=p13) → FOLDER_PAGE_ORDER 적용
  *   🔴 vol3/06 PNG 순서 어긋남 (1=p26, 2=p28, 3=p27, 4=p30, 5=p29) → FOLDER_PAGE_ORDER 적용
  *
- * 담당자 액션 필요 (자료 부재 — PDF에 슬라이드 추가):
+ * 자현 액션 필요 (자료 부재 — PDF에 슬라이드 추가):
  *   🟠 2권 p21~25 누락 (string 도입부 — char→string 다리) — raw/16(p20)→raw/17(p26) 점프
  *   🟠 3권 p46~50 누락 (3권 종합 실습) — vol3/09 끝 = p45, p46~50 부재
  *
@@ -26,6 +26,7 @@
  */
 
 import type { Chapter } from './types';
+import { CPP_ADVANCED_SLIDE_CHAPTERS } from './cpp-master-slides';
 
 // ── 폴더 내 PNG 파일명이 페이지 순서와 어긋난 폴더 reorder 매핑 ──
 // raw/05: 1.png=p11, 2.png=p15, 3.png=p12, 4.png=p14, 5.png=p13 → 정렬: [1,3,5,4,2]
@@ -156,7 +157,7 @@ export const CPP_CHAPTERS: Chapter[] = [
         chapterNumber: 2,
         title: '2권 — 변수와 자료형',
         icon: 'inventory_2',
-        description: '9 unit × 5 슬라이드. int / double / char / string 4가지 자료형 마스터 + 변수 이름 + 오류 찾기 + 자기소개 프로그램.',
+        description: '9 unit × 5 슬라이드. int / double / char / string 4가지 자료형 정리 + 변수 이름 + 오류 찾기 + 자기소개 프로그램.',
         units: BOOK2_UNITS,
     },
     {
@@ -175,4 +176,5 @@ export const CPP_CHAPTERS: Chapter[] = [
         description: '20 unit × 5 슬라이드. if 조건문 1부(10 unit) + else if · 중첩 조건 2부(10 unit). 짝/홀수, 학점, 등급 분류, 계산기 종합 실습까지.',
         units: BOOK4_UNITS,
     },
+    ...CPP_ADVANCED_SLIDE_CHAPTERS,
 ];

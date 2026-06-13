@@ -93,5 +93,5 @@ export interface Course {
      * 코드 에디터 default language. 미지정 시 'python'.
      * 코스 진입 시 우측 sidebar의 CodeEditor가 이 언어로 시작.
      */
-    defaultLanguage?: 'python' | 'c' | 'cpp';
+    defaultLanguage?: 'python' | 'c' | 'cpp' | 'lua';
 }

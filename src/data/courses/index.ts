@@ -10,6 +10,7 @@ import { PHYSICAL_COMPUTING } from './physical-computing';
 import { MATH_THINKING_CHAPTERS } from './math-thinking';
 import { AI_LITERACY_CHAPTERS } from './ai-literacy';
 import { CPP_CHAPTERS } from './cpp';
+import { GAME_DEV_CHAPTERS } from './game-dev';
 import { PROGRAMMING_CONTEST_CHAPTERS } from './programming-contest';
 import { WORDPROCESSOR_CHAPTERS } from './wordprocessor';
 import { KIDS_IT_CHAPTERS } from './kids-it';
@@ -41,7 +42,6 @@ const EMPTY_CHAPTERS: Chapter[] = [
     },
 ];
 
-// ── CosPro 서브 코스 정의 ──
 export interface CosProSubCourse {
     id: string;
     title: string;
@@ -52,18 +52,6 @@ export interface CosProSubCourse {
     cardImage?: string;
     description: string;
     icon: string;
-}
-
-export interface ProgrammingContestSubCourse {
-    id: string;
-    title: string;
-    subtitle: string;
-    language: "Python" | "C" | "C/Python";
-    gradient: string;
-    description: string;
-    icon: string;
-    track: "python" | "c" | "koi";
-    status: "ready" | "coming-soon";
 }
 
 export const COSPRO_SUB_COURSES: CosProSubCourse[] = [
@@ -108,6 +96,18 @@ export const COSPRO_SUB_COURSES: CosProSubCourse[] = [
         icon: 'terminal',
     },
 ];
+
+export interface ProgrammingContestSubCourse {
+    id: string;
+    title: string;
+    subtitle: string;
+    language: "Python" | "C" | "C/Python";
+    gradient: string;
+    description: string;
+    icon: string;
+    track: "python" | "c" | "koi";
+    status: "ready" | "coming-soon";
+}
 
 export const PROGRAMMING_CONTEST_SUB_COURSES: ProgrammingContestSubCourse[] = [
     {
@@ -170,12 +170,11 @@ export const COURSES: Course[] = [
         icon: 'child_care',
         gradient: 'linear-gradient(135deg, #0ea5e9, #6366f1)',
         cardImage: '/images/courses/kids-it.png',
-        description: '5~9세 영유아 IT 입문 — 13단계 풀 시리즈. 기계부터 AI까지 차근차근. 0-1 단원 슬라이드 준비 완료.',
-        totalUnits: 38,
+        description: '5~9세 어린이를 위한 IT 첫걸음 정리본입니다. 컴퓨터 화면, 입력 장치, 파일, 미디어, 인터넷 안전, 디지털 표현까지 145장 이미지 교재로 학습합니다.',
+        totalUnits: 15,
         totalProblems: 0,
-        estimatedHours: 25,
+        estimatedHours: 15,
         chapters: KIDS_IT_CHAPTERS,
-        materialMode: 'ppt',
     },
     {
         id: '12',
@@ -184,12 +183,12 @@ export const COURSES: Course[] = [
         icon: 'emoji_events',
         gradient: 'linear-gradient(135deg, #1e40af, #312e81)',
         cardImage: '/images/courses/koi.png',
-        description: '정보올림피아드 대회 학습 카드 410장 — 1교시·2교시 × 입문·초급·중급·고급 8단계 커리큘럼. C++ 트랙.',
-        totalUnits: 8,
+        description: '정보올림피아드 단계별 수업자료를 게임 제작 코스와 같은 책형 화면으로 다시 구성할 준비 상태입니다.',
+        totalUnits: 0,
         totalProblems: 0,
-        estimatedHours: 40,
+        estimatedHours: 0,
         chapters: KOI_CHAPTERS,
-        materialMode: 'ppt',
+
         defaultLanguage: 'cpp',
     },
     {
@@ -198,10 +197,10 @@ export const COURSES: Course[] = [
         icon: 'calculate',
         gradient: 'linear-gradient(135deg, #f59e0b, #ec4899)',
         cardImage: '/images/courses/math-thinking.png',
-        description: '논리·이산수학·문제해결 — CS50 스타일로 코딩하는 두뇌를 만드는 사고력 수학입니다.',
-        totalUnits: 20,
+        description: '고난도 사고력수학 1-50 본교재와 정답해설편 51-110을 함께 보며 문제 독해, 논리 추론, 풀이 검토, 오답 교정을 학습합니다.',
+        totalUnits: 11,
         totalProblems: 0,
-        estimatedHours: 25,
+        estimatedHours: 26,
         chapters: MATH_THINKING_CHAPTERS,
     },
     {
@@ -210,12 +209,12 @@ export const COURSES: Course[] = [
         icon: 'computer',
         gradient: 'linear-gradient(135deg, #ec4899, #60a5fa)',
         cardImage: '/images/courses/computer-basics.png',
-        description: '컴퓨터가 뭔지부터 하드웨어, 소프트웨어, 인터넷, 이진수, 문제해결까지 완전 기초를 배웁니다.',
-        totalUnits: 22,
+        description: '컴퓨터 구조, 키보드·마우스, 파일, 인터넷, 이진수와 문제해결을 책형 수업자료로 다시 구성합니다.',
+        totalUnits: 0,
         totalProblems: 0,
-        estimatedHours: 30,
+        estimatedHours: 0,
         chapters: COMPUTER_BASICS,
-        materialMode: 'ppt',
+
     },
     {
         id: '1',
@@ -223,12 +222,12 @@ export const COURSES: Course[] = [
         icon: 'code',
         gradient: 'linear-gradient(135deg, #10b981, #06b6d4)',
         cardImage: '/images/courses/coding-basics.png',
-        description: '코딩이 뭔지, 왜 배우는지, 변수/조건/반복 개념, 문제해결 사고력, 개발 환경 첫걸음까지.',
-        totalUnits: 22,
+        description: '코딩의 의미, 변수·조건·반복·함수, 문제해결 사고까지 책형 수업자료로 다시 구성할 준비를 마쳤습니다.',
+        totalUnits: 0,
         totalProblems: 0,
-        estimatedHours: 30,
+        estimatedHours: 0,
         chapters: CODING_BASICS,
-        materialMode: 'ppt',
+
     },
     {
         id: '2',
@@ -236,12 +235,12 @@ export const COURSES: Course[] = [
         icon: 'memory',
         gradient: 'linear-gradient(135deg, #f59e0b, #f97316)',
         cardImage: '/images/courses/physical-computing.png',
-        description: '아두이노, 센서, 서보모터, 반도체 원리부터 IoT 프로젝트까지 실습합니다.',
-        totalUnits: 22,
+        description: '아두이노, 기본 회로, 센서, 출력 장치, 모터 제어, 생활 문제 해결 프로젝트까지 피지컬 컴퓨팅 완성본 120장으로 학습합니다.',
+        totalUnits: 12,
         totalProblems: 0,
-        estimatedHours: 40,
+        estimatedHours: 24,
         chapters: PHYSICAL_COMPUTING,
-        materialMode: 'ppt',
+
     },
     {
         id: '3',
@@ -261,10 +260,10 @@ export const COURSES: Course[] = [
         icon: 'smart_toy',
         gradient: 'linear-gradient(135deg, #06b6d4, #3b82f6)',
         cardImage: '/images/courses/ai-class.png',
-        description: 'AI 사용법, MCP, 프롬프트 엔지니어링, AI 도구 활용 — 미래를 위한 AI 역량을 키웁니다.',
-        totalUnits: 22,
+        description: 'AI 기초부터 도구 활용, 안전과 윤리, 진로까지 책형 수업자료로 다시 업로드할 준비 상태입니다.',
+        totalUnits: 0,
         totalProblems: 0,
-        estimatedHours: 32,
+        estimatedHours: 0,
         chapters: AI_LITERACY_CHAPTERS,
     },
     {
@@ -273,25 +272,26 @@ export const COURSES: Course[] = [
         icon: 'terminal',
         gradient: 'linear-gradient(135deg, #1e3a8a, #3b82f6)',
         cardImage: '/images/courses/cpp.png',
-        description: 'C++ 49단원. 입문, 변수와 자료형, 입력과 연산자, 조건문까지 PNG 이미지 수업자료로 학습합니다.',
-        totalUnits: 49,
+        description: 'C++ 121단원. 입문, 변수와 자료형, 입력과 연산자, 조건문, 반복문·문자열·배열·함수·vector·pair·정렬·이분탐색·2차원 배열·완전탐색·누적합·투 포인터·stack까지 실전형 슬라이드로 학습합니다.',
+        totalUnits: 121,
         totalProblems: 0,
-        estimatedHours: 32,
+        estimatedHours: 90,
         chapters: CPP_CHAPTERS,
         defaultLanguage: 'cpp',
     },
     {
         id: '5',
-        title: 'CosPro',
-        icon: 'verified',
-        gradient: 'linear-gradient(135deg, #ec4899, #f43f5e)',
-        cardImage: '/images/courses/cospro.png',
-        description: 'CosPro 파이썬/C언어 1급·2급 자격증 시험을 체계적으로 준비합니다.',
-        totalUnits: 0,
+        title: '게임 제작',
+        subtitle: 'Roblox Luau 기초',
+        icon: 'sports_esports',
+        gradient: 'linear-gradient(135deg, #16a34a, #2563eb)',
+        cardImage: '/images/courses/game-dev.png',
+        description: 'Roblox Studio와 Luau로 게임 제작을 배우는 교과서 과정입니다. 기초 UI·코인·오비·상점에서 함수·모듈·저장·퀘스트, 보스전 프로젝트까지 420장으로 학습합니다.',
+        totalUnits: 41,
         totalProblems: 0,
-        estimatedHours: 0,
-        chapters: EMPTY_CHAPTERS,
-        comingSoon: true,
+        estimatedHours: 60,
+        chapters: GAME_DEV_CHAPTERS,
+        defaultLanguage: 'lua',
     },
     {
         id: '6',
