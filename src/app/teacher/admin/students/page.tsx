@@ -5,10 +5,12 @@ import { RefreshCw, ShieldCheck, Trash2, UserCheck, UserMinus, Users } from "luc
 
 type StudentAccount = {
     id: string;
+    source: "student" | "orphan";
     name: string;
     grade: string | null;
     className: string | null;
     status: string;
+    canChangeStatus: boolean;
     pinIssued: boolean;
     createdAt: string | null;
     updatedAt: string | null;
@@ -29,6 +31,7 @@ type Stats = {
     approved: number;
     deactivated: number;
     pending: number;
+    orphan: number;
 };
 
 type ApiResponse = {
@@ -44,6 +47,7 @@ const FILTERS = [
     { key: "unlinked", label: "미가입" },
     { key: "approved", label: "활성" },
     { key: "deactivated", label: "비활성" },
+    { key: "orphan", label: "미연결 계정" },
 ] as const;
 
 const STATUS_LABEL: Record<string, string> = {
@@ -51,6 +55,7 @@ const STATUS_LABEL: Record<string, string> = {
     approved: "활성",
     deactivated: "비활성",
     rejected: "거절",
+    orphan: "미연결",
 };
 
 function formatDate(value: string | null) {
@@ -64,12 +69,13 @@ function statusColor(status: string) {
     if (status === "approved") return { bg: "#ecfdf5", fg: "#047857", bd: "#bbf7d0" };
     if (status === "deactivated") return { bg: "#fef2f2", fg: "#b91c1c", bd: "#fecaca" };
     if (status === "pending") return { bg: "#fffbeb", fg: "#b45309", bd: "#fde68a" };
+    if (status === "orphan") return { bg: "#f8fafc", fg: "#475569", bd: "#cbd5e1" };
     return { bg: "#f8fafc", fg: "#475569", bd: "#e2e8f0" };
 }
 
 export default function StudentAccountsPage() {
     const [students, setStudents] = useState<StudentAccount[]>([]);
-    const [stats, setStats] = useState<Stats>({ total: 0, linked: 0, unlinked: 0, approved: 0, deactivated: 0, pending: 0 });
+    const [stats, setStats] = useState<Stats>({ total: 0, linked: 0, unlinked: 0, approved: 0, deactivated: 0, pending: 0, orphan: 0 });
     const [filter, setFilter] = useState<(typeof FILTERS)[number]["key"]>("all");
     const [query, setQuery] = useState("");
     const [loading, setLoading] = useState(true);
@@ -84,7 +90,7 @@ export default function StudentAccountsPage() {
             const data = (await res.json()) as ApiResponse;
             if (!res.ok || !data.success) throw new Error(data.error || "학생 계정 목록을 불러오지 못했습니다.");
             setStudents(data.students || []);
-            setStats(data.stats || { total: 0, linked: 0, unlinked: 0, approved: 0, deactivated: 0, pending: 0 });
+            setStats(data.stats || { total: 0, linked: 0, unlinked: 0, approved: 0, deactivated: 0, pending: 0, orphan: 0 });
         } catch (error) {
             setStudents([]);
             setMessage({ type: "error", text: error instanceof Error ? error.message : "목록 조회 실패" });
@@ -104,6 +110,7 @@ export default function StudentAccountsPage() {
             if (filter === "unlinked" && student.accountLinked) return false;
             if (filter === "approved" && student.status !== "approved") return false;
             if (filter === "deactivated" && student.status !== "deactivated") return false;
+            if (filter === "orphan" && student.source !== "orphan") return false;
             if (normalizedQuery && !student.name.includes(normalizedQuery)) return false;
             return true;
         });
@@ -133,7 +140,9 @@ export default function StudentAccountsPage() {
     const deleteAccount = async (student: StudentAccount) => {
         if (!student.accountLinked) return;
         const ok = window.confirm(
-            `${student.name} 학생의 회원가입 계정을 삭제합니다.\n\n학생 목록과 학부모 인증번호는 유지되고, 이 학생은 다시 회원가입해야 로그인할 수 있습니다.`,
+            student.source === "orphan"
+                ? `${student.name} 미연결 회원가입 계정을 삭제합니다.\n\n학생 목록에 연결되지 않은 과거/테스트 계정이며, 삭제 후 이 계정으로는 로그인할 수 없습니다.`
+                : `${student.name} 학생의 회원가입 계정을 삭제합니다.\n\n학생 목록과 학부모 인증번호는 유지되고, 이 학생은 다시 회원가입해야 로그인할 수 있습니다.`,
         );
         if (!ok) return;
 
@@ -143,13 +152,18 @@ export default function StudentAccountsPage() {
             const res = await fetch("/api/teacher/student-accounts", {
                 method: "DELETE",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ studentId: student.id }),
+                body: JSON.stringify(student.source === "orphan" ? { accountId: student.authUserId || student.id } : { studentId: student.id }),
             });
             const data = (await res.json()) as ApiResponse;
             if (!res.ok || !data.success) throw new Error(data.error || "계정 삭제 실패");
             setStudents(data.students || []);
             if (data.stats) setStats(data.stats);
-            setMessage({ type: "ok", text: `${student.name} 회원가입 계정을 삭제했습니다. 학부모 인증번호로 다시 가입할 수 있습니다.` });
+            setMessage({
+                type: "ok",
+                text: student.source === "orphan"
+                    ? `${student.name} 미연결 회원가입 계정을 삭제했습니다.`
+                    : `${student.name} 회원가입 계정을 삭제했습니다. 학부모 인증번호로 다시 가입할 수 있습니다.`,
+            });
         } catch (error) {
             setMessage({ type: "error", text: error instanceof Error ? error.message : "계정 삭제 실패" });
         } finally {
@@ -175,7 +189,7 @@ export default function StudentAccountsPage() {
                 <Stat icon={<Users size={24} />} label="학생 목록" value={stats.total} />
                 <Stat icon={<UserCheck size={24} />} label="회원가입 완료" value={stats.linked} />
                 <Stat icon={<UserMinus size={24} />} label="미가입" value={stats.unlinked} />
-                <Stat icon={<ShieldCheck size={24} />} label="활성 학생" value={stats.approved} />
+                <Stat icon={<ShieldCheck size={24} />} label="미연결 계정" value={stats.orphan} />
             </section>
 
             {message && (
@@ -225,7 +239,11 @@ export default function StudentAccountsPage() {
                                     <div className="avatar">{student.name.slice(0, 1)}</div>
                                     <div>
                                         <strong>{student.name}</strong>
-                                        <small>{student.className || "반 미지정"} · 인증번호 {student.pinIssued ? "발급됨" : "없음"}</small>
+                                        <small>
+                                            {student.source === "orphan"
+                                                ? "학생 목록 미연결"
+                                                : `${student.className || "반 미지정"} · 인증번호 ${student.pinIssued ? "발급됨" : "없음"}`}
+                                        </small>
                                     </div>
                                 </div>
                                 <div>
@@ -244,14 +262,16 @@ export default function StudentAccountsPage() {
                                     <small className="sub">가입 {formatDate(student.authCreatedAt || student.createdAt)}</small>
                                 </div>
                                 <div className="actions">
-                                    {student.status === "deactivated" ? (
-                                        <button onClick={() => updateStatus(student, "approved")} disabled={acting}>
-                                            활성화
-                                        </button>
-                                    ) : (
-                                        <button onClick={() => updateStatus(student, "deactivated")} disabled={acting}>
-                                            비활성화
-                                        </button>
+                                    {student.canChangeStatus && (
+                                        student.status === "deactivated" ? (
+                                            <button onClick={() => updateStatus(student, "approved")} disabled={acting}>
+                                                활성화
+                                            </button>
+                                        ) : (
+                                            <button onClick={() => updateStatus(student, "deactivated")} disabled={acting}>
+                                                비활성화
+                                            </button>
+                                        )
                                     )}
                                     <button
                                         className="danger"

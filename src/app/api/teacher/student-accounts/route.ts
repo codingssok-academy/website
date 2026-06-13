@@ -81,19 +81,23 @@ async function loadStudentAccounts(admin: NonNullable<ReturnType<typeof createAd
     if (profilesRes.error) throw new Error(profilesRes.error.message);
 
     const profiles = new Map((profilesRes.data || []).map(profile => [profile.id, profile as ProfileRow]));
+    const linkedProfileIds = new Set<string>();
 
-    const students = ((studentsRes.data || []) as StudentRow[])
+    const studentAccounts = ((studentsRes.data || []) as StudentRow[])
         .filter(student => student.class !== "admin")
         .map(student => {
             const profile = student.auth_user_id ? profiles.get(student.auth_user_id) || null : null;
             const authUser = student.auth_user_id ? authUsers.get(student.auth_user_id) || null : null;
+            if (student.auth_user_id) linkedProfileIds.add(student.auth_user_id);
 
             return {
                 id: student.id,
+                source: "student" as const,
                 name: student.name,
                 grade: student.grade,
                 className: student.class,
                 status: student.status || "approved",
+                canChangeStatus: true,
                 pinIssued: /^\d{5}$/.test(student.pin || ""),
                 createdAt: student.created_at,
                 updatedAt: student.updated_at,
@@ -108,13 +112,43 @@ async function loadStudentAccounts(admin: NonNullable<ReturnType<typeof createAd
             };
         });
 
+    const orphanAccounts = (profilesRes.data || [])
+        .map(profile => profile as ProfileRow)
+        .filter(profile => profile.role === "student" && !linkedProfileIds.has(profile.id) && authUsers.has(profile.id))
+        .map(profile => {
+            const authUser = authUsers.get(profile.id) || null;
+            return {
+                id: profile.id,
+                source: "orphan" as const,
+                name: profile.display_name || profile.name || authUser?.email || profile.email || "미연결 계정",
+                grade: null,
+                className: "미연결 계정",
+                status: "orphan",
+                canChangeStatus: false,
+                pinIssued: false,
+                createdAt: authUser?.created_at || null,
+                updatedAt: null,
+                authUserId: profile.id,
+                accountLinked: true,
+                email: authUser?.email || profile.email || null,
+                role: profile.role || null,
+                displayName: profile.display_name || profile.name || null,
+                authCreatedAt: authUser?.created_at || null,
+                lastSignInAt: authUser?.last_sign_in_at || null,
+                canDeleteAccount: true,
+            };
+        })
+        .sort((a, b) => a.name.localeCompare(b.name, "ko"));
+
+    const students = [...studentAccounts, ...orphanAccounts];
     const stats = {
         total: students.length,
         linked: students.filter(student => student.accountLinked).length,
-        unlinked: students.filter(student => !student.accountLinked).length,
+        unlinked: studentAccounts.filter(student => !student.accountLinked).length,
         approved: students.filter(student => student.status === "approved").length,
         deactivated: students.filter(student => student.status === "deactivated").length,
         pending: students.filter(student => student.status === "pending").length,
+        orphan: orphanAccounts.length,
     };
 
     return { success: true, students, stats };
@@ -201,9 +235,56 @@ export async function DELETE(request: NextRequest) {
 
         const body = await request.json().catch(() => ({}));
         const studentId = normalizeId(body?.studentId);
+        const accountId = normalizeId(body?.accountId);
 
-        if (!studentId) {
-            return NextResponse.json({ success: false, error: "학생 ID가 필요합니다." }, { status: 400 });
+        if (!studentId && !accountId) {
+            return NextResponse.json({ success: false, error: "학생 ID 또는 계정 ID가 필요합니다." }, { status: 400 });
+        }
+
+        if (accountId && !studentId) {
+            if (accountId === auth.userId) {
+                return NextResponse.json(
+                    { success: false, error: "현재 로그인한 관리자 계정은 삭제할 수 없습니다." },
+                    { status: 400 },
+                );
+            }
+
+            const { data: profile, error: profileError } = await admin
+                .from("profiles")
+                .select(PROFILE_COLUMNS)
+                .eq("id", accountId)
+                .maybeSingle();
+
+            if (profileError) throw new Error(profileError.message);
+            if (isProtectedProfile(profile as ProfileRow | null)) {
+                return NextResponse.json(
+                    { success: false, error: "관리자/선생님 계정은 학생 계정 화면에서 삭제할 수 없습니다." },
+                    { status: 400 },
+                );
+            }
+
+            const { data: linkedStudent, error: linkedStudentError } = await admin
+                .from("students")
+                .select("id")
+                .eq("auth_user_id", accountId)
+                .maybeSingle();
+
+            if (linkedStudentError) throw new Error(linkedStudentError.message);
+            if (linkedStudent) {
+                return NextResponse.json(
+                    { success: false, error: "학생 목록에 연결된 계정은 학생 row에서 삭제해주세요." },
+                    { status: 400 },
+                );
+            }
+
+            const { error: deleteAuthError } = await admin.auth.admin.deleteUser(accountId);
+            if (deleteAuthError) throw new Error(deleteAuthError.message);
+
+            await admin.from("profiles").delete().eq("id", accountId);
+
+            return NextResponse.json(await loadStudentAccounts(admin), {
+                headers: { "Cache-Control": "no-store" },
+            });
         }
 
         const { data: student, error: studentError } = await admin
