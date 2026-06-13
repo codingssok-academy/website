@@ -21,7 +21,6 @@ const navLinks = [
     { name: "FAQ", href: "#faq" },
     { name: "문의", href: "#contact" },
     { name: "학습 플랫폼", href: "/dashboard/learning" },
-    { name: "학부모 포털", href: "/parent" },
 ];
 
 /* ── SVG Pill Button — nodcoding btn-plain (exact path + hover morph) ── */
@@ -368,30 +367,6 @@ export default function Navbar() {
                                         </motion.a>
                                     ))}
 
-                                    {/* 앱 설치 — 로그인 안 됐으면 로그인 먼저 */}
-                                    <motion.button
-                                        initial={{ opacity: 0, x: -10 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: navLinks.length * 0.05 }}
-                                        onClick={() => {
-                                            setIsDropdownOpen(false);
-                                            if (user) {
-                                                router.push("/install");
-                                            } else {
-                                                router.push("/login?redirect=/install");
-                                            }
-                                        }}
-                                        style={{
-                                            display: "flex", alignItems: "center", gap: 10, width: "100%",
-                                            padding: "12px 16px", borderRadius: 10,
-                                            color: "#2563eb", fontWeight: 600, fontSize: 14,
-                                            background: "rgba(37,99,235,0.06)", border: "none", cursor: "pointer", textAlign: "left",
-                                            marginTop: 4,
-                                        }}
-                                    >
-                                        <span className="material-symbols-outlined" style={{ fontSize: 18 }}>install_mobile</span>
-                                        앱 설치
-                                    </motion.button>
                                 </motion.div>
                             )}
                         </AnimatePresence>
@@ -462,31 +437,6 @@ export default function Navbar() {
                                 {link.name}
                             </motion.a>
                         ))}
-                        {/* 앱 설치 — 항상 표시 */}
-                        <motion.button
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: navLinks.length * 0.08 }}
-                            onClick={() => {
-                                setIsMobileMenuOpen(false);
-                                if (user) {
-                                    router.push("/install");
-                                } else {
-                                    router.push("/login?redirect=/install");
-                                }
-                            }}
-                            style={{
-                                display: "flex", alignItems: "center", gap: 10, width: "100%",
-                                fontSize: "clamp(1.5rem, 4vw, 2rem)", fontWeight: 600,
-                                color: "#2563eb", padding: "16px 0",
-                                borderBottom: "1px solid var(--color-grey-2)",
-                                background: "none", border: "none", cursor: "pointer", textAlign: "left",
-                            }}
-                        >
-                            <span className="material-symbols-outlined" style={{ fontSize: 24 }}>install_mobile</span>
-                            앱 설치
-                        </motion.button>
-
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
@@ -512,8 +462,6 @@ export default function Navbar() {
                             <PillButton href="#contact" onClick={(e) => handleNavClick(e, "#contact")}>
                                 상담 예약
                             </PillButton>
-
-                            {/* 모바일 앱 설치 제거됨 */}
 
                             {/* 모바일 로그인/로그아웃 */}
                             {!authLoading && (

@@ -86,6 +86,17 @@ function createAdmin() {
   });
 }
 
+function normalizeAdminName(value: string | null | undefined) {
+  return (value || "").replace(/\s+/g, "").trim().toLowerCase();
+}
+
+function isApprovedAdminStudent(row: { name?: string | null; class?: string | null; status?: string | null } | null) {
+  if (!row || row.status === "deactivated") return false;
+  const name = normalizeAdminName(row.name);
+  const className = normalizeAdminName(row.class);
+  return className === "admin" || ["구자현", "장민", "gujahyeon", "gujahyun", "jahyeon", "jangmin"].includes(name);
+}
+
 function getBearer(req: Request) {
   return (req.headers.get("authorization") || "").replace(/^Bearer\s+/i, "").trim();
 }
@@ -107,9 +118,17 @@ async function requireAdmin(req: Request) {
 
   if (profileError) throw new HttpError(500, profileError.message);
   if (profile?.role !== "teacher" && profile?.role !== "admin") {
-    throw new HttpError(403, "관리자 권한이 필요합니다.");
+    const { data: linkedStudent, error: studentError } = await admin
+      .from("students")
+      .select("name, class, status")
+      .eq("auth_user_id", user.id)
+      .maybeSingle();
+    if (studentError) throw new HttpError(500, studentError.message);
+    if (!isApprovedAdminStudent(linkedStudent)) {
+      throw new HttpError(403, "관리자 권한이 필요합니다.");
+    }
   }
-  return { admin, role: profile.role as string };
+  return { admin, role: (profile?.role || "admin") as string };
 }
 
 async function loadBaseData(admin = createAdmin()) {

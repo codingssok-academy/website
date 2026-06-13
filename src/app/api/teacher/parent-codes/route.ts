@@ -13,6 +13,7 @@ import {
     type ParentCodeStudentRow,
 } from '@/lib/parent-code-rows'
 import {
+    databaseQuery,
     getProfileRoleFromDatabase,
     hasDatabaseAdmin,
     loadParentCodeBaseDataFromDatabase,
@@ -68,6 +69,42 @@ function hasEdgeAdmin(context: TeacherContext): context is Extract<TeacherContex
     return 'edgeAdmin' in context
 }
 
+function normalizeAdminName(value: string | null | undefined) {
+    return (value ?? '').replace(/\s+/g, '').trim().toLowerCase()
+}
+
+function isApprovedAdminStudent(row: { name?: string | null; class?: string | null; status?: string | null } | null) {
+    if (!row || row.status === 'deactivated') return false
+    const name = normalizeAdminName(row.name)
+    const className = normalizeAdminName(row.class)
+    return className === 'admin' || ['구자현', '장민', 'gujahyeon', 'gujahyun', 'jahyeon', 'jangmin'].includes(name)
+}
+
+async function isApprovedAdminUser(
+    userId: string,
+    adminClient: AdminClient | null,
+    databaseAdmin: boolean,
+) {
+    if (adminClient) {
+        const { data } = await adminClient
+            .from('students')
+            .select('name, class, status')
+            .eq('auth_user_id', userId)
+            .maybeSingle()
+        return isApprovedAdminStudent(data)
+    }
+
+    if (databaseAdmin) {
+        const rows = await databaseQuery<{ name: string | null; class: string | null; status: string | null }>(
+            'select name, "class", status from public.students where auth_user_id = $1 limit 1',
+            [userId],
+        )
+        return isApprovedAdminStudent(rows[0] || null)
+    }
+
+    return false
+}
+
 async function requireTeacherContext(): Promise<TeacherContext> {
     const adminClient = createAdminClient()
     const databaseAdmin = hasDatabaseAdmin()
@@ -112,7 +149,7 @@ async function requireTeacherContext(): Promise<TeacherContext> {
         ? (await adminClient.from('profiles').select('role').eq('id', user.id).maybeSingle()).data?.role
         : await getProfileRoleFromDatabase(user.id)
 
-    if (role !== 'teacher' && role !== 'admin') {
+    if (role !== 'teacher' && role !== 'admin' && !(await isApprovedAdminUser(user.id, adminClient, databaseAdmin))) {
         return {
             error: NextResponse.json({ success: false, error: '관리자 권한이 필요합니다.' }, { status: 403 }),
         }
