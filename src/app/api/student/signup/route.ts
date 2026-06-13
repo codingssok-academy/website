@@ -5,6 +5,8 @@ import { PIN_COURSE } from "@/lib/parent-auth";
 import { findReferenceParentCode } from "@/lib/parent-code-reference";
 import { callParentPortalEdge } from "@/lib/parent-edge";
 
+type AdminClient = NonNullable<ReturnType<typeof createAdminClient>>;
+
 type StudentRow = {
     id: string;
     name: string;
@@ -48,10 +50,7 @@ function publicStudent(row: StudentRow) {
     };
 }
 
-async function findAuthUserByEmail(
-    adminClient: NonNullable<ReturnType<typeof createAdminClient>>,
-    email: string,
-) {
+async function findAuthUserByEmail(adminClient: AdminClient, email: string) {
     for (let page = 1; page <= 10; page += 1) {
         const { data, error } = await adminClient.auth.admin.listUsers({ page, perPage: 1000 });
         if (error) throw new Error(error.message);
@@ -63,7 +62,7 @@ async function findAuthUserByEmail(
 }
 
 async function resolveParentCode(input: {
-    adminClient: NonNullable<ReturnType<typeof createAdminClient>>;
+    adminClient: AdminClient;
     student: StudentRow | null;
     name: string;
 }) {
@@ -93,7 +92,7 @@ async function resolveParentCode(input: {
 }
 
 async function syncParentCode(input: {
-    adminClient: NonNullable<ReturnType<typeof createAdminClient>>;
+    adminClient: AdminClient;
     userId: string;
     code: string;
 }) {
@@ -175,6 +174,7 @@ export async function POST(request: NextRequest) {
                     class: codeCheck.reference?.className || null,
                     avatar: null,
                     pin: parentCode,
+                    status: "approved",
                 })
                 .select("id, name, grade, class, avatar, pin, auth_user_id, birthday, status")
                 .single();
@@ -229,6 +229,8 @@ export async function POST(request: NextRequest) {
                 auth_user_id: authUserId,
                 pin: parentCode,
                 class: student.class || codeCheck.reference?.className || null,
+                status: student.status || "approved",
+                updated_at: new Date().toISOString(),
             })
             .eq("id", student.id)
             .select("id, name, grade, class, avatar, pin, auth_user_id, birthday, status")

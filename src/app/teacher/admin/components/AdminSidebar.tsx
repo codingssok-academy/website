@@ -1,11 +1,16 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { useAdmin } from "../context";
-import { createClient } from "@/lib/supabase";
-import { useState } from "react";
-import { Home, LogOut, UserCog } from "lucide-react";
 import Image from "next/image";
+import { useState } from "react";
+import { Home, LogOut, UserCog, Users } from "lucide-react";
+import { createClient } from "@/lib/supabase";
+import { useAdmin } from "../context";
+
+const NAV_ITEMS = [
+    { href: "/teacher/admin", label: "학부모 코드 관리", icon: UserCog },
+    { href: "/teacher/admin/students", label: "학생 계정 관리", icon: Users },
+];
 
 export default function AdminSidebar() {
     const pathname = usePathname();
@@ -15,7 +20,6 @@ export default function AdminSidebar() {
 
     const teacherDisplayName =
         currentTeacher?.display_name || currentTeacher?.name || currentTeacher?.email || "관리자";
-    const active = pathname === "/teacher/admin";
 
     const handleLogout = async () => {
         setLogoutLoading(true);
@@ -34,7 +38,7 @@ export default function AdminSidebar() {
                     <Image src="/images/promo/logo-codingssok.png" alt="코딩쏙" width={32} height={32} style={mobileLogoStyle} />
                     <div style={{ minWidth: 0 }}>
                         <div style={{ fontSize: 14, fontWeight: 900, color: "#f8fafc" }}>코딩쏙 관리자</div>
-                        <div style={{ fontSize: 11, color: "#94a3b8" }}>학부모 코드 관리</div>
+                        <div style={{ fontSize: 11, color: "#94a3b8" }}>학부모 코드 · 학생 계정</div>
                     </div>
                 </div>
             </header>
@@ -54,17 +58,25 @@ export default function AdminSidebar() {
 
                 <nav style={{ flex: 1, padding: 12 }}>
                     <div style={sectionLabelStyle}>운영 메뉴</div>
-                    <button
-                        onClick={() => router.push("/teacher/admin")}
-                        style={{
-                            ...navButtonStyle,
-                            background: active ? "rgba(37, 99, 235, 0.18)" : "transparent",
-                            color: active ? "#bfdbfe" : "#94a3b8",
-                        }}
-                    >
-                        <UserCog size={21} strokeWidth={2.4} />
-                        <span>학부모 코드 관리</span>
-                    </button>
+                    {NAV_ITEMS.map(item => {
+                        const Icon = item.icon;
+                        const active = pathname === item.href;
+                        return (
+                            <button
+                                key={item.href}
+                                onClick={() => router.push(item.href)}
+                                style={{
+                                    ...navButtonStyle,
+                                    marginTop: item.href === NAV_ITEMS[0].href ? 0 : 6,
+                                    background: active ? "rgba(37, 99, 235, 0.18)" : "transparent",
+                                    color: active ? "#bfdbfe" : "#94a3b8",
+                                }}
+                            >
+                                <Icon size={21} strokeWidth={2.4} />
+                                <span>{item.label}</span>
+                            </button>
+                        );
+                    })}
                 </nav>
 
                 <div style={{ borderTop: "1px solid rgba(148,163,184,0.18)", padding: 14 }}>

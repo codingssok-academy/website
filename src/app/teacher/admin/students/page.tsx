@@ -1,219 +1,560 @@
 "use client";
 
-/**
- * 학생 계정 관리 — 관리자 승인/거부/탈퇴
- * /teacher/admin/students
- */
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { RefreshCw, ShieldCheck, Trash2, UserCheck, UserMinus, Users } from "lucide-react";
 
-import { useState, useEffect, useCallback } from "react";
-import { createClient } from "@/lib/supabase";
-
-interface Student {
+type StudentAccount = {
     id: string;
     name: string;
     grade: string | null;
-    pin: string;
+    className: string | null;
     status: string;
-    created_at: string;
-    auth_user_id: string | null;
-}
-
-type FilterStatus = "all" | "pending" | "approved" | "deactivated" | "rejected";
-
-const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-    pending: { label: "승인 대기", color: "#f59e0b", bg: "#fffbeb" },
-    approved: { label: "승인됨", color: "#22c55e", bg: "#f0fdf4" },
-    deactivated: { label: "비활성화", color: "#ef4444", bg: "#fef2f2" },
-    rejected: { label: "거절됨", color: "#64748b", bg: "#f8fafc" },
+    pinIssued: boolean;
+    createdAt: string | null;
+    updatedAt: string | null;
+    authUserId: string | null;
+    accountLinked: boolean;
+    email: string | null;
+    role: string | null;
+    displayName: string | null;
+    authCreatedAt: string | null;
+    lastSignInAt: string | null;
+    canDeleteAccount: boolean;
 };
 
-export default function StudentManagement() {
-    const [students, setStudents] = useState<Student[]>([]);
+type Stats = {
+    total: number;
+    linked: number;
+    unlinked: number;
+    approved: number;
+    deactivated: number;
+    pending: number;
+};
+
+type ApiResponse = {
+    success: boolean;
+    students?: StudentAccount[];
+    stats?: Stats;
+    error?: string;
+};
+
+const FILTERS = [
+    { key: "all", label: "전체" },
+    { key: "linked", label: "회원가입 완료" },
+    { key: "unlinked", label: "미가입" },
+    { key: "approved", label: "활성" },
+    { key: "deactivated", label: "비활성" },
+] as const;
+
+const STATUS_LABEL: Record<string, string> = {
+    pending: "대기",
+    approved: "활성",
+    deactivated: "비활성",
+    rejected: "거절",
+};
+
+function formatDate(value: string | null) {
+    if (!value) return "-";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "-";
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+function statusColor(status: string) {
+    if (status === "approved") return { bg: "#ecfdf5", fg: "#047857", bd: "#bbf7d0" };
+    if (status === "deactivated") return { bg: "#fef2f2", fg: "#b91c1c", bd: "#fecaca" };
+    if (status === "pending") return { bg: "#fffbeb", fg: "#b45309", bd: "#fde68a" };
+    return { bg: "#f8fafc", fg: "#475569", bd: "#e2e8f0" };
+}
+
+export default function StudentAccountsPage() {
+    const [students, setStudents] = useState<StudentAccount[]>([]);
+    const [stats, setStats] = useState<Stats>({ total: 0, linked: 0, unlinked: 0, approved: 0, deactivated: 0, pending: 0 });
+    const [filter, setFilter] = useState<(typeof FILTERS)[number]["key"]>("all");
+    const [query, setQuery] = useState("");
     const [loading, setLoading] = useState(true);
-    const [filter, setFilter] = useState<FilterStatus>("all");
-    const [actionLoading, setActionLoading] = useState<string | null>(null);
+    const [actingId, setActingId] = useState<string | null>(null);
+    const [message, setMessage] = useState<{ type: "ok" | "error"; text: string } | null>(null);
 
-    const fetchStudents = useCallback(async () => {
+    const load = useCallback(async () => {
         setLoading(true);
-        const sb = createClient();
-        let q = sb.from("students").select("*").order("created_at", { ascending: false });
-        if (filter !== "all") q = q.eq("status", filter);
-        const { data } = await q;
-        setStudents((data as Student[]) || []);
-        setLoading(false);
-    }, [filter]);
+        setMessage(null);
+        try {
+            const res = await fetch("/api/teacher/student-accounts", { cache: "no-store" });
+            const data = (await res.json()) as ApiResponse;
+            if (!res.ok || !data.success) throw new Error(data.error || "학생 계정 목록을 불러오지 못했습니다.");
+            setStudents(data.students || []);
+            setStats(data.stats || { total: 0, linked: 0, unlinked: 0, approved: 0, deactivated: 0, pending: 0 });
+        } catch (error) {
+            setStudents([]);
+            setMessage({ type: "error", text: error instanceof Error ? error.message : "목록 조회 실패" });
+        } finally {
+            setLoading(false);
+        }
+    }, []);
 
-    useEffect(() => { fetchStudents(); }, [fetchStudents]);
+    useEffect(() => {
+        void load();
+    }, [load]);
 
-    const updateStatus = async (studentId: string, newStatus: string) => {
-        setActionLoading(studentId);
-        const sb = createClient();
-        await sb.from("students").update({ status: newStatus }).eq("id", studentId);
-        await fetchStudents();
-        setActionLoading(null);
+    const filtered = useMemo(() => {
+        const normalizedQuery = query.trim().replace(/\s+/g, "");
+        return students.filter(student => {
+            if (filter === "linked" && !student.accountLinked) return false;
+            if (filter === "unlinked" && student.accountLinked) return false;
+            if (filter === "approved" && student.status !== "approved") return false;
+            if (filter === "deactivated" && student.status !== "deactivated") return false;
+            if (normalizedQuery && !student.name.includes(normalizedQuery)) return false;
+            return true;
+        });
+    }, [filter, query, students]);
+
+    const updateStatus = async (student: StudentAccount, status: string) => {
+        setActingId(student.id);
+        setMessage(null);
+        try {
+            const res = await fetch("/api/teacher/student-accounts", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ studentId: student.id, status }),
+            });
+            const data = (await res.json()) as ApiResponse;
+            if (!res.ok || !data.success) throw new Error(data.error || "상태 변경 실패");
+            setStudents(data.students || []);
+            if (data.stats) setStats(data.stats);
+            setMessage({ type: "ok", text: `${student.name} 상태를 ${STATUS_LABEL[status] || status}로 변경했습니다.` });
+        } catch (error) {
+            setMessage({ type: "error", text: error instanceof Error ? error.message : "상태 변경 실패" });
+        } finally {
+            setActingId(null);
+        }
     };
 
-    const pendingCount = students.filter(s => s.status === "pending").length;
+    const deleteAccount = async (student: StudentAccount) => {
+        if (!student.accountLinked) return;
+        const ok = window.confirm(
+            `${student.name} 학생의 회원가입 계정을 삭제합니다.\n\n학생 목록과 학부모 인증번호는 유지되고, 이 학생은 다시 회원가입해야 로그인할 수 있습니다.`,
+        );
+        if (!ok) return;
+
+        setActingId(student.id);
+        setMessage(null);
+        try {
+            const res = await fetch("/api/teacher/student-accounts", {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ studentId: student.id }),
+            });
+            const data = (await res.json()) as ApiResponse;
+            if (!res.ok || !data.success) throw new Error(data.error || "계정 삭제 실패");
+            setStudents(data.students || []);
+            if (data.stats) setStats(data.stats);
+            setMessage({ type: "ok", text: `${student.name} 회원가입 계정을 삭제했습니다. 학부모 인증번호로 다시 가입할 수 있습니다.` });
+        } catch (error) {
+            setMessage({ type: "error", text: error instanceof Error ? error.message : "계정 삭제 실패" });
+        } finally {
+            setActingId(null);
+        }
+    };
 
     return (
-        <div style={{ padding: 32, maxWidth: 1000, margin: "0 auto" }}>
-            <div style={{ marginBottom: 28 }}>
-                <h1 style={{ fontSize: 24, fontWeight: 900, color: "#0f172a", margin: "0 0 6px" }}>
-                    학생 계정 관리
-                </h1>
-                <p style={{ fontSize: 14, color: "#64748b", margin: 0 }}>
-                    가입 승인, 계정 비활성화, 재승인을 관리합니다.
-                </p>
-            </div>
+        <div className="student-account-page">
+            <header className="page-head">
+                <div>
+                    <div className="eyebrow">Student Account Control</div>
+                    <h1>학생 회원가입 계정 관리</h1>
+                    <p>학부모 인증번호는 유지하면서 학생 로그인 계정만 해제하거나, 학생 상태를 관리합니다.</p>
+                </div>
+                <button className="ghost-btn" onClick={() => void load()} disabled={loading}>
+                    <RefreshCw size={16} strokeWidth={2.4} />
+                    새로고침
+                </button>
+            </header>
 
-            {/* 승인 대기 배너 */}
-            {pendingCount > 0 && (
-                <div style={{
-                    padding: "14px 20px", borderRadius: 12, marginBottom: 20,
-                    background: "#fffbeb", border: "1.5px solid #fde68a",
-                    display: "flex", alignItems: "center", gap: 10,
-                }}>
-                    <span className="material-symbols-outlined" style={{ fontSize: 22, color: "#f59e0b", fontVariationSettings: "'FILL' 1" }}>notification_important</span>
-                    <span style={{ fontSize: 14, fontWeight: 700, color: "#92400e" }}>
-                        승인 대기 중인 학생이 {pendingCount}명 있습니다
-                    </span>
+            <section className="stat-grid">
+                <Stat icon={<Users size={24} />} label="학생 목록" value={stats.total} />
+                <Stat icon={<UserCheck size={24} />} label="회원가입 완료" value={stats.linked} />
+                <Stat icon={<UserMinus size={24} />} label="미가입" value={stats.unlinked} />
+                <Stat icon={<ShieldCheck size={24} />} label="활성 학생" value={stats.approved} />
+            </section>
+
+            {message && (
+                <div className={`notice ${message.type}`}>
+                    {message.text}
                 </div>
             )}
 
-            {/* 필터 */}
-            <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
-                {(["all", "pending", "approved", "deactivated", "rejected"] as FilterStatus[]).map(f => (
-                    <button
-                        key={f}
-                        onClick={() => setFilter(f)}
-                        style={{
-                            padding: "8px 16px", borderRadius: 10, border: "none",
-                            background: filter === f ? "#2563eb" : "#f1f5f9",
-                            color: filter === f ? "#fff" : "#64748b",
-                            fontSize: 13, fontWeight: 700, cursor: "pointer",
-                        }}
-                    >
-                        {f === "all" ? "전체" : STATUS_CONFIG[f]?.label || f}
-                        {f === "pending" && pendingCount > 0 && (
-                            <span style={{
-                                marginLeft: 6, padding: "2px 6px", borderRadius: 6,
-                                background: filter === f ? "rgba(255,255,255,0.3)" : "#f59e0b",
-                                color: "#fff", fontSize: 10, fontWeight: 800,
-                            }}>
-                                {pendingCount}
-                            </span>
-                        )}
-                    </button>
-                ))}
-            </div>
-
-            {/* 학생 목록 */}
-            {loading ? (
-                <div style={{ textAlign: "center", padding: 40, color: "#94a3b8" }}>로딩 중...</div>
-            ) : students.length === 0 ? (
-                <div style={{ textAlign: "center", padding: 40, color: "#94a3b8" }}>
-                    {filter === "all" ? "등록된 학생이 없습니다." : `${STATUS_CONFIG[filter]?.label || filter} 상태 학생이 없습니다.`}
+            <section className="toolbar">
+                <div className="filters">
+                    {FILTERS.map(item => (
+                        <button
+                            key={item.key}
+                            onClick={() => setFilter(item.key)}
+                            className={filter === item.key ? "active" : ""}
+                        >
+                            {item.label}
+                        </button>
+                    ))}
                 </div>
-            ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                    {students.map(s => {
-                        const cfg = STATUS_CONFIG[s.status] || STATUS_CONFIG.pending;
-                        const isActing = actionLoading === s.id;
+                <input
+                    value={query}
+                    onChange={event => setQuery(event.target.value)}
+                    placeholder="학생 이름 검색"
+                />
+            </section>
+
+            <section className="table-wrap">
+                <div className="table-head">
+                    <span>학생</span>
+                    <span>가입 상태</span>
+                    <span>학생 상태</span>
+                    <span>최근 로그인</span>
+                    <span>관리</span>
+                </div>
+                {loading ? (
+                    <div className="empty">학생 계정을 불러오는 중입니다.</div>
+                ) : filtered.length === 0 ? (
+                    <div className="empty">표시할 학생이 없습니다.</div>
+                ) : (
+                    filtered.map(student => {
+                        const colors = statusColor(student.status);
+                        const acting = actingId === student.id;
                         return (
-                            <div key={s.id} style={{
-                                padding: "16px 20px", borderRadius: 14,
-                                background: "#fff", border: "1px solid #e2e8f0",
-                                display: "flex", alignItems: "center", gap: 14,
-                                opacity: isActing ? 0.6 : 1,
-                            }}>
-                                {/* 아바타 */}
-                                <div style={{
-                                    width: 40, height: 40, borderRadius: 12,
-                                    background: `linear-gradient(135deg, ${cfg.color}20, ${cfg.color}40)`,
-                                    display: "flex", alignItems: "center", justifyContent: "center",
-                                    fontSize: 16, fontWeight: 900, color: cfg.color,
-                                }}>
-                                    {s.name.charAt(0)}
-                                </div>
-
-                                {/* 정보 */}
-                                <div style={{ flex: 1 }}>
-                                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                                        <span style={{ fontSize: 15, fontWeight: 800, color: "#0f172a" }}>{s.name}</span>
-                                        <span style={{
-                                            padding: "2px 8px", borderRadius: 6,
-                                            fontSize: 10, fontWeight: 700,
-                                            background: cfg.bg, color: cfg.color,
-                                        }}>
-                                            {cfg.label}
-                                        </span>
-                                        {s.grade && <span style={{ fontSize: 11, color: "#94a3b8" }}>{s.grade}</span>}
-                                    </div>
-                                    <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 2 }}>
-                                        가입: {s.created_at?.slice(0, 10)} · PIN: {s.pin}
+                            <div className="table-row" key={student.id} style={{ opacity: acting ? 0.55 : 1 }}>
+                                <div className="student-cell">
+                                    <div className="avatar">{student.name.slice(0, 1)}</div>
+                                    <div>
+                                        <strong>{student.name}</strong>
+                                        <small>{student.className || "반 미지정"} · 인증번호 {student.pinIssued ? "발급됨" : "없음"}</small>
                                     </div>
                                 </div>
-
-                                {/* 액션 버튼 */}
-                                <div style={{ display: "flex", gap: 6 }}>
-                                    {s.status === "pending" && (
-                                        <>
-                                            <button
-                                                onClick={() => updateStatus(s.id, "approved")}
-                                                disabled={isActing}
-                                                style={{
-                                                    padding: "6px 14px", borderRadius: 8, border: "none",
-                                                    background: "#22c55e", color: "#fff",
-                                                    fontSize: 12, fontWeight: 700, cursor: "pointer",
-                                                }}
-                                            >
-                                                승인
-                                            </button>
-                                            <button
-                                                onClick={() => updateStatus(s.id, "rejected")}
-                                                disabled={isActing}
-                                                style={{
-                                                    padding: "6px 14px", borderRadius: 8, border: "none",
-                                                    background: "#f1f5f9", color: "#64748b",
-                                                    fontSize: 12, fontWeight: 700, cursor: "pointer",
-                                                }}
-                                            >
-                                                거절
-                                            </button>
-                                        </>
-                                    )}
-                                    {s.status === "approved" && (
-                                        <button
-                                            onClick={() => updateStatus(s.id, "deactivated")}
-                                            disabled={isActing}
-                                            style={{
-                                                padding: "6px 14px", borderRadius: 8, border: "none",
-                                                background: "#fef2f2", color: "#ef4444",
-                                                fontSize: 12, fontWeight: 700, cursor: "pointer",
-                                            }}
-                                        >
+                                <div>
+                                    <span className={student.accountLinked ? "pill linked" : "pill unlinked"}>
+                                        {student.accountLinked ? "회원가입 완료" : "미가입"}
+                                    </span>
+                                    {student.email && <small className="sub">{student.email}</small>}
+                                </div>
+                                <div>
+                                    <span className="status" style={{ background: colors.bg, color: colors.fg, borderColor: colors.bd }}>
+                                        {STATUS_LABEL[student.status] || student.status}
+                                    </span>
+                                </div>
+                                <div>
+                                    <span>{formatDate(student.lastSignInAt)}</span>
+                                    <small className="sub">가입 {formatDate(student.authCreatedAt || student.createdAt)}</small>
+                                </div>
+                                <div className="actions">
+                                    {student.status === "deactivated" ? (
+                                        <button onClick={() => updateStatus(student, "approved")} disabled={acting}>
+                                            활성화
+                                        </button>
+                                    ) : (
+                                        <button onClick={() => updateStatus(student, "deactivated")} disabled={acting}>
                                             비활성화
                                         </button>
                                     )}
-                                    {(s.status === "deactivated" || s.status === "rejected") && (
-                                        <button
-                                            onClick={() => updateStatus(s.id, "approved")}
-                                            disabled={isActing}
-                                            style={{
-                                                padding: "6px 14px", borderRadius: 8, border: "none",
-                                                background: "#eff6ff", color: "#2563eb",
-                                                fontSize: 12, fontWeight: 700, cursor: "pointer",
-                                            }}
-                                        >
-                                            재승인
-                                        </button>
-                                    )}
+                                    <button
+                                        className="danger"
+                                        onClick={() => deleteAccount(student)}
+                                        disabled={acting || !student.canDeleteAccount}
+                                        title={student.canDeleteAccount ? "회원가입/Auth 계정 삭제" : "삭제할 가입 계정이 없거나 보호 계정입니다."}
+                                    >
+                                        <Trash2 size={15} />
+                                        계정 삭제
+                                    </button>
                                 </div>
                             </div>
                         );
-                    })}
-                </div>
-            )}
+                    })
+                )}
+            </section>
+
+            <style>{`
+                .student-account-page {
+                    padding: 48px 52px;
+                    min-height: 100vh;
+                    background: #f6f9fe;
+                    color: #0f172a;
+                }
+                .page-head {
+                    display: flex;
+                    align-items: flex-start;
+                    justify-content: space-between;
+                    gap: 24px;
+                    margin-bottom: 24px;
+                }
+                .eyebrow {
+                    color: #2563eb;
+                    font-size: 13px;
+                    font-weight: 900;
+                    letter-spacing: 0.16em;
+                    text-transform: uppercase;
+                    margin-bottom: 8px;
+                }
+                h1 {
+                    font-size: clamp(34px, 4vw, 54px);
+                    line-height: 1.04;
+                    letter-spacing: -0.04em;
+                    margin: 0 0 14px;
+                    font-weight: 950;
+                }
+                p {
+                    margin: 0;
+                    color: #52627a;
+                    font-size: 16px;
+                    line-height: 1.65;
+                    font-weight: 650;
+                }
+                .ghost-btn, .actions button, .filters button {
+                    border: 1px solid #d7e2f2;
+                    background: #fff;
+                    color: #223047;
+                    border-radius: 12px;
+                    min-height: 42px;
+                    padding: 0 14px;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 8px;
+                    font-weight: 900;
+                    cursor: pointer;
+                    font-family: inherit;
+                }
+                button:disabled {
+                    cursor: not-allowed;
+                    opacity: 0.45;
+                }
+                .stat-grid {
+                    display: grid;
+                    grid-template-columns: repeat(4, minmax(0, 1fr));
+                    gap: 14px;
+                    margin-bottom: 20px;
+                }
+                .stat-card {
+                    background: #fff;
+                    border: 1px solid #d7e2f2;
+                    border-radius: 14px;
+                    padding: 22px 24px;
+                    display: flex;
+                    align-items: center;
+                    gap: 16px;
+                }
+                .stat-icon {
+                    width: 52px;
+                    height: 52px;
+                    border-radius: 14px;
+                    background: #eef5ff;
+                    color: #2563eb;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+                .stat-value {
+                    font-size: 32px;
+                    font-weight: 950;
+                    letter-spacing: -0.04em;
+                }
+                .stat-label {
+                    font-size: 13px;
+                    color: #52627a;
+                    font-weight: 850;
+                    margin-top: 3px;
+                }
+                .notice {
+                    border-radius: 12px;
+                    padding: 14px 16px;
+                    margin: 0 0 18px;
+                    font-weight: 850;
+                    border: 1px solid;
+                }
+                .notice.ok {
+                    background: #ecfdf5;
+                    border-color: #bbf7d0;
+                    color: #047857;
+                }
+                .notice.error {
+                    background: #fef2f2;
+                    border-color: #fecaca;
+                    color: #b91c1c;
+                }
+                .toolbar {
+                    background: #fff;
+                    border: 1px solid #d7e2f2;
+                    border-radius: 14px;
+                    padding: 14px;
+                    display: flex;
+                    justify-content: space-between;
+                    gap: 12px;
+                    margin-bottom: 14px;
+                }
+                .filters {
+                    display: flex;
+                    gap: 8px;
+                    flex-wrap: wrap;
+                }
+                .filters button.active {
+                    background: #2563eb;
+                    border-color: #2563eb;
+                    color: #fff;
+                }
+                input {
+                    width: min(320px, 100%);
+                    min-height: 42px;
+                    border: 1px solid #d7e2f2;
+                    border-radius: 12px;
+                    padding: 0 14px;
+                    font-size: 14px;
+                    font-weight: 800;
+                    outline: none;
+                    color: #0f172a;
+                }
+                .table-wrap {
+                    background: #fff;
+                    border: 1px solid #d7e2f2;
+                    border-radius: 16px;
+                    overflow: hidden;
+                }
+                .table-head, .table-row {
+                    display: grid;
+                    grid-template-columns: 1.4fr 1.1fr 0.8fr 0.9fr 1.1fr;
+                    gap: 16px;
+                    align-items: center;
+                }
+                .table-head {
+                    padding: 14px 20px;
+                    background: #f8fbff;
+                    color: #52627a;
+                    font-size: 12px;
+                    font-weight: 950;
+                    border-bottom: 1px solid #e4edf8;
+                }
+                .table-row {
+                    padding: 16px 20px;
+                    border-bottom: 1px solid #eef3f9;
+                }
+                .table-row:last-child {
+                    border-bottom: none;
+                }
+                .student-cell {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    min-width: 0;
+                }
+                .avatar {
+                    width: 42px;
+                    height: 42px;
+                    border-radius: 12px;
+                    background: linear-gradient(135deg, #2563eb, #0ea5e9);
+                    color: #fff;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 16px;
+                    font-weight: 950;
+                    flex: 0 0 auto;
+                }
+                strong {
+                    display: block;
+                    font-size: 15px;
+                    font-weight: 950;
+                    margin-bottom: 3px;
+                }
+                small, .sub {
+                    display: block;
+                    color: #72819a;
+                    font-size: 11px;
+                    font-weight: 750;
+                    margin-top: 4px;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
+                .pill, .status {
+                    display: inline-flex;
+                    align-items: center;
+                    min-height: 26px;
+                    border-radius: 999px;
+                    padding: 0 10px;
+                    font-size: 12px;
+                    font-weight: 950;
+                    border: 1px solid;
+                }
+                .pill.linked {
+                    background: #eff6ff;
+                    color: #1d4ed8;
+                    border-color: #bfdbfe;
+                }
+                .pill.unlinked {
+                    background: #f8fafc;
+                    color: #64748b;
+                    border-color: #e2e8f0;
+                }
+                .actions {
+                    display: flex;
+                    justify-content: flex-end;
+                    gap: 8px;
+                    flex-wrap: wrap;
+                }
+                .actions button {
+                    min-height: 36px;
+                    border-radius: 10px;
+                    font-size: 12px;
+                    padding: 0 12px;
+                }
+                .actions .danger {
+                    color: #b91c1c;
+                    border-color: #fecaca;
+                    background: #fff7f7;
+                }
+                .empty {
+                    padding: 64px 20px;
+                    text-align: center;
+                    color: #7b8aa0;
+                    font-weight: 850;
+                }
+                @media (max-width: 1180px) {
+                    .student-account-page {
+                        padding: 36px 24px;
+                    }
+                    .stat-grid {
+                        grid-template-columns: repeat(2, minmax(0, 1fr));
+                    }
+                    .table-head {
+                        display: none;
+                    }
+                    .table-row {
+                        grid-template-columns: 1fr;
+                        gap: 12px;
+                    }
+                    .actions {
+                        justify-content: flex-start;
+                    }
+                }
+                @media (max-width: 767px) {
+                    .student-account-page {
+                        padding: 76px 16px 24px;
+                    }
+                    .page-head, .toolbar {
+                        flex-direction: column;
+                    }
+                    .stat-grid {
+                        grid-template-columns: 1fr;
+                    }
+                }
+            `}</style>
+        </div>
+    );
+}
+
+function Stat({ icon, label, value }: { icon: React.ReactNode; label: string; value: number }) {
+    return (
+        <div className="stat-card">
+            <div className="stat-icon">{icon}</div>
+            <div>
+                <div className="stat-value">{value}</div>
+                <div className="stat-label">{label}</div>
+            </div>
         </div>
     );
 }

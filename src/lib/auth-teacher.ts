@@ -1,10 +1,3 @@
-/**
- * 교사 인증 헬퍼 — API 라우트에서 사용
- *
- * 현재 정책: teacher 또는 admin 역할만 통과
- * 미인증 시 401, 권한 없음 시 403 반환
- */
-
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -21,7 +14,7 @@ function isGrowthOsAdminStudent(row: { name?: string | null; class?: string | nu
     if (!row || row.status === "deactivated") return false;
     const name = normalizeAdminName(row.name);
     const className = normalizeAdminName(row.class);
-    return className === "admin" || ["구자현", "장민", "gujahyeon", "gujahyun", "jahyeon"].includes(name);
+    return className === "admin" || ["구자현", "장민", "gujahyeon", "gujahyun", "jahyeon", "jangmin"].includes(name);
 }
 
 export async function requireTeacher(): Promise<TeacherAuthResult> {
@@ -34,7 +27,7 @@ export async function requireTeacher(): Promise<TeacherAuthResult> {
                 ok: false,
                 response: NextResponse.json(
                     { error: "로그인이 필요합니다." },
-                    { status: 401 }
+                    { status: 401 },
                 ),
             };
         }
@@ -55,7 +48,7 @@ export async function requireTeacher(): Promise<TeacherAuthResult> {
                     .maybeSingle();
 
                 if (isGrowthOsAdminStudent(linkedStudent)) {
-                    return { ok: true, userId: user.id, role: "teacher" };
+                    return { ok: true, userId: user.id, role: "admin" };
                 }
             }
 
@@ -63,7 +56,7 @@ export async function requireTeacher(): Promise<TeacherAuthResult> {
                 ok: false,
                 response: NextResponse.json(
                     { error: "권한이 없습니다." },
-                    { status: 403 }
+                    { status: 403 },
                 ),
             };
         }
@@ -74,7 +67,7 @@ export async function requireTeacher(): Promise<TeacherAuthResult> {
             ok: false,
             response: NextResponse.json(
                 { error: "인증 확인 중 오류가 발생했습니다." },
-                { status: 500 }
+                { status: 500 },
             ),
         };
     }
