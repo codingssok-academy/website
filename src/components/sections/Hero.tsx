@@ -49,8 +49,10 @@ export default function Hero() {
         stiffness: 80,
         damping: 25,
     });
-    const contentOpacity = useTransform(scrollYProgress, [0, 0.4], [1, 0]);
-    // 배경 이미지 제거됨 — 순수 화이트 + 미세 그리드 + 그라데이션 오브로 대체 (피드백 #A)
+    const contentOpacity = useTransform(scrollYProgress, [0, 0.28, 0.48], [1, 0.45, 0]);
+    const darkImageOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
+    const lightImageOpacity = useTransform(scrollYProgress, [0, 0.22, 0.5], [0, 0.45, 1]);
+    const overlayOpacity = useTransform(scrollYProgress, [0, 0.42], [1, 0]);
 
     return (
         <>
@@ -66,17 +68,30 @@ export default function Hero() {
                 background: "#0f172a",
             }}
         >
-            {/* 교실 배경 이미지 */}
-            <div style={{
+            {/* 첫 화면: 어두운 로비 사진 */}
+            <motion.div style={{
                 position: "absolute", inset: 0,
+                opacity: darkImageOpacity,
+                backgroundImage: "url(/images/hero-lobby-dark-20260613.png)",
+                backgroundSize: "cover",
+                backgroundPosition: "center 40%",
+                backgroundRepeat: "no-repeat",
+            }} />
+
+            {/* 스크롤 후: 밝은 로비 사진만 보이도록 크로스페이드 */}
+            <motion.div style={{
+                position: "absolute", inset: 0,
+                opacity: lightImageOpacity,
                 backgroundImage: "url(/images/hero-lobby-20260613.png)",
                 backgroundSize: "cover",
                 backgroundPosition: "center 40%",
                 backgroundRepeat: "no-repeat",
             }} />
-            {/* 다크 오버레이 — 텍스트 가독성 */}
-            <div style={{
+
+            {/* 첫 화면 텍스트 가독성용 오버레이 */}
+            <motion.div style={{
                 position: "absolute", inset: 0,
+                opacity: overlayOpacity,
                 background: "linear-gradient(to bottom, rgba(15,23,42,0.55) 0%, rgba(15,23,42,0.3) 40%, rgba(15,23,42,0.7) 100%)",
             }} />
 
