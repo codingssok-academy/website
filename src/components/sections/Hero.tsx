@@ -69,7 +69,7 @@ export default function Hero() {
             {/* 교실 배경 이미지 */}
             <div style={{
                 position: "absolute", inset: 0,
-                backgroundImage: "url(/images/hero-classroom.jpg)",
+                backgroundImage: "url(/images/hero-lobby-20260613.png)",
                 backgroundSize: "cover",
                 backgroundPosition: "center 40%",
                 backgroundRepeat: "no-repeat",
