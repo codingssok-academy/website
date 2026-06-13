@@ -41,8 +41,14 @@ export type ParentCodeRow = {
     source: 'database' | 'reference' | 'inactive'
 }
 
+function isReservedAdminName(name: string) {
+    return ['구자현', '장민'].includes(name.trim().replace(/\s+/g, ''))
+}
+
 export function normalizeParentCodePin(input: unknown) {
-    return typeof input === 'string' ? input.replace(/\D/g, '').slice(0, 5) : ''
+    if (typeof input !== 'string') return ''
+    const pin = input.replace(/\D/g, '').slice(0, 5)
+    return /^\d{5}$/.test(pin) ? pin : ''
 }
 
 export function findProfileForParentCodeStudent(
@@ -67,7 +73,7 @@ export function buildParentCodeRows(input: {
     const rows = new Map<string, ParentCodeRow>()
 
     for (const student of input.students) {
-        if (student.status === 'deactivated' || student.class === 'admin') continue
+        if (student.status === 'deactivated' || student.class === 'admin' || isReservedAdminName(student.name)) continue
 
         const profile = findProfileForParentCodeStudent(student, input.profiles)
         const progressPin = profile ? progressByUserId.get(profile.id) : null
