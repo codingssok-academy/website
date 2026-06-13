@@ -51,6 +51,23 @@ export async function verifyParentPin(
     const profile = await findProfileByParentQuery(supabase, studentQuery)
     if (!profile) return null
 
+    const { data: linkedStudents } = await supabase
+        .from('students')
+        .select('id, name, pin, status, auth_user_id')
+        .eq('auth_user_id', profile.id)
+
+    const { data: namedStudents } = await supabase
+        .from('students')
+        .select('id, name, pin, status, auth_user_id')
+        .eq('name', studentQuery)
+
+    const studentRows = [...(linkedStudents || []), ...(namedStudents || [])]
+    const student = studentRows.find(row => row.auth_user_id === profile.id) || studentRows[0] || null
+    if (student) {
+        if (student.status === 'deactivated') return null
+        if (student.pin) return student.pin === pin ? profile : null
+    }
+
     const { data: pinData } = await supabase
         .from('study_progress')
         .select('completed_units')
