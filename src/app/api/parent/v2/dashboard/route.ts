@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 /**
  * /api/parent/v2/dashboard?name=학생이름
  *
@@ -13,17 +14,34 @@ import { createClient } from "@supabase/supabase-js";
 import { stripHtml, truncate } from "@/lib/text-utils";
 import { verifyParentSessionToken, PARENT_SESSION_COOKIE } from "@/lib/parent-session";
 import { createClient as createServerSupabase } from "@/lib/supabase/server";
-import { normalizeStudentName } from "@/lib/student-family";
+import { PIN_COURSE } from "@/lib/parent-auth";
+import { findReferenceParentCode } from "@/lib/parent-code-reference";
 
 // jsdom 체인은 text-utils로 끊었음. lazy dynamic import는 매 요청마다 module load
 // 4-5초 비용 → static import 복귀. cold start 1-2초 + 그 후 호출 즉시.
 export const runtime = 'nodejs';
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
-export const fetchCache = "force-no-store";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+function cleanEnv(value: string | undefined) {
+    const trimmed = (value || "").trim();
+    if (!trimmed || trimmed === '""' || trimmed === "''") return "";
+    return trimmed;
+}
+
+const supabaseUrl = cleanEnv(process.env.NEXT_PUBLIC_SUPABASE_URL);
+const supabaseServiceKey = cleanEnv(process.env.SUPABASE_SERVICE_ROLE_KEY);
+
+function isLocalRequest(req: NextRequest) {
+    const host = req.headers.get("host") || "";
+    return host.startsWith("localhost:") || host.startsWith("127.0.0.1:") || host.startsWith("[::1]:");
+}
+
+// ─── Notion 캐시 (SWR: fresh 5분 / stale 60분) ─────────────────────────────
+// fresh: 그대로 반환
+// stale: 즉시 반환 + 백그라운드 갱신 → 다음 호출에서 fresh
+// miss: 동기 fetch (cold start 첫 사용자만)
+const notionCache = new Map<string, { data: any; ts: number }>();
+const FRESH_TTL = 5 * 60 * 1000;        // 5분
+const STALE_TTL = 60 * 60 * 1000;       // 1시간
 
 // ─── Dashboard response 캐시 (lambda in-memory) ─────────────────────────────
 // 같은 학생 30초 cache → 두 번째 호출부터 0ms 응답.
@@ -44,10 +62,24 @@ function setCachedDash(name: string, data: any) {
     }
 }
 
-function parentSessionAllowsName(parentSession: ReturnType<typeof verifyParentSessionToken>, name: string) {
-    if (!parentSession) return false;
-    const requestedName = normalizeStudentName(name);
-    return (parentSession.studentNames || []).some(studentName => normalizeStudentName(studentName) === requestedName);
+type CacheLookup = { data: any; fresh: boolean } | null;
+
+function getCachedNotion(key: string): CacheLookup {
+    const entry = notionCache.get(key);
+    if (!entry) return null;
+    const age = Date.now() - entry.ts;
+    if (age < FRESH_TTL) return { data: entry.data, fresh: true };
+    if (age < STALE_TTL) return { data: entry.data, fresh: false };
+    return null;
+}
+
+function setCachedNotion(key: string, data: any) {
+    notionCache.set(key, { data, ts: Date.now() });
+    // 오래된 캐시 정리 (100개 초과 시)
+    if (notionCache.size > 100) {
+        const oldest = [...notionCache.entries()].sort((a, b) => a[1].ts - b[1].ts)[0];
+        if (oldest) notionCache.delete(oldest[0]);
+    }
 }
 
 // createClient는 GET handler 안 lazy dynamic import에서 destructure됨 (scope 격리)
@@ -60,31 +92,63 @@ const NOTION_HEADERS = {
     "Notion-Version": "2022-06-28",
     "Content-Type": "application/json",
 };
-const NO_STORE_HEADERS = {
-    "Cache-Control": "no-store, no-cache, must-revalidate",
-};
-
-type NotionHomeworkResult = {
-    feedbacks: { id: string; date: string | null; status: string }[];
-    notionHomeworks: {
-        id: string;
-        source: "notion";
-        title: string;
-        description: string;
-        date: string | null;
-        files: { name: string; url: string; type: string }[];
-        status: "pending";
-    }[];
-};
-
-const EMPTY_NOTION_RESULT: NotionHomeworkResult = { feedbacks: [], notionHomeworks: [] };
 
 function getText(richText: any[]): string {
     return (richText || []).map((t: any) => t.plain_text).join("");
 }
 
+function getReferenceDashboard(req: NextRequest, name: string) {
+    if (!isLocalRequest(req)) return null;
+    const parentToken = req.cookies.get(PARENT_SESSION_COOKIE)?.value;
+    const parentSession = parentToken ? verifyParentSessionToken(parentToken) : null;
+    const reference = findReferenceParentCode(name);
+    if (!reference) return null;
+    if (supabaseServiceKey && parentSession?.studentId !== `reference:${name}`) return null;
+    return {
+        found: true,
+        student: {
+            id: `reference:${name}`,
+            name,
+            totalXp: 0,
+            level: 1,
+            tier: "Reference",
+            streak: 0,
+            bestStreak: 0,
+            accuracy: 0,
+            totalCodeRuns: 0,
+            totalProblems: 0,
+            lastActive: null,
+        },
+        xp: { total: 0, today: 0, weekly: [], history: [] },
+        activity: { todayMinutes: 0, totalMinutes: 0, recent: [] },
+        feedbacks: [],
+        announcements: [],
+        studyNotes: { count30d: 0, latestAt: null },
+        codeHistory: [],
+        reference,
+        warning: "로컬 개발 환경 기준표 인증으로 표시 중입니다. 실제 데이터는 Supabase 서비스 키가 있는 환경에서 조회됩니다.",
+    };
+}
+
 export async function GET(req: NextRequest) {
     try {
+    const name = req.nextUrl.searchParams.get("name")?.trim();
+
+    // 입력 검증: 2~10자 한글/영문만
+    if (!name || name.length < 2 || name.length > 10) {
+        return NextResponse.json({ error: "학생 이름 필요 (2~10자)" }, { status: 400 });
+    }
+    if (/[<>"';&\\]/.test(name)) {
+        return NextResponse.json({ error: "잘못된 문자 포함" }, { status: 400 });
+    }
+
+    const referenceDashboard = getReferenceDashboard(req, name);
+    if (referenceDashboard) {
+        return NextResponse.json(referenceDashboard, {
+            headers: { "Cache-Control": "no-store", "X-Cache": "REFERENCE" },
+        });
+    }
+
     // 환경변수 빠른 검증 — 누락이면 즉시 명확한 에러
     if (!supabaseUrl || !supabaseServiceKey) {
         return NextResponse.json({
@@ -95,18 +159,6 @@ export async function GET(req: NextRequest) {
             },
         }, { status: 500 });
     }
-
-    const name = req.nextUrl.searchParams.get("name")?.trim();
-
-    // 입력 검증: 2~10자 한글/영문만
-    if (!name || name.length < 2 || name.length > 10) {
-        return NextResponse.json({ error: "학생 이름 필요 (2~10자)" }, { status: 400 });
-    }
-    if (/[<>"';&\\]/.test(name)) {
-        return NextResponse.json({ error: "잘못된 문자 포함" }, { status: 400 });
-    }
-    const includeNotion = req.nextUrl.searchParams.get("includeNotion") === "1";
-    const bypassCache = req.nextUrl.searchParams.get("fresh") === "1" || includeNotion;
 
     // Rate limit: IP당 1분에 60회 (탭 전환 + 백그라운드 갱신 대응)
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
@@ -127,18 +179,29 @@ export async function GET(req: NextRequest) {
     const parentToken = req.cookies.get(PARENT_SESSION_COOKIE)?.value;
     const parentSession = parentToken ? verifyParentSessionToken(parentToken) : null;
     if (parentSession?.studentId) {
-        if (parentSessionAllowsName(parentSession, name)) {
-            isAuthorized = true;
-        } else {
-            const { data: studentProfile } = await sb
-                .from("profiles")
-                .select("display_name,name")
+        const [profileRes, studentRes, pinRes] = await Promise.all([
+            sb.from("profiles")
+                .select("display_name, name")
                 .eq("id", parentSession.studentId)
-                .maybeSingle();
-            const profileName = studentProfile?.display_name || studentProfile?.name || "";
-            if (normalizeStudentName(profileName) === normalizeStudentName(name)) {
-                isAuthorized = true;
-            }
+                .maybeSingle(),
+            sb.from("students")
+                .select("id, name, pin, auth_user_id")
+                .or(`id.eq.${parentSession.studentId},auth_user_id.eq.${parentSession.studentId}`)
+                .limit(5),
+            sb.from("study_progress")
+                .select("completed_units")
+                .eq("user_id", parentSession.studentId)
+                .eq("course_id", PIN_COURSE)
+                .maybeSingle(),
+        ]);
+
+        const matchingStudent = (studentRes.data || []).find((student: any) => student.name === name);
+        const profileName = profileRes.data?.display_name || profileRes.data?.name || "";
+        const hasActiveStudentPin = Boolean(matchingStudent?.pin);
+        const hasActiveProgressPin = Boolean(pinRes.data?.completed_units?.[0]);
+
+        if ((profileName === name && hasActiveProgressPin) || (matchingStudent && hasActiveStudentPin)) {
+            isAuthorized = true;
         }
     }
 
@@ -165,13 +228,11 @@ export async function GET(req: NextRequest) {
     }
 
     // ── Lambda in-memory cache hit (30초) — Supabase 7 query 비용 0 ──
-    if (!bypassCache) {
-        const cachedDash = getCachedDash(name);
-        if (cachedDash) {
-            return NextResponse.json(cachedDash, {
-                headers: { ...NO_STORE_HEADERS, "X-Cache": "HIT" },
-            });
-        }
+    const cachedDash = getCachedDash(name);
+    if (cachedDash) {
+        return NextResponse.json(cachedDash, {
+            headers: { "Cache-Control": "private, max-age=60, stale-while-revalidate=120", "X-Cache": "HIT" },
+        });
     }
 
     // 1. Find profile by display_name
@@ -182,9 +243,20 @@ export async function GET(req: NextRequest) {
         .limit(1);
 
     const profile = profiles?.[0] ?? null;
-    const userId = profile?.id;
+    let fallbackStudent: any = null;
+    if (!profile) {
+        const { data: fallbackStudents } = await sb
+            .from("students")
+            .select("id, name, auth_user_id, pin")
+            .eq("name", name)
+            .limit(1);
+        fallbackStudent = fallbackStudents?.[0] ?? null;
+    }
+    const userId = profile?.id || fallbackStudent?.auth_user_id || null;
 
-    // 2. Parallel fetch — 기본은 Supabase만. includeNotion=1일 때만 Notion을 후속 조회.
+    // 2. Parallel fetch — Supabase만 (노션은 별도 endpoint /api/parent/v2/notion-feedbacks로 분리)
+    // 자현 '앱 출시 — 느려터지면 어쩌잔겨' 명시: 노션 fetch가 토큰 stale 시 매번 5초 timeout
+    // 까지 대기 → 학부모 페이지 첫 진입 5초+. 분리해서 dashboard는 0.5초 안에 응답.
     const [xpResult, progressResult, activityResult, codeResult, announcementResult, notesResult] = await Promise.all([
         // XP history (last 30 days)
         userId
@@ -267,17 +339,26 @@ export async function GET(req: NextRequest) {
     );
 
     const progress = (progressResult as any)?.data;
-    const notionResult: NotionHomeworkResult = includeNotion
-        ? await fetchNotionWithHomework(name, 20)
-        : EMPTY_NOTION_RESULT;
 
     const responseObj = {
-        found: !!profile,
+        found: !!profile || !!fallbackStudent,
         student: profile ? {
             id: profile.id,
             name: profile.display_name,
             totalXp: totalXp || progress?.xp || 0,
             level: progress?.level || profile.level || 1,
+            tier: progress?.tier || "Iron",
+            streak: progress?.streak || 0,
+            bestStreak: progress?.best_streak || 0,
+            accuracy: progress?.accuracy || 0,
+            totalCodeRuns: progress?.total_code_runs || 0,
+            totalProblems: progress?.total_problems || 0,
+            lastActive: progress?.last_active_date || null,
+        } : fallbackStudent ? {
+            id: fallbackStudent.auth_user_id || fallbackStudent.id,
+            name: fallbackStudent.name,
+            totalXp: progress?.xp || 0,
+            level: progress?.level || 1,
             tier: progress?.tier || "Iron",
             streak: progress?.streak || 0,
             bestStreak: progress?.best_streak || 0,
@@ -297,8 +378,7 @@ export async function GET(req: NextRequest) {
             totalMinutes: totalStudyMinutes,
             recent: activities.slice(0, 10),
         },
-        feedbacks: notionResult.feedbacks,
-        notionHomeworks: notionResult.notionHomeworks,
+        feedbacks: [] as any[],
         announcements: ((announcementResult as any)?.data || []).map((a: any) => ({
             id: a.id,
             title: truncate(stripHtml(a.title || ""), 100),
@@ -319,9 +399,12 @@ export async function GET(req: NextRequest) {
             created_at: c.created_at,
         })),
     };
-    if (!bypassCache) setCachedDash(name, responseObj);
+    setCachedDash(name, responseObj);
     return NextResponse.json(responseObj, {
-        headers: { ...NO_STORE_HEADERS, "X-Cache": "MISS" },
+        headers: {
+            "Cache-Control": "private, max-age=60, stale-while-revalidate=120",
+            "X-Cache": "MISS",
+        },
     });
     } catch (err: any) {
         // 진단용: 500 에러 stack을 Vercel 로그 + 응답 body 양쪽에 남김
@@ -341,9 +424,27 @@ export async function GET(req: NextRequest) {
     }
 }
 
-async function fetchNotionWithHomework(name: string, limit: number): Promise<NotionHomeworkResult> {
-    if (!NOTION_KEY || !FEEDBACK_DB) return EMPTY_NOTION_RESULT;
-    return fetchNotionFresh(name, limit);
+async function fetchNotionWithHomework(name: string, limit: number) {
+    if (!NOTION_KEY) return { feedbacks: [], notionHomeworks: [] };
+
+    const cacheKey = `notion-hw:${name}:${limit}`;
+    const cached = getCachedNotion(cacheKey);
+
+    // fresh hit — 즉시 반환
+    if (cached?.fresh) return cached.data;
+
+    // stale hit — 즉시 반환 + 백그라운드 갱신 (fire-and-forget)
+    if (cached) {
+        fetchNotionFresh(name, limit, cacheKey).catch(() => {});
+        return cached.data;
+    }
+
+    // miss — 자현 명시 "느려터졌어 진짜" 핵심 fix:
+    // 동기 fetch 제거 → 백그라운드 fetch + 빈 데이터 즉시 반환.
+    // 첫 사용자는 노션 데이터 못 보지만 응답 즉시. 새로고침 시 fresh hit.
+    // 노션 토큰 stale/네트워크 지연으로 30초+ blocking 방지.
+    fetchNotionFresh(name, limit, cacheKey).catch(() => {});
+    return { feedbacks: [], notionHomeworks: [] };
 }
 
 // 노션 fetch 안전망: 5초 timeout 강제 (백그라운드 갱신도 hang 방지)
@@ -351,13 +452,13 @@ async function fetchWithTimeout(url: string, init: RequestInit, ms = 5000): Prom
     const ctrl = new AbortController();
     const id = setTimeout(() => ctrl.abort(), ms);
     try {
-        return await fetch(url, { ...init, signal: ctrl.signal, cache: "no-store" });
+        return await fetch(url, { ...init, signal: ctrl.signal });
     } finally {
         clearTimeout(id);
     }
 }
 
-async function fetchNotionFresh(name: string, limit: number): Promise<NotionHomeworkResult> {
+async function fetchNotionFresh(name: string, limit: number, cacheKey: string) {
     try {
         const res = await fetchWithTimeout(`https://api.notion.com/v1/databases/${FEEDBACK_DB}/query`, {
             method: "POST",
@@ -368,7 +469,7 @@ async function fetchNotionFresh(name: string, limit: number): Promise<NotionHome
                 page_size: limit,
             }),
         }, 5000);
-        if (!res.ok) return EMPTY_NOTION_RESULT;
+        if (!res.ok) return { feedbacks: [], notionHomeworks: [] };
         const data = await res.json();
 
         const activePages = (data.results || [])
@@ -384,7 +485,7 @@ async function fetchNotionFresh(name: string, limit: number): Promise<NotionHome
                     id: p.id,
                     date: p.properties["피드백 날짜"]?.date?.start || null,
                     status: p.properties["피드백 상태"]?.status?.name || "시작 전",
-                    homework: findSection(sections, ["과제", "숙제", "오늘의 과제"]),
+                    homework: sections["과제"]?.trim() || "",
                     files,
                 };
             })
@@ -406,12 +507,14 @@ async function fetchNotionFresh(name: string, limit: number): Promise<NotionHome
                 description: d.homework,
                 date: d.date,
                 files: d.files,
-                status: "pending" as const,
+                status: "pending",
             }));
 
-        return { feedbacks, notionHomeworks };
+        const result = { feedbacks, notionHomeworks };
+        setCachedNotion(cacheKey, result);
+        return result;
     } catch {
-        return EMPTY_NOTION_RESULT;
+        return { feedbacks: [], notionHomeworks: [] };
     }
 }
 
@@ -431,31 +534,16 @@ async function fetchBlocks(pageId: string): Promise<any[]> {
     }
 }
 
-const SECTION_HEADING_TYPES = new Set(["heading_1", "heading_2", "heading_3"]);
-
-function normalizeSectionTitle(title: string) {
-    return title.replace(/\s+/g, "").trim();
-}
-
-function findSection(sections: Record<string, string>, candidates: string[]) {
-    const normalizedCandidates = candidates.map(normalizeSectionTitle);
-    const entry = Object.entries(sections).find(([title]) =>
-        normalizedCandidates.includes(normalizeSectionTitle(title))
-    );
-    return entry?.[1]?.trim() || "";
-}
-
 function parseSections(blocks: any[]): Record<string, string> {
     const sections: Record<string, string> = {};
     let current = "";
     for (const block of blocks) {
         const type = block.type;
         const text = getText(block[type]?.rich_text);
-        if (SECTION_HEADING_TYPES.has(type) && text) {
+        if (type === "heading_2" && text) {
             current = text.replace(/^\d+\.\s*/, "").trim();
-        } else if (text) {
-            const sectionName = current || "기타 내용";
-            sections[sectionName] = (sections[sectionName] || "") + text + "\n";
+        } else if (current && text) {
+            sections[current] = (sections[current] || "") + text + "\n";
         }
     }
     return sections;

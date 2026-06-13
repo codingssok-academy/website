@@ -58,9 +58,9 @@ function createSupabaseMock(input: {
 }
 
 describe('parent-auth', () => {
-    it('generates a 6-digit numeric PIN', () => {
+    it('generates a 5-digit numeric PIN', () => {
         const pin = generateParentPin()
-        expect(pin).toMatch(/^\d{6}$/)
+        expect(pin).toMatch(/^\d{5}$/)
     })
 
     it('verifies a parent PIN by email lookup', async () => {

@@ -1,70 +1,44 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * /api/parent/lookup?name=학생이름
  *
  * 노션 피드백 DB에서 해당 학생의 피드백을 가져온다.
- * 학부모 세션에서 허용된 학생 이름만 조회.
+ * 로그인 불필요. 학생 이름 매칭만으로 조회.
  *
- * 담당자 명시 "노션 자료 로딩 너무 길어" — 직렬 child block fetch 제거 + 모든 fetch에 timeout.
+ * 자현 명시 "노션 자료 로딩 너무 길어" — 직렬 child block fetch 제거 + 모든 fetch에 timeout.
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { verifyParentSessionToken, PARENT_SESSION_COOKIE } from "@/lib/parent-session";
-import { createClient as createServerSupabase } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { normalizeStudentName } from "@/lib/student-family";
-import {
-    fetchWithTimeout,
-    getNotionFeedbackHeaders,
-    isNotionFeedbackConfigured,
-    queryNotionFeedbackPagesByStudent,
-} from "@/lib/notion-feedback";
+import { createClient as createServerSupabase } from "@/lib/supabase/server";
+import { PIN_COURSE } from "@/lib/parent-auth";
+import { PARENT_SESSION_COOKIE, verifyParentSessionToken } from "@/lib/parent-session";
+import { findReferenceParentCode } from "@/lib/parent-code-reference";
+import { callParentPortalEdge } from "@/lib/parent-edge";
+import { canParentSessionReadStudentFromDatabase, hasDatabaseAdmin } from "@/lib/postgres-admin";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
-export const fetchCache = "force-no-store";
-
-const NO_STORE_HEADERS = {
-    "Cache-Control": "no-store, no-cache, must-revalidate",
+const NOTION_KEY = process.env.NOTION_API_KEY || "";
+const FEEDBACK_DB = "3279bd0e-91c9-802f-b0bf-e8336861f74c";
+const HEADERS = {
+    "Authorization": `Bearer ${NOTION_KEY}`,
+    "Notion-Version": "2022-06-28",
+    "Content-Type": "application/json",
 };
 
-function jsonNoStore(body: unknown, init?: { status?: number }) {
-    return NextResponse.json(body, { ...init, headers: NO_STORE_HEADERS });
+const DETAIL_CONCURRENCY = 5;
+
+function isLocalRequest(req: NextRequest) {
+    const host = req.headers.get("host") || "";
+    return host.startsWith("localhost:") || host.startsWith("127.0.0.1:") || host.startsWith("[::1]:");
 }
 
-async function isAuthorizedParentLookup(req: NextRequest, name: string) {
-    const requestedName = normalizeStudentName(name);
-    const parentToken = req.cookies.get(PARENT_SESSION_COOKIE)?.value;
-    const parentSession = parentToken ? verifyParentSessionToken(parentToken) : null;
-
-    if (parentSession?.studentNames?.some(studentName => normalizeStudentName(studentName) === requestedName)) {
-        return true;
-    }
-
-    if (parentSession?.studentId) {
-        const adminClient = createAdminClient();
-        if (adminClient) {
-            const { data: profile } = await adminClient
-                .from("profiles")
-                .select("display_name,name")
-                .eq("id", parentSession.studentId)
-                .maybeSingle();
-            const profileName = profile?.display_name || profile?.name || "";
-            if (normalizeStudentName(profileName) === requestedName) return true;
-        }
-    }
-
+async function fetchWithTimeout(url: string, options: RequestInit, ms: number): Promise<Response> {
+    const ac = new AbortController();
+    const t = setTimeout(() => ac.abort(), ms);
     try {
-        const userClient = await createServerSupabase();
-        const { data: { user } } = await userClient.auth.getUser();
-        if (!user) return false;
-        const { data: teacherProfile } = await userClient
-            .from("profiles")
-            .select("role")
-            .eq("id", user.id)
-            .maybeSingle();
-        return teacherProfile?.role === "teacher" || teacherProfile?.role === "admin";
-    } catch {
-        return false;
+        return await fetch(url, { ...options, signal: ac.signal });
+    } finally {
+        clearTimeout(t);
     }
 }
 
@@ -72,43 +46,35 @@ function getText(richText: any[]): string {
     return (richText || []).map((t: any) => t.plain_text).join("");
 }
 
+function getFirstSection(sections: Record<string, string>, names: string[]) {
+    for (const name of names) {
+        const value = sections[name]?.trim();
+        if (value) return value;
+    }
+    return "";
+}
+
+async function mapWithConcurrency<T, R>(
+    items: T[],
+    limit: number,
+    mapper: (item: T, index: number) => Promise<R>,
+) {
+    const results: R[] = [];
+    let nextIndex = 0;
+    const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
+        while (nextIndex < items.length) {
+            const index = nextIndex;
+            nextIndex += 1;
+            results[index] = await mapper(items[index], index);
+        }
+    });
+    await Promise.all(workers);
+    return results;
+}
+
 interface PageContent {
     sections: Record<string, string>;
     files: { name: string; url: string; type: string }[];
-}
-
-const SECTION_HEADING_TYPES = new Set(["heading_1", "heading_2", "heading_3"]);
-const LEARNED_SECTION_NAMES = ["배운 내용", "배운내용"];
-const HOMEWORK_SECTION_NAMES = ["과제", "숙제", "오늘의 과제"];
-const ATTITUDE_SECTION_NAMES = ["수업 태도", "수업태도"];
-const UNDERSTANDING_SECTION_NAMES = ["이해도 및 성취도", "이해도", "성취도"];
-const NOTES_SECTION_NAMES = ["특이사항", "특이 사항", "전달사항", "전달 사항"];
-const KNOWN_SECTION_NAMES = [
-    ...LEARNED_SECTION_NAMES,
-    ...HOMEWORK_SECTION_NAMES,
-    ...ATTITUDE_SECTION_NAMES,
-    ...UNDERSTANDING_SECTION_NAMES,
-    ...NOTES_SECTION_NAMES,
-];
-
-function normalizeSectionTitle(title: string) {
-    return title.replace(/\s+/g, "").trim();
-}
-
-function findSection(sections: Record<string, string>, candidates: string[]) {
-    const normalizedCandidates = candidates.map(normalizeSectionTitle);
-    const entry = Object.entries(sections).find(([title]) =>
-        normalizedCandidates.includes(normalizeSectionTitle(title))
-    );
-    return entry?.[1]?.trim() || "";
-}
-
-function getExtraSections(sections: Record<string, string>) {
-    const knownTitles = new Set(KNOWN_SECTION_NAMES.map(normalizeSectionTitle));
-    return Object.entries(sections)
-        .map(([title, content]) => ({ title: title.trim(), content: content.trim() }))
-        .filter(section => section.title && section.content)
-        .filter(section => !knownTitles.has(normalizeSectionTitle(section.title)));
 }
 
 function extractFile(block: any): { name: string; url: string; type: string } | null {
@@ -131,12 +97,86 @@ function extractFile(block: any): { name: string; url: string; type: string } | 
     return null;
 }
 
+async function canReadStudentFeedback(req: NextRequest, name: string) {
+    const parentToken = req.cookies.get(PARENT_SESSION_COOKIE)?.value;
+    const parentSession = parentToken ? verifyParentSessionToken(parentToken) : null;
+    const adminClient = createAdminClient();
+
+    if (
+        isLocalRequest(req) &&
+        (!createAdminClient() || parentSession?.studentId === `reference:${name}`) &&
+        findReferenceParentCode(name)
+    ) {
+        return true;
+    }
+
+    if (parentSession?.studentId) {
+        if (adminClient) {
+            const [profileRes, studentRes, pinRes] = await Promise.all([
+                adminClient
+                    .from("profiles")
+                    .select("name, display_name")
+                    .eq("id", parentSession.studentId)
+                    .maybeSingle(),
+                adminClient
+                    .from("students")
+                    .select("id, name, pin, auth_user_id")
+                    .or(`id.eq.${parentSession.studentId},auth_user_id.eq.${parentSession.studentId}`)
+                    .limit(5),
+                adminClient
+                    .from("study_progress")
+                    .select("completed_units")
+                    .eq("user_id", parentSession.studentId)
+                    .eq("course_id", PIN_COURSE)
+                    .maybeSingle(),
+            ]);
+
+            const profileName = profileRes.data?.display_name || profileRes.data?.name || "";
+            const matchingStudent = (studentRes.data || []).find((student: any) => student.name === name);
+            const hasActiveStudentPin = Boolean(matchingStudent?.pin);
+            const hasActiveProgressPin = Boolean(pinRes.data?.completed_units?.[0]);
+
+            if ((profileName === name && hasActiveProgressPin) || (matchingStudent && hasActiveStudentPin)) {
+                return true;
+            }
+        }
+
+        if (!adminClient && hasDatabaseAdmin()) {
+            return canParentSessionReadStudentFromDatabase(parentSession.studentId, name);
+        }
+
+        if (!adminClient && !hasDatabaseAdmin()) {
+            const edgeCheck = await callParentPortalEdge<{ success: true; canRead: boolean }>(
+                "canRead",
+                { name, studentId: parentSession.studentId },
+            );
+            if (edgeCheck.ok && edgeCheck.data.canRead) return true;
+        }
+    }
+
+    try {
+        const supabase = await createServerSupabase();
+        const {
+            data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) return false;
+        const { data: profile } = await supabase
+            .from("profiles")
+            .select("role")
+            .eq("id", user.id)
+            .maybeSingle();
+        return profile?.role === "teacher" || profile?.role === "admin";
+    } catch {
+        return false;
+    }
+}
+
 async function getPageContent(pageId: string): Promise<PageContent> {
     let res: Response;
     try {
         res = await fetchWithTimeout(
             `https://api.notion.com/v1/blocks/${pageId}/children?page_size=100`,
-            { headers: getNotionFeedbackHeaders() },
+            { headers: HEADERS },
             3500,
         );
     } catch {
@@ -153,11 +193,10 @@ async function getPageContent(pageId: string): Promise<PageContent> {
         const type = block.type;
 
         const text = getText(block[type]?.rich_text);
-        if (SECTION_HEADING_TYPES.has(type) && text) {
+        if (type === "heading_2" && text) {
             currentSection = text.replace(/^\d+\.\s*/, "").trim();
-        } else if (text) {
-            const sectionName = currentSection || "기타 내용";
-            sections[sectionName] = (sections[sectionName] || "") + text + "\n";
+        } else if (currentSection && text) {
+            sections[currentSection] = (sections[currentSection] || "") + text + "\n";
         }
 
         const file = extractFile(block);
@@ -186,49 +225,71 @@ export async function GET(req: NextRequest) {
         }
     } catch { /* Redis 없어도 동작 */ }
 
-    if (!(await isAuthorizedParentLookup(req, name))) {
-        return jsonNoStore({ error: "권한이 없습니다." }, { status: 403 });
+    const authorized = await canReadStudentFeedback(req, name);
+    if (!authorized) {
+        return NextResponse.json({ error: "학부모 인증이 필요합니다." }, { status: 403 });
     }
 
-    if (!isNotionFeedbackConfigured()) {
-        return jsonNoStore({ error: "서비스 일시 중단" }, { status: 503 });
+    if (!NOTION_KEY) {
+        return NextResponse.json({ error: "서비스 일시 중단" }, { status: 503 });
     }
 
     try {
-        const pages = await queryNotionFeedbackPagesByStudent(name);
+        const queryRes = await fetchWithTimeout(
+            `https://api.notion.com/v1/databases/${FEEDBACK_DB}/query`,
+            {
+                method: "POST",
+                headers: HEADERS,
+                body: JSON.stringify({
+                    filter: { property: "학생 이름", rich_text: { equals: name } },
+                    sorts: [{ property: "피드백 날짜", direction: "descending" }],
+                    page_size: 100,
+                }),
+            },
+            5000,
+        );
+
+        if (!queryRes.ok) {
+            return NextResponse.json({ error: "노션 조회 실패" }, { status: 502 });
+        }
+
+        const queryData = await queryRes.json();
+        const pages = queryData.results || [];
 
         if (pages.length === 0) {
-            return jsonNoStore({
+            return NextResponse.json({
                 found: false,
                 message: `"${name}" 학생의 피드백을 찾을 수 없습니다.`,
             });
         }
 
-        const activePage = pages.filter((p: any) => p.properties["피드백 상태"]?.status?.name !== "시작 전");
+        const activePages = pages
+            .filter((p: any) => p.properties["피드백 상태"]?.status?.name !== "시작 전");
 
-        // Notion 피드백 본문은 학생 이름을 제외하고 가능한 모든 작성 섹션을 응답한다.
-        const feedbacks = await Promise.all(
-            activePage.map(async (page: any) => {
+        const feedbacks = await mapWithConcurrency(
+            activePages,
+            DETAIL_CONCURRENCY,
+            async (page: any) => {
                 const props = page.properties;
                 const { sections, files } = await getPageContent(page.id);
                 return {
                     id: page.id,
                     date: props["피드백 날짜"]?.date?.start || null,
                     status: props["피드백 상태"]?.status?.name || "시작 전",
+                    studentName: getText(props["학생 이름"]?.rich_text),
                     title: getText(props["3.19"]?.title),
-                    contentLearned: findSection(sections, LEARNED_SECTION_NAMES),
-                    homework: findSection(sections, HOMEWORK_SECTION_NAMES),
-                    attitude: findSection(sections, ATTITUDE_SECTION_NAMES),
-                    understanding: findSection(sections, UNDERSTANDING_SECTION_NAMES),
-                    notes: findSection(sections, NOTES_SECTION_NAMES),
-                    extraSections: getExtraSections(sections),
+                    contentLearned: getFirstSection(sections, ["배운 내용", "학습 내용", "수업 내용"]),
+                    homework: getFirstSection(sections, ["과제", "숙제", "다음 과제"]),
+                    attitude: getFirstSection(sections, ["수업 태도", "태도"]),
+                    understanding: getFirstSection(sections, ["이해도 및 성취도", "이해도", "성취도"]),
+                    notes: getFirstSection(sections, ["특이사항", "특이 사항", "비고"]),
                     files,
                     url: page.url,
                 };
-            })
+            },
         );
 
-        return jsonNoStore({
+        return NextResponse.json({
             found: true,
             studentName: name,
             totalFeedbacks: pages.filter((p: any) => p.properties["피드백 상태"]?.status?.name === "완료").length,

@@ -7,7 +7,8 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { rateLimit } from "@/lib/rate-limit";
-import { truncate } from "@/lib/sanitize";
+import { truncate } from "@/lib/text-utils";
+import { fetchGroqChatCompletion } from "@/lib/groq";
 
 const MODEL = "llama-3.1-8b-instant";
 
@@ -58,13 +59,7 @@ export async function POST(req: NextRequest) {
 
         const userPrompt = `Question: ${truncate(lastQuestion || "", 300)}\nAnswer: ${truncate(lastAnswer, 800)}`;
 
-        const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${apiKey}`,
-            },
-            body: JSON.stringify({
+        const res = await fetchGroqChatCompletion(apiKey, {
                 model: MODEL,
                 messages: [
                     { role: "system", content: systemPrompt },
@@ -72,7 +67,6 @@ export async function POST(req: NextRequest) {
                 ],
                 temperature: 0.8,
                 max_tokens: 200,
-            }),
         });
 
         if (!res.ok) return NextResponse.json({ suggestions: [] });

@@ -17,10 +17,7 @@ import Curriculum from "@/components/sections/Curriculum";
 import Schedule from "@/components/sections/Schedule";
 import Gallery from "@/components/sections/Gallery";
 import Events from "@/components/sections/Events";
-import Awards from "@/components/sections/Awards";
-import Achievements from "@/components/sections/Achievements";
 import SocialFeed from "@/components/sections/SocialFeed";
-import PlatformShowcase from "@/components/sections/PlatformShowcase";
 import LiveStudySection from "@/components/sections/LiveStudySection";
 import Reviews from "@/components/sections/Reviews";
 import LeaderboardSection from "@/components/sections/LeaderboardSection";
@@ -48,15 +45,12 @@ export default function Home() {
             <WhyUs />
             <Philosophy />
             <PromoShowcase />
-            <PlatformShowcase />
             <LiveStudySection />
             <Teachers />
             <Curriculum />
             <Schedule />
             <Gallery />
             <Events />
-            <Awards />
-            <Achievements />
             <SocialFeed />
             <Reviews />
             <LeaderboardSection />

@@ -14,6 +14,7 @@ describe('parent-session', () => {
     afterEach(() => {
         vi.useRealTimers()
         delete process.env.PARENT_SESSION_SECRET
+        delete process.env.VERCEL_URL
     })
 
     it('creates and verifies a signed parent session token', () => {
@@ -49,8 +50,9 @@ describe('parent-session', () => {
         expect(verifyParentSessionToken(token)).toBeNull()
     })
 
-    it('requires PARENT_SESSION_SECRET when creating tokens', () => {
+    it('requires PARENT_SESSION_SECRET in deployed environments', () => {
         delete process.env.PARENT_SESSION_SECRET
+        process.env.VERCEL_URL = 'codingssok-parent-app.vercel.app'
 
         expect(() =>
             createParentSessionToken({

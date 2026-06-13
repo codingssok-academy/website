@@ -18,7 +18,7 @@
 import { NextResponse } from "next/server";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase";
 
-export const revalidate = 30; // 30초 캐시 — 실시간 느낌
+export const dynamic = "force-dynamic";
 
 interface ActivityLogRow {
     user_id?: string | null;

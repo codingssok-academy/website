@@ -14,7 +14,7 @@ export interface ParentAccessProfile {
 }
 
 export function generateParentPin(): string {
-    return String(Math.floor(100000 + Math.random() * 900000))
+    return String(Math.floor(10000 + Math.random() * 90000))
 }
 
 async function findProfileByParentQuery(

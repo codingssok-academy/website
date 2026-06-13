@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable @typescript-eslint/no-explicit-any, react-hooks/set-state-in-effect */
+
 /**
  * 학부모 대시보드 데이터 — 클라이언트 캐시 + 백그라운드 갱신
  *
@@ -11,13 +13,10 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import {
-    STUDENT_KEY,
-    clearParentStudentAccess,
-    readAllowedStudentNames,
-    selectAllowedStudent,
-} from "../lib/studentAccess";
-
-const CACHE_KEY = "codingssok_dash_cache";
+    clearParentClientAuth,
+    PARENT_DASH_CACHE_KEY,
+    PARENT_STUDENT_KEY,
+} from "@/lib/parent-client-auth";
 const CACHE_TTL = 5 * 60 * 1000; // 5분 — sessionStorage 캐시 (탭 닫으면 초기화)
 
 export interface DashboardData {
@@ -51,7 +50,7 @@ interface CacheEntry {
 
 function getCache(name: string): DashboardData | null {
     try {
-        const raw = sessionStorage.getItem(CACHE_KEY);
+        const raw = sessionStorage.getItem(PARENT_DASH_CACHE_KEY);
         if (!raw) return null;
         const entry: CacheEntry = JSON.parse(raw);
         if (entry.name !== name) return null;
@@ -62,7 +61,7 @@ function getCache(name: string): DashboardData | null {
 
 function setCache(name: string, data: DashboardData) {
     try {
-        sessionStorage.setItem(CACHE_KEY, JSON.stringify({ data, ts: Date.now(), name }));
+        sessionStorage.setItem(PARENT_DASH_CACHE_KEY, JSON.stringify({ data, ts: Date.now(), name }));
     } catch { /* quota exceeded — ignore */ }
 }
 
@@ -70,7 +69,6 @@ export function useParentDashboard() {
     const [data, setData] = useState<DashboardData | null>(null);
     const [loading, setLoading] = useState(true);
     const [name, setName] = useState("");
-    const [allowedNames, setAllowedNames] = useState<string[]>([]);
     const mountedRef = useRef(true);
     const abortRef = useRef<AbortController | null>(null);
 
@@ -85,9 +83,8 @@ export function useParentDashboard() {
 
     // 학생 이름 로드
     useEffect(() => {
-        const stored = localStorage.getItem(STUDENT_KEY) ?? "";
+        const stored = localStorage.getItem(PARENT_STUDENT_KEY) ?? "";
         setName(stored);
-        setAllowedNames(readAllowedStudentNames(stored));
         if (!stored) { setLoading(false); return; }
 
         // 캐시 먼저 반환
@@ -111,19 +108,18 @@ export function useParentDashboard() {
 
         try {
             const res = await fetch(
-                `/api/parent/v2/dashboard?name=${encodeURIComponent(studentName)}&fresh=1`,
-                { signal: controller.signal, cache: "no-store" }
+                `/api/parent/v2/dashboard?name=${encodeURIComponent(studentName)}`,
+                { signal: controller.signal }
             );
-            const json = await res.json();
-            if (controller.signal.aborted || !mountedRef.current) return;
-            if (res.status === 403) {
-                clearParentStudentAccess();
-                sessionStorage.removeItem(CACHE_KEY);
+            if (res.status === 401 || res.status === 403) {
+                clearParentClientAuth();
                 setData(null);
                 setName("");
-                setAllowedNames([]);
+                window.location.reload();
                 return;
             }
+            const json = await res.json();
+            if (controller.signal.aborted || !mountedRef.current) return;
             setData(json);
             setCache(studentName, json);
         } catch (err: unknown) {
@@ -139,21 +135,11 @@ export function useParentDashboard() {
         }
     }, []);
 
-    // 학생 선택 시 fetch
+    // 저장된 학생명 로드 후 fetch
     useEffect(() => {
         if (!name) return;
         const cached = getCache(name);
         fetchDashboard(name, !!cached);
-    }, [name, fetchDashboard]);
-
-    useEffect(() => {
-        if (!name) return;
-        const interval = window.setInterval(() => {
-            if (document.visibilityState === "visible") {
-                void fetchDashboard(name, true);
-            }
-        }, 30_000);
-        return () => window.clearInterval(interval);
     }, [name, fetchDashboard]);
 
     // 수동 리프레시
@@ -161,13 +147,5 @@ export function useParentDashboard() {
         if (name) await fetchDashboard(name, false);
     }, [name, fetchDashboard]);
 
-    const selectStudent = useCallback((studentName: string) => {
-        if (!selectAllowedStudent(studentName, name)) return;
-        sessionStorage.removeItem(CACHE_KEY);
-        setData(null);
-        setName(studentName);
-        setAllowedNames(readAllowedStudentNames(studentName));
-    }, [name]);
-
-    return { data, loading, name, allowedNames, selectStudent, refresh };
+    return { data, loading, name, refresh };
 }

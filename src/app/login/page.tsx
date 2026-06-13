@@ -1,9 +1,10 @@
 "use client";
 
+/* eslint-disable react-hooks/immutability, @next/next/no-img-element */
+
 import { useState, useEffect, useRef, useCallback } from "react";
-import { createClient, isLocalPreviewAuthEnabled, isSupabaseConfigured } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase";
 import { buildStudentAuthEmail, buildStudentAuthPassword } from "@/lib/auth-bridge";
-import { isGrowthOsAdminName } from "@/lib/growth-os-client";
 
 /* ── 클라이언트 사이드 Rate Limiting (UX 보호용, 보안 목적 아님) ──
  * PIN 비교는 Supabase 서버에서 처리되므로 PIN 노출 위험 없음.
@@ -65,90 +66,13 @@ interface StudentRow {
 const PRIMARY = "#3b82f6";
 const ACCENT = "#2563eb";
 
-function persistSessionCookie(authUserId: string) {
-  document.cookie = `codingssok_session=${authUserId}; path=/; max-age=${60 * 60 * 24 * 30}; Secure; SameSite=Lax`;
-}
-
-function redirectToPostLoginDestination(profile: { name: string; role: "student" | "teacher" }) {
-  const params = new URLSearchParams(window.location.search);
-  const redirect = params.get("redirect");
-  const isAdmin = profile.role === "teacher" || isGrowthOsAdminName(profile.name);
-  if (isAdmin) {
-    window.location.assign(redirect?.startsWith("/dashboard/learning/admin") ? redirect : "/dashboard/learning/admin");
-    return;
-  }
-  window.location.assign(redirect || "/dashboard/learning");
-}
-
-function buildLocalPreviewId(name: string, pin: string) {
-  const source = `${name.trim().toLowerCase()}-${pin}`;
-  const encoded = encodeURIComponent(source).toLowerCase().replace(/%/g, "");
-  const safe = encoded.replace(/[^a-z0-9-]/g, "").slice(0, 48) || "student";
-  return `local-${safe}`;
-}
-
-function rememberLocalStudent(student: StudentRow, pin: string) {
-  try {
-    const raw = localStorage.getItem("codingssok_local_students");
-    const rows = raw ? JSON.parse(raw) as Array<Record<string, unknown>> : [];
-    const savedAt = new Date().toISOString();
-    const next = [
-      {
-        id: student.id,
-        name: student.name,
-        grade: student.grade,
-        avatar: student.avatar,
-        pin,
-        status: student.status ?? "approved",
-        savedAt,
-      },
-      ...rows.filter((row) => row.id !== student.id && row.name !== student.name),
-    ];
-    localStorage.setItem("codingssok_local_students", JSON.stringify(next));
-  } catch {
-    // Local preview signup history should never block login.
-  }
-}
-
-function recordLoginEvent(params: {
-  studentId: string;
-  authUserId: string;
-  studentName: string;
-  eventType: "login" | "signup" | "local-preview-login";
-}) {
-  const payload = JSON.stringify({
-    studentId: params.studentId,
-    authUserId: params.authUserId,
-    studentName: params.studentName,
-    eventType: params.eventType,
-    status: "success",
-    source: "student-login",
-  });
-
-  try {
-    if (navigator.sendBeacon) {
-      navigator.sendBeacon(
-        "/api/growth-os/login-event",
-        new Blob([payload], { type: "application/json" }),
-      );
-      return;
-    }
-
-    fetch("/api/growth-os/login-event", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: payload,
-      keepalive: true,
-    }).catch(() => {});
-  } catch {
-    // Login should never fail because analytics recording failed.
-  }
-}
-
 export default function LoginPage() {
   const [name, setName] = useState("");
   const [pin, setPin] = useState("");
+  const [parentCode, setParentCode] = useState("");
+  const [signupOpen, setSignupOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [signupLoading, setSignupLoading] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const pinRef0 = useRef<HTMLInputElement>(null);
@@ -159,47 +83,19 @@ export default function LoginPage() {
 
   useEffect(() => { inputRef.current?.focus(); }, []);
 
-  const ensureStudentAuth = useCallback(async (
+  const signInStudentAuth = useCallback(async (
     sb: ReturnType<typeof createClient>,
     student: StudentRow,
     currentPin: string,
   ) => {
-    const role = isGrowthOsAdminName(student.name) ? "teacher" : "student";
     const email = buildStudentAuthEmail(student.id);
     const password = buildStudentAuthPassword(student.id, currentPin);
 
     const signIn = await sb.auth.signInWithPassword({ email, password });
-    let authUser = signIn.data.user ?? null;
+    const authUser = signIn.data.user ?? null;
 
-    if (!authUser) {
-      const signUp = await sb.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            name: student.name,
-            role,
-          },
-        },
-      });
-
-      const alreadyRegistered = signUp.error?.message?.toLowerCase().includes("already registered");
-      if (signUp.error && !alreadyRegistered) {
-        throw signUp.error;
-      }
-
-      authUser = signUp.data.user ?? null;
-      if (!authUser || !signUp.data.session) {
-        const retry = await sb.auth.signInWithPassword({ email, password });
-        if (retry.error || !retry.data.user) {
-          throw retry.error ?? new Error("학생 인증 계정을 연결하지 못했습니다.");
-        }
-        authUser = retry.data.user;
-      }
-    }
-
-    if (!authUser) {
-      throw new Error("학생 인증 계정을 찾지 못했습니다.");
+    if (signIn.error || !authUser) {
+      throw new Error("비밀번호가 틀렸습니다.");
     }
 
     if (student.auth_user_id !== authUser.id) {
@@ -214,21 +110,14 @@ export default function LoginPage() {
       }
     }
 
-    const { error: profileSyncError } = await sb
+    await sb
       .from("profiles")
-      .upsert({
-        id: authUser.id,
+      .update({
         name: student.name,
-        email,
         display_name: student.name,
-        role,
-        approval_status: "approved",
-        updated_at: new Date().toISOString(),
-      }, { onConflict: "id" });
-
-    if (profileSyncError && process.env.NODE_ENV === "development") {
-      console.warn("[Login] profile sync failed:", profileSyncError.message);
-    }
+        role: "student",
+      })
+      .eq("id", authUser.id);
 
     return authUser.id;
   }, []);
@@ -254,10 +143,12 @@ export default function LoginPage() {
     }
   };
 
-  /* ── 로그인/가입 처리 ── */
+  const normalizeStudentName = (value: string) => value.trim().replace(/\s+/g, "");
+
+  /* ── 로그인 처리 ── */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const trimmed = name.trim();
+    const trimmed = normalizeStudentName(name);
     if (!trimmed) { setMsg({ ok: false, text: "이름을 입력해주세요" }); return; }
     if (pin.length !== 4) { setMsg({ ok: false, text: "비밀번호 4자리를 입력해주세요" }); return; }
 
@@ -273,130 +164,95 @@ export default function LoginPage() {
     recordLoginAttempt();
 
     try {
-      if (!isSupabaseConfigured()) {
-        if (isLocalPreviewAuthEnabled()) {
-          const studentId = buildLocalPreviewId(trimmed, pin);
-          const authUserId = `${studentId}-auth`;
-          recordLoginEvent({
-            studentId,
-            authUserId,
-            studentName: trimmed,
-            eventType: "local-preview-login",
-          });
-          clearLoginAttempts();
-          const localStudent = {
-            id: studentId,
-            name: trimmed,
-            grade: null,
-            avatar: null,
-            auth_user_id: authUserId,
-            status: "approved",
-          };
-          rememberLocalStudent(localStudent, pin);
-          loginAs(localStudent, authUserId);
-          return;
-        }
-        setMsg({ ok: false, text: "로컬 환경에 Supabase 설정이 없어 로그인을 실행할 수 없습니다. NEXT_PUBLIC_SUPABASE_URL과 NEXT_PUBLIC_SUPABASE_ANON_KEY를 설정해주세요." });
-        return;
-      }
-
       const sb = createClient();
 
-      // 1. 이름+PIN으로 서버에서 매칭 (PIN을 클라이언트에 노출하지 않음)
+      // 로그인은 이미 가입된 학생 계정만 허용한다. 새 학생은 회원가입에서 학부모 인증번호를 먼저 확인한다.
       const { data: matched, error } = await sb
         .from("students")
         .select("id, name, grade, avatar, auth_user_id, status")
-        .ilike("name", trimmed)
-        .eq("pin", pin)
+        .eq("name", trimmed)
         .maybeSingle();
 
       if (error) throw error;
 
-      if (matched) {
-        // ── 이름+PIN 매칭 성공 ──
-        // deactivated만 차단 (비활성 보안). pending/rejected는 자동 통과.
-        const status = matched.status || "approved";
-        if (status === "deactivated") {
-          setMsg({ ok: false, text: "비활성화된 계정입니다. 선생님에게 문의해주세요." });
-          return;
-        }
-
-        const authUserId = await ensureStudentAuth(sb, matched as StudentRow, pin);
-        recordLoginEvent({
-          studentId: (matched as StudentRow).id,
-          authUserId,
-          studentName: (matched as StudentRow).name,
-          eventType: "login",
-        });
-        clearLoginAttempts();
-        rememberLocalStudent(matched as StudentRow, pin);
-        loginAs(matched as StudentRow, authUserId);
-      } else {
-        // 이름이 존재하는지 확인 (PIN 없이 — 가입 vs 오답 판별)
-        const { data: existingByName } = await sb
-          .from("students")
-          .select("id, status")
-          .ilike("name", trimmed)
-          .maybeSingle();
-
-        if (existingByName) {
-          const st = (existingByName as Pick<StudentRow, "status">).status;
-          if (st === "deactivated") {
-            setMsg({ ok: false, text: "비활성화된 계정입니다. 재가입이 필요합니다. 선생님에게 문의해주세요." });
-          } else {
-            // 이름은 있지만 PIN 불일치 (pending/rejected 상태 무관)
-            setMsg({ ok: false, text: "비밀번호가 틀렸습니다" });
-            setPin("");
-            pinRefs[0].current?.focus();
-          }
-        } else {
-          // ── 없으면 즉시 가입 + 자동 로그인 ──
-          const { data: newStudent, error: insertErr } = await sb
-            .from("students")
-            .insert({ name: trimmed, pin, grade: null, avatar: null, status: "approved" })
-            .select("id, name, grade, avatar, auth_user_id")
-            .single();
-
-          if (insertErr) throw insertErr;
-          if (!newStudent) throw new Error("가입 처리 중 오류가 발생했습니다.");
-
-          const authUserId = await ensureStudentAuth(sb, newStudent as StudentRow, pin);
-          recordLoginEvent({
-            studentId: (newStudent as StudentRow).id,
-            authUserId,
-            studentName: (newStudent as StudentRow).name,
-            eventType: "signup",
-          });
-          clearLoginAttempts();
-          rememberLocalStudent(newStudent as StudentRow, pin);
-          loginAs(newStudent as StudentRow, authUserId);
-        }
+      if (!matched) {
+        setMsg({ ok: false, text: "등록된 학생 계정이 없습니다. 처음이라면 회원가입을 눌러 학부모 인증번호를 확인해주세요." });
+        setSignupOpen(true);
+        return;
       }
+
+      if ((matched as StudentRow).status === "deactivated") {
+        setMsg({ ok: false, text: "비활성화된 계정입니다. 선생님에게 문의해주세요." });
+        return;
+      }
+
+      const authUserId = await signInStudentAuth(sb, matched as StudentRow, pin);
+      clearLoginAttempts();
+      loginAs(matched as StudentRow, authUserId);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       if (process.env.NODE_ENV === 'development') console.error("[Login] error:", err);
-      setMsg({ ok: false, text: `오류: ${message}` });
+      setMsg({ ok: false, text: message });
+      if (message.includes("비밀번호")) {
+        setPin("");
+        pinRefs[0].current?.focus();
+      }
     } finally { setLoading(false); }
+  };
+
+  const handleSignup = async () => {
+    const trimmed = normalizeStudentName(name);
+    const cleanParentCode = parentCode.replace(/\D/g, "").slice(0, 5);
+    if (!trimmed) { setMsg({ ok: false, text: "학생 이름을 입력해주세요" }); return; }
+    if (cleanParentCode.length !== 5) { setMsg({ ok: false, text: "학부모 인증번호 5자리를 입력해주세요" }); return; }
+    if (pin.length !== 4) { setMsg({ ok: false, text: "로그인에 사용할 비밀번호 4자리를 정해주세요" }); return; }
+
+    setSignupLoading(true);
+    setMsg(null);
+
+    try {
+      const res = await fetch("/api/student/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: trimmed, parentCode: cleanParentCode, pin }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "회원가입을 처리하지 못했습니다.");
+      }
+
+      const student = data.student as StudentRow;
+      const sb = createClient();
+      const authUserId = await signInStudentAuth(sb, student, pin);
+      clearLoginAttempts();
+      loginAs(student, authUserId);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      if (process.env.NODE_ENV === "development") console.error("[Signup] error:", err);
+      setMsg({ ok: false, text: message });
+    } finally {
+      setSignupLoading(false);
+    }
   };
 
   /* ── 로그인 처리 ── */
   const loginAs = (student: StudentRow, authUserId: string) => {
-    const role: "student" | "teacher" = isGrowthOsAdminName(student.name) ? "teacher" : "student";
     const profile = {
       id: authUserId,
       studentId: student.id,
       name: student.name,
       email: buildStudentAuthEmail(student.id),
-      role,
+      role: "student" as const,
       grade: student.grade || undefined,
       avatar: student.avatar || undefined,
       level: 1, xp: 0, streak: 0,
       joinedAt: new Date().toISOString(),
     };
     localStorage.setItem("codingssok_user", JSON.stringify(profile));
-    localStorage.setItem("codingssok_role", role);
-    persistSessionCookie(authUserId);
-    redirectToPostLoginDestination(profile);
+    document.cookie = `codingssok_session=${authUserId}; path=/; max-age=${60 * 60 * 24 * 30}; Secure; SameSite=Lax`;
+    const params = new URLSearchParams(window.location.search);
+    const redirect = params.get("redirect");
+    window.location.href = redirect || "/dashboard/learning";
   };
 
   /* ── PIN digit style ── */
@@ -461,7 +317,7 @@ export default function LoginPage() {
             코딩<span style={{ color: "#0ea5e9" }}>쏙</span> 아카데미
           </h1>
           <p style={{ fontSize: 14, color: "#64748b", fontWeight: 500, margin: 0, lineHeight: 1.6 }}>
-            학습 플랫폼 — 이름과 비밀번호로 바로 시작!
+            {signupOpen ? "회원가입 — 이름, 학부모 인증번호, 사용할 비밀번호를 입력하세요." : "학습 플랫폼 — 이름과 비밀번호로 로그인"}
           </p>
         </div>
 
@@ -481,7 +337,10 @@ export default function LoginPage() {
                 id="student-name"
                 type="text"
                 value={name}
-                onChange={(e) => { setName(e.target.value); setMsg(null); }}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  setMsg(null);
+                }}
                 required
                 autoComplete="off"
                 placeholder="홍길동"
@@ -498,13 +357,45 @@ export default function LoginPage() {
             </div>
           </div>
 
+          {signupOpen && (
+            <div>
+              <label htmlFor="parent-code" style={{
+                display: "block", fontSize: 13, fontWeight: 600, color: "#374151",
+                marginBottom: 8, marginLeft: 4,
+              }}>
+                학부모 인증번호
+              </label>
+              <input
+                id="parent-code"
+                type="tel"
+                inputMode="numeric"
+                value={parentCode}
+                onChange={(e) => {
+                  setParentCode(e.target.value.replace(/\D/g, "").slice(0, 5));
+                  setMsg(null);
+                }}
+                placeholder="숫자 5자리"
+                maxLength={5}
+                style={{
+                  display: "block", width: "100%", paddingLeft: 16, paddingRight: 16,
+                  paddingTop: 14, paddingBottom: 14, border: "2px solid #dbeafe",
+                  borderRadius: 16, background: "rgba(239,246,255,0.9)", fontSize: 18,
+                  color: "#1f2937", outline: "none", transition: "all 0.2s",
+                  boxSizing: "border-box", textAlign: "center", fontWeight: 800, letterSpacing: "0.22em",
+                }}
+                onFocus={(e) => { e.target.style.borderColor = PRIMARY; e.target.style.boxShadow = `0 0 0 3px rgba(99,102,241,0.1)`; }}
+                onBlur={(e) => { e.target.style.borderColor = "#dbeafe"; e.target.style.boxShadow = "none"; }}
+              />
+            </div>
+          )}
+
           {/* 4자리 비밀번호 */}
           <div>
             <label style={{
               display: "block", fontSize: 13, fontWeight: 600, color: "#374151",
               marginBottom: 8, marginLeft: 4,
             }}>
-              비밀번호 (숫자 4자리)
+              {signupOpen ? "사용할 비밀번호 (숫자 4자리)" : "비밀번호 (숫자 4자리)"}
             </label>
             <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
               {[0, 1, 2, 3].map((idx) => (
@@ -542,15 +433,15 @@ export default function LoginPage() {
           {/* Submit Button */}
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || signupLoading}
             style={{
               display: "flex", width: "100%", justifyContent: "center", alignItems: "center",
               gap: 8, padding: "16px 20px", borderRadius: 16, fontSize: 15, fontWeight: 700,
               color: "#fff", border: "none",
               background: `linear-gradient(135deg, ${PRIMARY}, ${ACCENT})`,
               boxShadow: `0 6px 20px rgba(99,102,241,0.3)`,
-              cursor: loading ? "not-allowed" : "pointer",
-              opacity: loading ? 0.7 : 1,
+              cursor: loading || signupLoading ? "not-allowed" : "pointer",
+              opacity: loading || signupLoading ? 0.7 : 1,
               transition: "all 0.2s",
               marginTop: 4,
             }}
@@ -567,14 +458,48 @@ export default function LoginPage() {
               </>
             )}
           </button>
+
+          <button
+            type="button"
+            disabled={loading || signupLoading}
+            onClick={() => {
+              if (!signupOpen) {
+                setSignupOpen(true);
+                setMsg({ ok: true, text: "학생 이름, 학부모 인증번호, 사용할 비밀번호 4자리를 입력한 뒤 회원가입을 누르세요." });
+                return;
+              }
+              void handleSignup();
+            }}
+            style={{
+              display: "flex", width: "100%", justifyContent: "center", alignItems: "center",
+              gap: 8, padding: "15px 20px", borderRadius: 16, fontSize: 15, fontWeight: 800,
+              color: "#1d4ed8", border: "1.5px solid rgba(37,99,235,0.22)",
+              background: "rgba(239,246,255,0.9)",
+              cursor: loading || signupLoading ? "not-allowed" : "pointer",
+              opacity: loading || signupLoading ? 0.7 : 1,
+              transition: "all 0.2s",
+            }}
+          >
+            {signupLoading ? (
+              <>
+                <span className="material-symbols-outlined" style={{ fontSize: 18, animation: "spin 1s linear infinite" }}>progress_activity</span>
+                회원가입 중...
+              </>
+            ) : (
+              <>
+                <span className="material-symbols-outlined" style={{ fontSize: 18 }}>person_add</span>
+                회원가입
+              </>
+            )}
+          </button>
         </form>
 
         {/* Footer */}
         <div style={{ textAlign: "center", marginTop: 24 }}>
           <p style={{ fontSize: 12, color: "#9ca3af", margin: 0, lineHeight: 1.6 }}>
-            처음이라면 이름과 비밀번호를 정하면 자동으로 가입돼요!
+            처음 가입할 때는 학원에서 받은 학부모 인증번호가 필요합니다.
             <br />
-            <span style={{ color: "#3b82f6", fontWeight: 600 }}>이미 있는 이름이면 비밀번호로 로그인해요</span>
+            <span style={{ color: "#3b82f6", fontWeight: 600 }}>이름과 인증번호가 맞는 학생만 계정을 만들 수 있어요</span>
           </p>
         </div>
       </div>

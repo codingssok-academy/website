@@ -239,7 +239,7 @@ export async function POST(request: NextRequest) {
             title: `${teacherName} 피드백 도착`,
             body: (input.nextPlan?.trim() || input.homeworkSummary?.trim() || input.content.trim()).slice(0, 100),
             tag: `feedback-${feedback.id}`,
-            url: '/parent',
+            url: '/parent/feedback',
         }).catch(() => {})
 
         return NextResponse.json({

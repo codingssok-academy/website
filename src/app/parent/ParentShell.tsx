@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable react-hooks/set-state-in-effect */
+
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
@@ -7,11 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import ParentBottomNav from "./ParentBottomNav";
 import ParentNameGate from "./ParentNameGate";
 import { installGlobalErrorHandler } from "@/lib/error-reporter";
-import {
-    PARENT_STUDENT_CHANGED_EVENT,
-    STUDENT_KEY,
-    saveParentStudentAccess,
-} from "./lib/studentAccess";
+import { clearParentClientAuth, PARENT_STUDENT_KEY, PARENT_VERIFIED_KEY } from "@/lib/parent-client-auth";
 
 export default function ParentShell({ children }: { children: React.ReactNode }) {
     useEffect(() => { installGlobalErrorHandler(); }, []);
@@ -20,22 +18,20 @@ export default function ParentShell({ children }: { children: React.ReactNode })
     const pathname = usePathname();
 
     useEffect(() => {
-        const stored = localStorage.getItem(STUDENT_KEY) ?? "";
-        setStudentName(stored || null);
+        const stored = localStorage.getItem(PARENT_STUDENT_KEY) ?? "";
+        const verified = localStorage.getItem(PARENT_VERIFIED_KEY) === "true";
+        if (!stored || !verified) {
+            clearParentClientAuth();
+            setStudentName(null);
+        } else {
+            setStudentName(stored);
+        }
         setBooting(false);
     }, []);
 
-    useEffect(() => {
-        const handleStudentChange = (event: Event) => {
-            const nextName = (event as CustomEvent<string>).detail;
-            setStudentName(nextName || "");
-        };
-        window.addEventListener(PARENT_STUDENT_CHANGED_EVENT, handleStudentChange);
-        return () => window.removeEventListener(PARENT_STUDENT_CHANGED_EVENT, handleStudentChange);
-    }, []);
-
     const handleNameSet = (name: string) => {
-        saveParentStudentAccess(name);
+        localStorage.setItem(PARENT_STUDENT_KEY, name);
+        localStorage.setItem(PARENT_VERIFIED_KEY, "true");
         setStudentName(name);
     };
 

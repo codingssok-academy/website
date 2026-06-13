@@ -14,8 +14,16 @@ export interface ParentSessionPayload {
     expiresAt: number
 }
 
+function hasVercelUrl() {
+    const value = (process.env.VERCEL_URL || '').trim()
+    return Boolean(value && value !== '""' && value !== "''")
+}
+
 function getSessionSecret() {
     if (!env.PARENT_SESSION_SECRET) {
+        if (!hasVercelUrl()) {
+            return 'codingssok-local-parent-session-secret'
+        }
         throw new Error('PARENT_SESSION_SECRET is not configured.')
     }
     return env.PARENT_SESSION_SECRET

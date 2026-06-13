@@ -1,6 +1,6 @@
-/* 코딩쏙 학부모 앱 Service Worker v2 */
-const CACHE_NAME = "codingssok-parent-v2";
-const PRECACHE_URLS = ["/parent", "/parent/growth", "/parent/feedback", "/parent/homework", "/parent/settings", "/offline"];
+/* 코딩쏙 학부모 앱 Service Worker v3 */
+const CACHE_NAME = "codingssok-parent-v3";
+const PRECACHE_URLS = ["/parent/feedback", "/parent/settings", "/offline"];
 
 self.addEventListener("install", (event) => {
     event.waitUntil(
@@ -26,7 +26,7 @@ self.addEventListener("fetch", (event) => {
     if (event.request.mode === "navigate") {
         event.respondWith(
             fetch(event.request).catch(() =>
-                caches.match("/parent").then((r) => r || caches.match(event.request))
+                caches.match("/parent/feedback").then((r) => r || caches.match(event.request))
             )
         );
         return;
@@ -47,7 +47,7 @@ self.addEventListener("fetch", (event) => {
 
 // Push notification handler
 self.addEventListener("push", (event) => {
-    let data = { title: "코딩쏙 학부모", body: "새로운 알림이 있습니다.", url: "/parent" };
+    let data = { title: "코딩쏙 학부모", body: "새로운 알림이 있습니다.", url: "/parent/feedback" };
 
     if (event.data) {
         try {
@@ -76,7 +76,7 @@ self.addEventListener("push", (event) => {
 self.addEventListener("notificationclick", (event) => {
     event.notification.close();
 
-    const url = event.notification.data?.url || "/parent";
+    const url = event.notification.data?.url || "/parent/feedback";
 
     event.waitUntil(
         self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {

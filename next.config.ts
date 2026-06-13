@@ -74,7 +74,7 @@ const nextConfig: NextConfig = {
 
   // Turbopack root 설정 (경고 제거)
   turbopack: {
-    root: path.resolve(__dirname),
+    root: path.resolve(process.cwd()),
   },
 };
 

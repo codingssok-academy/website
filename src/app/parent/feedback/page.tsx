@@ -1,13 +1,10 @@
 "use client";
 
+/* eslint-disable react-hooks/set-state-in-effect */
+
 import { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-    STUDENT_KEY,
-    clearParentStudentAccess,
-    readAllowedStudentNames,
-    selectAllowedStudent,
-} from "../lib/studentAccess";
+import { clearParentClientAuth, PARENT_STUDENT_KEY } from "@/lib/parent-client-auth";
 
 interface FeedbackFile {
     name: string;
@@ -15,21 +12,16 @@ interface FeedbackFile {
     type: string;
 }
 
-interface FeedbackExtraSection {
-    title: string;
-    content: string;
-}
-
 interface Feedback {
     id: string;
     date: string | null;
     status: string;
+    studentName: string;
     contentLearned: string;
     homework: string;
     attitude: string;
     understanding: string;
     notes: string;
-    extraSections?: FeedbackExtraSection[];
     files?: FeedbackFile[];
 }
 
@@ -99,7 +91,6 @@ function FeedbackSection({
 
 function FeedbackCard({ fb, index }: { fb: Feedback; index: number }) {
     const [expanded, setExpanded] = useState(index === 0);
-    const preview = fb.contentLearned || fb.homework || fb.notes || fb.extraSections?.[0]?.content || "";
 
     return (
         <motion.div
@@ -158,7 +149,7 @@ function FeedbackCard({ fb, index }: { fb: Feedback; index: number }) {
                         <div style={{ fontSize: 14, fontWeight: 800, color: "#0f172a" }}>
                             {fb.date ?? "날짜 미지정"}
                         </div>
-                        {preview && (
+                        {fb.contentLearned && (
                             <div
                                 style={{
                                     fontSize: 11,
@@ -170,7 +161,7 @@ function FeedbackCard({ fb, index }: { fb: Feedback; index: number }) {
                                     whiteSpace: "nowrap",
                                 }}
                             >
-                                {preview.split("\n")[0]}
+                                {fb.contentLearned.split("\n")[0]}
                             </div>
                         )}
                     </div>
@@ -231,8 +222,8 @@ function FeedbackCard({ fb, index }: { fb: Feedback; index: number }) {
                                     icon="assignment"
                                     title="과제"
                                     content={fb.homework}
-                                    color="#9333ea"
-                                    bg="#faf5ff"
+                                    color="#ea580c"
+                                    bg="#fff7ed"
                                 />
                             )}
                             {fb.attitude && (
@@ -262,16 +253,6 @@ function FeedbackCard({ fb, index }: { fb: Feedback; index: number }) {
                                     bg="#f8fafc"
                                 />
                             )}
-                            {fb.extraSections?.map(section => (
-                                <FeedbackSection
-                                    key={section.title}
-                                    icon="notes"
-                                    title={section.title}
-                                    content={section.content}
-                                    color="#475569"
-                                    bg="#f8fafc"
-                                />
-                            ))}
 
                             {/* PDF/image attachments */}
                             {fb.files && fb.files.length > 0 && (
@@ -394,35 +375,34 @@ function FeedbackCard({ fb, index }: { fb: Feedback; index: number }) {
 
 export default function ParentFeedbackPage() {
     const [studentName, setStudentName] = useState("");
-    const [allowedNames, setAllowedNames] = useState<string[]>([]);
     const [loading, setLoading] = useState(true);
     const [result, setResult] = useState<LookupResult | null>(null);
 
     useEffect(() => {
-        const stored = localStorage.getItem(STUDENT_KEY) ?? "";
+        const stored = localStorage.getItem(PARENT_STUDENT_KEY) ?? "";
         setStudentName(stored);
-        setAllowedNames(readAllowedStudentNames(stored));
     }, []);
 
-    const search = useCallback(async (name: string, isBackground = false) => {
+    const search = useCallback(async (name: string) => {
         if (!name || name.length < 2) return;
-        if (!isBackground) setLoading(true);
+        setLoading(true);
         try {
-            const res = await fetch(`/api/parent/lookup?name=${encodeURIComponent(name)}`, {
-                cache: "no-store",
-            });
+            const res = await fetch(`/api/parent/lookup?name=${encodeURIComponent(name)}`);
             const data = await res.json();
-            if (res.status === 403) {
-                clearParentStudentAccess();
-                setStudentName("");
-                setResult(null);
+            if (res.status === 401 || res.status === 403) {
+                clearParentClientAuth();
+                window.location.reload();
+                return;
+            }
+            if (!res.ok) {
+                setResult({ found: false, message: data?.error || "피드백을 불러오지 못했습니다." });
                 return;
             }
             setResult(data);
         } catch {
             setResult({ found: false, message: "서버 연결 오류" });
         } finally {
-            if (!isBackground) setLoading(false);
+            setLoading(false);
         }
     }, []);
 
@@ -430,24 +410,6 @@ export default function ParentFeedbackPage() {
         if (studentName) search(studentName);
         else setLoading(false);
     }, [studentName, search]);
-
-    useEffect(() => {
-        if (!studentName) return;
-        const interval = window.setInterval(() => {
-            if (document.visibilityState === "visible") {
-                void search(studentName, true);
-            }
-        }, 30_000);
-        return () => window.clearInterval(interval);
-    }, [studentName, search]);
-
-    const handleStudentSelect = useCallback((name: string) => {
-        if (name === studentName) return;
-        if (!selectAllowedStudent(name, studentName)) return;
-        setResult(null);
-        setStudentName(name);
-        setAllowedNames(readAllowedStudentNames(name));
-    }, [studentName]);
 
     return (
         <div style={{ padding: "20px 16px 8px", maxWidth: 480, margin: "0 auto" }}>
@@ -469,46 +431,6 @@ export default function ParentFeedbackPage() {
                     </div>
                 </div>
             </div>
-
-            {allowedNames.length > 1 && (
-                <div
-                    style={{
-                        display: "flex",
-                        gap: 6,
-                        padding: 4,
-                        borderRadius: 12,
-                        background: "#e2e8f0",
-                        marginBottom: 16,
-                    }}
-                >
-                    {allowedNames.map(name => {
-                        const active = name === studentName;
-                        return (
-                            <button
-                                key={name}
-                                type="button"
-                                onClick={() => handleStudentSelect(name)}
-                                disabled={active}
-                                style={{
-                                    flex: 1,
-                                    minHeight: 38,
-                                    border: "none",
-                                    borderRadius: 8,
-                                    background: active ? "#0f172a" : "transparent",
-                                    color: active ? "#fff" : "#475569",
-                                    fontSize: 13,
-                                    fontWeight: 900,
-                                    fontFamily: "inherit",
-                                    cursor: active ? "default" : "pointer",
-                                    boxShadow: active ? "0 1px 6px rgba(15,23,42,0.18)" : "none",
-                                }}
-                            >
-                                {name}
-                            </button>
-                        );
-                    })}
-                </div>
-            )}
 
             {/* Loading skeletons */}
             {loading && (
@@ -553,7 +475,7 @@ export default function ParentFeedbackPage() {
                         search_off
                     </span>
                     <div style={{ fontSize: 14, color: "#64748b", fontWeight: 600 }}>
-                        {result.message}
+                        {result.message || "피드백을 불러오지 못했습니다."}
                     </div>
                 </motion.div>
             )}

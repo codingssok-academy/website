@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
-export default function ParentHomeRedirect() {
+export default function ParentHomePage() {
     redirect("/parent/feedback");
 }

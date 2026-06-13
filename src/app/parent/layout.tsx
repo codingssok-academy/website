@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import ParentSwRegister from "./ParentSwRegister";
 import ParentShell from "./ParentShell";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
     title: {
         default: "코딩쏙학원 학부모포털",

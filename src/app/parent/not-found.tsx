@@ -16,9 +16,9 @@ export default function ParentNotFound() {
             </p>
             <Link
                 href="/parent/feedback"
-                className="inline-block px-8 py-3 rounded-[8px] bg-blue-600 text-white text-sm font-bold no-underline"
+                className="inline-block px-8 py-3 rounded-[14px] bg-gradient-to-br from-blue-600 to-blue-700 text-white text-sm font-bold no-underline"
             >
-                피드백으로 이동
+                홈으로 이동
             </Link>
         </div>
     );
