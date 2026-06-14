@@ -215,6 +215,36 @@ export default function Navbar() {
 
                     {/* ── Auth + CTA (desktop) ── */}
                     <div className="nav-main" style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                        <Link
+                            href="/parent/feedback"
+                            aria-label="학부모 포털"
+                            style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                minHeight: 40,
+                                padding: "8px 18px",
+                                borderRadius: 10,
+                                border: "1px solid #e2e8f0",
+                                background: "rgba(255,255,255,0.82)",
+                                backdropFilter: "blur(8px)",
+                                color: "#334155",
+                                fontSize: 13,
+                                fontWeight: 700,
+                                textDecoration: "none",
+                                whiteSpace: "nowrap",
+                                boxShadow: "0 8px 24px rgba(15,23,42,0.08)",
+                            }}
+                            onMouseEnter={e => {
+                                (e.currentTarget as HTMLAnchorElement).style.borderColor = "#0ea5e9";
+                                (e.currentTarget as HTMLAnchorElement).style.color = "#0ea5e9";
+                            }}
+                            onMouseLeave={e => {
+                                (e.currentTarget as HTMLAnchorElement).style.borderColor = "#e2e8f0";
+                                (e.currentTarget as HTMLAnchorElement).style.color = "#334155";
+                            }}
+                        >
+                            학부모 포털
+                        </Link>
                         {/* 로그인/로그아웃 */}
                         {!authLoading && (
                             user ? (
