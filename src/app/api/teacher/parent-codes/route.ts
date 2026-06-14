@@ -233,6 +233,7 @@ async function upsertStudentCode(input: {
         class: input.className || existing?.class || null,
         pin: input.pin,
         auth_user_id: existing?.auth_user_id || profile?.id || null,
+        status: 'approved',
     }
 
     const query = existing

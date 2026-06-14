@@ -89,6 +89,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 }
 
                 // Step 2: Session exists — load/sync user profile
+                const { data: linkedStudent, error: linkedStudentError } = await sb
+                    .from("students")
+                    .select("id,name,grade,avatar,status,auth_user_id")
+                    .eq("auth_user_id", session.user.id)
+                    .maybeSingle();
+
+                if (linkedStudentError || !linkedStudent || linkedStudent.status === "deactivated" || linkedStudent.status === "rejected") {
+                    saveUser(null);
+                    localStorage.removeItem("codingssok_role");
+                    await sb.auth.signOut({ scope: "local" });
+                    if (!cancelled) setUser(null);
+                    return;
+                }
+
                 const stored = loadUser();
                 if (stored && stored.id === session.user.id && !cancelled) {
                     // Sync latest XP/level from Supabase

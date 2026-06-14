@@ -3,13 +3,14 @@
 import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
 import { useState } from "react";
-import { Home, LogOut, UserCog, Users } from "lucide-react";
+import { ClipboardList, Home, LogOut, UserCog, Users } from "lucide-react";
 import { createClient } from "@/lib/supabase";
 import { useAdmin } from "../context";
 
 const NAV_ITEMS = [
     { href: "/teacher/admin", label: "학부모 코드 관리", icon: UserCog },
     { href: "/teacher/admin/students", label: "학생 계정 관리", icon: Users },
+    { href: "/teacher/admin/growth", label: "성장 관리표", icon: ClipboardList },
 ];
 
 export default function AdminSidebar() {
@@ -38,7 +39,7 @@ export default function AdminSidebar() {
                     <Image src="/images/promo/logo-codingssok.png" alt="코딩쏙" width={32} height={32} style={mobileLogoStyle} />
                     <div style={{ minWidth: 0 }}>
                         <div style={{ fontSize: 14, fontWeight: 900, color: "#f8fafc" }}>코딩쏙 관리자</div>
-                        <div style={{ fontSize: 11, color: "#94a3b8" }}>학부모 코드 · 학생 계정</div>
+                        <div style={{ fontSize: 11, color: "#94a3b8" }}>학생 성장 관리</div>
                     </div>
                 </div>
             </header>

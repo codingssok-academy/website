@@ -117,7 +117,8 @@ export async function upsertStudentCodeInDatabase(input: {
                 grade = $4,
                 "class" = $5,
                 pin = $6,
-                auth_user_id = $7
+                auth_user_id = $7,
+                status = 'approved'
             where id = $1
             returning id, name, birthday, grade, "class", avatar, pin, auth_user_id, status, created_at
             `,
@@ -136,8 +137,8 @@ export async function upsertStudentCodeInDatabase(input: {
 
     const rows = await databaseQuery<ParentCodeStudentRow>(
         `
-        insert into public.students (name, birthday, grade, "class", pin, auth_user_id)
-        values ($1, $2, $3, $4, $5, $6)
+        insert into public.students (name, birthday, grade, "class", pin, auth_user_id, status)
+        values ($1, $2, $3, $4, $5, $6, 'approved')
         returning id, name, birthday, grade, "class", avatar, pin, auth_user_id, status, created_at
         `,
         [

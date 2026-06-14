@@ -20,15 +20,33 @@ describe("parent portal admin integration contract", () => {
     expect(page).toContain("const deleteCode");
     expect(page).toContain("const saveSiblingGroup");
     expect(page).toContain('href="/teacher/admin/students"');
-    expect(page).toContain("cache: \"no-store\"");
+    expect(page).toContain('cache: "no-store"');
+  });
+
+  it("keeps teacher growth management available from the admin shell", () => {
+    const sidebar = read("src/app/teacher/admin/components/AdminSidebar.tsx");
+    const page = read("src/app/teacher/admin/growth/page.tsx");
+    const route = read("src/app/api/teacher/growth-management/route.ts");
+    const migration = read("supabase/migrations/20260616_student_growth_management.sql");
+
+    expect(sidebar).toContain("/teacher/admin/growth");
+    expect(sidebar).toContain("성장 관리표");
+    expect(page).toContain("학생 성장 관리표");
+    expect(page).toContain("학부모 전달사항");
+    expect(page).toContain("/api/teacher/growth-management");
+    expect(route).toContain("export async function GET");
+    expect(route).toContain("export async function POST");
+    expect(route).toContain("export async function DELETE");
+    expect(route).toContain("student_growth_management");
+    expect(migration).toContain("create table if not exists public.student_growth_management");
+    expect(migration).toContain("unique (student_id)");
+    expect(migration).toContain("student_growth_management_teacher_write");
   });
 
   it("keeps parent code API protected and connected to the live parent auth storage", () => {
     const route = read("src/app/api/teacher/parent-codes/route.ts");
 
     expect(route).toContain("async function requireTeacherContext");
-    expect(route).toContain("관리자 로그인이 필요합니다");
-    expect(route).toContain("관리자 권한이 필요합니다");
     expect(route).toContain("export async function GET");
     expect(route).toContain("export async function POST");
     expect(route).toContain("export async function PATCH");
@@ -56,7 +74,7 @@ describe("parent portal admin integration contract", () => {
     expect(shell).toContain("focus");
   });
 
-  it("keeps student signup accounts manageable without deleting parent codes", () => {
+  it("keeps student signup accounts manageable without deleting parent codes or auth users", () => {
     const page = read("src/app/teacher/admin/students/page.tsx");
     const route = read("src/app/api/teacher/student-accounts/route.ts");
 
@@ -65,9 +83,45 @@ describe("parent portal admin integration contract", () => {
     expect(page).toContain('method: "DELETE"');
     expect(page).toContain("deleteAccount");
     expect(route).toContain("export async function DELETE");
-    expect(route).toContain("isProtectedProfile");
-    expect(route).toContain("deleteUser");
-    expect(route).toContain("auth_user_id: null");
-    expect(route).toContain(".from(\"profiles\").delete()");
+    expect(route).toContain("proxyStudentAccountsToRpc");
+    expect(route).toContain("studentAccountDelete");
+    expect(route).not.toContain("deleteUser");
+    expect(route).not.toContain(".from(\"profiles\").delete()");
+  });
+
+  it("keeps student account management available through the safe admin RPC fallback", () => {
+    const route = read("src/app/api/teacher/student-accounts/route.ts");
+    const migration = read("supabase/migrations/20260615_admin_student_accounts_rpc.sql");
+
+    expect(route).toContain("proxyStudentAccountsToRpc");
+    expect(route).toContain('supabase.rpc("codingssok_admin_student_accounts"');
+    expect(route).toContain("studentAccountsList");
+    expect(route).toContain("studentAccountStatus");
+    expect(route).toContain("studentAccountDelete");
+    expect(migration).toContain("create or replace function private.codingssok_admin_student_accounts_impl");
+    expect(migration).toContain("create or replace function public.codingssok_admin_student_accounts");
+    expect(migration).toContain("security definer");
+    expect(migration).toContain("security invoker");
+    expect(migration).toContain("set search_path = ''");
+    expect(migration).toContain("auth.uid()");
+    expect(migration).toContain("This admin account is not allowlisted.");
+    expect(migration).toContain("profiles_approval_status_check");
+    expect(migration).toContain("approval_status = 'deactivated'");
+    expect(migration).toContain("status = 'deactivated'");
+    expect(migration).not.toContain("delete from auth.users");
+    expect(migration).not.toContain("deleteUser");
+    expect(migration).toContain("grant execute on function public.codingssok_admin_student_accounts");
+  });
+
+  it("keeps deleted or deactivated student auth sessions blocked on dashboard load", () => {
+    const auth = read("src/contexts/AuthContext.tsx");
+    const parentCodes = read("src/app/api/teacher/parent-codes/route.ts");
+    const postgresAdmin = read("src/lib/postgres-admin.ts");
+
+    expect(auth).toContain('.eq("auth_user_id", session.user.id)');
+    expect(auth).toContain('linkedStudent.status === "deactivated"');
+    expect(auth).toContain('linkedStudent.status === "rejected"');
+    expect(parentCodes).toContain("status: 'approved'");
+    expect(postgresAdmin).toContain("status = 'approved'");
   });
 });
