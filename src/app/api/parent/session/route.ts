@@ -1,10 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { verifyParentPin } from "@/lib/parent-auth";
-import { createParentSessionToken, setParentSessionCookie } from "@/lib/parent-session";
+import {
+    PARENT_SESSION_COOKIE,
+    clearParentSessionCookie,
+    createParentSessionToken,
+    setParentSessionCookie,
+    verifyParentSessionToken,
+} from "@/lib/parent-session";
 import { getLinkedStudentNames } from "@/lib/student-family";
 import { createNotionStudentId, getNotionParentAccess } from "@/lib/notion-feedback";
-import { loadAllowedStudentsByParentPin } from "@/lib/parent-session-access";
+import { canParentSessionReadStudent, loadAllowedStudentsByParentPin, normalizeParentAccessName } from "@/lib/parent-session-access";
+import { callParentPortalEdge } from "@/lib/parent-edge";
+import { canParentSessionReadStudentFromDatabase, hasDatabaseAdmin } from "@/lib/postgres-admin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -29,6 +37,71 @@ type StudentRow = {
     status?: string | null;
     auth_user_id?: string | null;
 };
+
+function authExpiredResponse(status = 401) {
+    const response = NextResponse.json(
+        { success: false, error: "학부모 인증이 만료되었거나 변경되었습니다." },
+        { status, headers: NO_STORE_HEADERS },
+    );
+    clearParentSessionCookie(response);
+    return response;
+}
+
+export async function GET(req: NextRequest) {
+    try {
+        const token = req.cookies.get(PARENT_SESSION_COOKIE)?.value;
+        const session = verifyParentSessionToken(token);
+        if (!session?.studentId) return authExpiredResponse(401);
+
+        const requestedName = req.nextUrl.searchParams.get("name") || session.parentName || session.studentNames?.[0] || "";
+        const studentName = normalizeParentAccessName(requestedName);
+        if (studentName.length < 2 || studentName.length > 20 || /[<>"';&\\]/.test(studentName)) {
+            return authExpiredResponse(401);
+        }
+
+        const adminClient = createAdminClient();
+        let canRead = false;
+
+        if (adminClient) {
+            canRead = await canParentSessionReadStudent(adminClient, session, studentName);
+        } else if (hasDatabaseAdmin()) {
+            canRead = await canParentSessionReadStudentFromDatabase(
+                session.studentId,
+                studentName,
+                session.parentPin,
+                session.studentNames,
+            );
+        } else {
+            const edgeCheck = await callParentPortalEdge<{ success: true; canRead: boolean }>(
+                "canRead",
+                {
+                    name: studentName,
+                    studentId: session.studentId,
+                    parentPin: session.parentPin,
+                    studentNames: session.studentNames,
+                },
+            );
+            canRead = Boolean(edgeCheck.ok && edgeCheck.data.canRead);
+        }
+
+        if (!canRead) return authExpiredResponse(403);
+
+        let allowedStudents = session.studentNames?.map(normalizeParentAccessName).filter(Boolean) || [];
+        if (adminClient && session.parentPin) {
+            const allowed = await loadAllowedStudentsByParentPin(adminClient, session.parentPin, studentName);
+            allowedStudents = allowed.studentNames;
+        }
+        if (allowedStudents.length === 0) allowedStudents = [studentName];
+
+        return NextResponse.json({
+            success: true,
+            studentName,
+            allowedStudents,
+        }, { headers: NO_STORE_HEADERS });
+    } catch {
+        return authExpiredResponse(401);
+    }
+}
 
 function canonicalStudentName(profile: ProfileRow, fallbackName: string) {
     return (profile.display_name || profile.name || fallbackName).trim();

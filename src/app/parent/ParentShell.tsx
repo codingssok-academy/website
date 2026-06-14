@@ -2,14 +2,19 @@
 
 /* eslint-disable react-hooks/set-state-in-effect */
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import ParentBottomNav from "./ParentBottomNav";
 import ParentNameGate from "./ParentNameGate";
 import { installGlobalErrorHandler } from "@/lib/error-reporter";
-import { clearParentClientAuth, PARENT_STUDENT_KEY, PARENT_VERIFIED_KEY } from "@/lib/parent-client-auth";
+import {
+    clearParentClientAuth,
+    PARENT_STUDENT_KEY,
+    PARENT_VERIFIED_KEY,
+    writeAllowedStudentNames,
+} from "@/lib/parent-client-auth";
 
 export default function ParentShell({ children }: { children: React.ReactNode }) {
     useEffect(() => {
@@ -48,6 +53,54 @@ export default function ParentShell({ children }: { children: React.ReactNode })
         localStorage.setItem(PARENT_VERIFIED_KEY, "true");
         setStudentName(name);
     };
+
+    const validateSession = useCallback(async (name: string | null) => {
+        if (!name) return;
+        try {
+            const res = await fetch(`/api/parent/session?name=${encodeURIComponent(name)}`, { cache: "no-store" });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok || !data.success) {
+                clearParentClientAuth();
+                setStudentName(null);
+                return;
+            }
+
+            const allowedStudents = Array.isArray(data.allowedStudents)
+                ? data.allowedStudents.map((item: unknown) => String(item || "").trim()).filter(Boolean)
+                : [];
+            if (allowedStudents.length > 0) {
+                writeAllowedStudentNames(allowedStudents);
+                if (!allowedStudents.includes(name)) {
+                    const nextName = allowedStudents[0];
+                    localStorage.setItem(PARENT_STUDENT_KEY, nextName);
+                    setStudentName(nextName);
+                }
+            }
+        } catch {
+            // Keep the current UI during transient network failures; protected API calls still enforce access.
+        }
+    }, []);
+
+    useEffect(() => {
+        if (!studentName) return;
+
+        void validateSession(studentName);
+        const interval = window.setInterval(() => {
+            void validateSession(localStorage.getItem(PARENT_STUDENT_KEY) || studentName);
+        }, 30_000);
+        const handleFocus = () => void validateSession(localStorage.getItem(PARENT_STUDENT_KEY) || studentName);
+        const handleVisibility = () => {
+            if (document.visibilityState === "visible") handleFocus();
+        };
+
+        window.addEventListener("focus", handleFocus);
+        document.addEventListener("visibilitychange", handleVisibility);
+        return () => {
+            window.clearInterval(interval);
+            window.removeEventListener("focus", handleFocus);
+            document.removeEventListener("visibilitychange", handleVisibility);
+        };
+    }, [studentName, validateSession]);
 
     if (booting) {
         return (
