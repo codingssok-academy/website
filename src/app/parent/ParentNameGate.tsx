@@ -5,7 +5,7 @@ import type { CSSProperties } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { hapticLight, hapticMedium } from "./components/ui/haptic";
-import { PARENT_VERIFIED_KEY } from "@/lib/parent-client-auth";
+import { PARENT_VERIFIED_KEY, writeAllowedStudentNames } from "@/lib/parent-client-auth";
 
 interface Props {
     onNameSet: (name: string) => void;
@@ -40,8 +40,12 @@ export default function ParentNameGate({ onNameSet }: Props) {
             }
 
             hapticLight();
+            const allowedStudents = Array.isArray(data.allowedStudents) && data.allowedStudents.length > 0
+                ? data.allowedStudents.map((item: unknown) => String(item || "").trim()).filter(Boolean)
+                : [studentName];
+            writeAllowedStudentNames(allowedStudents);
             localStorage.setItem(PARENT_VERIFIED_KEY, "true");
-            onNameSet(studentName);
+            onNameSet(data.studentName || studentName);
         } catch (err) {
             hapticMedium();
             setError(err instanceof Error ? err.message : "인증 중 오류가 발생했습니다.");

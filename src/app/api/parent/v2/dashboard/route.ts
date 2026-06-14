@@ -14,8 +14,8 @@ import { createClient } from "@supabase/supabase-js";
 import { stripHtml, truncate } from "@/lib/text-utils";
 import { verifyParentSessionToken, PARENT_SESSION_COOKIE } from "@/lib/parent-session";
 import { createClient as createServerSupabase } from "@/lib/supabase/server";
-import { PIN_COURSE } from "@/lib/parent-auth";
 import { findReferenceParentCode } from "@/lib/parent-code-reference";
+import { canParentSessionReadStudent } from "@/lib/parent-session-access";
 
 // jsdom 체인은 text-utils로 끊었음. lazy dynamic import는 매 요청마다 module load
 // 4-5초 비용 → static import 복귀. cold start 1-2초 + 그 후 호출 즉시.
@@ -179,28 +179,7 @@ export async function GET(req: NextRequest) {
     const parentToken = req.cookies.get(PARENT_SESSION_COOKIE)?.value;
     const parentSession = parentToken ? verifyParentSessionToken(parentToken) : null;
     if (parentSession?.studentId) {
-        const [profileRes, studentRes, pinRes] = await Promise.all([
-            sb.from("profiles")
-                .select("display_name, name")
-                .eq("id", parentSession.studentId)
-                .maybeSingle(),
-            sb.from("students")
-                .select("id, name, pin, auth_user_id")
-                .or(`id.eq.${parentSession.studentId},auth_user_id.eq.${parentSession.studentId}`)
-                .limit(5),
-            sb.from("study_progress")
-                .select("completed_units")
-                .eq("user_id", parentSession.studentId)
-                .eq("course_id", PIN_COURSE)
-                .maybeSingle(),
-        ]);
-
-        const matchingStudent = (studentRes.data || []).find((student: any) => student.name === name);
-        const profileName = profileRes.data?.display_name || profileRes.data?.name || "";
-        const hasActiveStudentPin = Boolean(matchingStudent?.pin);
-        const hasActiveProgressPin = Boolean(pinRes.data?.completed_units?.[0]);
-
-        if ((profileName === name && hasActiveProgressPin) || (matchingStudent && hasActiveStudentPin)) {
+        if (await canParentSessionReadStudent(sb, parentSession, name)) {
             isAuthorized = true;
         }
     }

@@ -33,7 +33,7 @@ export default function ParentSettingsPage() {
                         icon="person"
                         iconBg="bg-blue-50"
                         iconColor="text-blue-600"
-                        label="현재 학생"
+                        label="연결된 학생"
                         value={studentName || "-"}
                         divider={false}
                     />

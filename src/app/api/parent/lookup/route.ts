@@ -11,11 +11,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient as createServerSupabase } from "@/lib/supabase/server";
-import { PIN_COURSE } from "@/lib/parent-auth";
 import { PARENT_SESSION_COOKIE, verifyParentSessionToken } from "@/lib/parent-session";
 import { findReferenceParentCode } from "@/lib/parent-code-reference";
 import { callParentPortalEdge } from "@/lib/parent-edge";
 import { canParentSessionReadStudentFromDatabase, hasDatabaseAdmin } from "@/lib/postgres-admin";
+import { canParentSessionReadStudent } from "@/lib/parent-session-access";
+import { queryNotionFeedbackPagesByStudent } from "@/lib/notion-feedback";
 
 const NOTION_KEY = process.env.NOTION_API_KEY || "";
 const FEEDBACK_DB = "3279bd0e-91c9-802f-b0bf-e8336861f74c";
@@ -112,43 +113,29 @@ async function canReadStudentFeedback(req: NextRequest, name: string) {
 
     if (parentSession?.studentId) {
         if (adminClient) {
-            const [profileRes, studentRes, pinRes] = await Promise.all([
-                adminClient
-                    .from("profiles")
-                    .select("name, display_name")
-                    .eq("id", parentSession.studentId)
-                    .maybeSingle(),
-                adminClient
-                    .from("students")
-                    .select("id, name, pin, auth_user_id")
-                    .or(`id.eq.${parentSession.studentId},auth_user_id.eq.${parentSession.studentId}`)
-                    .limit(5),
-                adminClient
-                    .from("study_progress")
-                    .select("completed_units")
-                    .eq("user_id", parentSession.studentId)
-                    .eq("course_id", PIN_COURSE)
-                    .maybeSingle(),
-            ]);
-
-            const profileName = profileRes.data?.display_name || profileRes.data?.name || "";
-            const matchingStudent = (studentRes.data || []).find((student: any) => student.name === name);
-            const hasActiveStudentPin = Boolean(matchingStudent?.pin);
-            const hasActiveProgressPin = Boolean(pinRes.data?.completed_units?.[0]);
-
-            if ((profileName === name && hasActiveProgressPin) || (matchingStudent && hasActiveStudentPin)) {
+            if (await canParentSessionReadStudent(adminClient, parentSession, name)) {
                 return true;
             }
         }
 
         if (!adminClient && hasDatabaseAdmin()) {
-            return canParentSessionReadStudentFromDatabase(parentSession.studentId, name);
+            return canParentSessionReadStudentFromDatabase(
+                parentSession.studentId,
+                name,
+                parentSession.parentPin,
+                parentSession.studentNames,
+            );
         }
 
         if (!adminClient && !hasDatabaseAdmin()) {
             const edgeCheck = await callParentPortalEdge<{ success: true; canRead: boolean }>(
                 "canRead",
-                { name, studentId: parentSession.studentId },
+                {
+                    name,
+                    studentId: parentSession.studentId,
+                    parentPin: parentSession.parentPin,
+                    studentNames: parentSession.studentNames,
+                },
             );
             if (edgeCheck.ok && edgeCheck.data.canRead) return true;
         }
@@ -235,26 +222,7 @@ export async function GET(req: NextRequest) {
     }
 
     try {
-        const queryRes = await fetchWithTimeout(
-            `https://api.notion.com/v1/databases/${FEEDBACK_DB}/query`,
-            {
-                method: "POST",
-                headers: HEADERS,
-                body: JSON.stringify({
-                    filter: { property: "학생 이름", rich_text: { equals: name } },
-                    sorts: [{ property: "피드백 날짜", direction: "descending" }],
-                    page_size: 100,
-                }),
-            },
-            5000,
-        );
-
-        if (!queryRes.ok) {
-            return NextResponse.json({ error: "노션 조회 실패" }, { status: 502 });
-        }
-
-        const queryData = await queryRes.json();
-        const pages = queryData.results || [];
+        const pages = await queryNotionFeedbackPagesByStudent(name);
 
         if (pages.length === 0) {
             return NextResponse.json({

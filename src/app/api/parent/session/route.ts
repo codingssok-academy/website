@@ -4,6 +4,7 @@ import { verifyParentPin } from "@/lib/parent-auth";
 import { createParentSessionToken, setParentSessionCookie } from "@/lib/parent-session";
 import { getLinkedStudentNames } from "@/lib/student-family";
 import { createNotionStudentId, getNotionParentAccess } from "@/lib/notion-feedback";
+import { loadAllowedStudentsByParentPin } from "@/lib/parent-session-access";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,6 +20,14 @@ type ProfileRow = {
     name: string | null;
     display_name?: string | null;
     email?: string | null;
+};
+
+type StudentRow = {
+    id: string;
+    name: string;
+    pin?: string | null;
+    status?: string | null;
+    auth_user_id?: string | null;
 };
 
 function canonicalStudentName(profile: ProfileRow, fallbackName: string) {
@@ -82,6 +91,7 @@ export async function POST(req: NextRequest) {
                 studentId: notionAccess.id,
                 studentIds: allowedStudents.map(createNotionStudentId),
                 studentNames: allowedStudents,
+                parentPin: pin,
                 parentName: canonicalName,
             });
 
@@ -99,15 +109,49 @@ export async function POST(req: NextRequest) {
 
         const adminClient = createAdminClient();
         if (adminClient) {
+            const { data: directStudents, error: directStudentError } = await adminClient
+                .from("students")
+                .select("id,name,pin,status,auth_user_id")
+                .eq("name", studentName)
+                .limit(5);
+            if (directStudentError) throw new Error(directStudentError.message);
+
+            const matchedStudent = ((directStudents || []) as StudentRow[]).find(student => student.pin === pin);
+            if (matchedStudent) {
+                if (matchedStudent.status === "deactivated") {
+                    return NextResponse.json({ success: false, error: "비활성화된 학생입니다. 선생님에게 문의해주세요." }, { status: 403, headers: NO_STORE_HEADERS });
+                }
+                const allowed = await loadAllowedStudentsByParentPin(adminClient, pin, studentName);
+                const token = createParentSessionToken({
+                    studentId: matchedStudent.auth_user_id || matchedStudent.id,
+                    studentIds: allowed.studentIds,
+                    studentNames: allowed.studentNames,
+                    parentPin: pin,
+                    parentName: studentName,
+                });
+
+                const response = NextResponse.json({
+                    success: true,
+                    studentName,
+                    allowedStudents: allowed.studentNames,
+                }, { headers: NO_STORE_HEADERS });
+                setParentSessionCookie(response, token);
+                return response;
+            }
+
             const profile = await verifyParentPin(adminClient, studentName, pin);
             if (profile) {
                 const canonicalName = canonicalStudentName(profile, studentName);
-                const allowedStudents = getLinkedStudentNames(canonicalName);
+                const allowedByPin = await loadAllowedStudentsByParentPin(adminClient, pin, canonicalName);
+                const allowedStudents = allowedByPin.studentNames.length > 0
+                    ? allowedByPin.studentNames
+                    : getLinkedStudentNames(canonicalName);
                 const linkedProfiles = await loadLinkedProfiles(adminClient, allowedStudents, profile);
                 const token = createParentSessionToken({
                     studentId: profile.id,
-                    studentIds: linkedProfiles.map(item => item.id),
+                    studentIds: allowedByPin.studentIds.length > 0 ? allowedByPin.studentIds : linkedProfiles.map(item => item.id),
                     studentNames: allowedStudents,
+                    parentPin: pin,
                     parentName: canonicalName,
                 });
 

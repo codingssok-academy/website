@@ -4,7 +4,12 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { clearParentClientAuth, PARENT_STUDENT_KEY } from "@/lib/parent-client-auth";
+import {
+    clearParentClientAuth,
+    PARENT_STUDENT_KEY,
+    readAllowedStudentNames,
+    selectAllowedStudent,
+} from "@/lib/parent-client-auth";
 
 interface FeedbackFile {
     name: string;
@@ -375,13 +380,22 @@ function FeedbackCard({ fb, index }: { fb: Feedback; index: number }) {
 
 export default function ParentFeedbackPage() {
     const [studentName, setStudentName] = useState("");
+    const [allowedNames, setAllowedNames] = useState<string[]>([]);
     const [loading, setLoading] = useState(true);
     const [result, setResult] = useState<LookupResult | null>(null);
 
     useEffect(() => {
         const stored = localStorage.getItem(PARENT_STUDENT_KEY) ?? "";
+        const allowed = readAllowedStudentNames();
+        setAllowedNames(allowed.includes(stored) ? allowed : (stored ? [stored, ...allowed] : allowed));
         setStudentName(stored);
     }, []);
+
+    const handleStudentSelect = (name: string) => {
+        selectAllowedStudent(name);
+        setStudentName(name);
+        setResult(null);
+    };
 
     const search = useCallback(async (name: string) => {
         if (!name || name.length < 2) return;
@@ -431,6 +445,41 @@ export default function ParentFeedbackPage() {
                     </div>
                 </div>
             </div>
+
+            {allowedNames.length > 1 && (
+                <div
+                    style={{
+                        display: "flex",
+                        flexWrap: "wrap",
+                        gap: 8,
+                        marginBottom: 16,
+                    }}
+                >
+                    {allowedNames.map(name => {
+                        const active = name === studentName;
+                        return (
+                            <button
+                                key={name}
+                                onClick={() => handleStudentSelect(name)}
+                                style={{
+                                    border: active ? "1px solid #2563eb" : "1px solid #dbe5f2",
+                                    background: active ? "#2563eb" : "#ffffff",
+                                    color: active ? "#ffffff" : "#334155",
+                                    minHeight: 34,
+                                    padding: "0 12px",
+                                    borderRadius: 999,
+                                    fontSize: 13,
+                                    fontWeight: 900,
+                                    fontFamily: "inherit",
+                                    cursor: "pointer",
+                                }}
+                            >
+                                {name}
+                            </button>
+                        );
+                    })}
+                </div>
+            )}
 
             {/* Loading skeletons */}
             {loading && (

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { LucideIcon } from "lucide-react";
-import { AlertCircle, CheckCircle, Database, Network, Plus, RefreshCw, ShieldCheck, Users } from "lucide-react";
+import { AlertCircle, CheckCircle, Database, Edit3, Network, Plus, RefreshCw, ShieldCheck, Users } from "lucide-react";
 import { useAdmin } from "./context";
 
 type ParentCodeRow = {
@@ -36,6 +36,8 @@ export default function ParentCodeAdminPage() {
     const [form, setForm] = useState<FormState>(EMPTY_FORM);
     const [groupNames, setGroupNames] = useState("한보리\n한보윤");
     const [groupPin, setGroupPin] = useState("47864");
+    const [editingRow, setEditingRow] = useState<ParentCodeRow | null>(null);
+    const [editForm, setEditForm] = useState<FormState>(EMPTY_FORM);
     const [error, setError] = useState("");
     const [notice, setNotice] = useState("");
     const [canMutate, setCanMutate] = useState(true);
@@ -141,6 +143,33 @@ export default function ParentCodeAdminPage() {
     const reissueCode = (row: ParentCodeRow) =>
         requestJson("PATCH", { name: row.name }, `${row.name} 인증번호를 새로 발급했습니다.`, `reissue-${row.name}`);
 
+    const startEdit = (row: ParentCodeRow) => {
+        setEditingRow(row);
+        setEditForm({ name: row.name, pin: row.code, className: row.className });
+        setError("");
+        setNotice("");
+    };
+
+    const saveEdit = async () => {
+        if (!editingRow) return;
+        const name = editForm.name.trim().replace(/\s+/g, "");
+        const pin = editForm.pin.replace(/\D/g, "").slice(0, 5);
+        if (name.length < 2 || pin.length !== 5) {
+            setError("학생 이름과 5자리 인증번호를 확인해주세요.");
+            return;
+        }
+        const ok = await requestJson(
+            "POST",
+            { name, pin, className: editForm.className },
+            `${name} 학생 정보를 수정했습니다.`,
+            `edit-${editingRow.name}`,
+        );
+        if (ok) {
+            setEditingRow(null);
+            setEditForm(EMPTY_FORM);
+        }
+    };
+
     const deleteCode = async (row: ParentCodeRow) => {
         if (!window.confirm(`${row.name} 학부모 인증번호를 삭제할까요? 삭제하면 앱 로그인도 막힙니다.`)) return;
         await requestJson("DELETE", { name: row.name }, `${row.name} 인증번호를 삭제했습니다.`, `delete-${row.name}`);
@@ -199,6 +228,9 @@ export default function ParentCodeAdminPage() {
                     <RefreshCw size={16} strokeWidth={2.4} />
                     새로고침
                 </button>
+                <a className="ghost-link" href="/teacher/admin/students">
+                    학생 로그인 계정 관리
+                </a>
             </div>
 
             <section className="stat-grid">
@@ -220,6 +252,37 @@ export default function ParentCodeAdminPage() {
                     <AlertCircle size={17} strokeWidth={2.5} />
                     기준표 상태의 코드는 아직 앱 인증에 적용된 코드가 아닙니다. 학부모에게 안내하기 전에 기준표 전체 활성화 또는 개별 재발급을 먼저 실행해주세요.
                 </div>
+            )}
+
+            {editingRow && (
+                <section className="panel edit-panel">
+                    <div className="panel-title">
+                        <Edit3 size={19} strokeWidth={2.6} />
+                        {editingRow.name} 학생 정보 수정
+                    </div>
+                    <div className="form-row edit-row">
+                        <input value={editForm.name} readOnly aria-label="학생 이름" />
+                        <input
+                            value={editForm.pin}
+                            onChange={event => setEditForm(prev => ({ ...prev, pin: event.target.value.replace(/\D/g, "").slice(0, 5) }))}
+                            placeholder="학부모 인증번호"
+                            inputMode="numeric"
+                            maxLength={5}
+                        />
+                        <input
+                            value={editForm.className}
+                            onChange={event => setEditForm(prev => ({ ...prev, className: event.target.value }))}
+                            placeholder="반/메모"
+                        />
+                        <button className="primary-btn" onClick={saveEdit} disabled={!canMutate || saving === `edit-${editingRow.name}`}>
+                            수정 저장
+                        </button>
+                        <button className="outline-btn" onClick={() => setEditingRow(null)}>
+                            취소
+                        </button>
+                    </div>
+                    <p className="hint">인증번호를 바꾸면 기존 앱 세션은 다음 조회부터 인증이 풀리고, 새 번호로 다시 인증해야 합니다.</p>
+                </section>
             )}
 
             <section className="work-grid">
@@ -352,6 +415,9 @@ export default function ParentCodeAdminPage() {
                                             <div className="row-actions">
                                                 <button className="mini-btn" onClick={() => reissueCode(row)} disabled={!canMutate || saving === `reissue-${row.name}`}>
                                                     재발급
+                                                </button>
+                                                <button className="mini-btn" onClick={() => startEdit(row)} disabled={!canMutate || saving === `edit-${row.name}`}>
+                                                    편집
                                                 </button>
                                                 <button className="danger-btn" onClick={() => deleteCode(row)} disabled={!canMutate || saving === `delete-${row.name}`}>
                                                     삭제
@@ -584,6 +650,20 @@ button {
     background: #ffffff;
     border: 1px solid #cfe0f5;
 }
+.ghost-link {
+    min-height: 40px;
+    padding: 0 13px;
+    color: #1e3a8a;
+    background: #ffffff;
+    border: 1px solid #cfe0f5;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 900;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
 .mini-btn {
     min-height: 32px;
     padding: 0 10px;
@@ -609,6 +689,12 @@ button:disabled {
     display: flex;
     flex-direction: column;
     gap: 8px;
+}
+.edit-panel {
+    margin-bottom: 16px;
+}
+.edit-row {
+    grid-template-columns: 1.1fr 0.9fr 1fr auto auto;
 }
 .table-toolbar {
     display: flex;

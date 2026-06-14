@@ -20,6 +20,7 @@ const navLinks = [
     { name: "수강료", href: "#pricing" },
     { name: "FAQ", href: "#faq" },
     { name: "문의", href: "#contact" },
+    { name: "학부모 포털", href: "/parent/feedback" },
     { name: "학습 플랫폼", href: "/dashboard/learning" },
 ];
 

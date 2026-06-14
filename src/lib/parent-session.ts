@@ -9,6 +9,7 @@ export interface ParentSessionPayload {
     studentId: string
     studentIds?: string[]
     studentNames?: string[]
+    parentPin?: string
     parentName: string
     issuedAt: number
     expiresAt: number
@@ -45,13 +46,16 @@ export function createParentSessionToken(input: {
     studentId: string
     studentIds?: string[]
     studentNames?: string[]
+    parentPin?: string | null
     parentName?: string | null
 }) {
     const now = Date.now()
+    const parentPin = (input.parentPin || '').replace(/\D/g, '').slice(0, 5)
     const payload: ParentSessionPayload = {
         studentId: input.studentId,
         studentIds: input.studentIds?.filter(Boolean).slice(0, 5),
         studentNames: input.studentNames?.map(name => name.trim()).filter(Boolean).slice(0, 5),
+        parentPin: /^\d{5}$/.test(parentPin) ? parentPin : undefined,
         parentName: (input.parentName || '').trim().slice(0, 60),
         issuedAt: now,
         expiresAt: now + PARENT_SESSION_TTL_MS,

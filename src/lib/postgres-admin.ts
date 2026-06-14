@@ -200,15 +200,35 @@ export async function findParentAuthInDatabase(name: string, pin: string) {
     return { status: 'not_found' as const, studentId: null }
 }
 
-export async function canParentSessionReadStudentFromDatabase(studentId: string, name: string) {
+function normalizeParentSessionName(value: string) {
+    return value.trim().replace(/\s+/g, '')
+}
+
+export async function canParentSessionReadStudentFromDatabase(
+    studentId: string,
+    name: string,
+    parentPin?: string | null,
+    studentNames: string[] = [],
+) {
+    const normalizedName = normalizeParentSessionName(name)
+    const normalizedPin = (parentPin || '').replace(/\D/g, '').slice(0, 5)
+    if (!/^\d{5}$/.test(normalizedPin)) return false
+
+    const allowedNames = new Set(
+        (studentNames.length > 0 ? studentNames : [name])
+            .map(normalizeParentSessionName)
+            .filter(Boolean),
+    )
+    if (!allowedNames.has(normalizedName)) return false
+
     const [profiles, students, progress] = await Promise.all([
         databaseQuery<{ name: string | null; display_name: string | null }>(
             'select name, display_name from public.profiles where id = $1 limit 1',
             [studentId],
         ),
-        databaseQuery<Pick<ParentCodeStudentRow, 'id' | 'name' | 'pin' | 'auth_user_id'>>(
-            'select id, name, pin, auth_user_id from public.students where id = $1 or auth_user_id = $1 limit 5',
-            [studentId],
+        databaseQuery<Pick<ParentCodeStudentRow, 'id' | 'name' | 'pin' | 'auth_user_id' | 'status'>>(
+            'select id, name, pin, auth_user_id, status from public.students where name = $1 limit 10',
+            [normalizedName],
         ),
         databaseQuery<{ completed_units: string[] | null }>(
             'select completed_units from public.study_progress where user_id = $1 and course_id = $2 limit 1',
@@ -216,10 +236,13 @@ export async function canParentSessionReadStudentFromDatabase(studentId: string,
         ),
     ])
 
-    const profileName = profiles[0]?.display_name || profiles[0]?.name || ''
-    const matchingStudent = students.find(student => student.name === name)
-    const hasActiveStudentPin = Boolean(matchingStudent?.pin)
-    const hasActiveProgressPin = Boolean(progress[0]?.completed_units?.[0])
+    const profileName = normalizeParentSessionName(profiles[0]?.display_name || profiles[0]?.name || '')
+    const matchingStudent = students.find(student =>
+        normalizeParentSessionName(student.name) === normalizedName &&
+        student.pin === normalizedPin &&
+        student.status !== 'deactivated',
+    )
+    const hasActiveProgressPin = progress[0]?.completed_units?.[0] === normalizedPin
 
-    return (profileName === name && hasActiveProgressPin) || Boolean(matchingStudent && hasActiveStudentPin)
+    return (profileName === normalizedName && hasActiveProgressPin) || Boolean(matchingStudent)
 }

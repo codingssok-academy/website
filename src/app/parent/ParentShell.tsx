@@ -34,6 +34,15 @@ export default function ParentShell({ children }: { children: React.ReactNode })
         setBooting(false);
     }, []);
 
+    useEffect(() => {
+        const handleStudentChange = (event: Event) => {
+            const nextName = (event as CustomEvent<{ name?: string }>).detail?.name || localStorage.getItem(PARENT_STUDENT_KEY) || "";
+            if (nextName) setStudentName(nextName);
+        };
+        window.addEventListener("codingssok-parent-student-change", handleStudentChange);
+        return () => window.removeEventListener("codingssok-parent-student-change", handleStudentChange);
+    }, []);
+
     const handleNameSet = (name: string) => {
         localStorage.setItem(PARENT_STUDENT_KEY, name);
         localStorage.setItem(PARENT_VERIFIED_KEY, "true");

@@ -5,6 +5,8 @@ import { createParentSessionToken, setParentSessionCookie } from '@/lib/parent-s
 import { findReferenceParentCode } from '@/lib/parent-code-reference'
 import { callParentPortalEdge } from '@/lib/parent-edge'
 import { findParentAuthInDatabase, hasDatabaseAdmin } from '@/lib/postgres-admin'
+import { loadAllowedStudentsByParentPin } from '@/lib/parent-session-access'
+import { getLinkedStudentNames } from '@/lib/student-family'
 
 function isLocalRequest(request: NextRequest) {
     const host = request.headers.get('host') || ''
@@ -63,12 +65,19 @@ export async function POST(request: NextRequest) {
                     )
                 }
                 if (auth.status === 'ok' && auth.studentId) {
+                    const allowedStudents = getLinkedStudentNames(name)
                     const response = NextResponse.json({
                         success: true,
                         studentName: name,
                         studentId: auth.studentId,
+                        allowedStudents,
                     })
-                    setParentSessionCookie(response, createParentSessionToken({ studentId: auth.studentId, parentName: name }))
+                    setParentSessionCookie(response, createParentSessionToken({
+                        studentId: auth.studentId,
+                        studentNames: allowedStudents,
+                        parentPin: pin,
+                        parentName: name,
+                    }))
                     return response
                 }
                 return NextResponse.json(
@@ -79,13 +88,21 @@ export async function POST(request: NextRequest) {
             if (isLocalRequest(request)) {
                 const reference = findReferenceParentCode(name)
                 if (reference?.code === pin) {
+                    const allowedStudents = getLinkedStudentNames(name)
                     const response = NextResponse.json({
                         success: true,
                         studentName: name,
                         studentId: `reference:${name}`,
                         mode: 'reference',
+                        allowedStudents,
                     })
-                    setParentSessionCookie(response, createParentSessionToken({ studentId: `reference:${name}`, parentName: name }))
+                    setParentSessionCookie(response, createParentSessionToken({
+                        studentId: `reference:${name}`,
+                        studentIds: allowedStudents.map(student => `reference:${student}`),
+                        studentNames: allowedStudents,
+                        parentPin: pin,
+                        parentName: name,
+                    }))
                     return response
                 }
                 if (reference) {
@@ -101,13 +118,20 @@ export async function POST(request: NextRequest) {
             }
             const edgeAuth = await callParentPortalEdge<EdgeParentAuthResponse>('auth', { name, pin })
             if (edgeAuth.ok) {
+                const allowedStudents = getLinkedStudentNames(edgeAuth.data.studentName || name)
                 const response = NextResponse.json({
                     success: true,
                     studentName: edgeAuth.data.studentName || name,
                     studentId: edgeAuth.data.studentId,
                     mode: 'edge',
+                    allowedStudents,
                 })
-                setParentSessionCookie(response, createParentSessionToken({ studentId: edgeAuth.data.studentId, parentName: name }))
+                setParentSessionCookie(response, createParentSessionToken({
+                    studentId: edgeAuth.data.studentId,
+                    studentNames: allowedStudents,
+                    parentPin: pin,
+                    parentName: edgeAuth.data.studentName || name,
+                }))
                 return response
             }
 
@@ -166,12 +190,23 @@ export async function POST(request: NextRequest) {
             )
         }
 
+        const allowed = matchedStudent
+            ? await loadAllowedStudentsByParentPin(adminClient, pin, name)
+            : { studentIds: sessionStudentId ? [sessionStudentId] : [], studentNames: getLinkedStudentNames(name) }
+
         const response = NextResponse.json({
             success: true,
             studentName: name,
             studentId: sessionStudentId,
+            allowedStudents: allowed.studentNames,
         })
-        setParentSessionCookie(response, createParentSessionToken({ studentId: sessionStudentId, parentName: name }))
+        setParentSessionCookie(response, createParentSessionToken({
+            studentId: sessionStudentId,
+            studentIds: allowed.studentIds,
+            studentNames: allowed.studentNames,
+            parentPin: pin,
+            parentName: name,
+        }))
         return response
     } catch (error) {
         return NextResponse.json(
