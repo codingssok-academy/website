@@ -1,7 +1,7 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { ClipboardList, Home, LogOut, UserCog, Users } from "lucide-react";
 import { createClient } from "@/lib/supabase";
@@ -25,8 +25,8 @@ export default function AdminSidebar() {
     const handleLogout = async () => {
         setLogoutLoading(true);
         try {
-            const sb = createClient();
-            await sb.auth.signOut();
+            const supabase = createClient();
+            await supabase.auth.signOut();
         } finally {
             window.location.href = "/teacher/login";
         }
@@ -87,7 +87,7 @@ export default function AdminSidebar() {
                             <div style={{ fontSize: 12, fontWeight: 800, color: "#e2e8f0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                                 {teacherDisplayName}
                             </div>
-                            <div style={{ fontSize: 10, color: "#64748b" }}>관리자 화면</div>
+                            <div style={{ fontSize: 10, color: "#64748b" }}>관리자 계정</div>
                         </div>
                     </div>
                     <button onClick={() => router.push("/")} style={footerButtonStyle}>

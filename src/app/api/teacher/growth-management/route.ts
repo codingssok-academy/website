@@ -5,6 +5,8 @@ import { createClient } from "@/lib/supabase/server";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+const NO_STORE_HEADERS = { "Cache-Control": "no-store" };
+
 const TEXT_FIELDS = [
     "studentName",
     "currentClass",
@@ -17,50 +19,78 @@ const TEXT_FIELDS = [
     "classProgress",
     "parentFeedbackDraft",
     "teacherMemo",
+    "entryNote",
 ] as const;
 
-function readText(body: Record<string, unknown>, key: typeof TEXT_FIELDS[number]) {
+type TextField = typeof TEXT_FIELDS[number];
+
+type DbError = {
+    message?: string;
+    code?: string;
+};
+
+function readText(body: Record<string, unknown>, key: TextField, max = 4000) {
     const value = body[key];
-    return typeof value === "string" ? value.trim().slice(0, 4000) : "";
+    return typeof value === "string" ? value.trim().slice(0, max) : "";
 }
 
-function isMissingTable(error: { message?: string } | null) {
+function isMissingGrowthTable(error: DbError | null) {
     const message = (error?.message || "").toLowerCase();
-    return message.includes("student_growth_management")
-        && (message.includes("could not find") || message.includes("does not exist") || message.includes("schema cache"));
+    return (
+        message.includes("student_growth_management")
+        || message.includes("student_growth_entries")
+    ) && (
+        message.includes("could not find")
+        || message.includes("does not exist")
+        || message.includes("schema cache")
+        || error?.code === "42P01"
+        || error?.code === "PGRST205"
+    );
 }
 
 async function loadData() {
     const supabase = await createClient();
-    const [studentsRes, recordsRes] = await Promise.all([
+    const [studentsRes, recordsRes, entriesRes] = await Promise.all([
         supabase
             .from("students")
             .select("id,name,grade,class,status,updated_at,created_at")
+            .neq("status", "deactivated")
             .order("name", { ascending: true }),
         supabase
             .from("student_growth_management")
             .select("*")
             .order("updated_at", { ascending: false }),
+        supabase
+            .from("student_growth_entries")
+            .select("*")
+            .order("created_at", { ascending: false })
+            .limit(500),
     ]);
 
     if (studentsRes.error) throw new Error(studentsRes.error.message);
-    if (recordsRes.error) {
-        if (isMissingTable(recordsRes.error)) {
+
+    const students = (studentsRes.data || []).filter(student => student.class !== "admin");
+
+    if (recordsRes.error || entriesRes.error) {
+        const missing = isMissingGrowthTable(recordsRes.error) || isMissingGrowthTable(entriesRes.error);
+        if (missing) {
             return {
                 success: true,
                 migrationRequired: true,
-                students: (studentsRes.data || []).filter(student => student.class !== "admin"),
+                students,
                 records: [],
+                entries: [],
             };
         }
-        throw new Error(recordsRes.error.message);
+        throw new Error(recordsRes.error?.message || entriesRes.error?.message || "성장관리표를 불러오지 못했습니다.");
     }
 
     return {
         success: true,
         migrationRequired: false,
-        students: (studentsRes.data || []).filter(student => student.class !== "admin"),
+        students,
         records: recordsRes.data || [],
+        entries: entriesRes.data || [],
     };
 }
 
@@ -69,13 +99,11 @@ export async function GET() {
     if (!auth.ok) return auth.response;
 
     try {
-        return NextResponse.json(await loadData(), {
-            headers: { "Cache-Control": "no-store" },
-        });
+        return NextResponse.json(await loadData(), { headers: NO_STORE_HEADERS });
     } catch (error) {
         return NextResponse.json(
-            { success: false, error: error instanceof Error ? error.message : "Failed to load growth management records." },
-            { status: 500 },
+            { success: false, error: error instanceof Error ? error.message : "성장관리표를 불러오지 못했습니다." },
+            { status: 500, headers: NO_STORE_HEADERS },
         );
     }
 }
@@ -86,25 +114,25 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json().catch(() => null) as Record<string, unknown> | null;
     if (!body) {
-        return NextResponse.json({ success: false, error: "Invalid request body." }, { status: 400 });
+        return NextResponse.json({ success: false, error: "요청 본문이 올바르지 않습니다." }, { status: 400 });
     }
 
     const studentId = typeof body.studentId === "string" ? body.studentId.trim() : "";
     if (!studentId) {
-        return NextResponse.json({ success: false, error: "studentId is required." }, { status: 400 });
+        return NextResponse.json({ success: false, error: "학생을 먼저 선택해주세요." }, { status: 400 });
     }
 
     const supabase = await createClient();
     const payload = {
         student_id: studentId,
-        student_name: readText(body, "studentName"),
-        current_class: readText(body, "currentClass"),
-        temperament: readText(body, "temperament"),
-        skill_level: readText(body, "skillLevel"),
+        student_name: readText(body, "studentName", 120),
+        current_class: readText(body, "currentClass", 120),
+        temperament: readText(body, "temperament", 1000),
+        skill_level: readText(body, "skillLevel", 120),
         strengths: readText(body, "strengths"),
         weaknesses: readText(body, "weaknesses"),
         current_goal: readText(body, "currentGoal"),
-        next_class_potential: readText(body, "nextClassPotential"),
+        next_class_potential: readText(body, "nextClassPotential", 500),
         class_progress: readText(body, "classProgress"),
         parent_feedback_draft: readText(body, "parentFeedbackDraft"),
         teacher_memo: readText(body, "teacherMemo"),
@@ -113,22 +141,46 @@ export async function POST(request: NextRequest) {
         updated_by: auth.userId,
     };
 
+    const entryPayload = {
+        student_id: payload.student_id,
+        student_name: payload.student_name,
+        current_class: payload.current_class,
+        temperament: payload.temperament,
+        skill_level: payload.skill_level,
+        strengths: payload.strengths,
+        weaknesses: payload.weaknesses,
+        current_goal: payload.current_goal,
+        next_class_potential: payload.next_class_potential,
+        class_progress: payload.class_progress,
+        parent_feedback_draft: payload.parent_feedback_draft,
+        teacher_memo: payload.teacher_memo,
+        entry_note: readText(body, "entryNote"),
+        status: "active",
+        created_by: auth.userId,
+    };
+
     try {
-        const { data, error } = await supabase
+        const { data: record, error: upsertError } = await supabase
             .from("student_growth_management")
             .upsert(payload, { onConflict: "student_id" })
             .select("*")
             .single();
 
-        if (error) throw new Error(error.message);
+        if (upsertError) throw new Error(upsertError.message);
 
-        return NextResponse.json({ success: true, record: data }, {
-            headers: { "Cache-Control": "no-store" },
-        });
+        const { data: entry, error: entryError } = await supabase
+            .from("student_growth_entries")
+            .insert(entryPayload)
+            .select("*")
+            .single();
+
+        if (entryError) throw new Error(entryError.message);
+
+        return NextResponse.json({ success: true, record, entry }, { headers: NO_STORE_HEADERS });
     } catch (error) {
         return NextResponse.json(
-            { success: false, error: error instanceof Error ? error.message : "Failed to save growth record." },
-            { status: 500 },
+            { success: false, error: error instanceof Error ? error.message : "성장 기록 저장에 실패했습니다." },
+            { status: 500, headers: NO_STORE_HEADERS },
         );
     }
 }
@@ -140,20 +192,19 @@ export async function DELETE(request: NextRequest) {
     const body = await request.json().catch(() => null) as Record<string, unknown> | null;
     const studentId = typeof body?.studentId === "string" ? body.studentId.trim() : "";
     if (!studentId) {
-        return NextResponse.json({ success: false, error: "studentId is required." }, { status: 400 });
+        return NextResponse.json({ success: false, error: "학생을 먼저 선택해주세요." }, { status: 400 });
     }
 
     const supabase = await createClient();
-    const { error } = await supabase
-        .from("student_growth_management")
-        .delete()
-        .eq("student_id", studentId);
+    const [entriesDelete, summaryDelete] = await Promise.all([
+        supabase.from("student_growth_entries").delete().eq("student_id", studentId),
+        supabase.from("student_growth_management").delete().eq("student_id", studentId),
+    ]);
 
+    const error = entriesDelete.error || summaryDelete.error;
     if (error) {
-        return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+        return NextResponse.json({ success: false, error: error.message }, { status: 500, headers: NO_STORE_HEADERS });
     }
 
-    return NextResponse.json({ success: true }, {
-        headers: { "Cache-Control": "no-store" },
-    });
+    return NextResponse.json({ success: true }, { headers: NO_STORE_HEADERS });
 }

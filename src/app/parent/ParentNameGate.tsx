@@ -56,18 +56,10 @@ export default function ParentNameGate({ onNameSet }: Props) {
         }
     };
 
+    const canSubmit = name.trim().length >= 2 && pin.length === 5 && !loading;
+
     return (
-        <div
-            style={{
-                minHeight: "100dvh",
-                background: "linear-gradient(180deg, #f8fbff 0%, #ffffff 48%, #eef6ff 100%)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                padding: "28px 20px",
-                fontFamily: "'Pretendard', 'Noto Sans KR', sans-serif",
-            }}
-        >
+        <div style={pageStyle}>
             <motion.div
                 initial={{ opacity: 0, y: 18 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -84,22 +76,14 @@ export default function ParentNameGate({ onNameSet }: Props) {
                         priority
                     />
                     <div style={{ fontSize: 14, color: "#64748b", lineHeight: 1.7 }}>
-                        자녀의 학습 현황을 확인하려면
+                        학부모 포털
                         <br />
-                        학생 이름과 학부모 인증번호를 입력해주세요.
+                        자녀의 학습 현황을 확인하려면 정보를 입력해주세요.
                     </div>
                 </div>
 
                 <motion.div animate={shake ? { x: [-8, 8, -6, 6, -3, 3, 0] } : {}}>
-                    <div
-                        style={{
-                            background: "#ffffff",
-                            border: "1px solid #dbe5f2",
-                            borderRadius: 24,
-                            padding: 24,
-                            boxShadow: "0 22px 60px rgba(15, 23, 42, 0.08)",
-                        }}
-                    >
+                    <div style={cardStyle}>
                         <label style={labelStyle} htmlFor="parent-student-name">
                             학생 이름
                         </label>
@@ -111,10 +95,10 @@ export default function ParentNameGate({ onNameSet }: Props) {
                                 setError("");
                             }}
                             onKeyDown={event => {
-                                if (event.key === "Enter") submit();
+                                if (event.key === "Enter") void submit();
                             }}
                             autoFocus
-                            placeholder="예: 이다연"
+                            aria-label="학생 이름"
                             style={inputStyle}
                         />
 
@@ -131,49 +115,28 @@ export default function ParentNameGate({ onNameSet }: Props) {
                                 setError("");
                             }}
                             onKeyDown={event => {
-                                if (event.key === "Enter") submit();
+                                if (event.key === "Enter") void submit();
                             }}
-                            placeholder="5자리 숫자"
+                            aria-label="학부모 인증번호"
                             maxLength={5}
                             style={{ ...inputStyle, textAlign: "center", letterSpacing: "0.28em", fontWeight: 900 }}
                         />
 
                         {error && (
-                            <div
-                                style={{
-                                    marginTop: 12,
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: 6,
-                                    color: "#ef4444",
-                                    fontSize: 13,
-                                    fontWeight: 700,
-                                    lineHeight: 1.5,
-                                }}
-                            >
+                            <div style={errorStyle}>
                                 <span style={errorMarkStyle}>!</span>
                                 {error}
                             </div>
                         )}
 
                         <button
-                            onClick={submit}
-                            disabled={loading || name.trim().length < 2 || pin.length !== 5}
+                            onClick={() => void submit()}
+                            disabled={!canSubmit}
                             style={{
-                                marginTop: 20,
-                                width: "100%",
-                                minHeight: 54,
-                                border: "none",
-                                borderRadius: 14,
-                                background:
-                                    name.trim().length >= 2 && pin.length === 5
-                                        ? "linear-gradient(135deg, #111827, #020617)"
-                                        : "#dbe3ef",
-                                color: name.trim().length >= 2 && pin.length === 5 ? "#ffffff" : "#8a98aa",
-                                fontSize: 15,
-                                fontWeight: 900,
-                                cursor: loading || name.trim().length < 2 || pin.length !== 5 ? "default" : "pointer",
-                                fontFamily: "inherit",
+                                ...submitButtonStyle,
+                                background: canSubmit ? "linear-gradient(135deg, #111827, #020617)" : "#dbe3ef",
+                                color: canSubmit ? "#ffffff" : "#8a98aa",
+                                cursor: canSubmit ? "pointer" : "default",
                             }}
                         >
                             {loading ? "확인 중..." : "시작하기"}
@@ -184,6 +147,24 @@ export default function ParentNameGate({ onNameSet }: Props) {
         </div>
     );
 }
+
+const pageStyle: CSSProperties = {
+    minHeight: "100dvh",
+    background: "linear-gradient(180deg, #f8fbff 0%, #ffffff 48%, #eef6ff 100%)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "28px 20px",
+    fontFamily: "'Pretendard', 'Noto Sans KR', sans-serif",
+};
+
+const cardStyle: CSSProperties = {
+    background: "#ffffff",
+    border: "1px solid #dbe5f2",
+    borderRadius: 24,
+    padding: 24,
+    boxShadow: "0 22px 60px rgba(15, 23, 42, 0.08)",
+};
 
 const labelStyle: CSSProperties = {
     display: "block",
@@ -204,6 +185,28 @@ const inputStyle: CSSProperties = {
     fontSize: 16,
     fontWeight: 800,
     outline: "none",
+    fontFamily: "inherit",
+};
+
+const errorStyle: CSSProperties = {
+    marginTop: 12,
+    display: "flex",
+    alignItems: "center",
+    gap: 6,
+    color: "#ef4444",
+    fontSize: 13,
+    fontWeight: 700,
+    lineHeight: 1.5,
+};
+
+const submitButtonStyle: CSSProperties = {
+    marginTop: 20,
+    width: "100%",
+    minHeight: 54,
+    border: "none",
+    borderRadius: 14,
+    fontSize: 15,
+    fontWeight: 900,
     fontFamily: "inherit",
 };
 
