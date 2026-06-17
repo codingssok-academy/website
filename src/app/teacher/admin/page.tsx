@@ -220,7 +220,7 @@ export default function ParentCodeAdminPage() {
         <div className="code-admin">
             <div className="page-head">
                 <div>
-                    <div className="eyebrow">Parent Access Console</div>
+                    <div className="eyebrow">학부모 인증 관리</div>
                     <h1>학부모 코드 관리</h1>
                     <p>학생별 인증번호를 발급하고, 형제/자매는 같은 번호로 묶어서 학부모 포털 접근을 관리합니다.</p>
                 </div>
@@ -461,8 +461,8 @@ function formatDate(value: string | null) {
 const styles = `
 .code-admin {
     min-height: 100vh;
-    color: #0f172a;
-    background: #f5f8fc;
+    color: #111827;
+    background: #f4f6f9;
     font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
 }
 .page-head {
@@ -473,18 +473,17 @@ const styles = `
     margin-bottom: 22px;
 }
 .eyebrow {
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 900;
-    letter-spacing: 0.16em;
-    color: #2563eb;
-    text-transform: uppercase;
+    letter-spacing: 0;
+    color: #4b5563;
     margin-bottom: 8px;
 }
 h1 {
     margin: 0;
-    font-size: 34px;
-    line-height: 1.15;
-    font-weight: 950;
+    font-size: 30px;
+    line-height: 1.2;
+    font-weight: 900;
     letter-spacing: 0;
 }
 .page-head p {
@@ -634,7 +633,7 @@ button {
     min-height: 42px;
     padding: 0 16px;
     color: #ffffff;
-    background: #2563eb;
+    background: #1f2937;
 }
 .dark-btn {
     min-height: 42px;

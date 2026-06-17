@@ -39,6 +39,7 @@ type StudentAccountsRpcResponse = {
     error?: string;
     students?: unknown[];
     stats?: Record<string, number>;
+    warning?: string;
 };
 
 const STUDENT_COLUMNS = "id,name,grade,class,pin,status,created_at,updated_at,auth_user_id";
@@ -112,14 +113,21 @@ async function listAuthUsers(admin: NonNullable<ReturnType<typeof createAdminCli
 }
 
 async function loadStudentAccounts(admin: NonNullable<ReturnType<typeof createAdminClient>>) {
-    const [studentsRes, profilesRes, authUsers] = await Promise.all([
+    const [studentsRes, profilesRes] = await Promise.all([
         admin.from("students").select(STUDENT_COLUMNS).order("name", { ascending: true }),
         admin.from("profiles").select(PROFILE_COLUMNS),
-        listAuthUsers(admin),
     ]);
 
     if (studentsRes.error) throw new Error(studentsRes.error.message);
     if (profilesRes.error) throw new Error(profilesRes.error.message);
+
+    let authUsers = new Map<string, AuthUserSummary>();
+    let warning: string | null = null;
+    try {
+        authUsers = await listAuthUsers(admin);
+    } catch (error) {
+        warning = error instanceof Error ? error.message : "Auth user list was unavailable.";
+    }
 
     const profiles = new Map((profilesRes.data || []).map(profile => [profile.id, profile as ProfileRow]));
     const linkedProfileIds = new Set<string>();
@@ -155,7 +163,10 @@ async function loadStudentAccounts(admin: NonNullable<ReturnType<typeof createAd
 
     const orphanAccounts = (profilesRes.data || [])
         .map(profile => profile as ProfileRow)
-        .filter(profile => profile.role === "student" && !linkedProfileIds.has(profile.id) && authUsers.has(profile.id))
+        .filter(profile => {
+            if (profile.role !== "student" || linkedProfileIds.has(profile.id)) return false;
+            return authUsers.size > 0 ? authUsers.has(profile.id) : true;
+        })
         .map(profile => {
             const authUser = authUsers.get(profile.id) || null;
             return {
@@ -192,7 +203,12 @@ async function loadStudentAccounts(admin: NonNullable<ReturnType<typeof createAd
         orphan: orphanAccounts.length,
     };
 
-    return { success: true, students, stats };
+    return {
+        success: true,
+        students,
+        stats,
+        warning: warning ? "Auth 사용자 목록을 직접 조회하지 못해 프로필 기준으로 계정 상태를 표시합니다." : undefined,
+    };
 }
 
 async function updateStatusWithAdmin(admin: NonNullable<ReturnType<typeof createAdminClient>>, body: Record<string, unknown>) {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { RefreshCw, ShieldCheck, Trash2, UserCheck, UserMinus, Users } from "lucide-react";
+import { RefreshCw, Trash2 } from "lucide-react";
 
 type StudentAccount = {
     id: string;
@@ -39,6 +39,7 @@ type ApiResponse = {
     students?: StudentAccount[];
     stats?: Stats;
     error?: string;
+    warning?: string;
 };
 
 const FILTERS = [
@@ -80,7 +81,7 @@ export default function StudentAccountsPage() {
     const [query, setQuery] = useState("");
     const [loading, setLoading] = useState(true);
     const [actingId, setActingId] = useState<string | null>(null);
-    const [message, setMessage] = useState<{ type: "ok" | "error"; text: string } | null>(null);
+    const [message, setMessage] = useState<{ type: "ok" | "error" | "info"; text: string } | null>(null);
 
     const load = useCallback(async () => {
         setLoading(true);
@@ -91,6 +92,7 @@ export default function StudentAccountsPage() {
             if (!res.ok || !data.success) throw new Error(data.error || "학생 계정 목록을 불러오지 못했습니다.");
             setStudents(data.students || []);
             setStats(data.stats || { total: 0, linked: 0, unlinked: 0, approved: 0, deactivated: 0, pending: 0, orphan: 0 });
+            if (data.warning) setMessage({ type: "info", text: data.warning });
         } catch (error) {
             setStudents([]);
             setMessage({ type: "error", text: error instanceof Error ? error.message : "목록 조회 실패" });
@@ -175,7 +177,7 @@ export default function StudentAccountsPage() {
         <div className="student-account-page">
             <header className="page-head">
                 <div>
-                    <div className="eyebrow">Student Account Control</div>
+                    <div className="eyebrow">계정 운영</div>
                     <h1>학생 회원가입 계정 관리</h1>
                     <p>학부모 인증번호는 유지하면서 학생 로그인 계정만 해제하거나, 학생 상태를 관리합니다.</p>
                 </div>
@@ -186,10 +188,10 @@ export default function StudentAccountsPage() {
             </header>
 
             <section className="stat-grid">
-                <Stat icon={<Users size={24} />} label="학생 목록" value={stats.total} />
-                <Stat icon={<UserCheck size={24} />} label="회원가입 완료" value={stats.linked} />
-                <Stat icon={<UserMinus size={24} />} label="미가입" value={stats.unlinked} />
-                <Stat icon={<ShieldCheck size={24} />} label="미연결 계정" value={stats.orphan} />
+                <Stat label="학생 목록" value={stats.total} />
+                <Stat label="회원가입 완료" value={stats.linked} />
+                <Stat label="미가입" value={stats.unlinked} />
+                <Stat label="미연결 계정" value={stats.orphan} />
             </section>
 
             {message && (
@@ -291,10 +293,11 @@ export default function StudentAccountsPage() {
 
             <style>{`
                 .student-account-page {
-                    padding: 48px 52px;
+                    padding: 32px 36px;
                     min-height: 100vh;
-                    background: #f6f9fe;
-                    color: #0f172a;
+                    background: #f4f6f9;
+                    color: #111827;
+                    font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
                 }
                 .page-head {
                     display: flex;
@@ -304,34 +307,33 @@ export default function StudentAccountsPage() {
                     margin-bottom: 24px;
                 }
                 .eyebrow {
-                    color: #2563eb;
-                    font-size: 13px;
+                    color: #4b5563;
+                    font-size: 12px;
                     font-weight: 900;
-                    letter-spacing: 0.16em;
-                    text-transform: uppercase;
+                    letter-spacing: 0;
                     margin-bottom: 8px;
                 }
                 h1 {
-                    font-size: clamp(34px, 4vw, 54px);
-                    line-height: 1.04;
-                    letter-spacing: -0.04em;
-                    margin: 0 0 14px;
-                    font-weight: 950;
+                    font-size: 30px;
+                    line-height: 1.2;
+                    letter-spacing: 0;
+                    margin: 0 0 10px;
+                    font-weight: 900;
                 }
                 p {
                     margin: 0;
-                    color: #52627a;
-                    font-size: 16px;
-                    line-height: 1.65;
-                    font-weight: 650;
+                    color: #6b7280;
+                    font-size: 14px;
+                    line-height: 1.6;
+                    font-weight: 600;
                 }
                 .ghost-btn, .actions button, .filters button {
-                    border: 1px solid #d7e2f2;
+                    border: 1px solid #d9e1ec;
                     background: #fff;
-                    color: #223047;
-                    border-radius: 12px;
-                    min-height: 42px;
-                    padding: 0 14px;
+                    color: #1f2937;
+                    border-radius: 7px;
+                    min-height: 38px;
+                    padding: 0 12px;
                     display: inline-flex;
                     align-items: center;
                     justify-content: center;
@@ -347,44 +349,32 @@ export default function StudentAccountsPage() {
                 .stat-grid {
                     display: grid;
                     grid-template-columns: repeat(4, minmax(0, 1fr));
-                    gap: 14px;
-                    margin-bottom: 20px;
+                    gap: 10px;
+                    margin-bottom: 16px;
                 }
                 .stat-card {
                     background: #fff;
-                    border: 1px solid #d7e2f2;
-                    border-radius: 14px;
-                    padding: 22px 24px;
-                    display: flex;
-                    align-items: center;
-                    gap: 16px;
-                }
-                .stat-icon {
-                    width: 52px;
-                    height: 52px;
-                    border-radius: 14px;
-                    background: #eef5ff;
-                    color: #2563eb;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
+                    border: 1px solid #d9e1ec;
+                    border-radius: 8px;
+                    padding: 16px 18px;
                 }
                 .stat-value {
-                    font-size: 32px;
+                    font-size: 28px;
                     font-weight: 950;
-                    letter-spacing: -0.04em;
+                    letter-spacing: 0;
                 }
                 .stat-label {
-                    font-size: 13px;
-                    color: #52627a;
+                    font-size: 12px;
+                    color: #6b7280;
                     font-weight: 850;
-                    margin-top: 3px;
+                    margin-top: 5px;
                 }
                 .notice {
-                    border-radius: 12px;
-                    padding: 14px 16px;
-                    margin: 0 0 18px;
+                    border-radius: 8px;
+                    padding: 12px 14px;
+                    margin: 0 0 14px;
                     font-weight: 850;
+                    font-size: 13px;
                     border: 1px solid;
                 }
                 .notice.ok {
@@ -397,11 +387,16 @@ export default function StudentAccountsPage() {
                     border-color: #fecaca;
                     color: #b91c1c;
                 }
+                .notice.info {
+                    background: #f8fafc;
+                    border-color: #d9e1ec;
+                    color: #475569;
+                }
                 .toolbar {
                     background: #fff;
-                    border: 1px solid #d7e2f2;
-                    border-radius: 14px;
-                    padding: 14px;
+                    border: 1px solid #d9e1ec;
+                    border-radius: 8px;
+                    padding: 12px;
                     display: flex;
                     justify-content: space-between;
                     gap: 12px;
@@ -413,15 +408,15 @@ export default function StudentAccountsPage() {
                     flex-wrap: wrap;
                 }
                 .filters button.active {
-                    background: #2563eb;
-                    border-color: #2563eb;
+                    background: #1f2937;
+                    border-color: #1f2937;
                     color: #fff;
                 }
                 input {
                     width: min(320px, 100%);
-                    min-height: 42px;
-                    border: 1px solid #d7e2f2;
-                    border-radius: 12px;
+                    min-height: 38px;
+                    border: 1px solid #d9e1ec;
+                    border-radius: 7px;
                     padding: 0 14px;
                     font-size: 14px;
                     font-weight: 800;
@@ -430,8 +425,8 @@ export default function StudentAccountsPage() {
                 }
                 .table-wrap {
                     background: #fff;
-                    border: 1px solid #d7e2f2;
-                    border-radius: 16px;
+                    border: 1px solid #d9e1ec;
+                    border-radius: 8px;
                     overflow: hidden;
                 }
                 .table-head, .table-row {
@@ -442,15 +437,15 @@ export default function StudentAccountsPage() {
                 }
                 .table-head {
                     padding: 14px 20px;
-                    background: #f8fbff;
-                    color: #52627a;
+                    background: #f8fafc;
+                    color: #4b5563;
                     font-size: 12px;
                     font-weight: 950;
                     border-bottom: 1px solid #e4edf8;
                 }
                 .table-row {
-                    padding: 16px 20px;
-                    border-bottom: 1px solid #eef3f9;
+                    padding: 14px 20px;
+                    border-bottom: 1px solid #edf1f6;
                 }
                 .table-row:last-child {
                     border-bottom: none;
@@ -462,16 +457,16 @@ export default function StudentAccountsPage() {
                     min-width: 0;
                 }
                 .avatar {
-                    width: 42px;
-                    height: 42px;
-                    border-radius: 12px;
-                    background: linear-gradient(135deg, #2563eb, #0ea5e9);
-                    color: #fff;
+                    width: 34px;
+                    height: 34px;
+                    border-radius: 7px;
+                    background: #eef2f7;
+                    color: #1f2937;
                     display: flex;
                     align-items: center;
                     justify-content: center;
                     font-size: 16px;
-                    font-weight: 950;
+                    font-weight: 900;
                     flex: 0 0 auto;
                 }
                 strong {
@@ -493,8 +488,8 @@ export default function StudentAccountsPage() {
                 .pill, .status {
                     display: inline-flex;
                     align-items: center;
-                    min-height: 26px;
-                    border-radius: 999px;
+                    min-height: 24px;
+                    border-radius: 7px;
                     padding: 0 10px;
                     font-size: 12px;
                     font-weight: 950;
@@ -518,7 +513,7 @@ export default function StudentAccountsPage() {
                 }
                 .actions button {
                     min-height: 36px;
-                    border-radius: 10px;
+                    border-radius: 7px;
                     font-size: 12px;
                     padding: 0 12px;
                 }
@@ -567,14 +562,11 @@ export default function StudentAccountsPage() {
     );
 }
 
-function Stat({ icon, label, value }: { icon: React.ReactNode; label: string; value: number }) {
+function Stat({ label, value }: { label: string; value: number }) {
     return (
         <div className="stat-card">
-            <div className="stat-icon">{icon}</div>
-            <div>
-                <div className="stat-value">{value}</div>
-                <div className="stat-label">{label}</div>
-            </div>
+            <div className="stat-value">{value}</div>
+            <div className="stat-label">{label}</div>
         </div>
     );
 }

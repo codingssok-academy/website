@@ -1,12 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import {
     AlertTriangle,
     ClipboardCopy,
     Download,
-    Eye,
     FileText,
     MessageSquareText,
     Pencil,
@@ -201,6 +200,7 @@ export default function GrowthManagementPage() {
     const [saving, setSaving] = useState(false);
     const [migrationRequired, setMigrationRequired] = useState(false);
     const [message, setMessage] = useState<{ type: "ok" | "error"; text: string } | null>(null);
+    const selectedIdRef = useRef("");
 
     const recordByStudent = useMemo(() => new Map(records.map(record => [record.student_id, record])), [records]);
     const entriesByStudent = useMemo(() => {
@@ -251,6 +251,7 @@ export default function GrowthManagementPage() {
     const selectStudent = useCallback((studentId: string, sourceStudents = students, sourceRecords = records) => {
         const student = sourceStudents.find(item => item.id === studentId);
         const record = sourceRecords.find(item => item.student_id === studentId);
+        selectedIdRef.current = studentId;
         setSelectedId(studentId);
         if (record) setForm(toForm(record, student));
         else if (student) setForm(newForm(student));
@@ -258,6 +259,7 @@ export default function GrowthManagementPage() {
 
     const load = useCallback(async () => {
         setLoading(true);
+        setMessage(null);
         try {
             const response = await fetch("/api/teacher/growth-management", { cache: "no-store" });
             const data = await response.json() as ApiResponse;
@@ -270,16 +272,26 @@ export default function GrowthManagementPage() {
             setEntries(data.entries || []);
             setMigrationRequired(Boolean(data.migrationRequired));
 
-            const nextSelected = selectedId && nextStudents.some(student => student.id === selectedId)
-                ? selectedId
+            const previousSelected = selectedIdRef.current;
+            const nextSelected = previousSelected && nextStudents.some(student => student.id === previousSelected)
+                ? previousSelected
                 : nextStudents[0]?.id || "";
-            if (nextSelected) selectStudent(nextSelected, nextStudents, nextRecords);
+            selectedIdRef.current = nextSelected;
+            setSelectedId(nextSelected);
+            if (nextSelected) {
+                const student = nextStudents.find(item => item.id === nextSelected);
+                const record = nextRecords.find(item => item.student_id === nextSelected);
+                if (record) setForm(toForm(record, student));
+                else if (student) setForm(newForm(student));
+            } else {
+                setForm(EMPTY_FORM);
+            }
         } catch (error) {
             setMessage({ type: "error", text: error instanceof Error ? error.message : "성장관리표를 불러오지 못했습니다." });
         } finally {
             setLoading(false);
         }
-    }, [selectStudent, selectedId]);
+    }, []);
 
     useEffect(() => {
         void load();
@@ -375,14 +387,53 @@ export default function GrowthManagementPage() {
         setMessage({ type: "ok", text: "학부모 전달용 피드백을 복사했습니다." });
     };
 
+    if (loading && students.length === 0) {
+        return (
+            <div className="growth-page loading-shell">
+                <div className="loading-card">
+                    <strong>성장 기록을 불러오는 중입니다.</strong>
+                    <span>학생 목록과 누적 기록을 확인하고 있습니다.</span>
+                </div>
+                <style>{`
+                    .growth-page.loading-shell {
+                        min-height: calc(100vh - 48px);
+                        display: grid;
+                        place-items: center;
+                        background: #f4f6f9;
+                        color: #111827;
+                        font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
+                    }
+                    .loading-card {
+                        width: min(420px, 100%);
+                        border: 1px solid #d9e1ec;
+                        background: #ffffff;
+                        border-radius: 8px;
+                        padding: 22px 24px;
+                        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+                    }
+                    .loading-card strong {
+                        display: block;
+                        font-size: 16px;
+                        font-weight: 900;
+                        margin-bottom: 8px;
+                    }
+                    .loading-card span {
+                        color: #6b7280;
+                        font-size: 13px;
+                        font-weight: 700;
+                    }
+                `}</style>
+            </div>
+        );
+    }
+
     return (
         <div className="growth-page">
             <section className="growth-main">
                 <header className="growth-header">
                     <div className="header-title-wrap">
-                        <div className="header-icon"><Eye size={28} /></div>
                         <div>
-                            <div className="eyebrow">GROWTH MANAGEMENT</div>
+                            <div className="eyebrow">성장 관리</div>
                             <h1>성장 기록 한눈에 보기</h1>
                             <p>학생 성장 관리표에서 작성 상태와 핵심 내용을 한 번에 확인하고, 기록을 누적 관리합니다.</p>
                         </div>
@@ -604,45 +655,44 @@ export default function GrowthManagementPage() {
             </aside>
 
             <style>{`
-                .growth-page { min-height: calc(100vh - 48px); display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 22px; color: #0f172a; }
+                .growth-page { min-height: calc(100vh - 48px); display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 18px; color: #111827; background: #f4f6f9; font-family: 'Pretendard', 'Noto Sans KR', sans-serif; }
                 .growth-main { min-width: 0; }
-                .growth-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; margin-bottom: 24px; }
+                .growth-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; margin-bottom: 20px; }
                 .header-title-wrap { display: flex; align-items: center; gap: 18px; }
-                .header-icon { width: 58px; height: 58px; border-radius: 18px; display: grid; place-items: center; background: #eaf2ff; color: #2563eb; }
-                .eyebrow { font-size: 13px; letter-spacing: .22em; font-weight: 900; color: #2563eb; }
-                h1 { margin: 4px 0 8px; font-size: clamp(32px, 4.5vw, 52px); line-height: 1.04; letter-spacing: -0.04em; }
+                .eyebrow { font-size: 12px; letter-spacing: 0; font-weight: 900; color: #4b5563; }
+                h1 { margin: 4px 0 8px; font-size: 30px; line-height: 1.2; letter-spacing: 0; }
                 p { margin: 0; }
-                .growth-header p { color: #64748b; font-size: 16px; }
+                .growth-header p { color: #6b7280; font-size: 14px; font-weight: 600; }
                 .header-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: flex-end; }
                 .last-sync { display: inline-flex; align-items: center; gap: 8px; color: #64748b; font-size: 13px; font-weight: 700; }
                 button, input, select, textarea { font: inherit; }
                 button { cursor: pointer; }
-                .subtle-button, .primary, .outline, .danger { min-height: 40px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-weight: 850; border: 1px solid #dbe6f5; background: #fff; color: #1e293b; padding: 0 15px; }
-                .primary { background: #2563eb; border-color: #2563eb; color: #fff; box-shadow: 0 14px 24px rgba(37,99,235,.22); }
+                .subtle-button, .primary, .outline, .danger { min-height: 38px; border-radius: 7px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-weight: 850; border: 1px solid #d9e1ec; background: #fff; color: #1f2937; padding: 0 13px; }
+                .primary { background: #1f2937; border-color: #1f2937; color: #fff; box-shadow: none; }
                 .danger { color: #dc2626; }
-                .outline { color: #2563eb; }
+                .outline { color: #1f2937; }
                 button:disabled { opacity: .5; cursor: not-allowed; }
-                .notice { display: flex; align-items: center; gap: 10px; border-radius: 14px; padding: 14px 16px; margin-bottom: 16px; font-weight: 800; }
+                .notice { display: flex; align-items: center; gap: 10px; border-radius: 8px; padding: 12px 14px; margin-bottom: 14px; font-size: 13px; font-weight: 800; }
                 .notice.error { color: #dc2626; background: #fff1f2; border: 1px solid #fecdd3; }
                 .notice.ok { color: #047857; background: #ecfdf5; border: 1px solid #a7f3d0; }
                 .filters { display: grid; grid-template-columns: 1.15fr .8fr .8fr 1fr 1.25fr; gap: 14px; margin-bottom: 22px; align-items: end; }
                 label { display: grid; gap: 8px; font-size: 12px; color: #334155; font-weight: 900; }
-                select, input, textarea { width: 100%; border: 1px solid #dbe6f5; background: #fff; color: #0f172a; border-radius: 12px; min-height: 44px; padding: 0 13px; outline: none; }
+                select, input, textarea { width: 100%; border: 1px solid #d9e1ec; background: #fff; color: #111827; border-radius: 7px; min-height: 40px; padding: 0 12px; outline: none; }
                 textarea { min-height: 78px; padding: 12px 13px; resize: vertical; line-height: 1.55; }
                 .search-field div { position: relative; }
                 .search-field svg { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
                 .search-field input { padding-right: 42px; }
                 .quick-filter { display: flex; align-items: end; gap: 7px; flex-wrap: wrap; }
                 .quick-filter span { width: 100%; color: #334155; font-size: 12px; font-weight: 900; }
-                .quick-filter button { min-height: 34px; border: 1px solid #dbe6f5; background: #fff; border-radius: 10px; padding: 0 10px; color: #64748b; font-size: 12px; font-weight: 850; }
-                .quick-filter button.active { background: #2563eb; border-color: #2563eb; color: #fff; }
+                .quick-filter button { min-height: 32px; border: 1px solid #d9e1ec; background: #fff; border-radius: 7px; padding: 0 10px; color: #64748b; font-size: 12px; font-weight: 850; }
+                .quick-filter button.active { background: #1f2937; border-color: #1f2937; color: #fff; }
                 .stats { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; margin-bottom: 22px; }
-                .stat { min-height: 102px; border: 1px solid #dbe6f5; border-radius: 16px; background: #fff; padding: 18px; display: flex; align-items: center; gap: 14px; box-shadow: 0 10px 24px rgba(15,23,42,.04); }
-                .stat-icon { width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center; background: #eff6ff; }
+                .stat { min-height: 92px; border: 1px solid #d9e1ec; border-radius: 8px; background: #fff; padding: 16px; display: flex; align-items: center; gap: 12px; box-shadow: none; }
+                .stat-icon { width: 40px; height: 40px; border-radius: 7px; display: grid; place-items: center; background: #eef2f7; }
                 .stat-icon svg { width: 24px; height: 24px; }
-                .stat strong { display: block; font-size: 29px; line-height: 1; letter-spacing: -.04em; }
+                .stat strong { display: block; font-size: 26px; line-height: 1; letter-spacing: 0; }
                 .stat span { display: block; margin-top: 8px; color: #64748b; font-size: 12px; font-weight: 800; }
-                .matrix-card { border: 1px solid #dbe6f5; background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 18px 40px rgba(15,23,42,.05); }
+                .matrix-card { border: 1px solid #d9e1ec; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: none; }
                 .tabs { display: flex; border-bottom: 1px solid #e2e8f0; }
                 .tabs button { min-height: 48px; padding: 0 24px; border: 0; background: #fff; color: #475569; font-weight: 900; border-right: 1px solid #e2e8f0; }
                 .tabs button.active { color: #2563eb; box-shadow: inset 0 -3px 0 #2563eb; }
@@ -658,9 +708,9 @@ export default function GrowthManagementPage() {
                 .student-cell { display: flex; align-items: center; gap: 10px; }
                 .student-cell span { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; background: #eaf2ff; color: #2563eb; font-weight: 950; }
                 .empty-row, .empty-state { min-height: 160px; text-align: center; color: #94a3b8; font-weight: 800; padding: 56px 20px; }
-                .detail-panel { position: sticky; top: 24px; height: calc(100vh - 48px); overflow-y: auto; border: 1px solid #e2e8f0; background: rgba(255,255,255,.95); border-radius: 22px; padding: 22px; box-shadow: 0 24px 60px rgba(15,23,42,.08); }
+                .detail-panel { position: sticky; top: 24px; height: calc(100vh - 48px); overflow-y: auto; border: 1px solid #d9e1ec; background: #ffffff; border-radius: 8px; padding: 20px; box-shadow: none; }
                 .detail-head { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
-                .large-avatar { width: 62px; height: 62px; border-radius: 18px; display: grid; place-items: center; background: #eaf2ff; color: #2563eb; font-size: 29px; font-weight: 950; }
+                .large-avatar { width: 52px; height: 52px; border-radius: 8px; display: grid; place-items: center; background: #eef2f7; color: #1f2937; font-size: 24px; font-weight: 950; }
                 .detail-head h2 { margin: 0 0 6px; font-size: 26px; }
                 .detail-head p { color: #64748b; font-size: 13px; font-weight: 800; }
                 .completion { display: grid; gap: 8px; margin-bottom: 18px; }
