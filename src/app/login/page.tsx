@@ -58,6 +58,7 @@ interface StudentRow {
   id: string;
   name: string;
   grade: string | null;
+  class?: string | null;
   avatar: string | null;
   auth_user_id?: string | null;
   status?: string | null;
@@ -168,7 +169,7 @@ export default function LoginPage() {
       // 로그인은 이미 가입된 학생 계정만 허용한다. 새 학생은 회원가입에서 학부모 인증번호를 먼저 확인한다.
       const { data: matched, error } = await sb
         .from("students")
-        .select("id, name, grade, avatar, auth_user_id, status")
+        .select("id, name, grade, class, avatar, auth_user_id, status")
         .eq("name", trimmed)
         .maybeSingle();
 
@@ -236,12 +237,14 @@ export default function LoginPage() {
 
   /* ── 로그인 처리 ── */
   const loginAs = (student: StudentRow, authUserId: string) => {
+    const isAdminStudent = student.class?.replace(/\s+/g, "").toLowerCase() === "admin"
+      || ["구자현", "장민"].includes(student.name.replace(/\s+/g, ""));
     const profile = {
       id: authUserId,
       studentId: student.id,
       name: student.name,
       email: buildStudentAuthEmail(student.id),
-      role: "student" as const,
+      role: isAdminStudent ? "admin" as const : "student" as const,
       grade: student.grade || undefined,
       avatar: student.avatar || undefined,
       level: 1, xp: 0, streak: 0,
@@ -251,7 +254,7 @@ export default function LoginPage() {
     document.cookie = `codingssok_session=${authUserId}; path=/; max-age=${60 * 60 * 24 * 30}; Secure; SameSite=Lax`;
     const params = new URLSearchParams(window.location.search);
     const redirect = params.get("redirect");
-    window.location.href = redirect || "/dashboard/learning";
+    window.location.href = redirect || (isAdminStudent ? "/teacher/admin" : "/dashboard/learning");
   };
 
   /* ── PIN digit style ── */
