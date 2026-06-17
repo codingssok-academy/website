@@ -11,7 +11,6 @@ const TEXT_FIELDS = [
     "studentName",
     "currentClass",
     "temperament",
-    "skillLevel",
     "strengths",
     "weaknesses",
     "currentGoal",
@@ -32,6 +31,15 @@ type DbError = {
 function readText(body: Record<string, unknown>, key: TextField, max = 4000) {
     const value = body[key];
     return typeof value === "string" ? value.trim().slice(0, max) : "";
+}
+
+function readString(body: Record<string, unknown>, key: string, max = 4000) {
+    const value = body[key];
+    return typeof value === "string" ? value.trim().slice(0, max) : "";
+}
+
+function readBoolean(body: Record<string, unknown>, key: string) {
+    return body[key] === true;
 }
 
 function isMissingGrowthTable(error: DbError | null) {
@@ -123,12 +131,15 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = await createClient();
+    const autoSave = readBoolean(body, "autoSave");
+    const createEntry = readBoolean(body, "createEntry");
+    const entryNote = readText(body, "entryNote");
     const payload = {
         student_id: studentId,
         student_name: readText(body, "studentName", 120),
         current_class: readText(body, "currentClass", 120),
         temperament: readText(body, "temperament", 1000),
-        skill_level: readText(body, "skillLevel", 120),
+        skill_level: null,
         strengths: readText(body, "strengths"),
         weaknesses: readText(body, "weaknesses"),
         current_goal: readText(body, "currentGoal"),
@@ -136,7 +147,7 @@ export async function POST(request: NextRequest) {
         class_progress: readText(body, "classProgress"),
         parent_feedback_draft: readText(body, "parentFeedbackDraft"),
         teacher_memo: readText(body, "teacherMemo"),
-        status: "active",
+        status: readString(body, "recordStatus", 120) || "관찰중",
         created_by: auth.userId,
         updated_by: auth.userId,
     };
@@ -154,8 +165,8 @@ export async function POST(request: NextRequest) {
         class_progress: payload.class_progress,
         parent_feedback_draft: payload.parent_feedback_draft,
         teacher_memo: payload.teacher_memo,
-        entry_note: readText(body, "entryNote"),
-        status: "active",
+        entry_note: entryNote,
+        status: payload.status,
         created_by: auth.userId,
     };
 
@@ -167,6 +178,10 @@ export async function POST(request: NextRequest) {
             .single();
 
         if (upsertError) throw new Error(upsertError.message);
+
+        if (autoSave && !createEntry && !entryNote) {
+            return NextResponse.json({ success: true, record, entry: null }, { headers: NO_STORE_HEADERS });
+        }
 
         const { data: entry, error: entryError } = await supabase
             .from("student_growth_entries")

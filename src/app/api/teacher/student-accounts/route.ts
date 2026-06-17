@@ -45,6 +45,46 @@ type StudentAccountsRpcResponse = {
 const STUDENT_COLUMNS = "id,name,grade,class,pin,status,created_at,updated_at,auth_user_id";
 const PROFILE_COLUMNS = "id,email,role,name,display_name,approval_status";
 const MUTABLE_STATUSES = new Set(["pending", "approved", "deactivated", "rejected"]);
+const ACTIVE_STUDENT_NAMES = new Set([
+    "탁규원",
+    "김무성",
+    "김주찬",
+    "전예준",
+    "윤유림",
+    "김성윤",
+    "한효제",
+    "박하준",
+    "이현구",
+    "오서영",
+    "민다온",
+    "김우현",
+    "박리현",
+    "강지호",
+    "김은별",
+    "노현승",
+    "김주원",
+    "석정현",
+    "유시호",
+    "한보윤",
+    "한보리",
+    "김기석",
+    "박지용",
+    "임하준",
+    "이다연",
+    "길태웅",
+    "하우빈",
+    "김영호",
+    "박도현",
+    "서민호",
+    "이세라",
+    "엄찬유",
+    "김윤호",
+    "변승완",
+    "김태현",
+    "김민준",
+    "조예준",
+    "이시아",
+]);
 
 function normalizeStatus(input: unknown) {
     return typeof input === "string" ? input.trim() : "";
@@ -52,6 +92,10 @@ function normalizeStatus(input: unknown) {
 
 function normalizeId(input: unknown) {
     return typeof input === "string" ? input.trim() : "";
+}
+
+function normalizeStudentName(input: unknown) {
+    return typeof input === "string" ? input.replace(/\s+/g, "").trim() : "";
 }
 
 function isProtectedProfile(profile: ProfileRow | null | undefined) {
@@ -132,12 +176,14 @@ async function loadStudentAccounts(admin: NonNullable<ReturnType<typeof createAd
     const profiles = new Map((profilesRes.data || []).map(profile => [profile.id, profile as ProfileRow]));
     const linkedProfileIds = new Set<string>();
 
-    const studentAccounts = ((studentsRes.data || []) as StudentRow[])
+    const allStudentAccounts = ((studentsRes.data || []) as StudentRow[])
         .filter(student => student.class !== "admin")
         .map(student => {
             const profile = student.auth_user_id ? profiles.get(student.auth_user_id) || null : null;
             const authUser = student.auth_user_id ? authUsers.get(student.auth_user_id) || null : null;
             if (student.auth_user_id) linkedProfileIds.add(student.auth_user_id);
+            const isActiveRoster = ACTIVE_STUDENT_NAMES.has(normalizeStudentName(student.name));
+            const deleteRecommended = !isActiveRoster && Boolean(student.auth_user_id && !isProtectedProfile(profile));
 
             return {
                 id: student.id,
@@ -158,8 +204,15 @@ async function loadStudentAccounts(admin: NonNullable<ReturnType<typeof createAd
                 authCreatedAt: authUser?.created_at || null,
                 lastSignInAt: authUser?.last_sign_in_at || null,
                 canDeleteAccount: Boolean(student.auth_user_id && !isProtectedProfile(profile)),
+                deleteRecommended,
+                recommendationReason: deleteRecommended ? "운영 38명 명단 기준 밖 회원가입 계정" : null,
             };
         });
+
+    const studentAccounts = allStudentAccounts.filter(student => {
+        if (ACTIVE_STUDENT_NAMES.has(normalizeStudentName(student.name))) return true;
+        return student.deleteRecommended;
+    });
 
     const orphanAccounts = (profilesRes.data || [])
         .map(profile => profile as ProfileRow)
@@ -188,6 +241,8 @@ async function loadStudentAccounts(admin: NonNullable<ReturnType<typeof createAd
                 authCreatedAt: authUser?.created_at || null,
                 lastSignInAt: authUser?.last_sign_in_at || null,
                 canDeleteAccount: !isProtectedProfile(profile),
+                deleteRecommended: true,
+                recommendationReason: "학생 목록과 연결되지 않은 회원가입 계정",
             };
         })
         .sort((a, b) => a.name.localeCompare(b.name, "ko"));
@@ -201,6 +256,7 @@ async function loadStudentAccounts(admin: NonNullable<ReturnType<typeof createAd
         deactivated: students.filter(student => student.status === "deactivated").length,
         pending: students.filter(student => student.status === "pending").length,
         orphan: orphanAccounts.length,
+        deleteRecommended: students.filter(student => student.deleteRecommended).length,
     };
 
     return {

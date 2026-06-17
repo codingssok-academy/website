@@ -32,6 +32,10 @@ export default function AdminLayoutClient({ children }: { children: ReactNode })
                     .admin-main-content {
                         margin-left: 240px;
                         padding: 24px 32px;
+                        transition: margin-left 180ms ease;
+                    }
+                    body.admin-sidebar-collapsed .admin-main-content {
+                        margin-left: 76px;
                     }
                 }
                 @media (max-width: 767px) {
