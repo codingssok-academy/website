@@ -102,6 +102,38 @@ function isProtectedProfile(profile: ProfileRow | null | undefined) {
     return profile?.role === "teacher" || profile?.role === "admin";
 }
 
+async function deactivateProfile(admin: NonNullable<ReturnType<typeof createAdminClient>>, accountId: string) {
+    const timestamp = new Date().toISOString();
+    const { error } = await admin
+        .from("profiles")
+        .update({ approval_status: "deactivated", updated_at: timestamp })
+        .eq("id", accountId);
+
+    if (!error) return;
+
+    const message = error.message || "";
+    if (!message.includes("updated_at")) throw new Error(message);
+
+    const fallback = await admin
+        .from("profiles")
+        .update({ approval_status: "deactivated" })
+        .eq("id", accountId);
+
+    if (fallback.error) throw new Error(fallback.error.message);
+}
+
+async function clearParentLoginBridge(admin: NonNullable<ReturnType<typeof createAdminClient>>, accountId: string) {
+    try {
+        await admin
+            .from("study_progress")
+            .delete()
+            .eq("user_id", accountId)
+            .eq("course_id", "__parent_pin__");
+    } catch {
+        // Login account unlinking must not fail just because the optional bridge table is unavailable.
+    }
+}
+
 async function proxyStudentAccountsToRpc(action: string, payload: Record<string, unknown> = {}) {
     const supabase = await createClient();
     const {
@@ -218,6 +250,7 @@ async function loadStudentAccounts(admin: NonNullable<ReturnType<typeof createAd
         .map(profile => profile as ProfileRow)
         .filter(profile => {
             if (profile.role !== "student" || linkedProfileIds.has(profile.id)) return false;
+            if (profile.approval_status === "deactivated") return false;
             return authUsers.size > 0 ? authUsers.has(profile.id) : true;
         })
         .map(profile => {
@@ -248,13 +281,16 @@ async function loadStudentAccounts(admin: NonNullable<ReturnType<typeof createAd
         .sort((a, b) => a.name.localeCompare(b.name, "ko"));
 
     const students = [...studentAccounts, ...orphanAccounts];
+    const activeRosterAccounts = studentAccounts.filter(student =>
+        ACTIVE_STUDENT_NAMES.has(normalizeStudentName(student.name)),
+    );
     const stats = {
-        total: students.length,
-        linked: students.filter(student => student.accountLinked).length,
-        unlinked: studentAccounts.filter(student => !student.accountLinked).length,
-        approved: students.filter(student => student.status === "approved").length,
-        deactivated: students.filter(student => student.status === "deactivated").length,
-        pending: students.filter(student => student.status === "pending").length,
+        total: ACTIVE_STUDENT_NAMES.size,
+        linked: activeRosterAccounts.filter(student => student.accountLinked).length,
+        unlinked: activeRosterAccounts.filter(student => !student.accountLinked).length,
+        approved: activeRosterAccounts.filter(student => student.status === "approved").length,
+        deactivated: activeRosterAccounts.filter(student => student.status === "deactivated").length,
+        pending: activeRosterAccounts.filter(student => student.status === "pending").length,
         orphan: orphanAccounts.length,
         deleteRecommended: students.filter(student => student.deleteRecommended).length,
     };
@@ -318,12 +354,7 @@ async function deactivateAccountWithAdmin(
             return NextResponse.json({ success: false, error: "Teacher and admin accounts are protected." }, { status: 400 });
         }
 
-        const { error } = await admin
-            .from("profiles")
-            .update({ approval_status: "deactivated", updated_at: new Date().toISOString() })
-            .eq("id", accountId);
-
-        if (error) throw new Error(error.message);
+        await deactivateProfile(admin, accountId);
 
         return NextResponse.json(await loadStudentAccounts(admin), {
             headers: { "Cache-Control": "no-store" },
@@ -360,26 +391,14 @@ async function deactivateAccountWithAdmin(
             return NextResponse.json({ success: false, error: "Teacher and admin accounts are protected." }, { status: 400 });
         }
 
-        const { error: profileUpdateError } = await admin
-            .from("profiles")
-            .update({ approval_status: "deactivated", updated_at: new Date().toISOString() })
-            .eq("id", authUserId);
-
-        if (profileUpdateError) throw new Error(profileUpdateError.message);
-
-        await admin
-            .from("study_progress")
-            .delete()
-            .eq("user_id", authUserId)
-            .eq("course_id", "__parent_pin__");
+        await deactivateProfile(admin, authUserId);
+        await clearParentLoginBridge(admin, authUserId);
     }
 
     const { error: studentUpdateError } = await admin
         .from("students")
         .update({
             auth_user_id: null,
-            pin: null,
-            status: "deactivated",
             updated_at: new Date().toISOString(),
         })
         .eq("id", row.id);

@@ -363,15 +363,15 @@ export default function GrowthManagementPage() {
     };
 
     const exportCsv = () => {
-        const header = ["학생", "현재 반", "성향", "현재 목표", "학부모 피드백", "최근 수정"];
+        const header = ["학생", "현재 반", "성향", "잘하는 점", "보완할 점", "최근 수정"];
         const rows = filteredStudents.map(student => {
             const record = recordByStudent.get(student.id);
             return [
                 student.name,
                 record?.current_class || student.class || "",
                 record?.temperament || "",
-                record?.current_goal || "",
-                record?.parent_feedback_draft || "",
+                record?.strengths || "",
+                record?.weaknesses || "",
                 record?.updated_at || "",
             ];
         });
@@ -477,8 +477,8 @@ export default function GrowthManagementPage() {
                     <div className="table-head">
                         <span>학생</span>
                         <span>성향</span>
-                        <span>현재 목표</span>
-                        <span>학부모 피드백</span>
+                        <span>잘하는 점</span>
+                        <span>보완할 점</span>
                         <span>최근 수정</span>
                     </div>
                     {filteredStudents.map(student => {
@@ -495,8 +495,8 @@ export default function GrowthManagementPage() {
                                     <em>{record?.current_class || student.class || "반 미지정"}</em>
                                 </span>
                                 <span>{compact(record?.temperament, 90)}</span>
-                                <span>{compact(record?.current_goal, 90)}</span>
-                                <span>{compact(record?.parent_feedback_draft, 110)}</span>
+                                <span>{compact(record?.strengths, 95)}</span>
+                                <span>{compact(record?.weaknesses, 95)}</span>
                                 <span>{formatDate(record?.updated_at)}</span>
                             </button>
                         );
@@ -816,9 +816,20 @@ export default function GrowthManagementPage() {
                 }
                 .detail-actions {
                     display: grid;
-                    grid-template-columns: 1fr 1fr 1.2fr;
+                    grid-template-columns: repeat(3, minmax(0, 1fr));
                     gap: 8px;
                     margin: 16px 0 18px;
+                }
+                .detail-actions button {
+                    min-width: 0;
+                    min-height: 42px;
+                    padding: 0 10px;
+                    font-size: 13px;
+                    font-weight: 850;
+                    line-height: 1;
+                    white-space: nowrap;
+                    word-break: keep-all;
+                    letter-spacing: 0;
                 }
                 .history {
                     border-top: 1px solid #e5edf6;
