@@ -102,11 +102,22 @@ function isProtectedProfile(profile: ProfileRow | null | undefined) {
     return profile?.role === "teacher" || profile?.role === "admin";
 }
 
+function readableProfileName(profile: ProfileRow, authUser: AuthUserSummary | null) {
+    const candidate = [profile.display_name, profile.name]
+        .map(value => String(value || "").trim())
+        .find(value => value && !/^\?+$/.test(value));
+    if (candidate) return candidate;
+
+    const email = authUser?.email || profile.email || "";
+    if (/^student_[a-f0-9-]+@codingssok\.local$/i.test(email)) return "연결 안 된 계정";
+    return email || "연결 안 된 계정";
+}
+
 async function deactivateProfile(admin: NonNullable<ReturnType<typeof createAdminClient>>, accountId: string) {
     const timestamp = new Date().toISOString();
     const { error } = await admin
         .from("profiles")
-        .update({ approval_status: "deactivated", updated_at: timestamp })
+        .update({ approval_status: "rejected", updated_at: timestamp })
         .eq("id", accountId);
 
     if (!error) return;
@@ -116,7 +127,7 @@ async function deactivateProfile(admin: NonNullable<ReturnType<typeof createAdmi
 
     const fallback = await admin
         .from("profiles")
-        .update({ approval_status: "deactivated" })
+        .update({ approval_status: "rejected" })
         .eq("id", accountId);
 
     if (fallback.error) throw new Error(fallback.error.message);
@@ -250,7 +261,7 @@ async function loadStudentAccounts(admin: NonNullable<ReturnType<typeof createAd
         .map(profile => profile as ProfileRow)
         .filter(profile => {
             if (profile.role !== "student" || linkedProfileIds.has(profile.id)) return false;
-            if (profile.approval_status === "deactivated") return false;
+            if (profile.approval_status === "deactivated" || profile.approval_status === "rejected") return false;
             return authUsers.size > 0 ? authUsers.has(profile.id) : true;
         })
         .map(profile => {
@@ -258,7 +269,7 @@ async function loadStudentAccounts(admin: NonNullable<ReturnType<typeof createAd
             return {
                 id: profile.id,
                 source: "orphan" as const,
-                name: profile.display_name || profile.name || authUser?.email || profile.email || "Unlinked account",
+                name: readableProfileName(profile, authUser),
                 grade: null,
                 className: "Unlinked account",
                 status: profile.approval_status || "orphan",
