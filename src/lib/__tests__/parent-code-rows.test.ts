@@ -1,7 +1,29 @@
 import { describe, expect, it } from 'vitest'
 import { buildParentCodeRows } from '@/lib/parent-code-rows'
+import { REFERENCE_PARENT_CODES } from '@/lib/parent-code-reference'
 
 describe('parent-code-rows', () => {
+    it('hides deactivated roster students instead of reviving them as reference rows', () => {
+        const target = REFERENCE_PARENT_CODES[0]
+        const rows = buildParentCodeRows({
+            students: [
+                {
+                    id: 'student-deactivated',
+                    name: target.name,
+                    pin: null,
+                    status: 'deactivated',
+                    auth_user_id: null,
+                    class: target.className,
+                    created_at: '2026-06-18T00:00:00.000Z',
+                },
+            ],
+            profiles: [],
+            progress: [],
+        })
+
+        expect(rows.some(row => row.name === target.name)).toBe(false)
+    })
+
     it('does not revive a deleted database student code from the reference table', () => {
         const rows = buildParentCodeRows({
             students: [

@@ -17,7 +17,7 @@ describe("parent portal admin integration contract", () => {
     expect(page).toContain("const issueCode");
     expect(page).toContain("const reissueCode");
     expect(page).toContain("const saveEdit");
-    expect(page).toContain("const deleteCode");
+    expect(page).toContain("const deleteStudent");
     expect(page).toContain("const saveSiblingGroup");
     expect(page).toContain('href="/teacher/admin/students"');
     expect(page).toContain('cache: "no-store"');
@@ -56,6 +56,21 @@ describe("parent portal admin integration contract", () => {
     expect(route).toContain(".from('students')");
     expect(route).toContain(".from('study_progress')");
     expect(route).toContain("pin: null");
+    expect(route).toContain("status: 'deactivated'");
+    expect(route).toContain("set pin = null");
+    expect(route).toContain("insert into public.students");
+    expect(route).toContain("'deactivated'");
+  });
+
+  it("keeps the parent portal edge fallback using the same roster deletion semantics", () => {
+    const edge = read("supabase/functions/parent-portal/index.ts");
+
+    expect(edge).toContain('action === "delete"');
+    expect(edge).toContain("syncProgressPin");
+    expect(edge).toContain('status: "deactivated"');
+    expect(edge).toContain("pin: null");
+    expect(edge).toContain('(student) => student.class !== "admin"');
+    expect(edge).not.toContain('student.status !== "deactivated" && student.class !== "admin"');
   });
 
   it("keeps parent sessions revalidated against the live current code", () => {

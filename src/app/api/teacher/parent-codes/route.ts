@@ -485,18 +485,26 @@ export async function DELETE(request: NextRequest) {
 
         if (existing) {
             if (hasAdminClient(context)) {
-                const { error } = await context.adminClient.from('students').update({ pin: null }).eq('id', existing.id)
+                const { error } = await context.adminClient
+                    .from('students')
+                    .update({
+                        pin: null,
+                        status: 'deactivated',
+                        updated_at: new Date().toISOString(),
+                    })
+                    .eq('id', existing.id)
                 if (error) throw new Error(error.message)
             } else {
-                await upsertStudentCodeInDatabase({
-                    id: existing.id,
-                    name,
-                    pin: null,
-                    birthday: existing.birthday || '2000-01-01',
-                    grade: existing.grade || null,
-                    className: existing.class || null,
-                    authUserId: existing.auth_user_id || profile?.id || null,
-                })
+                await databaseQuery(
+                    `
+                    update public.students
+                    set pin = null,
+                        status = 'deactivated',
+                        updated_at = now()
+                    where id = $1
+                    `,
+                    [existing.id],
+                )
             }
         } else {
             const baseline = findReferenceParentCode(name)
@@ -509,16 +517,17 @@ export async function DELETE(request: NextRequest) {
                         class: baseline.className,
                         pin: null,
                         auth_user_id: profile?.id || null,
+                        status: 'deactivated',
                     })
                     if (error) throw new Error(error.message)
                 } else {
-                    await upsertStudentCodeInDatabase({
-                        name,
-                        pin: null,
-                        birthday: '2000-01-01',
-                        className: baseline.className,
-                        authUserId: profile?.id || null,
-                    })
+                    await databaseQuery(
+                        `
+                        insert into public.students (name, birthday, grade, "class", pin, auth_user_id, status)
+                        values ($1, '2000-01-01', null, $2, null, $3, 'deactivated')
+                        `,
+                        [name, baseline.className, profile?.id || null],
+                    )
                 }
             }
         }

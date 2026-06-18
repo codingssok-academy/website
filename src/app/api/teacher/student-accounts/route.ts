@@ -253,7 +253,9 @@ async function loadStudentAccounts(admin: NonNullable<ReturnType<typeof createAd
         });
 
     const studentAccounts = allStudentAccounts.filter(student => {
-        if (ACTIVE_STUDENT_NAMES.has(normalizeStudentName(student.name))) return true;
+        if (ACTIVE_STUDENT_NAMES.has(normalizeStudentName(student.name))) {
+            return student.status !== "deactivated";
+        }
         return student.deleteRecommended;
     });
 
@@ -296,7 +298,7 @@ async function loadStudentAccounts(admin: NonNullable<ReturnType<typeof createAd
         ACTIVE_STUDENT_NAMES.has(normalizeStudentName(student.name)),
     );
     const stats = {
-        total: ACTIVE_STUDENT_NAMES.size,
+        total: activeRosterAccounts.length,
         linked: activeRosterAccounts.filter(student => student.accountLinked).length,
         unlinked: activeRosterAccounts.filter(student => !student.accountLinked).length,
         approved: activeRosterAccounts.filter(student => student.status === "approved").length,

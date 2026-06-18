@@ -156,9 +156,7 @@ async function loadBaseData(admin = createAdmin()) {
 
   return {
     success: true,
-    students: (studentsRes.data || []).filter((student) =>
-      student.status !== "deactivated" && student.class !== "admin"
-    ),
+    students: (studentsRes.data || []).filter((student) => student.class !== "admin"),
     profiles,
     progress: progressRes.data || [],
     warning: profilesRes.error?.message || progressRes.error?.message || null,
@@ -469,7 +467,7 @@ Deno.serve(async (req: Request) => {
       if (existing) {
         const { error: updateError } = await admin
           .from("students")
-          .update({ pin: null, updated_at: new Date().toISOString() })
+          .update({ pin: null, status: "deactivated", updated_at: new Date().toISOString() })
           .eq("id", existing.id);
         if (updateError) throw new HttpError(500, updateError.message);
         await syncProgressPin(admin, existing.auth_user_id || null, null);

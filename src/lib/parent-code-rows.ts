@@ -71,6 +71,11 @@ export function buildParentCodeRows(input: {
         input.progress.map(row => [row.user_id, { pin: row.completed_units?.[0] || "", updatedAt: row.updated_at }]),
     );
     const rows = new Map<string, ParentCodeRow>();
+    const deactivatedNames = new Set(
+        input.students
+            .filter(student => student.status === "deactivated")
+            .map(student => student.name),
+    );
 
     for (const student of input.students) {
         if (student.status === "deactivated" || student.class === "admin" || isReservedAdminName(student.name)) continue;
@@ -96,6 +101,7 @@ export function buildParentCodeRows(input: {
     }
 
     for (const { name, code, feedbackRows, className } of REFERENCE_PARENT_CODES) {
+        if (deactivatedNames.has(name)) continue;
         if (rows.has(name)) continue;
         const profile = input.profiles.find(item => item.display_name === name || item.name === name);
         const progressPin = profile ? progressByUserId.get(profile.id) : null;

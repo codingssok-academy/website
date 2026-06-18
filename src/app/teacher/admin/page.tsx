@@ -170,9 +170,9 @@ export default function ParentCodeAdminPage() {
         }
     };
 
-    const deleteCode = async (row: ParentCodeRow) => {
-        if (!window.confirm(`${row.name} 학부모 인증번호를 삭제할까요? 삭제하면 앱 로그인도 막힙니다.`)) return;
-        await requestJson("DELETE", { name: row.name }, `${row.name} 인증번호를 삭제했습니다.`, `delete-${row.name}`);
+    const deleteStudent = async (row: ParentCodeRow) => {
+        if (!window.confirm(`${row.name} 학생을 운영 명단에서 삭제할까요?\n\n삭제하면 학부모 인증번호가 제거되고, 앱과 웹 학부모 포털에서도 더 이상 인증되지 않습니다.`)) return;
+        await requestJson("DELETE", { name: row.name }, `${row.name} 학생을 운영 명단에서 삭제했습니다.`, `delete-${row.name}`);
     };
 
     const seedBaseline = async () => {
@@ -419,8 +419,8 @@ export default function ParentCodeAdminPage() {
                                                 <button className="mini-btn" onClick={() => startEdit(row)} disabled={!canMutate || saving === `edit-${row.name}`}>
                                                     편집
                                                 </button>
-                                                <button className="danger-btn" onClick={() => deleteCode(row)} disabled={!canMutate || saving === `delete-${row.name}`}>
-                                                    삭제
+                                                <button className="danger-btn" onClick={() => deleteStudent(row)} disabled={!canMutate || saving === `delete-${row.name}`}>
+                                                    학생 삭제
                                                 </button>
                                             </div>
                                         </td>
