@@ -83,13 +83,13 @@ export default function ParentCodeAdminPage() {
             return acc;
         }, {});
         return {
-            students: students.length || rows.length,
+            students: rows.length,
             active,
             reference,
             inactive,
             siblingGroups: Object.values(siblings).filter(count => count > 1).length,
         };
-    }, [rows, students.length]);
+    }, [rows]);
     const hasReferenceOnlyCodes = stats.reference > 0;
 
     const requestJson = async (
