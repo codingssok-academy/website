@@ -77,7 +77,9 @@ const EMPTY_FORM: FormState = {
     recordStatus: "관찰중",
 };
 
-const TRACKS = ["전체 반", "공통기초반", "흥미반", "만들기반", "프로젝트반", "대회반", "내신반", "자격증반"];
+const NO_CLASS_PROGRESS_LABEL = "수업 미진행";
+const CLASS_OPTIONS = ["공통기초반", "흥미반", "만들기반", "프로젝트반", "대회반", "내신반", "자격증반"];
+const TRACKS = ["전체 반", NO_CLASS_PROGRESS_LABEL, ...CLASS_OPTIONS];
 const MOVE_OPTIONS = ["-", "관찰 필요", "이동 가능", "보강 후 이동", "상담 필요"];
 const RECORD_STATUS_OPTIONS = ["관찰중", "초안", "전달 준비", "상담 필요", "완료"];
 
@@ -89,6 +91,25 @@ function compact(value: string | null | undefined, limit = 80) {
     const text = safeText(value).replace(/\s+/g, " ");
     if (!text) return "-";
     return text.length > limit ? `${text.slice(0, limit)}...` : text;
+}
+
+function hasGrowthContent(record: GrowthRecord | undefined) {
+    if (!record) return false;
+    return Boolean(
+        record.updated_at
+        || safeText(record.temperament)
+        || safeText(record.strengths)
+        || safeText(record.weaknesses)
+        || safeText(record.current_goal)
+        || safeText(record.next_class_potential)
+        || safeText(record.parent_feedback_draft)
+        || safeText(record.teacher_memo),
+    );
+}
+
+function getClassLabel(student: StudentOption, record: GrowthRecord | undefined) {
+    if (!hasGrowthContent(record)) return NO_CLASS_PROGRESS_LABEL;
+    return record?.current_class || student.class || "반 미지정";
 }
 
 function formatDate(value: string | null | undefined) {
@@ -200,7 +221,7 @@ export default function GrowthManagementPage() {
         const normalizedQuery = query.trim().replace(/\s+/g, "");
         return students.filter(student => {
             const record = recordByStudent.get(student.id);
-            const className = record?.current_class || student.class || "";
+            const className = getClassLabel(student, record);
             const queryMatch = !normalizedQuery
                 || student.name.replace(/\s+/g, "").includes(normalizedQuery)
                 || className.replace(/\s+/g, "").includes(normalizedQuery);
@@ -213,7 +234,7 @@ export default function GrowthManagementPage() {
         const counts = new Map<string, number>();
         for (const student of students) {
             const record = recordByStudent.get(student.id);
-            const className = record?.current_class || student.class || "미지정";
+            const className = getClassLabel(student, record);
             counts.set(className, (counts.get(className) || 0) + 1);
         }
         return counts;
@@ -484,15 +505,17 @@ export default function GrowthManagementPage() {
                     {filteredStudents.map(student => {
                         const record = recordByStudent.get(student.id);
                         const active = student.id === selectedId;
+                        const classLabel = getClassLabel(student, record);
+                        const notStarted = classLabel === NO_CLASS_PROGRESS_LABEL;
                         return (
                             <button
                                 key={student.id}
-                                className={`student-row ${active ? "selected" : ""}`}
+                                className={`student-row ${active ? "selected" : ""} ${notStarted ? "not-started" : ""}`}
                                 onClick={() => selectStudent(student.id)}
                             >
                                 <span className="name-cell">
                                     <strong>{student.name}</strong>
-                                    <em>{record?.current_class || student.class || "반 미지정"}</em>
+                                    <em className={`class-badge ${notStarted ? "not-started" : ""}`}>{classLabel}</em>
                                 </span>
                                 <span>{compact(record?.temperament, 90)}</span>
                                 <span>{compact(record?.strengths, 95)}</span>
@@ -520,7 +543,7 @@ export default function GrowthManagementPage() {
                             <Field label="현재 반">
                                 <select value={form.currentClass} onChange={event => updateForm("currentClass", event.target.value)}>
                                     <option value="">선택</option>
-                                    {TRACKS.slice(1).map(item => <option key={item} value={item}>{item}</option>)}
+                                    {CLASS_OPTIONS.map(item => <option key={item} value={item}>{item}</option>)}
                                 </select>
                             </Field>
                             <Field label="관리 상태">
@@ -544,9 +567,6 @@ export default function GrowthManagementPage() {
                             </Field>
                             <Field label="보완할 점">
                                 <textarea value={form.weaknesses} onChange={event => updateForm("weaknesses", event.target.value)} />
-                            </Field>
-                            <Field label="반별 진행 상황">
-                                <textarea value={form.classProgress} onChange={event => updateForm("classProgress", event.target.value)} />
                             </Field>
                             <Field label="학부모 전달사항">
                                 <textarea className="large-textarea" value={form.parentFeedbackDraft} onChange={event => updateForm("parentFeedbackDraft", event.target.value)} />
@@ -748,6 +768,8 @@ export default function GrowthManagementPage() {
                     font-weight: 700;
                 }
                 .student-row:hover, .student-row.selected { background: #f5f9ff; }
+                .student-row.not-started { background: #fffaf3; }
+                .student-row.not-started:hover, .student-row.not-started.selected { background: #fff4e6; }
                 .student-row.selected { box-shadow: inset 3px 0 0 #2563eb; }
                 .student-row span {
                     min-width: 0;
@@ -766,12 +788,27 @@ export default function GrowthManagementPage() {
                     font-weight: 950;
                     white-space: nowrap;
                 }
-                .name-cell em {
+                .class-badge {
+                    display: inline-flex;
+                    align-items: center;
+                    min-height: 24px;
+                    max-width: 112px;
+                    padding: 0 8px;
+                    border: 1px solid #d9e1ec;
+                    border-radius: 999px;
+                    background: #f8fafc;
                     font-style: normal;
                     color: #64748b;
                     font-size: 12px;
                     font-weight: 850;
                     white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+                .class-badge.not-started {
+                    color: #b45309;
+                    background: #fff7ed;
+                    border-color: #fed7aa;
                 }
                 .empty-row, .empty-state {
                     padding: 60px 20px;
