@@ -9,17 +9,16 @@ function read(relativePath: string) {
 }
 
 describe("learning platform routing", () => {
-  it("opens the course and book list from the learning platform entry", () => {
+  it("keeps the learning platform entry on the 3D book dashboard", () => {
     const learningPage = read("src/app/dashboard/learning/page.tsx");
     const coursesPage = read("src/app/dashboard/learning/courses/page.tsx");
     const layout = read("src/app/dashboard/learning/layout.tsx");
 
-    expect(learningPage).toContain('redirect("/dashboard/learning/courses")');
-    expect(coursesPage).toContain("bookshelfCourses");
-    expect(coursesPage).toContain("/images/courses/kids-it.png");
-    expect(coursesPage).toContain("/images/courses/programming-contest.png");
-    expect(coursesPage).toContain("/dashboard/learning/courses/");
-    expect(coursesPage).not.toContain("COURSES.map");
+    expect(learningPage).toContain("function BookCard");
+    expect(learningPage).toContain("COURSES.slice(0,5).map");
+    expect(learningPage).toContain("COURSES.slice(5,10).map");
+    expect(learningPage).toContain("router.push(`/dashboard/learning/courses/${id}`)");
+    expect(coursesPage).toContain('export { default } from "../page"');
     expect(coursesPage).not.toContain("배정센터");
     expect(layout).toContain('const isCourseList = pathname === "/dashboard/learning/courses"');
     expect(layout).toContain("isMainDashboard || isCourseList || isCourseDetail || isLivePage");

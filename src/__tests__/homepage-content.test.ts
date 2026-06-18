@@ -9,10 +9,12 @@ function read(relativePath: string) {
 }
 
 describe("homepage content", () => {
-  it("uses the previous learning platform section instead of the V2 section", () => {
+  it("uses the current homepage learning and curriculum sections", () => {
     const page = read("src/app/page.tsx");
 
-    expect(page).toContain("PlatformShowcase");
+    expect(page).toContain("PromoShowcase");
+    expect(page).toContain("LiveStudySection");
+    expect(page).toContain("Curriculum");
     expect(page).not.toContain("GrowthPlatformV2");
   });
 
