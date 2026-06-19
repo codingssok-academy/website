@@ -17,7 +17,6 @@ type GrowthRecord = {
     student_id: string;
     student_name: string;
     current_class: string | null;
-    temperament: string | null;
     skill_level: string | null;
     strengths: string | null;
     weaknesses: string | null;
@@ -50,7 +49,6 @@ type FormState = {
     studentId: string;
     studentName: string;
     currentClass: string;
-    temperament: string;
     strengths: string;
     weaknesses: string;
     currentGoal: string;
@@ -66,7 +64,6 @@ const EMPTY_FORM: FormState = {
     studentId: "",
     studentName: "",
     currentClass: "",
-    temperament: "",
     strengths: "",
     weaknesses: "",
     currentGoal: "",
@@ -98,7 +95,6 @@ function hasGrowthContent(record: GrowthRecord | undefined) {
     if (!record) return false;
     return Boolean(
         record.updated_at
-        || safeText(record.temperament)
         || safeText(record.strengths)
         || safeText(record.weaknesses)
         || safeText(record.current_goal)
@@ -130,7 +126,6 @@ function toForm(record: GrowthRecord, fallback?: StudentOption): FormState {
         studentId: record.student_id,
         studentName: record.student_name || fallback?.name || "",
         currentClass: record.current_class || fallback?.class || "",
-        temperament: record.temperament || "",
         strengths: record.strengths || "",
         weaknesses: record.weaknesses || "",
         currentGoal: record.current_goal || "",
@@ -178,7 +173,6 @@ function buildParentCopy(form: FormState) {
         `현재 반: ${form.currentClass || "-"}`,
         `현재 목표: ${form.currentGoal || "-"}`,
         "",
-        `성향: ${form.temperament || "-"}`,
         `잘하는 점: ${form.strengths || "-"}`,
         `보완할 점: ${form.weaknesses || "-"}`,
         "",
@@ -387,13 +381,12 @@ export default function GrowthManagementPage() {
     };
 
     const exportCsv = () => {
-        const header = ["학생", "현재 반", "성향", "잘하는 점", "보완할 점", "최근 수정"];
+        const header = ["학생", "현재 반", "잘하는 점", "보완할 점", "최근 수정"];
         const rows = filteredStudents.map(student => {
             const record = recordByStudent.get(student.id);
             return [
                 student.name,
                 record?.current_class || student.class || "",
-                record?.temperament || "",
                 record?.strengths || "",
                 record?.weaknesses || "",
                 record?.updated_at || "",
@@ -458,7 +451,7 @@ export default function GrowthManagementPage() {
                     <div>
                         <div className="eyebrow">성장 관리</div>
                         <h1>학생 성장 관리표</h1>
-                        <p>학생별 현재 반, 성향, 목표, 학부모 피드백을 한 화면에서 관리합니다. 입력 내용은 자동 저장됩니다.</p>
+                        <p>학생별 현재 반, 목표, 잘하는 점과 보완할 점을 한 화면에서 관리합니다. 입력 내용은 자동 저장됩니다.</p>
                     </div>
                     <div className="header-actions">
                         <span className={`save-state ${saveState}`}>{saveLabel}</span>
@@ -500,7 +493,6 @@ export default function GrowthManagementPage() {
                 <section className="matrix-card">
                     <div className="table-head">
                         <span>학생</span>
-                        <span>성향</span>
                         <span>잘하는 점</span>
                         <span>보완할 점</span>
                         <span>최근 수정</span>
@@ -521,7 +513,6 @@ export default function GrowthManagementPage() {
                                     <em className={`class-badge ${notStarted ? "not-started" : ""}`}>{classLabel}</em>
                                     <small className="student-meta">{[student.school, student.grade].filter(Boolean).join(" · ") || "학교/학년 미입력"}</small>
                                 </span>
-                                <span>{compact(record?.temperament, 90)}</span>
                                 <span>{compact(record?.strengths, 95)}</span>
                                 <span>{compact(record?.weaknesses, 95)}</span>
                                 <span>{formatDate(record?.updated_at)}</span>
@@ -559,9 +550,6 @@ export default function GrowthManagementPage() {
                                 <select value={form.nextClassPotential} onChange={event => updateForm("nextClassPotential", event.target.value)}>
                                     {MOVE_OPTIONS.map(item => <option key={item} value={item}>{item}</option>)}
                                 </select>
-                            </Field>
-                            <Field label="성향">
-                                <textarea value={form.temperament} onChange={event => updateForm("temperament", event.target.value)} />
                             </Field>
                             <Field label="현재 목표">
                                 <textarea value={form.currentGoal} onChange={event => updateForm("currentGoal", event.target.value)} />
@@ -746,7 +734,7 @@ export default function GrowthManagementPage() {
                 }
                 .table-head, .student-row {
                     display: grid;
-                    grid-template-columns: 210px 1fr 1fr 1.35fr 116px;
+                    grid-template-columns: 230px minmax(0, 1fr) minmax(0, 1.15fr) 116px;
                     gap: 14px;
                     align-items: center;
                 }
@@ -899,7 +887,7 @@ export default function GrowthManagementPage() {
                 @media (max-width: 1280px) {
                     .growth-page { grid-template-columns: 1fr; }
                     .detail-panel { position: static; height: auto; }
-                    .table-head, .student-row { grid-template-columns: 180px 1fr 1fr 1.2fr 105px; }
+                    .table-head, .student-row { grid-template-columns: 190px minmax(0, 1fr) minmax(0, 1.1fr) 105px; }
                 }
                 @media (max-width: 820px) {
                     .growth-header { flex-direction: column; }

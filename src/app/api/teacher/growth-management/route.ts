@@ -10,7 +10,6 @@ const NO_STORE_HEADERS = { "Cache-Control": "no-store" };
 const TEXT_FIELDS = [
     "studentName",
     "currentClass",
-    "temperament",
     "strengths",
     "weaknesses",
     "currentGoal",
@@ -138,7 +137,6 @@ export async function POST(request: NextRequest) {
         student_id: studentId,
         student_name: readText(body, "studentName", 120),
         current_class: readText(body, "currentClass", 120),
-        temperament: readText(body, "temperament", 1000),
         skill_level: null,
         strengths: readText(body, "strengths"),
         weaknesses: readText(body, "weaknesses"),
@@ -156,7 +154,6 @@ export async function POST(request: NextRequest) {
         student_id: payload.student_id,
         student_name: payload.student_name,
         current_class: payload.current_class,
-        temperament: payload.temperament,
         skill_level: payload.skill_level,
         strengths: payload.strengths,
         weaknesses: payload.weaknesses,
