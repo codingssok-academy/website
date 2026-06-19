@@ -95,6 +95,10 @@ function normalizeId(input: unknown) {
     return typeof input === "string" ? input.trim() : "";
 }
 
+function normalizeOptionalText(input: unknown, maxLength: number) {
+    return typeof input === "string" ? input.trim().slice(0, maxLength) : "";
+}
+
 function normalizeStudentName(input: unknown) {
     return typeof input === "string" ? input.replace(/\s+/g, "").trim() : "";
 }
@@ -342,6 +346,34 @@ async function updateStatusWithAdmin(admin: NonNullable<ReturnType<typeof create
     });
 }
 
+async function updateStudentInfoWithAdmin(admin: NonNullable<ReturnType<typeof createAdminClient>>, body: Record<string, unknown>) {
+    const studentId = normalizeId(body?.studentId);
+    const school = normalizeOptionalText(body?.school, 40);
+    const grade = normalizeOptionalText(body?.grade, 20);
+
+    if (!studentId) {
+        return NextResponse.json(
+            { success: false, error: "Student id is required." },
+            { status: 400 },
+        );
+    }
+
+    const { error } = await admin
+        .from("students")
+        .update({
+            school: school || null,
+            grade: grade || null,
+            updated_at: new Date().toISOString(),
+        })
+        .eq("id", studentId);
+
+    if (error) throw new Error(error.message);
+
+    return NextResponse.json(await loadStudentAccounts(admin), {
+        headers: { "Cache-Control": "no-store" },
+    });
+}
+
 async function deactivateAccountWithAdmin(
     admin: NonNullable<ReturnType<typeof createAdminClient>>,
     actorUserId: string,
@@ -453,10 +485,14 @@ export async function PATCH(request: NextRequest) {
         if (!auth.ok) return auth.response;
 
         const body = await request.json().catch(() => ({}));
+        const action = typeof body?.action === "string" ? body.action : "";
         const admin = createAdminClient();
-        if (admin) return updateStatusWithAdmin(admin, body);
+        if (admin) {
+            if (action === "studentInfo") return updateStudentInfoWithAdmin(admin, body);
+            return updateStatusWithAdmin(admin, body);
+        }
 
-        return proxyStudentAccountsToRpc("studentAccountStatus", body);
+        return proxyStudentAccountsToRpc(action === "studentInfo" ? "studentAccountInfo" : "studentAccountStatus", body);
     } catch (error) {
         return NextResponse.json(
             { success: false, error: error instanceof Error ? error.message : "Failed to update student account status." },

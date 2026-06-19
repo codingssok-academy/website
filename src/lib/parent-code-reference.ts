@@ -63,6 +63,7 @@ export function buildReferenceParentCodeRows() {
         code: row.code,
         feedbackRows: row.feedbackRows,
         issuedAt: null,
+        school: '',
         grade: '',
         className: row.className,
         linked: false,

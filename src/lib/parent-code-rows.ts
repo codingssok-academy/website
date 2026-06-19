@@ -4,6 +4,7 @@ export type ParentCodeStudentRow = {
     id: string;
     name: string;
     birthday?: string | null;
+    school?: string | null;
     grade?: string | null;
     class?: string | null;
     avatar?: string | null;
@@ -35,6 +36,7 @@ export type ParentCodeRow = {
     code: string;
     feedbackRows: number;
     issuedAt: string | null;
+    school: string;
     grade: string;
     className: string;
     linked: boolean;
@@ -93,6 +95,7 @@ export function buildParentCodeRows(input: {
             code: dbCode,
             feedbackRows: baseline?.feedbackRows || 0,
             issuedAt: student.created_at || progressPin?.updatedAt || null,
+            school: student.school || "",
             grade: student.grade || "",
             className: student.class || baseline?.className || "",
             linked: Boolean(profile?.id || student.auth_user_id),
@@ -113,6 +116,7 @@ export function buildParentCodeRows(input: {
             code: normalizeParentCodePin(progressPin?.pin || "") || code,
             feedbackRows,
             issuedAt: progressPin?.updatedAt || null,
+            school: "",
             grade: "",
             className,
             linked: Boolean(profile?.id),

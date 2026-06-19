@@ -13,6 +13,7 @@ type ParentCodeRow = {
     code: string;
     feedbackRows: number;
     issuedAt: string | null;
+    school: string;
     grade: string;
     className: string;
     linked: boolean;
@@ -22,10 +23,12 @@ type ParentCodeRow = {
 type FormState = {
     name: string;
     pin: string;
+    school: string;
+    grade: string;
     className: string;
 };
 
-const EMPTY_FORM: FormState = { name: "", pin: "", className: "" };
+const EMPTY_FORM: FormState = { name: "", pin: "", school: "", grade: "", className: "" };
 
 export default function ParentCodeAdminPage() {
     const { students, loading: studentsLoading } = useAdmin();
@@ -70,6 +73,8 @@ export default function ParentCodeAdminPage() {
         return rows.filter(row =>
             row.name.toLowerCase().includes(q) ||
             row.code.includes(q) ||
+            row.school.toLowerCase().includes(q) ||
+            row.grade.toLowerCase().includes(q) ||
             row.className.toLowerCase().includes(q),
         );
     }, [rows, search]);
@@ -133,7 +138,7 @@ export default function ParentCodeAdminPage() {
         }
         const ok = await requestJson(
             "POST",
-            { name, pin: form.pin, className: form.className },
+            { name, pin: form.pin, school: form.school, grade: form.grade, className: form.className },
             `${name} 학부모 인증번호를 발급했습니다.`,
             "issue",
         );
@@ -141,11 +146,16 @@ export default function ParentCodeAdminPage() {
     };
 
     const reissueCode = (row: ParentCodeRow) =>
-        requestJson("PATCH", { name: row.name }, `${row.name} 인증번호를 새로 발급했습니다.`, `reissue-${row.name}`);
+        requestJson(
+            "PATCH",
+            { name: row.name, school: row.school, grade: row.grade, className: row.className },
+            `${row.name} 인증번호를 새로 발급했습니다.`,
+            `reissue-${row.name}`,
+        );
 
     const startEdit = (row: ParentCodeRow) => {
         setEditingRow(row);
-        setEditForm({ name: row.name, pin: row.code, className: row.className });
+        setEditForm({ name: row.name, pin: row.code, school: row.school, grade: row.grade, className: row.className });
         setError("");
         setNotice("");
     };
@@ -160,7 +170,7 @@ export default function ParentCodeAdminPage() {
         }
         const ok = await requestJson(
             "POST",
-            { name, pin, className: editForm.className },
+            { name, pin, school: editForm.school, grade: editForm.grade, className: editForm.className },
             `${name} 학생 정보를 수정했습니다.`,
             `edit-${editingRow.name}`,
         );
@@ -270,6 +280,16 @@ export default function ParentCodeAdminPage() {
                             maxLength={5}
                         />
                         <input
+                            value={editForm.school}
+                            onChange={event => setEditForm(prev => ({ ...prev, school: event.target.value.slice(0, 40) }))}
+                            placeholder="학교"
+                        />
+                        <input
+                            value={editForm.grade}
+                            onChange={event => setEditForm(prev => ({ ...prev, grade: event.target.value.slice(0, 20) }))}
+                            placeholder="학년"
+                        />
+                        <input
                             value={editForm.className}
                             onChange={event => setEditForm(prev => ({ ...prev, className: event.target.value }))}
                             placeholder="반/메모"
@@ -303,6 +323,16 @@ export default function ParentCodeAdminPage() {
                             placeholder="5자리 번호 비우면 자동"
                             inputMode="numeric"
                             maxLength={5}
+                        />
+                        <input
+                            value={form.school}
+                            onChange={event => setForm(prev => ({ ...prev, school: event.target.value.slice(0, 40) }))}
+                            placeholder="학교"
+                        />
+                        <input
+                            value={form.grade}
+                            onChange={event => setForm(prev => ({ ...prev, grade: event.target.value.slice(0, 20) }))}
+                            placeholder="학년"
                         />
                         <input
                             value={form.className}
@@ -369,6 +399,8 @@ export default function ParentCodeAdminPage() {
                             <tr>
                                 <th>번호</th>
                                 <th>학생 이름</th>
+                                <th>학교</th>
+                                <th>학년</th>
                                 <th>학부모 인증번호</th>
                                 <th>피드백 row 수</th>
                                 <th>상태</th>
@@ -380,11 +412,11 @@ export default function ParentCodeAdminPage() {
                         <tbody>
                             {loading ? (
                                 <tr>
-                                    <td colSpan={8} className="empty">목록을 불러오는 중입니다.</td>
+                                    <td colSpan={10} className="empty">목록을 불러오는 중입니다.</td>
                                 </tr>
                             ) : filteredRows.length === 0 ? (
                                 <tr>
-                                    <td colSpan={8} className="empty">표시할 학생이 없습니다.</td>
+                                    <td colSpan={10} className="empty">표시할 학생이 없습니다.</td>
                                 </tr>
                             ) : (
                                 filteredRows.map((row, index) => (
@@ -396,6 +428,8 @@ export default function ParentCodeAdminPage() {
                                                 <span>{row.className || (row.linked ? "계정 연동" : "계정 미연동")}</span>
                                             </div>
                                         </td>
+                                        <td>{row.school || "-"}</td>
+                                        <td>{row.grade || "-"}</td>
                                         <td>
                                             <span className="pin">{row.code || "미발급"}</span>
                                         </td>
@@ -582,7 +616,7 @@ h1 {
 }
 .form-row {
     display: grid;
-    grid-template-columns: 1.2fr 1fr 1fr auto;
+    grid-template-columns: minmax(140px, 1.15fr) minmax(120px, 0.85fr) minmax(140px, 1fr) minmax(90px, 0.7fr) minmax(130px, 1fr) auto;
     gap: 8px;
 }
 input, textarea {
@@ -693,7 +727,7 @@ button:disabled {
     margin-bottom: 16px;
 }
 .edit-row {
-    grid-template-columns: 1.1fr 0.9fr 1fr auto auto;
+    grid-template-columns: minmax(140px, 1fr) minmax(120px, 0.8fr) minmax(140px, 1fr) minmax(90px, 0.7fr) minmax(130px, 1fr) auto auto;
 }
 .table-toolbar {
     display: flex;
@@ -728,7 +762,7 @@ button:disabled {
 }
 table {
     width: 100%;
-    min-width: 920px;
+    min-width: 1120px;
     border-collapse: collapse;
     background: #ffffff;
 }

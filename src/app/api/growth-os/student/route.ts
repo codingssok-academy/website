@@ -257,7 +257,7 @@ export async function GET() {
 
     const { data: student, error: studentError } = await admin
         .from("students")
-        .select("id,name,grade,class,status,auth_user_id,created_at,updated_at")
+        .select("id,name,school,grade,class,status,auth_user_id,created_at,updated_at")
         .eq("auth_user_id", user.id)
         .maybeSingle();
 

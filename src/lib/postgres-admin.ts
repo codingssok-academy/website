@@ -58,7 +58,7 @@ export async function getProfileRoleFromDatabase(userId: string) {
 export async function loadParentCodeBaseDataFromDatabase() {
     const [students, profiles, progress] = await Promise.all([
         databaseQuery<ParentCodeStudentRow>(
-            'select id, name, birthday, grade, "class", avatar, pin, auth_user_id, status, created_at from public.students order by name asc',
+            'select id, name, birthday, school, grade, "class", avatar, pin, auth_user_id, status, created_at from public.students order by name asc',
         ),
         databaseQuery<ParentCodeProfileRow>(
             'select id, name, display_name, email, role from public.profiles',
@@ -104,6 +104,7 @@ export async function upsertStudentCodeInDatabase(input: {
     name: string
     pin: string | null
     birthday?: string | null
+    school?: string | null
     grade?: string | null
     className?: string | null
     authUserId?: string | null
@@ -114,18 +115,20 @@ export async function upsertStudentCodeInDatabase(input: {
             update public.students
             set name = $2,
                 birthday = $3,
-                grade = $4,
-                "class" = $5,
-                pin = $6,
-                auth_user_id = $7,
+                school = $4,
+                grade = $5,
+                "class" = $6,
+                pin = $7,
+                auth_user_id = $8,
                 status = 'approved'
             where id = $1
-            returning id, name, birthday, grade, "class", avatar, pin, auth_user_id, status, created_at
+            returning id, name, birthday, school, grade, "class", avatar, pin, auth_user_id, status, created_at
             `,
             [
                 input.id,
                 input.name,
                 input.birthday || '2000-01-01',
+                input.school || null,
                 input.grade || null,
                 input.className || null,
                 input.pin,
@@ -137,13 +140,14 @@ export async function upsertStudentCodeInDatabase(input: {
 
     const rows = await databaseQuery<ParentCodeStudentRow>(
         `
-        insert into public.students (name, birthday, grade, "class", pin, auth_user_id, status)
-        values ($1, $2, $3, $4, $5, $6, 'approved')
-        returning id, name, birthday, grade, "class", avatar, pin, auth_user_id, status, created_at
+        insert into public.students (name, birthday, school, grade, "class", pin, auth_user_id, status)
+        values ($1, $2, $3, $4, $5, $6, $7, 'approved')
+        returning id, name, birthday, school, grade, "class", avatar, pin, auth_user_id, status, created_at
         `,
         [
             input.name,
             input.birthday || '2000-01-01',
+            input.school || null,
             input.grade || null,
             input.className || null,
             input.pin,

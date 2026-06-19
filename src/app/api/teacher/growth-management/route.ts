@@ -61,7 +61,7 @@ async function loadData() {
     const [studentsRes, recordsRes, entriesRes] = await Promise.all([
         supabase
             .from("students")
-            .select("id,name,grade,class,status,updated_at,created_at")
+            .select("id,name,school,grade,class,status,updated_at,created_at")
             .neq("status", "deactivated")
             .order("name", { ascending: true }),
         supabase

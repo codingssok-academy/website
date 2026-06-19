@@ -314,7 +314,7 @@ export async function GET() {
         loginEvents,
         notion,
     ] = await Promise.all([
-        queryRows("students", admin.from("students").select("id,name,grade,class,pin,status,auth_user_id,created_at,updated_at").order("created_at", { ascending: false }).limit(1000)),
+        queryRows("students", admin.from("students").select("id,name,school,grade,class,pin,status,auth_user_id,created_at,updated_at").order("created_at", { ascending: false }).limit(1000)),
         queryRows("student_diagnostic_results", admin.from("student_diagnostic_results").select("student_id,percent,recommended_track,created_at").order("created_at", { ascending: false }).limit(1000)),
         queryRows("lesson_records", admin.from("lesson_records").select("student_id,error_fix_count,created_at").order("created_at", { ascending: false }).limit(1000)),
         queryRows("code_submissions", admin.from("code_submissions").select("user_id,status,created_at").order("created_at", { ascending: false }).limit(3000)),

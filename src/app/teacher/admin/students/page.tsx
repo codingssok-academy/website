@@ -45,6 +45,11 @@ type ApiResponse = {
     warning?: string;
 };
 
+type InfoDraft = {
+    school: string;
+    grade: string;
+};
+
 const FILTERS = [
     { key: "all", label: "전체" },
     { key: "linked", label: "회원가입 완료" },
@@ -96,6 +101,7 @@ export default function StudentAccountsPage() {
     const [query, setQuery] = useState("");
     const [loading, setLoading] = useState(true);
     const [actingId, setActingId] = useState<string | null>(null);
+    const [infoDrafts, setInfoDrafts] = useState<Record<string, InfoDraft>>({});
     const [message, setMessage] = useState<{ type: "ok" | "error" | "info"; text: string } | null>(null);
 
     const load = useCallback(async () => {
@@ -127,10 +133,43 @@ export default function StudentAccountsPage() {
             if (filter === "unlinked" && (student.accountLinked || student.deleteRecommended)) return false;
             if (filter === "deleteRecommended" && !student.deleteRecommended) return false;
             if (filter === "deactivated" && student.status !== "deactivated") return false;
-            if (normalizedQuery && !student.name.replace(/\s+/g, "").includes(normalizedQuery)) return false;
+            if (normalizedQuery) {
+                const haystack = [
+                    student.name,
+                    student.school || "",
+                    student.grade || "",
+                    student.className || "",
+                    student.email || "",
+                ].join("").replace(/\s+/g, "");
+                if (!haystack.includes(normalizedQuery)) return false;
+            }
             return true;
         });
     }, [filter, query, students]);
+
+    const getInfoDraft = (student: StudentAccount): InfoDraft => {
+        return infoDrafts[student.id] || {
+            school: student.school || "",
+            grade: student.grade || "",
+        };
+    };
+
+    const setInfoDraft = (student: StudentAccount, key: keyof InfoDraft, value: string) => {
+        const maxLength = key === "school" ? 40 : 20;
+        setInfoDrafts(prev => ({
+            ...prev,
+            [student.id]: {
+                school: prev[student.id]?.school ?? student.school ?? "",
+                grade: prev[student.id]?.grade ?? student.grade ?? "",
+                [key]: value.slice(0, maxLength),
+            },
+        }));
+    };
+
+    const isInfoDirty = (student: StudentAccount) => {
+        const draft = getInfoDraft(student);
+        return draft.school.trim() !== (student.school || "") || draft.grade.trim() !== (student.grade || "");
+    };
 
     const updateStatus = async (student: StudentAccount, status: string) => {
         setActingId(student.id);
@@ -148,6 +187,39 @@ export default function StudentAccountsPage() {
             setMessage({ type: "ok", text: `${student.name} 상태를 ${STATUS_LABEL[status] || status}로 변경했습니다.` });
         } catch (error) {
             setMessage({ type: "error", text: error instanceof Error ? error.message : "상태 변경 실패" });
+        } finally {
+            setActingId(null);
+        }
+    };
+
+    const saveStudentInfo = async (student: StudentAccount) => {
+        if (student.source !== "student") return;
+        const draft = getInfoDraft(student);
+        setActingId(student.id);
+        setMessage(null);
+        try {
+            const res = await fetch("/api/teacher/student-accounts", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    action: "studentInfo",
+                    studentId: student.id,
+                    school: draft.school.trim(),
+                    grade: draft.grade.trim(),
+                }),
+            });
+            const data = await readApiJson(res);
+            if (!res.ok || !data.success) throw new Error(data.error || "학생 정보를 저장하지 못했습니다.");
+            setStudents(data.students || []);
+            if (data.stats) setStats(data.stats);
+            setInfoDrafts(prev => {
+                const next = { ...prev };
+                delete next[student.id];
+                return next;
+            });
+            setMessage({ type: "ok", text: `${student.name} 학교/학년 정보를 저장했습니다.` });
+        } catch (error) {
+            setMessage({ type: "error", text: error instanceof Error ? error.message : "학생 정보 저장 실패" });
         } finally {
             setActingId(null);
         }
@@ -222,6 +294,8 @@ export default function StudentAccountsPage() {
             <section className="table-wrap">
                 <div className="table-head">
                     <span>학생</span>
+                    <span>학교</span>
+                    <span>학년</span>
                     <span>계정 상태</span>
                     <span>학생 상태</span>
                     <span>최근 로그인</span>
@@ -235,6 +309,9 @@ export default function StudentAccountsPage() {
                     filtered.map(student => {
                         const colors = statusColor(student.status);
                         const acting = actingId === student.id;
+                        const draft = getInfoDraft(student);
+                        const canEditInfo = student.source === "student" && student.canChangeStatus;
+                        const dirtyInfo = isInfoDirty(student);
                         const infoLine = student.deleteRecommended
                             ? student.recommendationReason || "운영 명단 기준 밖 계정"
                             : [
@@ -251,6 +328,32 @@ export default function StudentAccountsPage() {
                                         <strong>{student.name}</strong>
                                         <small>{infoLine}</small>
                                     </div>
+                                </div>
+                                <div>
+                                    {canEditInfo ? (
+                                        <input
+                                            className="inline-field"
+                                            value={draft.school}
+                                            onChange={event => setInfoDraft(student, "school", event.target.value)}
+                                            placeholder="학교"
+                                            disabled={acting}
+                                        />
+                                    ) : (
+                                        <span className="info-empty">{student.school || "-"}</span>
+                                    )}
+                                </div>
+                                <div>
+                                    {canEditInfo ? (
+                                        <input
+                                            className="inline-field compact"
+                                            value={draft.grade}
+                                            onChange={event => setInfoDraft(student, "grade", event.target.value)}
+                                            placeholder="학년"
+                                            disabled={acting}
+                                        />
+                                    ) : (
+                                        <span className="info-empty">{student.grade || "-"}</span>
+                                    )}
                                 </div>
                                 <div>
                                     <span className={student.accountLinked ? "pill linked" : "pill unlinked"}>
@@ -281,6 +384,15 @@ export default function StudentAccountsPage() {
                                     >
                                         계정 해제
                                     </button>
+                                    {canEditInfo && (
+                                        <button
+                                            className="save"
+                                            onClick={() => saveStudentInfo(student)}
+                                            disabled={acting || !dirtyInfo}
+                                        >
+                                            정보 저장
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         );
@@ -395,7 +507,7 @@ export default function StudentAccountsPage() {
                 }
                 .table-head, .table-row {
                     display: grid;
-                    grid-template-columns: 1.35fr 1.1fr 0.75fr 0.9fr 1fr;
+                    grid-template-columns: minmax(180px, 1.3fr) minmax(130px, 0.8fr) minmax(82px, 0.55fr) minmax(132px, 0.9fr) minmax(100px, 0.65fr) minmax(120px, 0.8fr) minmax(210px, 1.2fr);
                     gap: 16px;
                     align-items: center;
                 }
@@ -450,9 +562,29 @@ export default function StudentAccountsPage() {
                 }
                 .pill.linked { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
                 .pill.unlinked { background: #f8fafc; color: #64748b; border-color: #e2e8f0; }
+                .inline-field {
+                    width: 100%;
+                    min-width: 0;
+                    min-height: 34px;
+                    padding: 0 10px;
+                    border: 1px solid #d9e1ec;
+                    border-radius: 7px;
+                    background: #fbfdff;
+                    font-size: 12px;
+                    font-weight: 850;
+                }
+                .inline-field.compact {
+                    max-width: 98px;
+                }
+                .info-empty {
+                    color: #94a3b8;
+                    font-size: 12px;
+                    font-weight: 850;
+                }
                 .actions { display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
                 .actions button { min-height: 34px; font-size: 12px; padding: 0 10px; }
                 .actions .danger { color: #b91c1c; border-color: #fecaca; background: #fff7f7; }
+                .actions .save { color: #065f46; border-color: #bbf7d0; background: #ecfdf5; }
                 .empty { padding: 64px 20px; text-align: center; color: #7b8aa0; font-weight: 850; }
                 @media (max-width: 1180px) {
                     .stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }

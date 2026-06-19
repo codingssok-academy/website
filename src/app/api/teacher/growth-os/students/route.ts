@@ -261,7 +261,7 @@ function buildRows(params: {
                 id,
                 name,
                 grade: readText(student, "grade") || "학년 미입력",
-                school: readText(student, "class") || "반 미입력",
+                school: readText(student, "school") || "학교 미입력",
                 status: readText(assignment, "status") === "assigned"
                     ? "배정 완료"
                     : !hasTrackAssignment ? "배정 필요" : assignedTrack === "공통기초" && recommendedTrack !== "공통기초" ? "배정 필요" : "공통기초 유지",
@@ -315,7 +315,7 @@ export async function GET() {
         assignments,
         loginEvents,
     ] = await Promise.all([
-        queryRows("students", admin.from("students").select("id,name,grade,class,pin,auth_user_id,status,created_at,updated_at").order("created_at", { ascending: false }).limit(1000)),
+        queryRows("students", admin.from("students").select("id,name,school,grade,class,pin,auth_user_id,status,created_at,updated_at").order("created_at", { ascending: false }).limit(1000)),
         queryRows("student_diagnostic_results", admin.from("student_diagnostic_results").select("student_id,percent,recommended_track,answered_count,created_at").order("created_at", { ascending: false }).limit(2000)),
         queryRows("lesson_records", admin.from("lesson_records").select("student_id,error_fix_count,created_at").order("created_at", { ascending: false }).limit(3000)),
         queryRows("code_submissions", admin.from("code_submissions").select("user_id,status,created_at").order("created_at", { ascending: false }).limit(3000)),

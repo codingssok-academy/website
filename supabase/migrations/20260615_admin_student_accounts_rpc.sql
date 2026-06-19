@@ -25,6 +25,8 @@ declare
     v_student_id uuid;
     v_account_id uuid;
     v_status text;
+    v_school text;
+    v_grade text;
     v_auth_user_id uuid;
     v_profile_role text;
     v_students jsonb := '[]'::jsonb;
@@ -61,7 +63,25 @@ begin
         return jsonb_build_object('success', false, 'error', 'Admin permission is required.');
     end if;
 
-    if _action = 'studentAccountStatus' then
+    if _action = 'studentAccountInfo' then
+        v_student_id := nullif(_payload->>'studentId', '')::uuid;
+        v_school := left(trim(coalesce(_payload->>'school', '')), 40);
+        v_grade := left(trim(coalesce(_payload->>'grade', '')), 20);
+
+        if v_student_id is null then
+            return jsonb_build_object('success', false, 'error', 'Student id is required.');
+        end if;
+
+        update public.students
+           set school = nullif(v_school, ''),
+               grade = nullif(v_grade, ''),
+               updated_at = now()
+         where id = v_student_id;
+
+        if not found then
+            return jsonb_build_object('success', false, 'error', 'Student was not found.');
+        end if;
+    elsif _action = 'studentAccountStatus' then
         v_student_id := nullif(_payload->>'studentId', '')::uuid;
         v_status := nullif(_payload->>'status', '');
 

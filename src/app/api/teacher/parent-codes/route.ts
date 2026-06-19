@@ -162,7 +162,7 @@ async function loadBaseData(adminClient: AdminClient) {
     const [studentsRes, profilesRes, progressRes] = await Promise.all([
         adminClient
             .from('students')
-            .select('id, name, birthday, grade, class, avatar, pin, auth_user_id, status, created_at')
+            .select('id, name, birthday, school, grade, class, avatar, pin, auth_user_id, status, created_at')
             .order('name', { ascending: true }),
         adminClient.from('profiles').select('id, name, display_name, email, role'),
         adminClient
@@ -214,6 +214,7 @@ async function upsertStudentCode(input: {
     adminClient: AdminClient
     name: string
     pin: string
+    school?: string
     grade?: string
     className?: string
 }) {
@@ -225,12 +226,16 @@ async function upsertStudentCode(input: {
     const profile = existing
         ? findProfileForParentCodeStudent(existing, profiles)
         : profiles.find(item => item.display_name === input.name || item.name === input.name) || null
+    const nextSchool = input.school !== undefined ? input.school || null : existing?.school || null
+    const nextGrade = input.grade !== undefined ? input.grade || null : existing?.grade || null
+    const nextClassName = input.className !== undefined ? input.className || null : existing?.class || null
 
     const payload = {
         name: input.name,
         birthday: existing?.birthday || '2000-01-01',
-        grade: input.grade || existing?.grade || null,
-        class: input.className || existing?.class || null,
+        school: nextSchool,
+        grade: nextGrade,
+        class: nextClassName,
         pin: input.pin,
         auth_user_id: existing?.auth_user_id || profile?.id || null,
         status: 'approved',
@@ -252,6 +257,7 @@ async function upsertStudentCode(input: {
 async function upsertStudentCodeWithDatabase(input: {
     name: string
     pin: string
+    school?: string
     grade?: string
     className?: string
 }) {
@@ -263,13 +269,17 @@ async function upsertStudentCodeWithDatabase(input: {
     const profile = existing
         ? findProfileForParentCodeStudent(existing, profiles)
         : profiles.find(item => item.display_name === input.name || item.name === input.name) || null
+    const nextSchool = input.school !== undefined ? input.school || null : existing?.school || null
+    const nextGrade = input.grade !== undefined ? input.grade || null : existing?.grade || null
+    const nextClassName = input.className !== undefined ? input.className || null : existing?.class || null
 
     const data = await upsertStudentCodeInDatabase({
         id: existing?.id || null,
         name: input.name,
         birthday: existing?.birthday || '2000-01-01',
-        grade: input.grade || existing?.grade || null,
-        className: input.className || existing?.class || null,
+        school: nextSchool,
+        grade: nextGrade,
+        className: nextClassName,
         pin: input.pin,
         authUserId: existing?.auth_user_id || profile?.id || null,
     })
@@ -370,6 +380,7 @@ export async function POST(request: NextRequest) {
 
         const name = normalizeName(body?.name)
         const pin = normalizePin(body?.pin) || generateParentPin()
+        const school = typeof body?.school === 'string' ? body.school.trim().slice(0, 40) : ''
         const grade = typeof body?.grade === 'string' ? body.grade.trim() : ''
         const className = typeof body?.className === 'string' ? body.className.trim() : ''
         if (hasEdgeAdmin(context)) {
@@ -379,15 +390,16 @@ export async function POST(request: NextRequest) {
                 action: 'issue',
                 name,
                 pin,
+                school,
                 grade,
                 className,
             }))
         }
         if (hasAdminClient(context)) {
-            await upsertStudentCode({ adminClient: context.adminClient, name, pin, grade, className })
+            await upsertStudentCode({ adminClient: context.adminClient, name, pin, school, grade, className })
             return NextResponse.json(await loadResponse(context.adminClient))
         }
-        await upsertStudentCodeWithDatabase({ name, pin, grade, className })
+        await upsertStudentCodeWithDatabase({ name, pin, school, grade, className })
         return NextResponse.json(await loadDatabaseResponse())
     } catch (error) {
         return NextResponse.json(
@@ -436,6 +448,9 @@ export async function PATCH(request: NextRequest) {
 
         const name = normalizeName(body?.name)
         const pin = normalizePin(body?.pin) || generateParentPin()
+        const school = typeof body?.school === 'string' ? body.school.trim().slice(0, 40) : ''
+        const grade = typeof body?.grade === 'string' ? body.grade.trim() : ''
+        const className = typeof body?.className === 'string' ? body.className.trim() : ''
         if (hasEdgeAdmin(context)) {
             assertName(name)
             assertPin(pin)
@@ -443,13 +458,16 @@ export async function PATCH(request: NextRequest) {
                 action: 'reissue',
                 name,
                 pin,
+                school,
+                grade,
+                className,
             }))
         }
         if (hasAdminClient(context)) {
-            await upsertStudentCode({ adminClient: context.adminClient, name, pin })
+            await upsertStudentCode({ adminClient: context.adminClient, name, pin, school, grade, className })
             return NextResponse.json(await loadResponse(context.adminClient))
         }
-        await upsertStudentCodeWithDatabase({ name, pin })
+        await upsertStudentCodeWithDatabase({ name, pin, school, grade, className })
         return NextResponse.json(await loadDatabaseResponse())
     } catch (error) {
         return NextResponse.json(

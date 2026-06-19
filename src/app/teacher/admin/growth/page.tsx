@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 type StudentOption = {
     id: string;
     name: string;
+    school: string | null;
     grade: string | null;
     class: string | null;
     status: string | null;
@@ -224,6 +225,8 @@ export default function GrowthManagementPage() {
             const className = getClassLabel(student, record);
             const queryMatch = !normalizedQuery
                 || student.name.replace(/\s+/g, "").includes(normalizedQuery)
+                || (student.school || "").replace(/\s+/g, "").includes(normalizedQuery)
+                || (student.grade || "").replace(/\s+/g, "").includes(normalizedQuery)
                 || className.replace(/\s+/g, "").includes(normalizedQuery);
             const trackMatch = track === "전체 반" || className === track;
             return queryMatch && trackMatch;
@@ -516,6 +519,7 @@ export default function GrowthManagementPage() {
                                 <span className="name-cell">
                                     <strong>{student.name}</strong>
                                     <em className={`class-badge ${notStarted ? "not-started" : ""}`}>{classLabel}</em>
+                                    <small className="student-meta">{[student.school, student.grade].filter(Boolean).join(" · ") || "학교/학년 미입력"}</small>
                                 </span>
                                 <span>{compact(record?.temperament, 90)}</span>
                                 <span>{compact(record?.strengths, 95)}</span>
@@ -809,6 +813,16 @@ export default function GrowthManagementPage() {
                     color: #b45309;
                     background: #fff7ed;
                     border-color: #fed7aa;
+                }
+                .student-meta {
+                    display: inline-block;
+                    min-width: 0;
+                    color: #94a3b8;
+                    font-size: 12px;
+                    font-weight: 800;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
                 }
                 .empty-row, .empty-state {
                     padding: 60px 20px;

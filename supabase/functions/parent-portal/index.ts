@@ -139,7 +139,7 @@ async function loadBaseData(admin = createAdmin()) {
   const [studentsRes, profilesRes, progressRes] = await Promise.all([
     admin
       .from("students")
-      .select("id, name, birthday, grade, class, avatar, pin, auth_user_id, status, created_at")
+      .select("id, name, birthday, school, grade, class, avatar, pin, auth_user_id, status, created_at")
       .order("name", { ascending: true }),
     admin.from("profiles").select("id, name, display_name, email, role"),
     admin
@@ -338,13 +338,16 @@ async function upsertStudentCode(input: {
   const profile = existing?.auth_user_id
     ? profiles?.find((item) => item.id === existing.auth_user_id) || null
     : profiles?.find((item) => item.display_name === input.name || item.name === input.name) || null;
+  const nextSchool = input.school !== undefined ? input.school || null : existing?.school || null;
+  const nextGrade = input.grade !== undefined ? input.grade || null : existing?.grade || null;
+  const nextClassName = input.className !== undefined ? input.className || null : existing?.class || null;
 
   const payload = {
     name: input.name,
     birthday: existing?.birthday || "2000-01-01",
-    school: input.school || existing?.school || null,
-    grade: input.grade || existing?.grade || null,
-    class: input.className || existing?.class || null,
+    school: nextSchool,
+    grade: nextGrade,
+    class: nextClassName,
     pin: input.pin,
     auth_user_id: existing?.auth_user_id || profile?.id || null,
     status: "approved",
@@ -467,7 +470,7 @@ Deno.serve(async (req: Request) => {
       assertName(name);
       const { data: students, error } = await admin
         .from("students")
-        .select("id, name, birthday, grade, class, auth_user_id")
+        .select("id, name, birthday, school, grade, class, auth_user_id")
         .eq("name", name)
         .limit(5);
       if (error) throw new HttpError(500, error.message);
