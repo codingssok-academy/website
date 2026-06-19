@@ -57,6 +57,7 @@ function clearLoginAttempts() {
 interface StudentRow {
   id: string;
   name: string;
+  school?: string | null;
   grade: string | null;
   class?: string | null;
   avatar: string | null;
@@ -71,6 +72,8 @@ export default function LoginPage() {
   const [name, setName] = useState("");
   const [pin, setPin] = useState("");
   const [parentCode, setParentCode] = useState("");
+  const [school, setSchool] = useState("");
+  const [grade, setGrade] = useState("");
   const [signupOpen, setSignupOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [signupLoading, setSignupLoading] = useState(false);
@@ -169,7 +172,7 @@ export default function LoginPage() {
       // 로그인은 이미 가입된 학생 계정만 허용한다. 새 학생은 회원가입에서 학부모 인증번호를 먼저 확인한다.
       const { data: matched, error } = await sb
         .from("students")
-        .select("id, name, grade, class, avatar, auth_user_id, status")
+        .select("id, name, school, grade, class, avatar, auth_user_id, status")
         .eq("name", trimmed)
         .maybeSingle();
 
@@ -203,6 +206,8 @@ export default function LoginPage() {
   const handleSignup = async () => {
     const trimmed = normalizeStudentName(name);
     const cleanParentCode = parentCode.replace(/\D/g, "").slice(0, 5);
+    const cleanSchool = school.trim().slice(0, 40);
+    const cleanGrade = grade.trim().slice(0, 20);
     if (!trimmed) { setMsg({ ok: false, text: "학생 이름을 입력해주세요" }); return; }
     if (cleanParentCode.length !== 5) { setMsg({ ok: false, text: "학부모 인증번호 5자리를 입력해주세요" }); return; }
     if (pin.length !== 4) { setMsg({ ok: false, text: "로그인에 사용할 비밀번호 4자리를 정해주세요" }); return; }
@@ -214,7 +219,7 @@ export default function LoginPage() {
       const res = await fetch("/api/student/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: trimmed, parentCode: cleanParentCode, pin }),
+        body: JSON.stringify({ name: trimmed, parentCode: cleanParentCode, pin, school: cleanSchool, grade: cleanGrade }),
       });
       const data = await res.json();
       if (!res.ok || !data.success) {
@@ -245,6 +250,7 @@ export default function LoginPage() {
       name: student.name,
       email: buildStudentAuthEmail(student.id),
       role: isAdminStudent ? "admin" as const : "student" as const,
+      school: student.school || undefined,
       grade: student.grade || undefined,
       avatar: student.avatar || undefined,
       level: 1, xp: 0, streak: 0,
@@ -319,7 +325,7 @@ export default function LoginPage() {
             코딩<span style={{ color: "#0ea5e9" }}>쏙</span> 아카데미
           </h1>
           <p style={{ fontSize: 14, color: "#64748b", fontWeight: 500, margin: 0, lineHeight: 1.6 }}>
-            {signupOpen ? "회원가입 — 이름, 학부모 인증번호, 사용할 비밀번호를 입력하세요." : "학습 플랫폼 — 이름과 비밀번호로 로그인"}
+            {signupOpen ? "회원가입 — 이름, 인증번호, 학교 정보를 입력하세요." : "학습 플랫폼 — 이름과 비밀번호로 로그인"}
           </p>
         </div>
 
@@ -360,35 +366,96 @@ export default function LoginPage() {
           </div>
 
           {signupOpen && (
-            <div>
-              <label htmlFor="parent-code" style={{
-                display: "block", fontSize: 13, fontWeight: 600, color: "#374151",
-                marginBottom: 8, marginLeft: 4,
-              }}>
-                학부모 인증번호
-              </label>
-              <input
-                id="parent-code"
-                type="tel"
-                inputMode="numeric"
-                value={parentCode}
-                onChange={(e) => {
-                  setParentCode(e.target.value.replace(/\D/g, "").slice(0, 5));
-                  setMsg(null);
-                }}
-                placeholder="숫자 5자리"
-                maxLength={5}
-                style={{
-                  display: "block", width: "100%", paddingLeft: 16, paddingRight: 16,
-                  paddingTop: 14, paddingBottom: 14, border: "2px solid #dbeafe",
-                  borderRadius: 16, background: "rgba(239,246,255,0.9)", fontSize: 18,
-                  color: "#1f2937", outline: "none", transition: "all 0.2s",
-                  boxSizing: "border-box", textAlign: "center", fontWeight: 800, letterSpacing: "0.22em",
-                }}
-                onFocus={(e) => { e.target.style.borderColor = PRIMARY; e.target.style.boxShadow = `0 0 0 3px rgba(99,102,241,0.1)`; }}
-                onBlur={(e) => { e.target.style.borderColor = "#dbeafe"; e.target.style.boxShadow = "none"; }}
-              />
-            </div>
+            <>
+              <div>
+                <label htmlFor="parent-code" style={{
+                  display: "block", fontSize: 13, fontWeight: 600, color: "#374151",
+                  marginBottom: 8, marginLeft: 4,
+                }}>
+                  학부모 인증번호
+                </label>
+                <input
+                  id="parent-code"
+                  type="tel"
+                  inputMode="numeric"
+                  value={parentCode}
+                  onChange={(e) => {
+                    setParentCode(e.target.value.replace(/\D/g, "").slice(0, 5));
+                    setMsg(null);
+                  }}
+                  placeholder="숫자 5자리"
+                  maxLength={5}
+                  style={{
+                    display: "block", width: "100%", paddingLeft: 16, paddingRight: 16,
+                    paddingTop: 14, paddingBottom: 14, border: "2px solid #dbeafe",
+                    borderRadius: 16, background: "rgba(239,246,255,0.9)", fontSize: 18,
+                    color: "#1f2937", outline: "none", transition: "all 0.2s",
+                    boxSizing: "border-box", textAlign: "center", fontWeight: 800, letterSpacing: "0.22em",
+                  }}
+                  onFocus={(e) => { e.target.style.borderColor = PRIMARY; e.target.style.boxShadow = `0 0 0 3px rgba(99,102,241,0.1)`; }}
+                  onBlur={(e) => { e.target.style.borderColor = "#dbeafe"; e.target.style.boxShadow = "none"; }}
+                />
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 0.72fr", gap: 12 }}>
+                <div>
+                  <label htmlFor="student-school" style={{
+                    display: "block", fontSize: 13, fontWeight: 600, color: "#374151",
+                    marginBottom: 8, marginLeft: 4,
+                  }}>
+                    학교
+                  </label>
+                  <input
+                    id="student-school"
+                    type="text"
+                    value={school}
+                    onChange={(e) => {
+                      setSchool(e.target.value.slice(0, 40));
+                      setMsg(null);
+                    }}
+                    autoComplete="off"
+                    placeholder="학교명"
+                    style={{
+                      display: "block", width: "100%", paddingLeft: 16, paddingRight: 16,
+                      paddingTop: 14, paddingBottom: 14, border: "2px solid #e5e7eb",
+                      borderRadius: 16, background: "rgba(255,255,255,0.8)", fontSize: 16,
+                      color: "#1f2937", outline: "none", transition: "all 0.2s",
+                      boxSizing: "border-box",
+                    }}
+                    onFocus={(e) => { e.target.style.borderColor = PRIMARY; e.target.style.boxShadow = `0 0 0 3px rgba(99,102,241,0.1)`; }}
+                    onBlur={(e) => { e.target.style.borderColor = "#e5e7eb"; e.target.style.boxShadow = "none"; }}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="student-grade" style={{
+                    display: "block", fontSize: 13, fontWeight: 600, color: "#374151",
+                    marginBottom: 8, marginLeft: 4,
+                  }}>
+                    학년
+                  </label>
+                  <input
+                    id="student-grade"
+                    type="text"
+                    value={grade}
+                    onChange={(e) => {
+                      setGrade(e.target.value.slice(0, 20));
+                      setMsg(null);
+                    }}
+                    autoComplete="off"
+                    placeholder="학년"
+                    style={{
+                      display: "block", width: "100%", paddingLeft: 16, paddingRight: 16,
+                      paddingTop: 14, paddingBottom: 14, border: "2px solid #e5e7eb",
+                      borderRadius: 16, background: "rgba(255,255,255,0.8)", fontSize: 16,
+                      color: "#1f2937", outline: "none", transition: "all 0.2s",
+                      boxSizing: "border-box",
+                    }}
+                    onFocus={(e) => { e.target.style.borderColor = PRIMARY; e.target.style.boxShadow = `0 0 0 3px rgba(99,102,241,0.1)`; }}
+                    onBlur={(e) => { e.target.style.borderColor = "#e5e7eb"; e.target.style.boxShadow = "none"; }}
+                  />
+                </div>
+              </div>
+            </>
           )}
 
           {/* 4자리 비밀번호 */}

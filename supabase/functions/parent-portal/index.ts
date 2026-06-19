@@ -210,13 +210,15 @@ async function handleStudentSignup(body: Record<string, unknown>) {
   const name = normalizeName(body.name);
   const parentCode = normalizePin(body.parentCode);
   const studentPin = normalizeStudentPin(body.pin);
+  const school = typeof body.school === "string" ? body.school.trim().slice(0, 40) : "";
+  const grade = typeof body.grade === "string" ? body.grade.trim().slice(0, 20) : "";
   assertName(name);
   assertPin(parentCode);
   assertStudentPin(studentPin);
 
   const { data: students, error: studentsError } = await admin
     .from("students")
-    .select("id, name, birthday, grade, class, avatar, pin, auth_user_id, status")
+    .select("id, name, birthday, school, grade, class, avatar, pin, auth_user_id, status")
     .eq("name", name)
     .limit(5);
   if (studentsError) throw new HttpError(500, studentsError.message);
@@ -278,11 +280,13 @@ async function handleStudentSignup(body: Record<string, unknown>) {
     .update({
       auth_user_id: authUserId,
       pin: parentCode,
+      school: school || student.school || null,
+      grade: grade || student.grade || null,
       status: "approved",
       updated_at: new Date().toISOString(),
     })
     .eq("id", student.id)
-    .select("id, name, grade, class, avatar, auth_user_id, status")
+    .select("id, name, school, grade, class, avatar, auth_user_id, status")
     .single();
   if (updateError || !updated) {
     throw new HttpError(500, updateError?.message || "학생 계정을 연결하지 못했습니다.");
@@ -295,6 +299,7 @@ async function handleStudentSignup(body: Record<string, unknown>) {
     student: {
       id: updated.id,
       name: updated.name,
+      school: updated.school || null,
       grade: updated.grade || null,
       avatar: updated.avatar || null,
       auth_user_id: updated.auth_user_id || null,
@@ -308,6 +313,7 @@ async function upsertStudentCode(input: {
   admin: ReturnType<typeof createAdmin>;
   name: string;
   pin: string | null;
+  school?: string | null;
   grade?: string | null;
   className?: string | null;
 }) {
@@ -317,7 +323,7 @@ async function upsertStudentCode(input: {
   const admin = input.admin;
   const { data: students, error: studentsError } = await admin
     .from("students")
-    .select("id, name, birthday, grade, class, avatar, pin, auth_user_id, status, created_at")
+    .select("id, name, birthday, school, grade, class, avatar, pin, auth_user_id, status, created_at")
     .eq("name", input.name)
     .limit(5);
   if (studentsError) throw new HttpError(500, studentsError.message);
@@ -336,6 +342,7 @@ async function upsertStudentCode(input: {
   const payload = {
     name: input.name,
     birthday: existing?.birthday || "2000-01-01",
+    school: input.school || existing?.school || null,
     grade: input.grade || existing?.grade || null,
     class: input.className || existing?.class || null,
     pin: input.pin,
@@ -437,6 +444,7 @@ Deno.serve(async (req: Request) => {
         admin,
         name: normalizeName(body.name),
         pin: normalizePin(body.pin),
+        school: typeof body.school === "string" ? body.school.trim().slice(0, 40) : null,
         grade: typeof body.grade === "string" ? body.grade.trim() : null,
         className: typeof body.className === "string" ? body.className.trim() : null,
       });

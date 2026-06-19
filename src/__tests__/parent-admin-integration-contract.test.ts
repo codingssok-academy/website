@@ -97,7 +97,9 @@ describe("parent portal admin integration contract", () => {
     expect(page).toContain('method: "PATCH"');
     expect(page).toContain('method: "DELETE"');
     expect(page).toContain("deleteAccount");
+    expect(page).toContain("student.school");
     expect(route).toContain("export async function DELETE");
+    expect(route).toContain("id,name,school,grade,class");
     expect(route).toContain("proxyStudentAccountsToRpc");
     expect(route).toContain("studentAccountDelete");
     expect(route).not.toContain("deleteUser");
@@ -123,6 +125,7 @@ describe("parent portal admin integration contract", () => {
     expect(migration).toContain("profiles_approval_status_check");
     expect(migration).toContain("approval_status = 'deactivated'");
     expect(migration).toContain("status = 'deactivated'");
+    expect(migration).toContain("'school', s.school");
     expect(migration).not.toContain("delete from auth.users");
     expect(migration).not.toContain("deleteUser");
     expect(migration).toContain("grant execute on function public.codingssok_admin_student_accounts");

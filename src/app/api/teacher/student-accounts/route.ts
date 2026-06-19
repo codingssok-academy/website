@@ -9,6 +9,7 @@ export const dynamic = "force-dynamic";
 type StudentRow = {
     id: string;
     name: string;
+    school: string | null;
     grade: string | null;
     class: string | null;
     pin: string | null;
@@ -42,7 +43,7 @@ type StudentAccountsRpcResponse = {
     warning?: string;
 };
 
-const STUDENT_COLUMNS = "id,name,grade,class,pin,status,created_at,updated_at,auth_user_id";
+const STUDENT_COLUMNS = "id,name,school,grade,class,pin,status,created_at,updated_at,auth_user_id";
 const PROFILE_COLUMNS = "id,email,role,name,display_name,approval_status";
 const MUTABLE_STATUSES = new Set(["pending", "approved", "deactivated", "rejected"]);
 const ACTIVE_STUDENT_NAMES = new Set([
@@ -232,6 +233,7 @@ async function loadStudentAccounts(admin: NonNullable<ReturnType<typeof createAd
                 id: student.id,
                 source: "student" as const,
                 name: student.name,
+                school: student.school,
                 grade: student.grade,
                 className: student.class,
                 status: student.status || "approved",
@@ -272,6 +274,7 @@ async function loadStudentAccounts(admin: NonNullable<ReturnType<typeof createAd
                 id: profile.id,
                 source: "orphan" as const,
                 name: readableProfileName(profile, authUser),
+                school: null,
                 grade: null,
                 className: "Unlinked account",
                 status: profile.approval_status || "orphan",

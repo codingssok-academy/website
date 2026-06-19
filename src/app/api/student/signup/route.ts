@@ -10,6 +10,7 @@ type AdminClient = NonNullable<ReturnType<typeof createAdminClient>>;
 type StudentRow = {
     id: string;
     name: string;
+    school?: string | null;
     grade?: string | null;
     class?: string | null;
     avatar?: string | null;
@@ -39,10 +40,15 @@ function normalizeStudentPin(input: unknown) {
     return typeof input === "string" ? input.replace(/\D/g, "").slice(0, 4) : "";
 }
 
+function normalizeOptionalText(input: unknown, maxLength: number) {
+    return typeof input === "string" ? input.trim().slice(0, maxLength) : "";
+}
+
 function publicStudent(row: StudentRow) {
     return {
         id: row.id,
         name: row.name,
+        school: row.school || null,
         grade: row.grade || null,
         avatar: row.avatar || null,
         auth_user_id: row.auth_user_id || null,
@@ -114,6 +120,8 @@ export async function POST(request: NextRequest) {
         const name = normalizeName(body?.name);
         const parentCode = normalizeParentCode(body?.parentCode);
         const pin = normalizeStudentPin(body?.pin);
+        const school = normalizeOptionalText(body?.school, 40);
+        const grade = normalizeOptionalText(body?.grade, 20);
 
         if (name.length < 2 || name.length > 20) {
             return NextResponse.json({ success: false, error: "학생 이름을 확인해주세요." }, { status: 400 });
@@ -132,7 +140,7 @@ export async function POST(request: NextRequest) {
                 student?: ReturnType<typeof publicStudent>;
                 message?: string;
                 error?: string;
-            }>("studentSignup", { name, parentCode, pin });
+            }>("studentSignup", { name, parentCode, pin, school, grade });
             if (!edge.ok) {
                 return NextResponse.json(
                     { success: false, error: edge.error },
@@ -144,7 +152,7 @@ export async function POST(request: NextRequest) {
 
         const { data: studentData, error: studentError } = await adminClient
             .from("students")
-            .select("id, name, grade, class, avatar, pin, auth_user_id, birthday, status")
+            .select("id, name, school, grade, class, avatar, pin, auth_user_id, birthday, status")
             .eq("name", name)
             .maybeSingle();
         if (studentError) throw new Error(studentError.message);
@@ -170,13 +178,14 @@ export async function POST(request: NextRequest) {
                 .insert({
                     name,
                     birthday: "2000-01-01",
-                    grade: null,
+                    school: school || null,
+                    grade: grade || null,
                     class: codeCheck.reference?.className || null,
                     avatar: null,
                     pin: parentCode,
                     status: "approved",
                 })
-                .select("id, name, grade, class, avatar, pin, auth_user_id, birthday, status")
+                .select("id, name, school, grade, class, avatar, pin, auth_user_id, birthday, status")
                 .single();
             if (insertError || !inserted) throw new Error(insertError?.message || "학생 정보를 만들지 못했습니다.");
             student = inserted as StudentRow;
@@ -228,12 +237,14 @@ export async function POST(request: NextRequest) {
             .update({
                 auth_user_id: authUserId,
                 pin: parentCode,
+                school: school || student.school || null,
+                grade: grade || student.grade || null,
                 class: student.class || codeCheck.reference?.className || null,
                 status: student.status || "approved",
                 updated_at: new Date().toISOString(),
             })
             .eq("id", student.id)
-            .select("id, name, grade, class, avatar, pin, auth_user_id, birthday, status")
+            .select("id, name, school, grade, class, avatar, pin, auth_user_id, birthday, status")
             .single();
         if (updateError || !updated) throw new Error(updateError?.message || "학생 계정을 연결하지 못했습니다.");
 

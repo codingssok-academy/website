@@ -6,6 +6,7 @@ type StudentAccount = {
     id: string;
     source: "student" | "orphan";
     name: string;
+    school: string | null;
     grade: string | null;
     className: string | null;
     status: string;
@@ -234,13 +235,21 @@ export default function StudentAccountsPage() {
                     filtered.map(student => {
                         const colors = statusColor(student.status);
                         const acting = actingId === student.id;
+                        const infoLine = student.deleteRecommended
+                            ? student.recommendationReason || "운영 명단 기준 밖 계정"
+                            : [
+                                student.className || "반 미지정",
+                                student.school || null,
+                                student.grade || null,
+                                `인증번호 ${student.pinIssued ? "발급됨" : "없음"}`,
+                            ].filter(Boolean).join(" · ");
                         return (
                             <div className={`table-row ${student.deleteRecommended ? "recommend-delete" : ""}`} key={student.id} style={{ opacity: acting ? 0.55 : 1 }}>
                                 <div className="student-cell">
                                     <div className="avatar">{student.name.slice(0, 1)}</div>
                                     <div>
                                         <strong>{student.name}</strong>
-                                        <small>{student.deleteRecommended ? student.recommendationReason || "운영 명단 기준 밖 계정" : `${student.className || "반 미지정"} · 인증번호 ${student.pinIssued ? "발급됨" : "없음"}`}</small>
+                                        <small>{infoLine}</small>
                                     </div>
                                 </div>
                                 <div>
