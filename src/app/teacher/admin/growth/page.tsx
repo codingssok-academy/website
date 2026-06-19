@@ -91,6 +91,39 @@ function compact(value: string | null | undefined, limit = 80) {
     return text.length > limit ? `${text.slice(0, limit)}...` : text;
 }
 
+function displayValue(value: string | null | undefined) {
+    return safeText(value) || "-";
+}
+
+function classTone(className: string) {
+    if (className === NO_CLASS_PROGRESS_LABEL) return "not-started";
+    if (className.includes("공통")) return "foundation";
+    if (className.includes("흥미")) return "interest";
+    if (className.includes("만들기")) return "maker";
+    if (className.includes("프로젝트")) return "project";
+    if (className.includes("대회")) return "contest";
+    if (className.includes("내신")) return "school";
+    if (className.includes("자격증")) return "cert";
+    return "default";
+}
+
+function statusTone(status: string | null | undefined) {
+    const text = safeText(status);
+    if (text.includes("상담")) return "danger";
+    if (text.includes("전달")) return "ready";
+    if (text.includes("완료")) return "done";
+    if (text.includes("초안")) return "draft";
+    return "watch";
+}
+
+function moveTone(value: string | null | undefined) {
+    const text = safeText(value);
+    if (text.includes("이동 가능")) return "go";
+    if (text.includes("상담")) return "danger";
+    if (text.includes("보강")) return "watch";
+    return "neutral";
+}
+
 function hasGrowthContent(record: GrowthRecord | undefined) {
     if (!record) return false;
     return Boolean(
@@ -381,15 +414,20 @@ export default function GrowthManagementPage() {
     };
 
     const exportCsv = () => {
-        const header = ["학생", "현재 반", "잘하는 점", "보완할 점", "최근 수정"];
+        const header = ["이름", "반", "학교", "학년", "관리상태", "반이동가능성", "현재 목표", "잘하는 점", "보완할 점"];
         const rows = filteredStudents.map(student => {
             const record = recordByStudent.get(student.id);
+            const classLabel = getClassLabel(student, record);
             return [
                 student.name,
-                record?.current_class || student.class || "",
+                classLabel,
+                student.school || "",
+                student.grade || "",
+                record?.status || "",
+                record?.next_class_potential || "",
+                record?.current_goal || "",
                 record?.strengths || "",
                 record?.weaknesses || "",
-                record?.updated_at || "",
             ];
         });
         const csv = [header, ...rows]
@@ -492,16 +530,23 @@ export default function GrowthManagementPage() {
 
                 <section className="matrix-card">
                     <div className="table-head">
-                        <span>학생</span>
+                        <span>이름</span>
+                        <span>반</span>
+                        <span>학교</span>
+                        <span>학년</span>
+                        <span>관리상태</span>
+                        <span>반이동가능성</span>
+                        <span>현재 목표</span>
                         <span>잘하는 점</span>
                         <span>보완할 점</span>
-                        <span>최근 수정</span>
                     </div>
                     {filteredStudents.map(student => {
                         const record = recordByStudent.get(student.id);
                         const active = student.id === selectedId;
                         const classLabel = getClassLabel(student, record);
                         const notStarted = classLabel === NO_CLASS_PROGRESS_LABEL;
+                        const recordStatus = record?.status || "관찰중";
+                        const moveStatus = record?.next_class_potential || "-";
                         return (
                             <button
                                 key={student.id}
@@ -510,12 +555,22 @@ export default function GrowthManagementPage() {
                             >
                                 <span className="name-cell">
                                     <strong>{student.name}</strong>
-                                    <em className={`class-badge ${notStarted ? "not-started" : ""}`}>{classLabel}</em>
-                                    <small className="student-meta">{[student.school, student.grade].filter(Boolean).join(" · ") || "학교/학년 미입력"}</small>
+                                    <small>{formatDate(record?.updated_at)}</small>
                                 </span>
-                                <span>{compact(record?.strengths, 95)}</span>
-                                <span>{compact(record?.weaknesses, 95)}</span>
-                                <span>{formatDate(record?.updated_at)}</span>
+                                <span>
+                                    <em className={`class-badge ${classTone(classLabel)}`}>{classLabel}</em>
+                                </span>
+                                <span className="plain-cell">{displayValue(student.school)}</span>
+                                <span className="plain-cell">{displayValue(student.grade)}</span>
+                                <span>
+                                    <em className={`status-badge ${statusTone(recordStatus)}`}>{recordStatus}</em>
+                                </span>
+                                <span>
+                                    <em className={`move-badge ${moveTone(moveStatus)}`}>{moveStatus}</em>
+                                </span>
+                                <span className="long-cell">{compact(record?.current_goal, 72)}</span>
+                                <span className="long-cell">{compact(record?.strengths, 72)}</span>
+                                <span className="long-cell">{compact(record?.weaknesses, 72)}</span>
                             </button>
                         );
                     })}
@@ -598,18 +653,22 @@ export default function GrowthManagementPage() {
                 .growth-page {
                     min-height: calc(100vh - 48px);
                     display: grid;
-                    grid-template-columns: minmax(0, 1fr) 390px;
-                    gap: 18px;
-                    color: #111827;
-                    background: #f4f6f9;
+                    grid-template-columns: minmax(0, 1fr) 410px;
+                    gap: 20px;
+                    color: #0f172a;
+                    background:
+                        linear-gradient(180deg, #f7f9fc 0%, #eef3f8 100%);
                     font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
+                }
+                .growth-main {
+                    min-width: 0;
                 }
                 .growth-header {
                     display: flex;
                     align-items: flex-start;
                     justify-content: space-between;
                     gap: 20px;
-                    margin-bottom: 18px;
+                    margin-bottom: 16px;
                 }
                 .eyebrow {
                     font-size: 12px;
@@ -619,7 +678,7 @@ export default function GrowthManagementPage() {
                 }
                 h1 {
                     margin: 4px 0 8px;
-                    font-size: 30px;
+                    font-size: 32px;
                     line-height: 1.2;
                     letter-spacing: 0;
                 }
@@ -685,7 +744,7 @@ export default function GrowthManagementPage() {
                     display: grid;
                     grid-template-columns: minmax(0, 1fr) 280px;
                     gap: 12px;
-                    margin-bottom: 14px;
+                    margin-bottom: 12px;
                     align-items: start;
                 }
                 .track-filter {
@@ -728,41 +787,52 @@ export default function GrowthManagementPage() {
                 .large-textarea { min-height: 118px; }
                 .matrix-card {
                     border: 1px solid #d9e1ec;
-                    background: #fff;
-                    border-radius: 8px;
-                    overflow: hidden;
+                    background: rgba(255,255,255,.86);
+                    border-radius: 10px;
+                    overflow: auto;
+                    box-shadow: 0 18px 42px rgba(15, 23, 42, 0.08);
+                    max-height: calc(100vh - 215px);
                 }
                 .table-head, .student-row {
                     display: grid;
-                    grid-template-columns: 230px minmax(0, 1fr) minmax(0, 1.15fr) 116px;
-                    gap: 14px;
+                    grid-template-columns: 90px 116px 138px 76px 112px 126px minmax(190px, 1fr) minmax(190px, 1fr) minmax(190px, 1fr);
+                    gap: 10px;
                     align-items: center;
+                    min-width: 1280px;
                 }
                 .table-head {
-                    min-height: 44px;
-                    padding: 0 16px;
-                    background: #f8fafc;
+                    position: sticky;
+                    top: 0;
+                    z-index: 3;
+                    min-height: 46px;
+                    padding: 0 14px;
+                    background: rgba(248, 250, 252, .96);
+                    backdrop-filter: blur(14px);
                     color: #4b5563;
                     border-bottom: 1px solid #e5edf6;
-                    font-size: 12px;
+                    font-size: 11px;
                     font-weight: 950;
+                    text-transform: uppercase;
                 }
                 .student-row {
                     width: 100%;
-                    min-height: 54px;
-                    padding: 8px 16px;
+                    min-height: 62px;
+                    padding: 9px 14px;
                     border: 0;
                     border-bottom: 1px solid #edf1f6;
                     background: #fff;
-                    color: #1f2937;
+                    color: #0f172a;
                     text-align: left;
                     font-size: 13px;
-                    font-weight: 700;
+                    font-weight: 760;
+                    transition: background .16s ease, box-shadow .16s ease;
                 }
                 .student-row:hover, .student-row.selected { background: #f5f9ff; }
-                .student-row.not-started { background: #fffaf3; }
-                .student-row.not-started:hover, .student-row.not-started.selected { background: #fff4e6; }
-                .student-row.selected { box-shadow: inset 3px 0 0 #2563eb; }
+                .student-row.not-started { background: #fffaf2; }
+                .student-row.not-started:hover, .student-row.not-started.selected { background: #fff4df; }
+                .student-row.selected {
+                    box-shadow: inset 3px 0 0 #2563eb, inset 0 0 0 1px rgba(37, 99, 235, .18);
+                }
                 .student-row span {
                     min-width: 0;
                     overflow: hidden;
@@ -771,20 +841,39 @@ export default function GrowthManagementPage() {
                 }
                 .name-cell {
                     display: flex;
-                    align-items: center;
-                    gap: 10px;
+                    flex-direction: column;
+                    align-items: flex-start;
+                    gap: 2px;
                 }
                 .name-cell strong {
-                    display: inline;
+                    display: block;
                     font-size: 14px;
                     font-weight: 950;
                     white-space: nowrap;
+                }
+                .name-cell small {
+                    display: block;
+                    max-width: 82px;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                    color: #94a3b8;
+                    font-size: 10px;
+                    font-weight: 850;
+                }
+                .plain-cell {
+                    color: #334155;
+                    font-weight: 850;
+                }
+                .long-cell {
+                    color: #1f2937;
+                    line-height: 1.35;
                 }
                 .class-badge {
                     display: inline-flex;
                     align-items: center;
                     min-height: 24px;
-                    max-width: 112px;
+                    max-width: 108px;
                     padding: 0 8px;
                     border: 1px solid #d9e1ec;
                     border-radius: 999px;
@@ -797,20 +886,57 @@ export default function GrowthManagementPage() {
                     overflow: hidden;
                     text-overflow: ellipsis;
                 }
+                .class-badge.not-started,
+                .class-badge.default {
+                    color: #64748b;
+                    background: #f8fafc;
+                    border-color: #e2e8f0;
+                }
                 .class-badge.not-started {
                     color: #b45309;
                     background: #fff7ed;
                     border-color: #fed7aa;
                 }
-                .student-meta {
-                    display: inline-block;
-                    min-width: 0;
-                    color: #94a3b8;
+                .class-badge.foundation { color: #075985; background: #e0f2fe; border-color: #bae6fd; }
+                .class-badge.interest { color: #166534; background: #dcfce7; border-color: #bbf7d0; }
+                .class-badge.maker { color: #9a3412; background: #ffedd5; border-color: #fed7aa; }
+                .class-badge.project { color: #1d4ed8; background: #dbeafe; border-color: #bfdbfe; }
+                .class-badge.contest { color: #7e22ce; background: #f3e8ff; border-color: #e9d5ff; }
+                .class-badge.school { color: #be123c; background: #ffe4e6; border-color: #fecdd3; }
+                .class-badge.cert { color: #0f766e; background: #ccfbf1; border-color: #99f6e4; }
+                .status-badge, .move-badge {
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    min-height: 24px;
+                    max-width: 112px;
+                    padding: 0 8px;
+                    border-radius: 7px;
+                    border: 1px solid #d9e1ec;
+                    font-style: normal;
                     font-size: 12px;
-                    font-weight: 800;
+                    font-weight: 900;
+                    white-space: nowrap;
                     overflow: hidden;
                     text-overflow: ellipsis;
-                    white-space: nowrap;
+                }
+                .status-badge.watch, .move-badge.neutral { color: #475569; background: #f8fafc; border-color: #e2e8f0; }
+                .status-badge.draft { color: #92400e; background: #fffbeb; border-color: #fde68a; }
+                .status-badge.ready { color: #5b21b6; background: #ede9fe; border-color: #ddd6fe; }
+                .status-badge.done { color: #047857; background: #ecfdf5; border-color: #bbf7d0; }
+                .status-badge.danger, .move-badge.danger { color: #b91c1c; background: #fef2f2; border-color: #fecaca; }
+                .move-badge.go { color: #1d4ed8; background: #eff6ff; border-color: #bfdbfe; }
+                .move-badge.watch { color: #b45309; background: #fffbeb; border-color: #fde68a; }
+                .matrix-card::-webkit-scrollbar,
+                .detail-panel::-webkit-scrollbar {
+                    width: 10px;
+                    height: 10px;
+                }
+                .matrix-card::-webkit-scrollbar-thumb,
+                .detail-panel::-webkit-scrollbar-thumb {
+                    background: #cbd5e1;
+                    border-radius: 999px;
+                    border: 2px solid #f8fafc;
                 }
                 .empty-row, .empty-state {
                     padding: 60px 20px;
@@ -824,9 +950,10 @@ export default function GrowthManagementPage() {
                     height: calc(100vh - 48px);
                     overflow-y: auto;
                     border: 1px solid #d9e1ec;
-                    background: #ffffff;
-                    border-radius: 8px;
+                    background: rgba(255,255,255,.92);
+                    border-radius: 10px;
                     padding: 18px;
+                    box-shadow: 0 18px 42px rgba(15, 23, 42, 0.08);
                 }
                 .detail-head {
                     display: flex;
@@ -887,14 +1014,15 @@ export default function GrowthManagementPage() {
                 @media (max-width: 1280px) {
                     .growth-page { grid-template-columns: 1fr; }
                     .detail-panel { position: static; height: auto; }
-                    .table-head, .student-row { grid-template-columns: 190px minmax(0, 1fr) minmax(0, 1.1fr) 105px; }
+                    .matrix-card { max-height: 62vh; }
                 }
                 @media (max-width: 820px) {
                     .growth-header { flex-direction: column; }
                     .filters { grid-template-columns: 1fr; }
-                    .table-head { display: none; }
-                    .student-row { grid-template-columns: 1fr; gap: 5px; white-space: normal; }
-                    .student-row span { white-space: normal; }
+                    .table-head, .student-row {
+                        min-width: 1180px;
+                        grid-template-columns: 82px 104px 122px 70px 108px 120px minmax(170px, 1fr) minmax(170px, 1fr) minmax(170px, 1fr);
+                    }
                     .detail-actions { grid-template-columns: 1fr; }
                 }
             `}</style>
