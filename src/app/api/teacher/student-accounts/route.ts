@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { requireTeacher } from "@/lib/auth-teacher";
+import { buildStudentAuthPassword } from "@/lib/auth-bridge";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -13,6 +14,7 @@ type StudentRow = {
     grade: string | null;
     class: string | null;
     pin: string | null;
+    login_pin: string | null;
     status: string | null;
     created_at: string | null;
     updated_at: string | null;
@@ -43,7 +45,7 @@ type StudentAccountsRpcResponse = {
     warning?: string;
 };
 
-const STUDENT_COLUMNS = "id,name,school,grade,class,pin,status,created_at,updated_at,auth_user_id";
+const STUDENT_COLUMNS = "id,name,school,grade,class,pin,login_pin,status,created_at,updated_at,auth_user_id";
 const PROFILE_COLUMNS = "id,email,role,name,display_name,approval_status";
 const MUTABLE_STATUSES = new Set(["pending", "approved", "deactivated", "rejected"]);
 const ACTIVE_STUDENT_NAMES = new Set([
@@ -97,6 +99,10 @@ function normalizeId(input: unknown) {
 
 function normalizeOptionalText(input: unknown, maxLength: number) {
     return typeof input === "string" ? input.trim().slice(0, maxLength) : "";
+}
+
+function normalizeLoginPin(input: unknown) {
+    return typeof input === "string" ? input.replace(/\D/g, "").slice(0, 4) : "";
 }
 
 function normalizeStudentName(input: unknown) {
@@ -243,6 +249,7 @@ async function loadStudentAccounts(admin: NonNullable<ReturnType<typeof createAd
                 status: student.status || "approved",
                 canChangeStatus: true,
                 pinIssued: /^\d{5}$/.test(student.pin || ""),
+                loginPin: student.auth_user_id && /^\d{4}$/.test(student.login_pin || "") ? student.login_pin : null,
                 createdAt: student.created_at,
                 updatedAt: student.updated_at,
                 authUserId: student.auth_user_id,
@@ -284,6 +291,7 @@ async function loadStudentAccounts(admin: NonNullable<ReturnType<typeof createAd
                 status: profile.approval_status || "orphan",
                 canChangeStatus: false,
                 pinIssued: false,
+                loginPin: null,
                 createdAt: authUser?.created_at || null,
                 updatedAt: null,
                 authUserId: profile.id,
@@ -368,6 +376,68 @@ async function updateStudentInfoWithAdmin(admin: NonNullable<ReturnType<typeof c
         .eq("id", studentId);
 
     if (error) throw new Error(error.message);
+
+    return NextResponse.json(await loadStudentAccounts(admin), {
+        headers: { "Cache-Control": "no-store" },
+    });
+}
+
+async function updateStudentLoginPinWithAdmin(admin: NonNullable<ReturnType<typeof createAdminClient>>, body: Record<string, unknown>) {
+    const studentId = normalizeId(body?.studentId);
+    const loginPin = normalizeLoginPin(body?.loginPin);
+
+    if (!studentId || !/^\d{4}$/.test(loginPin)) {
+        return NextResponse.json(
+            { success: false, error: "Student id and 4-digit login password are required." },
+            { status: 400 },
+        );
+    }
+
+    const { data: student, error: studentError } = await admin
+        .from("students")
+        .select(STUDENT_COLUMNS)
+        .eq("id", studentId)
+        .maybeSingle();
+
+    if (studentError) throw new Error(studentError.message);
+    if (!student) {
+        return NextResponse.json({ success: false, error: "Student was not found." }, { status: 404 });
+    }
+
+    const row = student as StudentRow;
+    if (!row.auth_user_id) {
+        return NextResponse.json(
+            { success: false, error: "Only registered student accounts can have a login password." },
+            { status: 400 },
+        );
+    }
+
+    const { data: profile, error: profileError } = await admin
+        .from("profiles")
+        .select(PROFILE_COLUMNS)
+        .eq("id", row.auth_user_id)
+        .maybeSingle();
+
+    if (profileError) throw new Error(profileError.message);
+    if (isProtectedProfile(profile as ProfileRow | null)) {
+        return NextResponse.json({ success: false, error: "Teacher and admin accounts are protected." }, { status: 400 });
+    }
+
+    const { error: authError } = await admin.auth.admin.updateUserById(row.auth_user_id, {
+        password: buildStudentAuthPassword(row.id, loginPin),
+    });
+
+    if (authError) throw new Error(authError.message);
+
+    const { error: updateError } = await admin
+        .from("students")
+        .update({
+            login_pin: loginPin,
+            updated_at: new Date().toISOString(),
+        })
+        .eq("id", row.id);
+
+    if (updateError) throw new Error(updateError.message);
 
     return NextResponse.json(await loadStudentAccounts(admin), {
         headers: { "Cache-Control": "no-store" },
@@ -489,7 +559,15 @@ export async function PATCH(request: NextRequest) {
         const admin = createAdminClient();
         if (admin) {
             if (action === "studentInfo") return updateStudentInfoWithAdmin(admin, body);
+            if (action === "studentLoginPin") return updateStudentLoginPinWithAdmin(admin, body);
             return updateStatusWithAdmin(admin, body);
+        }
+
+        if (action === "studentLoginPin") {
+            return NextResponse.json(
+                { success: false, error: "Server admin credentials are required to reset a student login password." },
+                { status: 503 },
+            );
         }
 
         return proxyStudentAccountsToRpc(action === "studentInfo" ? "studentAccountInfo" : "studentAccountStatus", body);

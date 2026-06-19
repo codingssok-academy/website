@@ -12,6 +12,7 @@ type StudentAccount = {
     status: string;
     canChangeStatus: boolean;
     pinIssued: boolean;
+    loginPin: string | null;
     createdAt: string | null;
     updatedAt: string | null;
     authUserId: string | null;
@@ -49,6 +50,8 @@ type InfoDraft = {
     school: string;
     grade: string;
 };
+
+type LoginPinDraft = Record<string, string>;
 
 const FILTERS = [
     { key: "all", label: "전체" },
@@ -102,6 +105,7 @@ export default function StudentAccountsPage() {
     const [loading, setLoading] = useState(true);
     const [actingId, setActingId] = useState<string | null>(null);
     const [infoDrafts, setInfoDrafts] = useState<Record<string, InfoDraft>>({});
+    const [loginPinDrafts, setLoginPinDrafts] = useState<LoginPinDraft>({});
     const [message, setMessage] = useState<{ type: "ok" | "error" | "info"; text: string } | null>(null);
 
     const load = useCallback(async () => {
@@ -139,7 +143,6 @@ export default function StudentAccountsPage() {
                     student.school || "",
                     student.grade || "",
                     student.className || "",
-                    student.email || "",
                 ].join("").replace(/\s+/g, "");
                 if (!haystack.includes(normalizedQuery)) return false;
             }
@@ -225,6 +228,50 @@ export default function StudentAccountsPage() {
         }
     };
 
+    const setLoginPinDraft = (student: StudentAccount, value: string) => {
+        setLoginPinDrafts(prev => ({
+            ...prev,
+            [student.id]: value.replace(/\D/g, "").slice(0, 4),
+        }));
+    };
+
+    const resetLoginPin = async (student: StudentAccount) => {
+        if (!student.accountLinked || student.source !== "student") return;
+        const loginPin = (loginPinDrafts[student.id] || "").replace(/\D/g, "").slice(0, 4);
+        if (!/^\d{4}$/.test(loginPin)) {
+            setMessage({ type: "error", text: "로그인 비밀번호는 숫자 4자리로 입력해야 합니다." });
+            return;
+        }
+
+        setActingId(student.id);
+        setMessage(null);
+        try {
+            const res = await fetch("/api/teacher/student-accounts", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    action: "studentLoginPin",
+                    studentId: student.id,
+                    loginPin,
+                }),
+            });
+            const data = await readApiJson(res);
+            if (!res.ok || !data.success) throw new Error(data.error || "로그인 비밀번호 저장 실패");
+            setStudents(data.students || []);
+            if (data.stats) setStats(data.stats);
+            setLoginPinDrafts(prev => {
+                const next = { ...prev };
+                delete next[student.id];
+                return next;
+            });
+            setMessage({ type: "ok", text: `${student.name} 로그인 비밀번호를 ${loginPin}로 설정했습니다.` });
+        } catch (error) {
+            setMessage({ type: "error", text: error instanceof Error ? error.message : "로그인 비밀번호 저장 실패" });
+        } finally {
+            setActingId(null);
+        }
+    };
+
     const deleteAccount = async (student: StudentAccount) => {
         if (!student.accountLinked) return;
         const ok = window.confirm(
@@ -296,7 +343,7 @@ export default function StudentAccountsPage() {
                     <span>학생</span>
                     <span>학교</span>
                     <span>학년</span>
-                    <span>계정 상태</span>
+                    <span>로그인 비밀번호</span>
                     <span>학생 상태</span>
                     <span>최근 로그인</span>
                     <span>관리</span>
@@ -356,10 +403,35 @@ export default function StudentAccountsPage() {
                                     )}
                                 </div>
                                 <div>
-                                    <span className={student.accountLinked ? "pill linked" : "pill unlinked"}>
-                                        {student.accountLinked ? "회원가입 완료" : "미가입"}
-                                    </span>
-                                    {student.email && <small className="sub">{student.email}</small>}
+                                    {student.accountLinked ? (
+                                        <div className="login-pin-cell">
+                                            <span className={student.loginPin ? "password-pill" : "password-pill missing"}>
+                                                {student.loginPin ? `비밀번호 ${student.loginPin}` : "비밀번호 재설정 필요"}
+                                            </span>
+                                            {student.source === "student" && (
+                                                <div className="pin-reset-row">
+                                                    <input
+                                                        className="pin-reset-input"
+                                                        value={loginPinDrafts[student.id] || ""}
+                                                        onChange={event => setLoginPinDraft(student, event.target.value)}
+                                                        placeholder="4자리"
+                                                        inputMode="numeric"
+                                                        maxLength={4}
+                                                        disabled={acting}
+                                                    />
+                                                    <button
+                                                        className="pin-reset-button"
+                                                        onClick={() => resetLoginPin(student)}
+                                                        disabled={acting || !/^\d{4}$/.test(loginPinDrafts[student.id] || "")}
+                                                    >
+                                                        저장
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <span className="pill unlinked">미가입</span>
+                                    )}
                                 </div>
                                 <div>
                                     <span className="status" style={{ background: colors.bg, color: colors.fg, borderColor: colors.bd }}>
@@ -562,6 +634,58 @@ export default function StudentAccountsPage() {
                 }
                 .pill.linked { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
                 .pill.unlinked { background: #f8fafc; color: #64748b; border-color: #e2e8f0; }
+                .login-pin-cell {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+                    min-width: 0;
+                }
+                .password-pill {
+                    width: fit-content;
+                    display: inline-flex;
+                    align-items: center;
+                    min-height: 24px;
+                    border-radius: 7px;
+                    padding: 0 10px;
+                    font-size: 12px;
+                    font-weight: 950;
+                    border: 1px solid #bfdbfe;
+                    background: #eff6ff;
+                    color: #1d4ed8;
+                }
+                .password-pill.missing {
+                    border-color: #fed7aa;
+                    background: #fff7ed;
+                    color: #c2410c;
+                }
+                .pin-reset-row {
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                }
+                .pin-reset-input {
+                    width: 70px;
+                    min-height: 30px;
+                    padding: 0 9px;
+                    border: 1px solid #d9e1ec;
+                    border-radius: 7px;
+                    background: #fff;
+                    font-size: 12px;
+                    font-weight: 900;
+                    letter-spacing: 0;
+                }
+                .pin-reset-button {
+                    min-height: 30px;
+                    border: 1px solid #d9e1ec;
+                    border-radius: 7px;
+                    background: #111827;
+                    color: #fff;
+                    padding: 0 9px;
+                    font-size: 12px;
+                    font-weight: 900;
+                    cursor: pointer;
+                    font-family: inherit;
+                }
                 .inline-field {
                     width: 100%;
                     min-width: 0;

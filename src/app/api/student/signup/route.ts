@@ -183,6 +183,7 @@ export async function POST(request: NextRequest) {
                     class: codeCheck.reference?.className || null,
                     avatar: null,
                     pin: parentCode,
+                    login_pin: pin,
                     status: "approved",
                 })
                 .select("id, name, school, grade, class, avatar, pin, auth_user_id, birthday, status")
@@ -237,6 +238,7 @@ export async function POST(request: NextRequest) {
             .update({
                 auth_user_id: authUserId,
                 pin: parentCode,
+                login_pin: pin,
                 school: school || student.school || null,
                 grade: grade || student.grade || null,
                 class: student.class || codeCheck.reference?.className || null,

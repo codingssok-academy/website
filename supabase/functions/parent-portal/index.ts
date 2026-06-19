@@ -280,6 +280,7 @@ async function handleStudentSignup(body: Record<string, unknown>) {
     .update({
       auth_user_id: authUserId,
       pin: parentCode,
+      login_pin: studentPin,
       school: school || student.school || null,
       grade: grade || student.grade || null,
       status: "approved",
