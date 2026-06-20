@@ -67,6 +67,71 @@ async function findAuthUserByEmail(adminClient: AdminClient, email: string) {
     return null;
 }
 
+function isMissingAuthUserError(error: { message?: string; status?: number } | null | undefined) {
+    const message = (error?.message || "").toLowerCase();
+    return error?.status === 404 || message.includes("not found") || message.includes("does not exist");
+}
+
+type StudentAuthPayload = {
+    email: string;
+    password: string;
+    name: string;
+    role: string;
+};
+
+async function createStudentAuthUser(adminClient: AdminClient, payload: StudentAuthPayload) {
+    const { data, error } = await adminClient.auth.admin.createUser({
+        email: payload.email,
+        password: payload.password,
+        email_confirm: true,
+        user_metadata: { name: payload.name, role: payload.role },
+        app_metadata: { role: payload.role },
+    });
+    if (error || !data.user) throw new Error(error?.message || "학생 인증 계정을 만들지 못했습니다.");
+    return data.user.id;
+}
+
+async function updateStudentAuthUser(adminClient: AdminClient, authUserId: string, payload: StudentAuthPayload) {
+    const { error } = await adminClient.auth.admin.updateUserById(authUserId, {
+        email: payload.email,
+        password: payload.password,
+        email_confirm: true,
+        user_metadata: { name: payload.name, role: payload.role },
+        app_metadata: { role: payload.role },
+    });
+    return error || null;
+}
+
+async function resolveStudentAuthUser(input: {
+    adminClient: AdminClient;
+    studentAuthUserId?: string | null;
+    payload: StudentAuthPayload;
+}) {
+    const existingUser = await findAuthUserByEmail(input.adminClient, input.payload.email);
+    if (existingUser?.id) {
+        const error = await updateStudentAuthUser(input.adminClient, existingUser.id, input.payload);
+        if (error) throw new Error(error.message);
+        return { authUserId: existingUser.id, created: false };
+    }
+
+    if (input.studentAuthUserId) {
+        const error = await updateStudentAuthUser(input.adminClient, input.studentAuthUserId, input.payload);
+        if (!error) return { authUserId: input.studentAuthUserId, created: false };
+        if (!isMissingAuthUserError(error)) throw new Error(error.message);
+    }
+
+    const authUserId = await createStudentAuthUser(input.adminClient, input.payload);
+    return { authUserId, created: true };
+}
+
+async function cleanupCreatedAuthUser(adminClient: AdminClient, authUserId: string) {
+    try {
+        await adminClient.auth.admin.deleteUser(authUserId);
+    } catch {
+        // Best-effort cleanup only. The original signup error is more important to return.
+    }
+}
+
 async function resolveParentCode(input: {
     adminClient: AdminClient;
     student: StudentRow | null;
@@ -150,14 +215,22 @@ export async function POST(request: NextRequest) {
             return NextResponse.json(edge.data);
         }
 
-        const { data: studentData, error: studentError } = await adminClient
+        const { data: studentRowsData, error: studentError } = await adminClient
             .from("students")
             .select("id, name, school, grade, class, avatar, pin, auth_user_id, birthday, status")
             .eq("name", name)
-            .maybeSingle();
+            .limit(10);
         if (studentError) throw new Error(studentError.message);
 
-        let student = (studentData as StudentRow | null) || null;
+        const studentRows = (studentRowsData || []) as StudentRow[];
+        let student = studentRows.find(row => normalizeParentCode(row.pin || "") === parentCode) || null;
+        if (!student && studentRows.length === 1) student = studentRows[0];
+        if (!student && studentRows.length > 1) {
+            return NextResponse.json(
+                { success: false, error: "동명이인 학생이 있습니다. 학생 이름과 학부모 인증번호를 다시 확인해주세요." },
+                { status: 401 },
+            );
+        }
         const codeCheck = await resolveParentCode({ adminClient, student, name });
         if (!codeCheck.code || codeCheck.code !== parentCode) {
             return NextResponse.json(
@@ -195,71 +268,60 @@ export async function POST(request: NextRequest) {
         const email = buildStudentAuthEmail(student.id);
         const password = buildStudentAuthPassword(student.id, pin);
         const accountRole = getAccountRoleForName(name);
-        const existingUser = await findAuthUserByEmail(adminClient, email);
-        let authUserId = existingUser?.id || student.auth_user_id || "";
-
-        if (authUserId) {
-            const { error } = await adminClient.auth.admin.updateUserById(authUserId, {
-                email,
-                password,
-                email_confirm: true,
-                user_metadata: { name, role: accountRole },
-                app_metadata: { role: accountRole },
-            });
-            if (error) throw new Error(error.message);
-        } else {
-            const { data, error } = await adminClient.auth.admin.createUser({
-                email,
-                password,
-                email_confirm: true,
-                user_metadata: { name, role: accountRole },
-                app_metadata: { role: accountRole },
-            });
-            if (error || !data.user) throw new Error(error?.message || "학생 인증 계정을 만들지 못했습니다.");
-            authUserId = data.user.id;
-        }
-
-        const { error: profileError } = await adminClient
-            .from("profiles")
-            .upsert(
-                {
-                    id: authUserId,
-                    email,
-                    name,
-                    display_name: name,
-                    role: accountRole,
-                    approval_status: "approved",
-                    birth_date: student.birthday || null,
-                    updated_at: new Date().toISOString(),
-                },
-                { onConflict: "id" },
-            );
-        if (profileError) throw new Error(profileError.message);
-
-        const { data: updated, error: updateError } = await adminClient
-            .from("students")
-            .update({
-                auth_user_id: authUserId,
-                pin: parentCode,
-                login_pin: pin,
-                school: school || student.school || null,
-                grade: grade || student.grade || null,
-                class: student.class || codeCheck.reference?.className || null,
-                status: student.status || "approved",
-                updated_at: new Date().toISOString(),
-            })
-            .eq("id", student.id)
-            .select("id, name, school, grade, class, avatar, pin, auth_user_id, birthday, status")
-            .single();
-        if (updateError || !updated) throw new Error(updateError?.message || "학생 계정을 연결하지 못했습니다.");
-
-        await syncParentCode({ adminClient, userId: authUserId, code: parentCode });
-
-        return NextResponse.json({
-            success: true,
-            student: publicStudent(updated as StudentRow),
-            message: "회원가입이 완료되었습니다.",
+        const authPayload = { email, password, name, role: accountRole };
+        const authResult = await resolveStudentAuthUser({
+            adminClient,
+            studentAuthUserId: student.auth_user_id,
+            payload: authPayload,
         });
+        const authUserId = authResult.authUserId;
+
+        try {
+            const { error: profileError } = await adminClient
+                .from("profiles")
+                .upsert(
+                    {
+                        id: authUserId,
+                        email,
+                        name,
+                        display_name: name,
+                        role: accountRole,
+                        approval_status: "approved",
+                        birth_date: student.birthday || null,
+                        updated_at: new Date().toISOString(),
+                    },
+                    { onConflict: "id" },
+                );
+            if (profileError) throw new Error(profileError.message);
+
+            const { data: updated, error: updateError } = await adminClient
+                .from("students")
+                .update({
+                    auth_user_id: authUserId,
+                    pin: parentCode,
+                    login_pin: pin,
+                    school: school || student.school || null,
+                    grade: grade || student.grade || null,
+                    class: student.class || codeCheck.reference?.className || null,
+                    status: student.status || "approved",
+                    updated_at: new Date().toISOString(),
+                })
+                .eq("id", student.id)
+                .select("id, name, school, grade, class, avatar, pin, auth_user_id, birthday, status")
+                .single();
+            if (updateError || !updated) throw new Error(updateError?.message || "학생 계정을 연결하지 못했습니다.");
+
+            await syncParentCode({ adminClient, userId: authUserId, code: parentCode });
+
+            return NextResponse.json({
+                success: true,
+                student: publicStudent(updated as StudentRow),
+                message: "회원가입이 완료되었습니다.",
+            });
+        } catch (error) {
+            if (authResult.created) await cleanupCreatedAuthUser(adminClient, authUserId);
+            throw error;
+        }
     } catch (error) {
         return NextResponse.json(
             { success: false, error: error instanceof Error ? error.message : "회원가입 처리 중 오류가 발생했습니다." },
