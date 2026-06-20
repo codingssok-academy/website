@@ -266,6 +266,18 @@ export default function Navbar() {
                                             관리자
                                         </Link>
                                     )}
+                                    {user.role !== "teacher" && user.role !== "admin" && (
+                                        <Link
+                                            href="/dashboard/learning/files"
+                                            style={{
+                                                padding: "8px 16px", borderRadius: 10, border: "1px solid #bfdbfe",
+                                                background: "rgba(239,246,255,0.92)", color: "#2563eb",
+                                                fontSize: 13, fontWeight: 800, textDecoration: "none", whiteSpace: "nowrap",
+                                            }}
+                                        >
+                                            내 파일함
+                                        </Link>
+                                    )}
                                     <button
                                         onClick={handleSignOut}
                                         style={{
@@ -504,6 +516,21 @@ export default function Navbar() {
                                             }}>
                                                 {user.name ?? "사용자"}님 로그인 중
                                             </span>
+                                            {user.role !== "teacher" && user.role !== "admin" && (
+                                                <Link
+                                                    href="/dashboard/learning/files"
+                                                    onClick={() => setIsMobileMenuOpen(false)}
+                                                    style={{
+                                                        display: "block", width: "100%", padding: "14px 24px",
+                                                        borderRadius: 12, border: "1px solid #bfdbfe",
+                                                        background: "#eff6ff", color: "#2563eb",
+                                                        fontSize: 14, fontWeight: 800,
+                                                        textDecoration: "none", textAlign: "center",
+                                                    }}
+                                                >
+                                                    내 파일함
+                                                </Link>
+                                            )}
                                             <button
                                                 onClick={() => { handleSignOut(); setIsMobileMenuOpen(false); }}
                                                 style={{
