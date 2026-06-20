@@ -219,7 +219,7 @@ export async function POST(request: NextRequest) {
             authUserId = data.user.id;
         }
 
-        await adminClient
+        const { error: profileError } = await adminClient
             .from("profiles")
             .upsert(
                 {
@@ -228,10 +228,13 @@ export async function POST(request: NextRequest) {
                     name,
                     display_name: name,
                     role: accountRole,
+                    approval_status: "approved",
+                    birth_date: student.birthday || null,
                     updated_at: new Date().toISOString(),
                 },
                 { onConflict: "id" },
             );
+        if (profileError) throw new Error(profileError.message);
 
         const { data: updated, error: updateError } = await adminClient
             .from("students")
