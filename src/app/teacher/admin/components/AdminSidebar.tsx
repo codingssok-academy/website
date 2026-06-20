@@ -1,10 +1,11 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
     ClipboardList,
+    FolderOpen,
     Home,
     LogOut,
     PanelLeftClose,
@@ -18,6 +19,7 @@ import { useAdmin } from "../context";
 const NAV_ITEMS = [
     { href: "/teacher/admin", label: "학부모 코드 관리", icon: UserCog },
     { href: "/teacher/admin/students", label: "학생 계정 관리", icon: Users },
+    { href: "/teacher/admin/files", label: "학생 파일함", icon: FolderOpen },
     { href: "/teacher/admin/growth", label: "성장 관리표", icon: ClipboardList },
 ];
 
@@ -34,7 +36,7 @@ export default function AdminSidebar() {
     }, [collapsed]);
 
     const teacherDisplayName =
-        currentTeacher?.display_name || currentTeacher?.name || currentTeacher?.email || "관리자";
+        currentTeacher?.display_name || currentTeacher?.name || currentTeacher?.email || "愿由ъ옄";
 
     const handleLogout = async () => {
         setLogoutLoading(true);
@@ -76,7 +78,7 @@ export default function AdminSidebar() {
                             <button
                                 type="button"
                                 onClick={() => setCollapsed(true)}
-                                title="사이드바 접기"
+                                title="?ъ씠?쒕컮 ?묎린"
                                 style={collapseButtonStyle}
                             >
                                 <PanelLeftClose size={18} />
@@ -87,7 +89,7 @@ export default function AdminSidebar() {
                         <button
                             type="button"
                             onClick={() => setCollapsed(false)}
-                            title="사이드바 열기"
+                            title={"사이드바 열기"}
                             style={{ ...collapseButtonStyle, margin: "14px auto 0" }}
                         >
                             <PanelLeftOpen size={18} />
@@ -130,18 +132,18 @@ export default function AdminSidebar() {
                                 <div style={{ fontSize: 12, fontWeight: 800, color: "#e2e8f0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                                     {teacherDisplayName}
                                 </div>
-                                <div style={{ fontSize: 10, color: "#64748b" }}>관리자 계정</div>
+                                <div style={{ fontSize: 10, color: "#64748b" }}>愿由ъ옄 怨꾩젙</div>
                             </div>
                         )}
                     </div>
                     <button
                         type="button"
                         onClick={() => router.push("/")}
-                        title={collapsed ? "홈페이지" : undefined}
+                        title={collapsed ? "?덊럹?댁?" : undefined}
                         style={{ ...footerButtonStyle, justifyContent: collapsed ? "center" : "flex-start" }}
                     >
                         <Home size={17} strokeWidth={2.3} />
-                        {!collapsed && "홈페이지"}
+                        {!collapsed && "?덊럹?댁?"}
                     </button>
                     <button
                         type="button"
@@ -277,3 +279,4 @@ const footerButtonStyle = {
     fontWeight: 700,
     textAlign: "left" as const,
 };
+

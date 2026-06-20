@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useMemo, useCallback, useRef, Component, ReactNode } from "react";
 import { useRouter } from "next/navigation";
@@ -14,7 +14,7 @@ import StudentHomeScreen from "./components/StudentHomeScreen";
 
 const Scene3D = dynamic(() => import("@/components/dashboard3d/Scene"), { ssr: false });
 
-/* ── ErrorBoundary for 3D Scene ── */
+/* ?? ErrorBoundary for 3D Scene ?? */
 class Scene3DErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
     constructor(props: { children: ReactNode }) {
         super(props);
@@ -36,16 +36,16 @@ function toggleFullscreen() {
     else document.documentElement.requestFullscreen().catch(() => {});
 }
 
-/* ═══════════════════════════════════════
-   PREMIUM 3D BOOK — 5-face, thick spine,
+/* ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??
+   PREMIUM 3D BOOK ??5-face, thick spine,
    metallic shine, mouse-tracking rotation
-   ═══════════════════════════════════════ */
+   ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??*/
 
 const T = 50;            // book thickness
 const R = 6;             // corner radius
 const PO = 2;            // pages inset from cover edges
 
-/* ── Toast ── */
+/* ?? Toast ?? */
 function useToast() {
     const [toast, setToast] = useState<string | null>(null);
     const show = useCallback((msg: string) => {
@@ -113,7 +113,7 @@ function BookCard({
         }
     }, [flipped, onClick, locked, course.comingSoon, onComingSoon]);
 
-    // Touch support: single tap → flip, second tap → enter
+    // Touch support: single tap ??flip, second tap ??enter
     const handleTouchEnd = useCallback((e: React.TouchEvent) => {
         e.preventDefault();
         isTouchRef.current = true;
@@ -132,7 +132,7 @@ function BookCard({
         >
             <div ref={bookRef} className="bk">
 
-                {/* ── FRONT COVER ── */}
+                {/* ?? FRONT COVER ?? */}
                 <div className="bk-face bk-front">
                     {course.cardImage ? (
                         <img src={course.cardImage} alt={course.title} className="bk-cover-img" draggable={false} />
@@ -174,25 +174,25 @@ function BookCard({
                         }}>
                             <span className="material-symbols-outlined" style={{ fontSize: 32, color: getTierInfo(requiredTierName).color }}>lock</span>
                             <span style={{ fontSize: 10, fontWeight: 800, color: "#fff", letterSpacing: 1 }}>
-                                <span className="material-symbols-outlined" style={{ fontSize: 10, verticalAlign: "middle" }}>{getTierInfo(requiredTierName).icon}</span> {getTierInfo(requiredTierName).nameKo} 이상
+                                <span className="material-symbols-outlined" style={{ fontSize: 10, verticalAlign: "middle" }}>{getTierInfo(requiredTierName).icon}</span> {getTierInfo(requiredTierName).nameKo} ?댁긽
                             </span>
                         </div>
                     )}
                 </div>
 
-                {/* ── LEFT SPINE (colored, matching cover) ── */}
+                {/* ?? LEFT SPINE (colored, matching cover) ?? */}
                 <div className="bk-face bk-spine" />
 
-                {/* ── RIGHT PAGE EDGES (paper texture) ── */}
+                {/* ?? RIGHT PAGE EDGES (paper texture) ?? */}
                 <div className="bk-face bk-pages" />
 
-                {/* ── TOP EDGE ── */}
+                {/* ?? TOP EDGE ?? */}
                 <div className="bk-face bk-top" />
 
-                {/* ── BOTTOM EDGE ── */}
+                {/* ?? BOTTOM EDGE ?? */}
                 <div className="bk-face bk-bottom" />
 
-                {/* ── BACK COVER ── */}
+                {/* ?? BACK COVER ?? */}
                 <div className="bk-face bk-back">
                     {course.cardImage ? (
                         <img src={course.cardImage} alt="" className="bk-cover-img" draggable={false} />
@@ -208,13 +208,13 @@ function BookCard({
                         )}
                         <button className="bk-back-btn" onClick={(e) => { e.stopPropagation(); if (!locked) onClick(); }}
                             style={locked ? { opacity: 0.5, cursor: "not-allowed" } : undefined}>
-                            {locked ? `${getTierInfo(requiredTierName || '').nameKo} 이상 필요` : "코스 입장 →"}
+                            {locked ? `${getTierInfo(requiredTierName || "").nameKo} 이상 필요` : "코스 입장 →"}
                         </button>
                     </div>
                 </div>
             </div>
 
-            {/* ── GROUND SHADOW ── */}
+            {/* ?? GROUND SHADOW ?? */}
             <div className="bk-ground-shadow" />
         </div>
     );
@@ -224,7 +224,7 @@ export default function LearningDashboard() {
     const { user } = useAuth();
     const router = useRouter();
 
-    /* Mobile detection — show StudentHomeScreen instead of 3D scene on small screens */
+    /* Mobile detection ??show StudentHomeScreen instead of 3D scene on small screens */
     const [isMobile, setIsMobile] = useState(false);
     useEffect(() => {
         function detect() {
@@ -286,9 +286,12 @@ export default function LearningDashboard() {
         );
     }
 
+    const normalizedUserName = (user?.name || "").replace(/\s+/g, "");
+    const isAdminUser = user?.role === "teacher" || (user?.role as string) === "admin" || ["구자현", "장민"].includes(normalizedUserName);
+
     return (
         <div className={`pg${ready ? " rdy" : ""}`}>
-            {/* 3D Scene removed — was showing old "book" design behind cards */}
+            {/* 3D Scene removed ??was showing old "book" design behind cards */}
 
             <style>{`
                 .pg {
@@ -301,7 +304,7 @@ export default function LearningDashboard() {
                 .pg::before{content:'';position:absolute;width:500px;height:500px;top:-15%;right:-8%;background:radial-gradient(circle,rgba(147,197,253,0.1),transparent 70%);border-radius:50%;pointer-events:none}
                 .pg::after{content:'';position:absolute;width:500px;height:500px;bottom:-15%;left:-8%;background:radial-gradient(circle,rgba(196,181,253,0.08),transparent 70%);border-radius:50%;pointer-events:none}
 
-                /* ── Welcome Banner ── */
+                /* ?? Welcome Banner ?? */
                 .pg-welcome{
                     position:relative;z-index:10;
                     margin:0 24px;padding:20px 28px;
@@ -327,7 +330,7 @@ export default function LearningDashboard() {
                 }
                 .pg-stat-icon{font-size:16px}
 
-                /* ── Quick Access Cards ── */
+                /* ?? Quick Access Cards ?? */
                 .pg-quick{
                     position:relative;z-index:10;
                     display:flex;gap:12px;
@@ -368,9 +371,9 @@ export default function LearningDashboard() {
                 .pg-r4{display:flex;justify-content:space-evenly;width:100%}
                 .pg-r3{display:flex;justify-content:space-evenly;width:80%}
 
-                /* ═══════════════════════════════════════
+                /* ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??
                    PREMIUM 3D BOOK
-                   ═══════════════════════════════════════ */
+                   ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??*/
 
                 .bk-scene {
                     display:flex;align-items:center;justify-content:center;
@@ -403,7 +406,7 @@ export default function LearningDashboard() {
                 .pg.rdy .bks-7{animation-delay:2.2s}
                 .bk-scene:hover{animation-play-state:paused!important}
 
-                /* ── THE BOOK ── */
+                /* ?? THE BOOK ?? */
                 .bk {
                     width: clamp(130px, 13vw, 180px);
                     height: clamp(185px, 18.5vw, 250px);
@@ -418,7 +421,7 @@ export default function LearningDashboard() {
                     display: block;
                 }
 
-                /* ── FRONT COVER ── */
+                /* ?? FRONT COVER ?? */
                 .bk-front {
                     width: 100%;
                     height: 100%;
@@ -429,7 +432,7 @@ export default function LearningDashboard() {
                         inset -5px 0 15px rgba(0,0,0,0.3);
                     z-index: 2;
                 }
-                /* Sheen/highlight on cover edges — like reference */
+                /* Sheen/highlight on cover edges ??like reference */
                 .bk-front::before {
                     content:'';
                     position:absolute;inset:0;z-index:5;pointer-events:none;
@@ -488,7 +491,7 @@ export default function LearningDashboard() {
                     background:linear-gradient(90deg, var(--spine), var(--spine2));
                 }
 
-                /* ── LEFT SPINE (colored, matching cover) ── */
+                /* ?? LEFT SPINE (colored, matching cover) ?? */
                 .bk-spine {
                     width: ${T}px;
                     height: 100%;
@@ -500,7 +503,7 @@ export default function LearningDashboard() {
                     box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
                 }
 
-                /* ── RIGHT PAGE EDGES (paper texture) ── */
+                /* ?? RIGHT PAGE EDGES (paper texture) ?? */
                 .bk-pages {
                     width: ${T}px;
                     height: 100%;
@@ -516,7 +519,7 @@ export default function LearningDashboard() {
                     box-shadow: inset 5px 0 15px rgba(0,0,0,0.15);
                 }
 
-                /* ── TOP EDGE ── */
+                /* ?? TOP EDGE ?? */
                 .bk-top {
                     width: 100%;
                     height: ${T}px;
@@ -528,7 +531,7 @@ export default function LearningDashboard() {
                         repeating-linear-gradient(to bottom, #ccc 0px, #eee 1px, #fff 2px);
                 }
 
-                /* ── BOTTOM EDGE ── */
+                /* ?? BOTTOM EDGE ?? */
                 .bk-bottom {
                     width: 100%;
                     height: ${T}px;
@@ -540,7 +543,7 @@ export default function LearningDashboard() {
                         repeating-linear-gradient(to top, #ccc 0px, #eee 1px, #fff 2px);
                 }
 
-                /* ── BACK COVER ── */
+                /* ?? BACK COVER ?? */
                 .bk-back {
                     width: 100%;
                     height: 100%;
@@ -568,7 +571,7 @@ export default function LearningDashboard() {
                 .bk-back-btn{padding:7px 16px;border-radius:8px;background:rgba(255,255,255,0.1);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,0.2);color:#fff;cursor:pointer;font-size:clamp(9px,0.75vw,12px);font-weight:700;transition:all .2s}
                 .bk-back-btn:hover{background:rgba(59,130,246,0.4);border-color:rgba(59,130,246,0.6);box-shadow:0 4px 20px rgba(59,130,246,0.35)}
 
-                /* ── GROUND SHADOW ── */
+                /* ?? GROUND SHADOW ?? */
                 .bk-ground-shadow {
                     position:absolute;
                     bottom:-18px;left:10%;
@@ -583,7 +586,7 @@ export default function LearningDashboard() {
                 .pg-hints{display:flex;justify-content:center;gap:20;padding:8px 0 12px;z-index:10;opacity:0.4}
                 .pg-hint{font-size:10px;color:#94a3b8;display:flex;align-items:center;gap:4}
 
-                /* ── MOBILE ── */
+                /* ?? MOBILE ?? */
                 @media (max-width: 640px) {
                     .pg-grid { gap: clamp(12px,3vh,24px); padding: 0 8px 24px; }
                     .pg-r4 { flex-wrap: wrap; justify-content: center; gap: 20px 16px; }
@@ -609,9 +612,13 @@ export default function LearningDashboard() {
                 <div className="pg-logo"><img src="/images/promo/logo-codingssok.png" alt="코딩쏙" /></div>
                 <div className="pg-acts">
                     <div className="pg-user"><div className="pg-dot" />{user?.name || "학생"}</div>
-                    {(user?.role === "teacher" || (user?.role as string) === "admin" || ["구자현", "장민"].includes(user?.name || "")) && (
+                    {isAdminUser ? (
                         <button className="pg-btn" onClick={() => router.push("/teacher/admin")} style={{background:"linear-gradient(135deg, #ef4444, #f97316)",color:"#fff",borderRadius:6,padding:"2px 8px",fontWeight:600}}>
                             <span className="material-symbols-outlined" style={{fontSize:15,color:"#fff"}}>admin_panel_settings</span>관리자
+                        </button>
+                    ) : (
+                        <button className="pg-btn" onClick={() => router.push("/dashboard/learning/files")} title="내 파일함">
+                            <span className="material-symbols-outlined" style={{fontSize:15}}>folder_open</span>내 파일함
                         </button>
                     )}
                     <button className="pg-btn" onClick={() => router.push("/dashboard/compiler")} title="C-Studio 컴파일러">
@@ -644,28 +651,29 @@ export default function LearningDashboard() {
                 </div>
             )}
 
-            {/* 숙제 알림 배너 */}
+            {/* ?숈젣 ?뚮┝ 諛곕꼫 */}
             <HomeworkBanner userName={user?.name || user?.email?.split("@")[0]} />
 
             <div className="pg-grid">
-                {/* 5개씩 2줄 — 사고력수학/AI강의 추가로 10개 전체 노출 */}
+                {/* 5媛쒖뵫 2以????ш퀬?μ닔??AI媛뺤쓽 異붽?濡?10媛??꾩껜 ?몄텧 */}
                 <div className="pg-r4">
                     {COURSES.slice(0,5).map((c,i) => (
-                        <BookCard key={c.id} course={c} progress={courseProgress[c.id]||0} index={i} onClick={() => go(c.id)} locked={!!c.requiredTier && !canAccessContent(userProgress.tier, c.requiredTier)} requiredTierName={c.requiredTier} onComingSoon={() => showToast("준비 중입니다. 곧 오픈될 예정이에요!")} />
+                        <BookCard key={c.id} course={c} progress={courseProgress[c.id]||0} index={i} onClick={() => go(c.id)} locked={!!c.requiredTier && !canAccessContent(userProgress.tier, c.requiredTier)} requiredTierName={c.requiredTier} onComingSoon={() => showToast("以鍮?以묒엯?덈떎. 怨??ㅽ뵂???덉젙?댁뿉??")} />
                     ))}
                 </div>
                 <div className="pg-r4">
                     {COURSES.slice(5,10).map((c,i) => (
-                        <BookCard key={c.id} course={c} progress={courseProgress[c.id]||0} index={i+5} onClick={() => go(c.id)} locked={!!c.requiredTier && !canAccessContent(userProgress.tier, c.requiredTier)} requiredTierName={c.requiredTier} onComingSoon={() => showToast("준비 중입니다. 곧 오픈될 예정이에요!")} />
+                        <BookCard key={c.id} course={c} progress={courseProgress[c.id]||0} index={i+5} onClick={() => go(c.id)} locked={!!c.requiredTier && !canAccessContent(userProgress.tier, c.requiredTier)} requiredTierName={c.requiredTier} onComingSoon={() => showToast("以鍮?以묒엯?덈떎. 怨??ㅽ뵂???덉젙?댁뿉??")} />
                     ))}
                 </div>
 
             </div>
 
             <div className="pg-hints">
-                <span className="pg-hint"><span className="material-symbols-outlined" style={{fontSize:12}}>swipe</span>호버 — 3D 회전 / 클릭 — 뒤집기</span>
-                <span className="pg-hint"><span className="material-symbols-outlined" style={{fontSize:12}}>touch_app</span>재클릭 — 진입</span>
+                <span className="pg-hint"><span className="material-symbols-outlined" style={{fontSize:12}}>swipe</span>호버 - 3D 회전 / 클릭 - 뒤집기</span>
+                <span className="pg-hint"><span className="material-symbols-outlined" style={{fontSize:12}}>touch_app</span>재클릭 - 진입</span>
             </div>
         </div>
     );
 }
+
