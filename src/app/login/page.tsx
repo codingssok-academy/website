@@ -260,7 +260,7 @@ export default function LoginPage() {
     document.cookie = `codingssok_session=${authUserId}; path=/; max-age=${60 * 60 * 24 * 30}; Secure; SameSite=Lax`;
     const params = new URLSearchParams(window.location.search);
     const redirect = params.get("redirect");
-    window.location.href = redirect || (isAdminStudent ? "/teacher/admin" : "/dashboard/learning");
+    window.location.href = redirect || "/dashboard/learning";
   };
 
   /* ── PIN digit style ── */
