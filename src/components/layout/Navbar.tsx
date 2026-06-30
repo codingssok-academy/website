@@ -255,9 +255,6 @@ export default function Navbar() {
                                     <span style={{ fontSize: 13, fontWeight: 600, color: "#334155", maxWidth: 80, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                                         {user.name ?? "사용자"}
                                     </span>
-                                    <Link href="/dashboard/learning" style={{ padding: "8px 16px", borderRadius: 10, border: "1px solid #bfdbfe", background: "rgba(239,246,255,0.92)", color: "#2563eb", fontSize: 13, fontWeight: 800, textDecoration: "none", whiteSpace: "nowrap" }}>
-                                        학습 플랫폼
-                                    </Link>
                                     {isAdmin && (
                                         <Link href="/teacher/admin" style={{ padding: "6px 14px", borderRadius: 8, border: "none", background: "linear-gradient(135deg, #3b82f6, #2563eb)", color: "#fff", fontSize: 12, fontWeight: 700, textDecoration: "none" }}>
                                             관리자
@@ -384,9 +381,6 @@ export default function Navbar() {
                                             <span style={{ fontSize: 13, color: "#64748b", fontWeight: 600, padding: "0 4px" }}>
                                                 {user.name ?? "사용자"} 로그인 중
                                             </span>
-                                            <Link href="/dashboard/learning" onClick={() => setIsMobileMenuOpen(false)} style={{ display: "block", width: "100%", padding: "14px 24px", borderRadius: 12, border: "1px solid #bfdbfe", background: "#eff6ff", color: "#2563eb", fontSize: 14, fontWeight: 800, textDecoration: "none", textAlign: "center" }}>
-                                                학습 플랫폼
-                                            </Link>
                                             {!isAdmin && (
                                                 <Link href="/dashboard/learning/files" onClick={() => setIsMobileMenuOpen(false)} style={{ display: "block", width: "100%", padding: "14px 24px", borderRadius: 12, border: "1px solid #bfdbfe", background: "#eff6ff", color: "#2563eb", fontSize: 14, fontWeight: 800, textDecoration: "none", textAlign: "center" }}>
                                                     내 파일함
