@@ -36,7 +36,7 @@ export default function AdminSidebar() {
     }, [collapsed]);
 
     const teacherDisplayName =
-        currentTeacher?.display_name || currentTeacher?.name || currentTeacher?.email || "愿由ъ옄";
+        currentTeacher?.display_name || currentTeacher?.name || currentTeacher?.email || "관리자";
 
     const handleLogout = async () => {
         setLogoutLoading(true);
@@ -78,7 +78,7 @@ export default function AdminSidebar() {
                             <button
                                 type="button"
                                 onClick={() => setCollapsed(true)}
-                                title="?ъ씠?쒕컮 ?묎린"
+                                title="사이드바 접기"
                                 style={collapseButtonStyle}
                             >
                                 <PanelLeftClose size={18} />
@@ -132,18 +132,18 @@ export default function AdminSidebar() {
                                 <div style={{ fontSize: 12, fontWeight: 800, color: "#e2e8f0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                                     {teacherDisplayName}
                                 </div>
-                                <div style={{ fontSize: 10, color: "#64748b" }}>愿由ъ옄 怨꾩젙</div>
+                                <div style={{ fontSize: 10, color: "#64748b" }}>관리자 계정</div>
                             </div>
                         )}
                     </div>
                     <button
                         type="button"
                         onClick={() => router.push("/")}
-                        title={collapsed ? "?덊럹?댁?" : undefined}
+                        title={collapsed ? "홈페이지" : undefined}
                         style={{ ...footerButtonStyle, justifyContent: collapsed ? "center" : "flex-start" }}
                     >
                         <Home size={17} strokeWidth={2.3} />
-                        {!collapsed && "?덊럹?댁?"}
+                        {!collapsed && "홈페이지"}
                     </button>
                     <button
                         type="button"
