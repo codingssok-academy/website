@@ -6,13 +6,10 @@ import type { Course, Chapter } from './types';
 import { PYTHON_BASICS } from './python-basics';
 import { COMPUTER_BASICS } from './computer-basics';
 import { CODING_BASICS } from './coding-basics';
-import { PHYSICAL_COMPUTING } from './physical-computing';
-import { MATH_THINKING_CHAPTERS } from './math-thinking';
 import { AI_LITERACY_CHAPTERS } from './ai-literacy';
 import { CPP_CHAPTERS } from './cpp';
 import { GAME_DEV_CHAPTERS } from './game-dev';
 import { PROGRAMMING_CONTEST_CHAPTERS } from './programming-contest';
-import { WORDPROCESSOR_CHAPTERS } from './wordprocessor';
 import { KIDS_IT_CHAPTERS } from './kids-it';
 import { KOI_CHAPTERS } from './koi';
 import {
@@ -198,10 +195,11 @@ export const COURSES: Course[] = [
         gradient: 'linear-gradient(135deg, #f59e0b, #ec4899)',
         cardImage: '/images/courses/math-thinking.png',
         description: '고난도 사고력수학 1-50 본교재와 정답해설편 51-110을 함께 보며 문제 독해, 논리 추론, 풀이 검토, 오답 교정을 학습합니다.',
-        totalUnits: 11,
+        totalUnits: 0,
         totalProblems: 0,
-        estimatedHours: 26,
-        chapters: MATH_THINKING_CHAPTERS,
+        estimatedHours: 0,
+        chapters: EMPTY_CHAPTERS,
+        comingSoon: true,
     },
     {
         id: '8',
@@ -236,10 +234,11 @@ export const COURSES: Course[] = [
         gradient: 'linear-gradient(135deg, #f59e0b, #f97316)',
         cardImage: '/images/courses/physical-computing.png',
         description: '아두이노, 기본 회로, 센서, 출력 장치, 모터 제어, 생활 문제 해결 프로젝트까지 피지컬 컴퓨팅 완성본 120장으로 학습합니다.',
-        totalUnits: 12,
+        totalUnits: 0,
         totalProblems: 0,
-        estimatedHours: 24,
-        chapters: PHYSICAL_COMPUTING,
+        estimatedHours: 0,
+        chapters: EMPTY_CHAPTERS,
+        comingSoon: true,
 
     },
     {

@@ -905,6 +905,24 @@ export default function CourseDetailPage() {
 
     if (!courseData) return <div style={{ textAlign: "center", padding: 60, color: "#94a3b8" }}>코스를 찾을 수 없습니다.</div>;
 
+    if (courseData.comingSoon) {
+        return (
+            <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, background: "linear-gradient(135deg,#eff6ff,#f8fafc)" }}>
+                <div style={{ width: "min(100%, 520px)", padding: 32, borderRadius: 24, background: "#fff", border: "1px solid #dbeafe", boxShadow: "0 20px 60px rgba(15,23,42,0.08)", textAlign: "center" }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: 44, color: "#3b82f6", marginBottom: 12 }}>construction</span>
+                    <h1 style={{ margin: "0 0 10px", color: "#0f172a", fontSize: 26, fontWeight: 900 }}>{courseData.title}</h1>
+                    <p style={{ margin: "0 0 24px", color: "#64748b", lineHeight: 1.7, wordBreak: "keep-all" }}>
+                        이 코스의 학습 자료 이미지를 준비하고 있습니다. 자료 업로드가 완료되면 바로 열람할 수 있습니다.
+                    </p>
+                    <Link href="/dashboard/learning" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "12px 18px", borderRadius: 12, background: "#2563eb", color: "#fff", fontWeight: 800, textDecoration: "none" }}>
+                        학습 홈으로 돌아가기
+                        <span className="material-symbols-outlined" style={{ fontSize: 18 }}>arrow_forward</span>
+                    </Link>
+                </div>
+            </div>
+        );
+    }
+
     if (tierLocked && requiredTier) {
         const reqTier = getTierInfo(requiredTier);
         return (

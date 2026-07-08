@@ -17,7 +17,7 @@ interface NavTab {
 const TABS: NavTab[] = [
     { icon: "home", label: "홈", href: "/dashboard/learning" },
     { icon: "menu_book", label: "학습", href: "/dashboard/learning/courses" },
-    { icon: "code", label: "연습장", href: "/dashboard/learning/playground" },
+    { icon: "code", label: "연습장", href: "/dashboard/learning/practice" },
     { icon: "chat", label: "채팅", href: "/dashboard/learning/dm", badgeKey: "chat" },
     { icon: "person", label: "내 정보", href: "/dashboard/learning/badges" },
 ];
