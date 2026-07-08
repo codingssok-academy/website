@@ -687,12 +687,142 @@ export default function LearningContentPage() {
                             return renderMedia(leftSrc, 'page', leftKey, iframeRefL);
                         })()
                     ) : currentPage.content ? (
-                        <div ref={hlContentRef} dangerouslySetInnerHTML={{ __html: sanitizeHTML(currentPage.content) }}
-                            style={{
-                                fontSize: 14, lineHeight: 1.9, color: "#334155",
-                                marginBottom: currentPage.quiz || currentPage.problems ? 32 : 0,
-                                cursor: hlActive ? "text" : "auto",
-                            }} />
+                        <>
+                            <div
+                                ref={hlContentRef}
+                                className={courseId === '11' ? 'kids-it-content' : undefined}
+                                dangerouslySetInnerHTML={{ __html: sanitizeHTML(currentPage.content) }}
+                                style={{
+                                    fontSize: 14, lineHeight: 1.9, color: "#334155",
+                                    marginBottom: currentPage.quiz || currentPage.problems ? 32 : 0,
+                                    cursor: hlActive ? "text" : "auto",
+                                }}
+                            />
+                            {courseId === '11' && (
+                                <style dangerouslySetInnerHTML={{ __html: `
+                                    .kids-it-content .kids-it-slide {
+                                        width: min(100%, 1080px);
+                                        margin: 0 auto 4px;
+                                        padding: clamp(18px, 3vw, 34px);
+                                        border-radius: 22px;
+                                        background:
+                                            radial-gradient(circle at top left, rgba(59,130,246,0.14), transparent 32%),
+                                            linear-gradient(135deg, #ffffff 0%, #f8fbff 56%, #eff6ff 100%);
+                                        border: 1px solid rgba(191,219,254,0.9);
+                                        box-shadow: 0 18px 48px rgba(15,23,42,0.12);
+                                        color: #0f172a;
+                                    }
+                                    .kids-it-content .kids-it-hero {
+                                        display: grid;
+                                        grid-template-columns: 1fr auto;
+                                        gap: 18px;
+                                        align-items: start;
+                                        margin-bottom: 20px;
+                                    }
+                                    .kids-it-content .kids-it-kicker {
+                                        margin: 0 0 10px;
+                                        color: #2563eb;
+                                        font-size: 13px;
+                                        font-weight: 900;
+                                    }
+                                    .kids-it-content .kids-it-hero h2 {
+                                        margin: 0;
+                                        color: #0f172a;
+                                        font-size: clamp(28px, 4vw, 46px);
+                                        line-height: 1.18;
+                                        font-weight: 950;
+                                    }
+                                    .kids-it-content .kids-it-hero-copy > p:last-child {
+                                        margin: 14px 0 0;
+                                        color: #475569;
+                                        font-size: clamp(18px, 2.2vw, 24px);
+                                        line-height: 1.65;
+                                        font-weight: 700;
+                                    }
+                                    .kids-it-content .kids-it-number {
+                                        display: inline-flex;
+                                        width: 72px;
+                                        height: 72px;
+                                        align-items: center;
+                                        justify-content: center;
+                                        border-radius: 22px;
+                                        background: linear-gradient(135deg, #3b82f6, #2563eb);
+                                        color: #fff;
+                                        font-size: 28px;
+                                        font-weight: 950;
+                                        box-shadow: 0 12px 28px rgba(37,99,235,0.28);
+                                    }
+                                    .kids-it-content .kids-it-grid {
+                                        display: grid;
+                                        grid-template-columns: repeat(2, minmax(0, 1fr));
+                                        gap: 16px;
+                                        margin-top: 22px;
+                                    }
+                                    .kids-it-content .kids-it-card,
+                                    .kids-it-content .kids-it-remember {
+                                        border-radius: 18px;
+                                        border: 1px solid #dbeafe;
+                                        background: rgba(255,255,255,0.88);
+                                        padding: 20px;
+                                        box-shadow: 0 10px 24px rgba(37,99,235,0.08);
+                                    }
+                                    .kids-it-content .kids-it-card span,
+                                    .kids-it-content .kids-it-remember strong {
+                                        display: inline-flex;
+                                        margin-bottom: 10px;
+                                        color: #1d4ed8;
+                                        font-size: 14px;
+                                        font-weight: 950;
+                                    }
+                                    .kids-it-content .kids-it-card p,
+                                    .kids-it-content .kids-it-remember p {
+                                        margin: 0;
+                                        color: #334155;
+                                        font-size: clamp(17px, 1.8vw, 21px);
+                                        line-height: 1.75;
+                                        font-weight: 700;
+                                    }
+                                    .kids-it-content .kids-it-card ol {
+                                        margin: 0;
+                                        padding-left: 24px;
+                                        color: #334155;
+                                        font-size: clamp(16px, 1.7vw, 20px);
+                                        line-height: 1.8;
+                                        font-weight: 700;
+                                    }
+                                    .kids-it-content .kids-it-card li + li {
+                                        margin-top: 6px;
+                                    }
+                                    .kids-it-content .kids-it-card-analogy {
+                                        background: linear-gradient(135deg, #ecfdf5, #ffffff);
+                                        border-color: #bbf7d0;
+                                    }
+                                    .kids-it-content .kids-it-remember {
+                                        margin-top: 16px;
+                                        background: linear-gradient(135deg, #fffbeb, #ffffff);
+                                        border-color: #fde68a;
+                                    }
+                                    .kids-it-content .kids-it-remember strong {
+                                        color: #b45309;
+                                    }
+                                    @media (max-width: 760px) {
+                                        .kids-it-content .kids-it-slide {
+                                            border-radius: 16px;
+                                        }
+                                        .kids-it-content .kids-it-hero,
+                                        .kids-it-content .kids-it-grid {
+                                            grid-template-columns: 1fr;
+                                        }
+                                        .kids-it-content .kids-it-number {
+                                            width: 56px;
+                                            height: 56px;
+                                            border-radius: 16px;
+                                            font-size: 22px;
+                                        }
+                                    }
+                                `}} />
+                            )}
+                        </>
                     ) : null}
 
                     {/* Quiz */}

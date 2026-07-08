@@ -30,10 +30,11 @@ function escapeHtml(value: string): string {
 
 function makePage(unit: KidsUnitDef, slide: KidsSlide, pageIndex: number): Page {
     const pageNumber = pageIndex + 1;
+    const legacySlideNumber = (unit.unitNumber - 1) * 10 + pageNumber;
     const practiceItems = slide.practice.map(item => `<li>${escapeHtml(item)}</li>`).join('');
 
     return {
-        id: `${unit.id}-p${String(pageNumber).padStart(2, '0')}`,
+        id: `kids-it-first-${String(legacySlideNumber).padStart(3, '0')}`,
         title: `${unit.title} ${pageNumber}`,
         type: PAGE_TYPE,
         content: `
