@@ -1391,9 +1391,9 @@ export default function CourseDetailPage() {
                                 );
                             })()}
 
-                            {/* HTML content — cpp(4) + 어린이 IT(11)는 React img 직접 렌더 (모든 layer 우회) */}
+                            {/* HTML content — cpp(4)는 React img 직접 렌더, 어린이 IT(11)는 HTML 슬라이드 렌더 */}
                             {activePage.content && (
-                                (courseId === '4' || courseId === '11') ? (() => {
+                                (courseId === '4') ? (() => {
                                     // src 추출 후 React img 직접 — sanitize/innerHTML/캐시/CSS 모든 layer 우회
                                     const m = activePage.content.match(/src=["']([^"']+\.(?:png|jpg|jpeg|webp|svg))["']/i);
                                     const src = m?.[1];
@@ -1646,6 +1646,127 @@ export default function CourseDetailPage() {
                                 .course-content-pad img:hover {
                                     transform: translateY(-3px);
                                     box-shadow: 0 16px 48px rgba(15,23,42,0.22) !important;
+                                }
+                                .course-content-pad .kids-it-slide {
+                                    width: min(100%, 1080px);
+                                    margin: 18px auto 24px;
+                                    padding: clamp(18px, 3vw, 34px);
+                                    border-radius: 22px;
+                                    background:
+                                        radial-gradient(circle at top left, rgba(59,130,246,0.14), transparent 32%),
+                                        linear-gradient(135deg, #ffffff 0%, #f8fbff 56%, #eff6ff 100%);
+                                    border: 1px solid rgba(191,219,254,0.9);
+                                    box-shadow: 0 18px 48px rgba(15,23,42,0.12);
+                                    color: #0f172a;
+                                }
+                                .course-content-pad .kids-it-hero {
+                                    display: grid;
+                                    grid-template-columns: 1fr auto;
+                                    gap: 18px;
+                                    align-items: start;
+                                    margin-bottom: 20px;
+                                }
+                                .course-content-pad .kids-it-kicker {
+                                    margin: 0 0 10px;
+                                    color: #2563eb;
+                                    font-size: 13px;
+                                    font-weight: 900;
+                                }
+                                .course-content-pad .kids-it-hero h2 {
+                                    margin: 0;
+                                    color: #0f172a;
+                                    font-size: clamp(28px, 4vw, 46px);
+                                    line-height: 1.18;
+                                    font-weight: 950;
+                                }
+                                .course-content-pad .kids-it-hero-copy > p:last-child {
+                                    margin: 14px 0 0;
+                                    color: #475569;
+                                    font-size: clamp(18px, 2.2vw, 24px);
+                                    line-height: 1.65;
+                                    font-weight: 700;
+                                }
+                                .course-content-pad .kids-it-number {
+                                    display: inline-flex;
+                                    width: 72px;
+                                    height: 72px;
+                                    align-items: center;
+                                    justify-content: center;
+                                    border-radius: 22px;
+                                    background: linear-gradient(135deg, #3b82f6, #2563eb);
+                                    color: #fff;
+                                    font-size: 28px;
+                                    font-weight: 950;
+                                    box-shadow: 0 12px 28px rgba(37,99,235,0.28);
+                                }
+                                .course-content-pad .kids-it-grid {
+                                    display: grid;
+                                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                                    gap: 16px;
+                                    margin-top: 22px;
+                                }
+                                .course-content-pad .kids-it-card,
+                                .course-content-pad .kids-it-remember {
+                                    border-radius: 18px;
+                                    border: 1px solid #dbeafe;
+                                    background: rgba(255,255,255,0.88);
+                                    padding: 20px;
+                                    box-shadow: 0 10px 24px rgba(37,99,235,0.08);
+                                }
+                                .course-content-pad .kids-it-card span,
+                                .course-content-pad .kids-it-remember strong {
+                                    display: inline-flex;
+                                    margin-bottom: 10px;
+                                    color: #1d4ed8;
+                                    font-size: 14px;
+                                    font-weight: 950;
+                                }
+                                .course-content-pad .kids-it-card p,
+                                .course-content-pad .kids-it-remember p {
+                                    margin: 0;
+                                    color: #334155;
+                                    font-size: clamp(17px, 1.8vw, 21px);
+                                    line-height: 1.75;
+                                    font-weight: 700;
+                                }
+                                .course-content-pad .kids-it-card ol {
+                                    margin: 0;
+                                    padding-left: 24px;
+                                    color: #334155;
+                                    font-size: clamp(16px, 1.7vw, 20px);
+                                    line-height: 1.8;
+                                    font-weight: 700;
+                                }
+                                .course-content-pad .kids-it-card li + li {
+                                    margin-top: 6px;
+                                }
+                                .course-content-pad .kids-it-card-analogy {
+                                    background: linear-gradient(135deg, #ecfdf5, #ffffff);
+                                    border-color: #bbf7d0;
+                                }
+                                .course-content-pad .kids-it-remember {
+                                    margin-top: 16px;
+                                    background: linear-gradient(135deg, #fffbeb, #ffffff);
+                                    border-color: #fde68a;
+                                }
+                                .course-content-pad .kids-it-remember strong {
+                                    color: #b45309;
+                                }
+                                @media (max-width: 760px) {
+                                    .course-content-pad .kids-it-slide {
+                                        border-radius: 16px;
+                                        margin: 8px auto 18px;
+                                    }
+                                    .course-content-pad .kids-it-hero,
+                                    .course-content-pad .kids-it-grid {
+                                        grid-template-columns: 1fr;
+                                    }
+                                    .course-content-pad .kids-it-number {
+                                        width: 56px;
+                                        height: 56px;
+                                        border-radius: 16px;
+                                        font-size: 22px;
+                                    }
                                 }
                             `}} />
 
