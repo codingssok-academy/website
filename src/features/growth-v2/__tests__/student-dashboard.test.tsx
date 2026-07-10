@@ -28,6 +28,10 @@ describe("Growth 2.0 student dashboard preview", () => {
     expect(screen.getByText("최근 획득 배지")).toBeInTheDocument();
     expect(screen.getByText("최근 성장 기록")).toBeInTheDocument();
     expect(screen.getByText("가상 학생 미리보기")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "학부모 화면 보기" })).toHaveAttribute(
+      "href",
+      "/growth-preview/parent",
+    );
   });
 
   it("shows five fixed growth records with the newest activity first", () => {

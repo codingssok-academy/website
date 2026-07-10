@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
+import Link from "next/link";
 import {
   BookOpenCheck,
   CalendarDays,
@@ -160,7 +161,12 @@ export function StudentDashboard({ dashboard }: StudentDashboardProps) {
             <small>Growth 2.0</small>
           </span>
         </div>
-        <span className={styles.previewBadge}>가상 학생 미리보기</span>
+        <div className={styles.topbarActions}>
+          <Link href="/growth-preview/parent" className={styles.previewSwitch}>
+            학부모 화면 보기
+          </Link>
+          <span className={styles.previewBadge}>가상 학생 미리보기</span>
+        </div>
       </header>
 
       <main id="main-content" className={styles.dashboard}>
