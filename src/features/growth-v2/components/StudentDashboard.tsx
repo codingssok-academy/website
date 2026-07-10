@@ -1,8 +1,9 @@
+"use client";
+
+import { useCallback, useRef, useState } from "react";
 import {
   BookOpenCheck,
   CalendarDays,
-  Check,
-  Circle,
   Clock3,
   Code2,
   Flame,
@@ -16,10 +17,13 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type {
+  DailyMission,
   EarnedBadge,
   GrowthIconName,
   StudentGrowthDashboard,
 } from "@/features/growth-v2/types/student-dashboard";
+import { DashboardSectionTitle } from "./DashboardSectionTitle";
+import { MissionPanel } from "./MissionPanel";
 import styles from "./StudentDashboard.module.css";
 
 interface StudentDashboardProps {
@@ -56,28 +60,6 @@ function ProgressBar({ value, label }: { value: number; label: string }) {
   );
 }
 
-function SectionTitle({
-  icon: Icon,
-  title,
-  note,
-}: {
-  icon: LucideIcon;
-  title: string;
-  note?: string;
-}) {
-  return (
-    <div className={styles.sectionTitle}>
-      <span className={styles.sectionIcon} aria-hidden="true">
-        <Icon size={20} strokeWidth={2.2} />
-      </span>
-      <div>
-        <h2>{title}</h2>
-        {note ? <p>{note}</p> : null}
-      </div>
-    </div>
-  );
-}
-
 function BadgeItem({ badge }: { badge: EarnedBadge }) {
   const Icon = BADGE_ICONS[badge.icon];
 
@@ -94,13 +76,55 @@ function BadgeItem({ badge }: { badge: EarnedBadge }) {
   );
 }
 
+function getInitiallyCompletedMissionIds(missions: DailyMission[]) {
+  return new Set(
+    missions
+      .filter((mission) => mission.status === "completed")
+      .map((mission) => mission.id),
+  );
+}
+
 export function StudentDashboard({ dashboard }: StudentDashboardProps) {
   const { student, missions, weeklyGrowth, teacherFeedback, project, recentBadges } = dashboard;
-  const xpRemaining = student.nextLevelXp - student.totalXp;
-  const levelProgress = Math.round((student.totalXp / student.nextLevelXp) * 100);
-  const completedMissionCount = missions.filter(
-    (mission) => mission.status === "completed",
-  ).length;
+  const [completedMissionIds, setCompletedMissionIds] = useState(() =>
+    getInitiallyCompletedMissionIds(missions),
+  );
+  const [earnedPreviewXp, setEarnedPreviewXp] = useState(0);
+  const [completionMessage, setCompletionMessage] = useState("");
+  const rewardedMissionIdsRef = useRef(new Set<string>());
+  const totalXp = student.totalXp + earnedPreviewXp;
+  const xpRemaining = student.nextLevelXp - totalXp;
+  const levelProgress = Math.min(
+    100,
+    Math.round((totalXp / student.nextLevelXp) * 100),
+  );
+
+  const handleCompleteMission = useCallback(
+    (missionId: string) => {
+      const mission = missions.find((item) => item.id === missionId);
+
+      if (
+        !mission ||
+        mission.status === "completed" ||
+        rewardedMissionIdsRef.current.has(missionId)
+      ) {
+        return;
+      }
+
+      rewardedMissionIdsRef.current.add(missionId);
+      setCompletedMissionIds((current) => new Set(current).add(missionId));
+      setEarnedPreviewXp((current) => current + mission.xp);
+      setCompletionMessage(`미션 완료! +${mission.xp} XP를 획득했어요.`);
+    },
+    [missions],
+  );
+
+  const handleResetPreview = useCallback(() => {
+    rewardedMissionIdsRef.current.clear();
+    setCompletedMissionIds(getInitiallyCompletedMissionIds(missions));
+    setEarnedPreviewXp(0);
+    setCompletionMessage("");
+  }, [missions]);
 
   return (
     <div className={styles.pageShell}>
@@ -137,7 +161,10 @@ export function StudentDashboard({ dashboard }: StudentDashboardProps) {
                 aria-valuemax={100}
                 aria-valuenow={levelProgress}
               >
-                <span style={{ width: `${levelProgress}%` }} />
+                <span
+                  data-testid="level-progress-fill"
+                  style={{ width: `${levelProgress}%` }}
+                />
               </div>
             </div>
           </div>
@@ -149,7 +176,7 @@ export function StudentDashboard({ dashboard }: StudentDashboardProps) {
             </div>
             <div>
               <dt>총 경험치</dt>
-              <dd>{student.totalXp.toLocaleString()} XP</dd>
+              <dd>{totalXp.toLocaleString()} XP</dd>
             </div>
             <div>
               <dt>연속 학습</dt>
@@ -162,53 +189,18 @@ export function StudentDashboard({ dashboard }: StudentDashboardProps) {
 
         <div className={styles.contentGrid}>
           <div className={styles.mainColumn}>
-            <section className={styles.panel} aria-labelledby="missions-title">
-              <div className={styles.panelHeader}>
-                <SectionTitle
-                  icon={Target}
-                  title="오늘의 미션"
-                  note="오늘 할 일을 차근차근 끝내 보세요."
-                />
-                <span className={styles.countPill}>
-                  {completedMissionCount}/{missions.length} 완료
-                </span>
-              </div>
-
-              <ul className={styles.missionList}>
-                {missions.map((mission) => {
-                  const isCompleted = mission.status === "completed";
-
-                  return (
-                    <li className={styles.missionItem} key={mission.id}>
-                      <span
-                        className={isCompleted ? styles.checkDone : styles.checkPending}
-                        aria-hidden="true"
-                      >
-                        {isCompleted ? <Check size={19} /> : <Circle size={19} />}
-                      </span>
-                      <div className={styles.missionCopy}>
-                        <strong id={mission.id}>{mission.title}</strong>
-                        <span>{mission.detail}</span>
-                      </div>
-                      <span
-                        className={isCompleted ? styles.xpEarned : styles.xpPending}
-                        aria-label={
-                          isCompleted
-                            ? `${mission.xp} 경험치 획득 완료`
-                            : `완료하면 ${mission.xp} 경험치`
-                        }
-                      >
-                        {isCompleted ? `+${mission.xp} XP` : `완료 시 +${mission.xp} XP`}
-                      </span>
-                    </li>
-                  );
-                })}
-              </ul>
-            </section>
+            <MissionPanel
+              missions={missions}
+              completedMissionIds={completedMissionIds}
+              completionMessage={completionMessage}
+              hasPreviewChanges={earnedPreviewXp > 0}
+              onComplete={handleCompleteMission}
+              onReset={handleResetPreview}
+            />
 
             <section className={styles.panel} aria-labelledby="weekly-growth-title">
               <div className={styles.panelHeader}>
-                <SectionTitle
+                <DashboardSectionTitle
                   icon={TrendingUp}
                   title="이번 주 성장"
                   note="지난주와 비교해 달라진 점을 확인해요."
@@ -243,7 +235,7 @@ export function StudentDashboard({ dashboard }: StudentDashboardProps) {
 
             <section className={styles.panel} aria-labelledby="project-title">
               <div className={styles.panelHeader}>
-                <SectionTitle
+                <DashboardSectionTitle
                   icon={Rocket}
                   title="진행 중인 프로젝트"
                   note="완성까지 얼마나 왔는지 살펴보세요."
@@ -275,7 +267,7 @@ export function StudentDashboard({ dashboard }: StudentDashboardProps) {
 
           <aside className={styles.sideColumn} aria-label="학습 도움 정보">
             <section className={styles.feedbackPanel} aria-labelledby="feedback-title">
-              <SectionTitle
+              <DashboardSectionTitle
                 icon={MessageSquareQuote}
                 title="선생님 피드백"
                 note="최근 수업에서 남긴 한줄평이에요."
@@ -290,7 +282,7 @@ export function StudentDashboard({ dashboard }: StudentDashboardProps) {
             </section>
 
             <section className={styles.panel} aria-labelledby="badges-title">
-              <SectionTitle
+              <DashboardSectionTitle
                 icon={Medal}
                 title="최근 획득 배지"
                 note="노력해서 얻은 멋진 기록이에요."

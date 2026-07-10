@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { StudentDashboard } from "@/features/growth-v2/components/StudentDashboard";
 import { MOCK_STUDENT_DASHBOARD } from "@/features/growth-v2/data/student-dashboard.mock";
@@ -32,7 +32,60 @@ describe("Growth 2.0 student dashboard preview", () => {
     render(<StudentDashboard dashboard={MOCK_STUDENT_DASHBOARD} />);
 
     expect(screen.getByText("2/3 완료")).toBeInTheDocument();
+    expect(screen.getByText("2,480 XP")).toBeInTheDocument();
+    expect(screen.getByText("다음 레벨까지 240 XP")).toBeInTheDocument();
     expect(screen.getByLabelText("30 경험치 획득 완료")).toBeInTheDocument();
     expect(screen.getByLabelText("완료하면 25 경험치")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", {
+        name: "프로젝트 진행 기록 작성하기 완료하기",
+      }),
+    ).toBeEnabled();
+  });
+
+  it("completes the preview mission only once and resets the experience", () => {
+    render(<StudentDashboard dashboard={MOCK_STUDENT_DASHBOARD} />);
+
+    const completeButton = screen.getByRole("button", {
+      name: "프로젝트 진행 기록 작성하기 완료하기",
+    });
+    const levelProgress = screen.getByRole("progressbar", {
+      name: "레벨 8 진행도",
+    });
+
+    expect(levelProgress).toHaveAttribute("aria-valuenow", "91");
+
+    fireEvent.click(completeButton);
+    fireEvent.click(completeButton);
+
+    expect(screen.getByText("3/3 완료")).toBeInTheDocument();
+    expect(screen.getByText("2,505 XP")).toBeInTheDocument();
+    expect(screen.getByText("다음 레벨까지 215 XP")).toBeInTheDocument();
+    expect(levelProgress).toHaveAttribute("aria-valuenow", "92");
+    expect(
+      screen.getByText("미션 완료! +25 XP를 획득했어요."),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveAttribute("aria-live", "polite");
+    expect(
+      screen.getByRole("button", {
+        name: "프로젝트 진행 기록 작성하기 완료됨",
+      }),
+    ).toBeDisabled();
+    expect(screen.queryByText("2,530 XP")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "체험 초기화" }));
+
+    expect(screen.getByText("2/3 완료")).toBeInTheDocument();
+    expect(screen.getByText("2,480 XP")).toBeInTheDocument();
+    expect(screen.getByText("다음 레벨까지 240 XP")).toBeInTheDocument();
+    expect(levelProgress).toHaveAttribute("aria-valuenow", "91");
+    expect(
+      screen.getByRole("button", {
+        name: "프로젝트 진행 기록 작성하기 완료하기",
+      }),
+    ).toBeEnabled();
+    expect(
+      screen.queryByText("미션 완료! +25 XP를 획득했어요."),
+    ).not.toBeInTheDocument();
   });
 });
