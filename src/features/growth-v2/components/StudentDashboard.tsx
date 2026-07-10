@@ -22,7 +22,9 @@ import type {
   GrowthIconName,
   StudentGrowthDashboard,
 } from "@/features/growth-v2/types/student-dashboard";
+import { PREVIEW_MISSION_TIMELINE_ENTRY } from "@/features/growth-v2/data/growth-timeline.mock";
 import { DashboardSectionTitle } from "./DashboardSectionTitle";
+import { GrowthTimeline } from "./GrowthTimeline";
 import { MissionPanel } from "./MissionPanel";
 import styles from "./StudentDashboard.module.css";
 
@@ -85,12 +87,23 @@ function getInitiallyCompletedMissionIds(missions: DailyMission[]) {
 }
 
 export function StudentDashboard({ dashboard }: StudentDashboardProps) {
-  const { student, missions, weeklyGrowth, teacherFeedback, project, recentBadges } = dashboard;
+  const {
+    student,
+    missions,
+    weeklyGrowth,
+    teacherFeedback,
+    project,
+    recentBadges,
+    growthTimeline: initialGrowthTimeline,
+  } = dashboard;
   const [completedMissionIds, setCompletedMissionIds] = useState(() =>
     getInitiallyCompletedMissionIds(missions),
   );
   const [earnedPreviewXp, setEarnedPreviewXp] = useState(0);
   const [completionMessage, setCompletionMessage] = useState("");
+  const [growthTimeline, setGrowthTimeline] = useState(initialGrowthTimeline);
+  const [highlightedTimelineEntryId, setHighlightedTimelineEntryId] = useState("");
+  const [timelineAnnouncement, setTimelineAnnouncement] = useState("");
   const rewardedMissionIdsRef = useRef(new Set<string>());
   const totalXp = student.totalXp + earnedPreviewXp;
   const xpRemaining = student.nextLevelXp - totalXp;
@@ -115,6 +128,14 @@ export function StudentDashboard({ dashboard }: StudentDashboardProps) {
       setCompletedMissionIds((current) => new Set(current).add(missionId));
       setEarnedPreviewXp((current) => current + mission.xp);
       setCompletionMessage(`미션 완료! +${mission.xp} XP를 획득했어요.`);
+      setGrowthTimeline((current) => [
+        PREVIEW_MISSION_TIMELINE_ENTRY,
+        ...current,
+      ].slice(0, 6));
+      setHighlightedTimelineEntryId(PREVIEW_MISSION_TIMELINE_ENTRY.id);
+      setTimelineAnnouncement(
+        `새 성장 기록: ${PREVIEW_MISSION_TIMELINE_ENTRY.title}, +${PREVIEW_MISSION_TIMELINE_ENTRY.xp} XP`,
+      );
     },
     [missions],
   );
@@ -124,7 +145,10 @@ export function StudentDashboard({ dashboard }: StudentDashboardProps) {
     setCompletedMissionIds(getInitiallyCompletedMissionIds(missions));
     setEarnedPreviewXp(0);
     setCompletionMessage("");
-  }, [missions]);
+    setGrowthTimeline(initialGrowthTimeline);
+    setHighlightedTimelineEntryId("");
+    setTimelineAnnouncement("");
+  }, [initialGrowthTimeline, missions]);
 
   return (
     <div className={styles.pageShell}>
@@ -263,6 +287,12 @@ export function StudentDashboard({ dashboard }: StudentDashboardProps) {
                 <span style={{ width: `${project.progress}%` }} />
               </div>
             </section>
+
+            <GrowthTimeline
+              entries={growthTimeline}
+              highlightedEntryId={highlightedTimelineEntryId}
+              announcement={timelineAnnouncement}
+            />
           </div>
 
           <aside className={styles.sideColumn} aria-label="학습 도움 정보">

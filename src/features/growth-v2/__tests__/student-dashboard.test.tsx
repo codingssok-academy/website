@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { StudentDashboard } from "@/features/growth-v2/components/StudentDashboard";
 import { MOCK_STUDENT_DASHBOARD } from "@/features/growth-v2/data/student-dashboard.mock";
@@ -12,6 +12,7 @@ describe("Growth 2.0 student dashboard preview", () => {
     expect(dashboard.student.displayName).toBe("민준");
     expect(dashboard.missions).toHaveLength(3);
     expect(dashboard.recentBadges).toHaveLength(3);
+    expect(dashboard.growthTimeline).toHaveLength(5);
   });
 
   it("shows the approved student home information", () => {
@@ -25,7 +26,24 @@ describe("Growth 2.0 student dashboard preview", () => {
     expect(screen.getByText("선생님 피드백")).toBeInTheDocument();
     expect(screen.getByText("나만의 우주 탐험 게임")).toBeInTheDocument();
     expect(screen.getByText("최근 획득 배지")).toBeInTheDocument();
+    expect(screen.getByText("최근 성장 기록")).toBeInTheDocument();
     expect(screen.getByText("가상 학생 미리보기")).toBeInTheDocument();
+  });
+
+  it("shows five fixed growth records with the newest activity first", () => {
+    render(<StudentDashboard dashboard={MOCK_STUDENT_DASHBOARD} />);
+
+    const timeline = screen.getByRole("list", { name: "최근 성장 기록 목록" });
+    const timelineItems = within(timeline).getAllByRole("listitem");
+    const feedbackItem = within(timeline)
+      .getByText("선생님 피드백을 받았어요")
+      .closest("li");
+
+    expect(timelineItems).toHaveLength(5);
+    expect(within(timelineItems[0]).getByText("반복문 문제 3개 완료")).toBeInTheDocument();
+    expect(within(timelineItems[0]).getByText("+30 XP")).toBeInTheDocument();
+    expect(feedbackItem).not.toBeNull();
+    expect(within(feedbackItem as HTMLLIElement).queryByText(/XP/)).not.toBeInTheDocument();
   });
 
   it("shows completed and remaining missions clearly", () => {
@@ -65,7 +83,22 @@ describe("Growth 2.0 student dashboard preview", () => {
     expect(
       screen.getByText("미션 완료! +25 XP를 획득했어요."),
     ).toBeInTheDocument();
-    expect(screen.getByRole("status")).toHaveAttribute("aria-live", "polite");
+    expect(
+      screen.getByText("미션 완료! +25 XP를 획득했어요."),
+    ).toHaveAttribute("aria-live", "polite");
+    const completedTimeline = screen.getByRole("list", {
+      name: "최근 성장 기록 목록",
+    });
+    const completedTimelineItems = within(completedTimeline).getAllByRole("listitem");
+    expect(completedTimelineItems).toHaveLength(6);
+    expect(
+      within(completedTimelineItems[0]).getByText("프로젝트 진행 기록 작성 완료"),
+    ).toBeInTheDocument();
+    expect(within(completedTimelineItems[0]).getByText("방금")).toBeInTheDocument();
+    expect(within(completedTimelineItems[0]).getByText("+25 XP")).toBeInTheDocument();
+    expect(
+      within(completedTimeline).getAllByText("프로젝트 진행 기록 작성 완료"),
+    ).toHaveLength(1);
     expect(
       screen.getByRole("button", {
         name: "프로젝트 진행 기록 작성하기 완료됨",
@@ -86,6 +119,13 @@ describe("Growth 2.0 student dashboard preview", () => {
     ).toBeEnabled();
     expect(
       screen.queryByText("미션 완료! +25 XP를 획득했어요."),
+    ).not.toBeInTheDocument();
+    const resetTimeline = screen.getByRole("list", {
+      name: "최근 성장 기록 목록",
+    });
+    expect(within(resetTimeline).getAllByRole("listitem")).toHaveLength(5);
+    expect(
+      within(resetTimeline).queryByText("프로젝트 진행 기록 작성 완료"),
     ).not.toBeInTheDocument();
   });
 });

@@ -1,5 +1,7 @@
 export type MissionStatus = "completed" | "in-progress";
 
+export type GrowthActivityType = "mission" | "feedback" | "project" | "badge";
+
 export type GrowthIconName =
   | "code"
   | "calendar"
@@ -49,6 +51,15 @@ export interface EarnedBadge {
   icon: GrowthIconName;
 }
 
+export interface GrowthTimelineEntry {
+  id: string;
+  timeLabel: string;
+  type: GrowthActivityType;
+  title: string;
+  detail?: string;
+  xp?: number;
+}
+
 export interface StudentGrowthDashboard {
   dataKind: "mock";
   student: StudentSummary;
@@ -57,4 +68,5 @@ export interface StudentGrowthDashboard {
   teacherFeedback: TeacherFeedback;
   project: StudentProject;
   recentBadges: EarnedBadge[];
+  growthTimeline: GrowthTimelineEntry[];
 }

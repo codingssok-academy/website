@@ -1,4 +1,5 @@
 import type { StudentGrowthDashboard } from "@/features/growth-v2/types/student-dashboard";
+import { INITIAL_GROWTH_TIMELINE } from "@/features/growth-v2/data/growth-timeline.mock";
 
 export const MOCK_STUDENT_DASHBOARD = {
   dataKind: "mock",
@@ -67,4 +68,5 @@ export const MOCK_STUDENT_DASHBOARD = {
       icon: "rocket",
     },
   ],
+  growthTimeline: INITIAL_GROWTH_TIMELINE,
 } satisfies StudentGrowthDashboard;
