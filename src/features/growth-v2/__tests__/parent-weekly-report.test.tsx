@@ -62,5 +62,9 @@ describe("Growth 2.0 parent weekly report preview", () => {
       "href",
       "/growth-preview",
     );
+    expect(screen.getByRole("link", { name: "선생님 화면 보기" })).toHaveAttribute(
+      "href",
+      "/growth-preview/teacher",
+    );
   });
 });

@@ -32,6 +32,10 @@ describe("Growth 2.0 student dashboard preview", () => {
       "href",
       "/growth-preview/parent",
     );
+    expect(screen.getByRole("link", { name: "선생님 화면 보기" })).toHaveAttribute(
+      "href",
+      "/growth-preview/teacher",
+    );
   });
 
   it("shows five fixed growth records with the newest activity first", () => {

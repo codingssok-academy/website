@@ -161,12 +161,15 @@ export function StudentDashboard({ dashboard }: StudentDashboardProps) {
             <small>Growth 2.0</small>
           </span>
         </div>
-        <div className={styles.topbarActions}>
+        <nav className={styles.topbarActions} aria-label="Growth 2.0 미리보기 화면 전환">
           <Link href="/growth-preview/parent" className={styles.previewSwitch}>
             학부모 화면 보기
           </Link>
+          <Link href="/growth-preview/teacher" className={styles.previewSwitch}>
+            선생님 화면 보기
+          </Link>
           <span className={styles.previewBadge}>가상 학생 미리보기</span>
-        </div>
+        </nav>
       </header>
 
       <main id="main-content" className={styles.dashboard}>

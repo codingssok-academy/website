@@ -100,6 +100,7 @@ export function ParentWeeklyReport({ report }: ParentWeeklyReportProps) {
         <nav className={styles.previewNav} aria-label="Growth 2.0 미리보기 화면 전환">
           <Link href="/growth-preview">학생 화면 보기</Link>
           <span aria-current="page">학부모 화면</span>
+          <Link href="/growth-preview/teacher">선생님 화면 보기</Link>
         </nav>
       </header>
 
