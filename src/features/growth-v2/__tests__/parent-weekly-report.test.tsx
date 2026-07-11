@@ -1,8 +1,17 @@
 import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { ParentWeeklyReport } from "@/features/growth-v2/components/ParentWeeklyReport";
+import { GrowthPreviewStateProvider } from "@/features/growth-v2/components/GrowthPreviewStateProvider";
 import { MOCK_PARENT_WEEKLY_REPORT } from "@/features/growth-v2/data/parent-weekly-report.mock";
 import { MOCK_STUDENT_DASHBOARD } from "@/features/growth-v2/data/student-dashboard.mock";
+
+function renderParentReport() {
+  return render(
+    <GrowthPreviewStateProvider>
+      <ParentWeeklyReport report={MOCK_PARENT_WEEKLY_REPORT} />
+    </GrowthPreviewStateProvider>,
+  );
+}
 
 describe("Growth 2.0 parent weekly report preview", () => {
   it("shares the approved student concepts and project summary", () => {
@@ -21,7 +30,7 @@ describe("Growth 2.0 parent weekly report preview", () => {
   });
 
   it("shows the weekly summary and the mock-data notice", () => {
-    render(<ParentWeeklyReport report={MOCK_PARENT_WEEKLY_REPORT} />);
+    renderParentReport();
 
     expect(
       screen.getByRole("heading", { name: "민준 학생의 이번 주 성장" }),
@@ -36,7 +45,7 @@ describe("Growth 2.0 parent weekly report preview", () => {
   });
 
   it("explains all three concepts and the teacher evaluation", () => {
-    render(<ParentWeeklyReport report={MOCK_PARENT_WEEKLY_REPORT} />);
+    renderParentReport();
 
     expect(screen.getByText("for 반복문")).toBeInTheDocument();
     expect(screen.getByText("조건 비교")).toBeInTheDocument();
@@ -47,7 +56,7 @@ describe("Growth 2.0 parent weekly report preview", () => {
   });
 
   it("shows activities, project details, conversation guidance, and navigation", () => {
-    render(<ParentWeeklyReport report={MOCK_PARENT_WEEKLY_REPORT} />);
+    renderParentReport();
 
     const activityList = screen.getByRole("heading", { name: "이번 주 성장 기록" })
       .closest("section")

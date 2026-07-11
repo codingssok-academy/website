@@ -27,6 +27,7 @@ import { PREVIEW_MISSION_TIMELINE_ENTRY } from "@/features/growth-v2/data/growth
 import { DashboardSectionTitle } from "./DashboardSectionTitle";
 import { GrowthTimeline } from "./GrowthTimeline";
 import { MissionPanel } from "./MissionPanel";
+import { useGrowthPreviewState } from "./GrowthPreviewStateProvider";
 import styles from "./StudentDashboard.module.css";
 
 interface StudentDashboardProps {
@@ -87,7 +88,25 @@ function getInitiallyCompletedMissionIds(missions: DailyMission[]) {
   );
 }
 
-export function StudentDashboard({ dashboard }: StudentDashboardProps) {
+export function StudentDashboard({ dashboard: initialDashboard }: StudentDashboardProps) {
+  const { published } = useGrowthPreviewState();
+  const dashboard = published
+    ? {
+        ...initialDashboard,
+        weeklyGrowth: {
+          ...initialDashboard.weeklyGrowth,
+          learnedConcepts: published.learnedConcepts,
+        },
+        teacherFeedback: {
+          comment: published.evaluation.strength,
+          nextLessonGoal: published.evaluation.nextLessonGoal,
+        },
+        project: {
+          ...initialDashboard.project,
+          recentWork: published.project.recentWork,
+        },
+      }
+    : initialDashboard;
   const {
     student,
     missions,

@@ -1,8 +1,17 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { StudentDashboard } from "@/features/growth-v2/components/StudentDashboard";
+import { GrowthPreviewStateProvider } from "@/features/growth-v2/components/GrowthPreviewStateProvider";
 import { MOCK_STUDENT_DASHBOARD } from "@/features/growth-v2/data/student-dashboard.mock";
 import { studentDashboardRepository } from "@/features/growth-v2/services/student-dashboard-repository";
+
+function renderStudentDashboard() {
+  return render(
+    <GrowthPreviewStateProvider>
+      <StudentDashboard dashboard={MOCK_STUDENT_DASHBOARD} />
+    </GrowthPreviewStateProvider>,
+  );
+}
 
 describe("Growth 2.0 student dashboard preview", () => {
   it("uses only the isolated mock repository", async () => {
@@ -16,7 +25,7 @@ describe("Growth 2.0 student dashboard preview", () => {
   });
 
   it("shows the approved student home information", () => {
-    render(<StudentDashboard dashboard={MOCK_STUDENT_DASHBOARD} />);
+    renderStudentDashboard();
 
     expect(
       screen.getByRole("heading", { name: "안녕하세요, 민준 학생" }),
@@ -39,7 +48,7 @@ describe("Growth 2.0 student dashboard preview", () => {
   });
 
   it("shows five fixed growth records with the newest activity first", () => {
-    render(<StudentDashboard dashboard={MOCK_STUDENT_DASHBOARD} />);
+    renderStudentDashboard();
 
     const timeline = screen.getByRole("list", { name: "최근 성장 기록 목록" });
     const timelineItems = within(timeline).getAllByRole("listitem");
@@ -55,7 +64,7 @@ describe("Growth 2.0 student dashboard preview", () => {
   });
 
   it("shows completed and remaining missions clearly", () => {
-    render(<StudentDashboard dashboard={MOCK_STUDENT_DASHBOARD} />);
+    renderStudentDashboard();
 
     expect(screen.getByText("2/3 완료")).toBeInTheDocument();
     expect(screen.getByText("2,480 XP")).toBeInTheDocument();
@@ -70,7 +79,7 @@ describe("Growth 2.0 student dashboard preview", () => {
   });
 
   it("completes the preview mission only once and resets the experience", () => {
-    render(<StudentDashboard dashboard={MOCK_STUDENT_DASHBOARD} />);
+    renderStudentDashboard();
 
     const completeButton = screen.getByRole("button", {
       name: "프로젝트 진행 기록 작성하기 완료하기",

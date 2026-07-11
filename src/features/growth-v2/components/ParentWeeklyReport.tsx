@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import {
   BookOpenCheck,
@@ -14,6 +16,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { ParentWeeklyReportData } from "@/features/growth-v2/types/parent-weekly-report";
+import { useGrowthPreviewState } from "./GrowthPreviewStateProvider";
 import styles from "./ParentWeeklyReport.module.css";
 
 interface ParentWeeklyReportProps {
@@ -56,7 +59,22 @@ function ProgressBar({ value, label }: { value: number; label: string }) {
   );
 }
 
-export function ParentWeeklyReport({ report }: ParentWeeklyReportProps) {
+export function ParentWeeklyReport({ report: initialReport }: ParentWeeklyReportProps) {
+  const { published } = useGrowthPreviewState();
+  const report = published
+    ? {
+        ...initialReport,
+        learnedConcepts: initialReport.learnedConcepts.filter((concept) =>
+          published.learnedConcepts.includes(concept.name),
+        ),
+        teacherEvaluation: { ...published.evaluation },
+        project: {
+          ...initialReport.project,
+          recentWork: published.project.recentWork,
+          nextWork: published.project.nextWork,
+        },
+      }
+    : initialReport;
   const metrics = [
     {
       label: "출석",

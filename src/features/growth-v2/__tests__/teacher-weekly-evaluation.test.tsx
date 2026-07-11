@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { TeacherWeeklyEvaluation } from "@/features/growth-v2/components/TeacherWeeklyEvaluation";
+import { GrowthPreviewStateProvider } from "@/features/growth-v2/components/GrowthPreviewStateProvider";
 import { MOCK_PARENT_WEEKLY_REPORT } from "@/features/growth-v2/data/parent-weekly-report.mock";
 import { MOCK_TEACHER_WEEKLY_EVALUATION } from "@/features/growth-v2/data/teacher-weekly-evaluation.mock";
 
@@ -8,9 +9,17 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
+function renderTeacherEvaluation() {
+  return render(
+    <GrowthPreviewStateProvider>
+      <TeacherWeeklyEvaluation data={MOCK_TEACHER_WEEKLY_EVALUATION} />
+    </GrowthPreviewStateProvider>,
+  );
+}
+
 describe("Growth 2.0 teacher weekly evaluation preview", () => {
   it("shows the approved mock student, period, summary, and defaults", () => {
-    render(<TeacherWeeklyEvaluation data={MOCK_TEACHER_WEEKLY_EVALUATION} />);
+    renderTeacherEvaluation();
 
     expect(screen.getByRole("heading", { name: "주간 평가 작성" })).toBeInTheDocument();
     expect(screen.getByText("민준 학생")).toBeInTheDocument();
@@ -50,7 +59,7 @@ describe("Growth 2.0 teacher weekly evaluation preview", () => {
   });
 
   it("reflects text and concept changes in the parent preview", () => {
-    render(<TeacherWeeklyEvaluation data={MOCK_TEACHER_WEEKLY_EVALUATION} />);
+    renderTeacherEvaluation();
     const preview = screen.getByLabelText("학부모 표시 미리보기");
 
     fireEvent.change(screen.getByLabelText("잘한 점"), {
@@ -77,7 +86,7 @@ describe("Growth 2.0 teacher weekly evaluation preview", () => {
   });
 
   it("applies a recommendation phrase as a clear replacement", () => {
-    render(<TeacherWeeklyEvaluation data={MOCK_TEACHER_WEEKLY_EVALUATION} />);
+    renderTeacherEvaluation();
 
     fireEvent.click(screen.getByRole("button", { name: "오류를 스스로 찾았어요" }));
 
@@ -92,7 +101,7 @@ describe("Growth 2.0 teacher weekly evaluation preview", () => {
   });
 
   it("validates every required evaluation field and focuses the first error", () => {
-    render(<TeacherWeeklyEvaluation data={MOCK_TEACHER_WEEKLY_EVALUATION} />);
+    renderTeacherEvaluation();
     const saveButton = screen.getByRole("button", { name: "평가 미리보기 저장" });
     const strength = screen.getByLabelText("잘한 점");
     const improvement = screen.getByLabelText("보완할 점");
@@ -118,7 +127,7 @@ describe("Growth 2.0 teacher weekly evaluation preview", () => {
 
   it("shows one local-only save notice even after repeated clicks", () => {
     const fetchSpy = vi.spyOn(globalThis, "fetch");
-    render(<TeacherWeeklyEvaluation data={MOCK_TEACHER_WEEKLY_EVALUATION} />);
+    renderTeacherEvaluation();
     const saveButton = screen.getByRole("button", { name: "평가 미리보기 저장" });
 
     fireEvent.click(saveButton);
@@ -134,7 +143,7 @@ describe("Growth 2.0 teacher weekly evaluation preview", () => {
   });
 
   it("resets edited fields, choices, concepts, notices, and errors", () => {
-    render(<TeacherWeeklyEvaluation data={MOCK_TEACHER_WEEKLY_EVALUATION} />);
+    renderTeacherEvaluation();
     const strength = screen.getByLabelText("잘한 점");
 
     fireEvent.change(strength, { target: { value: "" } });
@@ -164,7 +173,7 @@ describe("Growth 2.0 teacher weekly evaluation preview", () => {
   });
 
   it("links to the student and parent preview screens", () => {
-    render(<TeacherWeeklyEvaluation data={MOCK_TEACHER_WEEKLY_EVALUATION} />);
+    renderTeacherEvaluation();
 
     expect(screen.getByRole("link", { name: "학생 화면" })).toHaveAttribute(
       "href",

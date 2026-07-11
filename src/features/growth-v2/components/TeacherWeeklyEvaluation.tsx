@@ -14,11 +14,10 @@ import {
   UserRoundCheck,
 } from "lucide-react";
 import { ParentEvaluationPreview } from "./ParentEvaluationPreview";
+import { useGrowthPreviewState } from "./GrowthPreviewStateProvider";
 import type {
   EvaluationChoice,
   EvaluationTextField,
-  EvaluationTextValues,
-  ProjectEvaluationValues,
   RecommendationPhrase,
   TeacherWeeklyEvaluationData,
 } from "@/features/growth-v2/types/teacher-weekly-evaluation";
@@ -97,18 +96,14 @@ function RecommendationButtons({
 }
 
 export function TeacherWeeklyEvaluation({ data }: TeacherWeeklyEvaluationProps) {
-  const [understanding, setUnderstanding] = useState(data.defaults.understanding);
-  const [participation, setParticipation] = useState(data.defaults.participation);
-  const [homework, setHomework] = useState(data.defaults.homework);
-  const [selectedConcepts, setSelectedConcepts] = useState(
-    () => new Set(data.learnedConcepts),
-  );
-  const [evaluation, setEvaluation] = useState<EvaluationTextValues>(
-    data.defaults.evaluation,
-  );
-  const [project, setProject] = useState<ProjectEvaluationValues>(
-    data.defaults.project,
-  );
+  const { draft, updateDraft, publishDraft, resetPreview } = useGrowthPreviewState();
+  const {
+    understanding,
+    participation,
+    homework,
+    evaluation,
+    project,
+  } = draft;
   const [errors, setErrors] = useState<EvaluationErrors>({});
   const [saveMessage, setSaveMessage] = useState("");
   const strengthRef = useRef<HTMLTextAreaElement>(null);
@@ -124,12 +119,17 @@ export function TeacherWeeklyEvaluation({ data }: TeacherWeeklyEvaluationProps) 
     [],
   );
 
-  const visibleConcepts = data.learnedConcepts.filter((concept) =>
-    selectedConcepts.has(concept),
+  const selectedConcepts = useMemo(
+    () => new Set(draft.learnedConcepts),
+    [draft.learnedConcepts],
   );
+  const visibleConcepts = data.learnedConcepts.filter((concept) => selectedConcepts.has(concept));
 
   const updateEvaluation = (field: EvaluationTextField, value: string) => {
-    setEvaluation((current) => ({ ...current, [field]: value }));
+    updateDraft((current) => ({
+      ...current,
+      evaluation: { ...current.evaluation, [field]: value },
+    }));
     setErrors((current) => ({ ...current, [field]: undefined }));
     setSaveMessage("");
   };
@@ -142,13 +142,13 @@ export function TeacherWeeklyEvaluation({ data }: TeacherWeeklyEvaluationProps) 
   };
 
   const toggleConcept = (concept: string) => {
-    setSelectedConcepts((current) => {
-      const next = new Set(current);
+    updateDraft((current) => {
+      const next = new Set(current.learnedConcepts);
 
       if (next.has(concept)) next.delete(concept);
       else next.add(concept);
 
-      return next;
+      return { ...current, learnedConcepts: [...next] };
     });
     setSaveMessage("");
   };
@@ -182,18 +182,14 @@ export function TeacherWeeklyEvaluation({ data }: TeacherWeeklyEvaluationProps) 
   const handleSave = () => {
     if (!validateEvaluation()) return;
 
+    publishDraft();
     setSaveMessage(
       "주간 평가 미리보기가 준비됐어요. 실제 데이터에는 저장되지 않았습니다.",
     );
   };
 
   const handleReset = () => {
-    setUnderstanding(data.defaults.understanding);
-    setParticipation(data.defaults.participation);
-    setHomework(data.defaults.homework);
-    setSelectedConcepts(new Set(data.learnedConcepts));
-    setEvaluation(data.defaults.evaluation);
-    setProject(data.defaults.project);
+    resetPreview();
     setErrors({});
     setSaveMessage("");
   };
@@ -277,7 +273,7 @@ export function TeacherWeeklyEvaluation({ data }: TeacherWeeklyEvaluationProps) 
               options={data.understandingOptions}
               value={understanding}
               onChange={(value) => {
-                setUnderstanding(value);
+                updateDraft((current) => ({ ...current, understanding: value }));
                 setSaveMessage("");
               }}
             />
@@ -286,7 +282,7 @@ export function TeacherWeeklyEvaluation({ data }: TeacherWeeklyEvaluationProps) 
               options={data.participationOptions}
               value={participation}
               onChange={(value) => {
-                setParticipation(value);
+                updateDraft((current) => ({ ...current, participation: value }));
                 setSaveMessage("");
               }}
             />
@@ -295,7 +291,7 @@ export function TeacherWeeklyEvaluation({ data }: TeacherWeeklyEvaluationProps) 
               options={data.homeworkOptions}
               value={homework}
               onChange={(value) => {
-                setHomework(value);
+                updateDraft((current) => ({ ...current, homework: value }));
                 setSaveMessage("");
               }}
             />
@@ -371,7 +367,11 @@ export function TeacherWeeklyEvaluation({ data }: TeacherWeeklyEvaluationProps) 
                 maxLength={200}
                 value={project.recentWork}
                 onChange={(event) => {
-                  setProject((current) => ({ ...current, recentWork: event.target.value }));
+                  const recentWork = event.target.value;
+                  updateDraft((current) => ({
+                    ...current,
+                    project: { ...current.project, recentWork },
+                  }));
                   setSaveMessage("");
                 }}
               />
@@ -382,7 +382,11 @@ export function TeacherWeeklyEvaluation({ data }: TeacherWeeklyEvaluationProps) 
                 maxLength={200}
                 value={project.nextWork}
                 onChange={(event) => {
-                  setProject((current) => ({ ...current, nextWork: event.target.value }));
+                  const nextWork = event.target.value;
+                  updateDraft((current) => ({
+                    ...current,
+                    project: { ...current.project, nextWork },
+                  }));
                   setSaveMessage("");
                 }}
               />
