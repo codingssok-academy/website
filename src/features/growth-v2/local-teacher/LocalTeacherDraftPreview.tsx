@@ -23,6 +23,11 @@ import {
 } from "lucide-react";
 import { MOCK_TEACHER_WEEKLY_EVALUATION } from "@/features/growth-v2/data/teacher-weekly-evaluation.mock";
 import {
+  formatStudentDisplayName,
+  getGrowthPreviewEnvironmentCopy,
+  shouldShowGrowthPreviewDemoNavigation,
+} from "@/features/growth-v2/preview-presentation";
+import {
   createLocalTeacherSession,
   fetchLocalTeacherEvaluation,
   fetchLocalTeacherStudents,
@@ -147,6 +152,8 @@ function ChoiceGroup({
   );
 }
 export function LocalTeacherDraftPreview() {
+  const environment = getGrowthPreviewEnvironmentCopy();
+  const showDemoNavigation = shouldShowGrowthPreviewDemoNavigation();
   const [viewState, setViewState] = useState<ViewState>("signed-out");
   const [session, setSession] = useState<LocalTeacherSession | null>(null);
   const [students, setStudents] = useState<LocalTeacherStudent[]>([]);
@@ -389,7 +396,7 @@ export function LocalTeacherDraftPreview() {
       setEvaluation(refreshed);
       setForm(formFromEvaluation(refreshed));
       setIsDirty(false);
-      setMessage(`평가 초안 version ${refreshed.data.draft.version}이 실제 로컬 DB에 저장됐습니다.`);
+      setMessage("평가 초안이 안전하게 저장됐습니다.");
       const nextStudents = await refreshStudentList(session);
       const updatedStudent = nextStudents.find((student) => student.id === selectedStudent.id);
       if (updatedStudent) setSelectedStudent(updatedStudent);
@@ -459,7 +466,7 @@ export function LocalTeacherDraftPreview() {
       setHasConflict(false);
       setPublishResult(result);
       setIsPublishDialogOpen(false);
-      setMessage(`평가 공개 완료 · version ${result.version}`);
+      setMessage("평가 공개 완료");
       const nextStudents = await refreshStudentList(session);
       const updatedStudent = nextStudents.find((student) => student.id === selectedStudent.id);
       if (updatedStudent) setSelectedStudent(updatedStudent);
@@ -478,12 +485,12 @@ export function LocalTeacherDraftPreview() {
       <main className={styles.loginShell}>
         <section className={styles.loginPanel} aria-labelledby="teacher-local-title">
           <span className={styles.loginIcon} aria-hidden="true"><Database size={30} /></span>
-          <p className={styles.eyebrow}>Growth 2.0 로컬 연습 DB</p>
+          <p className={styles.eyebrow}>{environment.label}</p>
           <h1 id="teacher-local-title">선생님 평가 공개 체험</h1>
-          <p className={styles.loginIntro}>실제 학생 정보가 아닌 가상 자료로 초안 저장과 공개 흐름을 확인합니다.</p>
+          <p className={styles.loginIntro}>{environment.description} 초안 저장과 공개 흐름을 확인합니다.</p>
           <ul className={styles.noticeList}>
-            <li>저장된 평가 초안을 공개하는 로컬 연습 화면입니다.</li>
-            <li>공개하면 학생과 연결 학부모의 읽기 API에 최신 평가가 나타납니다.</li>
+            <li>저장된 평가 초안을 확인하고 공개하는 연습 화면입니다.</li>
+            <li>공개하면 학생과 연결 학부모 화면에 최신 평가가 나타납니다.</li>
             <li>새로고침하면 가상 로그인이 해제됩니다.</li>
             <li>운영 DB와 연결되지 않았습니다.</li>
           </ul>
@@ -492,7 +499,9 @@ export function LocalTeacherDraftPreview() {
             {isLoading ? <><LoaderCircle className={styles.spinner} size={18} /> 로그인 중</> :
               <><LockKeyhole size={18} /> 테스트 선생님으로 들어가기</>}
           </button>
-          <Link className={styles.mockLink} href="/growth-preview/teacher">기존 mock 선생님 화면 보기</Link>
+          {showDemoNavigation ? (
+            <Link className={styles.mockLink} href="/growth-preview/teacher">기존 데모 선생님 화면 보기</Link>
+          ) : null}
         </section>
       </main>
     );
@@ -528,20 +537,27 @@ export function LocalTeacherDraftPreview() {
   return (
     <div className={styles.pageShell}>
       <header className={styles.topbar}>
-        <Link href="/growth-preview/teacher" className={styles.brand}>
-          <span className={styles.brandMark}>C</span>
-          <span><strong>코딩쏙</strong><small>Growth 2.0</small></span>
-        </Link>
+        {showDemoNavigation ? (
+          <Link href="/growth-preview/teacher" className={styles.brand}>
+            <span className={styles.brandMark}>C</span>
+            <span><strong>코딩쏙</strong><small>Growth 2.0</small></span>
+          </Link>
+        ) : (
+          <div className={styles.brand}>
+            <span className={styles.brandMark}>C</span>
+            <span><strong>코딩쏙</strong><small>Growth 2.0</small></span>
+          </div>
+        )}
         <div className={styles.topbarActions}>
-          <span className={styles.localBadge}><Database size={15} /> 로컬 연습 DB</span>
+          <span className={styles.localBadge}><Database size={15} /> {environment.badge}</span>
           <button type="button" onClick={clearSession}><LogOut size={16} /> 체험 끝내기</button>
         </div>
       </header>
 
       <div className={styles.safetyBand}>
         <FileLock2 size={18} aria-hidden="true" />
-        <strong>Growth 2.0 로컬 연습 DB</strong>
-        <span>실제 학생 정보가 아닙니다. 공개하면 학생과 연결 학부모의 읽기 API에 최신 평가가 나타납니다. 운영 DB와 연결되지 않았습니다.</span>
+        <strong>{environment.label}</strong>
+        <span>{environment.description} 공개하면 학생과 연결 학부모 화면에 최신 평가가 나타납니다.</span>
       </div>
 
       <main className={styles.workspace}>
@@ -556,8 +572,8 @@ export function LocalTeacherDraftPreview() {
                 disabled={isLoadingStudent || isSaving}
                 onClick={() => loadStudent(session, student)}
               >
-                <strong>{student.display_name}</strong>
-                <span>{student.has_draft ? "초안 저장됨" : student.has_published ? "공개본 있음" : "평가 시작 전"}</span>
+                <strong>{formatStudentDisplayName(student.display_name)}</strong>
+                <span>{student.has_draft ? "초안 저장됨" : student.has_published ? "공개된 평가 있음" : "평가 시작 전"}</span>
               </button>
             ))}
           </div>
@@ -567,15 +583,15 @@ export function LocalTeacherDraftPreview() {
           <div className={styles.pageHeading}>
             <div>
               <p className={styles.eyebrow}>선생님 주간 평가</p>
-              <h1>{selectedStudent?.display_name ?? "학생"} 평가 초안</h1>
+              <h1>{selectedStudent ? formatStudentDisplayName(selectedStudent.display_name) : "학생"} 평가 초안</h1>
               <p>{evaluation ? `${evaluation.period.week_start} ~ ${evaluation.period.week_end}` : "평가를 불러오는 중입니다."}</p>
             </div>
             <div className={styles.statusSummary} aria-label="평가 상태">
               <span className={published ? styles.publishedStatus : styles.emptyStatus}>
-                {published ? `기존 공개본 v${published.version}` : "아직 공개된 평가 없음"}
+                {published ? "현재 공개 평가" : "아직 공개된 평가 없음"}
               </span>
               <span className={draft ? styles.draftStatus : styles.emptyStatus}>
-                {draft ? `작성 중 v${draft.version}` : "저장된 초안 없음"}
+                {draft ? "저장된 초안" : "저장된 초안 없음"}
               </span>
             </div>
           </div>
@@ -595,10 +611,10 @@ export function LocalTeacherDraftPreview() {
               <ShieldCheck size={21} aria-hidden="true" />
               <div>
                 <h2 id="publish-success-title">평가 공개 완료</h2>
-                <p>version {publishResult.version} · {formatSavedAt(publishResult.published_at ?? undefined)}</p>
+                <p>최신 공개 완료 · {formatSavedAt(publishResult.published_at ?? undefined)}</p>
                 <p>{publishResult.archived_previous_version
-                  ? `이전 공개본 version ${publishResult.archived_previous_version}은 이전 기록으로 보관됐습니다.`
-                  : "이전 공개본이 없는 첫 평가입니다."}</p>
+                  ? "기존 공개 평가는 이전 평가 기록으로 보관됐습니다."
+                  : "이전에 공개된 평가가 없는 첫 평가입니다."}</p>
                 <p>현재 초안 없음 · 학생과 연결 학부모에게 공개됨</p>
               </div>
             </section>
@@ -608,7 +624,7 @@ export function LocalTeacherDraftPreview() {
             <form className={styles.formPanel} onSubmit={(event) => event.preventDefault()}>
               <div className={styles.sectionHeading}>
                 <BookOpenCheck size={20} />
-                <div><h2>빠른 평가 입력</h2><p>변경한 내용은 저장 버튼을 누르기 전까지 DB에 반영되지 않습니다.</p></div>
+                <div><h2>빠른 평가 입력</h2><p>변경한 내용은 저장 버튼을 눌러야 안전하게 저장됩니다.</p></div>
                 {isDirty ? <span className={styles.unsavedBadge}>저장되지 않은 변경</span> : null}
               </div>
 
@@ -737,33 +753,33 @@ export function LocalTeacherDraftPreview() {
                 >
                   {isPublishing ? <><LoaderCircle className={styles.spinner} size={18} /> 평가 공개 중</> : <><Send size={18} /> 평가 공개하기</>}
                 </button>
-                <span><FileLock2 size={15} /> {draft ? "초안은 학생·학부모 미공개" : "최신 공개본 표시 중"}</span>
+                <span><FileLock2 size={15} /> {draft ? "초안은 학생·학부모 미공개" : "최신 공개 평가 표시 중"}</span>
               </div>
               {publishDisabledReason ? <p className={styles.publishHelp}>{publishDisabledReason}</p> : null}
               <p className={styles.successMessage} role="status" aria-live="polite">{message}</p>
             </form>
 
-            <aside className={styles.readbackPanel} aria-label="실제 DB 저장 상태">
-              <h2>실제 DB 상태</h2>
+            <aside className={styles.readbackPanel} aria-label="평가 저장 상태">
+              <h2>평가 저장 상태</h2>
               <dl>
-                <div><dt>초안</dt><dd>{draft ? `version ${draft.version}` : "없음"}</dd></div>
-                <div><dt>공개본</dt><dd>{published ? `version ${published.version}` : "없음"}</dd></div>
+                <div><dt>초안</dt><dd>{draft ? "저장됨" : "없음"}</dd></div>
+                <div><dt>공개 평가</dt><dd>{published ? "공개됨" : "없음"}</dd></div>
                 <div><dt>공개 여부</dt><dd>{draft ? "학생·학부모 미공개" : published ? "학생·학부모 공개" : "공개 평가 없음"}</dd></div>
                 <div><dt>기록 시각</dt><dd><Clock3 size={15} /> {formatSavedAt(draft?.updated_at ?? published?.published_at ?? undefined)}</dd></div>
               </dl>
               <div className={styles.savedConcepts}>
-                <h3>DB에서 다시 읽은 준비된 개념</h3>
+                <h3>저장된 준비된 개념</h3>
                 {(displayedEvaluation?.selected_concepts ?? displayedEvaluation?.concepts ?? []).length
                   ? (displayedEvaluation?.selected_concepts ?? displayedEvaluation?.concepts ?? []).map((concept) => <span key={concept.key}>{concept.label}</span>)
                   : <p>저장된 준비된 개념이 없습니다.</p>}
               </div>
               <div className={styles.savedConcepts}>
-                <h3>DB에서 다시 읽은 직접 입력 개념</h3>
+                <h3>저장된 직접 입력 개념</h3>
                 {displayedEvaluation?.custom_concepts?.length
                   ? displayedEvaluation.custom_concepts.map((concept) => <span key={concept.id}>{concept.label}</span>)
                   : <p>저장된 직접 입력 개념이 없습니다.</p>}
               </div>
-              <p className={styles.readbackNote}>저장 성공 표시는 저장 API 호출 뒤 선생님 읽기 API로 실제 내용을 다시 확인한 경우에만 나타납니다.</p>
+              <p className={styles.readbackNote}>저장한 내용을 다시 불러와 확인한 경우에만 저장 완료로 표시합니다.</p>
             </aside>
           </div>
         </section>
@@ -787,18 +803,18 @@ export function LocalTeacherDraftPreview() {
             <div className={styles.publishScope}>
               <section>
                 <h3>학생에게 공개</h3>
-                <ul><li>잘한 점</li><li>다음 수업 목표</li><li>선택한 학습 개념</li><li>직접 입력한 학습 개념</li></ul>
+                <ul><li>잘한 점</li><li>다음 수업 목표</li><li>이번 주에 배운 내용</li></ul>
               </section>
               <section>
                 <h3>학부모에게 공개</h3>
-                <ul><li>잘한 점</li><li>보완할 점</li><li>다음 수업 목표</li><li>선택·직접 입력 학습 개념</li></ul>
+                <ul><li>잘한 점</li><li>보완할 점</li><li>다음 수업 목표</li><li>이번 주에 배운 내용</li></ul>
               </section>
             </div>
             <div className={styles.archiveNotice}>
               <Archive size={18} aria-hidden="true" />
               <p>{published
-                ? `기존 공개본 version ${published.version}은 삭제하지 않고 이전 기록으로 보관됩니다.`
-                : "기존 공개본이 없어 이번 평가가 첫 공개본이 됩니다."}</p>
+                ? "기존 공개 평가는 삭제되지 않고 이전 기록으로 보관됩니다."
+                : "기존 공개 평가가 없어 이번 평가가 첫 공개 평가가 됩니다."}</p>
             </div>
             <p className={styles.dialogFootnote}>프로젝트 기록과 알림은 이번 단계에서 전송하지 않습니다.</p>
             <div className={styles.dialogActions}>

@@ -16,6 +16,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { ParentWeeklyReportData } from "@/features/growth-v2/types/parent-weekly-report";
+import { formatStudentPossessive } from "@/features/growth-v2/preview-presentation";
 import { useGrowthPreviewState } from "./GrowthPreviewStateProvider";
 import styles from "./ParentWeeklyReport.module.css";
 
@@ -126,7 +127,7 @@ export function ParentWeeklyReport({ report: initialReport }: ParentWeeklyReport
         <section className={styles.reportIntro} aria-labelledby="parent-report-title">
           <div>
             <p className={styles.eyebrow}>주간 성장 리포트</p>
-            <h1 id="parent-report-title">{report.studentName} 학생의 이번 주 성장</h1>
+            <h1 id="parent-report-title">{formatStudentPossessive(report.studentName)} 이번 주 성장</h1>
             <p className={styles.introduction}>{report.introduction}</p>
           </div>
           <div className={styles.reportMeta}>

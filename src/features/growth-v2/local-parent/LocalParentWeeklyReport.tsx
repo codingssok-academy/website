@@ -26,6 +26,12 @@ import type {
   LocalParentWeeklyReportResponse,
 } from "./types";
 import { LocalParentPreviewError } from "./types";
+import {
+  formatStudentDisplayName,
+  formatStudentPossessive,
+  getGrowthPreviewEnvironmentCopy,
+  shouldShowGrowthPreviewDemoNavigation,
+} from "../preview-presentation";
 import styles from "./LocalParentWeeklyReport.module.css";
 
 function currentWeekStart() {
@@ -52,6 +58,8 @@ function formatPublishedAt(value: string | null) {
 }
 
 export function LocalParentWeeklyReport() {
+  const environment = getGrowthPreviewEnvironmentCopy();
+  const showDemoNavigation = shouldShowGrowthPreviewDemoNavigation();
   const [session, setSession] = useState<LocalParentSession | null>(null);
   const [children, setChildren] = useState<LocalParentChild[]>([]);
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
@@ -105,7 +113,7 @@ export function LocalParentWeeklyReport() {
         currentWeekStart(),
       );
       setReport(nextReport);
-      if (refresh) setNotice("실제 로컬 DB에서 최신 공개 리포트를 다시 확인했습니다.");
+      if (refresh) setNotice("최신 공개 리포트를 다시 확인했습니다.");
     } catch (caught) {
       showError(caught, "최신 리포트를 불러오지 못했어요.");
     } finally {
@@ -156,10 +164,10 @@ export function LocalParentWeeklyReport() {
       <main className={styles.loginPage} id="main-content">
         <section className={styles.loginPanel} aria-labelledby="parent-local-login-title">
           <span className={styles.loginIcon} aria-hidden="true"><ShieldCheck size={30} /></span>
-          <p className={styles.eyebrow}>Growth 2.0 로컬 연습 DB</p>
+          <p className={styles.eyebrow}>{environment.label}</p>
           <h1 id="parent-local-login-title">학부모 주간 성장 리포트</h1>
           <p className={styles.loginDescription}>
-            실제 학생 정보가 아닌 가상 자료로 공개된 최신 평가를 확인합니다.
+            {environment.description} 공개된 최신 평가를 확인합니다.
           </p>
           <ul className={styles.safetyList}>
             <li>공개된 최신 평가만 보여주는 읽기 전용 화면입니다.</li>
@@ -177,7 +185,9 @@ export function LocalParentWeeklyReport() {
             {isLoggingIn ? "로그인 중" : "테스트 학부모로 들어가기"}
           </button>
           {error ? <p className={styles.error} role="alert">{error}</p> : null}
-          <Link href="/growth-preview/parent" className={styles.mockLink}>기존 mock 학부모 화면 보기</Link>
+          {showDemoNavigation ? (
+            <Link href="/growth-preview/parent" className={styles.mockLink}>기존 데모 학부모 화면 보기</Link>
+          ) : null}
         </section>
       </main>
     );
@@ -190,19 +200,26 @@ export function LocalParentWeeklyReport() {
   return (
     <div className={styles.pageShell}>
       <header className={styles.topbar}>
-        <Link href="/growth-preview/parent" className={styles.brand} aria-label="코딩쏙 Growth 2.0 기존 학부모 화면">
-          <span className={styles.brandMark}>C</span>
-          <span><strong>코딩쏙</strong><small>Growth 2.0</small></span>
-        </Link>
-        <span className={styles.localBadge}>로컬 읽기 전용</span>
+        {showDemoNavigation ? (
+          <Link href="/growth-preview/parent" className={styles.brand} aria-label="코딩쏙 Growth 2.0 기존 데모 학부모 화면">
+            <span className={styles.brandMark}>C</span>
+            <span><strong>코딩쏙</strong><small>Growth 2.0</small></span>
+          </Link>
+        ) : (
+          <div className={styles.brand}>
+            <span className={styles.brandMark}>C</span>
+            <span><strong>코딩쏙</strong><small>Growth 2.0</small></span>
+          </div>
+        )}
+        <span className={styles.localBadge}>{environment.badge}</span>
         <button type="button" className={styles.logoutButton} onClick={clearSession}>
           <LogOut size={17} /> 체험 끝내기
         </button>
       </header>
 
       <aside className={styles.safetyBanner}>
-        <strong>Growth 2.0 로컬 연습 DB</strong>
-        <span>실제 학생 정보가 아닙니다. 공개된 최신 평가만 표시하며 작성 중인 평가는 보이지 않습니다. 운영 DB와 연결되지 않았습니다.</span>
+        <strong>{environment.label}</strong>
+        <span>{environment.description} 공개된 최신 평가만 표시하며 작성 중인 평가는 보이지 않습니다.</span>
       </aside>
 
       <main id="main-content" className={styles.reportShell}>
@@ -224,7 +241,7 @@ export function LocalParentWeeklyReport() {
                     onClick={() => handleSelectStudent(child.id)}
                     disabled={isLoadingReport || isRefreshing}
                   >
-                    {child.display_name}
+                    {formatStudentDisplayName(child.display_name)}
                     <small>{selected ? "현재 선택" : "리포트 보기"}</small>
                   </button>
                 );
@@ -270,13 +287,12 @@ export function LocalParentWeeklyReport() {
             <section className={styles.reportIntro} aria-labelledby="local-parent-report-title">
               <div>
                 <p className={styles.eyebrow}>최신 주간 평가</p>
-                <h2 id="local-parent-report-title">{report.data.student.display_name} 학생의 이번 주 성장</h2>
-                <p className={styles.publishedHint}>선생님이 공개한 평가를 실제 로컬 DB에서 읽었습니다.</p>
+                <h2 id="local-parent-report-title">{formatStudentPossessive(report.data.student.display_name)} 이번 주 성장</h2>
+                <p className={styles.publishedHint}>선생님이 공개한 최신 평가입니다.</p>
               </div>
               <div className={styles.reportMeta}>
                 <span><CalendarDays size={16} /> {formatPeriod(report.period.week_start, report.period.week_end)}</span>
                 <span><History size={16} /> 공개일 {formatPublishedAt(evaluation.published_at)}</span>
-                <small>로컬 테스트 버전: {evaluation.version}</small>
               </div>
             </section>
 
@@ -317,7 +333,7 @@ export function LocalParentWeeklyReport() {
                 <section className={styles.panel} aria-labelledby="project-title">
                   <div className={styles.sectionTitle}>
                     <span aria-hidden="true"><FolderKanban size={20} /></span>
-                    <div><h3 id="project-title">프로젝트 기록</h3><p>실제 API가 제공하는 공개 기록입니다.</p></div>
+                    <div><h3 id="project-title">프로젝트 기록</h3><p>선생님이 공개한 최신 활동 기록입니다.</p></div>
                   </div>
                   <div className={styles.projectList}>
                     {report.data.projects.map((project) => (

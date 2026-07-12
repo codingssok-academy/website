@@ -44,6 +44,19 @@ describe("Growth 2.0 parent weekly report preview", () => {
     expect(screen.getAllByText("64%").length).toBeGreaterThanOrEqual(1);
   });
 
+  it("does not repeat the student honorific in the report title", () => {
+    render(
+      <GrowthPreviewStateProvider>
+        <ParentWeeklyReport
+          report={{ ...MOCK_PARENT_WEEKLY_REPORT, studentName: "테스트 학생 민준" }}
+        />
+      </GrowthPreviewStateProvider>,
+    );
+
+    expect(screen.getByRole("heading", { name: "테스트 학생 민준의 이번 주 성장" })).toBeInTheDocument();
+    expect(screen.queryByText(/테스트 학생 민준 학생의/)).not.toBeInTheDocument();
+  });
+
   it("explains all three concepts and the teacher evaluation", () => {
     renderParentReport();
 

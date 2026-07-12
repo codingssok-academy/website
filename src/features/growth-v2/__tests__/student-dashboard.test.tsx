@@ -47,6 +47,22 @@ describe("Growth 2.0 student dashboard preview", () => {
     );
   });
 
+  it("does not repeat the student honorific in the greeting", () => {
+    render(
+      <GrowthPreviewStateProvider>
+        <StudentDashboard
+          dashboard={{
+            ...MOCK_STUDENT_DASHBOARD,
+            student: { ...MOCK_STUDENT_DASHBOARD.student, displayName: "테스트 학생 민준" },
+          }}
+        />
+      </GrowthPreviewStateProvider>,
+    );
+
+    expect(screen.getByRole("heading", { name: "안녕하세요, 테스트 학생 민준" })).toBeInTheDocument();
+    expect(screen.queryByText(/테스트 학생 민준 학생/)).not.toBeInTheDocument();
+  });
+
   it("shows five fixed growth records with the newest activity first", () => {
     renderStudentDashboard();
 

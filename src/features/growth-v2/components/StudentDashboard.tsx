@@ -24,6 +24,7 @@ import type {
   StudentGrowthDashboard,
 } from "@/features/growth-v2/types/student-dashboard";
 import { PREVIEW_MISSION_TIMELINE_ENTRY } from "@/features/growth-v2/data/growth-timeline.mock";
+import { formatStudentWithHonorific } from "@/features/growth-v2/preview-presentation";
 import { DashboardSectionTitle } from "./DashboardSectionTitle";
 import { GrowthTimeline } from "./GrowthTimeline";
 import { MissionPanel } from "./MissionPanel";
@@ -195,7 +196,7 @@ export function StudentDashboard({ dashboard: initialDashboard }: StudentDashboa
         <section className={styles.summary} aria-labelledby="student-greeting">
           <div className={styles.summaryIntro}>
             <p className={styles.kicker}>오늘도 한 걸음 성장 중</p>
-            <h1 id="student-greeting">안녕하세요, {student.displayName} 학생</h1>
+            <h1 id="student-greeting">안녕하세요, {formatStudentWithHonorific(student.displayName)}</h1>
             <p className={styles.summaryMessage}>
               오늘 미션을 하나씩 마치며 나만의 코딩 실력을 쌓아 보세요.
             </p>

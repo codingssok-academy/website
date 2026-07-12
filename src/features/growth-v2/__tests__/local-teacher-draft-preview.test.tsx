@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { LocalTeacherDraftPreview } from "@/features/growth-v2/local-teacher/LocalTeacherDraftPreview";
 import {
   createLocalTeacherSession,
@@ -84,6 +84,8 @@ async function login() {
 
 describe("local teacher draft preview", () => {
   beforeEach(() => {
+    vi.stubEnv("NEXT_PUBLIC_GROWTH_PREVIEW_ENV", "local");
+    vi.stubEnv("NEXT_PUBLIC_GROWTH_PREVIEW_DEMO_NAV", "1");
     vi.clearAllMocks();
     mockedSession.mockResolvedValue(SESSION);
     mockedStudents.mockResolvedValue(STUDENTS);
@@ -98,6 +100,10 @@ describe("local teacher draft preview", () => {
       evaluation_id: "draft-2", version: 2, status: "published",
       published_at: "2026-07-12T11:00:00Z", archived_previous_version: 1,
     });
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   it("starts signed out, prevents duplicate login, and stores no browser session", async () => {
@@ -122,7 +128,7 @@ describe("local teacher draft preview", () => {
     expect(screen.getByRole("button", { name: /테스트 학생 A/ })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /테스트 학생 B/ })).toBeInTheDocument();
     expect(screen.queryByText("테스트 학생 C")).not.toBeInTheDocument();
-    expect(screen.getByText("기존 공개본 v1")).toBeInTheDocument();
+    expect(screen.getByText("현재 공개 평가")).toBeInTheDocument();
     expect(screen.getByText("저장된 초안 없음")).toBeInTheDocument();
     expect(screen.getByLabelText("프로젝트 최근 작업")).toBeDisabled();
     expect(screen.getByRole("button", { name: "평가 공개하기" })).toBeDisabled();
@@ -141,7 +147,8 @@ describe("local teacher draft preview", () => {
 
     await waitFor(() => expect(mockedSave).toHaveBeenCalledTimes(1));
     await waitFor(() => expect(mockedEvaluation).toHaveBeenCalledTimes(2));
-    expect(await screen.findByText(/평가 초안 version 2이 실제 로컬 DB에 저장/)).toBeInTheDocument();
+    expect(await screen.findByText("평가 초안이 안전하게 저장됐습니다.")).toBeInTheDocument();
+    expect(screen.queryByText(/version|\bv\d+\b/i)).not.toBeInTheDocument();
     expect(screen.getAllByText("학생·학부모 미공개").length).toBeGreaterThan(0);
     const sentForm = mockedSave.mock.calls[0][3];
     expect(sentForm).not.toHaveProperty("project");
@@ -168,7 +175,7 @@ describe("local teacher draft preview", () => {
 
     await waitFor(() => expect(mockedSave).toHaveBeenCalledTimes(1));
     expect(mockedSave.mock.calls[0][3].customConcepts).toEqual(["함수", "입출력"]);
-    expect(await screen.findByText(/평가 초안 version 2이 실제 로컬 DB에 저장/)).toBeInTheDocument();
+    expect(await screen.findByText("평가 초안이 안전하게 저장됐습니다.")).toBeInTheDocument();
     expect(screen.getAllByText("함수").length).toBeGreaterThan(0);
     expect(screen.getAllByText("입출력").length).toBeGreaterThan(0);
     expect(screen.queryByText("리스트")).not.toBeInTheDocument();
@@ -233,8 +240,8 @@ describe("local teacher draft preview", () => {
     fireEvent.change(customInput, { target: { value: "입출력" } });
     fireEvent.keyDown(customInput, { key: "Enter" });
     fireEvent.click(screen.getByRole("button", { name: "평가 초안 저장" }));
-    expect(await screen.findByText(/평가 초안 version 1이 실제 로컬 DB에 저장/)).toBeInTheDocument();
-    expect(screen.getByText("공개본", { selector: "dt" }).nextSibling).toHaveTextContent("없음");
+    expect(await screen.findByText("평가 초안이 안전하게 저장됐습니다.")).toBeInTheDocument();
+    expect(screen.getByText("공개 평가", { selector: "dt" }).nextSibling).toHaveTextContent("없음");
     expect(mockedSave.mock.calls.at(-1)?.[3].conceptKeys).toEqual([]);
     expect(mockedSave.mock.calls.at(-1)?.[3].customConcepts).toEqual(["변수", "입출력"]);
   });
@@ -282,8 +289,12 @@ describe("local teacher draft preview", () => {
     expect(screen.getByRole("dialog", { name: "평가를 공개할까요?" })).toBeInTheDocument();
     expect(screen.getByText("학생에게 공개")).toBeInTheDocument();
     expect(screen.getByText("학부모에게 공개")).toBeInTheDocument();
-    expect(screen.getAllByText(/보완할 점/).length).toBeGreaterThan(0);
-    expect(screen.getByText(/기존 공개본 version 1은 삭제하지 않고/)).toBeInTheDocument();
+    expect(screen.getAllByText("잘한 점").length).toBeGreaterThan(1);
+    expect(screen.getAllByText("다음 수업 목표").length).toBeGreaterThan(1);
+    expect(screen.getAllByText("이번 주에 배운 내용")).toHaveLength(2);
+    expect(screen.getAllByText("보완할 점").length).toBeGreaterThan(1);
+    expect(screen.getByText("기존 공개 평가는 삭제되지 않고 이전 기록으로 보관됩니다.")).toBeInTheDocument();
+    expect(screen.queryByText(/version|\bv\d+\b/i)).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "취소" })).toHaveFocus();
     fireEvent.click(screen.getByRole("button", { name: "취소" }));
     expect(mockedPublish).not.toHaveBeenCalled();
@@ -308,9 +319,10 @@ describe("local teacher draft preview", () => {
     expect(mockedPublish).toHaveBeenCalledWith(SESSION, "draft-2", "2026-07-12T10:00:00Z");
     await waitFor(() => expect(mockedEvaluation).toHaveBeenCalledTimes(2));
     expect(await screen.findByRole("heading", { name: "평가 공개 완료" })).toBeInTheDocument();
-    expect(screen.getByText("version 2", { selector: "dd" })).toBeInTheDocument();
+    expect(screen.getByText("공개됨", { selector: "dd" })).toBeInTheDocument();
     expect(screen.getByText("없음", { selector: "dd" })).toBeInTheDocument();
-    expect(screen.getByText(/이전 공개본 version 1은 이전 기록으로 보관/)).toBeInTheDocument();
+    expect(screen.getByText("기존 공개 평가는 이전 평가 기록으로 보관됐습니다.")).toBeInTheDocument();
+    expect(screen.queryByText(/version|\bv\d+\b/i)).not.toBeInTheDocument();
     expect(screen.getByText("학생·학부모 공개", { selector: "dd" })).toBeInTheDocument();
     expect(screen.getAllByText("함수").length).toBeGreaterThan(0);
     expect(screen.getAllByText("입출력").length).toBeGreaterThan(0);
@@ -339,5 +351,19 @@ describe("local teacher draft preview", () => {
     fireEvent.click(screen.getByRole("button", { name: "체험 끝내기" }));
     expect(screen.getByRole("button", { name: "테스트 선생님으로 들어가기" })).toBeInTheDocument();
     expect(mockedSave).not.toHaveBeenCalled();
+  });
+
+  it("shows local guidance and hides the old demo link in staging mode", () => {
+    const view = render(<LocalTeacherDraftPreview />);
+    expect(screen.getByText("Growth 2.0 로컬 연습 환경")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "기존 데모 선생님 화면 보기" })).toBeInTheDocument();
+    view.unmount();
+
+    vi.stubEnv("NEXT_PUBLIC_GROWTH_PREVIEW_ENV", "staging");
+    vi.stubEnv("NEXT_PUBLIC_GROWTH_PREVIEW_DEMO_NAV", "0");
+    render(<LocalTeacherDraftPreview />);
+    expect(screen.getByText("Growth 2.0 시험 환경")).toBeInTheDocument();
+    expect(screen.getByText(/운영 홈페이지와 분리/)).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /기존 데모 선생님 화면/ })).not.toBeInTheDocument();
   });
 });

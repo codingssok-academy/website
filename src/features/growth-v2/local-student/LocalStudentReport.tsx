@@ -27,6 +27,11 @@ import {
   type LocalStudentHomeResponse,
   type LocalStudentSession,
 } from "./types";
+import {
+  formatStudentPossessive,
+  getGrowthPreviewEnvironmentCopy,
+  shouldShowGrowthPreviewDemoNavigation,
+} from "../preview-presentation";
 import styles from "./LocalStudentReport.module.css";
 
 const STUDENT_LABELS: Record<LocalStudentCode, string> = {
@@ -51,6 +56,8 @@ function formatDate(value: string | null) {
 }
 
 export function LocalStudentReport() {
+  const environment = getGrowthPreviewEnvironmentCopy();
+  const showDemoNavigation = shouldShowGrowthPreviewDemoNavigation();
   const [session, setSession] = useState<LocalStudentSession | null>(null);
   const [studentCode, setStudentCode] = useState<LocalStudentCode | null>(null);
   const [home, setHome] = useState<LocalStudentHomeResponse | null>(null);
@@ -131,10 +138,10 @@ export function LocalStudentReport() {
       <main className={styles.loginPage} id="main-content">
         <section className={styles.loginPanel} aria-labelledby="student-local-login-title">
           <span className={styles.loginIcon} aria-hidden="true"><Database size={30} /></span>
-          <p className={styles.eyebrow}>Growth 2.0 로컬 연습 DB</p>
+          <p className={styles.eyebrow}>{environment.label}</p>
           <h1 id="student-local-login-title">학생 성장 리포트</h1>
           <p className={styles.loginDescription}>
-            실제 학생 정보가 아닌 가상 자료로 나에게 공개된 최신 학습 기록을 확인합니다.
+            {environment.description} 나에게 공개된 최신 학습 기록을 확인합니다.
           </p>
           <ul className={styles.safetyList}>
             <li>공개된 최신 평가만 보여주는 읽기 전용 화면입니다.</li>
@@ -163,7 +170,9 @@ export function LocalStudentReport() {
           <div className={styles.liveRegion} aria-live="polite">
             {error ? <p className={styles.error} role="alert">{error}</p> : null}
           </div>
-          <Link href="/growth-preview" className={styles.mockLink}>기존 mock 학생 화면 보기</Link>
+          {showDemoNavigation ? (
+            <Link href="/growth-preview" className={styles.mockLink}>기존 데모 학생 화면 보기</Link>
+          ) : null}
         </section>
       </main>
     );
@@ -177,15 +186,24 @@ export function LocalStudentReport() {
   return (
     <div className={styles.pageShell}>
       <header className={styles.topbar}>
-        <Link href="/growth-preview" className={styles.brand} aria-label="코딩쏙 Growth 2.0 기존 학생 화면">
-          <span className={styles.brandMark}>C</span>
-          <span><strong>코딩쏙</strong><small>Growth 2.0</small></span>
-        </Link>
-        <nav className={styles.screenLinks} aria-label="로컬 화면 이동">
-          <Link href="/growth-preview/parent-local">학부모</Link>
-          <Link href="/growth-preview/teacher-local">선생님</Link>
-        </nav>
-        <span className={styles.localBadge}>로컬 읽기 전용</span>
+        {showDemoNavigation ? (
+          <Link href="/growth-preview" className={styles.brand} aria-label="코딩쏙 Growth 2.0 기존 데모 학생 화면">
+            <span className={styles.brandMark}>C</span>
+            <span><strong>코딩쏙</strong><small>Growth 2.0</small></span>
+          </Link>
+        ) : (
+          <div className={styles.brand}>
+            <span className={styles.brandMark}>C</span>
+            <span><strong>코딩쏙</strong><small>Growth 2.0</small></span>
+          </div>
+        )}
+        {showDemoNavigation ? (
+          <nav className={styles.screenLinks} aria-label="데모 화면 이동">
+            <Link href="/growth-preview/parent-local">학부모</Link>
+            <Link href="/growth-preview/teacher-local">선생님</Link>
+          </nav>
+        ) : null}
+        <span className={styles.localBadge}>{environment.badge}</span>
         <button type="button" className={styles.logoutButton} onClick={() => clearSession()}>
           <LogOut size={17} /> 체험 끝내기
         </button>
@@ -193,14 +211,14 @@ export function LocalStudentReport() {
 
       <aside className={styles.safetyBanner}>
         <ShieldCheck size={18} aria-hidden="true" />
-        <span><strong>Growth 2.0 로컬 연습 DB</strong> 실제 학생 정보가 아닙니다. 공개된 최신 평가만 표시하며 보완할 점과 작성 중인 평가는 보이지 않습니다.</span>
+        <span><strong>{environment.label}</strong> {environment.description} 공개된 최신 평가만 표시하며 보완할 점과 작성 중인 평가는 보이지 않습니다.</span>
       </aside>
 
       <main id="main-content" className={styles.dashboard}>
         <section className={styles.summary} aria-labelledby="student-report-title">
           <div>
             <p className={styles.eyebrow}>현재 로그인 학생</p>
-            <h1 id="student-report-title">{data.student.display_name} 학생의 성장 리포트</h1>
+            <h1 id="student-report-title">{formatStudentPossessive(data.student.display_name)} 성장 리포트</h1>
             <p>선생님이 공개한 학습 기록을 내 화면에서 확인해요.</p>
           </div>
           <dl className={styles.xpSummary}>
@@ -245,7 +263,6 @@ export function LocalStudentReport() {
               </div>
               <div className={styles.feedbackMeta}>
                 <span><History size={15} /> {formatDate(feedback.published_at)}</span>
-                <small>테스트 버전: {feedback.version}</small>
               </div>
             </section>
 
@@ -332,7 +349,7 @@ export function LocalStudentReport() {
             <section className={styles.panel} aria-labelledby="student-badges-title">
               <div className={styles.sectionTitle}>
                 <Award size={21} aria-hidden="true" />
-                <div><h2 id="student-badges-title">획득 배지</h2><p>실제 읽기 API가 제공한 배지입니다.</p></div>
+                <div><h2 id="student-badges-title">획득 배지</h2><p>학생이 실제로 획득한 배지를 모았어요.</p></div>
               </div>
               <ul className={styles.badgeList}>{data.badges.map((badge) => <li key={badge.code}><span aria-hidden="true"><Award size={20} /></span><div><strong>{badge.name}</strong><p>{badge.description}</p></div></li>)}</ul>
             </section>

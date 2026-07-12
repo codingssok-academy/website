@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { LocalParentWeeklyReport } from "@/features/growth-v2/local-parent/LocalParentWeeklyReport";
 import {
   createLocalParentSession,
@@ -77,12 +77,14 @@ const mockedReport = vi.mocked(fetchLocalParentWeeklyReport);
 
 async function login() {
   fireEvent.click(screen.getByRole("button", { name: "테스트 학부모로 들어가기" }));
-  expect(await screen.findByRole("heading", { name: "테스트 학생 A 학생의 이번 주 성장" })).toBeInTheDocument();
+  expect(await screen.findByRole("heading", { name: "테스트 학생 A의 이번 주 성장" })).toBeInTheDocument();
   await waitFor(() => expect(screen.getByRole("button", { name: "최신 리포트 다시 불러오기" })).toBeEnabled());
 }
 
 describe("local parent weekly report", () => {
   beforeEach(() => {
+    vi.stubEnv("NEXT_PUBLIC_GROWTH_PREVIEW_ENV", "local");
+    vi.stubEnv("NEXT_PUBLIC_GROWTH_PREVIEW_DEMO_NAV", "1");
     mockedSession.mockReset();
     mockedChildren.mockReset();
     mockedReport.mockReset();
@@ -90,6 +92,10 @@ describe("local parent weekly report", () => {
     mockedSession.mockResolvedValue(SESSION);
     mockedChildren.mockResolvedValue(CHILDREN);
     mockedReport.mockResolvedValue(A_V1);
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   it("starts signed out, prevents duplicate login, and stores no browser session", async () => {
@@ -115,14 +121,15 @@ describe("local parent weekly report", () => {
     expect(screen.getByRole("button", { name: /테스트 학생 B\s*리포트 보기/ })).toBeInTheDocument();
     expect(screen.queryByText("테스트 학생 C")).not.toBeInTheDocument();
     expect(screen.queryByText(STUDENT_A)).not.toBeInTheDocument();
-    expect(screen.getByText("로컬 테스트 버전: 1")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "테스트 학생 A의 이번 주 성장" })).toBeInTheDocument();
+    expect(screen.queryByText(/테스트 학생 A 학생의/)).not.toBeInTheDocument();
     expect(screen.getByText(/질문을 정리하며 문제를 해결/)).toBeInTheDocument();
     expect(screen.getByText(/코드를 실행하기 전에 순서를 먼저 정리/)).toBeInTheDocument();
     expect(screen.getByText(/조건문을 활용한 점수 계산/)).toBeInTheDocument();
     expect(screen.getByText("for 반복문")).toBeInTheDocument();
     expect(screen.getByText("조건 비교")).toBeInTheDocument();
     expect(screen.getByText("나만의 우주 탐험 게임")).toBeInTheDocument();
-    expect(screen.queryByText(/draft|archived|version 2/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/draft|archived|published|version|테스트 버전|\bv\d+\b/i)).not.toBeInTheDocument();
   });
 
   it("shows student B without a published evaluation as a normal empty state", async () => {
@@ -149,11 +156,10 @@ describe("local parent weekly report", () => {
     expect(mockedReport).toHaveBeenCalledTimes(2);
     expect(screen.getByRole("button", { name: "불러오는 중" })).toBeDisabled();
     release?.(A_V2);
-    expect(await screen.findByText("로컬 테스트 버전: 2")).toBeInTheDocument();
-    expect(screen.getByText("함수")).toBeInTheDocument();
+    expect(await screen.findByText("함수")).toBeInTheDocument();
     expect(screen.getByText("입출력")).toBeInTheDocument();
-    expect(screen.queryByText("로컬 테스트 버전: 1")).not.toBeInTheDocument();
-    expect(screen.getByText(/실제 로컬 DB에서 최신 공개 리포트를 다시 확인/)).toBeInTheDocument();
+    expect(screen.queryByText(/version|테스트 버전|\bv\d+\b/i)).not.toBeInTheDocument();
+    expect(screen.getByText("최신 공개 리포트를 다시 확인했습니다.")).toBeInTheDocument();
   });
 
   it("shows student B first published version after a read-only refresh", async () => {
@@ -166,8 +172,7 @@ describe("local parent weekly report", () => {
     fireEvent.click(screen.getByRole("button", { name: /테스트 학생 B\s*리포트 보기/ }));
     expect(await screen.findByRole("heading", { name: "아직 공개된 주간 평가가 없습니다." })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "최신 리포트 다시 불러오기" }));
-    expect(await screen.findByText("로컬 테스트 버전: 1")).toBeInTheDocument();
-    expect(screen.getByText("변수")).toBeInTheDocument();
+    expect(await screen.findByText("변수")).toBeInTheDocument();
     expect(screen.getByText("입출력")).toBeInTheDocument();
     expect(screen.getByText(/코드를 실행하기 전에 순서를 먼저 정리/)).toBeInTheDocument();
   });
@@ -180,7 +185,21 @@ describe("local parent weekly report", () => {
     expect(screen.queryByText("테스트 학생 A")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "테스트 학부모로 들어가기" }));
     await waitFor(() => expect(mockedSession).toHaveBeenCalledTimes(2));
-    expect(await screen.findByText("로컬 테스트 버전: 1")).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "테스트 학생 A의 이번 주 성장" })).toBeInTheDocument();
+  });
+
+  it("shows local guidance and hides the old demo link in staging mode", () => {
+    const view = render(<LocalParentWeeklyReport />);
+    expect(screen.getByText("Growth 2.0 로컬 연습 환경")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "기존 데모 학부모 화면 보기" })).toBeInTheDocument();
+    view.unmount();
+
+    vi.stubEnv("NEXT_PUBLIC_GROWTH_PREVIEW_ENV", "staging");
+    vi.stubEnv("NEXT_PUBLIC_GROWTH_PREVIEW_DEMO_NAV", "0");
+    render(<LocalParentWeeklyReport />);
+    expect(screen.getByText("Growth 2.0 시험 환경")).toBeInTheDocument();
+    expect(screen.getByText(/운영 홈페이지와 분리/)).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /기존 데모 학부모 화면/ })).not.toBeInTheDocument();
   });
 
   it("distinguishes no children, database errors, access errors, and expired sessions", async () => {
