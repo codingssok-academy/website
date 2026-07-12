@@ -26,7 +26,12 @@ const STUDENTS = {
   ],
 };
 
-function evaluationResponse(studentName: string, draftVersion: number | null, publishedVersion: number | null): LocalTeacherEvaluationResponse {
+function evaluationResponse(
+  studentName: string,
+  draftVersion: number | null,
+  publishedVersion: number | null,
+  customLabels: string[] = [],
+): LocalTeacherEvaluationResponse {
   const record = (status: "draft" | "published", version: number) => ({
     evaluation_id: `${status}-${version}`,
     status,
@@ -39,6 +44,12 @@ function evaluationResponse(studentName: string, draftVersion: number | null, pu
     improvement: "실행 전에 예상 결과를 적는 연습이 필요합니다.",
     next_goal: "다음 시간에는 조건문 문제를 완성해 봅니다.",
     concepts: [{ key: "condition" as const, label: "조건 비교" }],
+    selected_concepts: [{ key: "condition" as const, label: "조건 비교" }],
+    custom_concepts: status === "draft" ? customLabels.map((label, index) => ({
+      id: `custom-${index}`,
+      label,
+      sort_order: index + 1,
+    })) : [],
   });
   return {
     api_version: "1.0",
@@ -55,7 +66,8 @@ function evaluationResponse(studentName: string, draftVersion: number | null, pu
 const A_PUBLISHED = evaluationResponse("테스트 학생 A", null, 1);
 const A_DRAFT = evaluationResponse("테스트 학생 A", 2, 1);
 const B_EMPTY = evaluationResponse("테스트 학생 B", null, null);
-const B_DRAFT = evaluationResponse("테스트 학생 B", 1, null);
+const A_CUSTOM_DRAFT = evaluationResponse("테스트 학생 A", 2, 1, ["함수", "입출력"]);
+const B_CUSTOM_DRAFT = evaluationResponse("테스트 학생 B", 1, null, ["변수", "입출력"]);
 const mockedSession = vi.mocked(createLocalTeacherSession);
 const mockedStudents = vi.mocked(fetchLocalTeacherStudents);
 const mockedEvaluation = vi.mocked(fetchLocalTeacherEvaluation);
@@ -113,7 +125,7 @@ describe("local teacher draft preview", () => {
     await login();
     fireEvent.click(screen.getByRole("checkbox", { name: "조건 비교" }));
     fireEvent.click(screen.getByRole("button", { name: "평가 초안 저장" }));
-    expect(await screen.findByRole("alert")).toHaveTextContent("학습 개념을 하나 이상");
+    expect(await screen.findByRole("alert")).toHaveTextContent("개념을 하나 이상");
     fireEvent.click(screen.getByRole("checkbox", { name: "조건 비교" }));
     fireEvent.click(screen.getByRole("button", { name: "평가 초안 저장" }));
 
@@ -126,11 +138,72 @@ describe("local teacher draft preview", () => {
     expect(JSON.stringify(sentForm)).not.toMatch(/teacher_id|role|published_at/);
   });
 
+  it("adds custom concepts by button and Enter, removes a tag, and re-reads DB values", async () => {
+    mockedEvaluation.mockResolvedValueOnce(A_PUBLISHED).mockResolvedValueOnce(A_CUSTOM_DRAFT);
+    render(<LocalTeacherDraftPreview />);
+    await login();
+
+    const input = screen.getByLabelText("직접 입력할 개념");
+    fireEvent.change(input, { target: { value: "  리스트  " } });
+    fireEvent.click(screen.getByRole("button", { name: "추가" }));
+    fireEvent.change(input, { target: { value: "함수" } });
+    fireEvent.keyDown(input, { key: "Enter" });
+    expect(screen.getByText("2/5")).toBeInTheDocument();
+    expect(input).toHaveValue("");
+
+    fireEvent.click(screen.getByRole("button", { name: "리스트 개념 제거" }));
+    fireEvent.change(input, { target: { value: "입출력" } });
+    fireEvent.click(screen.getByRole("button", { name: "추가" }));
+    fireEvent.click(screen.getByRole("button", { name: "평가 초안 저장" }));
+
+    await waitFor(() => expect(mockedSave).toHaveBeenCalledTimes(1));
+    expect(mockedSave.mock.calls[0][3].customConcepts).toEqual(["함수", "입출력"]);
+    expect(await screen.findByText(/평가 초안 version 2이 실제 로컬 DB에 저장/)).toBeInTheDocument();
+    expect(screen.getAllByText("함수").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("입출력").length).toBeGreaterThan(0);
+    expect(screen.queryByText("리스트")).not.toBeInTheDocument();
+  });
+
+  it("shows friendly custom concept limits and duplicate messages", async () => {
+    render(<LocalTeacherDraftPreview />);
+    await login();
+    const input = screen.getByLabelText("직접 입력할 개념");
+    fireEvent.click(screen.getByRole("button", { name: "추가" }));
+    expect(screen.getByRole("alert")).toHaveTextContent("입력해 주세요");
+    fireEvent.change(input, { target: { value: "A" } });
+    fireEvent.click(screen.getByRole("button", { name: "추가" }));
+    expect(screen.getByRole("alert")).toHaveTextContent("2자 이상");
+
+    fireEvent.change(input, { target: { value: "조건 비교" } });
+    fireEvent.click(screen.getByRole("button", { name: "추가" }));
+    expect(screen.getByRole("alert")).toHaveTextContent("준비된 개념에서 이미 선택");
+
+    fireEvent.click(screen.getByRole("checkbox", { name: "조건 비교" }));
+    fireEvent.change(input, { target: { value: "함수" } });
+    fireEvent.click(screen.getByRole("button", { name: "추가" }));
+    fireEvent.change(input, { target: { value: " 함수 " } });
+    fireEvent.click(screen.getByRole("button", { name: "추가" }));
+    expect(screen.getByRole("alert")).toHaveTextContent("이미 직접 추가");
+
+    fireEvent.change(input, { target: { value: "가".repeat(41) } });
+    fireEvent.click(screen.getByRole("button", { name: "추가" }));
+    expect(screen.getByRole("alert")).toHaveTextContent("40자 이하");
+
+    for (const concept of ["리스트", "입출력", "변수", "터틀 그래픽"]) {
+      fireEvent.change(input, { target: { value: concept } });
+      fireEvent.click(screen.getByRole("button", { name: "추가" }));
+    }
+    expect(screen.getByText("5/5")).toBeInTheDocument();
+    fireEvent.change(input, { target: { value: "HTML/CSS" } });
+    fireEvent.click(screen.getByRole("button", { name: "추가" }));
+    expect(screen.getByRole("alert")).toHaveTextContent("최대 5개");
+  });
+
   it("handles student B empty state and keeps draft version 1 after saving", async () => {
     mockedEvaluation
       .mockResolvedValueOnce(A_PUBLISHED)
       .mockResolvedValueOnce(B_EMPTY)
-      .mockResolvedValueOnce(B_DRAFT);
+      .mockResolvedValueOnce(B_CUSTOM_DRAFT);
     mockedSave.mockResolvedValue({
       saved: true, created: true, conflict: false, evaluation_id: "draft-1",
       version: 1, status: "draft", updated_at: "2026-07-12T10:00:00Z",
@@ -144,10 +217,16 @@ describe("local teacher draft preview", () => {
     fireEvent.change(screen.getByLabelText("잘한 점"), { target: { value: "순서에 맞춰 문제를 해결한 점이 아주 좋았습니다." } });
     fireEvent.change(screen.getByLabelText("보완할 점"), { target: { value: "실행 전에 예상 결과를 적는 연습을 이어갑니다." } });
     fireEvent.change(screen.getByLabelText("다음 수업 목표"), { target: { value: "다음 시간에는 조건문 문제를 스스로 완성합니다." } });
-    fireEvent.click(screen.getByRole("checkbox", { name: "조건 비교" }));
+    const customInput = screen.getByLabelText("직접 입력할 개념");
+    fireEvent.change(customInput, { target: { value: "변수" } });
+    fireEvent.click(screen.getByRole("button", { name: "추가" }));
+    fireEvent.change(customInput, { target: { value: "입출력" } });
+    fireEvent.keyDown(customInput, { key: "Enter" });
     fireEvent.click(screen.getByRole("button", { name: "평가 초안 저장" }));
     expect(await screen.findByText(/평가 초안 version 1이 실제 로컬 DB에 저장/)).toBeInTheDocument();
     expect(screen.getByText("공개본", { selector: "dt" }).nextSibling).toHaveTextContent("없음");
+    expect(mockedSave.mock.calls.at(-1)?.[3].conceptKeys).toEqual([]);
+    expect(mockedSave.mock.calls.at(-1)?.[3].customConcepts).toEqual(["변수", "입출력"]);
   });
 
   it("keeps typed text on conflict and offers an explicit reload", async () => {

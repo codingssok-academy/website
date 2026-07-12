@@ -6,6 +6,7 @@ import {
   safeJson,
   safeProxyError,
 } from "../local-teacher-guard";
+import { customConceptKey, validateCustomConceptList } from "@/features/growth-v2/local-teacher/custom-concepts";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
@@ -13,9 +14,14 @@ const UNDERSTANDING = new Set(["needs_help", "understands_basics", "solves_indep
 const PARTICIPATION = new Set(["listened", "asked_questions", "tried_independently", "explained_to_friend"]);
 const HOMEWORK = new Set(["not_submitted", "partly_complete", "complete", "extra_challenge"]);
 const CONCEPTS = new Set(["for-loop", "condition", "debugging"]);
+const CONCEPT_LABELS: Record<string, string> = {
+  "for-loop": "for 반복문",
+  condition: "조건 비교",
+  debugging: "오류 찾기",
+};
 const ALLOWED_KEYS = new Set([
   "studentId", "weekStart", "understanding", "participation", "homeworkStatus",
-  "strength", "improvement", "nextGoal", "conceptKeys", "expectedUpdatedAt",
+  "strength", "improvement", "nextGoal", "conceptKeys", "customConcepts", "expectedUpdatedAt",
 ]);
 
 type DraftBody = {
@@ -28,6 +34,7 @@ type DraftBody = {
   improvement?: unknown;
   nextGoal?: unknown;
   conceptKeys?: unknown;
+  customConcepts?: unknown;
   expectedUpdatedAt?: unknown;
 };
 
@@ -55,6 +62,13 @@ export async function POST(request: NextRequest) {
     ? [...new Set(body.conceptKeys.filter((value): value is string => typeof value === "string"))]
     : [];
   const expectedUpdatedAt = body?.expectedUpdatedAt;
+  const customConcepts = validateCustomConceptList(body?.customConcepts);
+  const selectedLabels = concepts.flatMap((concept) =>
+    CONCEPT_LABELS[concept] ? [CONCEPT_LABELS[concept]] : [],
+  );
+  const duplicatesSelected = customConcepts?.some((custom) =>
+    selectedLabels.some((label) => customConceptKey(label) === customConceptKey(custom)),
+  );
 
   if (
     !body || hasUnknownKey || typeof body.studentId !== "string" || !UUID.test(body.studentId) ||
@@ -63,7 +77,8 @@ export async function POST(request: NextRequest) {
     typeof body.participation !== "string" || !PARTICIPATION.has(body.participation) ||
     typeof body.homeworkStatus !== "string" || !HOMEWORK.has(body.homeworkStatus) ||
     !validText(body.strength) || !validText(body.improvement) || !validText(body.nextGoal) ||
-    concepts.length === 0 || concepts.some((concept) => !CONCEPTS.has(concept)) ||
+    customConcepts === null || concepts.some((concept) => !CONCEPTS.has(concept)) ||
+    concepts.length + customConcepts.length === 0 || duplicatesSelected ||
     !(expectedUpdatedAt === null || (typeof expectedUpdatedAt === "string" && !Number.isNaN(Date.parse(expectedUpdatedAt))))
   ) {
     return localJson(
@@ -92,7 +107,10 @@ export async function POST(request: NextRequest) {
           p_strength: body.strength.trim(),
           p_improvement: body.improvement.trim(),
           p_next_goal: body.nextGoal.trim(),
-          p_concept_keys: concepts,
+          p_concept_keys: [
+            ...concepts,
+            ...customConcepts.map((concept) => `custom:${concept}`),
+          ],
           p_expected_updated_at: expectedUpdatedAt,
         }),
       },

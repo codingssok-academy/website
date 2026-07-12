@@ -28,6 +28,7 @@ const VALID_DRAFT = {
   improvement: "실행 전에 예상 결과를 적는 연습이 필요합니다.",
   nextGoal: "다음 시간에는 조건문 문제를 완성해 봅니다.",
   conceptKeys: ["condition", "debugging"],
+  customConcepts: [],
   expectedUpdatedAt: null,
 };
 
@@ -138,11 +139,32 @@ describe("local teacher API routes", () => {
     ]));
   });
 
+  it("validates and forwards custom concepts without identity fields", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify({ saved: true, created: true, conflict: false }), { status: 200 }),
+    );
+    const customOnly = {
+      ...VALID_DRAFT,
+      conceptKeys: [],
+      customConcepts: ["  변수  ", "입출력"],
+    };
+    expect((await saveDraft(request("local-teacher-draft-save", customOnly))).status).toBe(200);
+    const sent = JSON.parse(String(fetchSpy.mock.calls[0][1]?.body));
+    expect(sent.p_concept_keys).toEqual(["custom:변수", "custom:입출력"]);
+    expect(Object.keys(sent)).not.toEqual(expect.arrayContaining([
+      "teacher_id", "role", "status", "published_at", "project",
+    ]));
+  });
+
   it("rejects hidden fields, invalid text, missing concepts, and missing tokens", async () => {
     const fetchSpy = vi.spyOn(globalThis, "fetch");
     expect((await saveDraft(request("local-teacher-draft-save", { ...VALID_DRAFT, teacher_id: "forbidden" }))).status).toBe(400);
     expect((await saveDraft(request("local-teacher-draft-save", { ...VALID_DRAFT, strength: "짧음" }))).status).toBe(400);
     expect((await saveDraft(request("local-teacher-draft-save", { ...VALID_DRAFT, conceptKeys: [] }))).status).toBe(400);
+    expect((await saveDraft(request("local-teacher-draft-save", { ...VALID_DRAFT, customConcepts: ["A"] }))).status).toBe(400);
+    expect((await saveDraft(request("local-teacher-draft-save", { ...VALID_DRAFT, customConcepts: ["함수", " 함수 "] }))).status).toBe(400);
+    expect((await saveDraft(request("local-teacher-draft-save", { ...VALID_DRAFT, customConcepts: ["조건 비교"] }))).status).toBe(400);
+    expect((await saveDraft(request("local-teacher-draft-save", { ...VALID_DRAFT, customConcepts: ["01개념", "02개념", "03개념", "04개념", "05개념", "06개념"] }))).status).toBe(400);
     expect((await saveDraft(request("local-teacher-draft-save", VALID_DRAFT, ""))).status).toBe(401);
     expect(fetchSpy).not.toHaveBeenCalled();
   });

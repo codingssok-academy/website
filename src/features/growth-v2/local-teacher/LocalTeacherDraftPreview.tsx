@@ -12,9 +12,11 @@ import {
   LoaderCircle,
   LockKeyhole,
   LogOut,
+  Plus,
   RefreshCw,
   Save,
   Users,
+  X,
 } from "lucide-react";
 import { MOCK_TEACHER_WEEKLY_EVALUATION } from "@/features/growth-v2/data/teacher-weekly-evaluation.mock";
 import {
@@ -31,6 +33,11 @@ import type {
   LocalTeacherStudent,
 } from "./types";
 import { LocalTeacherPreviewError } from "./types";
+import {
+  MAX_CUSTOM_CONCEPTS,
+  customConceptKey,
+  validateCustomConcept,
+} from "./custom-concepts";
 import styles from "./LocalTeacherDraftPreview.module.css";
 
 type ViewState = "signed-out" | "signing-in" | "ready" | "error";
@@ -72,11 +79,13 @@ const EMPTY_FORM: LocalDraftForm = {
   improvement: "",
   nextGoal: "",
   conceptKeys: [],
+  customConcepts: [],
 };
 
 function formFromEvaluation(response: LocalTeacherEvaluationResponse): LocalDraftForm {
   const source = response.data.draft ?? response.data.published;
-  if (!source) return { ...EMPTY_FORM, conceptKeys: [] };
+  if (!source) return { ...EMPTY_FORM, conceptKeys: [], customConcepts: [] };
+  const selectedConcepts = source.selected_concepts ?? source.concepts;
   return {
     understanding: source.understanding,
     participation: source.participation,
@@ -84,7 +93,8 @@ function formFromEvaluation(response: LocalTeacherEvaluationResponse): LocalDraf
     strength: source.strength,
     improvement: source.improvement,
     nextGoal: source.next_goal,
-    conceptKeys: source.concepts.map((concept) => concept.key),
+    conceptKeys: selectedConcepts.map((concept) => concept.key),
+    customConcepts: (source.custom_concepts ?? []).map((concept) => concept.label),
   };
 }
 
@@ -137,7 +147,8 @@ export function LocalTeacherDraftPreview() {
   const [students, setStudents] = useState<LocalTeacherStudent[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<LocalTeacherStudent | null>(null);
   const [evaluation, setEvaluation] = useState<LocalTeacherEvaluationResponse | null>(null);
-  const [form, setForm] = useState<LocalDraftForm>({ ...EMPTY_FORM, conceptKeys: [] });
+  const [form, setForm] = useState<LocalDraftForm>({ ...EMPTY_FORM, conceptKeys: [], customConcepts: [] });
+  const [customConceptInput, setCustomConceptInput] = useState("");
   const [errors, setErrors] = useState<FormErrors>({});
   const [message, setMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
@@ -149,13 +160,15 @@ export function LocalTeacherDraftPreview() {
   const improvementRef = useRef<HTMLTextAreaElement>(null);
   const nextGoalRef = useRef<HTMLTextAreaElement>(null);
   const conceptRef = useRef<HTMLFieldSetElement>(null);
+  const customConceptRef = useRef<HTMLInputElement>(null);
 
   const clearSession = useCallback(() => {
     setSession(null);
     setStudents([]);
     setSelectedStudent(null);
     setEvaluation(null);
-    setForm({ ...EMPTY_FORM, conceptKeys: [] });
+    setForm({ ...EMPTY_FORM, conceptKeys: [], customConcepts: [] });
+    setCustomConceptInput("");
     setErrors({});
     setMessage("");
     setErrorMessage("");
@@ -191,6 +204,7 @@ export function LocalTeacherDraftPreview() {
       setSelectedStudent(student);
       setEvaluation(next);
       setForm(formFromEvaluation(next));
+      setCustomConceptInput("");
       setErrors({});
       setIsDirty(false);
     } catch (error) {
@@ -229,6 +243,52 @@ export function LocalTeacherDraftPreview() {
     setIsDirty(true);
   };
 
+  const selectedConceptLabels = form.conceptKeys.map((key) =>
+    CONCEPTS.find((concept) => concept.key === key)?.label ?? key,
+  );
+
+  const addCustomConcept = () => {
+    const result = validateCustomConcept(
+      customConceptInput,
+      form.customConcepts,
+      selectedConceptLabels,
+    );
+    if (result.error) {
+      setErrors((current) => ({ ...current, customConcepts: result.error }));
+      customConceptRef.current?.focus();
+      return;
+    }
+    updateForm("customConcepts", [...form.customConcepts, result.value]);
+    setCustomConceptInput("");
+    customConceptRef.current?.focus();
+  };
+
+  const removeCustomConcept = (concept: string) => {
+    updateForm(
+      "customConcepts",
+      form.customConcepts.filter((value) => value !== concept),
+    );
+  };
+
+  const togglePreparedConcept = (concept: LocalConcept) => {
+    const isSelected = form.conceptKeys.includes(concept.key);
+    if (!isSelected && form.customConcepts.some(
+      (custom) => customConceptKey(custom) === customConceptKey(concept.label),
+    )) {
+      setErrors((current) => ({
+        ...current,
+        customConcepts: "직접 입력한 개념과 같은 준비된 개념은 함께 선택할 수 없어요.",
+      }));
+      return;
+    }
+    updateForm(
+      "conceptKeys",
+      isSelected
+        ? form.conceptKeys.filter((key) => key !== concept.key)
+        : [...form.conceptKeys, concept.key],
+    );
+  };
+
   const validate = () => {
     const nextErrors: FormErrors = {};
     const fields: Array<["strength" | "improvement" | "nextGoal", string]> = [
@@ -240,7 +300,9 @@ export function LocalTeacherDraftPreview() {
       const length = form[key].trim().length;
       if (length < 10 || length > 200) nextErrors[key] = `${label}을 10~200자로 적어 주세요.`;
     });
-    if (!form.conceptKeys.length) nextErrors.conceptKeys = "학습 개념을 하나 이상 선택해 주세요.";
+    if (!form.conceptKeys.length && !form.customConcepts.length) {
+      nextErrors.conceptKeys = "준비된 개념이나 직접 입력한 개념을 하나 이상 추가해 주세요.";
+    }
     setErrors(nextErrors);
     const firstTextError = fields.find(([key]) => nextErrors[key])?.[0];
     if (firstTextError === "strength") strengthRef.current?.focus();
@@ -424,17 +486,68 @@ export function LocalTeacherDraftPreview() {
                       <input
                         type="checkbox"
                         checked={form.conceptKeys.includes(concept.key)}
-                        onChange={() => updateForm(
-                          "conceptKeys",
-                          form.conceptKeys.includes(concept.key)
-                            ? form.conceptKeys.filter((key) => key !== concept.key)
-                            : [...form.conceptKeys, concept.key],
-                        )}
+                        onChange={() => togglePreparedConcept(concept as LocalConcept)}
                       />
                       <span>{concept.label}</span>
                     </label>
                   ))}
                 </div>
+                <div className={styles.customConceptSection}>
+                  <div className={styles.customConceptHeading}>
+                    <div>
+                      <h3>직접 입력한 개념</h3>
+                      <p>준비된 목록에 없는 개념은 직접 추가할 수 있어요.</p>
+                    </div>
+                    <strong aria-label={`직접 입력 개념 ${form.customConcepts.length}개, 최대 ${MAX_CUSTOM_CONCEPTS}개`}>
+                      {form.customConcepts.length}/{MAX_CUSTOM_CONCEPTS}
+                    </strong>
+                  </div>
+                  <div className={styles.customConceptInputRow}>
+                    <label className={styles.srOnly} htmlFor="local-custom-concept">직접 입력할 개념</label>
+                    <input
+                      id="local-custom-concept"
+                      ref={customConceptRef}
+                      type="text"
+                      maxLength={41}
+                      value={customConceptInput}
+                      disabled={disabled}
+                      placeholder="예: 리스트, 함수, 터틀 그래픽"
+                      aria-describedby="local-custom-concept-help"
+                      onChange={(event) => {
+                        setCustomConceptInput(event.target.value);
+                        setErrors((current) => ({ ...current, customConcepts: undefined }));
+                      }}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter") {
+                          event.preventDefault();
+                          addCustomConcept();
+                        }
+                      }}
+                    />
+                    <button type="button" disabled={disabled} onClick={addCustomConcept}>
+                      <Plus size={17} aria-hidden="true" /> 추가
+                    </button>
+                  </div>
+                  <p id="local-custom-concept-help" className={styles.customConceptHelp}>2~40자, 최대 5개까지 입력할 수 있어요.</p>
+                  {form.customConcepts.length ? (
+                    <div className={styles.customConceptTags} aria-label="직접 입력한 개념 목록">
+                      {form.customConcepts.map((concept) => (
+                        <span key={concept}>
+                          <b>{concept}</b>
+                          <button
+                            type="button"
+                            disabled={disabled}
+                            aria-label={`${concept} 개념 제거`}
+                            onClick={() => removeCustomConcept(concept)}
+                          >
+                            <X size={14} aria-hidden="true" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+                {errors.customConcepts ? <p className={styles.fieldError} role="alert">{errors.customConcepts}</p> : null}
                 {errors.conceptKeys ? <p className={styles.fieldError} role="alert">{errors.conceptKeys}</p> : null}
               </fieldset>
 
@@ -490,8 +603,16 @@ export function LocalTeacherDraftPreview() {
                 <div><dt>저장 시각</dt><dd><Clock3 size={15} /> {formatSavedAt(draft?.updated_at)}</dd></div>
               </dl>
               <div className={styles.savedConcepts}>
-                <h3>DB에서 다시 읽은 개념</h3>
-                {draft?.concepts.length ? draft.concepts.map((concept) => <span key={concept.key}>{concept.label}</span>) : <p>저장된 초안 개념이 없습니다.</p>}
+                <h3>DB에서 다시 읽은 준비된 개념</h3>
+                {(draft?.selected_concepts ?? draft?.concepts ?? []).length
+                  ? (draft?.selected_concepts ?? draft?.concepts ?? []).map((concept) => <span key={concept.key}>{concept.label}</span>)
+                  : <p>저장된 준비된 개념이 없습니다.</p>}
+              </div>
+              <div className={styles.savedConcepts}>
+                <h3>DB에서 다시 읽은 직접 입력 개념</h3>
+                {draft?.custom_concepts?.length
+                  ? draft.custom_concepts.map((concept) => <span key={concept.id}>{concept.label}</span>)
+                  : <p>저장된 직접 입력 개념이 없습니다.</p>}
               </div>
               <p className={styles.readbackNote}>저장 성공 표시는 저장 API 호출 뒤 선생님 읽기 API로 실제 내용을 다시 확인한 경우에만 나타납니다.</p>
             </aside>

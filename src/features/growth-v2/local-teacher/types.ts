@@ -18,6 +18,12 @@ export interface LocalConcept {
   description?: string | null;
 }
 
+export interface LocalCustomConcept {
+  id: string;
+  label: string;
+  sort_order: number;
+}
+
 export interface LocalEvaluationRecord {
   evaluation_id: string;
   status: "draft" | "published";
@@ -31,6 +37,8 @@ export interface LocalEvaluationRecord {
   improvement: string;
   next_goal: string;
   concepts: LocalConcept[];
+  selected_concepts?: LocalConcept[];
+  custom_concepts?: LocalCustomConcept[];
 }
 
 export interface LocalProjectRecord {
@@ -72,6 +80,7 @@ export interface LocalDraftForm {
   improvement: string;
   nextGoal: string;
   conceptKeys: LocalConcept["key"][];
+  customConcepts: string[];
 }
 
 export interface LocalDraftSaveResult {
@@ -83,6 +92,7 @@ export interface LocalDraftSaveResult {
   status: "draft";
   updated_at: string | null;
   selected_concepts: Array<Pick<LocalConcept, "key" | "label">>;
+  custom_concepts?: LocalCustomConcept[];
 }
 
 export type LocalTeacherErrorCode =

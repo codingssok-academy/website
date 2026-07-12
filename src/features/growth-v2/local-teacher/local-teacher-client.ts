@@ -99,6 +99,7 @@ export function saveLocalTeacherDraft(
       improvement: form.improvement,
       nextGoal: form.nextGoal,
       conceptKeys: form.conceptKeys,
+      customConcepts: form.customConcepts,
       expectedUpdatedAt,
     },
   );
