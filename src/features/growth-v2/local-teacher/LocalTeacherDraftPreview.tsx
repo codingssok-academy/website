@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   AlertTriangle,
+  Archive,
   BookOpenCheck,
   Check,
   Clock3,
@@ -15,6 +16,8 @@ import {
   Plus,
   RefreshCw,
   Save,
+  Send,
+  ShieldCheck,
   Users,
   X,
 } from "lucide-react";
@@ -23,11 +26,13 @@ import {
   createLocalTeacherSession,
   fetchLocalTeacherEvaluation,
   fetchLocalTeacherStudents,
+  publishLocalTeacherEvaluation,
   saveLocalTeacherDraft,
 } from "./local-teacher-client";
 import type {
   LocalConcept,
   LocalDraftForm,
+  LocalPublishResult,
   LocalTeacherEvaluationResponse,
   LocalTeacherSession,
   LocalTeacherStudent,
@@ -154,6 +159,9 @@ export function LocalTeacherDraftPreview() {
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoadingStudent, setIsLoadingStudent] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [isPublishDialogOpen, setIsPublishDialogOpen] = useState(false);
+  const [publishResult, setPublishResult] = useState<LocalPublishResult | null>(null);
   const [isDirty, setIsDirty] = useState(false);
   const [hasConflict, setHasConflict] = useState(false);
   const strengthRef = useRef<HTMLTextAreaElement>(null);
@@ -161,6 +169,25 @@ export function LocalTeacherDraftPreview() {
   const nextGoalRef = useRef<HTMLTextAreaElement>(null);
   const conceptRef = useRef<HTMLFieldSetElement>(null);
   const customConceptRef = useRef<HTMLInputElement>(null);
+  const publishTriggerRef = useRef<HTMLButtonElement>(null);
+  const publishCancelRef = useRef<HTMLButtonElement>(null);
+  const publishRequestRef = useRef(false);
+
+  useEffect(() => {
+    if (!isPublishDialogOpen) return;
+    const publishTrigger = publishTriggerRef.current;
+    publishCancelRef.current?.focus();
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !publishRequestRef.current) {
+        setIsPublishDialogOpen(false);
+      }
+    };
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("keydown", closeOnEscape);
+      publishTrigger?.focus();
+    };
+  }, [isPublishDialogOpen]);
 
   const clearSession = useCallback(() => {
     setSession(null);
@@ -172,6 +199,10 @@ export function LocalTeacherDraftPreview() {
     setErrors({});
     setMessage("");
     setErrorMessage("");
+    setIsPublishDialogOpen(false);
+    setIsPublishing(false);
+    setPublishResult(null);
+    publishRequestRef.current = false;
     setIsDirty(false);
     setHasConflict(false);
     setViewState("signed-out");
@@ -195,6 +226,7 @@ export function LocalTeacherDraftPreview() {
     setErrorMessage("");
     setMessage("");
     setHasConflict(false);
+    setPublishResult(null);
     try {
       const next = await fetchLocalTeacherEvaluation(
         activeSession,
@@ -240,6 +272,7 @@ export function LocalTeacherDraftPreview() {
     setErrors((current) => ({ ...current, [key]: undefined }));
     setMessage("");
     setHasConflict(false);
+    setPublishResult(null);
     setIsDirty(true);
   };
 
@@ -369,6 +402,76 @@ export function LocalTeacherDraftPreview() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [evaluation, form, isSaving, selectedStudent, session, showRequestError]);
 
+  const publishEvaluation = useCallback(async () => {
+    const currentDraft = evaluation?.data.draft;
+    if (
+      !session || !selectedStudent || !evaluation || !currentDraft?.updated_at ||
+      publishRequestRef.current || isDirty || hasConflict
+    ) return;
+
+    publishRequestRef.current = true;
+    setIsPublishing(true);
+    setErrorMessage("");
+    setMessage("");
+    try {
+      const result = await publishLocalTeacherEvaluation(
+        session,
+        currentDraft.evaluation_id,
+        currentDraft.updated_at,
+      );
+      if (result.conflict) {
+        setHasConflict(true);
+        setIsPublishDialogOpen(false);
+        setErrorMessage("다른 곳에서 초안이 변경됐어요. 최신 내용을 다시 확인해 주세요.");
+        return;
+      }
+      if (!result.published) {
+        setIsPublishDialogOpen(false);
+        setErrorMessage("평가를 공개하지 못했어요.");
+        return;
+      }
+
+      let refreshed: LocalTeacherEvaluationResponse;
+      try {
+        refreshed = await fetchLocalTeacherEvaluation(
+          session,
+          selectedStudent.id,
+          evaluation.period.week_start,
+        );
+      } catch {
+        setIsPublishDialogOpen(false);
+        setErrorMessage("공개했지만 최신 화면을 다시 불러오지 못했어요.");
+        return;
+      }
+      if (
+        refreshed.data.draft ||
+        refreshed.data.published?.status !== "published" ||
+        refreshed.data.published.version !== result.version
+      ) {
+        setIsPublishDialogOpen(false);
+        setErrorMessage("공개했지만 최신 화면을 다시 불러오지 못했어요.");
+        return;
+      }
+
+      setEvaluation(refreshed);
+      setForm(formFromEvaluation(refreshed));
+      setIsDirty(false);
+      setHasConflict(false);
+      setPublishResult(result);
+      setIsPublishDialogOpen(false);
+      setMessage(`평가 공개 완료 · version ${result.version}`);
+      const nextStudents = await refreshStudentList(session);
+      const updatedStudent = nextStudents.find((student) => student.id === selectedStudent.id);
+      if (updatedStudent) setSelectedStudent(updatedStudent);
+    } catch (error) {
+      setIsPublishDialogOpen(false);
+      showRequestError(error, "평가를 공개하지 못했어요.");
+    } finally {
+      publishRequestRef.current = false;
+      setIsPublishing(false);
+    }
+  }, [evaluation, hasConflict, isDirty, selectedStudent, session, showRequestError]);
+
   if (viewState !== "ready" || !session) {
     const isLoading = viewState === "signing-in";
     return (
@@ -376,11 +479,11 @@ export function LocalTeacherDraftPreview() {
         <section className={styles.loginPanel} aria-labelledby="teacher-local-title">
           <span className={styles.loginIcon} aria-hidden="true"><Database size={30} /></span>
           <p className={styles.eyebrow}>Growth 2.0 로컬 연습 DB</p>
-          <h1 id="teacher-local-title">선생님 평가 초안 체험</h1>
-          <p className={styles.loginIntro}>실제 학생 정보가 아닌 가상 자료로 초안 저장 흐름을 확인합니다.</p>
+          <h1 id="teacher-local-title">선생님 평가 공개 체험</h1>
+          <p className={styles.loginIntro}>실제 학생 정보가 아닌 가상 자료로 초안 저장과 공개 흐름을 확인합니다.</p>
           <ul className={styles.noticeList}>
-            <li>이번 단계는 평가 초안 저장만 연결되어 있습니다.</li>
-            <li>저장한 초안은 학생과 학부모에게 아직 공개되지 않습니다.</li>
+            <li>저장된 평가 초안을 공개하는 로컬 연습 화면입니다.</li>
+            <li>공개하면 학생과 연결 학부모의 읽기 API에 최신 평가가 나타납니다.</li>
             <li>새로고침하면 가상 로그인이 해제됩니다.</li>
             <li>운영 DB와 연결되지 않았습니다.</li>
           </ul>
@@ -398,7 +501,29 @@ export function LocalTeacherDraftPreview() {
   const draft = evaluation?.data.draft ?? null;
   const published = evaluation?.data.published ?? null;
   const project = evaluation?.data.project ?? null;
-  const disabled = isSaving || isLoadingStudent || !evaluation;
+  const displayedEvaluation = draft ?? published;
+  const disabled = isSaving || isPublishing || isLoadingStudent || !evaluation;
+  const hasRequiredPublishContent = Boolean(
+    draft &&
+    draft.strength.trim().length >= 10 &&
+    draft.improvement.trim().length >= 10 &&
+    draft.next_goal.trim().length >= 10 &&
+    ((draft.selected_concepts ?? draft.concepts).length + (draft.custom_concepts?.length ?? 0) > 0) &&
+    draft.updated_at,
+  );
+  const canPublish = Boolean(
+    session && selectedStudent && draft && !isDirty && !hasConflict &&
+    hasRequiredPublishContent && !isSaving && !isPublishing && !isLoadingStudent,
+  );
+  const publishDisabledReason = !draft
+    ? "현재 공개할 평가 초안이 없습니다."
+    : isDirty
+      ? "공개하기 전에 변경한 내용을 초안으로 저장해 주세요."
+      : hasConflict
+        ? "최신 평가를 다시 불러온 뒤 공개해 주세요."
+        : !hasRequiredPublishContent
+          ? "필수 문장과 학습 개념을 확인해 주세요."
+          : "";
 
   return (
     <div className={styles.pageShell}>
@@ -415,8 +540,8 @@ export function LocalTeacherDraftPreview() {
 
       <div className={styles.safetyBand}>
         <FileLock2 size={18} aria-hidden="true" />
-        <strong>평가 초안 저장만 연결됨</strong>
-        <span>실제 학생 정보가 아니며 학생·학부모에게 공개되지 않습니다. 운영 DB와 연결되지 않았습니다.</span>
+        <strong>Growth 2.0 로컬 연습 DB</strong>
+        <span>실제 학생 정보가 아닙니다. 공개하면 학생과 연결 학부모의 읽기 API에 최신 평가가 나타납니다. 운영 DB와 연결되지 않았습니다.</span>
       </div>
 
       <main className={styles.workspace}>
@@ -464,6 +589,19 @@ export function LocalTeacherDraftPreview() {
                 <button type="button" onClick={() => loadStudent(session, selectedStudent)}><RefreshCw size={15} /> 최신 내용 다시 불러오기</button>
               ) : null}
             </div>
+          ) : null}
+          {publishResult ? (
+            <section className={styles.publishSuccess} aria-live="polite" aria-labelledby="publish-success-title">
+              <ShieldCheck size={21} aria-hidden="true" />
+              <div>
+                <h2 id="publish-success-title">평가 공개 완료</h2>
+                <p>version {publishResult.version} · {formatSavedAt(publishResult.published_at ?? undefined)}</p>
+                <p>{publishResult.archived_previous_version
+                  ? `이전 공개본 version ${publishResult.archived_previous_version}은 이전 기록으로 보관됐습니다.`
+                  : "이전 공개본이 없는 첫 평가입니다."}</p>
+                <p>현재 초안 없음 · 학생과 연결 학부모에게 공개됨</p>
+              </div>
+            </section>
           ) : null}
 
           <div className={styles.contentGrid}>
@@ -589,8 +727,19 @@ export function LocalTeacherDraftPreview() {
                 <button className={styles.saveButton} type="button" disabled={disabled} onClick={saveDraft}>
                   {isSaving ? <><LoaderCircle className={styles.spinner} size={18} /> 초안 저장 중</> : <><Save size={18} /> 평가 초안 저장</>}
                 </button>
-                <span><FileLock2 size={15} /> 학생·학부모 미공개</span>
+                <button
+                  ref={publishTriggerRef}
+                  className={styles.publishButton}
+                  type="button"
+                  disabled={!canPublish}
+                  aria-haspopup="dialog"
+                  onClick={() => setIsPublishDialogOpen(true)}
+                >
+                  {isPublishing ? <><LoaderCircle className={styles.spinner} size={18} /> 평가 공개 중</> : <><Send size={18} /> 평가 공개하기</>}
+                </button>
+                <span><FileLock2 size={15} /> {draft ? "초안은 학생·학부모 미공개" : "최신 공개본 표시 중"}</span>
               </div>
+              {publishDisabledReason ? <p className={styles.publishHelp}>{publishDisabledReason}</p> : null}
               <p className={styles.successMessage} role="status" aria-live="polite">{message}</p>
             </form>
 
@@ -599,19 +748,19 @@ export function LocalTeacherDraftPreview() {
               <dl>
                 <div><dt>초안</dt><dd>{draft ? `version ${draft.version}` : "없음"}</dd></div>
                 <div><dt>공개본</dt><dd>{published ? `version ${published.version}` : "없음"}</dd></div>
-                <div><dt>공개 여부</dt><dd>학생·학부모 미공개</dd></div>
-                <div><dt>저장 시각</dt><dd><Clock3 size={15} /> {formatSavedAt(draft?.updated_at)}</dd></div>
+                <div><dt>공개 여부</dt><dd>{draft ? "학생·학부모 미공개" : published ? "학생·학부모 공개" : "공개 평가 없음"}</dd></div>
+                <div><dt>기록 시각</dt><dd><Clock3 size={15} /> {formatSavedAt(draft?.updated_at ?? published?.published_at ?? undefined)}</dd></div>
               </dl>
               <div className={styles.savedConcepts}>
                 <h3>DB에서 다시 읽은 준비된 개념</h3>
-                {(draft?.selected_concepts ?? draft?.concepts ?? []).length
-                  ? (draft?.selected_concepts ?? draft?.concepts ?? []).map((concept) => <span key={concept.key}>{concept.label}</span>)
+                {(displayedEvaluation?.selected_concepts ?? displayedEvaluation?.concepts ?? []).length
+                  ? (displayedEvaluation?.selected_concepts ?? displayedEvaluation?.concepts ?? []).map((concept) => <span key={concept.key}>{concept.label}</span>)
                   : <p>저장된 준비된 개념이 없습니다.</p>}
               </div>
               <div className={styles.savedConcepts}>
                 <h3>DB에서 다시 읽은 직접 입력 개념</h3>
-                {draft?.custom_concepts?.length
-                  ? draft.custom_concepts.map((concept) => <span key={concept.id}>{concept.label}</span>)
+                {displayedEvaluation?.custom_concepts?.length
+                  ? displayedEvaluation.custom_concepts.map((concept) => <span key={concept.id}>{concept.label}</span>)
                   : <p>저장된 직접 입력 개념이 없습니다.</p>}
               </div>
               <p className={styles.readbackNote}>저장 성공 표시는 저장 API 호출 뒤 선생님 읽기 API로 실제 내용을 다시 확인한 경우에만 나타납니다.</p>
@@ -619,6 +768,53 @@ export function LocalTeacherDraftPreview() {
           </div>
         </section>
       </main>
+      {isPublishDialogOpen && draft ? (
+        <div className={styles.dialogBackdrop}>
+          <section
+            className={styles.publishDialog}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="publish-dialog-title"
+            aria-describedby="publish-dialog-description"
+          >
+            <div className={styles.dialogHeading}>
+              <span aria-hidden="true"><Send size={22} /></span>
+              <div>
+                <h2 id="publish-dialog-title">평가를 공개할까요?</h2>
+                <p id="publish-dialog-description">공개하면 학생과 연결된 학부모가 최신 평가를 볼 수 있습니다.</p>
+              </div>
+            </div>
+            <div className={styles.publishScope}>
+              <section>
+                <h3>학생에게 공개</h3>
+                <ul><li>잘한 점</li><li>다음 수업 목표</li><li>선택한 학습 개념</li><li>직접 입력한 학습 개념</li></ul>
+              </section>
+              <section>
+                <h3>학부모에게 공개</h3>
+                <ul><li>잘한 점</li><li>보완할 점</li><li>다음 수업 목표</li><li>선택·직접 입력 학습 개념</li></ul>
+              </section>
+            </div>
+            <div className={styles.archiveNotice}>
+              <Archive size={18} aria-hidden="true" />
+              <p>{published
+                ? `기존 공개본 version ${published.version}은 삭제하지 않고 이전 기록으로 보관됩니다.`
+                : "기존 공개본이 없어 이번 평가가 첫 공개본이 됩니다."}</p>
+            </div>
+            <p className={styles.dialogFootnote}>프로젝트 기록과 알림은 이번 단계에서 전송하지 않습니다.</p>
+            <div className={styles.dialogActions}>
+              <button
+                ref={publishCancelRef}
+                type="button"
+                disabled={isPublishing}
+                onClick={() => setIsPublishDialogOpen(false)}
+              >취소</button>
+              <button type="button" disabled={isPublishing} onClick={publishEvaluation}>
+                {isPublishing ? <><LoaderCircle className={styles.spinner} size={18} /> 선생님 평가 공개 중</> : <><ShieldCheck size={18} /> 정말 공개하기</>}
+              </button>
+            </div>
+          </section>
+        </div>
+      ) : null}
     </div>
   );
 }

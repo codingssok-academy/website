@@ -4,6 +4,7 @@ import { POST as login } from "./local-teacher-session/route";
 import { POST as students } from "./local-teacher-students/route";
 import { POST as evaluation } from "./local-teacher-evaluation/route";
 import { POST as saveDraft } from "./local-teacher-draft-save/route";
+import { POST as publishEvaluation } from "./local-teacher-publish/route";
 
 const TOKEN = "teacher-access-token-long-enough";
 
@@ -30,6 +31,11 @@ const VALID_DRAFT = {
   conceptKeys: ["condition", "debugging"],
   customConcepts: [],
   expectedUpdatedAt: null,
+};
+
+const VALID_PUBLISH = {
+  evaluationId: "22222222-2222-4222-8222-222222222222",
+  expectedUpdatedAt: "2026-07-12T10:00:00.000Z",
 };
 
 describe("local teacher API routes", () => {
@@ -176,6 +182,80 @@ describe("local teacher API routes", () => {
     const conflict = await saveDraft(request("local-teacher-draft-save", VALID_DRAFT));
     expect(await conflict.json()).toEqual({ saved: false, conflict: true });
     const denied = await saveDraft(request("local-teacher-draft-save", VALID_DRAFT));
+    expect(await denied.json()).toEqual({ code: "TEACHER_ACCESS_DENIED" });
+  });
+
+  it("sends only the draft id and conflict timestamp to the verified publish RPC", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify({
+        published: true,
+        already_published: false,
+        conflict: false,
+        evaluation_id: VALID_PUBLISH.evaluationId,
+        version: 2,
+        status: "published",
+        published_at: "2026-07-12T11:00:00Z",
+        archived_previous_version: 1,
+      }), { status: 200 }),
+    );
+
+    const response = await publishEvaluation(request("local-teacher-publish", VALID_PUBLISH));
+    const sent = JSON.parse(String(fetchSpy.mock.calls[0][1]?.body));
+    expect(response.status).toBe(200);
+    expect(fetchSpy.mock.calls[0][0]).toBe(
+      "http://127.0.0.1:54321/rest/v1/rpc/growth_api_publish_teacher_evaluation",
+    );
+    expect(sent).toEqual({
+      p_evaluation_id: VALID_PUBLISH.evaluationId,
+      p_expected_updated_at: VALID_PUBLISH.expectedUpdatedAt,
+    });
+    expect(JSON.stringify(fetchSpy.mock.calls)).not.toMatch(
+      /service_role|teacher_id|student_id|published_at|archived_evaluation_id/,
+    );
+  });
+
+  it("blocks unsafe publish input, missing tokens, production, and external hosts", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+    expect((await publishEvaluation(request("local-teacher-publish", {
+      ...VALID_PUBLISH, teacher_id: "forbidden",
+    }))).status).toBe(400);
+    expect((await publishEvaluation(request("local-teacher-publish", {
+      ...VALID_PUBLISH, status: "published",
+    }))).status).toBe(400);
+    expect((await publishEvaluation(request("local-teacher-publish", {
+      ...VALID_PUBLISH, expectedUpdatedAt: "not-a-date",
+    }))).status).toBe(400);
+    expect((await publishEvaluation(request("local-teacher-publish", VALID_PUBLISH, ""))).status).toBe(401);
+    vi.stubEnv("NODE_ENV", "production");
+    expect((await publishEvaluation(request("local-teacher-publish", VALID_PUBLISH))).status).toBe(404);
+    vi.stubEnv("NODE_ENV", "development");
+    expect((await publishEvaluation(request(
+      "local-teacher-publish", VALID_PUBLISH, TOKEN, "example.com",
+    ))).status).toBe(404);
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it("passes through safe publish retries and conflicts while hiding backend errors", async () => {
+    vi.spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(new Response(JSON.stringify({
+        published: true, already_published: true, conflict: false,
+        evaluation_id: VALID_PUBLISH.evaluationId, version: 2, status: "published",
+        published_at: "2026-07-12T11:00:00Z", archived_previous_version: null,
+      }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({
+        published: false, already_published: false, conflict: true,
+        evaluation_id: VALID_PUBLISH.evaluationId, version: 2, status: "draft",
+        published_at: null, archived_previous_version: null,
+      }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({
+        message: "internal sql detail", details: "private stack",
+      }), { status: 403 }));
+
+    const retry = await publishEvaluation(request("local-teacher-publish", VALID_PUBLISH));
+    expect(await retry.json()).toMatchObject({ published: true, already_published: true });
+    const conflict = await publishEvaluation(request("local-teacher-publish", VALID_PUBLISH));
+    expect(await conflict.json()).toMatchObject({ published: false, conflict: true });
+    const denied = await publishEvaluation(request("local-teacher-publish", VALID_PUBLISH));
     expect(await denied.json()).toEqual({ code: "TEACHER_ACCESS_DENIED" });
   });
 });

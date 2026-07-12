@@ -5,6 +5,7 @@ import {
   createLocalTeacherSession,
   fetchLocalTeacherEvaluation,
   fetchLocalTeacherStudents,
+  publishLocalTeacherEvaluation,
   saveLocalTeacherDraft,
 } from "@/features/growth-v2/local-teacher/local-teacher-client";
 import type { LocalTeacherEvaluationResponse } from "@/features/growth-v2/local-teacher/types";
@@ -14,6 +15,7 @@ vi.mock("@/features/growth-v2/local-teacher/local-teacher-client", () => ({
   fetchLocalTeacherStudents: vi.fn(),
   fetchLocalTeacherEvaluation: vi.fn(),
   saveLocalTeacherDraft: vi.fn(),
+  publishLocalTeacherEvaluation: vi.fn(),
 }));
 
 const SESSION = { accessToken: "teacher-jwt-in-test-memory", expiresIn: 3600 };
@@ -45,11 +47,11 @@ function evaluationResponse(
     next_goal: "다음 시간에는 조건문 문제를 완성해 봅니다.",
     concepts: [{ key: "condition" as const, label: "조건 비교" }],
     selected_concepts: [{ key: "condition" as const, label: "조건 비교" }],
-    custom_concepts: status === "draft" ? customLabels.map((label, index) => ({
+    custom_concepts: customLabels.map((label, index) => ({
       id: `custom-${index}`,
       label,
       sort_order: index + 1,
-    })) : [],
+    })),
   });
   return {
     api_version: "1.0",
@@ -67,11 +69,13 @@ const A_PUBLISHED = evaluationResponse("테스트 학생 A", null, 1);
 const A_DRAFT = evaluationResponse("테스트 학생 A", 2, 1);
 const B_EMPTY = evaluationResponse("테스트 학생 B", null, null);
 const A_CUSTOM_DRAFT = evaluationResponse("테스트 학생 A", 2, 1, ["함수", "입출력"]);
+const A_PUBLISHED_V2 = evaluationResponse("테스트 학생 A", null, 2, ["함수", "입출력"]);
 const B_CUSTOM_DRAFT = evaluationResponse("테스트 학생 B", 1, null, ["변수", "입출력"]);
 const mockedSession = vi.mocked(createLocalTeacherSession);
 const mockedStudents = vi.mocked(fetchLocalTeacherStudents);
 const mockedEvaluation = vi.mocked(fetchLocalTeacherEvaluation);
 const mockedSave = vi.mocked(saveLocalTeacherDraft);
+const mockedPublish = vi.mocked(publishLocalTeacherEvaluation);
 
 async function login() {
   fireEvent.click(screen.getByRole("button", { name: "테스트 선생님으로 들어가기" }));
@@ -88,6 +92,11 @@ describe("local teacher draft preview", () => {
       saved: true, created: true, conflict: false, evaluation_id: "draft-2",
       version: 2, status: "draft", updated_at: "2026-07-12T10:00:00Z",
       selected_concepts: [{ key: "condition", label: "조건 비교" }],
+    });
+    mockedPublish.mockResolvedValue({
+      published: true, already_published: false, conflict: false,
+      evaluation_id: "draft-2", version: 2, status: "published",
+      published_at: "2026-07-12T11:00:00Z", archived_previous_version: 1,
     });
   });
 
@@ -116,7 +125,8 @@ describe("local teacher draft preview", () => {
     expect(screen.getByText("기존 공개본 v1")).toBeInTheDocument();
     expect(screen.getByText("저장된 초안 없음")).toBeInTheDocument();
     expect(screen.getByLabelText("프로젝트 최근 작업")).toBeDisabled();
-    expect(screen.queryByRole("button", { name: /공개하기|학생에게 보내기|학부모에게 보내기/ })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "평가 공개하기" })).toBeDisabled();
+    expect(screen.getByText("현재 공개할 평가 초안이 없습니다.")).toBeInTheDocument();
   });
 
   it("validates input, saves A, and shows only the re-read draft version 2", async () => {
@@ -242,6 +252,85 @@ describe("local teacher draft preview", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("다른 곳에서 평가가 변경");
     expect(screen.getByLabelText("잘한 점")).toHaveValue(changed);
     expect(screen.getByRole("button", { name: "최신 내용 다시 불러오기" })).toBeInTheDocument();
+  });
+
+  it("blocks publishing unsaved changes and enables it again after draft save", async () => {
+    mockedEvaluation.mockResolvedValueOnce(A_CUSTOM_DRAFT).mockResolvedValueOnce(A_CUSTOM_DRAFT);
+    render(<LocalTeacherDraftPreview />);
+    await login();
+    const publishButton = screen.getByRole("button", { name: "평가 공개하기" });
+    expect(publishButton).toBeEnabled();
+
+    fireEvent.change(screen.getByLabelText("잘한 점"), {
+      target: { value: "변경한 평가 문장은 먼저 초안으로 안전하게 저장해야 합니다." },
+    });
+    expect(publishButton).toBeDisabled();
+    expect(screen.getByText("공개하기 전에 변경한 내용을 초안으로 저장해 주세요.")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "평가 초안 저장" }));
+    await waitFor(() => expect(mockedSave).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(publishButton).toBeEnabled());
+  });
+
+  it("shows publishing scope, cancels without an API call, and returns focus", async () => {
+    mockedEvaluation.mockResolvedValue(A_CUSTOM_DRAFT);
+    render(<LocalTeacherDraftPreview />);
+    await login();
+    const publishButton = screen.getByRole("button", { name: "평가 공개하기" });
+    fireEvent.click(publishButton);
+
+    expect(screen.getByRole("dialog", { name: "평가를 공개할까요?" })).toBeInTheDocument();
+    expect(screen.getByText("학생에게 공개")).toBeInTheDocument();
+    expect(screen.getByText("학부모에게 공개")).toBeInTheDocument();
+    expect(screen.getAllByText(/보완할 점/).length).toBeGreaterThan(0);
+    expect(screen.getByText(/기존 공개본 version 1은 삭제하지 않고/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "취소" })).toHaveFocus();
+    fireEvent.click(screen.getByRole("button", { name: "취소" }));
+    expect(mockedPublish).not.toHaveBeenCalled();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(publishButton).toHaveFocus();
+  });
+
+  it("publishes once, re-reads the DB, and shows version 2 with no draft", async () => {
+    mockedEvaluation.mockResolvedValueOnce(A_CUSTOM_DRAFT).mockResolvedValueOnce(A_PUBLISHED_V2);
+    mockedStudents.mockResolvedValue({
+      ...STUDENTS,
+      data: [{ ...STUDENTS.data[0], has_draft: false, has_published: true, evaluation_status: "published" }, STUDENTS.data[1]],
+    });
+    render(<LocalTeacherDraftPreview />);
+    await login();
+    fireEvent.click(screen.getByRole("button", { name: "평가 공개하기" }));
+    const confirm = screen.getByRole("button", { name: "정말 공개하기" });
+    fireEvent.click(confirm);
+    fireEvent.click(confirm);
+
+    await waitFor(() => expect(mockedPublish).toHaveBeenCalledTimes(1));
+    expect(mockedPublish).toHaveBeenCalledWith(SESSION, "draft-2", "2026-07-12T10:00:00Z");
+    await waitFor(() => expect(mockedEvaluation).toHaveBeenCalledTimes(2));
+    expect(await screen.findByRole("heading", { name: "평가 공개 완료" })).toBeInTheDocument();
+    expect(screen.getByText("version 2", { selector: "dd" })).toBeInTheDocument();
+    expect(screen.getByText("없음", { selector: "dd" })).toBeInTheDocument();
+    expect(screen.getByText(/이전 공개본 version 1은 이전 기록으로 보관/)).toBeInTheDocument();
+    expect(screen.getByText("학생·학부모 공개", { selector: "dd" })).toBeInTheDocument();
+    expect(screen.getAllByText("함수").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("입출력").length).toBeGreaterThan(0);
+  });
+
+  it("treats already-published as safe and shows conflicts without success", async () => {
+    mockedEvaluation.mockResolvedValue(A_CUSTOM_DRAFT);
+    mockedPublish.mockResolvedValueOnce({
+      published: false, already_published: false, conflict: true,
+      evaluation_id: "draft-2", version: 2, status: "published",
+      published_at: "", archived_previous_version: null,
+    });
+    render(<LocalTeacherDraftPreview />);
+    await login();
+    fireEvent.click(screen.getByRole("button", { name: "평가 공개하기" }));
+    fireEvent.click(screen.getByRole("button", { name: "정말 공개하기" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("다른 곳에서 초안이 변경됐어요");
+    expect(screen.queryByRole("heading", { name: "평가 공개 완료" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "최신 내용 다시 불러오기" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "평가 공개하기" })).toBeDisabled();
   });
 
   it("clears the in-memory teacher session without deleting the DB draft", async () => {

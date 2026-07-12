@@ -95,13 +95,25 @@ export interface LocalDraftSaveResult {
   custom_concepts?: LocalCustomConcept[];
 }
 
+export interface LocalPublishResult {
+  published: boolean;
+  already_published: boolean;
+  conflict: boolean;
+  evaluation_id: string;
+  version: number;
+  status: "draft" | "published";
+  published_at: string | null;
+  archived_previous_version: number | null;
+}
+
 export type LocalTeacherErrorCode =
   | "BACKEND_UNAVAILABLE"
   | "SESSION_EXPIRED"
   | "ACCESS_DENIED"
   | "LOGIN_FAILED"
   | "INVALID_RESPONSE"
-  | "SAVE_FAILED";
+  | "SAVE_FAILED"
+  | "PUBLISH_FAILED";
 
 export class LocalTeacherPreviewError extends Error {
   constructor(public code: LocalTeacherErrorCode, message: string) {

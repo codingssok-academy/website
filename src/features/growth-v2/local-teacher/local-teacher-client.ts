@@ -1,6 +1,7 @@
 import type {
   LocalDraftForm,
   LocalDraftSaveResult,
+  LocalPublishResult,
   LocalTeacherEvaluationResponse,
   LocalTeacherSession,
   LocalTeacherStudentsResponse,
@@ -42,13 +43,25 @@ async function postLocal<T>(
   if (response.status === 403) {
     throw new LocalTeacherPreviewError(
       "ACCESS_DENIED",
-      "이 학생의 평가를 저장할 권한이 없습니다.",
+      path.includes("publish")
+        ? "이 평가를 공개할 권한이 없어요."
+        : "이 학생의 평가를 저장할 권한이 없습니다.",
+    );
+  }
+  if (response.status === 503) {
+    throw new LocalTeacherPreviewError(
+      "BACKEND_UNAVAILABLE",
+      "연습용 데이터베이스가 꺼져 있어요.",
     );
   }
   if (!response.ok || !result) {
     throw new LocalTeacherPreviewError(
-      response.status >= 500 ? "BACKEND_UNAVAILABLE" : "SAVE_FAILED",
-      result?.message ?? "로컬 평가 요청을 처리하지 못했습니다.",
+      response.status >= 500
+        ? "BACKEND_UNAVAILABLE"
+        : path.includes("publish") ? "PUBLISH_FAILED" : "SAVE_FAILED",
+      result?.message ?? (path.includes("publish")
+        ? "평가를 공개하지 못했어요."
+        : "로컬 평가 요청을 처리하지 못했습니다."),
     );
   }
   return result;
@@ -102,5 +115,17 @@ export function saveLocalTeacherDraft(
       customConcepts: form.customConcepts,
       expectedUpdatedAt,
     },
+  );
+}
+
+export function publishLocalTeacherEvaluation(
+  session: LocalTeacherSession,
+  evaluationId: string,
+  expectedUpdatedAt: string,
+) {
+  return postLocal<LocalPublishResult>(
+    "/api/growth-preview/local-teacher-publish",
+    session.accessToken,
+    { evaluationId, expectedUpdatedAt },
   );
 }
