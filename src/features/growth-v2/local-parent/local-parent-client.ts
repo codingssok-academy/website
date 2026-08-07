@@ -49,7 +49,15 @@ async function postLocalParent<T>(
 }
 
 export function createLocalParentSession() {
-  return postLocalParent<LocalParentSession>("/api/growth-preview/local-parent-session");
+  return postLocalParent<LocalParentSession>(
+    process.env.NEXT_PUBLIC_GROWTH_PREVIEW_ENV === "staging"
+      ? "/api/growth-preview/staging-session"
+      : "/api/growth-preview/local-parent-session",
+    undefined,
+    process.env.NEXT_PUBLIC_GROWTH_PREVIEW_ENV === "staging"
+      ? { roleCode: "parent" }
+      : undefined,
+  );
 }
 
 export function fetchLocalParentChildren(session: LocalParentSession) {

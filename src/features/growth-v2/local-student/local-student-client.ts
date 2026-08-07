@@ -12,13 +12,16 @@ async function safeJson(response: Response) {
 export async function createLocalStudentSession(
   studentCode: LocalStudentCode,
 ): Promise<LocalStudentSession> {
+  const staging = process.env.NEXT_PUBLIC_GROWTH_PREVIEW_ENV === "staging";
   let response: Response;
   try {
-    response = await fetch("/api/growth-preview/local-student-session", {
+    response = await fetch(staging
+      ? "/api/growth-preview/staging-session"
+      : "/api/growth-preview/local-student-session", {
       method: "POST",
       cache: "no-store",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ studentCode }),
+      body: JSON.stringify(staging ? { roleCode: studentCode } : { studentCode }),
     });
   } catch {
     throw new LocalStudentPreviewError(

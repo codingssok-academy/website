@@ -8,11 +8,18 @@ import {
   ClipboardCheck,
   FolderKanban,
   MessageSquareText,
+  Plus,
   RotateCcw,
   Save,
   Target,
   UserRoundCheck,
+  X,
 } from "lucide-react";
+import {
+  customConceptKey,
+  MAX_CUSTOM_CONCEPTS,
+  validateCustomConcept,
+} from "@/features/growth-v2/local-teacher/custom-concepts";
 import { ParentEvaluationPreview } from "./ParentEvaluationPreview";
 import { useGrowthPreviewState } from "./GrowthPreviewStateProvider";
 import type {
@@ -105,7 +112,10 @@ export function TeacherWeeklyEvaluation({ data }: TeacherWeeklyEvaluationProps) 
     project,
   } = draft;
   const [errors, setErrors] = useState<EvaluationErrors>({});
+  const [customConceptInput, setCustomConceptInput] = useState("");
+  const [conceptError, setConceptError] = useState("");
   const [saveMessage, setSaveMessage] = useState("");
+  const customConceptRef = useRef<HTMLInputElement>(null);
   const strengthRef = useRef<HTMLTextAreaElement>(null);
   const improvementRef = useRef<HTMLTextAreaElement>(null);
   const nextGoalRef = useRef<HTMLTextAreaElement>(null);
@@ -123,7 +133,11 @@ export function TeacherWeeklyEvaluation({ data }: TeacherWeeklyEvaluationProps) 
     () => new Set(draft.learnedConcepts),
     [draft.learnedConcepts],
   );
-  const visibleConcepts = data.learnedConcepts.filter((concept) => selectedConcepts.has(concept));
+  const customConcepts = useMemo(
+    () => draft.learnedConcepts.filter((concept) => !data.learnedConcepts.includes(concept)),
+    [data.learnedConcepts, draft.learnedConcepts],
+  );
+  const visibleConcepts = draft.learnedConcepts;
 
   const updateEvaluation = (field: EvaluationTextField, value: string) => {
     updateDraft((current) => ({
@@ -142,6 +156,16 @@ export function TeacherWeeklyEvaluation({ data }: TeacherWeeklyEvaluationProps) 
   };
 
   const toggleConcept = (concept: string) => {
+    if (
+      !selectedConcepts.has(concept) &&
+      customConcepts.some(
+        (customConcept) => customConceptKey(customConcept) === customConceptKey(concept),
+      )
+    ) {
+      setConceptError("직접 입력한 개념과 같은 준비된 개념은 함께 선택할 수 없어요.");
+      return;
+    }
+
     updateDraft((current) => {
       const next = new Set(current.learnedConcepts);
 
@@ -150,6 +174,42 @@ export function TeacherWeeklyEvaluation({ data }: TeacherWeeklyEvaluationProps) 
 
       return { ...current, learnedConcepts: [...next] };
     });
+    setConceptError("");
+    setSaveMessage("");
+  };
+
+  const addCustomConcept = () => {
+    const selectedPreparedConcepts = data.learnedConcepts.filter((concept) =>
+      selectedConcepts.has(concept),
+    );
+    const result = validateCustomConcept(
+      customConceptInput,
+      customConcepts,
+      selectedPreparedConcepts,
+    );
+
+    if (result.error) {
+      setConceptError(result.error);
+      customConceptRef.current?.focus();
+      return;
+    }
+
+    updateDraft((current) => ({
+      ...current,
+      learnedConcepts: [...current.learnedConcepts, result.value],
+    }));
+    setCustomConceptInput("");
+    setConceptError("");
+    setSaveMessage("");
+    customConceptRef.current?.focus();
+  };
+
+  const removeCustomConcept = (concept: string) => {
+    updateDraft((current) => ({
+      ...current,
+      learnedConcepts: current.learnedConcepts.filter((value) => value !== concept),
+    }));
+    setConceptError("");
     setSaveMessage("");
   };
 
@@ -191,6 +251,8 @@ export function TeacherWeeklyEvaluation({ data }: TeacherWeeklyEvaluationProps) 
   const handleReset = () => {
     resetPreview();
     setErrors({});
+    setCustomConceptInput("");
+    setConceptError("");
     setSaveMessage("");
   };
 
@@ -310,6 +372,75 @@ export function TeacherWeeklyEvaluation({ data }: TeacherWeeklyEvaluationProps) 
                   </label>
                 ))}
               </div>
+              <div className={styles.customConceptSection}>
+                <div className={styles.customConceptHeading}>
+                  <div>
+                    <h3>직접 입력한 개념</h3>
+                    <p>준비된 목록에 없는 개념은 선생님이 직접 추가할 수 있어요.</p>
+                  </div>
+                  <strong
+                    aria-label={`직접 입력 개념 ${customConcepts.length}개, 최대 ${MAX_CUSTOM_CONCEPTS}개`}
+                  >
+                    {customConcepts.length}/{MAX_CUSTOM_CONCEPTS}
+                  </strong>
+                </div>
+                <div className={styles.customConceptInputRow}>
+                  <label className={styles.srOnly} htmlFor="teacher-custom-concept">
+                    직접 입력할 개념
+                  </label>
+                  <input
+                    id="teacher-custom-concept"
+                    ref={customConceptRef}
+                    type="text"
+                    maxLength={41}
+                    value={customConceptInput}
+                    placeholder="예: 리스트, 함수, 터틀 그래픽"
+                    aria-invalid={Boolean(conceptError)}
+                    aria-describedby={`teacher-custom-concept-help${conceptError ? " teacher-custom-concept-error" : ""}`}
+                    onChange={(event) => {
+                      setCustomConceptInput(event.target.value);
+                      setConceptError("");
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") {
+                        event.preventDefault();
+                        addCustomConcept();
+                      }
+                    }}
+                  />
+                  <button type="button" onClick={addCustomConcept}>
+                    <Plus size={17} aria-hidden="true" /> 추가
+                  </button>
+                </div>
+                <p id="teacher-custom-concept-help" className={styles.customConceptHelp}>
+                  2~40자, 최대 5개까지 입력할 수 있어요.
+                </p>
+                {customConcepts.length > 0 ? (
+                  <div className={styles.customConceptTags} aria-label="직접 입력한 개념 목록">
+                    {customConcepts.map((concept) => (
+                      <span key={concept}>
+                        <b>{concept}</b>
+                        <button
+                          type="button"
+                          aria-label={`${concept} 개념 제거`}
+                          onClick={() => removeCustomConcept(concept)}
+                        >
+                          <X size={14} aria-hidden="true" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+              {conceptError ? (
+                <p
+                  className={styles.fieldError}
+                  id="teacher-custom-concept-error"
+                  role="alert"
+                >
+                  {conceptError}
+                </p>
+              ) : null}
             </fieldset>
 
             <section className={styles.textEvaluation} aria-labelledby="evaluation-text-title">

@@ -62,11 +62,18 @@ function ProgressBar({ value, label }: { value: number; label: string }) {
 
 export function ParentWeeklyReport({ report: initialReport }: ParentWeeklyReportProps) {
   const { published } = useGrowthPreviewState();
+  const initialConcepts = new Map(
+    initialReport.learnedConcepts.map((concept) => [concept.name, concept]),
+  );
   const report = published
     ? {
         ...initialReport,
-        learnedConcepts: initialReport.learnedConcepts.filter((concept) =>
-          published.learnedConcepts.includes(concept.name),
+        learnedConcepts: published.learnedConcepts.map(
+          (concept) =>
+            initialConcepts.get(concept) ?? {
+              name: concept,
+              description: "선생님이 이번 주 수업에서 배운 개념으로 기록했습니다.",
+            },
         ),
         teacherEvaluation: { ...published.evaluation },
         project: {

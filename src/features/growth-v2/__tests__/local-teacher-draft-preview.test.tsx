@@ -18,6 +18,10 @@ vi.mock("@/features/growth-v2/local-teacher/local-teacher-client", () => ({
   publishLocalTeacherEvaluation: vi.fn(),
 }));
 
+vi.mock("@/features/growth-v2/attendance/MonthlyAttendancePanel", () => ({
+  MonthlyAttendancePanel: () => null,
+}));
+
 const SESSION = { accessToken: "teacher-jwt-in-test-memory", expiresIn: 3600 };
 const STUDENTS = {
   api_version: "1.0",

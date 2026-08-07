@@ -12,6 +12,10 @@ vi.mock("@/features/growth-v2/local-student/local-student-client", () => ({
   fetchLocalStudentHome: vi.fn(),
 }));
 
+vi.mock("@/features/growth-v2/attendance/MonthlyAttendancePanel", () => ({
+  MonthlyAttendancePanel: () => null,
+}));
+
 const SESSION = { accessToken: "student-jwt-in-test-memory", expiresIn: 3600 };
 
 function studentHome(

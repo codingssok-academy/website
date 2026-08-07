@@ -17,6 +17,7 @@ import {
   UserRound,
 } from "lucide-react";
 import { useRef, useState } from "react";
+import { MonthlyAttendancePanel } from "@/features/growth-v2/attendance/MonthlyAttendancePanel";
 import {
   createLocalStudentSession,
   fetchLocalStudentHome,
@@ -242,6 +243,12 @@ export function LocalStudentReport() {
           {notice ? <p className={styles.notice}>{notice}</p> : null}
           {error ? <p className={styles.error} role="alert">{error}</p> : null}
         </div>
+
+        <MonthlyAttendancePanel
+          key={data.student.id}
+          accessToken={session.accessToken}
+          studentId={data.student.id}
+        />
 
         {!feedback ? (
           <section className={styles.emptyReport} aria-labelledby="student-empty-report-title">

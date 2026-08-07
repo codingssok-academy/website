@@ -47,6 +47,7 @@ const UPDATED_IMPROVEMENT = "코딩 전에 실행 순서를 글로 적는 연습
 const UPDATED_GOAL = "조건문을 사용해 우주 게임의 점수 기능을 완성합니다.";
 const UPDATED_RECENT_WORK = "반복문으로 행성이 차례대로 움직이게 만들었습니다.";
 const UPDATED_NEXT_WORK = "조건문으로 점수를 계산하는 기능을 추가합니다.";
+const CUSTOM_CONCEPT = "리스트 활용";
 
 function editTeacherDraft() {
   fireEvent.change(screen.getByLabelText("잘한 점"), {
@@ -65,6 +66,10 @@ function editTeacherDraft() {
     target: { value: UPDATED_NEXT_WORK },
   });
   fireEvent.click(screen.getByRole("checkbox", { name: "오류 찾기" }));
+  fireEvent.change(screen.getByLabelText("직접 입력할 개념"), {
+    target: { value: CUSTOM_CONCEPT },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "추가" }));
 }
 
 describe("Growth 2.0 preview data flow", () => {
@@ -78,6 +83,7 @@ describe("Growth 2.0 preview data flow", () => {
     ).toBeInTheDocument();
     expect(screen.queryByText(UPDATED_STRENGTH, { exact: false })).not.toBeInTheDocument();
     expect(screen.getByText(MOCK_STUDENT_DASHBOARD.project.recentWork)).toBeInTheDocument();
+    expect(screen.queryByText(CUSTOM_CONCEPT)).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "학부모 확인" }));
     expect(
@@ -94,6 +100,7 @@ describe("Growth 2.0 preview data flow", () => {
     expect(screen.getByText(UPDATED_GOAL)).toBeInTheDocument();
     expect(screen.getByText(UPDATED_RECENT_WORK)).toBeInTheDocument();
     expect(screen.queryByText("오류 찾기")).not.toBeInTheDocument();
+    expect(screen.getByText(CUSTOM_CONCEPT)).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "학부모 확인" }));
     expect(screen.getByText(UPDATED_STRENGTH)).toBeInTheDocument();
@@ -102,6 +109,10 @@ describe("Growth 2.0 preview data flow", () => {
     expect(screen.getByText(UPDATED_RECENT_WORK)).toBeInTheDocument();
     expect(screen.getByText(UPDATED_NEXT_WORK)).toBeInTheDocument();
     expect(screen.queryByText("오류 찾기")).not.toBeInTheDocument();
+    expect(screen.getByText(CUSTOM_CONCEPT)).toBeInTheDocument();
+    expect(
+      screen.getByText("선생님이 이번 주 수업에서 배운 개념으로 기록했습니다."),
+    ).toBeInTheDocument();
   });
 
   it("resets draft and published screens to the original mock data", () => {
@@ -121,6 +132,7 @@ describe("Growth 2.0 preview data flow", () => {
       screen.getByText(MOCK_PARENT_WEEKLY_REPORT.teacherEvaluation.strength),
     ).toBeInTheDocument();
     expect(screen.getByText("오류 찾기")).toBeInTheDocument();
+    expect(screen.queryByText(CUSTOM_CONCEPT)).not.toBeInTheDocument();
     expect(screen.queryByText(UPDATED_RECENT_WORK)).not.toBeInTheDocument();
   });
 

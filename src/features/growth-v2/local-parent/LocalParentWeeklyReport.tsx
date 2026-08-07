@@ -15,6 +15,7 @@ import {
   Users,
 } from "lucide-react";
 import { useRef, useState } from "react";
+import { MonthlyAttendancePanel } from "@/features/growth-v2/attendance/MonthlyAttendancePanel";
 import {
   createLocalParentSession,
   fetchLocalParentChildren,
@@ -271,6 +272,14 @@ export function LocalParentWeeklyReport() {
           {notice ? <p className={styles.notice}>{notice}</p> : null}
           {error ? <p className={styles.error} role="alert">{error}</p> : null}
         </div>
+
+        {session && selectedStudentId ? (
+          <MonthlyAttendancePanel
+            key={selectedStudentId}
+            accessToken={session.accessToken}
+            studentId={selectedStudentId}
+          />
+        ) : null}
 
         {isLoadingReport ? (
           <section className={styles.loadingPanel} aria-live="polite">

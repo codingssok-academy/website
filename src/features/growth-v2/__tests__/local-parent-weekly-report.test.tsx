@@ -15,6 +15,10 @@ vi.mock("@/features/growth-v2/local-parent/local-parent-client", () => ({
   fetchLocalParentWeeklyReport: vi.fn(),
 }));
 
+vi.mock("@/features/growth-v2/attendance/MonthlyAttendancePanel", () => ({
+  MonthlyAttendancePanel: () => null,
+}));
+
 const SESSION = { accessToken: "parent-jwt-in-test-memory", expiresIn: 3600 };
 const STUDENT_A = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 const STUDENT_B = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";

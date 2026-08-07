@@ -50,6 +50,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const localPreviewOnly = process.env.GROWTH_PREVIEW_LOCAL_ONLY === "1";
+  const stagingPreview =
+    process.env.VERCEL_TARGET_ENV === "staging" ||
+    process.env.NEXT_PUBLIC_GROWTH_PREVIEW_ENV === "staging";
 
   return (
     <html lang="ko" suppressHydrationWarning>
@@ -82,7 +85,7 @@ export default function RootLayout({
           본문으로 바로가기
         </a>
         {children}
-        {!localPreviewOnly ? (
+        {!localPreviewOnly && !stagingPreview ? (
           <script dangerouslySetInnerHTML={{
             __html: `
             if ('serviceWorker' in navigator) {

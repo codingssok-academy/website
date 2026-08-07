@@ -22,6 +22,7 @@ import {
   X,
 } from "lucide-react";
 import { MOCK_TEACHER_WEEKLY_EVALUATION } from "@/features/growth-v2/data/teacher-weekly-evaluation.mock";
+import { MonthlyAttendancePanel } from "@/features/growth-v2/attendance/MonthlyAttendancePanel";
 import {
   formatStudentDisplayName,
   getGrowthPreviewEnvironmentCopy,
@@ -618,6 +619,15 @@ export function LocalTeacherDraftPreview() {
                 <p>현재 초안 없음 · 학생과 연결 학부모에게 공개됨</p>
               </div>
             </section>
+          ) : null}
+
+          {session && selectedStudent ? (
+            <MonthlyAttendancePanel
+              key={selectedStudent.id}
+              accessToken={session.accessToken}
+              studentId={selectedStudent.id}
+              editable
+            />
           ) : null}
 
           <div className={styles.contentGrid}>

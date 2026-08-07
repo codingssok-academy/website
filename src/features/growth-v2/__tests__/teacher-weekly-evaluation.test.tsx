@@ -85,6 +85,49 @@ describe("Growth 2.0 teacher weekly evaluation preview", () => {
     expect(within(preview).queryByText("오류 찾기")).not.toBeInTheDocument();
   });
 
+  it("lets the teacher add and remove a custom learned concept", () => {
+    renderTeacherEvaluation();
+    const input = screen.getByLabelText("직접 입력할 개념");
+    const preview = screen.getByLabelText("학부모 표시 미리보기");
+
+    fireEvent.change(input, { target: { value: "  리스트 활용  " } });
+    fireEvent.click(screen.getByRole("button", { name: "추가" }));
+
+    expect(input).toHaveValue("");
+    expect(within(preview).getByText("리스트 활용")).toBeInTheDocument();
+    expect(
+      screen.getByLabelText("직접 입력 개념 1개, 최대 5개"),
+    ).toHaveTextContent("1/5");
+
+    fireEvent.click(screen.getByRole("button", { name: "리스트 활용 개념 제거" }));
+
+    expect(within(preview).queryByText("리스트 활용")).not.toBeInTheDocument();
+    expect(
+      screen.getByLabelText("직접 입력 개념 0개, 최대 5개"),
+    ).toHaveTextContent("0/5");
+  });
+
+  it("supports Enter and rejects invalid or duplicate custom concepts", () => {
+    renderTeacherEvaluation();
+    const input = screen.getByLabelText("직접 입력할 개념");
+
+    fireEvent.change(input, { target: { value: "함수" } });
+    fireEvent.keyDown(input, { key: "Enter" });
+    expect(screen.getByRole("button", { name: "함수 개념 제거" })).toBeInTheDocument();
+
+    fireEvent.change(input, { target: { value: "함수" } });
+    fireEvent.click(screen.getByRole("button", { name: "추가" }));
+    expect(screen.getByRole("alert")).toHaveTextContent("이미 직접 추가한 개념이에요.");
+
+    fireEvent.change(input, { target: { value: "for 반복문" } });
+    fireEvent.click(screen.getByRole("button", { name: "추가" }));
+    expect(screen.getByRole("alert")).toHaveTextContent("준비된 개념에서 이미 선택했어요.");
+
+    fireEvent.change(input, { target: { value: "한" } });
+    fireEvent.click(screen.getByRole("button", { name: "추가" }));
+    expect(screen.getByRole("alert")).toHaveTextContent("개념은 2자 이상 적어 주세요.");
+  });
+
   it("applies a recommendation phrase as a clear replacement", () => {
     renderTeacherEvaluation();
 
@@ -151,6 +194,10 @@ describe("Growth 2.0 teacher weekly evaluation preview", () => {
     fireEvent.click(screen.getByRole("button", { name: "스스로 해결을 시도했어요" }));
     fireEvent.click(screen.getByRole("button", { name: "추가 도전까지 완료" }));
     fireEvent.click(screen.getByRole("checkbox", { name: "조건 비교" }));
+    fireEvent.change(screen.getByLabelText("직접 입력할 개념"), {
+      target: { value: "함수" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "추가" }));
     fireEvent.click(screen.getByRole("button", { name: "평가 미리보기 저장" }));
     fireEvent.click(screen.getByRole("button", { name: "입력 초기화" }));
 
@@ -168,6 +215,7 @@ describe("Growth 2.0 teacher weekly evaluation preview", () => {
       "true",
     );
     expect(screen.getByRole("checkbox", { name: "조건 비교" })).toBeChecked();
+    expect(screen.queryByRole("button", { name: "함수 개념 제거" })).not.toBeInTheDocument();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     expect(screen.getByRole("status")).toHaveTextContent("");
   });

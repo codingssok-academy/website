@@ -68,8 +68,13 @@ async function postLocal<T>(
 }
 
 export function createLocalTeacherSession() {
+  const staging = process.env.NEXT_PUBLIC_GROWTH_PREVIEW_ENV === "staging";
   return postLocal<LocalTeacherSession>(
-    "/api/growth-preview/local-teacher-session",
+    staging
+      ? "/api/growth-preview/staging-session"
+      : "/api/growth-preview/local-teacher-session",
+    undefined,
+    staging ? { roleCode: "teacher" } : undefined,
   );
 }
 export function fetchLocalTeacherStudents(session: LocalTeacherSession) {
