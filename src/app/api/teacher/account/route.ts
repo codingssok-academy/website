@@ -257,20 +257,13 @@ export async function DELETE(request: NextRequest) {
             if (student.auth_user_id) targetAuthIds.add(student.auth_user_id)
         }
 
-        for (let page = 1; page <= 10; page += 1) {
-            const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 1000 })
-            if (error) {
-                return NextResponse.json({ success: false, error: error.message }, { status: 500 })
-            }
-
-            for (const user of data.users || []) {
-                const metadataName = String(user.user_metadata?.name || '').replace(/\s+/g, '')
-                const email = String(user.email || '').trim().toLowerCase()
-                if (metadataName === '구자현' || email === 'louispetergu@naver.com') {
-                    targetAuthIds.add(user.id)
-                }
-            }
-            if ((data.users || []).length < 1000) break
+        const allProfilesAreAdmins = (profiles || []).every(profile => profile.role === 'admin')
+        const allStudentsAreAdmins = (students || []).every(student => student.class === 'admin')
+        if (targetAuthIds.size !== 3 || !allProfilesAreAdmins || !allStudentsAreAdmins) {
+            return NextResponse.json(
+                { success: false, error: '확인된 삭제 대상이 예상한 구자현 관리자 계정 3개와 일치하지 않습니다.' },
+                { status: 409 },
+            )
         }
 
         if (targetAuthIds.has(context.user.id)) {
