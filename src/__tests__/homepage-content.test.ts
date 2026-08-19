@@ -10,12 +10,22 @@ function read(relativePath: string) {
 
 describe("homepage content", () => {
   it("uses the current homepage learning and curriculum sections", () => {
-    const page = read("src/app/page.tsx");
+    const page = read("src/app/HomeClient.tsx");
 
     expect(page).toContain("PromoShowcase");
     expect(page).toContain("LiveStudySection");
     expect(page).toContain("Curriculum");
+    expect(page).toContain("GrowthExperience");
     expect(page).not.toContain("GrowthPlatformV2");
+  });
+
+  it("links the public homepage to the production-safe growth page", () => {
+    const home = read("src/components/sections/GrowthExperience.tsx");
+    const growthPage = read("src/app/growth/page.tsx");
+
+    expect(home).toContain('href="/growth"');
+    expect(growthPage).toContain('mode="homepage"');
+    expect(growthPage).not.toContain("growth-preview/teacher-local");
   });
 
   it("does not show the curriculum V2 heading copy", () => {

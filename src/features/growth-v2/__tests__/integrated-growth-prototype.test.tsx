@@ -42,6 +42,26 @@ describe("Growth 2.0 홈페이지 통합형 UI/UX 시안", () => {
     ).toHaveAttribute("href", "/growth-preview/parent-local");
   });
 
+  it("uses the existing secure portals on the public homepage route", () => {
+    render(<IntegratedGrowthPrototype mode="homepage" />);
+
+    expect(screen.getByText("코딩쏙 성장관리 기능 미리보기")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /선생님 포털 열기/ }),
+    ).toHaveAttribute("href", "/teacher/login");
+
+    fireEvent.click(screen.getByRole("tab", { name: /학생/ }));
+    expect(
+      screen.getByRole("link", { name: /학생 포털 열기/ }),
+    ).toHaveAttribute("href", "/login");
+
+    fireEvent.click(screen.getByRole("tab", { name: /학부모/ }));
+    expect(
+      screen.getByRole("link", { name: /학부모 포털 열기/ }),
+    ).toHaveAttribute("href", "/parent/feedback");
+    expect(screen.queryByText(/시험 DB 연결 화면 열기/)).not.toBeInTheDocument();
+  });
+
   it("keeps learning weekly while attendance switches by calendar month", () => {
     render(<IntegratedGrowthPrototype />);
 

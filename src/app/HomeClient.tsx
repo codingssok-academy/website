@@ -9,6 +9,7 @@ import LivePulseSection from "@/components/sections/LivePulseSection";
 import TechMarquee from "@/components/sections/TechMarquee";
 import WhyUs from "@/components/sections/WhyUs";
 import Philosophy from "@/components/sections/Philosophy";
+import GrowthExperience from "@/components/sections/GrowthExperience";
 import PromoShowcase from "@/components/sections/PromoShowcase";
 import Teachers from "@/components/sections/Teachers";
 import Curriculum from "@/components/sections/Curriculum";
@@ -40,6 +41,7 @@ export function HomeClient() {
             <TechMarquee />
             <WhyUs />
             <Philosophy />
+            <GrowthExperience />
             <PromoShowcase />
             <LiveStudySection />
             <Teachers />

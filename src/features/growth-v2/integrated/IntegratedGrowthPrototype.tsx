@@ -124,6 +124,7 @@ const ROLE_OPTIONS: Array<{
   description: string;
   icon: LucideIcon;
   liveHref: string;
+  portalHref: string;
 }> = [
   {
     id: "teacher",
@@ -131,6 +132,7 @@ const ROLE_OPTIONS: Array<{
     description: "작성·미리보기·공개",
     icon: ClipboardList,
     liveHref: "/growth-preview/teacher-local",
+    portalHref: "/teacher/login",
   },
   {
     id: "student",
@@ -138,6 +140,7 @@ const ROLE_OPTIONS: Array<{
     description: "성장 확인·다음 목표",
     icon: Rocket,
     liveHref: "/growth-preview/student-local",
+    portalHref: "/login",
   },
   {
     id: "parent",
@@ -145,6 +148,7 @@ const ROLE_OPTIONS: Array<{
     description: "주간 리포트·대화 도움",
     icon: Heart,
     liveHref: "/growth-preview/parent-local",
+    portalHref: "/parent/feedback",
   },
 ];
 
@@ -741,7 +745,11 @@ function ParentView({
   );
 }
 
-export function IntegratedGrowthPrototype() {
+export function IntegratedGrowthPrototype({
+  mode = "preview",
+}: {
+  mode?: "preview" | "homepage";
+}) {
   const [activeRole, setActiveRole] = useState<PreviewRole>("teacher");
   const [selectedAttendanceMonth, setSelectedAttendanceMonth] =
     useState<AttendanceMonthId>("2026-08");
@@ -751,6 +759,8 @@ export function IntegratedGrowthPrototype() {
     () => ROLE_OPTIONS.find((role) => role.id === activeRole) ?? ROLE_OPTIONS[0],
     [activeRole],
   );
+  const isHomepage = mode === "homepage";
+  const activeHref = isHomepage ? activeRoleInfo.portalHref : activeRoleInfo.liveHref;
 
   return (
     <div className={styles.prototype}>
@@ -758,11 +768,13 @@ export function IntegratedGrowthPrototype() {
         <div className={styles.prototypeTitle}>
           <Brand />
           <div>
-            <span>홈페이지 통합형 UI/UX 시안</span>
+            <span>{isHomepage ? "코딩쏙 성장관리 기능 미리보기" : "홈페이지 통합형 UI/UX 시안"}</span>
             <p>선생님이 기록하고, 학생과 학부모가 같은 성장을 확인하는 흐름</p>
           </div>
         </div>
-        <span className={styles.mockBadge}>가상 데이터 · 실제 저장 없음</span>
+        <span className={styles.mockBadge}>
+          {isHomepage ? "기능 미리보기 · 입력 내용 저장 안 됨" : "가상 데이터 · 실제 저장 없음"}
+        </span>
       </header>
 
       <nav className={styles.roleSwitcher} role="tablist" aria-label="역할별 통합 시안 전환">
@@ -790,11 +802,17 @@ export function IntegratedGrowthPrototype() {
       <div className={styles.roleContext}>
         <div>
           <span>{activeRoleInfo.label} 화면</span>
-          <p>{activeRoleInfo.description} 흐름을 코딩쏙 기존 메뉴 안에서 확인하는 시안입니다.</p>
+          <p>
+            {isHomepage
+              ? `${activeRoleInfo.description} 기능을 살펴보고 전용 포털로 이동할 수 있습니다.`
+              : `${activeRoleInfo.description} 흐름을 코딩쏙 기존 메뉴 안에서 확인하는 시안입니다.`}
+          </p>
         </div>
-        <Link href={activeRoleInfo.liveHref}>
+        <Link href={activeHref}>
           <LockKeyhole size={15} aria-hidden="true" />
-          {activeRoleInfo.label} 시험 DB 연결 화면 열기
+          {isHomepage
+            ? `${activeRoleInfo.label} 포털 열기`
+            : `${activeRoleInfo.label} 시험 DB 연결 화면 열기`}
           <ArrowRight size={15} aria-hidden="true" />
         </Link>
       </div>
