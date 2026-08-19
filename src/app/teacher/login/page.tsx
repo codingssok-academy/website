@@ -3,7 +3,6 @@ import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { isTeacherContactEmail, TEACHER_DISPLAY_NAME } from "@/lib/auth-bridge";
 
 /* ═══════════════════════════════════════
    코딩쏙 관리자 로그인 — 다크 테마
@@ -47,26 +46,15 @@ export default function TeacherLogin() {
                 return;
             }
 
-            const signedInEmail = authData.user.email || email.trim();
             const { data: profile } = await supabase
                 .from("profiles")
                 .select("role")
                 .eq("id", authData.user.id)
                 .maybeSingle();
 
-            const canBootstrapTeacher = isTeacherContactEmail(signedInEmail);
             const hasTeacherRole = profile?.role === "teacher" || profile?.role === "admin";
 
-            if (!hasTeacherRole && canBootstrapTeacher) {
-                await supabase
-                    .from("profiles")
-                    .update({
-                        name: TEACHER_DISPLAY_NAME,
-                        display_name: `${TEACHER_DISPLAY_NAME} 선생님`,
-                        role: "teacher",
-                    })
-                    .eq("id", authData.user.id);
-            } else if (!hasTeacherRole) {
+            if (!hasTeacherRole) {
                 await supabase.auth.signOut();
                 setError("선생님 권한이 없는 계정입니다.");
                 setLoading(false);

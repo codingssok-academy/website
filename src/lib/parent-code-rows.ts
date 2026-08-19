@@ -44,7 +44,7 @@ export type ParentCodeRow = {
 };
 
 function isReservedAdminName(name: string) {
-    return ["구자현", "장민"].includes(name.trim().replace(/\s+/g, ""));
+    return name.trim().replace(/\s+/g, "") === "장민";
 }
 
 export function normalizeParentCodePin(input: unknown) {

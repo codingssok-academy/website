@@ -83,11 +83,6 @@ export function getTrackTitle(track: GrowthTrackId) {
     return titles[track];
 }
 
-export function isGrowthOsAdminName(name?: string | null) {
-    const normalized = (name ?? "").replace(/\s/g, "").toLowerCase();
-    return ["구자현", "gujahyeon", "gujahyun", "jahyeon"].includes(normalized);
-}
-
 export function readLocalTrackAssignments(): LocalTrackAssignment[] {
     if (typeof window === "undefined") return [];
 

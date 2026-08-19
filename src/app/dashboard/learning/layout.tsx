@@ -336,7 +336,7 @@ function LeftSidebar({ progress, addXP, hasLive }: { progress: import("@/hooks/u
                                 관리자 전용
                             </div>
                             <p style={{ margin: "10px 0 0", fontSize: 12, lineHeight: 1.6, color: "#475569", fontWeight: 600 }}>
-                                구자현 계정은 학생 학습 플랫폼이 아니라 트랙 배정과 관리자 페이지로만 이동합니다.
+                                관리자 계정은 학생 학습 플랫폼이 아니라 트랙 배정과 관리자 페이지로만 이동합니다.
                             </p>
                         </div>
                     </div>
@@ -408,11 +408,11 @@ function LeftSidebar({ progress, addXP, hasLive }: { progress: import("@/hooks/u
                                 {user?.name || "학생"}
                             </div>
                             <div style={{ fontSize: 10, color: "#94a3b8", fontWeight: 500 }}>
-                                {user?.role === "teacher" || ["구담당자", "장민"].includes(user?.name || "") ? "관리자" : "학생"}
+                                {user?.role === "teacher" || (user?.role as string) === "admin" || user?.name === "장민" ? "관리자" : "학생"}
                             </div>
                         </div>
-                        {/* 관리자 페이지 버튼 — 구담당자/장민만 */}
-                        {(user?.role === "teacher" || ["구담당자", "장민"].includes(user?.name || "")) && (
+                        {/* 관리자 페이지 버튼 */}
+                        {(user?.role === "teacher" || (user?.role as string) === "admin" || user?.name === "장민") && (
                             <Link
                                 href="/teacher/admin"
                                 title="관리자 페이지"
