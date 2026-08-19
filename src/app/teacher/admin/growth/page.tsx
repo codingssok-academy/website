@@ -132,6 +132,7 @@ function hasGrowthContent(record: GrowthRecord | undefined) {
         || safeText(record.weaknesses)
         || safeText(record.current_goal)
         || safeText(record.next_class_potential)
+        || safeText(record.class_progress)
         || safeText(record.parent_feedback_draft)
         || safeText(record.teacher_memo),
     );
@@ -204,7 +205,8 @@ function buildParentCopy(form: FormState) {
         `[코딩쏙] ${form.studentName || "학생"} 성장 피드백`,
         "",
         `현재 반: ${form.currentClass || "-"}`,
-        `현재 목표: ${form.currentGoal || "-"}`,
+        `배운 개념·수업 내용: ${form.classProgress || "-"}`,
+        `다음 수업 목표: ${form.currentGoal || "-"}`,
         "",
         `잘하는 점: ${form.strengths || "-"}`,
         `보완할 점: ${form.weaknesses || "-"}`,
@@ -244,6 +246,19 @@ export default function GrowthManagementPage() {
     const selectedStudent = useMemo(() => students.find(student => student.id === selectedId), [selectedId, students]);
     const selectedRecord = selectedId ? recordByStudent.get(selectedId) : undefined;
     const selectedEntries = selectedId ? entriesByStudent.get(selectedId) || [] : [];
+    const summary = useMemo(() => {
+        const recorded = records.filter(record => hasGrowthContent(record)).length;
+        const ready = records.filter(record => {
+            const status = safeText(record.status);
+            return status.includes("전달") || status.includes("완료");
+        }).length;
+        return {
+            total: students.length,
+            recorded,
+            pending: Math.max(students.length - recorded, 0),
+            ready,
+        };
+    }, [records, students.length]);
 
     const filteredStudents = useMemo(() => {
         const normalizedQuery = query.trim().replace(/\s+/g, "");
@@ -414,7 +429,7 @@ export default function GrowthManagementPage() {
     };
 
     const exportCsv = () => {
-        const header = ["이름", "반", "학교", "학년", "관리상태", "반이동가능성", "현재 목표", "잘하는 점", "보완할 점"];
+        const header = ["이름", "반", "학교", "학년", "관리상태", "반이동가능성", "배운 개념·수업 내용", "다음 수업 목표", "잘한 점", "보완할 점"];
         const rows = filteredStudents.map(student => {
             const record = recordByStudent.get(student.id);
             const classLabel = getClassLabel(student, record);
@@ -425,6 +440,7 @@ export default function GrowthManagementPage() {
                 student.grade || "",
                 record?.status || "",
                 record?.next_class_potential || "",
+                record?.class_progress || "",
                 record?.current_goal || "",
                 record?.strengths || "",
                 record?.weaknesses || "",
@@ -487,9 +503,12 @@ export default function GrowthManagementPage() {
             <section className="growth-main">
                 <header className="growth-header">
                     <div>
-                        <div className="eyebrow">성장 관리</div>
-                        <h1>학생 성장 관리표</h1>
-                        <p>학생별 현재 반, 목표, 잘하는 점과 보완할 점을 한 화면에서 관리합니다. 입력 내용은 자동 저장됩니다.</p>
+                        <div className="eyebrow">CODINGSSOK GROWTH 2.0</div>
+                        <div className="title-line">
+                            <h1>Growth 2.0 성장관리</h1>
+                            <span className="live-badge">실제 DB 연동</span>
+                        </div>
+                        <p>기존 성장관리표를 유지하면서 배운 내용, 잘한 점, 보완할 점과 다음 목표를 한 흐름으로 기록합니다.</p>
                     </div>
                     <div className="header-actions">
                         <span className={`save-state ${saveState}`}>{saveLabel}</span>
@@ -504,6 +523,13 @@ export default function GrowthManagementPage() {
                     </div>
                 )}
                 {message && <div className={`notice ${message.type}`}>{message.text}</div>}
+
+                <section className="growth-summary" aria-label="Growth 2.0 성장관리 현황">
+                    <article><span>전체 학생</span><strong>{summary.total}</strong><small>운영 학생 명단</small></article>
+                    <article><span>성장 기록 있음</span><strong>{summary.recorded}</strong><small>현재 기록 보유</small></article>
+                    <article><span>기록 미작성</span><strong>{summary.pending}</strong><small>첫 기록 필요</small></article>
+                    <article><span>전달 준비·완료</span><strong>{summary.ready}</strong><small>학부모 공유 단계</small></article>
+                </section>
 
                 <section className="filters">
                     <div className="track-filter">
@@ -536,8 +562,9 @@ export default function GrowthManagementPage() {
                         <span>학년</span>
                         <span>관리상태</span>
                         <span>반이동가능성</span>
-                        <span>현재 목표</span>
-                        <span>잘하는 점</span>
+                        <span>배운 내용</span>
+                        <span>다음 목표</span>
+                        <span>잘한 점</span>
                         <span>보완할 점</span>
                     </div>
                     {filteredStudents.map(student => {
@@ -568,6 +595,7 @@ export default function GrowthManagementPage() {
                                 <span>
                                     <em className={`move-badge ${moveTone(moveStatus)}`}>{moveStatus}</em>
                                 </span>
+                                <span className="long-cell">{compact(record?.class_progress, 72)}</span>
                                 <span className="long-cell">{compact(record?.current_goal, 72)}</span>
                                 <span className="long-cell">{compact(record?.strengths, 72)}</span>
                                 <span className="long-cell">{compact(record?.weaknesses, 72)}</span>
@@ -589,6 +617,12 @@ export default function GrowthManagementPage() {
                             <strong className={`save-state ${saveState}`}>{saveLabel}</strong>
                         </div>
 
+                        <div className="growth-workflow" aria-label="성장 기록 작성 순서">
+                            <span className="complete"><b>1</b>학생 선택</span>
+                            <span className={hasGrowthContent(selectedRecord) || saveState !== "idle" ? "complete" : ""}><b>2</b>성장 내용 작성</span>
+                            <span className={selectedEntries.length ? "complete" : ""}><b>3</b>누적 기록 남기기</span>
+                        </div>
+
                         <div className="form-grid">
                             <Field label="현재 반">
                                 <select value={form.currentClass} onChange={event => updateForm("currentClass", event.target.value)}>
@@ -606,16 +640,24 @@ export default function GrowthManagementPage() {
                                     {MOVE_OPTIONS.map(item => <option key={item} value={item}>{item}</option>)}
                                 </select>
                             </Field>
-                            <Field label="현재 목표">
+                            <Field label="배운 개념·수업 내용">
+                                <textarea
+                                    className="large-textarea"
+                                    value={form.classProgress}
+                                    onChange={event => updateForm("classProgress", event.target.value)}
+                                    placeholder="예: for 반복문, 조건 비교, 오류 찾기처럼 선생님이 직접 작성해주세요."
+                                />
+                            </Field>
+                            <Field label="다음 수업 목표">
                                 <textarea value={form.currentGoal} onChange={event => updateForm("currentGoal", event.target.value)} />
                             </Field>
-                            <Field label="잘하는 점">
+                            <Field label="잘한 점">
                                 <textarea value={form.strengths} onChange={event => updateForm("strengths", event.target.value)} />
                             </Field>
                             <Field label="보완할 점">
                                 <textarea value={form.weaknesses} onChange={event => updateForm("weaknesses", event.target.value)} />
                             </Field>
-                            <Field label="학부모 전달사항">
+                            <Field label="학부모 전달 문구">
                                 <textarea className="large-textarea" value={form.parentFeedbackDraft} onChange={event => updateForm("parentFeedbackDraft", event.target.value)} />
                             </Field>
                             <Field label="내부 메모">
@@ -630,7 +672,7 @@ export default function GrowthManagementPage() {
                             <button className="outline" onClick={copyFeedback}>피드백 복사</button>
                             <button className="danger" onClick={removeRecord} disabled={!selectedRecord}>기록 초기화</button>
                             <button className="primary" onClick={() => void submit("entry")} disabled={saving || migrationRequired}>
-                                기록 남기기
+                                이번 주 기록 남기기
                             </button>
                         </div>
 
@@ -687,6 +729,26 @@ export default function GrowthManagementPage() {
                     color: #6b7280;
                     font-size: 14px;
                     font-weight: 600;
+                    max-width: 760px;
+                    line-height: 1.6;
+                }
+                .title-line {
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    flex-wrap: wrap;
+                }
+                .live-badge {
+                    display: inline-flex;
+                    align-items: center;
+                    min-height: 26px;
+                    padding: 0 10px;
+                    border-radius: 999px;
+                    border: 1px solid #bbf7d0;
+                    background: #ecfdf5;
+                    color: #047857;
+                    font-size: 11px;
+                    font-weight: 950;
                 }
                 .header-actions {
                     display: flex;
@@ -740,6 +802,35 @@ export default function GrowthManagementPage() {
                 .notice.error { color: #b91c1c; background: #fef2f2; border-color: #fecaca; }
                 .notice.ok { color: #047857; background: #ecfdf5; border-color: #bbf7d0; }
                 .notice.info { color: #475569; background: #f8fafc; border-color: #d9e1ec; }
+                .growth-summary {
+                    display: grid;
+                    grid-template-columns: repeat(4, minmax(0, 1fr));
+                    gap: 10px;
+                    margin-bottom: 14px;
+                }
+                .growth-summary article {
+                    min-width: 0;
+                    border: 1px solid #dbe7f5;
+                    border-radius: 12px;
+                    background: rgba(255, 255, 255, .9);
+                    padding: 14px 16px;
+                    box-shadow: 0 10px 28px rgba(37, 99, 235, .05);
+                }
+                .growth-summary span,
+                .growth-summary small {
+                    display: block;
+                    color: #64748b;
+                    font-size: 11px;
+                    font-weight: 850;
+                }
+                .growth-summary strong {
+                    display: block;
+                    margin: 5px 0 3px;
+                    color: #172554;
+                    font-size: 24px;
+                    line-height: 1;
+                    font-weight: 950;
+                }
                 .filters {
                     display: grid;
                     grid-template-columns: minmax(0, 1fr) 280px;
@@ -791,14 +882,14 @@ export default function GrowthManagementPage() {
                     border-radius: 10px;
                     overflow: auto;
                     box-shadow: 0 18px 42px rgba(15, 23, 42, 0.08);
-                    max-height: calc(100vh - 215px);
+                    max-height: calc(100vh - 320px);
                 }
                 .table-head, .student-row {
                     display: grid;
-                    grid-template-columns: 90px 116px 138px 76px 112px 126px minmax(190px, 1fr) minmax(190px, 1fr) minmax(190px, 1fr);
+                    grid-template-columns: 90px 116px 138px 76px 112px 126px minmax(190px, 1fr) minmax(190px, 1fr) minmax(190px, 1fr) minmax(190px, 1fr);
                     gap: 10px;
                     align-items: center;
-                    min-width: 1280px;
+                    min-width: 1480px;
                 }
                 .table-head {
                     position: sticky;
@@ -972,6 +1063,47 @@ export default function GrowthManagementPage() {
                     margin-bottom: 5px;
                 }
                 .detail-head h2 { font-size: 24px; letter-spacing: 0; }
+                .growth-workflow {
+                    display: grid;
+                    grid-template-columns: repeat(3, minmax(0, 1fr));
+                    gap: 6px;
+                    margin-bottom: 14px;
+                }
+                .growth-workflow span {
+                    min-width: 0;
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    border: 1px solid #e2e8f0;
+                    border-radius: 9px;
+                    background: #f8fafc;
+                    color: #64748b;
+                    padding: 8px;
+                    font-size: 10px;
+                    font-weight: 900;
+                    line-height: 1.25;
+                }
+                .growth-workflow span.complete {
+                    border-color: #bfdbfe;
+                    background: #eff6ff;
+                    color: #1d4ed8;
+                }
+                .growth-workflow b {
+                    flex: 0 0 auto;
+                    width: 20px;
+                    height: 20px;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    border-radius: 999px;
+                    background: #e2e8f0;
+                    color: #475569;
+                    font-size: 10px;
+                }
+                .growth-workflow .complete b {
+                    background: #2563eb;
+                    color: #fff;
+                }
                 .form-grid { display: grid; gap: 12px; }
                 label {
                     display: grid;
@@ -1016,14 +1148,22 @@ export default function GrowthManagementPage() {
                     .detail-panel { position: static; height: auto; }
                     .matrix-card { max-height: 62vh; }
                 }
+                @media (max-width: 1040px) {
+                    .growth-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+                }
                 @media (max-width: 820px) {
                     .growth-header { flex-direction: column; }
                     .filters { grid-template-columns: 1fr; }
                     .table-head, .student-row {
-                        min-width: 1180px;
-                        grid-template-columns: 82px 104px 122px 70px 108px 120px minmax(170px, 1fr) minmax(170px, 1fr) minmax(170px, 1fr);
+                        min-width: 1380px;
+                        grid-template-columns: 82px 104px 122px 70px 108px 120px minmax(170px, 1fr) minmax(170px, 1fr) minmax(170px, 1fr) minmax(170px, 1fr);
                     }
                     .detail-actions { grid-template-columns: 1fr; }
+                }
+                @media (max-width: 520px) {
+                    .growth-summary { grid-template-columns: 1fr 1fr; }
+                    .growth-summary article { padding: 12px; }
+                    .growth-workflow { grid-template-columns: 1fr; }
                 }
             `}</style>
         </div>
