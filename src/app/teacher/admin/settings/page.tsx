@@ -30,7 +30,6 @@ export default function SettingsPage() {
     const [accountLoading, setAccountLoading] = useState(false);
     const [accountSaving, setAccountSaving] = useState(false);
     const [passwordSaving, setPasswordSaving] = useState(false);
-    const [formerAdminRemoving, setFormerAdminRemoving] = useState(false);
     const [accountMsg, setAccountMsg] = useState<{ ok: boolean; text: string } | null>(null);
     const [passwordMsg, setPasswordMsg] = useState<{ ok: boolean; text: string } | null>(null);
     const [warning, setWarning] = useState("");
@@ -88,31 +87,6 @@ export default function SettingsPage() {
         } catch (err: unknown) {
             setPasswordMsg({ ok: false, text: `오류: ${err instanceof Error ? err.message : String(err)}` });
         } finally { setPasswordSaving(false); }
-    };
-
-    const removeFormerAdministrator = async () => {
-        if (!window.confirm("구자현 관리자 계정 3개를 모두 삭제합니다. 계속하시겠습니까?")) return;
-
-        setFormerAdminRemoving(true);
-        setAccountMsg(null);
-        try {
-            const res = await fetch("/api/teacher/account", {
-                method: "DELETE",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    action: "removeFormerAdministrator",
-                    confirmationName: "구자현",
-                }),
-            });
-            const result = await res.json();
-            if (!res.ok || !result.success) throw new Error(result.error || "계정 삭제 실패");
-            setAccountMsg({ ok: true, text: result.message || "구자현 관리자 계정을 삭제했습니다." });
-            await loadAccount();
-        } catch (err: unknown) {
-            setAccountMsg({ ok: false, text: `오류: ${err instanceof Error ? err.message : String(err)}` });
-        } finally {
-            setFormerAdminRemoving(false);
-        }
     };
 
     const inputStyle: React.CSSProperties = {
@@ -243,20 +217,6 @@ export default function SettingsPage() {
                             </div>
                         ))}
                     </div>
-                    {accounts.some(acc => (acc.display_name || acc.name || "").startsWith("구자현")) && (
-                        <button
-                            onClick={removeFormerAdministrator}
-                            disabled={formerAdminRemoving}
-                            style={{
-                                marginTop: 16, padding: "10px 16px", borderRadius: 10,
-                                border: "1px solid #fecaca", background: "#fff1f2",
-                                color: "#be123c", fontSize: 12, fontWeight: 700,
-                                cursor: formerAdminRemoving ? "not-allowed" : "pointer",
-                            }}
-                        >
-                            {formerAdminRemoving ? "삭제 중..." : "구자현 이전 관리자 계정 삭제"}
-                        </button>
-                    )}
                 </div>
             )}
         </div>
