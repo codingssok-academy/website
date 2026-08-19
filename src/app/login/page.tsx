@@ -168,30 +168,26 @@ export default function LoginPage() {
 
     try {
       const sb = createClient();
+      const response = await fetch("/api/student/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: trimmed, pin }),
+      });
+      const result = await response.json().catch(() => null);
 
-      // 로그인은 이미 가입된 학생 계정만 허용한다. 새 학생은 회원가입에서 학부모 인증번호를 먼저 확인한다.
-      const { data: matched, error } = await sb
-        .from("students")
-        .select("id, name, school, grade, class, avatar, auth_user_id, status")
-        .eq("name", trimmed)
-        .maybeSingle();
-
-      if (error) throw error;
-
-      if (!matched) {
-        setMsg({ ok: false, text: "등록된 학생 계정이 없습니다. 처음이라면 회원가입을 눌러 학부모 인증번호를 확인해주세요." });
-        setSignupOpen(true);
-        return;
+      if (!response.ok || !result?.success || !result?.student || !result?.session) {
+        throw new Error(result?.error || "로그인 정보를 확인하지 못했습니다.");
       }
 
-      if ((matched as StudentRow).status === "deactivated") {
-        setMsg({ ok: false, text: "비활성화된 계정입니다. 선생님에게 문의해주세요." });
-        return;
+      const sessionResult = await sb.auth.setSession(result.session);
+      const authUser = sessionResult.data.user;
+      if (sessionResult.error || !authUser) {
+        throw new Error("로그인 세션을 저장하지 못했습니다.");
       }
 
-      const authUserId = await signInStudentAuth(sb, matched as StudentRow, pin);
+      const matched = result.student as StudentRow;
       clearLoginAttempts();
-      loginAs(matched as StudentRow, authUserId);
+      loginAs(matched, authUser.id);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       if (process.env.NODE_ENV === 'development') console.error("[Login] error:", err);
@@ -243,7 +239,7 @@ export default function LoginPage() {
   /* ── 로그인 처리 ── */
   const loginAs = (student: StudentRow, authUserId: string) => {
     const isAdminStudent = student.class?.replace(/\s+/g, "").toLowerCase() === "admin"
-      || ["구자현", "장민"].includes(student.name.replace(/\s+/g, ""));
+      || student.name.replace(/\s+/g, "") === "장민";
     const profile = {
       id: authUserId,
       studentId: student.id,

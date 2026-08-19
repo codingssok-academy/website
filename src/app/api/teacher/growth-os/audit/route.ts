@@ -70,7 +70,7 @@ function isKnownTrack(value: unknown) {
 function isGrowthAdminStudent(row: DbRow) {
     const name = normalizeName(readText(row, "name"));
     const className = normalizeName(readText(row, "class"));
-    return className === "admin" || ["구자현", "장민", "gujahyeon", "gujahyun", "jahyeon"].includes(name);
+    return className === "admin" || ["장민", "jangmin"].includes(name);
 }
 
 function isMissingOptionalTableError(error: string | null) {

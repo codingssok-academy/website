@@ -77,7 +77,7 @@ function isApprovedAdminStudent(row: { name?: string | null; class?: string | nu
     if (!row || row.status === 'deactivated') return false
     const name = normalizeAdminName(row.name)
     const className = normalizeAdminName(row.class)
-    return className === 'admin' || ['구자현', '장민', 'gujahyeon', 'gujahyun', 'jahyeon', 'jangmin'].includes(name)
+    return className === 'admin' || ['장민', 'jangmin'].includes(name)
 }
 
 async function isApprovedAdminUser(

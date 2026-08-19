@@ -287,7 +287,7 @@ export default function LearningDashboard() {
     }
 
     const normalizedUserName = (user?.name || "").replace(/\s+/g, "");
-    const isAdminUser = user?.role === "teacher" || (user?.role as string) === "admin" || ["구자현", "장민"].includes(normalizedUserName);
+    const isAdminUser = user?.role === "teacher" || (user?.role as string) === "admin" || normalizedUserName === "장민";
 
     return (
         <div className={`pg${ready ? " rdy" : ""}`}>

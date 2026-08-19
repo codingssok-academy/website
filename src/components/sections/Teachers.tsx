@@ -3,17 +3,6 @@
 import { useRef } from "react";
 import { motion, useInView } from "framer-motion";
 
-/* ── SVG Icons (Material Symbols style) ── */
-function CodeIcon() {
-    return (
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M8 6L2 12l6 6" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M16 6l6 6-6 6" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M14.5 4l-5 16" stroke="#2563EB" strokeWidth="1.5" strokeLinecap="round" opacity="0.5" />
-        </svg>
-    );
-}
-
 function EducationIcon() {
     return (
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -42,24 +31,6 @@ function QuoteIcon() {
 }
 
 const teachers = [
-    {
-        id: "goo",
-        name: "구자현 선생님",
-        role: "소프트웨어 강사",
-        roleLabel: "INSTRUCTOR",
-        tagline: "AI 개발 · IoT · 하드웨어",
-        IconComponent: CodeIcon,
-        skills: [
-            "실무 개발자 출신",
-            "AI 개발 및 활용 전문",
-            "하드웨어 및 마이크로프로세서 설계/제작",
-            "IoT 시스템 개발",
-            "관련 자격증 다수 보유",
-            "학생 맞춤 1:1 코드 리뷰",
-        ],
-        quote: "코드를 외우는 게 아니라\n생각하는 법을 가르칩니다",
-        initials: "구",
-    },
     {
         id: "jang",
         name: "장민 원장님",
@@ -393,11 +364,11 @@ export default function Teachers() {
                     className="teachers-grid"
                     style={{
                         display: "grid",
-                        gridTemplateColumns: "repeat(2, 1fr)",
+                        gridTemplateColumns: "1fr",
                         gap: "clamp(20px, 3vw, 36px)",
                         position: "relative",
                         zIndex: 1,
-                        maxWidth: 960,
+                        maxWidth: 480,
                         margin: "0 auto",
                     }}
                 >

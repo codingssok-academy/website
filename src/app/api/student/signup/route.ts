@@ -29,7 +29,7 @@ function normalizeName(input: unknown) {
 }
 
 function getAccountRoleForName(name: string) {
-    return ["구자현", "장민"].includes(normalizeName(name)) ? "admin" : "student";
+    return normalizeName(name) === "장민" ? "admin" : "student";
 }
 
 function normalizeParentCode(input: unknown) {
