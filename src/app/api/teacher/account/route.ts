@@ -9,7 +9,6 @@ type TeacherProfile = {
     name: string | null
     display_name: string | null
 }
-
 async function requireTeacher() {
     const supabase = await createClient()
     const {
@@ -110,7 +109,6 @@ export async function GET() {
         )
     }
 }
-
 export async function PATCH(request: NextRequest) {
     try {
         const context = await requireTeacher()
@@ -201,112 +199,3 @@ export async function POST(request: NextRequest) {
     }
 }
 
-export async function DELETE(request: NextRequest) {
-    try {
-        const context = await requireTeacher()
-        if ('error' in context) return context.error
-
-        if (context.profile.role !== 'admin') {
-            return NextResponse.json(
-                { success: false, error: '관리자 계정만 이전 관리자 계정을 삭제할 수 있습니다.' },
-                { status: 403 },
-            )
-        }
-
-        const payload = await request.json().catch(() => ({}))
-        if (payload?.action !== 'removeFormerAdministrator' || payload?.confirmationName !== '구자현') {
-            return NextResponse.json(
-                { success: false, error: '삭제 확인 정보가 올바르지 않습니다.' },
-                { status: 400 },
-            )
-        }
-
-        const admin = context.adminClient
-        if (!admin) {
-            return NextResponse.json(
-                { success: false, error: '운영 계정 관리 설정을 확인해주세요.' },
-                { status: 503 },
-            )
-        }
-
-        const [{ data: profiles, error: profileReadError }, { data: students, error: studentReadError }] =
-            await Promise.all([
-                admin
-                    .from('profiles')
-                    .select('id,name,display_name,email,role')
-                    .or('name.eq.구자현,display_name.eq.구자현'),
-                admin
-                    .from('students')
-                    .select('id,name,auth_user_id,class,status')
-                    .eq('name', '구자현'),
-            ])
-
-        if (profileReadError || studentReadError) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    error: profileReadError?.message || studentReadError?.message || '삭제 대상을 확인하지 못했습니다.',
-                },
-                { status: 500 },
-            )
-        }
-
-        const targetAuthIds = new Set<string>()
-        for (const profile of profiles || []) targetAuthIds.add(profile.id)
-        for (const student of students || []) {
-            if (student.auth_user_id) targetAuthIds.add(student.auth_user_id)
-        }
-
-        const allProfilesAreAdmins = (profiles || []).every(profile => profile.role === 'admin')
-        const allStudentsAreAdmins = (students || []).every(student => student.class === 'admin')
-        if (targetAuthIds.size !== 3 || !allProfilesAreAdmins || !allStudentsAreAdmins) {
-            return NextResponse.json(
-                { success: false, error: '확인된 삭제 대상이 예상한 구자현 관리자 계정 3개와 일치하지 않습니다.' },
-                { status: 409 },
-            )
-        }
-
-        if (targetAuthIds.has(context.user.id)) {
-            return NextResponse.json(
-                { success: false, error: '현재 로그인한 관리자 계정은 삭제할 수 없습니다.' },
-                { status: 400 },
-            )
-        }
-
-        for (const userId of targetAuthIds) {
-            const { error } = await admin.auth.admin.deleteUser(userId)
-            if (error) {
-                return NextResponse.json({ success: false, error: error.message }, { status: 500 })
-            }
-        }
-
-        const { error: studentDeleteError } = await admin.from('students').delete().eq('name', '구자현')
-        if (studentDeleteError) {
-            return NextResponse.json({ success: false, error: studentDeleteError.message }, { status: 500 })
-        }
-
-        const { error: profileDeleteError } = await admin
-            .from('profiles')
-            .delete()
-            .or('name.eq.구자현,display_name.eq.구자현')
-        if (profileDeleteError) {
-            return NextResponse.json({ success: false, error: profileDeleteError.message }, { status: 500 })
-        }
-
-        return NextResponse.json({
-            success: true,
-            removedAuthAccounts: targetAuthIds.size,
-            removedStudentRows: (students || []).length,
-            removedProfileRows: (profiles || []).length,
-            message: '구자현 관리자 계정을 삭제했습니다.',
-        })
-    } catch (error) {
-        return NextResponse.json(
-            {
-                success: false,
-                error: error instanceof Error ? error.message : '계정 삭제 중 오류가 발생했습니다.',
-            },
-            { status: 500 },
-        )
-    }
-}
