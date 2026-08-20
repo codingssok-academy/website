@@ -34,9 +34,11 @@ describe("parent portal admin integration contract", () => {
     const migration = read("supabase/migrations/20260616_student_growth_management.sql");
 
     expect(sidebar).toContain("/teacher/admin/growth");
-    expect(sidebar).toContain("성장 관리표");
-    expect(page).toContain("학생 성장 관리표");
-    expect(page).toContain("학부모 전달사항");
+    expect(sidebar).toContain("Growth 2.0 성장관리");
+    expect(page).toContain("Growth 2.0 성장관리");
+    expect(page).toContain("배운 개념·수업 내용");
+    expect(page).toContain("학부모 전달 문구");
+    expect(page).toContain('updateForm("classProgress"');
     expect(page).toContain("/api/teacher/growth-management");
     expect(route).toContain("export async function GET");
     expect(route).toContain("export async function POST");

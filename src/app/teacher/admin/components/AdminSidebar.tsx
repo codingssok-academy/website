@@ -20,7 +20,7 @@ const NAV_ITEMS = [
     { href: "/teacher/admin", label: "학부모 코드 관리", icon: UserCog },
     { href: "/teacher/admin/students", label: "학생 계정 관리", icon: Users },
     { href: "/teacher/admin/files", label: "학생 파일함", icon: FolderOpen },
-    { href: "/teacher/admin/growth", label: "성장 관리표", icon: ClipboardList },
+    { href: "/teacher/admin/growth", label: "Growth 2.0 성장관리", icon: ClipboardList },
 ];
 
 export default function AdminSidebar() {
