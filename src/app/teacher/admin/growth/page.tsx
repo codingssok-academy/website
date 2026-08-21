@@ -60,6 +60,19 @@ type FormState = {
     recordStatus: string;
 };
 
+type EntryEditState = {
+    currentClass: string;
+    strengths: string;
+    weaknesses: string;
+    currentGoal: string;
+    nextClassPotential: string;
+    classProgress: string;
+    parentFeedbackDraft: string;
+    teacherMemo: string;
+    entryNote: string;
+    recordStatus: string;
+};
+
 const EMPTY_FORM: FormState = {
     studentId: "",
     studentName: "",
@@ -181,6 +194,21 @@ function newForm(student: StudentOption): FormState {
     };
 }
 
+function toEntryEdit(entry: GrowthEntry): EntryEditState {
+    return {
+        currentClass: entry.current_class || "",
+        strengths: entry.strengths || "",
+        weaknesses: entry.weaknesses || "",
+        currentGoal: entry.current_goal || "",
+        nextClassPotential: entry.next_class_potential || "",
+        classProgress: entry.class_progress || "",
+        parentFeedbackDraft: entry.parent_feedback_draft || "",
+        teacherMemo: entry.teacher_memo || "",
+        entryNote: entry.entry_note || "",
+        recordStatus: entry.status || "관찰중",
+    };
+}
+
 function snapshot(form: FormState) {
     const { entryNote: _entryNote, ...rest } = form;
     return JSON.stringify(rest);
@@ -225,6 +253,9 @@ export default function GrowthManagementPage() {
     const [track, setTrack] = useState("전체 반");
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
+    const [entryEdit, setEntryEdit] = useState<EntryEditState | null>(null);
+    const [entrySaving, setEntrySaving] = useState(false);
     const [saveState, setSaveState] = useState<"idle" | "dirty" | "saving" | "saved" | "error">("idle");
     const [migrationRequired, setMigrationRequired] = useState(false);
     const [message, setMessage] = useState<{ type: "ok" | "error" | "info"; text: string } | null>(null);
@@ -290,6 +321,8 @@ export default function GrowthManagementPage() {
         const record = sourceRecords.find(item => item.student_id === studentId);
         selectedIdRef.current = studentId;
         setSelectedId(studentId);
+        setEditingEntryId(null);
+        setEntryEdit(null);
         const nextForm = record ? toForm(record, student) : student ? newForm(student) : EMPTY_FORM;
         setForm(nextForm);
         lastSavedSnapshotRef.current = snapshot(nextForm);
@@ -299,6 +332,8 @@ export default function GrowthManagementPage() {
     const load = useCallback(async () => {
         setLoading(true);
         setMessage(null);
+        setEditingEntryId(null);
+        setEntryEdit(null);
         try {
             const response = await fetch("/api/teacher/growth-management", { cache: "no-store" });
             const data = await readApiJson(response);
@@ -395,6 +430,50 @@ export default function GrowthManagementPage() {
 
     const updateForm = (key: keyof FormState, value: string) => {
         setForm(prev => ({ ...prev, [key]: value }));
+    };
+
+    const startEntryEdit = (entry: GrowthEntry) => {
+        if (entry.student_id !== form.studentId) return;
+        setEditingEntryId(entry.id);
+        setEntryEdit(toEntryEdit(entry));
+        setMessage(null);
+    };
+
+    const cancelEntryEdit = () => {
+        setEditingEntryId(null);
+        setEntryEdit(null);
+    };
+
+    const updateEntryEdit = (key: keyof EntryEditState, value: string) => {
+        setEntryEdit(prev => prev ? { ...prev, [key]: value } : prev);
+    };
+
+    const saveEntryEdit = async () => {
+        if (!editingEntryId || !entryEdit || !form.studentId) return;
+
+        setEntrySaving(true);
+        try {
+            const response = await fetch("/api/teacher/growth-management", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    entryId: editingEntryId,
+                    studentId: form.studentId,
+                    ...entryEdit,
+                }),
+            });
+            const data = await readApiJson(response);
+            if (!response.ok || !data.success || !data.entry) throw new Error(data.error || "성장 기록 수정에 실패했습니다.");
+
+            setEntries(prev => prev.map(entry => entry.id === data.entry!.id ? data.entry! : entry));
+            setEditingEntryId(null);
+            setEntryEdit(null);
+            setMessage({ type: "ok", text: "선택한 누적 성장 기록을 수정했습니다." });
+        } catch (error) {
+            setMessage({ type: "error", text: error instanceof Error ? error.message : "성장 기록 수정에 실패했습니다." });
+        } finally {
+            setEntrySaving(false);
+        }
     };
 
     const removeRecord = async () => {
@@ -623,6 +702,11 @@ export default function GrowthManagementPage() {
                             <span className={selectedEntries.length ? "complete" : ""}><b>3</b>누적 기록 남기기</span>
                         </div>
 
+                        <div className="autosave-note">
+                            <strong>현재 기록</strong>
+                            <span>아래 내용을 바꾸면 자동 저장됩니다. 지난 기록은 누적 기록의 수정 버튼을 이용해주세요.</span>
+                        </div>
+
                         <div className="form-grid">
                             <Field label="현재 반">
                                 <select value={form.currentClass} onChange={event => updateForm("currentClass", event.target.value)}>
@@ -677,13 +761,131 @@ export default function GrowthManagementPage() {
                         </div>
 
                         <section className="history">
-                            <h3>누적 기록</h3>
-                            {selectedEntries.length ? selectedEntries.slice(0, 8).map(entry => (
-                                <article key={entry.id}>
-                                    <strong>{formatDate(entry.created_at)}</strong>
-                                    <p>{entry.entry_note || entry.class_progress || entry.parent_feedback_draft || "성장 기록 저장"}</p>
-                                </article>
-                            )) : <p className="muted">아직 누적 기록이 없습니다.</p>}
+                            <div className="history-title">
+                                <div>
+                                    <h3>누적 기록</h3>
+                                    <p>지난 기록을 확인하거나 필요한 부분만 다시 수정할 수 있습니다.</p>
+                                </div>
+                                <span>{selectedEntries.length}건</span>
+                            </div>
+                            {selectedEntries.length ? selectedEntries.slice(0, 8).map(entry => {
+                                const editDraft = editingEntryId === entry.id ? entryEdit : null;
+                                return (
+                                    <article key={entry.id} className={editDraft ? "editing" : ""}>
+                                        <div className="history-card-head">
+                                            <div>
+                                                <strong>{formatDate(entry.created_at)}</strong>
+                                                <em className={`status-badge ${statusTone(entry.status)}`}>{entry.status || "관찰중"}</em>
+                                            </div>
+                                            {!editDraft && (
+                                                <button className="history-edit-button" onClick={() => startEntryEdit(entry)}>
+                                                    기록 수정
+                                                </button>
+                                            )}
+                                        </div>
+
+                                        {editDraft ? (
+                                            <div className="history-edit-form">
+                                                <div className="history-edit-grid">
+                                                    <Field label="기록 당시 반">
+                                                        <select
+                                                            aria-label="누적 기록 당시 반 수정"
+                                                            value={editDraft.currentClass}
+                                                            onChange={event => updateEntryEdit("currentClass", event.target.value)}
+                                                        >
+                                                            <option value="">선택</option>
+                                                            {CLASS_OPTIONS.map(item => <option key={item} value={item}>{item}</option>)}
+                                                        </select>
+                                                    </Field>
+                                                    <Field label="관리 상태">
+                                                        <select
+                                                            aria-label="누적 기록 관리 상태 수정"
+                                                            value={editDraft.recordStatus}
+                                                            onChange={event => updateEntryEdit("recordStatus", event.target.value)}
+                                                        >
+                                                            {RECORD_STATUS_OPTIONS.map(item => <option key={item} value={item}>{item}</option>)}
+                                                        </select>
+                                                    </Field>
+                                                    <Field label="반 이동 가능성">
+                                                        <select
+                                                            aria-label="누적 기록 반 이동 가능성 수정"
+                                                            value={editDraft.nextClassPotential}
+                                                            onChange={event => updateEntryEdit("nextClassPotential", event.target.value)}
+                                                        >
+                                                            {MOVE_OPTIONS.map(item => <option key={item} value={item}>{item}</option>)}
+                                                        </select>
+                                                    </Field>
+                                                </div>
+                                                <Field label="기록 메모">
+                                                    <textarea
+                                                        aria-label="누적 기록 메모 수정"
+                                                        value={editDraft.entryNote}
+                                                        onChange={event => updateEntryEdit("entryNote", event.target.value)}
+                                                    />
+                                                </Field>
+                                                <Field label="배운 개념·수업 내용">
+                                                    <textarea
+                                                        aria-label="누적 기록 배운 개념·수업 내용 수정"
+                                                        value={editDraft.classProgress}
+                                                        onChange={event => updateEntryEdit("classProgress", event.target.value)}
+                                                    />
+                                                </Field>
+                                                <Field label="다음 수업 목표">
+                                                    <textarea
+                                                        aria-label="누적 기록 다음 수업 목표 수정"
+                                                        value={editDraft.currentGoal}
+                                                        onChange={event => updateEntryEdit("currentGoal", event.target.value)}
+                                                    />
+                                                </Field>
+                                                <Field label="잘한 점">
+                                                    <textarea
+                                                        aria-label="누적 기록 잘한 점 수정"
+                                                        value={editDraft.strengths}
+                                                        onChange={event => updateEntryEdit("strengths", event.target.value)}
+                                                    />
+                                                </Field>
+                                                <Field label="보완할 점">
+                                                    <textarea
+                                                        aria-label="누적 기록 보완할 점 수정"
+                                                        value={editDraft.weaknesses}
+                                                        onChange={event => updateEntryEdit("weaknesses", event.target.value)}
+                                                    />
+                                                </Field>
+                                                <Field label="학부모 전달 문구">
+                                                    <textarea
+                                                        aria-label="누적 기록 학부모 전달 문구 수정"
+                                                        value={editDraft.parentFeedbackDraft}
+                                                        onChange={event => updateEntryEdit("parentFeedbackDraft", event.target.value)}
+                                                    />
+                                                </Field>
+                                                <Field label="내부 메모">
+                                                    <textarea
+                                                        aria-label="누적 기록 내부 메모 수정"
+                                                        value={editDraft.teacherMemo}
+                                                        onChange={event => updateEntryEdit("teacherMemo", event.target.value)}
+                                                    />
+                                                </Field>
+                                                <div className="history-edit-actions">
+                                                    <button className="outline" onClick={cancelEntryEdit} disabled={entrySaving}>취소</button>
+                                                    <button className="primary" onClick={() => void saveEntryEdit()} disabled={entrySaving}>
+                                                        {entrySaving ? "저장 중..." : "수정 내용 저장"}
+                                                    </button>
+                                                </div>
+                                                <small className="history-edit-help">선택한 날짜의 누적 기록만 수정됩니다.</small>
+                                            </div>
+                                        ) : (
+                                            <div className="history-card-body">
+                                                <p className="history-summary">{entry.entry_note || entry.class_progress || entry.parent_feedback_draft || "성장 기록 저장"}</p>
+                                                <dl>
+                                                    <div><dt>배운 내용</dt><dd>{compact(entry.class_progress, 120)}</dd></div>
+                                                    <div><dt>다음 목표</dt><dd>{compact(entry.current_goal, 120)}</dd></div>
+                                                    <div><dt>잘한 점</dt><dd>{compact(entry.strengths, 120)}</dd></div>
+                                                </dl>
+                                            </div>
+                                        )}
+                                    </article>
+                                );
+                            }) : <p className="muted">아직 누적 기록이 없습니다.</p>}
                         </section>
                     </>
                 ) : (
@@ -1104,6 +1306,22 @@ export default function GrowthManagementPage() {
                     background: #2563eb;
                     color: #fff;
                 }
+                .autosave-note {
+                    display: grid;
+                    grid-template-columns: auto minmax(0, 1fr);
+                    gap: 8px;
+                    align-items: start;
+                    margin-bottom: 14px;
+                    border: 1px solid #dbeafe;
+                    border-radius: 9px;
+                    background: #eff6ff;
+                    padding: 10px 12px;
+                    color: #475569;
+                    font-size: 11px;
+                    font-weight: 750;
+                    line-height: 1.45;
+                }
+                .autosave-note strong { color: #1d4ed8; white-space: nowrap; }
                 .form-grid { display: grid; gap: 12px; }
                 label {
                     display: grid;
@@ -1133,16 +1351,98 @@ export default function GrowthManagementPage() {
                     border-top: 1px solid #e5edf6;
                     padding-top: 14px;
                 }
-                .history h3 { margin-bottom: 10px; font-size: 15px; }
+                .history-title {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: flex-start;
+                    gap: 12px;
+                    margin-bottom: 10px;
+                }
+                .history-title h3 { margin-bottom: 3px; font-size: 15px; }
+                .history-title p { color: #64748b; font-size: 11px; font-weight: 750; line-height: 1.45; }
+                .history-title > span {
+                    flex: 0 0 auto;
+                    border-radius: 999px;
+                    background: #eff6ff;
+                    color: #1d4ed8;
+                    padding: 4px 9px;
+                    font-size: 11px;
+                    font-weight: 900;
+                }
                 .history article {
                     border: 1px solid #e5edf6;
-                    border-radius: 8px;
-                    padding: 11px;
-                    margin-bottom: 8px;
-                    background: #f8fafc;
+                    border-radius: 10px;
+                    padding: 12px;
+                    margin-bottom: 10px;
+                    background: #fff;
+                    transition: border-color .16s ease, box-shadow .16s ease;
                 }
-                .history article strong { display: block; margin-bottom: 6px; font-size: 12px; color: #2563eb; }
-                .history article p, .muted { color: #64748b; font-size: 13px; line-height: 1.55; }
+                .history article.editing {
+                    border-color: #93c5fd;
+                    box-shadow: 0 12px 28px rgba(37, 99, 235, .10);
+                }
+                .history-card-head {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    gap: 10px;
+                    margin-bottom: 10px;
+                }
+                .history-card-head > div {
+                    min-width: 0;
+                    display: flex;
+                    align-items: center;
+                    gap: 7px;
+                }
+                .history-card-head strong { color: #2563eb; font-size: 12px; }
+                .history-edit-button {
+                    flex: 0 0 auto;
+                    min-height: 32px;
+                    border: 1px solid #bfdbfe;
+                    border-radius: 7px;
+                    background: #eff6ff;
+                    color: #1d4ed8;
+                    padding: 0 10px;
+                    font-size: 11px;
+                    font-weight: 900;
+                }
+                .history-summary {
+                    margin: 0;
+                    color: #334155;
+                    font-size: 13px;
+                    font-weight: 850;
+                    line-height: 1.55;
+                }
+                .history-card-body dl {
+                    display: grid;
+                    gap: 7px;
+                    margin-top: 10px;
+                }
+                .history-card-body dl div {
+                    display: grid;
+                    grid-template-columns: 62px minmax(0, 1fr);
+                    gap: 8px;
+                    align-items: start;
+                }
+                .history-card-body dt { color: #64748b; font-size: 11px; font-weight: 900; }
+                .history-card-body dd { color: #475569; font-size: 11px; font-weight: 750; line-height: 1.45; }
+                .history-edit-form { display: grid; gap: 11px; }
+                .history-edit-grid { display: grid; gap: 9px; }
+                .history-edit-form textarea { min-height: 82px; }
+                .history-edit-actions {
+                    display: grid;
+                    grid-template-columns: 1fr 1.4fr;
+                    gap: 8px;
+                    margin-top: 2px;
+                }
+                .history-edit-actions button { min-height: 40px; font-size: 12px; font-weight: 900; }
+                .history-edit-help { color: #64748b; font-size: 11px; font-weight: 750; text-align: right; }
+                .history article .status-badge {
+                    min-height: 22px;
+                    max-width: 100px;
+                    font-size: 10px;
+                }
+                .muted { color: #64748b; font-size: 13px; line-height: 1.55; }
                 @media (max-width: 1280px) {
                     .growth-page { grid-template-columns: 1fr; }
                     .detail-panel { position: static; height: auto; }

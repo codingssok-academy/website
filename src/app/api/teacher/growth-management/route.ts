@@ -197,6 +197,55 @@ export async function POST(request: NextRequest) {
     }
 }
 
+export async function PATCH(request: NextRequest) {
+    const auth = await requireTeacher();
+    if (!auth.ok) return auth.response;
+
+    const body = await request.json().catch(() => null) as Record<string, unknown> | null;
+    if (!body) {
+        return NextResponse.json({ success: false, error: "요청 본문이 올바르지 않습니다." }, { status: 400 });
+    }
+
+    const entryId = readString(body, "entryId", 120);
+    const studentId = readString(body, "studentId", 120);
+    if (!entryId || !studentId) {
+        return NextResponse.json({ success: false, error: "수정할 성장 기록을 찾지 못했습니다." }, { status: 400 });
+    }
+
+    const payload = {
+        current_class: readText(body, "currentClass", 120),
+        strengths: readText(body, "strengths"),
+        weaknesses: readText(body, "weaknesses"),
+        current_goal: readText(body, "currentGoal"),
+        next_class_potential: readText(body, "nextClassPotential", 500),
+        class_progress: readText(body, "classProgress"),
+        parent_feedback_draft: readText(body, "parentFeedbackDraft"),
+        teacher_memo: readText(body, "teacherMemo"),
+        entry_note: readText(body, "entryNote"),
+        status: readString(body, "recordStatus", 120) || "관찰중",
+    };
+
+    try {
+        const supabase = await createClient();
+        const { data: entry, error } = await supabase
+            .from("student_growth_entries")
+            .update(payload)
+            .eq("id", entryId)
+            .eq("student_id", studentId)
+            .select("*")
+            .single();
+
+        if (error) throw new Error(error.message);
+
+        return NextResponse.json({ success: true, entry }, { headers: NO_STORE_HEADERS });
+    } catch (error) {
+        return NextResponse.json(
+            { success: false, error: error instanceof Error ? error.message : "성장 기록 수정에 실패했습니다." },
+            { status: 500, headers: NO_STORE_HEADERS },
+        );
+    }
+}
+
 export async function DELETE(request: NextRequest) {
     const auth = await requireTeacher();
     if (!auth.ok) return auth.response;
