@@ -22,11 +22,13 @@ const coursesData = readFileSync(
 describe("Digital Creator learning UI", () => {
     it("saves activity answers and requires the packaged lesson flow before completion", () => {
         expect(coursePage).toContain("isDigitalCreatorPage");
+        expect(coursePage).toContain("activePage?.id.startsWith('digital-creator-v2-')");
+        expect(coursePage).toContain('selectedUnit?.id.startsWith("digital-creator-v2-")');
         expect(coursePage).toContain("kids-activity-panel");
         expect(coursePage).toContain("updateDigitalCreatorAnswer");
         expect(coursePage).toContain("setActivityCompleted");
         expect(coursePage).toContain("lessonCompletion.activities.completed");
-        expect(coursePage).toContain("10개 학습 화면과 네 번의 탐험 기록");
+        expect(coursePage).toContain("10개 학습 화면과 네 번의 활동 기록");
     });
 
     it("shows instructor guidance only in teacher view", () => {

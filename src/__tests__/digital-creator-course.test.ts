@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { COURSES, STUDENT_SHELF_COURSES, getCourseById } from '@/data/courses';
+import { DIGITAL_CREATOR_CURRICULUM_VERSION } from '@/data/courses/kids-it';
 
 describe('Digital Creator course', () => {
     it('is the first of five focused student products without duplicating hidden courses', () => {
@@ -18,7 +19,7 @@ describe('Digital Creator course', () => {
         ]);
     });
 
-    it('provides fifteen detailed 120-minute sessions and 150 phased activity pages', () => {
+    it('provides a fully rebuilt set of fifteen 120-minute sessions and 150 phased activity pages', () => {
         const course = getCourseById('11');
         const units = course?.chapters.flatMap((chapter) => chapter.units) ?? [];
         const pages = units.flatMap((unit) => unit.pages ?? []);
@@ -27,11 +28,17 @@ describe('Digital Creator course', () => {
         expect(course?.estimatedHours).toBe(30);
         expect(units).toHaveLength(15);
         expect(units.every((unit) => unit.duration === '120분')).toBe(true);
-        expect(units.every((unit) => unit.subtitle?.includes('창작 미션 45분'))).toBe(true);
+        expect(DIGITAL_CREATOR_CURRICULUM_VERSION).toBe('2026.2-rebuild');
+        expect(units.every((unit) => unit.id.startsWith('digital-creator-v2-u'))).toBe(true);
+        expect(pages.every((page) => page.id.startsWith('digital-creator-v2-'))).toBe(true);
+        expect(new Set(units.map((unit) => unit.id)).size).toBe(15);
+        expect(new Set(pages.map((page) => page.id)).size).toBe(150);
+        expect(pages.some((page) => page.id.startsWith('kids-it-first-'))).toBe(false);
+        expect(units.every((unit) => unit.subtitle?.includes('창작하기 45분'))).toBe(true);
         expect(pages).toHaveLength(150);
         expect(units.every((unit) => unit.pages?.length === 10)).toBe(true);
-        expect(units[0]?.title).toBe('컴퓨터 탐험가 되기');
-        expect(units.at(-1)?.title).toBe('디지털 창작자 프로젝트 발표');
+        expect(units[0]?.title).toBe('컴퓨터 탐험대 출발');
+        expect(units.at(-1)?.title).toBe('디지털 창작자 발표회');
         expect(units.every((unit) => unit.pages?.[0]?.content?.includes('오늘의 120분'))).toBe(true);
         expect(pages.every((page) => page.content?.includes('kids-it-phase'))).toBe(true);
         expect(pages.every((page) => page.content?.includes('kids-it-textbook'))).toBe(true);
@@ -44,23 +51,33 @@ describe('Digital Creator course', () => {
         expect(pages.every((page) => page.content?.includes('수업 기록'))).toBe(true);
     });
 
-    it('packages the first four sessions with student records, teacher guidance and class-ready outcomes', () => {
+    it('packages every session with student records, teacher guidance and class-ready outcomes', () => {
         const course = getCourseById('11');
         const units = course?.chapters.flatMap((chapter) => chapter.units) ?? [];
-        const foundation = units.slice(0, 4);
 
-        expect(foundation.map((unit) => unit.title)).toEqual([
-            '컴퓨터 탐험가 되기',
-            '창과 아이콘 움직이기',
-            '마우스와 터치로 그리기',
-            '키보드로 이야기 쓰기',
+        expect(units.map((unit) => unit.title)).toEqual([
+            '컴퓨터 탐험대 출발',
+            '마우스 로봇 조종하기',
+            '키보드 낱말 카드 만들기',
+            '파일·폴더 보물상자',
+            '도형으로 나만의 캐릭터',
+            '픽셀과 색으로 표정 만들기',
+            '사진 편집과 저작권 약속',
+            '목소리로 소리 이야기',
+            '세 장면 디지털 그림책',
+            '검색 탐정과 디지털 시민',
+            '명령 카드로 길 찾기',
+            '엔트리 캐릭터 애니메이션',
+            '반복·조건 미니게임',
+            '나의 융합 작품 제작소',
+            '디지털 창작자 발표회',
         ]);
-        expect(foundation.every((unit) => unit.lessonPackage?.materials.length)).toBe(true);
-        expect(foundation.every((unit) => unit.lessonPackage?.completionCriteria.length === 3)).toBe(true);
-        expect(foundation.every((unit) => unit.lessonPackage?.parentReport.length)).toBe(true);
-        expect(foundation.every((unit) => unit.pages?.filter((page) => page.activity).length === 4)).toBe(true);
-        expect(foundation.flatMap((unit) => unit.pages ?? []).every((page) => page.teacherGuide)).toBe(true);
-        expect(foundation.every((unit) => unit.pages?.[0]?.content?.includes('오늘의 결과물'))).toBe(true);
-        expect(foundation.every((unit) => unit.pages?.at(-1)?.content?.includes('학부모 리포트 문장'))).toBe(true);
+        expect(units.every((unit) => unit.lessonPackage?.materials.length)).toBe(true);
+        expect(units.every((unit) => unit.lessonPackage?.completionCriteria.length === 3)).toBe(true);
+        expect(units.every((unit) => unit.lessonPackage?.parentReport.length)).toBe(true);
+        expect(units.every((unit) => unit.pages?.filter((page) => page.activity).length === 4)).toBe(true);
+        expect(units.flatMap((unit) => unit.pages ?? []).every((page) => page.teacherGuide)).toBe(true);
+        expect(units.every((unit) => unit.pages?.[0]?.content?.includes('오늘의 결과물'))).toBe(true);
+        expect(units.every((unit) => unit.pages?.at(-1)?.content?.includes('학부모 리포트 문장'))).toBe(true);
     });
 });

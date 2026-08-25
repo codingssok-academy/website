@@ -167,7 +167,7 @@ export const COURSES: Course[] = [
         icon: 'child_care',
         gradient: 'linear-gradient(135deg, #0ea5e9, #6366f1)',
         cardImage: '/images/courses/kids-it-v2.png',
-        description: '초등 1·2학년을 위한 120분 수업 15회차 과정입니다. 컴퓨터 탐험, 미디어 이야기, 코딩 사고, 디지털 작품 제작과 발표를 150개 활동 화면으로 완성합니다.',
+        description: '초등 1·2학년을 위한 프로젝트형 15회차 과정입니다. 디지털 도구 탐험, 미디어 이야기, 엔트리 코딩, 최종 작품 발표를 120분 수업과 150개 활동 화면으로 완성합니다.',
         totalUnits: 15,
         totalProblems: 0,
         estimatedHours: 30,

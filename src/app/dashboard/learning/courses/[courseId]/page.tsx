@@ -114,7 +114,7 @@ export default function CourseDetailPage() {
     const [selectedUnit, setSelectedUnit] = useState<Unit | null>(null);
     const [activePage, setActivePage] = useState<Page | null>(null);
     const isPythonCorePage = courseId === '3' && !!activePage?.id.startsWith('py-core-');
-    const isDigitalCreatorPage = courseId === '11' && !!activePage?.id.startsWith('kids-it-first-');
+    const isDigitalCreatorPage = courseId === '11' && !!activePage?.id.startsWith('digital-creator-v2-');
     const usesFocusedLessonUx = courseId === '4' || courseId === '11' || isPythonCorePage;
 
     // 학생 학습 활동 영구 기록 — student_activity_log INSERT/UPDATE
@@ -207,7 +207,7 @@ export default function CourseDetailPage() {
     const [digitalCreatorAnswer, setDigitalCreatorAnswer] = useState("");
 
     const isPythonCoreUnit = courseId === "3" && !!selectedUnit?.id.startsWith("py-core-");
-    const isDigitalCreatorUnit = courseId === "11" && !!selectedUnit?.id.startsWith("kids-it-first-");
+    const isDigitalCreatorUnit = courseId === "11" && !!selectedUnit?.id.startsWith("digital-creator-v2-");
     const usesLessonPersistence = isPythonCoreUnit || isDigitalCreatorUnit;
     const lessonPageIds = useMemo(() => selectedUnit?.pages?.map((page) => page.id) ?? [], [selectedUnit]);
     const lessonQuizPageIds = useMemo(
@@ -875,8 +875,8 @@ export default function CourseDetailPage() {
             setCompletionMessage("10단계 학습, 확인 퀴즈, 코딩 실습을 모두 마치면 수업을 완료할 수 있어요.");
             return;
         }
-        if (unit.id.startsWith("kids-it-first-") && !lessonCompletion.ready) {
-            setCompletionMessage("10개 학습 화면과 네 번의 탐험 기록을 모두 마치면 이번 회차를 완료할 수 있어요.");
+        if (unit.id.startsWith("digital-creator-v2-") && !lessonCompletion.ready) {
+            setCompletionMessage("10개 학습 화면과 네 번의 활동 기록을 모두 마치면 이번 회차를 완료할 수 있어요.");
             return;
         }
         setCompletionMessage("");
@@ -1750,11 +1750,11 @@ export default function CourseDetailPage() {
                                 <section className="kids-completion">
                                     <div className="kids-completion-heading">
                                         <span><MI icon="workspace_premium" style={{ fontSize: 20 }} /> 120분 수업 완료 확인</span>
-                                        <p>화면만 넘기는 것이 아니라 탐험 기록과 결과물까지 마치면 수업이 완료됩니다.</p>
+                                        <p>화면만 넘기는 것이 아니라 활동 기록과 결과물까지 마치면 수업이 완료됩니다.</p>
                                     </div>
                                     <div className="kids-completion-grid">
                                         <div><span>학습 화면</span><b>{lessonCompletion.pages.completed} / {lessonCompletion.pages.total}</b></div>
-                                        <div><span>탐험 기록</span><b>{lessonCompletion.activities.completed} / {lessonCompletion.activities.total}</b></div>
+                                        <div><span>활동 기록</span><b>{lessonCompletion.activities.completed} / {lessonCompletion.activities.total}</b></div>
                                         <div><span>오늘의 결과물</span><b>{selectedUnit.lessonPackage.deliverable}</b></div>
                                     </div>
                                     <button
@@ -1764,7 +1764,7 @@ export default function CourseDetailPage() {
                                     >
                                         {completedUnits.has(selectedUnit.id)
                                             ? completionSaveStatus === "saving" ? "수업 완료 저장 중..." : "✓ 이번 회차 완료됨"
-                                            : lessonCompletion.ready ? "이번 회차 수업 완료하기" : "남은 화면과 탐험 기록을 마쳐주세요"}
+                                            : lessonCompletion.ready ? "이번 회차 수업 완료하기" : "남은 화면과 활동 기록을 마쳐주세요"}
                                     </button>
                                     {completionMessage && <p className="kids-completion-message">{completionMessage}</p>}
                                 </section>
