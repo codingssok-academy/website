@@ -487,16 +487,16 @@ export default function LearningDashboard() {
                     isolation:isolate;
                 }
                 .bk-cover-renamed-title::before {
-                    content:'';position:absolute;inset:-26% -2%;z-index:-1;pointer-events:none;
-                    background:radial-gradient(ellipse at center,rgba(3,13,33,.86) 0%,rgba(5,20,48,.5) 46%,transparent 74%);
-                    filter:blur(8px);
+                    content:'';position:absolute;inset:-58% -12%;z-index:-1;pointer-events:none;
+                    background:radial-gradient(ellipse at center,rgba(4,17,40,1) 0%,rgba(5,21,48,.995) 54%,rgba(5,21,48,.88) 68%,transparent 86%);
+                    filter:blur(7px);
                 }
                 .bk-cover-renamed-title::after {
                     content:'';position:absolute;left:28%;right:28%;bottom:8%;height:1px;z-index:-1;
                     background:linear-gradient(90deg,transparent,rgba(147,197,253,.58),transparent);
                 }
                 .bk-cover-renamed-11 { top:31%; }
-                .bk-cover-renamed-10 { top:32%; }
+                .bk-cover-renamed-10 { top:34%; }
                 .bk-cover-renamed-4 { top:34%;font-size:clamp(12px,1.3vw,19px); }
 
                 .bk-cover-info {

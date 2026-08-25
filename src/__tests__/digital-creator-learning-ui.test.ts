@@ -34,6 +34,7 @@ describe("Digital Creator learning UI", () => {
     it("uses a child-friendly textbook layout in both lesson routes", () => {
         expect(coursePage).toContain("디지털 창작자 · 초등 교과서형");
         expect(coursePage).toContain(".course-content-pad .kids-it-think-box");
+        expect(coursePage).toContain(".course-content-pad .kids-it-illustration-frame");
         expect(coursePage).toContain("img:not(.kids-it-illustration)");
         expect(pageDetail).toContain(".kids-it-content .kids-it-textbook");
         expect(pageDetail).toContain(".kids-it-content .kids-it-record-box");

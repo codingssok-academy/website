@@ -866,6 +866,7 @@ export default function LearningContentPage() {
                                     .kids-it-content .kids-it-think-copy > p { margin:0;color:#294968;font-size:clamp(16px,1.8vw,20px);line-height:1.7;font-weight:750; }
                                     .kids-it-content .kids-it-analogy { margin-top:14px;padding:13px 15px;border:2px dashed #92c8eb;border-radius:16px;background:rgba(255,255,255,.78);color:#58708b;font-size:13px;line-height:1.65; }
                                     .kids-it-content .kids-it-analogy b { display:block;margin-bottom:3px;color:#2270b5;font-size:12px; }
+                                    .kids-it-content .kids-it-illustration-frame { display:flex!important;width:100%!important;max-width:430px!important;height:230px!important;margin:0 auto!important;align-items:center!important;justify-content:center!important;overflow:hidden!important; }
                                     .kids-it-content img.kids-it-illustration { display:block;width:100%;max-width:430px;height:230px;margin:0 auto;border-radius:0;box-shadow:none;object-fit:contain; }
                                     .kids-it-content .kids-it-action-grid { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px;margin-bottom:15px; }
                                     .kids-it-content .kids-it-action { position:relative;min-height:150px;padding:19px 22px;border-radius:20px; }
@@ -900,7 +901,7 @@ export default function LearningContentPage() {
                                         .kids-it-content .kids-it-title-row,.kids-it-content .kids-it-think-box,.kids-it-content .kids-it-action-grid { grid-template-columns:1fr; }
                                         .kids-it-content .kids-it-title-row > div:first-child { padding-left:0; }
                                         .kids-it-content .kids-it-textbook .kids-it-number { display:none; }
-                                        .kids-it-content img.kids-it-illustration { height:190px; }
+                                        .kids-it-content .kids-it-illustration-frame,.kids-it-content img.kids-it-illustration { height:190px!important; }
                                         .kids-it-content .kids-it-record-box { grid-template-columns:1fr; }
                                         .kids-it-content .kids-it-stars { justify-content:center; }
                                     }
