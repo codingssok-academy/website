@@ -46,6 +46,16 @@ describe("Digital Creator learning UI", () => {
         expect(pageDetail).toContain(".kids-it-content .kids-it-record-box");
     });
 
+    it("does not mistake a textbook illustration for an iframe and keeps the reader inside one page", () => {
+        expect(coursePage).toContain('activePage.content.match(/<iframe\\b');
+        expect(coursePage).not.toContain('const iframeSrcMatch = activePage.content.match(/src=');
+        expect(coursePage).toContain("digital-creator-reader");
+        expect(coursePage).toContain("digital-creator-material");
+        expect(coursePage).toContain("kids-page-nav");
+        expect(coursePage).toContain("const pageIdxInUnit = pages.findIndex");
+        expect(coursePage).toContain('content:\'교사용 지도서\'');
+    });
+
     it("uses cover images with the final course titles printed into the artwork", () => {
         expect(learningPage).not.toContain("bk-cover-renamed-title");
         expect(coursesData).toContain("/images/courses/kids-it-v2.png");

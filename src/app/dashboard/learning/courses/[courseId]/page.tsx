@@ -492,7 +492,7 @@ export default function CourseDetailPage() {
         lastPageIdRef.current = pageId;
 
         // iframe content는 DOM API로 직접 생성 (DOMPurify가 sandbox를 추가하여 로딩 차단하므로)
-        const iframeSrcMatch = activePage.content.match(/src="([^"]+)"/);
+        const iframeSrcMatch = activePage.content.match(/<iframe\b[^>]*\bsrc=["']([^"']+)["'][^>]*>/i);
         if (iframeSrcMatch) {
             htmlContentRef.current.textContent = '';
             // 책모드: 현재 + 다음 페이지 iframe을 1|2 로 병치 (둘 다 iframe일 때만)
@@ -1464,7 +1464,7 @@ export default function CourseDetailPage() {
                                 );
                             })()
                         ) : (
-                        <div ref={contentRef} className={`hide-sb${isIframePage ? " course-iframe-wrap" : " course-content-pad"}`} style={{
+                        <div ref={contentRef} className={`hide-sb${isIframePage ? " course-iframe-wrap" : " course-content-pad"}${isDigitalCreatorUnit ? " digital-creator-reader" : ""}`} style={{
                             flex: 1, overflowY: isIframePage ? "hidden" : "auto",
                             // cpp/어린이IT: 풀폭 활용 (담당자 '공간 낭비'). 다른 코스: 1080 가운데.
                             padding: isIframePage
@@ -1660,6 +1660,7 @@ export default function CourseDetailPage() {
                                     <motion.div
                                         ref={htmlContentRef}
                                         key={`content-${activePage.id}`}
+                                        className={isDigitalCreatorPage ? "digital-creator-material" : undefined}
                                         initial={{ opacity: 0, y: 10 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ duration: 0.35, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
@@ -1775,6 +1776,9 @@ export default function CourseDetailPage() {
                                 const curIdx = allUnits.findIndex((u: any) => u.id === selectedUnit.id);
                                 const unitIdxInCourse = curIdx + 1;
                                 const totalUnits = allUnits.length;
+                                const pageIdxInUnit = pages.findIndex((page) => page.id === activePage.id) + 1;
+                                const progressCurrent = isDigitalCreatorUnit ? pageIdxInUnit : unitIdxInCourse;
+                                const progressTotal = isDigitalCreatorUnit ? pages.length : totalUnits;
                                 const nextUnitInCourse = curIdx >= 0 && curIdx < totalUnits - 1 ? allUnits[curIdx + 1] : null;
                                 const prevUnitInCourse = curIdx > 0 ? allUnits[curIdx - 1] : null;
                                 const canGoBack = !!prevPage || !!prevUnitInCourse;
@@ -1783,7 +1787,7 @@ export default function CourseDetailPage() {
                                     else if (prevUnitInCourse) selectUnit(prevUnitInCourse);
                                 };
                                 return (
-                                    <div style={{
+                                    <div className={isDigitalCreatorUnit ? "kids-page-nav" : undefined} style={{
                                         // 담당자 '수업자료 밑에 두지' — cpp/어린이IT 코스 inline (슬라이드 바로 아래),
                                         // 다른 코스 fixed 우하단. AI tutor button + toast와 겹침 회피.
                                         ...(usesFocusedLessonUx
@@ -1824,9 +1828,9 @@ export default function CourseDetailPage() {
                                             <MI icon="arrow_back" style={{ fontSize: 18 }} />
                                         </button>
                                         <div style={{ padding: "0 10px", fontSize: 11, fontWeight: 700, color: "#64748b", whiteSpace: "nowrap" as const }}>
-                                            <span style={{ color: "#0f172a", fontWeight: 800 }}>{unitIdxInCourse}</span>
+                                            <span style={{ color: "#0f172a", fontWeight: 800 }}>{progressCurrent}</span>
                                             <span style={{ margin: "0 4px", color: "#cbd5e1" }}>/</span>
-                                            <span>{totalUnits}</span>
+                                            <span>{progressTotal}</span>
                                         </div>
                                         {nextPage ? (
                                             <button
@@ -1840,7 +1844,7 @@ export default function CourseDetailPage() {
                                                     boxShadow: "0 2px 8px rgba(37, 99, 235, 0.25)",
                                                 }}
                                             >
-                                                다음 <MI icon="arrow_forward" style={{ fontSize: 16 }} />
+                                                {isDigitalCreatorUnit ? "다음 쪽" : "다음"} <MI icon="arrow_forward" style={{ fontSize: 16 }} />
                                             </button>
                                         ) : nextUnitInCourse ? (
                                             <>
@@ -2204,6 +2208,145 @@ export default function CourseDetailPage() {
                                 .course-content-pad .kids-it-record-box strong i { font-style:normal; }
                                 .course-content-pad .kids-it-record-box p { padding:10px 14px;border:1px solid #f9d56e;border-radius:11px;background:#fff;color:#65583b;font-size:13px;line-height:1.55; }
                                 .course-content-pad .kids-it-stars { display:flex;gap:7px;color:#f5b800;font-size:29px;line-height:1; }
+
+                                /* 디지털 창작자 · 한 권의 교과서처럼 이어지는 학습 화면 */
+                                .course-content-pad.digital-creator-reader {
+                                    overflow-x:clip!important;
+                                    padding:24px clamp(16px,3.2vw,48px) 128px!important;
+                                    background:
+                                        radial-gradient(circle at 8% 4%,rgba(186,230,253,.34),transparent 22%),
+                                        linear-gradient(180deg,#edf6fc 0%,#f4f8fb 46%,#edf3f7 100%)!important;
+                                    scrollbar-gutter:stable;
+                                }
+                                .digital-creator-reader .digital-creator-material {
+                                    width:min(100%,1120px)!important;
+                                    min-width:0!important;
+                                    margin:0 auto!important;
+                                    overflow:visible!important;
+                                }
+                                .digital-creator-reader .kids-it-textbook {
+                                    width:100%!important;
+                                    max-width:1120px!important;
+                                    margin:0 auto 20px!important;
+                                    border-color:#d2dee8!important;
+                                    box-shadow:0 18px 44px rgba(71,85,105,.13),0 0 0 7px rgba(255,255,255,.58)!important;
+                                }
+                                .digital-creator-reader .kids-activity-panel,
+                                .digital-creator-reader .kids-teacher-guide,
+                                .digital-creator-reader .kids-completion {
+                                    width:min(100%,1120px)!important;
+                                    margin:18px auto!important;
+                                    border-radius:8px!important;
+                                    box-shadow:0 14px 38px rgba(71,85,105,.11),0 0 0 6px rgba(255,255,255,.5)!important;
+                                }
+                                .digital-creator-reader .kids-activity-panel {
+                                    padding:24px 26px!important;
+                                    border:1px solid #c8dceb!important;
+                                    border-left:7px solid #60a5fa!important;
+                                    background:
+                                        linear-gradient(rgba(255,255,255,.96),rgba(255,255,255,.96)),
+                                        repeating-linear-gradient(0deg,transparent 0 31px,rgba(96,165,250,.11) 31px 32px)!important;
+                                }
+                                .digital-creator-reader .kids-activity-top {
+                                    padding-bottom:12px;
+                                    border-bottom:2px solid #dbeafe;
+                                }
+                                .digital-creator-reader .kids-activity-top > span {
+                                    font-size:15px;
+                                    letter-spacing:-.03em;
+                                }
+                                .digital-creator-reader .kids-activity-panel textarea {
+                                    min-height:128px;
+                                    border:1px solid #bfd8eb;
+                                    border-radius:6px;
+                                    background:
+                                        linear-gradient(rgba(255,255,255,.9),rgba(255,255,255,.9)),
+                                        repeating-linear-gradient(0deg,transparent 0 30px,#dbeafe 30px 31px);
+                                    line-height:31px;
+                                }
+                                .digital-creator-reader .kids-teacher-guide {
+                                    padding:0!important;
+                                    overflow:hidden;
+                                    border:1px solid #bfd6e7!important;
+                                    border-left:7px solid #2f80c9!important;
+                                    background:#fffdf8!important;
+                                }
+                                .digital-creator-reader .kids-teacher-guide summary {
+                                    min-height:64px;
+                                    padding:18px 22px;
+                                    background:linear-gradient(90deg,#eaf5fc,#f8fcff 58%,#fffdf8);
+                                    color:#175f98;
+                                    font-size:16px;
+                                    letter-spacing:-.035em;
+                                }
+                                .digital-creator-reader .kids-teacher-guide summary::after {
+                                    content:'교사용 지도서';
+                                    margin-left:auto;
+                                    padding:5px 9px;
+                                    border:1px solid #b9d8ec;
+                                    border-radius:999px;
+                                    background:#fff;
+                                    color:#4d7999;
+                                    font-size:10px;
+                                    letter-spacing:0;
+                                }
+                                .digital-creator-reader .kids-teacher-guide[open] summary {
+                                    border-bottom:1px solid #cfdeea;
+                                }
+                                .digital-creator-reader .kids-teacher-guide-grid {
+                                    gap:0;
+                                    margin:0;
+                                    padding:8px 22px 4px;
+                                    background:
+                                        repeating-linear-gradient(0deg,transparent 0 31px,rgba(148,163,184,.075) 31px 32px);
+                                }
+                                .digital-creator-reader .kids-teacher-guide article {
+                                    min-height:138px;
+                                    padding:18px 18px 16px;
+                                    border:0;
+                                    border-bottom:1px dashed #cbd9e4;
+                                    border-radius:0;
+                                    background:transparent;
+                                }
+                                .digital-creator-reader .kids-teacher-guide article:nth-child(odd) {
+                                    border-right:1px dashed #cbd9e4;
+                                }
+                                .digital-creator-reader .kids-teacher-guide article span {
+                                    display:inline-flex;
+                                    padding:4px 8px;
+                                    border-radius:5px;
+                                    background:#e5f3fb;
+                                    color:#17689e;
+                                    font-size:11px;
+                                }
+                                .digital-creator-reader .kids-teacher-guide article p,
+                                .digital-creator-reader .kids-teacher-guide article ul {
+                                    color:#425b70;
+                                    font-size:13px;
+                                    line-height:1.75;
+                                }
+                                .digital-creator-reader .kids-teacher-check {
+                                    margin:0;
+                                    padding:16px 22px 20px;
+                                    border-top:1px solid #d9e5ed;
+                                    background:#f7fbfd;
+                                }
+                                .digital-creator-reader .kids-completion {
+                                    border-left:7px solid #34d399!important;
+                                    background:
+                                        linear-gradient(rgba(255,255,255,.95),rgba(255,255,255,.95)),
+                                        repeating-linear-gradient(0deg,transparent 0 31px,rgba(52,211,153,.09) 31px 32px)!important;
+                                }
+                                .digital-creator-reader .kids-page-nav {
+                                    width:min(100%,1120px)!important;
+                                    margin:20px auto 8px!important;
+                                    padding:10px 14px!important;
+                                    justify-content:center;
+                                    border:1px solid #cfdce7;
+                                    border-radius:8px!important;
+                                    background:#fff!important;
+                                    box-shadow:0 12px 30px rgba(71,85,105,.12)!important;
+                                }
                                 .kids-activity-panel { border-color:#bae6fd;background:linear-gradient(135deg,#f2fbff,#fff);box-shadow:0 12px 30px rgba(14,116,144,.08); }
                                 .kids-activity-top > span,.kids-activity-example strong { color:#1d6fae; }
                                 .kids-activity-top b { background:#eff6ff;color:#2563eb; }
@@ -2238,6 +2381,14 @@ export default function CourseDetailPage() {
                                     .course-content-pad .kids-it-illustration-frame { --kids-art-height:170px;height:190px!important;padding:10px 14px!important; }
                                     .course-content-pad .kids-it-record-box { grid-template-columns:1fr; }
                                     .course-content-pad .kids-it-stars { justify-content:center; }
+                                    .course-content-pad.digital-creator-reader { padding:12px 10px 96px!important; }
+                                    .digital-creator-reader .kids-activity-panel { padding:18px 16px!important; }
+                                    .digital-creator-reader .kids-teacher-guide summary { min-height:56px;padding:14px 15px; }
+                                    .digital-creator-reader .kids-teacher-guide summary::after { display:none; }
+                                    .digital-creator-reader .kids-teacher-guide-grid { grid-template-columns:1fr;padding:6px 15px; }
+                                    .digital-creator-reader .kids-teacher-guide article { min-height:auto;padding:15px 5px;border-right:0!important; }
+                                    .digital-creator-reader .kids-teacher-check { padding:14px 15px 18px; }
+                                    .digital-creator-reader .kids-page-nav { position:sticky!important;bottom:10px;z-index:12; }
                                 }
                             `}} />
 
