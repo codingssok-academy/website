@@ -8,6 +8,7 @@ import { COMPUTER_BASICS } from './computer-basics';
 import { CODING_BASICS } from './coding-basics';
 import { AI_LITERACY_CHAPTERS } from './ai-literacy';
 import { CPP_CHAPTERS } from './cpp';
+import { PYTHON_CORE_CHAPTERS } from './python-core';
 import { GAME_DEV_CHAPTERS } from './game-dev';
 import { PROGRAMMING_CONTEST_CHAPTERS } from './programming-contest';
 import { KIDS_IT_CHAPTERS } from './kids-it';
@@ -243,15 +244,17 @@ export const COURSES: Course[] = [
     },
     {
         id: '3',
-        title: '파이썬',
+        title: '파이썬 코어',
+        subtitle: '예측 · 실행 · 디버깅 · 응용',
         icon: 'data_object',
         gradient: 'linear-gradient(135deg, #3b82f6, #3b82f6)',
         cardImage: '/images/courses/python.png',
-        description: '파이썬의 기초 문법부터 자료구조, 함수, 클래스까지 체계적으로 학습합니다.',
-        totalUnits: 94,
+        description: 'C++ 과정과 같은 3패널 학습 환경에서 개념을 예측하고, Python 코드로 실행하며, 오류 수정과 응용 프로젝트까지 체계적으로 학습합니다.',
+        totalUnits: 185,
         totalProblems: 0,
         estimatedHours: 60,
-        chapters: PYTHON_BASICS,
+        chapters: [...PYTHON_CORE_CHAPTERS, ...PYTHON_BASICS],
+        defaultLanguage: 'python',
     },
     {
         id: '10',

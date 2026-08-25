@@ -110,6 +110,8 @@ export default function CourseDetailPage() {
     const [expandedChapters, setExpandedChapters] = useState<Set<string>>(new Set());
     const [selectedUnit, setSelectedUnit] = useState<Unit | null>(null);
     const [activePage, setActivePage] = useState<Page | null>(null);
+    const isPythonCorePage = courseId === '3' && !!activePage?.id.startsWith('py-core-');
+    const usesFocusedLessonUx = courseId === '4' || courseId === '11' || isPythonCorePage;
 
     // 학생 학습 활동 영구 기록 — student_activity_log INSERT/UPDATE
     // 학부모 portal /parent dashboard가 fetch하는 테이블. 담당자 '성장기록 데이터 연동 안된 듯'
@@ -492,7 +494,7 @@ export default function CourseDetailPage() {
             // 저장 → fresh cpp.ts pageImg 무시 → 슬라이드 잘림. cpp 코스(courseId='4')는 항상
             // fresh content 사용 (형광펜 잠깐 사라져도 OK, 슬라이드 fit 우선).
             // 어린이 IT(11)도 동일 — kids-it.ts에 inline style 강제 추가했지만 stale HTML이 무시했음.
-            const skipStaleHtml = courseId === '4' || courseId === '11';
+            const skipStaleHtml = courseId === '4' || courseId === '11' || isPythonCorePage;
             const saved = skipStaleHtml ? null : localStorage.getItem(hlStorageKey);
             if (saved) {
                 htmlContentRef.current.innerHTML = sanitizeHTML(saved);
@@ -976,6 +978,43 @@ export default function CourseDetailPage() {
                 .panel-drag::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:2px;height:32px;border-radius:2px;background:#93c5fd;transition:background .15s}
                 .panel-drag:hover::after,.panel-drag:active::after{background:#3b82f6}
 
+                /* ── PYTHON CORE · C++형 집중 학습 UI ── */
+                .pycore-frame{width:100%;margin:0 auto 24px}
+                .pycore-frame-top{display:flex;align-items:center;gap:10px;margin:0 2px 12px;min-height:34px}
+                .pycore-frame-count{display:inline-flex;align-items:center;justify-content:center;min-width:58px;height:30px;padding:0 12px;border-radius:999px;background:linear-gradient(135deg,#2563eb,#0ea5e9);color:#fff;font-size:12px;font-weight:900;box-shadow:0 5px 14px rgba(37,99,235,.24)}
+                .pycore-frame-context{font-size:11px;color:#64748b;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+                .pycore-focus-btn{margin-left:auto;display:inline-flex;align-items:center;gap:5px;padding:7px 10px;border:1px solid #dbeafe;border-radius:10px;background:#fff;color:#2563eb;font-size:11px;font-weight:800;cursor:pointer}
+                .pycore-focus-btn:hover{background:#eff6ff}
+                .pycore-content{width:100%}
+                .pycore-slide{--pc-blue:#2563eb;--pc-cyan:#0ea5e9;--pc-navy:#102a56;--pc-mint:#0f9f7f;--pc-purple:#7154d8;overflow:hidden;width:100%;min-height:620px;border:1px solid #dbeafe;border-radius:22px;background:linear-gradient(145deg,#f8fbff 0%,#eef6ff 54%,#f7f5ff 100%);box-shadow:0 18px 54px rgba(30,64,175,.14),0 2px 8px rgba(15,23,42,.08);color:#1f2d3d}
+                .pycore-hero{position:relative;padding:32px 38px 28px;background:radial-gradient(circle at 92% 12%,rgba(56,189,248,.25),transparent 26%),linear-gradient(135deg,#102a56 0%,#173b77 62%,#2563eb 100%);color:#fff}
+                .pycore-hero:after{content:'PY';position:absolute;right:28px;bottom:-12px;font:900 88px/1 'JetBrains Mono',monospace;color:rgba(255,255,255,.055);letter-spacing:-8px}
+                .pycore-step{display:inline-flex;padding:5px 9px;border-radius:7px;background:#38bdf8;color:#082f49;font:900 10px/1 'JetBrains Mono',monospace;letter-spacing:.8px}
+                .pycore-eyebrow{margin-left:9px;font:800 10px/1 'JetBrains Mono',monospace;color:#bfdbfe;letter-spacing:1.2px}
+                .pycore-hero h2{position:relative;z-index:1;margin:15px 0 8px;font-size:clamp(24px,3vw,34px);line-height:1.25;letter-spacing:-1px;color:#fff;word-break:keep-all}
+                .pycore-hero p{position:relative;z-index:1;max-width:780px;margin:0;color:#dbeafe;font-size:14px;line-height:1.7;word-break:keep-all}
+                .pycore-body{padding:30px 38px 34px}
+                .pycore-mission-grid,.pycore-choice-grid,.pycore-score-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+                .pycore-card,.pycore-choice-grid>div,.pycore-score-grid>div{padding:20px;border:1px solid #dbeafe;border-radius:17px;background:rgba(255,255,255,.9);box-shadow:0 8px 20px rgba(15,23,42,.05)}
+                .pycore-card .material-symbols-outlined,.pycore-score-grid .material-symbols-outlined{display:flex;width:40px;height:40px;align-items:center;justify-content:center;margin-bottom:14px;border-radius:12px;background:#dbeafe;color:#2563eb;font-size:22px}
+                .pycore-card-mint .material-symbols-outlined{background:#d1fae5;color:#0f9f7f}.pycore-card-purple .material-symbols-outlined{background:#ede9fe;color:#7154d8}
+                .pycore-card strong,.pycore-choice-grid b,.pycore-score-grid b{display:block;margin-bottom:6px;color:#102a56;font-size:16px}.pycore-card p,.pycore-choice-grid p,.pycore-score-grid p{margin:0;color:#64748b;font-size:12px;line-height:1.65}
+                .pycore-route{display:flex;align-items:center;justify-content:center;margin:24px 0 18px}.pycore-route span{padding:7px 12px;border-radius:999px;background:#fff;border:1px solid #bfdbfe;color:#1d4ed8;font-size:11px;font-weight:800}.pycore-route i{width:30px;height:2px;background:#bfdbfe}
+                .pycore-callout,.pycore-rule{display:grid;grid-template-columns:130px 1fr;overflow:hidden;border-radius:13px;border:1px solid #93c5fd;background:#fff}.pycore-callout b,.pycore-rule b{display:flex;align-items:center;justify-content:center;padding:13px;background:#2563eb;color:#fff;font-size:12px}.pycore-callout span,.pycore-rule span{padding:13px 16px;color:#334155;font-size:12px;font-weight:700;line-height:1.6}
+                .pycore-split{display:grid;grid-template-columns:1fr 1fr;gap:15px}.pycore-concept-card{display:flex;gap:16px;padding:20px;border:1px solid #dbeafe;border-radius:18px;background:#fff}.pycore-icon-bubble{display:flex;flex:0 0 46px;height:46px;align-items:center;justify-content:center;border-radius:14px;background:#dbeafe;color:#2563eb}.pycore-icon-bubble.mint{background:#d1fae5;color:#0f9f7f}.pycore-concept-card small{font-size:10px;color:#64748b;font-weight:800}.pycore-concept-card h3{margin:3px 0 10px;color:#102a56;font-size:16px}.pycore-concept-card code,.pycore-code-compare code,.pycore-predict-list code,.pycore-error-card code{display:block;padding:10px 12px;border-radius:9px;background:#102a56;color:#e0f2fe;font:700 12px/1.5 'JetBrains Mono',monospace}.pycore-concept-card p{margin:9px 0 0;color:#64748b;font-size:11px;line-height:1.55}
+                .pycore-code-compare{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:15px}.pycore-code-compare>div{padding:15px;border-radius:15px;background:#fff;border:1px solid #dbeafe}.pycore-code-compare span{display:block;margin-bottom:8px;color:#2563eb;font-size:11px;font-weight:900}.pycore-code-compare b{display:block;margin-top:9px;color:#475569;font-size:11px}
+                .pycore-question,.pycore-tip{display:flex;align-items:center;gap:11px;margin-top:16px;padding:14px 16px;border-radius:13px;background:#fff7d6;border:1px solid #fde68a;color:#713f12}.pycore-question p,.pycore-tip p{margin:0;font-size:12px;line-height:1.6}
+                .pycore-predict-list{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.pycore-predict-list>div{padding:16px;border:1px solid #dbeafe;border-radius:15px;background:#fff}.pycore-predict-list span{display:block;margin-bottom:8px;color:#7154d8;font-size:10px;font-weight:900}.pycore-predict-list p{margin:10px 0 0;color:#64748b;font-size:11px;line-height:1.55}.pycore-rule{margin-top:16px;border-color:#c4b5fd}.pycore-rule b{background:#7154d8}
+                .pycore-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.pycore-steps>div{display:flex;gap:11px;padding:14px;border:1px solid #dbeafe;border-radius:14px;background:#fff}.pycore-steps b{display:flex;flex:0 0 30px;height:30px;align-items:center;justify-content:center;border-radius:9px;background:#2563eb;color:#fff}.pycore-steps strong,.pycore-steps small{display:block}.pycore-steps strong{color:#102a56;font-size:12px}.pycore-steps small{margin-top:4px;color:#64748b;font-size:10px;line-height:1.45}
+                .pycore-code{margin:16px 0;padding:18px 20px;border-radius:15px;background:#0f2445;color:#dbeafe;overflow:auto;box-shadow:inset 0 0 0 1px rgba(125,211,252,.13)}.pycore-code code{font:600 13px/1.75 'JetBrains Mono',monospace;white-space:pre-wrap}.pycore-check,.pycore-selfcheck{display:flex;flex-wrap:wrap;gap:8px}.pycore-check span,.pycore-selfcheck span{flex:1;min-width:150px;padding:10px 12px;border:1px solid #dbeafe;border-radius:10px;background:#fff;color:#475569;font-size:11px;font-weight:700}
+                .pycore-sort-board{display:grid;grid-template-columns:1.4fr 1fr 1fr;overflow:hidden;border:1px solid #bfdbfe;border-radius:15px;background:#fff}.pycore-sort-board>div{padding:12px;border-right:1px solid #dbeafe;border-bottom:1px solid #dbeafe;text-align:center;color:#475569;font-size:12px}.pycore-sort-board>.label{background:#2563eb;color:#fff;font-weight:900}.pycore-sort-board code{font:700 12px 'JetBrains Mono',monospace;color:#102a56}
+                .pycore-blueprint{display:grid;grid-template-columns:repeat(5,1fr);gap:9px}.pycore-blueprint>div{padding:14px 10px;border:1px solid #dbeafe;border-radius:13px;background:#fff;text-align:center}.pycore-blueprint span{display:inline-block;padding:3px 7px;border-radius:6px;background:#dbeafe;color:#1d4ed8;font-size:9px;font-weight:900}.pycore-blueprint b,.pycore-blueprint small{display:block}.pycore-blueprint b{margin:9px 0 5px;color:#102a56;font-size:12px}.pycore-blueprint small{color:#64748b;font-size:9px;line-height:1.45}.pycore-blueprint+.pycore-callout{margin-top:16px}
+                .pycore-debug-flow{display:flex;align-items:center}.pycore-debug-flow>div{display:flex;flex:1;gap:9px;align-items:center;padding:13px;border:1px solid #fecaca;border-radius:13px;background:#fff}.pycore-debug-flow>i{width:18px;height:2px;background:#fca5a5}.pycore-debug-flow b{display:flex;flex:0 0 28px;height:28px;align-items:center;justify-content:center;border-radius:8px;background:#ef4444;color:#fff}.pycore-debug-flow span,.pycore-debug-flow small{display:block}.pycore-debug-flow span{color:#7f1d1d;font-size:11px;font-weight:800}.pycore-debug-flow small{margin-top:3px;color:#64748b;font-size:9px;line-height:1.4}.pycore-error-card{display:grid;grid-template-columns:100px 1fr;gap:10px;margin:16px 0;padding:15px;border:1px solid #fecaca;border-radius:14px;background:#fff}.pycore-error-card>span{display:flex;align-items:center;justify-content:center;border-radius:9px;background:#fee2e2;color:#b91c1c;font:800 11px 'JetBrains Mono',monospace}.pycore-error-card p{grid-column:1/-1;margin:0;color:#64748b;font-size:11px}
+                .pycore-choice-grid>div>span{display:inline-block;margin-bottom:9px;padding:4px 7px;border-radius:6px;background:#ede9fe;color:#6d28d9;font:900 9px 'JetBrains Mono',monospace}.pycore-score-grid{grid-template-columns:repeat(4,1fr)}.pycore-score-grid>div{text-align:center}.pycore-score-grid .material-symbols-outlined{margin:0 auto 12px}
+                .pycore-reflection{display:grid;gap:10px}.pycore-reflection>div{display:flex;gap:14px;align-items:center;padding:14px 16px;border:1px solid #dbeafe;border-radius:14px;background:#fff}.pycore-reflection>div>span{display:flex;flex:0 0 36px;height:36px;align-items:center;justify-content:center;border-radius:10px;background:#dbeafe;color:#1d4ed8;font-size:11px;font-weight:900}.pycore-reflection p,.pycore-reflection b,.pycore-reflection small{display:block;margin:0}.pycore-reflection b{color:#102a56;font-size:12px}.pycore-reflection small{margin-top:3px;color:#64748b;font-size:10px}.pycore-homework{display:flex;gap:16px;align-items:center;margin:16px 0;padding:18px;border-radius:16px;background:linear-gradient(135deg,#dbeafe,#ede9fe);border:1px solid #bfdbfe}.pycore-homework>.material-symbols-outlined{display:flex;flex:0 0 46px;height:46px;align-items:center;justify-content:center;border-radius:14px;background:#2563eb;color:#fff}.pycore-homework small{color:#1d4ed8;font-size:10px;font-weight:900}.pycore-homework h3{margin:2px 0 5px;color:#102a56;font-size:15px}.pycore-homework p{margin:0;color:#475569;font-size:11px;line-height:1.55}
+                @media(max-width:960px){.pycore-slide{min-height:auto}.pycore-hero,.pycore-body{padding-left:24px;padding-right:24px}.pycore-mission-grid,.pycore-choice-grid,.pycore-predict-list,.pycore-steps{grid-template-columns:1fr}.pycore-score-grid{grid-template-columns:1fr 1fr}.pycore-blueprint{grid-template-columns:1fr 1fr}.pycore-debug-flow{display:grid;grid-template-columns:1fr 1fr;gap:8px}.pycore-debug-flow>i{display:none}}
+                @media(max-width:620px){.pycore-hero,.pycore-body{padding-left:18px;padding-right:18px}.pycore-split,.pycore-code-compare{grid-template-columns:1fr}.pycore-score-grid{grid-template-columns:1fr}.pycore-route{display:grid;grid-template-columns:1fr 1fr;gap:6px}.pycore-route i{display:none}.pycore-callout,.pycore-rule{grid-template-columns:1fr}.pycore-blueprint{grid-template-columns:1fr}.pycore-debug-flow{grid-template-columns:1fr}.pycore-frame-context{display:none}}
+
                 /* ── MOBILE ── */
                 @media (max-width: 768px) {
                     .course-left-panel {
@@ -1188,7 +1227,7 @@ export default function CourseDetailPage() {
                 {selectedUnit && activePage ? (
                     <>
                         {/* Toolbar — 형광펜 + 보기 모드 (cpp/어린이IT는 hide) */}
-                        <div className="course-toolbar" style={{ display: (courseId === '4' || courseId === '11') ? "none" : "flex", alignItems: "center", justifyContent: "center", gap: 6, borderBottom: "1px solid #e2e8f0", background: "#fff", padding: "8px 24px", flexShrink: 0 }}>
+                        <div className="course-toolbar" style={{ display: usesFocusedLessonUx ? "none" : "flex", alignItems: "center", justifyContent: "center", gap: 6, borderBottom: "1px solid #e2e8f0", background: "#fff", padding: "8px 24px", flexShrink: 0 }}>
                             {!isIframePage && <>
                             <MI icon="ink_highlighter" style={{ fontSize: 16, color: activeHL ? HL_COLORS.find(c => c.id === activeHL)?.solid || "#3b82f6" : "#94a3b8" }} />
                             {HL_COLORS.map(c => {
@@ -1309,7 +1348,7 @@ export default function CourseDetailPage() {
                             // cpp/어린이IT: 풀폭 활용 (담당자 '공간 낭비'). 다른 코스: 1080 가운데.
                             padding: isIframePage
                                 ? 0
-                                : (courseId === '4' || courseId === '11')
+                                : usesFocusedLessonUx
                                     ? "16px 16px 100px"
                                     : "32px max(40px, calc((100% - 1080px) / 2)) 120px",
                             background: isIframePage ? "#fafafa" : undefined,
@@ -1317,7 +1356,7 @@ export default function CourseDetailPage() {
                             minHeight: 0,
                         }}>
                                                         {/* Page header — breadcrumb + progress + title (cpp/어린이IT는 hide — 담당자 '딱 수업자료만') */}
-                            {!isIframePage && courseId !== '4' && courseId !== '11' && (() => {
+                            {!isIframePage && !usesFocusedLessonUx && (() => {
                                 const currentChapter = courseData.chapters.find((c: any) => c.units.some((u: any) => u.id === selectedUnit.id));
                                 const unitIdxInChapter = currentChapter ? currentChapter.units.findIndex((u: any) => u.id === selectedUnit.id) + 1 : 0;
                                 const totalInChapter = currentChapter?.units.length || 0;
@@ -1461,6 +1500,37 @@ export default function CourseDetailPage() {
                                             />
                                         </motion.div>
                                     );
+                                })() : isPythonCorePage ? (() => {
+                                    const corePageIndex = (selectedUnit.pages?.findIndex((p) => p.id === activePage.id) ?? 0) + 1;
+                                    const corePageTotal = selectedUnit.pages?.length ?? 1;
+                                    const coreChapter = courseData.chapters.find((chapter) => chapter.units.some((unit) => unit.id === selectedUnit.id));
+                                    return (
+                                        <motion.section
+                                            key={`python-core-content-${activePage.id}`}
+                                            className="pycore-frame"
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                                        >
+                                            <div className="pycore-frame-top">
+                                                <span className="pycore-frame-count">{corePageIndex} / {corePageTotal}</span>
+                                                <span className="pycore-frame-context">{coreChapter?.title} · {selectedUnit.title}</span>
+                                                <button
+                                                    className="pycore-focus-btn"
+                                                    onClick={() => {
+                                                        const shouldOpen = !leftOpen && !rightOpen;
+                                                        setLeftOpen(shouldOpen);
+                                                        setRightOpen(shouldOpen);
+                                                    }}
+                                                    title="양쪽 패널을 접거나 엽니다"
+                                                >
+                                                    <MI icon="center_focus_strong" style={{ fontSize: 14 }} />
+                                                    {!leftOpen && !rightOpen ? '도구 열기' : '집중 모드'}
+                                                </button>
+                                            </div>
+                                            <div ref={htmlContentRef} className="pycore-content" />
+                                        </motion.section>
+                                    );
                                 })() : (
                                     <motion.div
                                         ref={htmlContentRef}
@@ -1508,7 +1578,7 @@ export default function CourseDetailPage() {
                                     <div style={{
                                         // 담당자 '수업자료 밑에 두지' — cpp/어린이IT 코스 inline (슬라이드 바로 아래),
                                         // 다른 코스 fixed 우하단. AI tutor button + toast와 겹침 회피.
-                                        ...((courseId === '4' || courseId === '11')
+                                        ...(usesFocusedLessonUx
                                             ? {
                                                 position: "static" as const,
                                                 margin: "16px auto 8px",
@@ -1830,7 +1900,7 @@ export default function CourseDetailPage() {
                             </AnimatePresence>
 
                             {/* Nav buttons (inline — 페이지 제목 보이는 큰 버튼, cpp/어린이IT는 hide) */}
-                            <div style={{ display: (courseId === '4' || courseId === '11') ? "none" : "flex", justifyContent: "space-between", marginTop: 32, gap: 16 }}>
+                            <div style={{ display: usesFocusedLessonUx ? "none" : "flex", justifyContent: "space-between", marginTop: 32, gap: 16 }}>
                                 {prevPage ? (
                                     <button onClick={() => navigatePage(prevPage)} style={{ padding: "12px 22px", borderRadius: 14, border: "1px solid #e2e8f0", background: "#fff", cursor: "pointer", fontSize: 13, fontWeight: 600, color: "#475569", display: "flex", alignItems: "center", gap: 8, boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
                                         <MI icon="arrow_back" style={{ fontSize: 16 }} />
