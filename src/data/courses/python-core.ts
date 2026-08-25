@@ -1,4 +1,8 @@
-import type { Chapter, Page } from './types';
+import type { Chapter, Page, Unit } from './types';
+import { createPythonCoreSession } from './python-core-generator';
+import { PYTHON_CORE_LEVEL_1_SPECS } from './python-core-level1';
+import { PYTHON_CORE_LEVEL_2_SPECS } from './python-core-level2';
+import { PYTHON_CORE_LEVEL_3_SPECS } from './python-core-level3';
 
 type SlideInput = {
     step: string;
@@ -270,7 +274,7 @@ print(10 + 20)</code></pre>
     },
     {
         id: 'py-core-w01-p10',
-        title: '성장 기록과 과제',
+        title: '성장 기록과 선택 과제',
         type: '핵심정리',
         content: slide({
             step: '10',
@@ -279,34 +283,56 @@ print(10 + 20)</code></pre>
             summary: '오른쪽 학습 노트에 오늘 알게 된 것, 해결한 오류, 다음에 만들고 싶은 것을 기록하세요.',
             body: `
                 <div class="pycore-reflection"><div><span>01</span><p><b>오늘 새롭게 알게 된 것</b><small>print(), 따옴표, 문자열과 숫자 중 하나를 설명합니다.</small></p></div><div><span>02</span><p><b>처음에는 어려웠지만 해결한 것</b><small>오류를 어떻게 발견하고 고쳤는지 순서대로 적습니다.</small></p></div><div><span>03</span><p><b>다음 시간에 더 해보고 싶은 것</b><small>게임·퀴즈·도구 중 만들고 싶은 것을 적습니다.</small></p></div></div>
-                <div class="pycore-homework"><span class="material-symbols-outlined">home_work</span><div><small>선택 과제</small><h3>가족을 위한 응원 메시지 프로그램</h3><p>문자열을 세 번 이상, 숫자 계산을 한 번 이상 출력하고 <b>week01_home_이름.py</b>로 저장하세요.</p></div></div>
+                <div class="pycore-homework"><span class="material-symbols-outlined">home_work</span><div><small>선택 과제</small><h3>가족을 위한 응원 메시지 프로그램</h3><p>문자열을 세 번 이상, 숫자 계산을 한 번 이상 출력하고 <b>session01_home_이름.py</b>로 저장하세요.</p></div></div>
                 <div class="pycore-selfcheck"><span>□ 도움이 필요해요</span><span>□ 조금 알겠어요</span><span>□ 혼자 할 수 있어요</span><span>□ 바꾸어 응용할 수 있어요</span></div>
             `,
         }),
     },
 ];
 
+const SESSION_01_UNIT: Unit = {
+    id: 'py-core-w01',
+    unitNumber: 1,
+    title: '1회차 · 컴퓨터에게 첫 인사를 시켜요',
+    subtitle: 'print(), 문자열과 숫자, 첫 디버깅',
+    duration: '120분',
+    type: '실습',
+    difficulty: 1,
+    pages: WEEK_01_PAGES,
+    problemCount: 4,
+};
+
+const LEVEL_1_UNITS = [SESSION_01_UNIT, ...PYTHON_CORE_LEVEL_1_SPECS.map(createPythonCoreSession)];
+const LEVEL_2_UNITS = PYTHON_CORE_LEVEL_2_SPECS.map(createPythonCoreSession);
+const LEVEL_3_UNITS = PYTHON_CORE_LEVEL_3_SPECS.map(createPythonCoreSession);
+
 export const PYTHON_CORE_CHAPTERS: Chapter[] = [
     {
         id: 'python-core-level-1',
         chapterNumber: 1,
-        title: 'Python Core 1단계',
+        title: 'Python Core 1단계 · 문법과 문제해결',
         icon: 'terminal',
-        description: '예측하고 실행하며 오류를 고치는 파이썬 기초 과정입니다.',
+        description: '1~12회차 · 출력부터 함수와 첫 퀴즈 프로젝트까지 완성합니다.',
         recommendedGrade: '초 5 ~ 중 2',
-        units: [
-            {
-                id: 'py-core-w01',
-                unitNumber: 1,
-                title: '1주차 · 컴퓨터에게 첫 인사를 시켜요',
-                subtitle: 'print(), 문자열과 숫자, 첫 디버깅',
-                duration: '90분',
-                type: '실습',
-                difficulty: 1,
-                pages: WEEK_01_PAGES,
-                problemCount: 4,
-            },
-        ],
+        units: LEVEL_1_UNITS,
+    },
+    {
+        id: 'python-core-level-2',
+        chapterNumber: 2,
+        title: 'Python Core 2단계 · 데이터와 설계',
+        icon: 'account_tree',
+        description: '13~24회차 · 자료구조, 함수 설계, 파일, 알고리즘, 클래스를 프로젝트에 결합합니다.',
+        recommendedGrade: '초 6 ~ 중 3',
+        units: LEVEL_2_UNITS,
+    },
+    {
+        id: 'python-core-level-3',
+        chapterNumber: 3,
+        title: 'Python Core 3단계 · 알고리즘과 캡스톤',
+        icon: 'deployed_code',
+        description: '25~36회차 · 객체 설계, 데이터 처리, 테스트, 알고리즘과 최종 작품 발표를 완성합니다.',
+        recommendedGrade: '중 1 ~ 중 3',
+        units: LEVEL_3_UNITS,
     },
 ];
 

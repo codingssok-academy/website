@@ -5,6 +5,7 @@ import JsonLd from "@/components/seo/JsonLd";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://codingssok.com"),
   title: {
     default: "코딩쏙 | AI 시대 역량을 '쏙' 채우는 코딩 교육",
     template: "%s | 코딩쏙",
@@ -62,7 +63,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="코딩쏙" />
         <link rel="manifest" href="/manifest.json" />
-        <link rel="apple-touch-icon" href="/icon-192.png" />
+        <link rel="apple-touch-icon" href="/icon.png" />
         {!localPreviewOnly ? (
           <>
             <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="anonymous" />

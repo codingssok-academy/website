@@ -104,7 +104,7 @@ export default function TeacherLogin() {
                 {/* 로고 + 타이틀 */}
                 <div style={{ textAlign: "center", marginBottom: 36 }}>
                     <motion.img
-                        src="/images/promo/logo-codingssok.png"
+                        src="/icon.png"
                         alt="코딩쏙"
                         initial={{ scale: 0, rotate: -15 }}
                         animate={{ scale: 1, rotate: 0 }}

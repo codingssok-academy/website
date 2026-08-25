@@ -3,7 +3,6 @@
  */
 
 import type { Course, Chapter } from './types';
-import { PYTHON_BASICS } from './python-basics';
 import { COMPUTER_BASICS } from './computer-basics';
 import { CODING_BASICS } from './coding-basics';
 import { AI_LITERACY_CHAPTERS } from './ai-literacy';
@@ -249,11 +248,11 @@ export const COURSES: Course[] = [
         icon: 'data_object',
         gradient: 'linear-gradient(135deg, #3b82f6, #3b82f6)',
         cardImage: '/images/courses/python.png',
-        description: 'C++ 과정과 같은 3패널 학습 환경에서 개념을 예측하고, Python 코드로 실행하며, 오류 수정과 응용 프로젝트까지 체계적으로 학습합니다.',
-        totalUnits: 185,
-        totalProblems: 0,
-        estimatedHours: 60,
-        chapters: [...PYTHON_CORE_CHAPTERS, ...PYTHON_BASICS],
+        description: '120분 수업 36회차 과정입니다. 주 1회는 36주, 주 2회는 18주 동안 예측·실행·디버깅·프로젝트를 반복하며 완성합니다.',
+        totalUnits: 36,
+        totalProblems: 144,
+        estimatedHours: 72,
+        chapters: PYTHON_CORE_CHAPTERS,
         defaultLanguage: 'python',
     },
     {

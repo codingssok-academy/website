@@ -1,5 +1,5 @@
 "use client";
-import { useState, useCallback, useEffect, useMemo, useRef } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { createClient } from "@/lib/supabase";
 
 const LOCAL_KEY = (courseId: string) => `codingssok_completed_${courseId}`;
@@ -10,7 +10,7 @@ export function useStudyProgress(userId: string | undefined, courseId: string) {
         if (typeof window === "undefined") return new Set();
         try { const s = localStorage.getItem(LOCAL_KEY(courseId)); return s ? new Set(JSON.parse(s)) : new Set(); } catch { return new Set(); }
     });
-    const syncRef = useRef(false);
+    const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "local" | "error">("idle");
 
     // Load from Supabase on mount
     useEffect(() => {
@@ -31,29 +31,41 @@ export function useStudyProgress(userId: string | undefined, courseId: string) {
                     return merged;
                 });
             }
-            syncRef.current = true;
         })();
     }, [userId, courseId, supabase]);
 
-    // Toggle completion
-    const toggleUnit = useCallback((unitId: string) => {
-        setCompletedUnits(prev => {
-            const next = new Set(prev);
-            if (next.has(unitId)) next.delete(unitId); else next.add(unitId);
-            // Save to localStorage
-            localStorage.setItem(LOCAL_KEY(courseId), JSON.stringify([...next]));
-            // Save to Supabase
-            if (userId) {
-                supabase.from("study_progress").upsert({
-                    user_id: userId,
-                    course_id: courseId,
-                    completed_units: [...next],
-                    updated_at: new Date().toISOString(),
-                }, { onConflict: "user_id,course_id" }).then(() => {});
-            }
-            return next;
-        });
-    }, [userId, courseId, supabase]);
+    const setUnitCompleted = useCallback(async (unitId: string, completed: boolean) => {
+        const next = new Set(completedUnits);
+        if (completed) next.add(unitId); else next.delete(unitId);
+        setCompletedUnits(next);
 
-    return { completedUnits, toggleUnit };
+        let localSaved = false;
+        try {
+            localStorage.setItem(LOCAL_KEY(courseId), JSON.stringify([...next]));
+            localSaved = true;
+        } catch {}
+
+        if (!userId) {
+            setSaveStatus(localSaved ? "local" : "error");
+            return { savedToCloud: false, savedLocally: localSaved };
+        }
+
+        setSaveStatus("saving");
+        const { error } = await supabase.from("study_progress").upsert({
+            user_id: userId,
+            course_id: courseId,
+            completed_units: [...next],
+            updated_at: new Date().toISOString(),
+        }, { onConflict: "user_id,course_id" });
+
+        setSaveStatus(error ? (localSaved ? "local" : "error") : "saved");
+        return { savedToCloud: !error, savedLocally: localSaved };
+    }, [completedUnits, userId, courseId, supabase]);
+
+    // Legacy-compatible toggle for the other courses.
+    const toggleUnit = useCallback((unitId: string) => {
+        void setUnitCompleted(unitId, !completedUnits.has(unitId));
+    }, [completedUnits, setUnitCompleted]);
+
+    return { completedUnits, toggleUnit, setUnitCompleted, saveStatus };
 }

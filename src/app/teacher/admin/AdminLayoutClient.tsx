@@ -14,7 +14,7 @@ export default function AdminLayoutClient({ children }: { children: ReactNode })
                 <meta name="apple-mobile-web-app-capable" content="yes" />
                 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
                 <meta name="apple-mobile-web-app-title" content="CodingSSok Admin" />
-                <link rel="apple-touch-icon" href="/images/promo/logo-codingssok.png" />
+                <link rel="apple-touch-icon" href="/icon.png" />
             </head>
             <TeacherSwRegister />
             <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" />

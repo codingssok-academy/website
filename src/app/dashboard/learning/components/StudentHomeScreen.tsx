@@ -33,7 +33,7 @@ export default function StudentHomeScreen() {
     return (
         <main className="student-home">
             <header className="topbar">
-                <img src="/images/promo/logo-codingssok.png" alt="코딩쏙" />
+                <img src="/icon.png" alt="코딩쏙" />
                 <div>
                     <span>학습 플랫폼</span>
                     <strong>{user?.name || "학생"}</strong>

@@ -26,6 +26,8 @@ import { useStudyProgress } from "@/hooks/useStudyProgress";
 import StudyNotesEditor from "./StudyNotesEditor";
 import { usePresenceHeartbeat } from "@/hooks/usePresenceHeartbeat";
 import { useActivityLog } from "@/hooks/useActivityLog";
+import { useLessonAnswerPersistence, useLessonSessionProgress } from "@/hooks/useLessonPersistence";
+import { evaluateLessonCompletion, type LessonAnswerSnapshot } from "@/lib/python-core-learning";
 import AITutor from "@/components/ui/AITutor";
 import CosProSelector from "./CosProSelector";
 import ProgrammingContestSelector from "./ProgrammingContestSelector";
@@ -106,7 +108,7 @@ export default function CourseDetailPage() {
     const tierLocked = !!requiredTier && !canAccessContent(userProgress.tier, requiredTier);
 
     // ── State ──
-    const { completedUnits, toggleUnit } = useStudyProgress(user?.id, courseId);
+    const { completedUnits, toggleUnit, setUnitCompleted, saveStatus: completionSaveStatus } = useStudyProgress(user?.id, courseId);
     const [expandedChapters, setExpandedChapters] = useState<Set<string>>(new Set());
     const [selectedUnit, setSelectedUnit] = useState<Unit | null>(null);
     const [activePage, setActivePage] = useState<Page | null>(null);
@@ -199,6 +201,61 @@ export default function CourseDetailPage() {
     const [editorCode, setEditorCode] = useState<Record<number, string>>({});
     const [runResult, setRunResult] = useState<Record<number, { stdout: string; stderr: string; exitCode: number } | null>>({});
     const [runLoading, setRunLoading] = useState<Record<number, boolean>>({});
+    const [completionMessage, setCompletionMessage] = useState("");
+
+    const isPythonCoreUnit = courseId === "3" && !!selectedUnit?.id.startsWith("py-core-");
+    const corePageIds = useMemo(() => selectedUnit?.pages?.map((page) => page.id) ?? [], [selectedUnit]);
+    const coreQuizPageIds = useMemo(
+        () => selectedUnit?.pages?.filter((page) => page.quiz).map((page) => page.id) ?? [],
+        [selectedUnit],
+    );
+    const coreProblemIds = useMemo(
+        () => selectedUnit?.pages?.flatMap((page) => page.problems?.map((problem) => problem.id) ?? []) ?? [],
+        [selectedUnit],
+    );
+    const {
+        progress: lessonSessionProgress,
+        status: lessonProgressSaveStatus,
+        ready: lessonProgressReady,
+        markPageVisited,
+        markQuizCorrect,
+        markProblemSuccessful,
+    } = useLessonSessionProgress({
+        enabled: isPythonCoreUnit,
+        userId: user?.id,
+        courseId,
+        unitId: selectedUnit?.id,
+    });
+    const lessonCompletion = useMemo(
+        () => evaluateLessonCompletion(lessonSessionProgress, corePageIds, coreQuizPageIds, coreProblemIds),
+        [corePageIds, coreProblemIds, coreQuizPageIds, lessonSessionProgress],
+    );
+
+    const restoreLessonAnswer = useCallback((saved: LessonAnswerSnapshot) => {
+        setSelectedAnswer(saved.quizAnswer);
+        setQuizResult(saved.quizResult);
+        setEditorCode(Object.fromEntries(
+            Object.entries(saved.codeAnswers).map(([problemId, code]) => [Number(problemId), code]),
+        ));
+    }, []);
+    const lessonAnswerDraft = useMemo(() => ({
+        quizAnswer: selectedAnswer,
+        quizResult: quizResult === "correct" ? "correct" as const : null,
+        codeAnswers: Object.fromEntries(Object.entries(editorCode).map(([problemId, code]) => [String(problemId), code])),
+    }), [editorCode, quizResult, selectedAnswer]);
+    const { status: answerSaveStatus } = useLessonAnswerPersistence({
+        enabled: isPythonCorePage,
+        userId: user?.id,
+        courseId,
+        unitId: selectedUnit?.id,
+        pageId: activePage?.id,
+        answer: lessonAnswerDraft,
+        onRestore: restoreLessonAnswer,
+    });
+
+    useEffect(() => {
+        if (isPythonCorePage && activePage && lessonProgressReady) markPageVisited(activePage.id);
+    }, [activePage, isPythonCorePage, lessonProgressReady, markPageVisited]);
 
     // Notes
     const { saveNote, getNote } = useStudyNotes(user?.id);
@@ -727,6 +784,7 @@ export default function CourseDetailPage() {
     const resetQuiz = () => { setSelectedAnswer(null); setQuizResult(null); setWrongCount(0); setShowHint(false); setShaking(false); setShowProblemAnswer({}); setEditorCode({}); setRunResult({}); };
 
     const executeCode = async (probId: number, code: string) => {
+        setEditorCode(prev => ({ ...prev, [probId]: code }));
         setRunLoading(prev => ({ ...prev, [probId]: true }));
         setRunResult(prev => ({ ...prev, [probId]: null }));
         try {
@@ -744,6 +802,15 @@ export default function CourseDetailPage() {
                     ? 0
                     : stderr || !res.ok ? 1 : 0;
             setRunResult(prev => ({ ...prev, [probId]: { stdout, stderr, exitCode } }));
+            if (isPythonCorePage && exitCode === 0) {
+                const template = activePage?.problems?.find((problem) => problem.id === probId)?.codeTemplate ?? "";
+                if (code.trim() !== template.trim()) {
+                    markProblemSuccessful(probId);
+                    setCompletionMessage("");
+                } else {
+                    setCompletionMessage("예제 코드를 한 곳 이상 직접 바꾼 뒤 다시 실행하면 코딩 활동이 인정됩니다.");
+                }
+            }
         } catch { setRunResult(prev => ({ ...prev, [probId]: { stdout: "", stderr: "네트워크 오류", exitCode: 1 } })); }
         finally { setRunLoading(prev => ({ ...prev, [probId]: false })); }
     };
@@ -753,7 +820,11 @@ export default function CourseDetailPage() {
         if (selectedAnswer === quiz.answer) {
             setQuizResult("correct");
             trackMission("quiz_solve");
-            setTimeout(() => completeUnit(unit), 1500);
+            if (isPythonCorePage && activePage) {
+                markQuizCorrect(activePage.id);
+            } else {
+                setTimeout(() => completeUnit(unit), 1500);
+            }
         } else {
             setQuizResult("wrong"); setShaking(true);
             const nw = wrongCount + 1; setWrongCount(nw);
@@ -765,7 +836,12 @@ export default function CourseDetailPage() {
 
     const completeUnit = async (unit: Unit) => {
         if (completedUnits.has(unit.id)) return;
-        toggleUnit(unit.id);
+        if (unit.id.startsWith("py-core-") && !lessonCompletion.ready) {
+            setCompletionMessage("10단계 학습, 확인 퀴즈, 코딩 실습을 모두 마치면 수업을 완료할 수 있어요.");
+            return;
+        }
+        setCompletionMessage("");
+        const persisted = await setUnitCompleted(unit.id, true);
         const nc = new Set(completedUnits); nc.add(unit.id);
         resetQuiz();
         if (user) {
@@ -776,6 +852,9 @@ export default function CourseDetailPage() {
             checkAchievementBadges({ completedUnits: nc.size, codeRuns: 0, quizStreak: 0 });
             const prog = Math.round((nc.size / allUnits.length) * 100);
             await supabase.from("user_course_progress").upsert({ user_id: user.id, course_id: courseId, progress: prog, completed_lessons: Array.from(nc) }, { onConflict: "user_id,course_id" });
+        }
+        if (!persisted.savedToCloud && persisted.savedLocally) {
+            setCompletionMessage("수업 완료는 이 기기에 저장됐습니다. 인터넷 연결 후 다시 동기화해 주세요.");
         }
     };
 
@@ -983,7 +1062,9 @@ export default function CourseDetailPage() {
                 .pycore-frame-top{display:flex;align-items:center;gap:10px;margin:0 2px 12px;min-height:34px}
                 .pycore-frame-count{display:inline-flex;align-items:center;justify-content:center;min-width:58px;height:30px;padding:0 12px;border-radius:999px;background:linear-gradient(135deg,#2563eb,#0ea5e9);color:#fff;font-size:12px;font-weight:900;box-shadow:0 5px 14px rgba(37,99,235,.24)}
                 .pycore-frame-context{font-size:11px;color:#64748b;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+                .pycore-save-state{display:inline-flex;align-items:center;gap:5px;margin-left:auto;padding:6px 9px;border:1px solid #dbeafe;border-radius:999px;background:#f8fbff;color:#64748b;font-size:10px;font-weight:800;white-space:nowrap}.pycore-save-state[data-status="saving"],.pycore-save-state[data-status="loading"]{color:#2563eb}.pycore-save-state[data-status="saved"]{color:#047857;border-color:#a7f3d0;background:#ecfdf5}.pycore-save-state[data-status="local"]{color:#b45309;border-color:#fde68a;background:#fffbeb}.pycore-save-state[data-status="error"]{color:#b91c1c;border-color:#fecaca;background:#fef2f2}
                 .pycore-focus-btn{margin-left:auto;display:inline-flex;align-items:center;gap:5px;padding:7px 10px;border:1px solid #dbeafe;border-radius:10px;background:#fff;color:#2563eb;font-size:11px;font-weight:800;cursor:pointer}
+                .pycore-save-state+.pycore-focus-btn{margin-left:0}
                 .pycore-focus-btn:hover{background:#eff6ff}
                 .pycore-content{width:100%}
                 .pycore-slide{--pc-blue:#2563eb;--pc-cyan:#0ea5e9;--pc-navy:#102a56;--pc-mint:#0f9f7f;--pc-purple:#7154d8;overflow:hidden;width:100%;min-height:620px;border:1px solid #dbeafe;border-radius:22px;background:linear-gradient(145deg,#f8fbff 0%,#eef6ff 54%,#f7f5ff 100%);box-shadow:0 18px 54px rgba(30,64,175,.14),0 2px 8px rgba(15,23,42,.08);color:#1f2d3d}
@@ -1012,8 +1093,9 @@ export default function CourseDetailPage() {
                 .pycore-debug-flow{display:flex;align-items:center}.pycore-debug-flow>div{display:flex;flex:1;gap:9px;align-items:center;padding:13px;border:1px solid #fecaca;border-radius:13px;background:#fff}.pycore-debug-flow>i{width:18px;height:2px;background:#fca5a5}.pycore-debug-flow b{display:flex;flex:0 0 28px;height:28px;align-items:center;justify-content:center;border-radius:8px;background:#ef4444;color:#fff}.pycore-debug-flow span,.pycore-debug-flow small{display:block}.pycore-debug-flow span{color:#7f1d1d;font-size:11px;font-weight:800}.pycore-debug-flow small{margin-top:3px;color:#64748b;font-size:9px;line-height:1.4}.pycore-error-card{display:grid;grid-template-columns:100px 1fr;gap:10px;margin:16px 0;padding:15px;border:1px solid #fecaca;border-radius:14px;background:#fff}.pycore-error-card>span{display:flex;align-items:center;justify-content:center;border-radius:9px;background:#fee2e2;color:#b91c1c;font:800 11px 'JetBrains Mono',monospace}.pycore-error-card p{grid-column:1/-1;margin:0;color:#64748b;font-size:11px}
                 .pycore-choice-grid>div>span{display:inline-block;margin-bottom:9px;padding:4px 7px;border-radius:6px;background:#ede9fe;color:#6d28d9;font:900 9px 'JetBrains Mono',monospace}.pycore-score-grid{grid-template-columns:repeat(4,1fr)}.pycore-score-grid>div{text-align:center}.pycore-score-grid .material-symbols-outlined{margin:0 auto 12px}
                 .pycore-reflection{display:grid;gap:10px}.pycore-reflection>div{display:flex;gap:14px;align-items:center;padding:14px 16px;border:1px solid #dbeafe;border-radius:14px;background:#fff}.pycore-reflection>div>span{display:flex;flex:0 0 36px;height:36px;align-items:center;justify-content:center;border-radius:10px;background:#dbeafe;color:#1d4ed8;font-size:11px;font-weight:900}.pycore-reflection p,.pycore-reflection b,.pycore-reflection small{display:block;margin:0}.pycore-reflection b{color:#102a56;font-size:12px}.pycore-reflection small{margin-top:3px;color:#64748b;font-size:10px}.pycore-homework{display:flex;gap:16px;align-items:center;margin:16px 0;padding:18px;border-radius:16px;background:linear-gradient(135deg,#dbeafe,#ede9fe);border:1px solid #bfdbfe}.pycore-homework>.material-symbols-outlined{display:flex;flex:0 0 46px;height:46px;align-items:center;justify-content:center;border-radius:14px;background:#2563eb;color:#fff}.pycore-homework small{color:#1d4ed8;font-size:10px;font-weight:900}.pycore-homework h3{margin:2px 0 5px;color:#102a56;font-size:15px}.pycore-homework p{margin:0;color:#475569;font-size:11px;line-height:1.55}
+                .pycore-completion{margin:22px 0 8px;padding:22px;border:1px solid #bae6fd;border-radius:20px;background:linear-gradient(145deg,#fff,#f0f9ff);box-shadow:0 12px 32px rgba(14,165,233,.08)}.pycore-completion h3{margin:0 0 6px;color:#102a56;font-size:18px}.pycore-completion>p{margin:0;color:#64748b;font-size:12px;line-height:1.6}.pycore-completion-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0}.pycore-completion-grid>div{padding:13px;border:1px solid #dbeafe;border-radius:13px;background:#fff}.pycore-completion-grid span,.pycore-completion-grid b{display:block}.pycore-completion-grid span{color:#64748b;font-size:10px;font-weight:800}.pycore-completion-grid b{margin-top:5px;color:#1d4ed8;font-size:16px}.pycore-complete-btn{width:100%;padding:13px 18px;border:0;border-radius:13px;background:linear-gradient(135deg,#10b981,#059669);color:#fff;font-size:13px;font-weight:900;cursor:pointer;box-shadow:0 7px 18px rgba(5,150,105,.2)}.pycore-complete-btn:disabled{background:#cbd5e1;box-shadow:none;cursor:not-allowed}.pycore-completion-message{margin-top:10px!important;padding:9px 11px;border-radius:9px;background:#fff7ed;color:#9a3412!important;font-weight:700}
                 @media(max-width:960px){.pycore-slide{min-height:auto}.pycore-hero,.pycore-body{padding-left:24px;padding-right:24px}.pycore-mission-grid,.pycore-choice-grid,.pycore-predict-list,.pycore-steps{grid-template-columns:1fr}.pycore-score-grid{grid-template-columns:1fr 1fr}.pycore-blueprint{grid-template-columns:1fr 1fr}.pycore-debug-flow{display:grid;grid-template-columns:1fr 1fr;gap:8px}.pycore-debug-flow>i{display:none}}
-                @media(max-width:620px){.pycore-hero,.pycore-body{padding-left:18px;padding-right:18px}.pycore-split,.pycore-code-compare{grid-template-columns:1fr}.pycore-score-grid{grid-template-columns:1fr}.pycore-route{display:grid;grid-template-columns:1fr 1fr;gap:6px}.pycore-route i{display:none}.pycore-callout,.pycore-rule{grid-template-columns:1fr}.pycore-blueprint{grid-template-columns:1fr}.pycore-debug-flow{grid-template-columns:1fr}.pycore-frame-context{display:none}}
+                @media(max-width:620px){.pycore-hero,.pycore-body{padding-left:18px;padding-right:18px}.pycore-split,.pycore-code-compare{grid-template-columns:1fr}.pycore-score-grid{grid-template-columns:1fr}.pycore-route{display:grid;grid-template-columns:1fr 1fr;gap:6px}.pycore-route i{display:none}.pycore-callout,.pycore-rule{grid-template-columns:1fr}.pycore-blueprint{grid-template-columns:1fr}.pycore-debug-flow{grid-template-columns:1fr}.pycore-frame-context{display:none}.pycore-completion-grid{grid-template-columns:1fr}.pycore-save-state{margin-left:auto}.pycore-focus-btn{display:none}}
 
                 /* ── MOBILE ── */
                 @media (max-width: 768px) {
@@ -1515,6 +1597,10 @@ export default function CourseDetailPage() {
                                             <div className="pycore-frame-top">
                                                 <span className="pycore-frame-count">{corePageIndex} / {corePageTotal}</span>
                                                 <span className="pycore-frame-context">{coreChapter?.title} · {selectedUnit.title}</span>
+                                                <span className="pycore-save-state" data-status={answerSaveStatus === "idle" ? lessonProgressSaveStatus : answerSaveStatus}>
+                                                    <MI icon={(answerSaveStatus === "saving" || answerSaveStatus === "loading") ? "sync" : answerSaveStatus === "error" ? "cloud_off" : answerSaveStatus === "local" ? "save" : "cloud_done"} style={{ fontSize: 13 }} />
+                                                    {(answerSaveStatus === "saving" || answerSaveStatus === "loading") ? "저장 중" : answerSaveStatus === "error" ? "저장 오류" : answerSaveStatus === "local" ? "기기에 저장" : "자동 저장됨"}
+                                                </span>
                                                 <button
                                                     className="pycore-focus-btn"
                                                     onClick={() => {
@@ -1560,6 +1646,28 @@ export default function CourseDetailPage() {
                                         <CodeProblemCard key={prob.id} prob={prob} editorCode={editorCode} setEditorCode={setEditorCode} runResult={runResult} runLoading={runLoading} executeCode={executeCode} showProblemAnswer={showProblemAnswer} setShowProblemAnswer={setShowProblemAnswer} />
                                     ))}
                                 </div>
+                            )}
+
+                            {isPythonCorePage && currentPageIdx === pages.length - 1 && (
+                                <section className="pycore-completion">
+                                    <h3>120분 수업 완료 확인</h3>
+                                    <p>단순 열람이 아니라 개념 확인과 코딩 실행까지 마치면 이번 회차가 완료됩니다.</p>
+                                    <div className="pycore-completion-grid">
+                                        <div><span>학습 단계</span><b>{lessonCompletion.pages.completed} / {lessonCompletion.pages.total}</b></div>
+                                        <div><span>확인 퀴즈</span><b>{lessonCompletion.quizzes.completed} / {lessonCompletion.quizzes.total}</b></div>
+                                        <div><span>코드 수정·실행</span><b>{lessonCompletion.problems.completed} / {lessonCompletion.problems.total}</b></div>
+                                    </div>
+                                    <button
+                                        className="pycore-complete-btn"
+                                        disabled={!lessonCompletion.ready || completedUnits.has(selectedUnit.id)}
+                                        onClick={() => void completeUnit(selectedUnit)}
+                                    >
+                                        {completedUnits.has(selectedUnit.id)
+                                            ? completionSaveStatus === "saving" ? "수업 완료 저장 중..." : "✓ 이번 회차 완료됨"
+                                            : lessonCompletion.ready ? "이번 회차 수업 완료하기" : "학습 활동을 모두 마쳐주세요"}
+                                    </button>
+                                    {completionMessage && <p className="pycore-completion-message">{completionMessage}</p>}
+                                </section>
                             )}
 
                             {/* Floating sticky pill nav — Codecademy/Replit 스타일 (Glassmorphism) */}
@@ -1649,7 +1757,13 @@ export default function CourseDetailPage() {
                                                     {completedUnits.has(selectedUnit.id) ? "✓ 완료" : "✓"}
                                                 </button>
                                                 <button
-                                                    onClick={() => { if (!completedUnits.has(selectedUnit.id)) completeUnit(selectedUnit); selectUnit(nextUnitInCourse); }}
+                                                    onClick={async () => {
+                                                        if (!completedUnits.has(selectedUnit.id)) {
+                                                            await completeUnit(selectedUnit);
+                                                            if (isPythonCoreUnit && !lessonCompletion.ready) return;
+                                                        }
+                                                        selectUnit(nextUnitInCourse);
+                                                    }}
                                                     style={{
                                                         height: 38, padding: "0 18px", borderRadius: 999,
                                                         border: "none", cursor: "pointer",

@@ -51,7 +51,7 @@ export default function Contact() {
                         className="ct-info"
                     >
                         <Image
-                            src="/images/promo/logo-codingssok.png"
+                            src="/icon.png"
                             alt="코딩쏙"
                             width={160}
                             height={50}

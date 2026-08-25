@@ -609,7 +609,7 @@ export default function LearningDashboard() {
             `}</style>
 
             <div className="pg-bar">
-                <div className="pg-logo"><img src="/images/promo/logo-codingssok.png" alt="코딩쏙" /></div>
+                <div className="pg-logo"><img src="/icon.png" alt="코딩쏙" /></div>
                 <div className="pg-acts">
                     <div className="pg-user"><div className="pg-dot" />{user?.name || "학생"}</div>
                     {isAdminUser ? (

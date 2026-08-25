@@ -52,7 +52,7 @@ export default function AdminSidebar() {
         <>
             <header className="admin-mobile-header" style={mobileHeaderStyle}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, width: "100%" }}>
-                    <Image src="/images/promo/logo-codingssok.png" alt="코딩쏙" width={32} height={32} style={mobileLogoStyle} />
+                    <Image src="/icon.png" alt="코딩쏙" width={32} height={32} style={mobileLogoStyle} />
                     <div style={{ minWidth: 0 }}>
                         <div style={{ fontSize: 14, fontWeight: 900, color: "#f8fafc" }}>코딩쏙 관리자</div>
                         <div style={{ fontSize: 11, color: "#94a3b8" }}>학생 운영 관리</div>
@@ -64,7 +64,7 @@ export default function AdminSidebar() {
                 <div style={{ padding: collapsed ? "18px 12px" : "22px 18px 18px", borderBottom: "1px solid rgba(148,163,184,0.18)" }}>
                     <div style={{ display: "flex", alignItems: "center", justifyContent: collapsed ? "center" : "space-between", gap: 12 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
-                            <Image src="/images/promo/logo-codingssok.png" alt="코딩쏙" width={40} height={40} style={logoStyle} />
+                            <Image src="/icon.png" alt="코딩쏙" width={40} height={40} style={logoStyle} />
                             {!collapsed && (
                                 <div>
                                     <div style={{ fontSize: 16, fontWeight: 900, color: "#f8fafc" }}>코딩쏙</div>

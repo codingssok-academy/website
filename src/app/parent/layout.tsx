@@ -49,7 +49,7 @@ export default function ParentLayout({
                 rel="stylesheet"
                 href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
             />
-            <link rel="apple-touch-icon" href="/icon-192.png" />
+            <link rel="apple-touch-icon" href="/icon.png" />
             <ParentShell>{children}</ParentShell>
             <ParentSwRegister />
         </>

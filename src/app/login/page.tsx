@@ -309,7 +309,7 @@ export default function LoginPage() {
         {/* Brand Header */}
         <div style={{ textAlign: "center", marginBottom: 36 }}>
           <img
-            src="/images/promo/logo-codingssok.png"
+            src="/icon.png"
             alt="코딩쏙"
             style={{
               width: 72, height: 72, borderRadius: 22, margin: "0 auto 20px",

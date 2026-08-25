@@ -74,10 +74,18 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "answers 항목이 너무 많습니다 (최대 100)" }, { status: 400 });
     }
 
+    if (!answers.every((answer) => Number.isInteger(answer.field_index) && answer.field_index >= 0 && answer.field_index <= 100_000)) {
+        return NextResponse.json({ error: "field_index 형식 오류" }, { status: 400 });
+    }
+
+    if (answers.length === 0) {
+        return NextResponse.json({ saved: 0 });
+    }
+
     const rows = answers.map((a) => ({
         user_id: user.id,
         page_path,
-        field_index: Number(a.field_index) | 0,
+        field_index: a.field_index,
         answer_text: String(a.answer_text ?? "").slice(0, 10000),
         updated_at: new Date().toISOString(),
     }));

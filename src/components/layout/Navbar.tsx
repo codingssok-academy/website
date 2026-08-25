@@ -237,7 +237,7 @@ export default function Navbar() {
                 <div className="site-head__inner">
                     <Link href="/" className="s__logo" style={{ display: "inline-flex", alignItems: "center", gap: 0 }}>
                         <Image
-                            src="/images/promo/logo-codingssok.png"
+                            src="/icon.png"
                             alt="코딩쏙"
                             width={140}
                             height={48}

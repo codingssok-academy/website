@@ -47,7 +47,7 @@ export default function PageLoader() {
                             transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
                         >
                             <Image
-                                src="/images/promo/logo-codingssok.png"
+                                src="/icon.png"
                                 alt="코딩쏙"
                                 width={180}
                                 height={60}
