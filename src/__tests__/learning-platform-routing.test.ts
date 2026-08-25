@@ -13,6 +13,7 @@ describe("learning platform routing", () => {
     const learningPage = read("src/app/dashboard/learning/page.tsx");
     const studentHome = read("src/app/dashboard/learning/components/StudentHomeScreen.tsx");
     const coursesPage = read("src/app/dashboard/learning/courses/page.tsx");
+    const coursesData = read("src/data/courses/index.ts");
     const layout = read("src/app/dashboard/learning/layout.tsx");
 
     expect(learningPage).toContain("function BookCard");
@@ -21,9 +22,10 @@ describe("learning platform routing", () => {
     expect(learningPage).not.toContain("COURSES.slice(5,10).map");
     expect(studentHome).toContain("const visibleCourses = STUDENT_SHELF_COURSES");
     expect(learningPage).toContain("router.push(`/dashboard/learning/courses/${id}`)");
-    expect(learningPage).toContain('"11": "디지털 창작자"');
-    expect(learningPage).toContain('"10": "AI 프로젝트 랩"');
-    expect(learningPage).toContain('"4": "알고리즘·대회"');
+    expect(learningPage).not.toContain("bk-cover-renamed-title");
+    expect(coursesData).toContain("kids-it-v2.png");
+    expect(coursesData).toContain("ai-class-v2.png");
+    expect(coursesData).toContain("cpp-v2.png");
     expect(coursesPage).toContain('export { default } from "../page"');
     expect(coursesPage).not.toContain("배정센터");
     expect(layout).toContain('const isCourseList = pathname === "/dashboard/learning/courses"');

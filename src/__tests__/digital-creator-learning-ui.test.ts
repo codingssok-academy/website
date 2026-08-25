@@ -14,6 +14,10 @@ const learningPage = readFileSync(
     join(process.cwd(), "src/app/dashboard/learning/page.tsx"),
     "utf8",
 );
+const coursesData = readFileSync(
+    join(process.cwd(), "src/data/courses/index.ts"),
+    "utf8",
+);
 
 describe("Digital Creator learning UI", () => {
     it("saves activity answers and requires the packaged lesson flow before completion", () => {
@@ -40,9 +44,10 @@ describe("Digital Creator learning UI", () => {
         expect(pageDetail).toContain(".kids-it-content .kids-it-record-box");
     });
 
-    it("renders renamed shelf titles as printed cover typography", () => {
-        expect(learningPage).toContain('bk-cover-renamed-${course.id}');
-        expect(learningPage).toContain(".bk-cover-renamed-title::before");
-        expect(learningPage).toContain("radial-gradient(ellipse at center");
+    it("uses cover images with the final course titles printed into the artwork", () => {
+        expect(learningPage).not.toContain("bk-cover-renamed-title");
+        expect(coursesData).toContain("/images/courses/kids-it-v2.png");
+        expect(coursesData).toContain("/images/courses/ai-class-v2.png");
+        expect(coursesData).toContain("/images/courses/cpp-v2.png");
     });
 });

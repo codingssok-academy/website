@@ -145,8 +145,8 @@ function makePage(unit: KidsUnitDef, slide: KidsSlide, pageIndex: number): Page 
                         <p>${escapeHtml(slide.idea)}</p>
                         <div class="kids-it-analogy"><b>이렇게 생각해요</b>${escapeHtml(slide.analogy)}</div>
                     </div>
-                    <div class="kids-it-illustration-frame" style="display:flex !important;width:100% !important;max-width:430px !important;height:230px !important;margin:0 auto !important;align-items:center !important;justify-content:center !important;overflow:hidden !important;">
-                        <img src="/images/courses/digital-creator-textbook-v1.png" alt="친구들과 로봇이 디지털 작품을 만드는 모습" class="kids-it-illustration" width="430" height="230" style="display:block !important;width:100% !important;max-width:430px !important;height:230px !important;margin:0 auto !important;object-fit:contain !important;border:0 !important;box-shadow:none !important;transform:none !important;" />
+                    <div class="kids-it-illustration-frame" style="--kids-art-height:206px;display:flex !important;width:100% !important;max-width:430px !important;height:230px !important;margin:0 auto !important;padding:12px 18px !important;align-items:center !important;justify-content:center !important;overflow:visible !important;">
+                        <img src="/images/courses/digital-creator-textbook-v2.png" alt="친구들과 로봇이 디지털 작품을 만드는 모습" class="kids-it-illustration" width="430" height="287" style="display:block !important;width:100% !important;max-width:394px !important;height:auto !important;max-height:var(--kids-art-height) !important;margin:0 auto !important;object-fit:contain !important;border:0 !important;box-shadow:none !important;transform:none !important;" />
                     </div>
                 </section>
                 <div class="kids-it-action-grid">
