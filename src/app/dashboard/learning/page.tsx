@@ -141,6 +141,9 @@ function BookCard({
                     )}
                     <div className="bk-cover-dim" />
                     <div className="bk-cover-shine" />
+                    {course.id === "11" && (
+                        <div className="bk-cover-renamed-title">디지털 창작자</div>
+                    )}
                     <div className="bk-cover-info">
                         <span className="bk-cover-title">{course.title}</span>
                     </div>
@@ -466,6 +469,17 @@ export default function LearningDashboard() {
                     background-size:200% 200%;
                     animation: bk-shine 5s linear infinite;
                     opacity:0.7;
+                }
+
+                .bk-cover-renamed-title {
+                    position:absolute;left:5%;right:5%;top:30%;height:30%;z-index:3;
+                    display:flex;align-items:center;justify-content:center;text-align:center;
+                    padding:8px;border-radius:8px;
+                    background:linear-gradient(135deg,rgba(7,20,46,.98),rgba(12,34,70,.96));
+                    color:#dbeafe;font-size:clamp(16px,1.8vw,26px);font-weight:900;
+                    line-height:1.15;letter-spacing:-0.06em;
+                    text-shadow:0 2px 12px rgba(37,99,235,.55);
+                    box-shadow:0 8px 24px rgba(2,6,23,.34),inset 0 1px 0 rgba(255,255,255,.08);
                 }
 
                 .bk-cover-info {

@@ -18,6 +18,8 @@ describe("learning platform routing", () => {
     expect(learningPage).toContain("COURSES.slice(0,5).map");
     expect(learningPage).toContain("COURSES.slice(5,10).map");
     expect(learningPage).toContain("router.push(`/dashboard/learning/courses/${id}`)");
+    expect(learningPage).toContain('course.id === "11"');
+    expect(learningPage).toContain('bk-cover-renamed-title">디지털 창작자');
     expect(coursesPage).toContain('export { default } from "../page"');
     expect(coursesPage).not.toContain("배정센터");
     expect(layout).toContain('const isCourseList = pathname === "/dashboard/learning/courses"');
