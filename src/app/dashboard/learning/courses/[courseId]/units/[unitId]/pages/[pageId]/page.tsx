@@ -835,6 +835,51 @@ export default function LearningContentPage() {
                                     .kids-it-content .kids-it-remember strong {
                                         color: #b45309;
                                     }
+                                    .kids-it-content .kids-it-textbook {
+                                        position:relative;overflow:hidden;width:min(100%,1120px);min-height:720px;
+                                        padding:clamp(24px,3.4vw,46px);border:1px solid #dce5ef;border-radius:8px;
+                                        background:linear-gradient(rgba(255,255,255,.965),rgba(255,255,255,.965)),repeating-linear-gradient(0deg,transparent 0 27px,rgba(148,163,184,.07) 27px 28px);
+                                        box-shadow:0 18px 52px rgba(71,85,105,.16),0 0 0 8px rgba(255,255,255,.72);color:#16335f;
+                                        font-family:'Pretendard','Noto Sans KR',system-ui,sans-serif;
+                                    }
+                                    .kids-it-content .kids-it-textbook::before { content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 12% 8%,rgba(191,219,254,.18),transparent 23%),radial-gradient(circle at 90% 12%,rgba(254,240,138,.12),transparent 18%); }
+                                    .kids-it-content .kids-it-doodle { position:absolute;z-index:0;user-select:none;opacity:.8; }
+                                    .kids-it-content .kids-it-doodle-star { top:25px;left:17%;color:#facc15;font-size:28px;transform:rotate(-9deg); }
+                                    .kids-it-content .kids-it-doodle-cloud { top:31px;right:19%;color:#bae6fd;font-size:39px; }
+                                    .kids-it-content .kids-it-doodle-plane { top:58px;right:7%;color:#fbbf24;font-size:30px;transform:rotate(-24deg); }
+                                    .kids-it-content .kids-it-textbook > *:not(.kids-it-doodle) { position:relative;z-index:1; }
+                                    .kids-it-content .kids-it-textbook-top { display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:18px; }
+                                    .kids-it-content .kids-it-textbook-brand { display:flex;flex-direction:column;gap:2px;color:#1d4ed8; }
+                                    .kids-it-content .kids-it-textbook-brand small { font-size:9px;font-weight:900;letter-spacing:.14em;color:#7c9bc5; }
+                                    .kids-it-content .kids-it-textbook-brand b { font-size:clamp(20px,2.3vw,30px);font-weight:950;letter-spacing:-.06em; }
+                                    .kids-it-content .kids-it-textbook .kids-it-phase { margin:0;padding:8px 13px;border:1px solid #bfdbfe;background:#eff6ff;color:#1d4ed8;font-size:11px; }
+                                    .kids-it-content .kids-it-mission-ribbon { width:min(250px,72%);margin:0 auto 18px;padding:8px 34px;text-align:center;background:linear-gradient(90deg,#fde68a,#fbbf24,#fde68a);clip-path:polygon(0 0,100% 0,88% 50%,100% 100%,0 100%,12% 50%);color:#4a3211;font-size:16px;font-weight:950; }
+                                    .kids-it-content .kids-it-title-row { display:grid;grid-template-columns:1fr auto;gap:18px;align-items:end;text-align:center; }
+                                    .kids-it-content .kids-it-title-row > div:first-child { padding-left:80px; }
+                                    .kids-it-content .kids-it-title-row h2 { margin:0;color:#123265;font-size:clamp(30px,4.6vw,52px);line-height:1.18;font-weight:950;letter-spacing:-.065em;word-break:keep-all; }
+                                    .kids-it-content .kids-it-title-row .kids-it-cue { display:block;margin:9px 0 0;color:#5f728d;font-size:14px;line-height:1.6;font-weight:750; }
+                                    .kids-it-content .kids-it-textbook .kids-it-number { width:62px;height:62px;border:2px solid #bfdbfe;border-radius:50%;background:#eff6ff;color:#2563eb;box-shadow:none;font-size:24px; }
+                                    .kids-it-content .kids-it-pencil-line { height:13px;margin:10px 4% 20px;background:radial-gradient(12px 8px at 12px 0,transparent 11px,#a7d8f5 12px,#a7d8f5 13px,transparent 14px) 0 0/24px 13px repeat-x; }
+                                    .kids-it-content .kids-it-think-box { display:grid;grid-template-columns:minmax(0,.95fr) minmax(250px,1.05fr);gap:22px;align-items:center;margin-bottom:15px;padding:20px 24px;border:1px solid #bae6fd;border-radius:22px;background:linear-gradient(135deg,#f2fbff,#eaf7ff); }
+                                    .kids-it-content .kids-it-section-title { display:flex;align-items:center;gap:9px;margin-bottom:11px;color:#1e6ab4;font-size:21px;font-weight:950; }
+                                    .kids-it-content .kids-it-section-title i { display:inline-flex;width:38px;height:38px;align-items:center;justify-content:center;border-radius:50%;background:#70b9ea;color:#fff;font-size:19px;font-style:normal; }
+                                    .kids-it-content .kids-it-think-copy > p { margin:0;color:#294968;font-size:clamp(16px,1.8vw,20px);line-height:1.7;font-weight:750; }
+                                    .kids-it-content .kids-it-analogy { margin-top:14px;padding:13px 15px;border:2px dashed #92c8eb;border-radius:16px;background:rgba(255,255,255,.78);color:#58708b;font-size:13px;line-height:1.65; }
+                                    .kids-it-content .kids-it-analogy b { display:block;margin-bottom:3px;color:#2270b5;font-size:12px; }
+                                    .kids-it-content img.kids-it-illustration { display:block;width:100%;max-width:430px;height:230px;margin:0 auto;border-radius:0;box-shadow:none;object-fit:contain; }
+                                    .kids-it-content .kids-it-action-grid { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px;margin-bottom:15px; }
+                                    .kids-it-content .kids-it-action { position:relative;min-height:150px;padding:19px 22px;border-radius:20px; }
+                                    .kids-it-content .kids-it-action-make { border:1px solid #bbf7d0;background:linear-gradient(135deg,#f3fff6,#eefbf0); }
+                                    .kids-it-content .kids-it-action-challenge { border:1px solid #bae6fd;background:linear-gradient(135deg,#f2faff,#eaf6ff); }
+                                    .kids-it-content .kids-it-action-make .kids-it-section-title { color:#268a53; }
+                                    .kids-it-content .kids-it-action-make .kids-it-section-title i { background:#77c692; }
+                                    .kids-it-content .kids-it-action p { margin:0 38px 20px 0;color:#31516d;font-size:15px;line-height:1.65;font-weight:750; }
+                                    .kids-it-content .kids-it-step-number { position:absolute;top:18px;right:18px;display:flex;width:28px;height:28px;align-items:center;justify-content:center;border-radius:9px;background:#fff;color:#5082ab;font-size:12px;font-weight:950;box-shadow:0 3px 8px rgba(15,23,42,.08); }
+                                    .kids-it-content .kids-it-write-line { height:36px;border:2px dashed rgba(85,124,156,.38);border-radius:12px;background:rgba(255,255,255,.67); }
+                                    .kids-it-content .kids-it-record-box { display:grid;grid-template-columns:auto 1fr auto;gap:15px;align-items:center;margin-top:15px;padding:16px 20px;border:1px solid #fde68a;border-radius:19px;background:linear-gradient(135deg,#fffdf3,#fff9df);box-shadow:none; }
+                                    .kids-it-content .kids-it-record-box strong { margin:0;color:#895708;font-size:19px; }
+                                    .kids-it-content .kids-it-record-box p { padding:10px 14px;border:1px solid #f9d56e;border-radius:11px;background:#fff;color:#65583b;font-size:13px;line-height:1.55; }
+                                    .kids-it-content .kids-it-stars { display:flex;gap:7px;color:#f5b800;font-size:29px;line-height:1; }
                                     @media (max-width: 760px) {
                                         .kids-it-content .kids-it-slide {
                                             border-radius: 16px;
@@ -849,6 +894,15 @@ export default function LearningContentPage() {
                                             border-radius: 16px;
                                             font-size: 22px;
                                         }
+                                        .kids-it-content .kids-it-textbook { min-height:auto;padding:20px 16px;border-radius:6px; }
+                                        .kids-it-content .kids-it-doodle { display:none; }
+                                        .kids-it-content .kids-it-textbook-brand small { display:none; }
+                                        .kids-it-content .kids-it-title-row,.kids-it-content .kids-it-think-box,.kids-it-content .kids-it-action-grid { grid-template-columns:1fr; }
+                                        .kids-it-content .kids-it-title-row > div:first-child { padding-left:0; }
+                                        .kids-it-content .kids-it-textbook .kids-it-number { display:none; }
+                                        .kids-it-content img.kids-it-illustration { height:190px; }
+                                        .kids-it-content .kids-it-record-box { grid-template-columns:1fr; }
+                                        .kids-it-content .kids-it-stars { justify-content:center; }
                                     }
                                 `}} />
                             )}

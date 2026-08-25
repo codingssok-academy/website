@@ -147,7 +147,7 @@ function BookCard({
                     <div className="bk-cover-dim" />
                     <div className="bk-cover-shine" />
                     {renamedCoverTitle && (
-                        <div className="bk-cover-renamed-title">{renamedCoverTitle}</div>
+                        <div className={`bk-cover-renamed-title bk-cover-renamed-${course.id}`}>{renamedCoverTitle}</div>
                     )}
                     <div className="bk-cover-info">
                         <span className="bk-cover-title">{course.title}</span>
@@ -477,15 +477,27 @@ export default function LearningDashboard() {
                 }
 
                 .bk-cover-renamed-title {
-                    position:absolute;left:5%;right:5%;top:30%;height:30%;z-index:3;
+                    position:absolute;left:5%;right:5%;top:32%;min-height:24%;z-index:3;
                     display:flex;align-items:center;justify-content:center;text-align:center;
-                    padding:8px;border-radius:8px;
-                    background:linear-gradient(135deg,rgba(7,20,46,.98),rgba(12,34,70,.96));
-                    color:#dbeafe;font-size:clamp(16px,1.8vw,26px);font-weight:900;
-                    line-height:1.15;letter-spacing:-0.06em;
-                    text-shadow:0 2px 12px rgba(37,99,235,.55);
-                    box-shadow:0 8px 24px rgba(2,6,23,.34),inset 0 1px 0 rgba(255,255,255,.08);
+                    padding:5px 10%;
+                    color:#eef6ff;font-size:clamp(13px,1.42vw,21px);font-weight:900;
+                    line-height:1.22;letter-spacing:-0.045em;word-break:keep-all;text-wrap:balance;
+                    text-shadow:0 1px 0 rgba(255,255,255,.18),0 2px 5px rgba(0,0,0,.95),0 7px 18px rgba(2,6,23,.88);
+                    filter:drop-shadow(0 1px 2px rgba(96,165,250,.28));
+                    isolation:isolate;
                 }
+                .bk-cover-renamed-title::before {
+                    content:'';position:absolute;inset:-26% -2%;z-index:-1;pointer-events:none;
+                    background:radial-gradient(ellipse at center,rgba(3,13,33,.86) 0%,rgba(5,20,48,.5) 46%,transparent 74%);
+                    filter:blur(8px);
+                }
+                .bk-cover-renamed-title::after {
+                    content:'';position:absolute;left:28%;right:28%;bottom:8%;height:1px;z-index:-1;
+                    background:linear-gradient(90deg,transparent,rgba(147,197,253,.58),transparent);
+                }
+                .bk-cover-renamed-11 { top:31%; }
+                .bk-cover-renamed-10 { top:32%; }
+                .bk-cover-renamed-4 { top:34%;font-size:clamp(12px,1.3vw,19px); }
 
                 .bk-cover-info {
                     position:absolute;bottom:0;left:0;right:0;z-index:3;

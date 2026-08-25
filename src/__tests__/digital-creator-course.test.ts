@@ -34,6 +34,12 @@ describe('Digital Creator course', () => {
         expect(units.at(-1)?.title).toBe('디지털 창작자 프로젝트 발표');
         expect(units.every((unit) => unit.pages?.[0]?.content?.includes('오늘의 120분'))).toBe(true);
         expect(pages.every((page) => page.content?.includes('kids-it-phase'))).toBe(true);
+        expect(pages.every((page) => page.content?.includes('kids-it-textbook'))).toBe(true);
+        expect(pages.every((page) => page.content?.includes('digital-creator-textbook-v1.png'))).toBe(true);
+        expect(pages.every((page) => page.content?.includes('생각 열기'))).toBe(true);
+        expect(pages.every((page) => page.content?.includes('만들기'))).toBe(true);
+        expect(pages.every((page) => page.content?.includes('도전하기'))).toBe(true);
+        expect(pages.every((page) => page.content?.includes('수업 기록'))).toBe(true);
     });
 
     it('packages the first four sessions with student records, teacher guidance and class-ready outcomes', () => {

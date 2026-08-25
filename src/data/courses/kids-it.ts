@@ -81,7 +81,6 @@ function escapeHtml(value: string): string {
 function makePage(unit: KidsUnitDef, slide: KidsSlide, pageIndex: number): Page {
     const pageNumber = pageIndex + 1;
     const legacySlideNumber = (unit.unitNumber - 1) * 10 + pageNumber;
-    const practiceItems = slide.practice.map(item => `<li>${escapeHtml(item)}</li>`).join('');
     const unitMeta = getUnitMeta(unit.unitNumber);
     const phase = getLessonPhase(pageNumber);
     const lessonPlan = pageNumber === 1 ? `
@@ -122,32 +121,52 @@ function makePage(unit: KidsUnitDef, slide: KidsSlide, pageIndex: number): Page 
         title: `${unitMeta.title} ${pageNumber}`,
         type: PAGE_TYPE,
         content: `
-            <section class="kids-it-slide">
-                <div class="kids-it-phase"><b>${phase.label}</b><span>${phase.time}</span></div>
-                <p class="kids-it-cue">${getPhaseCue(pageNumber)}</p>
-                <div class="kids-it-hero">
-                    <div class="kids-it-hero-copy">
+            <section class="kids-it-slide kids-it-textbook">
+                <div class="kids-it-doodle kids-it-doodle-star">★</div>
+                <div class="kids-it-doodle kids-it-doodle-cloud">☁</div>
+                <div class="kids-it-doodle kids-it-doodle-plane">➤</div>
+                <header class="kids-it-textbook-top">
+                    <div class="kids-it-textbook-brand"><small>CODING SSOK ACADEMY</small><b>디지털 창작자</b></div>
+                    <div class="kids-it-phase"><b>${phase.label}</b><span>${phase.time}</span></div>
+                </header>
+                <div class="kids-it-mission-ribbon">오늘의 미션</div>
+                <div class="kids-it-title-row">
+                    <div>
                         <p class="kids-it-kicker">${getStageLabel(unit.unitNumber)} · ${pageNumber}/${unit.slides.length}</p>
                         <h2>${escapeHtml(slide.title)}</h2>
-                        <p>${escapeHtml(slide.idea)}</p>
+                        <p class="kids-it-cue">${getPhaseCue(pageNumber)}</p>
                     </div>
                     <div class="kids-it-number">${String(unit.unitNumber).padStart(2, '0')}</div>
                 </div>
-                <div class="kids-it-grid">
-                    <article class="kids-it-card kids-it-card-analogy">
-                        <span>비유로 생각하기</span>
-                        <p>${escapeHtml(slide.analogy)}</p>
+                <div class="kids-it-pencil-line"></div>
+                <section class="kids-it-think-box">
+                    <div class="kids-it-think-copy">
+                        <span class="kids-it-section-title"><i>💡</i> 생각 열기</span>
+                        <p>${escapeHtml(slide.idea)}</p>
+                        <div class="kids-it-analogy"><b>이렇게 생각해요</b>${escapeHtml(slide.analogy)}</div>
+                    </div>
+                    <img src="/images/courses/digital-creator-textbook-v1.png" alt="친구들과 로봇이 디지털 작품을 만드는 모습" class="kids-it-illustration" />
+                </section>
+                <div class="kids-it-action-grid">
+                    <article class="kids-it-action kids-it-action-make">
+                        <span class="kids-it-section-title"><i>🧩</i> 만들기</span>
+                        <div class="kids-it-step-number">1</div>
+                        <p>${escapeHtml(slide.practice[0] ?? slide.remember)}</p>
+                        <div class="kids-it-write-line"></div>
                     </article>
-                    <article class="kids-it-card">
-                        <span>따라 해보기</span>
-                        <ol>${practiceItems}</ol>
+                    <article class="kids-it-action kids-it-action-challenge">
+                        <span class="kids-it-section-title"><i>⚑</i> 도전하기</span>
+                        <div class="kids-it-step-number">2</div>
+                        <p>${escapeHtml(slide.practice[1] ?? slide.remember)}</p>
+                        <div class="kids-it-write-line"></div>
                     </article>
                 </div>
                 ${lessonPlan}
                 ${packageSummary}
-                <div class="kids-it-remember">
-                    <strong>한 문장으로 기억하기</strong>
+                <div class="kids-it-remember kids-it-record-box">
+                    <strong><i>📋</i> 수업 기록</strong>
                     <p>${escapeHtml(slide.remember)}</p>
+                    <div class="kids-it-stars"><span>☆</span><span>☆</span><span>☆</span></div>
                 </div>
                 ${lessonWrapUp}
             </section>
