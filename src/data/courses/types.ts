@@ -21,6 +21,34 @@ export interface CodeProblem {
     codeTemplate?: string; // 코드 실행 문제용 초기 코드
 }
 
+/** 저학년·프로젝트형 수업에서 사용하는 짧은 학습 기록 */
+export interface LearningActivity {
+    label: string;
+    prompt: string;
+    placeholder: string;
+    example?: string;
+    minLength?: number;
+}
+
+/** 학생 화면과 분리해 교사 계정에만 보여주는 페이지별 지도안 */
+export interface TeacherGuide {
+    objective: string;
+    say: string;
+    questions: string[];
+    expectedAnswer: string;
+    coaching: string;
+    extension: string;
+    assessment: string[];
+}
+
+/** 한 회차를 바로 운영할 수 있도록 묶은 수업 패키지 정보 */
+export interface LessonPackage {
+    materials: string[];
+    deliverable: string;
+    completionCriteria: string[];
+    parentReport: string;
+}
+
 /** 페이지 (유닛 내 개별 학습 항목) */
 export interface Page {
     id: string;         // "3.1", "7.11" 등
@@ -29,6 +57,8 @@ export interface Page {
     content?: string;        // HTML 학습 콘텐츠
     quiz?: Quiz;             // 객관식 퀴즈
     problems?: CodeProblem[]; // 코드 문제
+    activity?: LearningActivity; // 짧은 학생 기록 활동
+    teacherGuide?: TeacherGuide; // 교사 계정 전용 지도안
 }
 
 /** 학습 유닛 (하나의 레슨) */
@@ -46,6 +76,7 @@ export interface Unit {
     quiz?: Quiz;
     problems?: CodeProblem[];
     problemCount?: number;
+    lessonPackage?: LessonPackage;
 }
 
 /** 연령대 — 사고력수학 등 초등~고등까지 연령대별 과정에서 사용 */

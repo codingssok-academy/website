@@ -35,4 +35,24 @@ describe('Digital Creator course', () => {
         expect(units.every((unit) => unit.pages?.[0]?.content?.includes('오늘의 120분'))).toBe(true);
         expect(pages.every((page) => page.content?.includes('kids-it-phase'))).toBe(true);
     });
+
+    it('packages the first four sessions with student records, teacher guidance and class-ready outcomes', () => {
+        const course = getCourseById('11');
+        const units = course?.chapters.flatMap((chapter) => chapter.units) ?? [];
+        const foundation = units.slice(0, 4);
+
+        expect(foundation.map((unit) => unit.title)).toEqual([
+            '컴퓨터 탐험가 되기',
+            '창과 아이콘 움직이기',
+            '마우스와 터치로 그리기',
+            '키보드로 이야기 쓰기',
+        ]);
+        expect(foundation.every((unit) => unit.lessonPackage?.materials.length)).toBe(true);
+        expect(foundation.every((unit) => unit.lessonPackage?.completionCriteria.length === 3)).toBe(true);
+        expect(foundation.every((unit) => unit.lessonPackage?.parentReport.length)).toBe(true);
+        expect(foundation.every((unit) => unit.pages?.filter((page) => page.activity).length === 4)).toBe(true);
+        expect(foundation.flatMap((unit) => unit.pages ?? []).every((page) => page.teacherGuide)).toBe(true);
+        expect(foundation.every((unit) => unit.pages?.[0]?.content?.includes('오늘의 결과물'))).toBe(true);
+        expect(foundation.every((unit) => unit.pages?.at(-1)?.content?.includes('학부모 리포트 문장'))).toBe(true);
+    });
 });

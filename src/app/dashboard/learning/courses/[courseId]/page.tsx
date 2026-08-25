@@ -63,6 +63,7 @@ export default function CourseDetailPage() {
     const contestTrack = searchParams.get("track");
     const certId = searchParams.get("cert");
     const { user } = useAuth();
+    const isTeacherView = user?.role === "teacher" || (user?.role as string) === "admin" || user?.name === "장민";
     const supabase = useMemo(() => createClient(), []);
     const contentRef = useRef<HTMLDivElement>(null);
     const htmlContentRef = useRef<HTMLDivElement>(null);
@@ -113,6 +114,7 @@ export default function CourseDetailPage() {
     const [selectedUnit, setSelectedUnit] = useState<Unit | null>(null);
     const [activePage, setActivePage] = useState<Page | null>(null);
     const isPythonCorePage = courseId === '3' && !!activePage?.id.startsWith('py-core-');
+    const isDigitalCreatorPage = courseId === '11' && !!activePage?.id.startsWith('kids-it-first-');
     const usesFocusedLessonUx = courseId === '4' || courseId === '11' || isPythonCorePage;
 
     // 학생 학습 활동 영구 기록 — student_activity_log INSERT/UPDATE
@@ -202,15 +204,22 @@ export default function CourseDetailPage() {
     const [runResult, setRunResult] = useState<Record<number, { stdout: string; stderr: string; exitCode: number } | null>>({});
     const [runLoading, setRunLoading] = useState<Record<number, boolean>>({});
     const [completionMessage, setCompletionMessage] = useState("");
+    const [digitalCreatorAnswer, setDigitalCreatorAnswer] = useState("");
 
     const isPythonCoreUnit = courseId === "3" && !!selectedUnit?.id.startsWith("py-core-");
-    const corePageIds = useMemo(() => selectedUnit?.pages?.map((page) => page.id) ?? [], [selectedUnit]);
-    const coreQuizPageIds = useMemo(
+    const isDigitalCreatorUnit = courseId === "11" && !!selectedUnit?.id.startsWith("kids-it-first-");
+    const usesLessonPersistence = isPythonCoreUnit || isDigitalCreatorUnit;
+    const lessonPageIds = useMemo(() => selectedUnit?.pages?.map((page) => page.id) ?? [], [selectedUnit]);
+    const lessonQuizPageIds = useMemo(
         () => selectedUnit?.pages?.filter((page) => page.quiz).map((page) => page.id) ?? [],
         [selectedUnit],
     );
-    const coreProblemIds = useMemo(
+    const lessonProblemIds = useMemo(
         () => selectedUnit?.pages?.flatMap((page) => page.problems?.map((problem) => problem.id) ?? []) ?? [],
+        [selectedUnit],
+    );
+    const lessonActivityPageIds = useMemo(
+        () => selectedUnit?.pages?.filter((page) => page.activity).map((page) => page.id) ?? [],
         [selectedUnit],
     );
     const {
@@ -220,31 +229,50 @@ export default function CourseDetailPage() {
         markPageVisited,
         markQuizCorrect,
         markProblemSuccessful,
+        setActivityCompleted,
     } = useLessonSessionProgress({
-        enabled: isPythonCoreUnit,
+        enabled: usesLessonPersistence,
         userId: user?.id,
         courseId,
         unitId: selectedUnit?.id,
     });
     const lessonCompletion = useMemo(
-        () => evaluateLessonCompletion(lessonSessionProgress, corePageIds, coreQuizPageIds, coreProblemIds),
-        [corePageIds, coreProblemIds, coreQuizPageIds, lessonSessionProgress],
+        () => evaluateLessonCompletion(
+            lessonSessionProgress,
+            lessonPageIds,
+            lessonQuizPageIds,
+            lessonProblemIds,
+            lessonActivityPageIds,
+        ),
+        [lessonActivityPageIds, lessonPageIds, lessonProblemIds, lessonQuizPageIds, lessonSessionProgress],
     );
 
     const restoreLessonAnswer = useCallback((saved: LessonAnswerSnapshot) => {
+        if (isDigitalCreatorPage) {
+            const restoredAnswer = saved.codeAnswers.activity ?? "";
+            setDigitalCreatorAnswer(restoredAnswer);
+            if (activePage?.activity) {
+                setActivityCompleted(activePage.id, restoredAnswer.trim().length >= (activePage.activity.minLength ?? 1));
+            }
+            return;
+        }
         setSelectedAnswer(saved.quizAnswer);
         setQuizResult(saved.quizResult);
         setEditorCode(Object.fromEntries(
             Object.entries(saved.codeAnswers).map(([problemId, code]) => [Number(problemId), code]),
         ));
-    }, []);
-    const lessonAnswerDraft = useMemo(() => ({
+    }, [activePage, isDigitalCreatorPage, setActivityCompleted]);
+    const lessonAnswerDraft = useMemo(() => isDigitalCreatorPage ? ({
+        quizAnswer: null,
+        quizResult: null,
+        codeAnswers: { activity: digitalCreatorAnswer },
+    }) : ({
         quizAnswer: selectedAnswer,
         quizResult: quizResult === "correct" ? "correct" as const : null,
         codeAnswers: Object.fromEntries(Object.entries(editorCode).map(([problemId, code]) => [String(problemId), code])),
-    }), [editorCode, quizResult, selectedAnswer]);
+    }), [digitalCreatorAnswer, editorCode, isDigitalCreatorPage, quizResult, selectedAnswer]);
     const { status: answerSaveStatus } = useLessonAnswerPersistence({
-        enabled: isPythonCorePage,
+        enabled: isPythonCorePage || (isDigitalCreatorPage && !!activePage?.activity),
         userId: user?.id,
         courseId,
         unitId: selectedUnit?.id,
@@ -254,8 +282,15 @@ export default function CourseDetailPage() {
     });
 
     useEffect(() => {
-        if (isPythonCorePage && activePage && lessonProgressReady) markPageVisited(activePage.id);
-    }, [activePage, isPythonCorePage, lessonProgressReady, markPageVisited]);
+        if ((isPythonCorePage || isDigitalCreatorPage) && activePage && lessonProgressReady) markPageVisited(activePage.id);
+    }, [activePage, isDigitalCreatorPage, isPythonCorePage, lessonProgressReady, markPageVisited]);
+
+    const updateDigitalCreatorAnswer = useCallback((value: string) => {
+        setDigitalCreatorAnswer(value);
+        if (activePage?.activity) {
+            setActivityCompleted(activePage.id, value.trim().length >= (activePage.activity.minLength ?? 1));
+        }
+    }, [activePage, setActivityCompleted]);
 
     // Notes
     const { saveNote, getNote } = useStudyNotes(user?.id);
@@ -781,7 +816,7 @@ export default function CourseDetailPage() {
         resetQuiz();
     };
 
-    const resetQuiz = () => { setSelectedAnswer(null); setQuizResult(null); setWrongCount(0); setShowHint(false); setShaking(false); setShowProblemAnswer({}); setEditorCode({}); setRunResult({}); };
+    const resetQuiz = () => { setSelectedAnswer(null); setQuizResult(null); setWrongCount(0); setShowHint(false); setShaking(false); setShowProblemAnswer({}); setEditorCode({}); setRunResult({}); setDigitalCreatorAnswer(""); };
 
     const executeCode = async (probId: number, code: string) => {
         setEditorCode(prev => ({ ...prev, [probId]: code }));
@@ -838,6 +873,10 @@ export default function CourseDetailPage() {
         if (completedUnits.has(unit.id)) return;
         if (unit.id.startsWith("py-core-") && !lessonCompletion.ready) {
             setCompletionMessage("10단계 학습, 확인 퀴즈, 코딩 실습을 모두 마치면 수업을 완료할 수 있어요.");
+            return;
+        }
+        if (unit.id.startsWith("kids-it-first-") && !lessonCompletion.ready) {
+            setCompletionMessage("10개 학습 화면과 네 번의 탐험 기록을 모두 마치면 이번 회차를 완료할 수 있어요.");
             return;
         }
         setCompletionMessage("");
@@ -1636,6 +1675,43 @@ export default function CourseDetailPage() {
                                 )
                             )}
 
+                            {isDigitalCreatorPage && activePage.activity && (
+                                <section className="kids-activity-panel">
+                                    <div className="kids-activity-top">
+                                        <span>{activePage.activity.label}</span>
+                                        <b data-status={answerSaveStatus}>
+                                            <MI icon={(answerSaveStatus === "saving" || answerSaveStatus === "loading") ? "sync" : answerSaveStatus === "error" ? "cloud_off" : answerSaveStatus === "local" ? "save" : "cloud_done"} style={{ fontSize: 15 }} />
+                                            {(answerSaveStatus === "saving" || answerSaveStatus === "loading") ? "저장 중" : answerSaveStatus === "error" ? "저장 오류" : answerSaveStatus === "local" ? "이 기기에 저장" : "자동 저장됨"}
+                                        </b>
+                                    </div>
+                                    <h3>{activePage.activity.prompt}</h3>
+                                    {activePage.activity.example && <p className="kids-activity-example"><strong>생각이 안 날 때 예시</strong>{activePage.activity.example}</p>}
+                                    <textarea
+                                        value={digitalCreatorAnswer}
+                                        onChange={(event) => updateDigitalCreatorAnswer(event.target.value)}
+                                        placeholder={activePage.activity.placeholder}
+                                        maxLength={500}
+                                        aria-label={activePage.activity.prompt}
+                                    />
+                                    <p className="kids-activity-help">한 단어나 짧은 문장으로 적어도 괜찮아요. 선생님과 함께 적을 수도 있어요.</p>
+                                </section>
+                            )}
+
+                            {isDigitalCreatorPage && isTeacherView && activePage.teacherGuide && (
+                                <details className="kids-teacher-guide">
+                                    <summary><MI icon="school" style={{ fontSize: 18 }} /> 강사용 지도안 열기</summary>
+                                    <div className="kids-teacher-guide-grid">
+                                        <article><span>이번 화면 목표</span><p>{activePage.teacherGuide.objective}</p></article>
+                                        <article><span>아이에게 이렇게 설명하세요</span><p>{activePage.teacherGuide.say}</p></article>
+                                        <article><span>발문 예시</span><ul>{activePage.teacherGuide.questions.map((question) => <li key={question}>{question}</li>)}</ul></article>
+                                        <article><span>기대 답변</span><p>{activePage.teacherGuide.expectedAnswer}</p></article>
+                                        <article><span>도움이 필요한 학생</span><p>{activePage.teacherGuide.coaching}</p></article>
+                                        <article><span>빠른 학생 확장</span><p>{activePage.teacherGuide.extension}</p></article>
+                                    </div>
+                                    <div className="kids-teacher-check"><strong>관찰 체크</strong>{activePage.teacherGuide.assessment.map((item) => <span key={item}>□ {item}</span>)}</div>
+                                </details>
+                            )}
+
                             {/* Quiz */}
                             {activePage.quiz && <QuizPanel quiz={activePage.quiz} unit={selectedUnit} selectedAnswer={selectedAnswer} setSelectedAnswer={setSelectedAnswer} quizResult={quizResult} shaking={shaking} wrongCount={wrongCount} showHint={showHint} onCheck={() => handleQuizCheck(activePage.quiz!, selectedUnit)} />}
 
@@ -1667,6 +1743,30 @@ export default function CourseDetailPage() {
                                             : lessonCompletion.ready ? "이번 회차 수업 완료하기" : "학습 활동을 모두 마쳐주세요"}
                                     </button>
                                     {completionMessage && <p className="pycore-completion-message">{completionMessage}</p>}
+                                </section>
+                            )}
+
+                            {isDigitalCreatorUnit && selectedUnit.lessonPackage && currentPageIdx === pages.length - 1 && (
+                                <section className="kids-completion">
+                                    <div className="kids-completion-heading">
+                                        <span><MI icon="workspace_premium" style={{ fontSize: 20 }} /> 120분 수업 완료 확인</span>
+                                        <p>화면만 넘기는 것이 아니라 탐험 기록과 결과물까지 마치면 수업이 완료됩니다.</p>
+                                    </div>
+                                    <div className="kids-completion-grid">
+                                        <div><span>학습 화면</span><b>{lessonCompletion.pages.completed} / {lessonCompletion.pages.total}</b></div>
+                                        <div><span>탐험 기록</span><b>{lessonCompletion.activities.completed} / {lessonCompletion.activities.total}</b></div>
+                                        <div><span>오늘의 결과물</span><b>{selectedUnit.lessonPackage.deliverable}</b></div>
+                                    </div>
+                                    <button
+                                        className="kids-complete-btn"
+                                        disabled={!lessonCompletion.ready || completedUnits.has(selectedUnit.id)}
+                                        onClick={() => void completeUnit(selectedUnit)}
+                                    >
+                                        {completedUnits.has(selectedUnit.id)
+                                            ? completionSaveStatus === "saving" ? "수업 완료 저장 중..." : "✓ 이번 회차 완료됨"
+                                            : lessonCompletion.ready ? "이번 회차 수업 완료하기" : "남은 화면과 탐험 기록을 마쳐주세요"}
+                                    </button>
+                                    {completionMessage && <p className="kids-completion-message">{completionMessage}</p>}
                                 </section>
                             )}
 
@@ -1760,7 +1860,7 @@ export default function CourseDetailPage() {
                                                     onClick={async () => {
                                                         if (!completedUnits.has(selectedUnit.id)) {
                                                             await completeUnit(selectedUnit);
-                                                            if (isPythonCoreUnit && !lessonCompletion.ready) return;
+                                                            if ((isPythonCoreUnit || (isDigitalCreatorUnit && !!selectedUnit.lessonPackage)) && !lessonCompletion.ready) return;
                                                         }
                                                         selectUnit(nextUnitInCourse);
                                                     }}
@@ -1858,6 +1958,13 @@ export default function CourseDetailPage() {
                                 .course-content-pad .kids-it-phase span {
                                     color: #7c3aed;
                                     opacity: .72;
+                                }
+                                .course-content-pad .kids-it-cue {
+                                    display: inline-flex;
+                                    margin: 0 0 16px 10px;
+                                    color: #475569;
+                                    font-size: 13px;
+                                    font-weight: 850;
                                 }
                                 .course-content-pad .kids-it-hero {
                                     display: grid;
@@ -1961,6 +2068,32 @@ export default function CourseDetailPage() {
                                 }
                                 .course-content-pad .kids-it-plan strong { color: #312e81; margin-right: 4px; }
                                 .course-content-pad .kids-it-plan i { color: #a78bfa; font-style: normal; }
+                                .course-content-pad .kids-it-toolkit {
+                                    display: grid;
+                                    grid-template-columns: repeat(3, minmax(0, 1fr));
+                                    gap: 12px;
+                                    margin-top: 16px;
+                                }
+                                .course-content-pad .kids-it-toolkit article {
+                                    padding: 15px 16px;
+                                    border: 1px solid #c7d2fe;
+                                    border-radius: 15px;
+                                    background: rgba(255,255,255,.92);
+                                }
+                                .course-content-pad .kids-it-toolkit span {
+                                    display: block;
+                                    margin-bottom: 5px;
+                                    color: #4338ca;
+                                    font-size: 11px;
+                                    font-weight: 950;
+                                }
+                                .course-content-pad .kids-it-toolkit p {
+                                    margin: 0;
+                                    color: #334155;
+                                    font-size: 14px;
+                                    line-height: 1.6;
+                                    font-weight: 750;
+                                }
                                 .course-content-pad .kids-it-remember {
                                     margin-top: 16px;
                                     background: linear-gradient(135deg, #fffbeb, #ffffff);
@@ -1969,6 +2102,39 @@ export default function CourseDetailPage() {
                                 .course-content-pad .kids-it-remember strong {
                                     color: #b45309;
                                 }
+                                .course-content-pad .kids-it-finish {
+                                    margin-top: 16px;
+                                    padding: 20px;
+                                    border: 1px solid #a7f3d0;
+                                    border-radius: 18px;
+                                    background: linear-gradient(135deg,#ecfdf5,#fff);
+                                }
+                                .course-content-pad .kids-it-finish > span { color:#047857;font-size:14px;font-weight:950; }
+                                .course-content-pad .kids-it-finish ul { margin:10px 0 14px;padding-left:22px;color:#334155;font-size:14px;line-height:1.75;font-weight:700; }
+                                .course-content-pad .kids-it-finish p { margin:0;padding:12px 14px;border-radius:12px;background:#fff;color:#475569;font-size:13px;line-height:1.65; }
+                                .course-content-pad .kids-it-finish b { display:block;margin-bottom:4px;color:#0f766e; }
+                                .kids-activity-panel,.kids-teacher-guide,.kids-completion { width:min(100%,1080px);margin:16px auto;padding:22px;border-radius:20px;box-sizing:border-box; }
+                                .kids-activity-panel { border:1px solid #c4b5fd;background:linear-gradient(135deg,#faf5ff,#fff);box-shadow:0 12px 30px rgba(109,40,217,.08); }
+                                .kids-activity-top { display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px; }
+                                .kids-activity-top > span { color:#6d28d9;font-size:12px;font-weight:950; }
+                                .kids-activity-top b { display:inline-flex;align-items:center;gap:5px;padding:6px 9px;border-radius:999px;background:#f5f3ff;color:#7c3aed;font-size:10px; }
+                                .kids-activity-top b[data-status="saved"] { background:#ecfdf5;color:#047857; }.kids-activity-top b[data-status="local"] { background:#fffbeb;color:#b45309; }.kids-activity-top b[data-status="error"] { background:#fef2f2;color:#b91c1c; }
+                                .kids-activity-panel h3 { margin:0 0 10px;color:#312e81;font-size:18px;line-height:1.5; }
+                                .kids-activity-example { margin:0 0 12px;padding:11px 13px;border-radius:12px;background:#fff;color:#64748b;font-size:12px;line-height:1.6; }
+                                .kids-activity-example strong { display:block;margin-bottom:2px;color:#7c3aed; }
+                                .kids-activity-panel textarea { width:100%;min-height:100px;resize:vertical;padding:14px 16px;border:2px solid #ddd6fe;border-radius:14px;outline:none;background:#fff;color:#1e293b;font:700 15px/1.7 inherit;box-sizing:border-box; }
+                                .kids-activity-panel textarea:focus { border-color:#8b5cf6;box-shadow:0 0 0 4px rgba(139,92,246,.1); }
+                                .kids-activity-help { margin:8px 2px 0;color:#64748b;font-size:11px;font-weight:650; }
+                                .kids-teacher-guide { border:1px solid #bae6fd;background:linear-gradient(135deg,#f0f9ff,#fff); }
+                                .kids-teacher-guide summary { display:flex;align-items:center;gap:7px;color:#075985;font-size:14px;font-weight:950;cursor:pointer;list-style:none; }
+                                .kids-teacher-guide-grid { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;margin-top:16px; }
+                                .kids-teacher-guide article { padding:14px;border:1px solid #dbeafe;border-radius:14px;background:#fff; }
+                                .kids-teacher-guide article span { color:#0369a1;font-size:11px;font-weight:950; }.kids-teacher-guide article p,.kids-teacher-guide article ul { margin:6px 0 0;color:#475569;font-size:12px;line-height:1.7; }.kids-teacher-guide article ul { padding-left:18px; }
+                                .kids-teacher-check { display:flex;flex-wrap:wrap;gap:8px;margin-top:12px; }.kids-teacher-check strong { width:100%;color:#075985;font-size:11px; }.kids-teacher-check span { padding:8px 10px;border-radius:10px;background:#fff;color:#475569;font-size:11px;font-weight:700; }
+                                .kids-completion { border:1px solid #a7f3d0;background:linear-gradient(135deg,#ecfdf5,#fff);box-shadow:0 14px 34px rgba(5,150,105,.09); }
+                                .kids-completion-heading span { display:flex;align-items:center;gap:7px;color:#047857;font-size:18px;font-weight:950; }.kids-completion-heading p { margin:6px 0 0;color:#64748b;font-size:12px;line-height:1.6; }
+                                .kids-completion-grid { display:grid;grid-template-columns:.7fr .7fr 2fr;gap:10px;margin:16px 0; }.kids-completion-grid div { padding:13px;border:1px solid #d1fae5;border-radius:13px;background:#fff; }.kids-completion-grid span,.kids-completion-grid b { display:block; }.kids-completion-grid span { color:#64748b;font-size:10px;font-weight:850; }.kids-completion-grid b { margin-top:5px;color:#047857;font-size:14px;line-height:1.5; }
+                                .kids-complete-btn { width:100%;padding:14px 18px;border:0;border-radius:13px;background:linear-gradient(135deg,#10b981,#059669);color:#fff;font-size:13px;font-weight:950;cursor:pointer;box-shadow:0 8px 20px rgba(5,150,105,.2); }.kids-complete-btn:disabled { background:#cbd5e1;box-shadow:none;cursor:not-allowed; }.kids-completion-message { margin:10px 0 0;padding:9px 11px;border-radius:9px;background:#fff7ed;color:#9a3412;font-size:12px;font-weight:750; }
                                 @media (max-width: 760px) {
                                     .course-content-pad .kids-it-slide {
                                         border-radius: 16px;
@@ -1984,6 +2150,8 @@ export default function CourseDetailPage() {
                                         border-radius: 16px;
                                         font-size: 22px;
                                     }
+                                    .course-content-pad .kids-it-toolkit,.kids-teacher-guide-grid,.kids-completion-grid { grid-template-columns:1fr; }
+                                    .kids-activity-panel,.kids-teacher-guide,.kids-completion { padding:16px; }
                                 }
                             `}} />
 

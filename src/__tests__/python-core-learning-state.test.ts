@@ -20,6 +20,18 @@ describe("Python Core learning state", () => {
         expect(summary.pages).toEqual({ completed: 3, total: 3 });
         expect(summary.quizzes).toEqual({ completed: 1, total: 1 });
         expect(summary.problems).toEqual({ completed: 2, total: 2 });
+        expect(summary.activities).toEqual({ completed: 0, total: 0 });
+    });
+
+    it("tracks short project records when a lesson requires them", () => {
+        const summary = evaluateLessonCompletion({
+            ...emptyLessonProgress(),
+            visitedPageIds: ["p1", "p2"],
+            completedActivityPageIds: ["p2"],
+        }, ["p1", "p2"], [], [], ["p2"]);
+
+        expect(summary.ready).toBe(true);
+        expect(summary.activities).toEqual({ completed: 1, total: 1 });
     });
 
     it("does not complete a lesson after only one correct quiz", () => {

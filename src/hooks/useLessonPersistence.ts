@@ -225,6 +225,19 @@ export function useLessonSessionProgress({
         });
     }, []);
 
+    const setActivityCompleted = useCallback((pageId: string, completed: boolean) => {
+        setProgress((current) => {
+            const alreadyCompleted = current.completedActivityPageIds.includes(pageId);
+            if (alreadyCompleted === completed) return current;
+            return {
+                ...current,
+                completedActivityPageIds: completed
+                    ? [...current.completedActivityPageIds, pageId]
+                    : current.completedActivityPageIds.filter((id) => id !== pageId),
+            };
+        });
+    }, []);
+
     return {
         progress,
         status,
@@ -232,5 +245,6 @@ export function useLessonSessionProgress({
         markPageVisited,
         markQuizCorrect,
         markProblemSuccessful,
+        setActivityCompleted,
     };
 }

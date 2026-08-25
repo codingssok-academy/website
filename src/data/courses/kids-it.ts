@@ -1,4 +1,4 @@
-import type { Chapter, Page, Unit } from './types';
+import type { Chapter, LearningActivity, LessonPackage, Page, TeacherGuide, Unit } from './types';
 
 interface KidsSlide {
     title: string;
@@ -6,6 +6,7 @@ interface KidsSlide {
     analogy: string;
     practice: string[];
     remember: string;
+    activity?: LearningActivity;
 }
 
 interface KidsUnitDef {
@@ -14,6 +15,10 @@ interface KidsUnitDef {
     title: string;
     bookLabel: string;
     slides: KidsSlide[];
+    lessonPackage?: LessonPackage;
+    teacherOpening?: string;
+    teacherCoaching?: string;
+    teacherExtension?: string;
 }
 
 const PAGE_TYPE = '페이지' as const;
@@ -57,6 +62,13 @@ function getLessonPhase(pageNumber: number) {
     return { label: '발표·기록', time: '20분' };
 }
 
+function getPhaseCue(pageNumber: number) {
+    if (pageNumber <= 2) return '먼저 보고 말해요';
+    if (pageNumber <= 5) return '선생님과 함께 한 단계씩 해요';
+    if (pageNumber <= 8) return '내 생각을 넣어 작품으로 만들어요';
+    return '친구에게 보여주고 성장 기록을 남겨요';
+}
+
 function escapeHtml(value: string): string {
     return value
         .replace(/&/g, '&amp;')
@@ -78,6 +90,32 @@ function makePage(unit: KidsUnitDef, slide: KidsSlide, pageIndex: number): Page 
             <span>알아보기 20분</span><i>→</i><span>따라 하기 35분</span><i>→</i><span>창작 미션 45분</span><i>→</i><span>발표·기록 20분</span>
         </div>
     ` : '';
+    const packageSummary = pageNumber === 1 && unit.lessonPackage ? `
+        <div class="kids-it-toolkit">
+            <article><span>준비물</span><p>${unit.lessonPackage.materials.map(escapeHtml).join(' · ')}</p></article>
+            <article><span>오늘의 결과물</span><p>${escapeHtml(unit.lessonPackage.deliverable)}</p></article>
+            <article><span>완료 기준</span><p>${escapeHtml(unit.lessonPackage.completionCriteria[0])}</p></article>
+        </div>
+    ` : '';
+    const lessonWrapUp = pageNumber === unit.slides.length && unit.lessonPackage ? `
+        <div class="kids-it-finish">
+            <span>오늘의 완성 체크</span>
+            <ul>${unit.lessonPackage.completionCriteria.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>
+            <p><b>학부모 리포트 문장</b>${escapeHtml(unit.lessonPackage.parentReport)}</p>
+        </div>
+    ` : '';
+    const teacherGuide: TeacherGuide | undefined = unit.lessonPackage ? {
+        objective: slide.idea,
+        say: `${unit.teacherOpening ?? '오늘 배울 내용을 실제 화면과 연결해 설명해 주세요.'} ${slide.analogy}`,
+        questions: [
+            `${slide.title}에서 가장 먼저 보이는 것은 무엇인가요?`,
+            slide.practice[0] ?? '직접 해 본 방법을 말해 볼까요?',
+        ],
+        expectedAnswer: slide.remember,
+        coaching: unit.teacherCoaching ?? '아이에게 먼저 화면을 가리켜 보게 하고, 필요한 경우 손동작을 천천히 시범 보입니다.',
+        extension: unit.teacherExtension ?? '빠르게 끝낸 학생은 같은 기능을 다른 방법으로 한 번 더 설명하게 합니다.',
+        assessment: slide.practice,
+    } : undefined;
 
     return {
         id: `kids-it-first-${String(legacySlideNumber).padStart(3, '0')}`,
@@ -86,6 +124,7 @@ function makePage(unit: KidsUnitDef, slide: KidsSlide, pageIndex: number): Page 
         content: `
             <section class="kids-it-slide">
                 <div class="kids-it-phase"><b>${phase.label}</b><span>${phase.time}</span></div>
+                <p class="kids-it-cue">${getPhaseCue(pageNumber)}</p>
                 <div class="kids-it-hero">
                     <div class="kids-it-hero-copy">
                         <p class="kids-it-kicker">${getStageLabel(unit.unitNumber)} · ${pageNumber}/${unit.slides.length}</p>
@@ -105,12 +144,16 @@ function makePage(unit: KidsUnitDef, slide: KidsSlide, pageIndex: number): Page 
                     </article>
                 </div>
                 ${lessonPlan}
+                ${packageSummary}
                 <div class="kids-it-remember">
                     <strong>한 문장으로 기억하기</strong>
                     <p>${escapeHtml(slide.remember)}</p>
                 </div>
+                ${lessonWrapUp}
             </section>
         `,
+        activity: slide.activity,
+        teacherGuide,
     };
 }
 
@@ -125,10 +168,11 @@ function makeUnit(def: KidsUnitDef): Unit {
         difficulty: 1,
         duration: '120분',
         pages: def.slides.map((slide, index) => makePage(def, slide, index)),
+        lessonPackage: def.lessonPackage,
     };
 }
 
-const BOOK1_UNITS: Unit[] = [
+const LEGACY_BOOK1_UNITS: Unit[] = [
     makeUnit({
         id: 'kids-it-first-u01',
         unitNumber: 1,
@@ -519,6 +563,122 @@ const BOOK1_UNITS: Unit[] = [
             },
         ],
     }),
+];
+
+const DETAILED_FOUNDATION_UNITS: Unit[] = [
+    makeUnit({
+        id: 'kids-it-first-u01',
+        unitNumber: 1,
+        title: '컴퓨터 탐험가 되기',
+        bookLabel: '1단계 | 컴퓨터 탐험가',
+        lessonPackage: {
+            materials: ['컴퓨터 또는 노트북', '마우스', '그림판', '필기도구'],
+            deliverable: '아이콘 3개와 안전 약속 2개가 담긴 나의 컴퓨터 탐험 지도',
+            completionCriteria: ['화면·아이콘·버튼을 구별해 말한다.', '모르는 창이 나오면 멈추고 도움을 요청한다.', '탐험 지도를 저장하고 친구에게 한 가지를 설명한다.'],
+            parentReport: '화면의 아이콘과 버튼을 관찰하고, 모르는 상황에서 멈추고 질문하는 안전한 디지털 사용 습관을 연습했습니다.',
+        },
+        teacherOpening: '교실을 탐험할 때 출입문과 표지판을 먼저 찾듯, 컴퓨터도 화면의 표지판부터 살펴본다고 말해 주세요.',
+        teacherCoaching: '정답을 먼저 알려주지 말고 아이가 포인터로 가리킨 뒤 이름을 말하게 합니다. 클릭 전에는 “보고–읽고–누르기”를 함께 외칩니다.',
+        teacherExtension: '빠르게 끝낸 학생은 같은 기능을 가진 아이콘이나 버튼을 하나 더 찾아 친구에게 퀴즈로 냅니다.',
+        slides: [
+            { title: '오늘은 컴퓨터 탐험가', idea: '컴퓨터를 켜고 화면을 관찰한 뒤 오늘 만들 탐험 지도와 안전 약속을 확인합니다.', analogy: '처음 가는 놀이터에서 입구와 안내판을 살피는 것처럼 화면부터 천천히 둘러봐요.', practice: ['컴퓨터로 해 본 일을 손가락으로 세어 봅니다.', '오늘의 결과물과 네 가지 수업 단계를 함께 읽습니다.'], remember: '컴퓨터는 내 생각을 작품으로 만드는 도구입니다.' },
+            { title: '화면에서 표지판 찾기', idea: '바탕화면에서 아이콘, 버튼, 글자를 찾아 서로 다른 역할을 관찰합니다.', analogy: '아이콘은 가게 간판, 버튼은 누르면 열리는 초인종과 비슷합니다.', practice: ['아이콘 한 개와 버튼 한 개를 포인터로 가리킵니다.', '누르기 전에 그림과 글자를 소리 내어 읽습니다.'], remember: '먼저 보고 읽은 뒤에 누릅니다.', activity: { label: '탐험 기록 1', prompt: '화면에서 발견한 아이콘이나 버튼 이름을 하나 적어 보세요.', placeholder: '예: 그림판 또는 시작 버튼', example: '그림판 아이콘', minLength: 1 } },
+            { title: '프로그램을 안전하게 열기', idea: '그림판 아이콘을 찾아 한 번 선택하고 두 번 클릭해 프로그램을 엽니다.', analogy: '문 앞 이름표를 확인하고 문을 여는 순서와 같습니다.', practice: ['아이콘을 한 번 클릭해 선택 표시를 확인합니다.', '두 번 클릭해 그림판 창을 열고 제목을 읽습니다.'], remember: '한 번 클릭은 고르기, 두 번 클릭은 열기입니다.' },
+            { title: '아이콘·버튼·메뉴 구별하기', idea: '그림판 화면에서 도구 아이콘, 실행 버튼, 선택 메뉴를 역할에 따라 나눕니다.', analogy: '필통 속 연필, 지우개, 색연필이 서로 다른 일을 하는 것과 같습니다.', practice: ['연필 도구와 지우개 도구를 번갈아 선택합니다.', '색상 메뉴에서 원하는 색을 한 가지 고릅니다.'], remember: '모양이 다른 도구는 하는 일도 다릅니다.' },
+            { title: '창의 세 가지 버튼 연습', idea: '최소화, 최대화, 닫기 버튼의 차이를 관찰하고 안전한 순서로 사용합니다.', analogy: '최소화는 서랍에 잠깐 넣기, 닫기는 책을 덮기와 같습니다.', practice: ['최소화한 뒤 작업 표시줄에서 다시 엽니다.', '닫기 전에는 저장 여부를 먼저 확인합니다.'], remember: '닫기 전에는 저장했는지 확인합니다.', activity: { label: '따라 하기 확인', prompt: '최소화·최대화·닫기 중 오늘 직접 사용한 버튼을 적어 보세요.', placeholder: '예: 최소화 버튼', example: '최소화 버튼을 눌렀다가 다시 열었어요.', minLength: 2 } },
+            { title: '탐험 지도 설계하기', idea: '탐험 지도에 넣을 아이콘 3개와 안전 약속 2개의 위치를 먼저 정합니다.', analogy: '블록을 만들기 전에 어디에 놓을지 그림으로 생각하는 것과 같습니다.', practice: ['화면을 세 칸으로 나누고 아이콘 자리를 정합니다.', '아래쪽에는 안전 약속 자리를 남깁니다.'], remember: '만들기 전 설계하면 생각이 또렷해집니다.' },
+            { title: '아이콘 세 개 그리기', idea: '그림판의 도형과 색 도구를 사용해 발견한 아이콘을 단순한 모양으로 표현합니다.', analogy: '복잡한 로봇도 동그라미와 네모부터 그리면 쉽게 시작할 수 있습니다.', practice: ['동그라미·네모 도구로 아이콘 세 개를 만듭니다.', '각 아이콘 아래에 선이나 색으로 역할을 표시합니다.'], remember: '완전히 똑같지 않아도 특징이 보이면 좋은 그림입니다.' },
+            { title: '안전 약속 배지 붙이기', idea: '모르는 창과 개인정보 상황에서 지킬 행동을 그림이나 짧은 말로 표시합니다.', analogy: '횡단보도 앞의 멈춤 표지판처럼 컴퓨터에도 멈춤 약속이 필요합니다.', practice: ['“모르면 멈춰요” 배지를 지도에 넣습니다.', '이름·전화번호는 혼자 입력하지 않는 표시를 넣습니다.'], remember: '모르면 멈추고 선생님이나 보호자에게 물어봅니다.', activity: { label: '창작 미션 기록', prompt: '내 탐험 지도에 넣은 안전 약속 한 가지를 적어 보세요.', placeholder: '예: 모르는 광고는 누르지 않아요.', example: '모르면 멈추고 선생님께 물어봐요.', minLength: 2 } },
+            { title: '친구에게 탐험 지도 소개하기', idea: '완성한 지도를 보여주며 아이콘 한 개와 안전 약속 한 개를 설명합니다.', analogy: '박물관 안내원이 중요한 작품을 짧고 또렷하게 소개하는 것과 같습니다.', practice: ['“이 아이콘은 ___을 해요”로 설명합니다.', '친구 발표에서 좋은 점을 한 가지 말합니다.'], remember: '작품을 설명하면 내가 배운 것이 더 잘 기억납니다.' },
+            { title: '탐험가 성장 기록', idea: '오늘 잘한 행동과 다음 시간에 더 해 보고 싶은 일을 기록하고 결과물을 저장합니다.', analogy: '탐험가는 여행이 끝난 뒤 발견한 것을 탐험 일지에 남깁니다.', practice: ['파일 이름을 “01_이름_탐험지도”로 저장합니다.', '완성 기준 세 가지를 선생님과 확인합니다.'], remember: '나는 안전하게 살펴보고 질문하는 컴퓨터 탐험가입니다.', activity: { label: '오늘의 성장 기록', prompt: '오늘 가장 잘한 것과 다음에 해 보고 싶은 것을 짧게 적어 보세요.', placeholder: '예: 아이콘을 잘 찾았어요. 다음에는 그림을 더 그리고 싶어요.', example: '모르는 버튼을 바로 누르지 않고 물어봤어요.', minLength: 2 } },
+        ],
+    }),
+    makeUnit({
+        id: 'kids-it-first-u02',
+        unitNumber: 2,
+        title: '창과 아이콘 움직이기',
+        bookLabel: '1단계 | 컴퓨터 탐험가',
+        lessonPackage: {
+            materials: ['컴퓨터 또는 노트북', '마우스', '그림판', '연습용 폴더'],
+            deliverable: '클릭·창 이동·크기 조절·정리를 보여주는 창 조작 미션 카드',
+            completionCriteria: ['한 번 클릭과 두 번 클릭을 구별한다.', '창을 이동·크기 조절·최소화한 뒤 되돌린다.', '저장 확인 후 창을 정리하고 조작 방법을 시범 보인다.'],
+            parentReport: '클릭과 더블클릭의 차이를 이해하고 창 이동·크기 조절·최소화·복원 과정을 스스로 수행했습니다.',
+        },
+        teacherOpening: '책상 위 종이를 앞뒤로 옮기고 크기를 바꿀 수 없지만, 컴퓨터 창은 움직이고 크기를 바꿀 수 있다고 시범 보여 주세요.',
+        teacherCoaching: '더블클릭이 어려운 학생은 손가락으로 “톡톡” 리듬을 먼저 연습합니다. 창을 옮길 때는 제목 막대를 색 테이프로 표시한 것처럼 찾아보게 합니다.',
+        teacherExtension: '빠르게 끝낸 학생은 두 창을 화면 양쪽에 나란히 배치하고 어떤 상황에서 편리한지 설명합니다.',
+        slides: [
+            { title: '창 조작 미션을 시작해요', idea: '지난 시간의 안전 약속을 떠올리고 오늘 연습할 네 가지 창 조작을 확인합니다.', analogy: '게임을 시작하기 전에 조작 버튼을 확인하는 준비 화면과 같습니다.', practice: ['한 번 클릭과 두 번 클릭을 손가락으로 표현합니다.', '오늘 결과물과 완료 기준을 함께 읽습니다.'], remember: '창을 잘 다루면 필요한 일을 빠르게 찾을 수 있습니다.' },
+            { title: '한 번 클릭과 두 번 클릭 비교', idea: '한 번 클릭은 선택, 두 번 클릭은 열기에 사용되는 차이를 화면 변화로 확인합니다.', analogy: '한 번 손들기는 “저요”, 두 번 노크는 “들어갈게요”라는 신호와 비슷합니다.', practice: ['아이콘을 한 번 눌러 테두리 변화를 봅니다.', '같은 아이콘을 두 번 눌러 열린 창을 확인합니다.'], remember: '클릭 횟수에 따라 컴퓨터의 행동이 달라집니다.', activity: { label: '탐정 기록 1', prompt: '한 번 클릭과 두 번 클릭은 각각 어떤 일을 했나요?', placeholder: '예: 한 번은 고르기, 두 번은 열기', example: '한 번 클릭은 선택, 두 번 클릭은 열기예요.', minLength: 2 } },
+            { title: '원하는 창을 맨 앞으로', idea: '겹친 창의 제목을 클릭해 보고 싶은 창을 앞으로 가져옵니다.', analogy: '겹친 색종이 중 보고 싶은 종이를 맨 위로 올리는 것과 같습니다.', practice: ['그림판과 연습용 폴더 창을 겹쳐 놓습니다.', '각 창을 번갈아 클릭해 앞뒤 변화를 말합니다.'], remember: '보고 싶은 창을 클릭하면 맨 앞으로 옵니다.' },
+            { title: '제목 막대를 잡고 이동하기', idea: '창 위쪽 제목 막대를 드래그해 화면의 다른 자리로 옮깁니다.', analogy: '가방 손잡이를 잡고 가방 전체를 옮기는 것과 같습니다.', practice: ['제목 막대 위에 포인터를 정확히 놓습니다.', '누른 채 천천히 화면 왼쪽과 오른쪽으로 옮깁니다.'], remember: '제목 막대는 창을 옮기는 손잡이입니다.' },
+            { title: '모서리로 크기 바꾸기', idea: '창 모서리에서 포인터 모양을 확인하고 드래그해 크기를 조절합니다.', analogy: '사진의 모서리를 잡아 크게 펼치는 모습과 비슷합니다.', practice: ['모서리에서 양방향 화살표를 찾습니다.', '내용이 잘 보이는 크기로 만들고 다시 원래대로 돌립니다.'], remember: '모서리는 창의 크기 손잡이입니다.', activity: { label: '따라 하기 확인', prompt: '창을 움직이거나 크기를 바꿀 때 잡았던 곳을 적어 보세요.', placeholder: '예: 제목 막대와 오른쪽 아래 모서리', example: '움직일 때는 제목 막대, 크기는 모서리를 잡았어요.', minLength: 2 } },
+            { title: '미션 카드 1: 잠깐 숨기기', idea: '최소화 버튼으로 창을 숨긴 뒤 작업 표시줄에서 같은 창을 다시 찾습니다.', analogy: '사용하던 색연필을 서랍에 잠깐 넣었다가 다시 꺼내는 것과 같습니다.', practice: ['그림판을 최소화하고 화면에서 사라졌는지 봅니다.', '작업 표시줄 아이콘을 눌러 같은 그림을 다시 확인합니다.'], remember: '최소화는 닫기가 아니라 잠깐 숨기기입니다.' },
+            { title: '미션 카드 2: 두 창 나란히', idea: '두 창을 이동하고 크기를 조절해 서로 가리지 않도록 배치합니다.', analogy: '책 두 권을 책상 위에 나란히 펼쳐 보는 것과 같습니다.', practice: ['그림판 창을 왼쪽 절반에 놓습니다.', '폴더 창을 오른쪽에 놓고 두 제목이 모두 보이게 합니다.'], remember: '창을 나란히 놓으면 두 내용을 함께 볼 수 있습니다.' },
+            { title: '미션 카드 3: 저장하고 정리하기', idea: '만든 미션 표시를 저장하고 필요한 창만 남도록 안전하게 정리합니다.', analogy: '놀이가 끝난 뒤 작품은 보관하고 도구는 제자리에 놓는 것과 같습니다.', practice: ['저장 버튼을 눌러 파일 이름을 확인합니다.', '필요 없는 창은 저장 여부를 보고 하나씩 닫습니다.'], remember: '저장 확인 후 하나씩 정리합니다.', activity: { label: '창작 미션 기록', prompt: '오늘 성공한 창 조작을 두 가지 적어 보세요.', placeholder: '예: 창 이동하기, 최소화했다가 다시 열기', example: '창 크기를 바꾸고 두 창을 나란히 놓았어요.', minLength: 2 } },
+            { title: '친구 앞에서 조작 시범', idea: '미션 카드에서 자신 있는 조작 하나를 골라 천천히 설명하며 보여줍니다.', analogy: '마술사가 손동작을 천천히 보여주면 친구도 따라 할 수 있는 것과 같습니다.', practice: ['“먼저 ___을 잡아요”로 시작해 설명합니다.', '친구의 설명을 듣고 같은 조작을 따라 합니다.'], remember: '말하면서 보여주면 정확한 순서를 알 수 있습니다.' },
+            { title: '창 조작 성장 기록', idea: '오늘 성공한 미션과 어려웠던 조작을 기록하고 다음 연습 목표를 정합니다.', analogy: '운동 연습표에 성공한 동작과 더 연습할 동작을 표시하는 것과 같습니다.', practice: ['파일 이름을 “02_이름_창미션”으로 저장합니다.', '완성 기준을 확인하고 선생님에게 결과물을 보여줍니다.'], remember: '나는 창을 움직이고 정리할 수 있습니다.', activity: { label: '오늘의 성장 기록', prompt: '가장 자신 있는 창 조작과 조금 더 연습할 조작을 적어 보세요.', placeholder: '예: 최소화는 자신 있어요. 크기 조절은 더 연습할래요.', example: '창 이동은 잘했고 더블클릭은 더 연습하고 싶어요.', minLength: 2 } },
+        ],
+    }),
+    makeUnit({
+        id: 'kids-it-first-u03',
+        unitNumber: 3,
+        title: '마우스와 터치로 그리기',
+        bookLabel: '1단계 | 컴퓨터 탐험가',
+        lessonPackage: {
+            materials: ['컴퓨터 또는 터치 기기', '마우스', '그림판', '도형 참고 카드'],
+            deliverable: '선·도형·색·이름을 넣어 저장한 나만의 디지털 배지',
+            completionCriteria: ['포인터를 목표에 맞추고 클릭·드래그를 정확히 사용한다.', '선·도형·색을 조합해 디지털 배지를 완성한다.', '작품을 저장하고 사용한 도구를 친구에게 설명한다.'],
+            parentReport: '마우스의 클릭·드래그와 스크롤을 정확히 사용하고 선·도형·색을 조합한 디지털 배지를 완성했습니다.',
+        },
+        teacherOpening: '마우스는 화면 속 연필을 움직이는 손잡이라고 설명하고, 빠르게 움직이는 것보다 목표에 정확히 멈추는 모습을 시범 보여 주세요.',
+        teacherCoaching: '손목 전체보다 팔을 편하게 두고 작은 움직임부터 연습시킵니다. 드래그가 끊기면 “잡기–움직이기–놓기” 세 단어로 다시 시도합니다.',
+        teacherExtension: '빠르게 끝낸 학생은 같은 배지를 두 가지 색 조합으로 만들고 어떤 느낌이 다른지 비교합니다.',
+        slides: [
+            { title: '오늘은 디지털 미술가', idea: '마우스와 터치의 기본 움직임을 익히고 오늘 만들 디지털 배지를 확인합니다.', analogy: '붓을 잡는 방법을 알면 원하는 모양을 더 잘 그릴 수 있는 것과 같습니다.', practice: ['손목을 편하게 두고 마우스를 잡습니다.', '오늘 결과물의 선·도형·색·이름 요소를 찾습니다.'], remember: '빠르게보다 천천히 정확하게 움직입니다.' },
+            { title: '포인터와 목표 맞추기', idea: '마우스를 움직이며 포인터가 화면의 작은 목표 위에 정확히 멈추도록 조절합니다.', analogy: '공을 던지기 전에 바구니를 정확히 바라보는 것과 같습니다.', practice: ['화면의 아이콘 세 개 위에 차례로 포인터를 올립니다.', '포인터 모양이 달라지는 곳을 찾아 말합니다.'], remember: '먼저 가리키고, 그다음 누릅니다.', activity: { label: '관찰 기록 1', prompt: '포인터를 올렸을 때 모양이 달라진 곳을 하나 적어 보세요.', placeholder: '예: 버튼 위에서 손가락 모양이 되었어요.', example: '그림판 도구 위에서 포인터 모양이 바뀌었어요.', minLength: 2 } },
+            { title: '클릭 표적 미션', idea: '크기가 다른 표적을 한 번씩 클릭하며 포인터 정확도를 높입니다.', analogy: '도장 찍을 자리에 맞춰 꾹 누르는 놀이와 비슷합니다.', practice: ['큰 표적부터 작은 표적 순서로 클릭합니다.', '잘못 눌렀을 때는 멈추고 다시 목표를 봅니다.'], remember: '클릭은 목표 위에서 한 번 가볍게 누릅니다.' },
+            { title: '드래그로 선과 도형 만들기', idea: '마우스 버튼을 누른 채 움직여 선을 그리고 도형 크기를 조절합니다.', analogy: '색연필을 종이에 댄 채 움직이면 선이 생기는 것과 같습니다.', practice: ['직선과 곡선을 하나씩 그립니다.', '도형 도구를 골라 작은 원과 큰 원을 만듭니다.'], remember: '드래그는 잡기–움직이기–놓기입니다.' },
+            { title: '스크롤·확대·터치 비교', idea: '휠 스크롤과 두 손가락 확대 등 기기에 따른 화면 이동 방법을 비교합니다.', analogy: '긴 그림책을 넘기거나 사진을 가까이 가져오는 행동과 같습니다.', practice: ['휠을 천천히 굴려 위아래로 이동합니다.', '터치 기기에서는 두 손가락으로 확대 후 원래 크기로 돌아옵니다.'], remember: '기기가 달라도 화면을 움직이는 약속이 있습니다.', activity: { label: '따라 하기 확인', prompt: '클릭·드래그·스크롤 중 가장 잘된 동작과 이유를 적어 보세요.', placeholder: '예: 드래그가 잘됐어요. 선을 끊지 않고 그렸어요.', example: '클릭이 잘됐어요. 누르기 전에 포인터를 확인했어요.', minLength: 2 } },
+            { title: '배지 모양 설계하기', idea: '동그라미·별·방패 중 기본 모양을 고르고 안에 넣을 상징을 정합니다.', analogy: '운동팀 마크도 먼저 큰 모양과 대표 색을 정하고 시작합니다.', practice: ['배지의 바깥 모양을 한 가지 고릅니다.', '나를 나타내는 작은 상징을 하나 정합니다.'], remember: '작품은 큰 모양부터 작은 장식 순서로 만듭니다.' },
+            { title: '선과 도형으로 배지 만들기', idea: '도형과 선 도구를 사용해 배지의 큰 모양과 상징을 화면에 배치합니다.', analogy: '큰 블록으로 몸통을 만들고 작은 블록으로 장식하는 것과 같습니다.', practice: ['도형 도구로 배지 테두리를 만듭니다.', '드래그로 상징 또는 무늬를 두 개 이상 넣습니다.'], remember: '도형을 조합하면 새로운 그림이 됩니다.' },
+            { title: '색과 이름을 넣고 저장하기', idea: '색을 두세 가지로 정리하고 짧은 이름이나 첫 글자를 넣어 작품을 완성합니다.', analogy: '케이크에 마지막 장식과 이름표를 올리는 단계와 같습니다.', practice: ['서로 잘 보이는 색을 골라 채웁니다.', '이름 첫 글자를 넣고 “03_이름_디지털배지”로 저장합니다.'], remember: '저장해야 내 디지털 작품이 남습니다.', activity: { label: '창작 미션 기록', prompt: '배지에 넣은 모양·색·상징과 그 이유를 적어 보세요.', placeholder: '예: 별과 파란색을 넣었어요. 도전하는 마음을 나타내요.', example: '초록 방패와 번개를 넣어서 용기 있는 모습을 표현했어요.', minLength: 2 } },
+            { title: '디지털 배지 전시회', idea: '작품을 화면에 띄우고 사용한 도구와 작품의 의미를 친구에게 소개합니다.', analogy: '미술관의 작가가 작품 제목과 만든 생각을 들려주는 것과 같습니다.', practice: ['“제 배지 이름은 ___입니다”로 발표합니다.', '친구 작품에서 멋진 모양이나 색을 하나 찾아 말합니다.'], remember: '작품에는 만든 사람의 생각이 담겨 있습니다.' },
+            { title: '디지털 미술가 성장 기록', idea: '사용할 수 있게 된 마우스 동작과 다음 작품에서 도전할 기능을 기록합니다.', analogy: '화가가 스케치북에 새로 배운 기법을 적어 두는 것과 같습니다.', practice: ['저장한 파일을 다시 열어 작품이 남았는지 확인합니다.', '완성 기준을 선생님과 하나씩 확인합니다.'], remember: '나는 마우스로 생각을 그림으로 표현할 수 있습니다.', activity: { label: '오늘의 성장 기록', prompt: '오늘 가장 잘 사용한 도구와 다음에 더 사용해 보고 싶은 도구를 적어 보세요.', placeholder: '예: 도형 도구를 잘 썼어요. 다음에는 스티커를 넣고 싶어요.', example: '드래그로 별을 잘 만들었고 다음에는 글자 도구를 더 써 보고 싶어요.', minLength: 2 } },
+        ],
+    }),
+    makeUnit({
+        id: 'kids-it-first-u04',
+        unitNumber: 4,
+        title: '키보드로 이야기 쓰기',
+        bookLabel: '1단계 | 컴퓨터 탐험가',
+        lessonPackage: {
+            materials: ['컴퓨터 또는 노트북', '키보드', '간단한 글쓰기 프로그램', '이야기 그림 카드'],
+            deliverable: '제목·두 문장·줄바꿈이 들어간 나의 첫 디지털 이야기',
+            completionCriteria: ['한글·영어 전환과 스페이스·엔터·백스페이스를 사용한다.', '제목과 두 문장으로 짧은 이야기를 입력하고 수정한다.', '개인정보를 넣지 않고 파일을 저장해 소리 내어 발표한다.'],
+            parentReport: '키보드의 한영 전환·띄어쓰기·줄바꿈·수정 기능을 사용해 개인정보가 없는 짧은 디지털 이야기를 완성했습니다.',
+        },
+        teacherOpening: '키보드는 글자 소리가 나는 피아노라고 설명하고, 커서는 다음 글자가 앉을 빈 의자라고 보여 주세요.',
+        teacherCoaching: '속도보다 정확도를 칭찬하고 한 손가락 입력도 허용합니다. 오타가 나면 실패라고 하지 말고 커서와 백스페이스로 고치는 탐정 미션으로 바꿉니다.',
+        teacherExtension: '빠르게 끝낸 학생은 제목 크기나 기호를 바꾸고, 원래 문장과 고친 문장 중 어느 쪽이 더 읽기 좋은지 설명합니다.',
+        slides: [
+            { title: '오늘은 디지털 이야기 작가', idea: '키보드의 주요 키를 살펴보고 두 문장 이야기라는 오늘의 결과물을 확인합니다.', analogy: '피아노 건반이 소리를 만들듯 키보드 건반은 화면에 글자를 만듭니다.', practice: ['자기 이름에 들어가는 글자 키를 찾아봅니다.', '오늘 이야기에는 개인정보를 쓰지 않는 약속을 확인합니다.'], remember: '키보드는 내 생각을 글자로 바꾸는 도구입니다.' },
+            { title: '키보드 지도 탐험', idea: '글자·숫자·스페이스·엔터·백스페이스·한영 키의 위치와 역할을 찾습니다.', analogy: '도시 지도에서 학교와 공원을 찾듯 키보드에서도 필요한 키를 찾습니다.', practice: ['스페이스·엔터·백스페이스를 차례로 가리킵니다.', '키 하나를 누르고 화면의 커서 변화를 관찰합니다.'], remember: '키의 위치와 역할을 알면 글쓰기가 쉬워집니다.', activity: { label: '키보드 탐험 기록', prompt: '오늘 처음 알게 된 키 이름과 하는 일을 적어 보세요.', placeholder: '예: 엔터 키 — 다음 줄로 내려가요.', example: '백스페이스 키는 왼쪽 글자를 지워요.', minLength: 2 } },
+            { title: '한글·영어·기호 바꾸기', idea: '한영 키와 쉬프트 키를 사용해 입력 모드를 바꾸고 화면 결과를 비교합니다.', analogy: '색연필을 바꾸면 같은 종이에도 다른 색이 나오는 것과 같습니다.', practice: ['한글 한 글자와 영어 한 글자를 번갈아 입력합니다.', '쉬프트와 숫자 키를 함께 눌러 기호 하나를 입력합니다.'], remember: '한영과 쉬프트 키는 다른 글자 모습을 꺼냅니다.' },
+            { title: '띄어쓰기와 줄바꿈', idea: '스페이스로 낱말 사이를 띄우고 엔터로 문장을 다음 줄에 배치합니다.', analogy: '친구들이 줄을 설 때 간격을 두고, 새 줄로 이동하는 것과 같습니다.', practice: ['“나는 코딩을 배워요”를 띄어 씁니다.', '엔터를 눌러 좋아하는 것을 다음 줄에 씁니다.'], remember: '스페이스는 낱말 사이, 엔터는 다음 줄입니다.' },
+            { title: '커서와 백스페이스로 고치기', idea: '깜빡이는 커서를 원하는 위치로 옮기고 오타를 한 글자씩 수정합니다.', analogy: '커서는 다음 글자가 앉을 빈 의자, 백스페이스는 작은 지우개입니다.', practice: ['일부러 한 글자를 틀리게 입력합니다.', '커서를 옮기고 백스페이스로 정확히 고칩니다.'], remember: '오타는 커서를 찾고 한 글자씩 고치면 됩니다.', activity: { label: '따라 하기 확인', prompt: '틀린 글자를 어떤 키와 순서로 고쳤는지 적어 보세요.', placeholder: '예: 커서를 옮기고 백스페이스로 지운 뒤 다시 썼어요.', example: '틀린 글자 뒤를 클릭하고 백스페이스로 지운 다음 다시 입력했어요.', minLength: 2 } },
+            { title: '두 문장 이야기 설계하기', idea: '그림 카드에서 주인공·장소·행동을 골라 제목과 두 문장의 순서를 정합니다.', analogy: '레고를 조립하기 전에 어떤 모양을 만들지 부품을 고르는 것과 같습니다.', practice: ['주인공과 장소를 한 가지씩 고릅니다.', '처음 문장과 다음 문장에서 일어날 일을 말로 먼저 이야기합니다.'], remember: '글을 쓰기 전에 말로 순서를 정하면 쉽게 시작할 수 있습니다.' },
+            { title: '제목과 첫 문장 입력하기', idea: '제목을 입력하고 엔터로 줄을 바꾼 뒤 주인공과 장소가 나오는 첫 문장을 씁니다.', analogy: '책 표지의 제목을 쓰고 첫 장을 여는 것과 같습니다.', practice: ['제목을 짧게 입력하고 엔터를 누릅니다.', '“___가 ___에 갔어요”처럼 첫 문장을 완성합니다.'], remember: '제목 다음에는 줄을 바꾸면 읽기 편합니다.' },
+            { title: '두 번째 문장과 수정·저장', idea: '주인공의 행동이 담긴 두 번째 문장을 쓰고 띄어쓰기와 오타를 확인해 저장합니다.', analogy: '그림을 완성한 뒤 삐져나온 색을 고치고 이름표를 붙이는 단계와 같습니다.', practice: ['두 번째 문장을 쓰고 소리 내어 읽으며 오타를 찾습니다.', '“04_이름_디지털이야기”로 저장합니다.'], remember: '읽어 보면 고칠 곳을 더 쉽게 찾을 수 있습니다.', activity: { label: '창작 미션 기록', prompt: '내 이야기의 제목과 가장 마음에 드는 문장을 적어 보세요.', placeholder: '예: 제목은 우주 고양이예요. “고양이가 별을 만났어요.”가 좋아요.', example: '제목은 구름 자동차이고, “자동차가 무지개 길을 달렸어요.”가 마음에 들어요.', minLength: 2 } },
+            { title: '작가 낭독회', idea: '완성한 이야기를 친구에게 읽어 주고 제목·문장·줄바꿈이 잘 보이는지 의견을 듣습니다.', analogy: '그림책 작가가 새 책을 독자에게 처음 읽어 주는 시간과 같습니다.', practice: ['제목을 말하고 두 문장을 천천히 읽습니다.', '친구 이야기에서 재미있는 낱말을 하나 찾아 칭찬합니다.'], remember: '내 글을 읽어 주면 생각을 다른 사람과 나눌 수 있습니다.' },
+            { title: '디지털 작가 성장 기록', idea: '오늘 사용한 키와 스스로 고친 부분을 돌아보고 안전한 글쓰기 약속을 확인합니다.', analogy: '작가는 원고를 마친 뒤 잘된 점과 다음 이야깃거리를 메모합니다.', practice: ['파일을 다시 열어 제목과 두 문장이 저장됐는지 확인합니다.', '비밀번호와 개인정보는 작품에 적지 않는 약속을 말합니다.'], remember: '나는 키보드로 생각을 안전하게 이야기로 만들 수 있습니다.', activity: { label: '오늘의 성장 기록', prompt: '오늘 가장 잘 사용한 키와 다음 이야기에서 써 보고 싶은 내용을 적어 보세요.', placeholder: '예: 엔터 키를 잘 썼어요. 다음에는 공룡 이야기를 쓰고 싶어요.', example: '백스페이스로 오타를 고쳤고 다음에는 로봇 이야기를 쓰고 싶어요.', minLength: 2 } },
+        ],
+    }),
+];
+
+const BOOK1_UNITS: Unit[] = [
+    ...DETAILED_FOUNDATION_UNITS,
+    ...LEGACY_BOOK1_UNITS.slice(4, 5),
 ];
 
 const BOOK2_UNITS: Unit[] = [
