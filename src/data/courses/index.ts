@@ -164,14 +164,13 @@ export const COURSES: Course[] = [
     {
         id: '11',
         title: '디지털 창작자',
-        subtitle: '초등 1·2학년 · 디지털 기초와 창작',
-        icon: 'palette',
-        gradient: 'linear-gradient(135deg, #7c3aed, #0ea5e9)',
+        icon: 'child_care',
+        gradient: 'linear-gradient(135deg, #0ea5e9, #6366f1)',
         cardImage: '/images/courses/kids-it.png',
-        description: '초등 1·2학년을 위한 120분 수업 15회차 과정입니다. 컴퓨터 기초부터 미디어·인터넷 안전, 코딩 사고, 디지털 작품 제작과 발표까지 150개 활동 화면으로 학습합니다.',
+        description: '5~9세 어린이를 위한 IT 첫걸음 정리본입니다. 컴퓨터 화면, 입력 장치, 파일, 미디어, 인터넷 안전, 디지털 표현까지 145장 이미지 교재로 학습합니다.',
         totalUnits: 15,
         totalProblems: 0,
-        estimatedHours: 30,
+        estimatedHours: 15,
         chapters: KIDS_IT_CHAPTERS,
     },
     {
