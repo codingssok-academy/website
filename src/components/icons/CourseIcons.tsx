@@ -247,6 +247,7 @@ const COURSE_ICON_MAP: Record<string, React.FC<IconProps>> = {
     "6": ContestIcon,
     "7": CertificationIcon,
     "8": ComputerBasicsIcon,
+    "11": ComputerBasicsIcon,
 };
 
 /** 코스 ID로 아이콘 컴포넌트 가져오기 */
