@@ -712,6 +712,19 @@ export default function LearningContentPage() {
                                         box-shadow: 0 18px 48px rgba(15,23,42,0.12);
                                         color: #0f172a;
                                     }
+                                    .kids-it-content .kids-it-phase {
+                                        display: inline-flex;
+                                        align-items: center;
+                                        gap: 8px;
+                                        margin-bottom: 16px;
+                                        padding: 7px 12px;
+                                        border-radius: 999px;
+                                        background: #ede9fe;
+                                        color: #6d28d9;
+                                        font-size: 12px;
+                                        font-weight: 900;
+                                    }
+                                    .kids-it-content .kids-it-phase span { color: #7c3aed; opacity: .72; }
                                     .kids-it-content .kids-it-hero {
                                         display: grid;
                                         grid-template-columns: 1fr auto;
@@ -797,6 +810,23 @@ export default function LearningContentPage() {
                                         background: linear-gradient(135deg, #ecfdf5, #ffffff);
                                         border-color: #bbf7d0;
                                     }
+                                    .kids-it-content .kids-it-plan {
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        flex-wrap: wrap;
+                                        gap: 8px;
+                                        margin-top: 16px;
+                                        padding: 14px 16px;
+                                        border-radius: 16px;
+                                        background: linear-gradient(135deg, #eef2ff, #f5f3ff);
+                                        border: 1px solid #ddd6fe;
+                                        color: #4338ca;
+                                        font-size: 12px;
+                                        font-weight: 850;
+                                    }
+                                    .kids-it-content .kids-it-plan strong { color: #312e81; margin-right: 4px; }
+                                    .kids-it-content .kids-it-plan i { color: #a78bfa; font-style: normal; }
                                     .kids-it-content .kids-it-remember {
                                         margin-top: 16px;
                                         background: linear-gradient(135deg, #fffbeb, #ffffff);

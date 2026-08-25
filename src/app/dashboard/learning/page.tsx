@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { COURSES } from "@/data/courses";
+import { COURSES, STUDENT_SHELF_COURSES } from "@/data/courses";
 import { canAccessContent, getTierInfo } from "@/lib/xp-engine";
 import HomeworkBanner from "@/components/ui/HomeworkBanner";
 import { useUserProgress } from "@/hooks/useUserProgress";
@@ -73,6 +73,11 @@ function BookCard({
     const spineColor = colors[0];
     const spineColor2 = colors[1] || colors[0];
     const spineColorDark = `color-mix(in srgb, ${spineColor} 70%, #000)`;
+    const renamedCoverTitle = ({
+        "11": "디지털 창작자",
+        "10": "AI 프로젝트 랩",
+        "4": "알고리즘·대회",
+    } as Record<string, string>)[course.id];
 
     // Per-card mouse-tracking rotation
     const handleMouseMove = useCallback((e: React.MouseEvent) => {
@@ -141,8 +146,8 @@ function BookCard({
                     )}
                     <div className="bk-cover-dim" />
                     <div className="bk-cover-shine" />
-                    {course.id === "11" && (
-                        <div className="bk-cover-renamed-title">디지털 창작자</div>
+                    {renamedCoverTitle && (
+                        <div className="bk-cover-renamed-title">{renamedCoverTitle}</div>
                     )}
                     <div className="bk-cover-info">
                         <span className="bk-cover-title">{course.title}</span>
@@ -669,18 +674,12 @@ export default function LearningDashboard() {
             <HomeworkBanner userName={user?.name || user?.email?.split("@")[0]} />
 
             <div className="pg-grid">
-                {/* 5媛쒖뵫 2以????ш퀬?μ닔??AI媛뺤쓽 異붽?濡?10媛??꾩껜 ?몄텧 */}
+                {/* 학생에게는 학원의 5개 대표 교육상품만 노출 */}
                 <div className="pg-r4">
-                    {COURSES.slice(0,5).map((c,i) => (
+                    {STUDENT_SHELF_COURSES.map((c,i) => (
                         <BookCard key={c.id} course={c} progress={courseProgress[c.id]||0} index={i} onClick={() => go(c.id)} locked={!!c.requiredTier && !canAccessContent(userProgress.tier, c.requiredTier)} requiredTierName={c.requiredTier} onComingSoon={() => showToast("以鍮?以묒엯?덈떎. 怨??ㅽ뵂???덉젙?댁뿉??")} />
                     ))}
                 </div>
-                <div className="pg-r4">
-                    {COURSES.slice(5,10).map((c,i) => (
-                        <BookCard key={c.id} course={c} progress={courseProgress[c.id]||0} index={i+5} onClick={() => go(c.id)} locked={!!c.requiredTier && !canAccessContent(userProgress.tier, c.requiredTier)} requiredTierName={c.requiredTier} onComingSoon={() => showToast("以鍮?以묒엯?덈떎. 怨??ㅽ뵂???덉젙?댁뿉??")} />
-                    ))}
-                </div>
-
             </div>
 
             <div className="pg-hints">

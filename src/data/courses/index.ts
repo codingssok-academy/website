@@ -167,10 +167,10 @@ export const COURSES: Course[] = [
         icon: 'child_care',
         gradient: 'linear-gradient(135deg, #0ea5e9, #6366f1)',
         cardImage: '/images/courses/kids-it.png',
-        description: '5~9세 어린이를 위한 IT 첫걸음 정리본입니다. 컴퓨터 화면, 입력 장치, 파일, 미디어, 인터넷 안전, 디지털 표현까지 145장 이미지 교재로 학습합니다.',
+        description: '초등 1·2학년을 위한 120분 수업 15회차 과정입니다. 컴퓨터 탐험, 미디어 이야기, 코딩 사고, 디지털 작품 제작과 발표를 150개 활동 화면으로 완성합니다.',
         totalUnits: 15,
         totalProblems: 0,
-        estimatedHours: 15,
+        estimatedHours: 30,
         chapters: KIDS_IT_CHAPTERS,
     },
     {
@@ -257,11 +257,12 @@ export const COURSES: Course[] = [
     },
     {
         id: '10',
-        title: 'AI 강의',
+        title: 'AI 프로젝트 랩',
+        subtitle: 'AI 이해 · 도구 활용 · 프로젝트',
         icon: 'smart_toy',
         gradient: 'linear-gradient(135deg, #06b6d4, #3b82f6)',
         cardImage: '/images/courses/ai-class.png',
-        description: 'AI 기초부터 도구 활용, 안전과 윤리, 진로까지 책형 수업자료로 다시 업로드할 준비 상태입니다.',
+        description: 'AI의 원리를 이해하고 도구 활용, 안전과 윤리, 생활 문제 해결 프로젝트로 연결하는 융합 과정입니다.',
         totalUnits: 0,
         totalProblems: 0,
         estimatedHours: 0,
@@ -269,11 +270,12 @@ export const COURSES: Course[] = [
     },
     {
         id: '4',
-        title: 'C++',
+        title: '알고리즘·대회',
+        subtitle: 'C++ · 문제해결 · KOI 대비',
         icon: 'terminal',
         gradient: 'linear-gradient(135deg, #1e3a8a, #3b82f6)',
         cardImage: '/images/courses/cpp.png',
-        description: 'C++ 121단원. 입문, 변수와 자료형, 입력과 연산자, 조건문, 반복문·문자열·배열·함수·vector·pair·정렬·이분탐색·2차원 배열·완전탐색·누적합·투 포인터·stack까지 실전형 슬라이드로 학습합니다.',
+        description: 'C++ 121단원으로 문법과 자료구조를 익히고 정렬, 탐색, 완전탐색, 누적합, 투 포인터 등 대회형 문제해결력을 훈련합니다.',
         totalUnits: 121,
         totalProblems: 0,
         estimatedHours: 90,
@@ -319,6 +321,12 @@ export const COURSES: Course[] = [
         chapters: WORDPROCESSOR_EXAM_CHAPTERS, // CertificateSelector에서 서브코스 선택
     },
 ];
+
+/** 학생 책장에 노출하는 대표 교육상품. 나머지 과정 데이터는 교사용으로 보존합니다. */
+export const STUDENT_SHELF_COURSE_IDS = ['11', '3', '10', '5', '4'] as const;
+export const STUDENT_SHELF_COURSES: Course[] = STUDENT_SHELF_COURSE_IDS
+    .map((courseId) => COURSES.find((course) => course.id === courseId))
+    .filter((course): course is Course => Boolean(course));
 
 // ── 유틸리티 함수 ──
 

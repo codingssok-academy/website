@@ -19,6 +19,44 @@ interface KidsUnitDef {
 const PAGE_TYPE = '페이지' as const;
 const UNIT_TYPE = '종합' as const;
 
+const DIGITAL_CREATOR_UNIT_META = [
+    { title: '컴퓨터 탐험가 되기', goal: '화면·아이콘·버튼을 관찰하고 안전한 사용 약속을 정해요.' },
+    { title: '창과 아이콘 움직이기', goal: '클릭·더블클릭·창 이동으로 필요한 프로그램을 찾아요.' },
+    { title: '마우스와 터치로 그리기', goal: '클릭·드래그·스크롤을 사용해 간단한 그림을 만들어요.' },
+    { title: '키보드로 이야기 쓰기', goal: '한글·숫자·기호를 입력하고 짧은 디지털 이야기를 써요.' },
+    { title: '내 작품 저장소 만들기', goal: '파일 이름과 폴더 규칙을 정해 작품을 저장하고 다시 찾아요.' },
+    { title: '그림과 사진으로 표현하기', goal: '그림과 사진을 고르고 배치해 한 장의 메시지를 만들어요.' },
+    { title: '소리와 영상으로 이야기하기', goal: '소리·장면·재생 순서를 연결해 짧은 미디어 이야기를 만들어요.' },
+    { title: '안전하게 검색하고 발견하기', goal: '검색어를 고르고 믿을 만한 정보를 안전하게 찾아요.' },
+    { title: '디지털 시민 안전 미션', goal: '개인정보·비밀번호·온라인 예절을 상황 미션으로 연습해요.' },
+    { title: '문제 해결 탐정단', goal: '관찰–확인–다시 시도–도움 요청 순서로 문제를 해결해요.' },
+    { title: '코딩 설계도 그리기', goal: '목표·재료·순서·조건을 그림 설계도로 표현해요.' },
+    { title: '순서와 반복으로 움직이기', goal: '명령의 순서와 반복 패턴으로 캐릭터 움직임을 설계해요.' },
+    { title: '나만의 디지털 작품 만들기', goal: '글·그림·버튼·소리를 조합해 나만의 작품을 완성해요.' },
+    { title: '작품 발표회 준비하기', goal: '작품을 테스트하고 고친 뒤 친구에게 설명할 발표를 준비해요.' },
+    { title: '디지털 창작자 프로젝트 발표', goal: '완성 작품을 발표하고 피드백과 성장 기록을 남겨요.' },
+] as const;
+
+function getUnitMeta(unitNumber: number) {
+    return DIGITAL_CREATOR_UNIT_META[unitNumber - 1] ?? {
+        title: `디지털 창작 ${unitNumber}회차`,
+        goal: '디지털 도구를 안전하게 사용해 생각을 작품으로 표현해요.',
+    };
+}
+
+function getStageLabel(unitNumber: number) {
+    if (unitNumber <= 5) return '1단계 · 컴퓨터 탐험가';
+    if (unitNumber <= 10) return '2단계 · 미디어 스토리텔러';
+    return '3단계 · 코딩·디지털 창작자';
+}
+
+function getLessonPhase(pageNumber: number) {
+    if (pageNumber <= 2) return { label: '알아보기', time: '20분' };
+    if (pageNumber <= 5) return { label: '따라 하기', time: '35분' };
+    if (pageNumber <= 8) return { label: '창작 미션', time: '45분' };
+    return { label: '발표·기록', time: '20분' };
+}
+
 function escapeHtml(value: string): string {
     return value
         .replace(/&/g, '&amp;')
@@ -32,16 +70,25 @@ function makePage(unit: KidsUnitDef, slide: KidsSlide, pageIndex: number): Page 
     const pageNumber = pageIndex + 1;
     const legacySlideNumber = (unit.unitNumber - 1) * 10 + pageNumber;
     const practiceItems = slide.practice.map(item => `<li>${escapeHtml(item)}</li>`).join('');
+    const unitMeta = getUnitMeta(unit.unitNumber);
+    const phase = getLessonPhase(pageNumber);
+    const lessonPlan = pageNumber === 1 ? `
+        <div class="kids-it-plan">
+            <strong>오늘의 120분</strong>
+            <span>알아보기 20분</span><i>→</i><span>따라 하기 35분</span><i>→</i><span>창작 미션 45분</span><i>→</i><span>발표·기록 20분</span>
+        </div>
+    ` : '';
 
     return {
         id: `kids-it-first-${String(legacySlideNumber).padStart(3, '0')}`,
-        title: `${unit.title} ${pageNumber}`,
+        title: `${unitMeta.title} ${pageNumber}`,
         type: PAGE_TYPE,
         content: `
             <section class="kids-it-slide">
+                <div class="kids-it-phase"><b>${phase.label}</b><span>${phase.time}</span></div>
                 <div class="kids-it-hero">
                     <div class="kids-it-hero-copy">
-                        <p class="kids-it-kicker">${escapeHtml(unit.bookLabel)} · ${pageNumber}/${unit.slides.length}</p>
+                        <p class="kids-it-kicker">${getStageLabel(unit.unitNumber)} · ${pageNumber}/${unit.slides.length}</p>
                         <h2>${escapeHtml(slide.title)}</h2>
                         <p>${escapeHtml(slide.idea)}</p>
                     </div>
@@ -57,6 +104,7 @@ function makePage(unit: KidsUnitDef, slide: KidsSlide, pageIndex: number): Page 
                         <ol>${practiceItems}</ol>
                     </article>
                 </div>
+                ${lessonPlan}
                 <div class="kids-it-remember">
                     <strong>한 문장으로 기억하기</strong>
                     <p>${escapeHtml(slide.remember)}</p>
@@ -67,13 +115,15 @@ function makePage(unit: KidsUnitDef, slide: KidsSlide, pageIndex: number): Page 
 }
 
 function makeUnit(def: KidsUnitDef): Unit {
+    const unitMeta = getUnitMeta(def.unitNumber);
     return {
         id: def.id,
         unitNumber: def.unitNumber,
-        title: def.title,
+        title: unitMeta.title,
+        subtitle: `${unitMeta.goal} · 알아보기 20분 · 따라 하기 35분 · 창작 미션 45분 · 발표·기록 20분`,
         type: UNIT_TYPE,
         difficulty: 1,
-        duration: '25분',
+        duration: '120분',
         pages: def.slides.map((slide, index) => makePage(def, slide, index)),
     };
 }
@@ -1261,31 +1311,31 @@ export const KIDS_IT_CHAPTERS: Chapter[] = [
     {
         id: 'kids-it-first-1',
         chapterNumber: 1,
-        title: '1권 | 컴퓨터와 화면 첫걸음',
+        title: '1단계 | 컴퓨터 탐험가',
         icon: 'computer',
-        description: '어린이가 컴퓨터 화면, 아이콘, 창, 마우스와 터치 조작을 부담 없이 익히는 첫 단계입니다.',
+        description: '화면과 입력 장치를 직접 조작하고 그림·글·파일을 만들며 디지털 도구의 기본기를 익힙니다.',
         ageLevel: 'elementary',
-        recommendedGrade: '5~9세',
+        recommendedGrade: '초등 1~2학년',
         units: BOOK1_UNITS,
     },
     {
         id: 'kids-it-first-2',
         chapterNumber: 2,
-        title: '2권 | 미디어·인터넷·안전',
+        title: '2단계 | 미디어 스토리텔러',
         icon: 'photo_camera',
-        description: '그림, 사진, 소리, 인터넷 검색, 안전한 디지털 사용 습관을 쉬운 비유로 배웁니다.',
+        description: '그림·사진·소리·영상을 활용해 이야기를 만들고 검색과 디지털 안전 습관을 프로젝트로 익힙니다.',
         ageLevel: 'elementary',
-        recommendedGrade: '5~9세',
+        recommendedGrade: '초등 1~2학년',
         units: BOOK2_UNITS,
     },
     {
         id: 'kids-it-first-3',
         chapterNumber: 3,
-        title: '3권 | 디지털 표현과 마무리',
+        title: '3단계 | 코딩·디지털 창작자',
         icon: 'auto_stories',
-        description: '코딩 전 생각 정리, 순서와 반복, 디지털 작품 만들기, 발표까지 연결합니다.',
+        description: '순서·조건·반복으로 코딩 사고를 익히고 디지털 작품을 설계·제작·발표하는 최종 단계입니다.',
         ageLevel: 'elementary',
-        recommendedGrade: '5~9세',
+        recommendedGrade: '초등 1~2학년',
         units: BOOK3_UNITS,
     },
 ];

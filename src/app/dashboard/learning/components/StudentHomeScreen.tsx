@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
-import { COURSES } from "@/data/courses";
+import { STUDENT_SHELF_COURSES } from "@/data/courses";
 
 function QuickCard({
     icon,
@@ -28,7 +28,7 @@ function QuickCard({
 
 export default function StudentHomeScreen() {
     const { user } = useAuth();
-    const visibleCourses = COURSES.slice(0, 10);
+    const visibleCourses = STUDENT_SHELF_COURSES;
 
     return (
         <main className="student-home">
@@ -50,7 +50,7 @@ export default function StudentHomeScreen() {
                 <QuickCard icon="folder_open" label="내 파일함" sub="결과물 저장" href="/dashboard/learning/files" color="#4f46e5" />
                 <QuickCard icon="menu_book" label="코스 보기" sub="교재와 문제" href="/dashboard/learning/courses" color="#2563eb" />
                 <QuickCard icon="terminal" label="코드 실행" sub="C-Studio" href="/dashboard/compiler" color="#0f172a" />
-                <QuickCard icon="emoji_events" label="문제 풀이" sub="알고리즘 카드" href="/dashboard/learning/courses/12" color="#ca8a04" />
+                <QuickCard icon="emoji_events" label="알고리즘·대회" sub="C++ 문제해결" href="/dashboard/learning/courses/4" color="#ca8a04" />
             </section>
 
             <section className="course-section" aria-label="코스 목록">
