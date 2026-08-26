@@ -6,8 +6,7 @@
  * Phase 2 추가 기능:
  * - 최근 대화 5건을 시스템 프롬프트에 주입 (메모리 증강)
  * - 자주 물어본 개념 TOP 5 주입 (약점 인식)
- * - Socratic vs Direct 모드 토글
- * - 응답 후 개념 자동 추출 & 태깅 (비동기)
+ * - 학생에게 정답 대신 단계별 힌트 제공
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -15,7 +14,7 @@ import { rateLimit } from "@/lib/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { truncate } from "@/lib/text-utils";
-import { TUTOR_LIGHTWEIGHT_MODEL, TUTOR_RESPONSE_MODEL } from "@/lib/tutor-models";
+import { TUTOR_RESPONSE_MODEL } from "@/lib/tutor-models";
 
 const GROQ_KEY = process.env.GROQ_API_KEY || "";
 const MAX_CODE_CHARS = 3000;
@@ -183,61 +182,6 @@ async function fetchWeakConcepts(
     } catch { return []; }
 }
 
-/** 비동기 개념 추출 — 응답 후 백그라운드 실행 */
-async function extractAndSaveConcepts(
-    userId: string | null,
-    userQuestion: string,
-    aiAnswer: string
-): Promise<void> {
-    if (!userId || !GROQ_KEY) return;
-    try {
-        const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${GROQ_KEY}`,
-            },
-            body: JSON.stringify({
-                model: TUTOR_LIGHTWEIGHT_MODEL,
-                messages: [
-                    {
-                        role: "system",
-                        content: "Extract 1-3 coding concepts from the Q&A. Return ONLY a JSON array of short Korean concept names. Example: [\"포인터\",\"NULL 역참조\"]. No explanation.",
-                    },
-                    {
-                        role: "user",
-                        content: `Q: ${truncate(userQuestion, 500)}\nA: ${truncate(aiAnswer, 500)}`,
-                    },
-                ],
-                temperature: 0.2,
-                max_tokens: 100,
-            }),
-        });
-        if (!res.ok) return;
-        const data = await res.json();
-        const text: string = data.choices?.[0]?.message?.content || "";
-        const match = text.match(/\[[^\]]+\]/);
-        if (!match) return;
-        let concepts: string[] = [];
-        try {
-            concepts = JSON.parse(match[0]);
-        } catch { return; }
-        if (!Array.isArray(concepts)) return;
-
-        const supabase = createAdminClient();
-        if (!supabase) return;
-        for (const c of concepts.slice(0, 3)) {
-            if (typeof c !== "string" || c.length < 2 || c.length > 50) continue;
-            const clean = c.trim();
-            // RPC로 upsert + count 증가
-            await supabase.rpc("increment_concept", {
-                p_user_id: userId,
-                p_concept: clean,
-            });
-        }
-    } catch { /* 추출 실패 무시 */ }
-}
-
 export async function POST(req: NextRequest) {
     try {
         const authClient = await createClient();
@@ -261,7 +205,6 @@ export async function POST(req: NextRequest) {
         const body = await req.json();
         const {
             messages,
-            mode,
             context,
             currentCode,
             currentLanguage,
@@ -269,7 +212,6 @@ export async function POST(req: NextRequest) {
             sessionId,
         } = body as {
             messages: Array<{ role: "user" | "assistant"; content: string }>;
-            mode?: TutorMode;
             context?: string;
             currentCode?: string;
             currentLanguage?: string;
@@ -299,7 +241,8 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "마지막 메시지는 학생 질문이어야 해요." }, { status: 400 });
         }
 
-        const effectiveMode: TutorMode = mode === "direct" ? "direct" : "socratic";
+        // 학생 질문은 화면 요청값과 관계없이 항상 힌트 방식으로만 답합니다.
+        const effectiveMode: TutorMode = "socratic";
         const verifiedStudentId = user.id;
         const safeContext = typeof context === "string" ? truncate(context, 200) : undefined;
         const safeCode = typeof currentCode === "string" ? truncate(currentCode, MAX_CODE_CHARS) : undefined;
@@ -362,8 +305,8 @@ export async function POST(req: NextRequest) {
                     { role: "system", content: systemPrompt },
                     ...safeMessages,
                 ],
-                temperature: effectiveMode === "socratic" ? 0.5 : 0.7,
-                max_tokens: effectiveMode === "socratic" ? 300 : 1024,
+                temperature: 0.5,
+                max_tokens: 300,
                 stream: true,
             }),
         });
@@ -430,12 +373,9 @@ export async function POST(req: NextRequest) {
                 ));
                 controller.close();
 
-                // 백그라운드: 저장 + 개념 추출
+                // 백그라운드: 대화 저장
                 if (fullText) {
                     saveConversation(verifiedStudentId, effectiveSessionId, contextKey, "assistant", fullText);
-                    if (effectiveMode === "direct") {
-                        extractAndSaveConcepts(verifiedStudentId, lastUser.content, fullText);
-                    }
                 }
             },
         });
