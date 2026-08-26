@@ -117,7 +117,32 @@ export function CLangIcon({ size = 32, className, style }: IconProps) {
     );
 }
 
-/* ── 5. CosPro — 메달 + 코드 ── */
+/* ── 5. 게임 제작 — 게임패드 + 빌드 블록 ── */
+export function GameMakerIcon({ size = 32, className, style }: IconProps) {
+    return (
+        <svg width={size} height={size} viewBox="0 0 48 48" fill="none" className={className} style={style}>
+            <defs>
+                <linearGradient id="gm-bg" x1="0" y1="0" x2="48" y2="48">
+                    <stop offset="0%" stopColor="#2563eb" />
+                    <stop offset="100%" stopColor="#06b6d4" />
+                </linearGradient>
+                <linearGradient id="gm-shine" x1="0" y1="0" x2="48" y2="48">
+                    <stop offset="0%" stopColor="#fff" stopOpacity="0.25" />
+                    <stop offset="100%" stopColor="#fff" stopOpacity="0" />
+                </linearGradient>
+            </defs>
+            <rect width="48" height="48" rx="14" fill="url(#gm-bg)" />
+            <rect width="48" height="48" rx="14" fill="url(#gm-shine)" />
+            <path d="M16 18H32C35.5 18 38 21 38 24.5V29C38 32 36 34 33.5 34C31.5 34 30 32.8 28.5 30.5H19.5C18 32.8 16.5 34 14.5 34C12 34 10 32 10 29V24.5C10 21 12.5 18 16 18Z" stroke="#fff" strokeWidth="2.5" strokeLinejoin="round" />
+            <path d="M17 23V29M14 26H20" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" />
+            <circle cx="30" cy="24" r="1.7" fill="#fef08a" />
+            <circle cx="34" cy="28" r="1.7" fill="#fef08a" />
+            <path d="M20 13H24V17H20V13ZM26 10H30V14H26V10Z" fill="#fff" fillOpacity="0.75" />
+        </svg>
+    );
+}
+
+/* ── 기존 CosPro 아이콘 — 이전 자격 과정 호환용 ── */
 export function CosProIcon({ size = 32, className, style }: IconProps) {
     return (
         <svg width={size} height={size} viewBox="0 0 48 48" fill="none" className={className} style={style}>
@@ -243,7 +268,7 @@ const COURSE_ICON_MAP: Record<string, React.FC<IconProps>> = {
     "2": PhysicalComputingIcon,
     "3": PythonIcon,
     "4": CLangIcon,
-    "5": CosProIcon,
+    "5": GameMakerIcon,
     "6": ContestIcon,
     "7": CertificationIcon,
     "8": ComputerBasicsIcon,

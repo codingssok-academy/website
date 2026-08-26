@@ -29,7 +29,6 @@ import { useActivityLog } from "@/hooks/useActivityLog";
 import { useLessonAnswerPersistence, useLessonSessionProgress } from "@/hooks/useLessonPersistence";
 import { evaluateLessonCompletion, type LessonAnswerSnapshot } from "@/lib/python-core-learning";
 import AITutor from "@/components/ui/AITutor";
-import CosProSelector from "./CosProSelector";
 import ProgrammingContestSelector from "./ProgrammingContestSelector";
 import ProgrammingContestComingSoon from "./ProgrammingContestComingSoon";
 import WordProcessorView from "./WordProcessorView";
@@ -1081,8 +1080,6 @@ export default function CourseDetailPage() {
     // 자격증 (id:'7') → 서브코스 선택기만 (certId 있으면 아래 일반 뷰 사용)
     if (courseId === '7' && !certId) return <CertificateSelector />;
 
-    // CosPro (id:'5') → show sub-course selector
-    if (courseId === '5') return <CosProSelector />;
     if (courseId === "6" && !contestTrack) return <ProgrammingContestSelector />;
     if (courseId === "6" && contestTrack === "c") {
         router.replace("/dashboard/learning/problem-book/c-problems");

@@ -8,6 +8,11 @@ const coursePage = readFileSync(
 );
 
 describe('Game Maker learning UI', () => {
+    it('opens the game curriculum instead of the retired CosPro selector', () => {
+        expect(coursePage).not.toContain("if (courseId === '5') return <CosProSelector />");
+        expect(coursePage).not.toContain('import CosProSelector from "./CosProSelector"');
+    });
+
     it('uses an original block-game studio reader and focused page navigation', () => {
         expect(coursePage).toContain("activePage?.id.startsWith('game-maker-v1-')");
         expect(coursePage).toContain('selectedUnit?.id.startsWith("game-maker-v1-")');
