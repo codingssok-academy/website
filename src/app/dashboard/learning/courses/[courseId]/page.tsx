@@ -116,8 +116,9 @@ export default function CourseDetailPage() {
     const isPythonCorePage = courseId === '3' && !!activePage?.id.startsWith('py-core-');
     const isDigitalCreatorPage = courseId === '11' && !!activePage?.id.startsWith('digital-creator-v2-');
     const isAiProjectLabPage = courseId === '10' && !!activePage?.id.startsWith('ai-project-v1-');
-    const isProjectActivityPage = isDigitalCreatorPage || isAiProjectLabPage;
-    const usesFocusedLessonUx = courseId === '4' || courseId === '10' || courseId === '11' || isPythonCorePage;
+    const isGameStudioPage = courseId === '5' && !!activePage?.id.startsWith('game-maker-v1-');
+    const isProjectActivityPage = isDigitalCreatorPage || isAiProjectLabPage || isGameStudioPage;
+    const usesFocusedLessonUx = courseId === '4' || courseId === '5' || courseId === '10' || courseId === '11' || isPythonCorePage;
 
     // 학생 학습 활동 영구 기록 — student_activity_log INSERT/UPDATE
     // 학부모 portal /parent dashboard가 fetch하는 테이블. 담당자 '성장기록 데이터 연동 안된 듯'
@@ -135,7 +136,7 @@ export default function CourseDetailPage() {
     // 학생이 챕터/유닛 list 필요하면 좌상단 chevron 버튼 클릭.
     const [leftOpen, setLeftOpen] = useState(false);
     // 어린이 IT (id 11)는 영유아용 슬라이드 학습 전용 → 우측 패널 default 닫음 (PNG 풀폭 표시)
-    const [rightOpen, setRightOpen] = useState(courseId !== '10' && courseId !== '11');
+    const [rightOpen, setRightOpen] = useState(courseId !== '5' && courseId !== '10' && courseId !== '11');
     const [bookViewerOpen, setBookViewerOpen] = useState(true);
     const [slideMode, setSlideMode] = useState(false); // 수업자료 슬라이드 모드
     // 책 모드 (1|2 페이지 분할) — 피드백 #G
@@ -211,7 +212,8 @@ export default function CourseDetailPage() {
     const isPythonCoreUnit = courseId === "3" && !!selectedUnit?.id.startsWith("py-core-");
     const isDigitalCreatorUnit = courseId === "11" && !!selectedUnit?.id.startsWith("digital-creator-v2-");
     const isAiProjectLabUnit = courseId === "10" && !!selectedUnit?.id.startsWith("ai-project-v1-");
-    const usesProjectActivityUnit = isDigitalCreatorUnit || isAiProjectLabUnit;
+    const isGameStudioUnit = courseId === "5" && !!selectedUnit?.id.startsWith("game-maker-v1-");
+    const usesProjectActivityUnit = isDigitalCreatorUnit || isAiProjectLabUnit || isGameStudioUnit;
     const usesLessonPersistence = isPythonCoreUnit || usesProjectActivityUnit;
     const lessonPageIds = useMemo(() => selectedUnit?.pages?.map((page) => page.id) ?? [], [selectedUnit]);
     const lessonQuizPageIds = useMemo(
@@ -803,7 +805,7 @@ export default function CourseDetailPage() {
         setSlideMode(false); // 유닛 전환 시 슬라이드 모드 해제
         // Auto-inject HTML textbook page if available (skip for courses with direct page mapping)
         const unitIdx = allUnits.indexOf(unit);
-        const skipAutoInject = ['1','2','4','8'].includes(courseId); // 커리큘럼 ts에서 직접 경로 관리
+        const skipAutoInject = ['1','2','4','5','8'].includes(courseId); // 커리큘럼 ts에서 직접 경로 관리
         const htmlPath = skipAutoInject ? null : getHtmlContentPath(courseId, unitIdx + 1);
         let pagesWithHtml = unit.pages ?? [];
         if (htmlPath && !pagesWithHtml.some(p => p.id.endsWith('.0'))) {
@@ -883,6 +885,10 @@ export default function CourseDetailPage() {
             setCompletionMessage("10개 학습 화면과 네 번의 활동 기록을 모두 마치면 이번 회차를 완료할 수 있어요.");
             return;
         }
+        if (unit.id.startsWith("game-maker-v1-") && !lessonCompletion.ready) {
+            setCompletionMessage("10개 제작 단계와 네 번의 게임 개발 기록을 모두 마치면 이번 회차를 완료할 수 있어요.");
+            return;
+        }
         setCompletionMessage("");
         const persisted = await setUnitCompleted(unit.id, true);
         const nc = new Set(completedUnits); nc.add(unit.id);
@@ -906,7 +912,7 @@ export default function CourseDetailPage() {
         const basePgs = selectedUnit?.pages ?? [];
         if (!selectedUnit) return basePgs;
         const uIdx = allUnits.indexOf(selectedUnit);
-        const skipInject = ['1','2','4','8'].includes(courseId);
+        const skipInject = ['1','2','4','5','8'].includes(courseId);
         const htmlPath = skipInject ? null : getHtmlContentPath(courseId, uIdx + 1);
         if (htmlPath && !basePgs.some(p => p.id.endsWith('.0'))) {
             const textbookPage: Page = {
@@ -1468,7 +1474,7 @@ export default function CourseDetailPage() {
                                 );
                             })()
                         ) : (
-                        <div ref={contentRef} className={`hide-sb${isIframePage ? " course-iframe-wrap" : " course-content-pad"}${isDigitalCreatorUnit ? " digital-creator-reader" : ""}${isAiProjectLabUnit ? " ai-project-reader" : ""}`} style={{
+                        <div ref={contentRef} className={`hide-sb${isIframePage ? " course-iframe-wrap" : " course-content-pad"}${isDigitalCreatorUnit ? " digital-creator-reader" : ""}${isAiProjectLabUnit ? " ai-project-reader" : ""}${isGameStudioUnit ? " game-studio-reader" : ""}`} style={{
                             flex: 1, overflowY: isIframePage ? "hidden" : "auto",
                             // cpp/어린이IT: 풀폭 활용 (담당자 '공간 낭비'). 다른 코스: 1080 가운데.
                             padding: isIframePage
@@ -1664,7 +1670,7 @@ export default function CourseDetailPage() {
                                     <motion.div
                                         ref={htmlContentRef}
                                         key={`content-${activePage.id}`}
-                                        className={isDigitalCreatorPage ? "digital-creator-material" : isAiProjectLabPage ? "ai-project-material" : undefined}
+                                        className={isDigitalCreatorPage ? "digital-creator-material" : isAiProjectLabPage ? "ai-project-material" : isGameStudioPage ? "game-studio-material" : undefined}
                                         initial={{ opacity: 0, y: 10 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ duration: 0.35, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
@@ -1681,7 +1687,7 @@ export default function CourseDetailPage() {
                             )}
 
                             {isProjectActivityPage && activePage.activity && (
-                                <section className={`kids-activity-panel${isAiProjectLabPage ? " ai-lab-activity-panel" : ""}`}>
+                                <section className={`kids-activity-panel${isAiProjectLabPage ? " ai-lab-activity-panel" : ""}${isGameStudioPage ? " game-studio-activity-panel" : ""}`}>
                                     <div className="kids-activity-top">
                                         <span>{activePage.activity.label}</span>
                                         <b data-status={answerSaveStatus}>
@@ -1698,12 +1704,12 @@ export default function CourseDetailPage() {
                                         maxLength={500}
                                         aria-label={activePage.activity.prompt}
                                     />
-                                    <p className="kids-activity-help">{isAiProjectLabPage ? "결과만 적지 말고 예상·실험·선택·수정의 근거를 함께 남겨 보세요." : "한 단어나 짧은 문장으로 적어도 괜찮아요. 선생님과 함께 적을 수도 있어요."}</p>
+                                    <p className="kids-activity-help">{isAiProjectLabPage ? "결과만 적지 말고 예상·실험·선택·수정의 근거를 함께 남겨 보세요." : isGameStudioPage ? "코드를 복사한 기록보다 예상·실행·버그·수정 과정을 남겨야 게임 개발 활동이 인정됩니다." : "한 단어나 짧은 문장으로 적어도 괜찮아요. 선생님과 함께 적을 수도 있어요."}</p>
                                 </section>
                             )}
 
                             {isProjectActivityPage && isTeacherView && activePage.teacherGuide && (
-                                <details className={`kids-teacher-guide${isAiProjectLabPage ? " ai-lab-teacher-guide" : ""}`}>
+                                <details className={`kids-teacher-guide${isAiProjectLabPage ? " ai-lab-teacher-guide" : ""}${isGameStudioPage ? " game-studio-teacher-guide" : ""}`}>
                                     <summary><MI icon="school" style={{ fontSize: 18 }} /> 강사용 지도안 열기</summary>
                                     <div className="kids-teacher-guide-grid">
                                         <article><span>이번 화면 목표</span><p>{activePage.teacherGuide.objective}</p></article>
@@ -1752,10 +1758,10 @@ export default function CourseDetailPage() {
                             )}
 
                             {usesProjectActivityUnit && selectedUnit.lessonPackage && currentPageIdx === pages.length - 1 && (
-                                <section className={`kids-completion${isAiProjectLabUnit ? " ai-lab-completion" : ""}`}>
+                                <section className={`kids-completion${isAiProjectLabUnit ? " ai-lab-completion" : ""}${isGameStudioUnit ? " game-studio-completion" : ""}`}>
                                     <div className="kids-completion-heading">
                                         <span><MI icon="workspace_premium" style={{ fontSize: 20 }} /> 120분 수업 완료 확인</span>
-                                        <p>{isAiProjectLabUnit ? "탐구·실험·제작 기록과 안전 점검까지 마치면 이번 프로젝트 수업이 완료됩니다." : "화면만 넘기는 것이 아니라 활동 기록과 결과물까지 마치면 수업이 완료됩니다."}</p>
+                                        <p>{isAiProjectLabUnit ? "탐구·실험·제작 기록과 안전 점검까지 마치면 이번 프로젝트 수업이 완료됩니다." : isGameStudioUnit ? "미션·코딩·테스트·디버그 기록과 오늘의 게임 빌드를 마치면 이번 수업이 완료됩니다." : "화면만 넘기는 것이 아니라 활동 기록과 결과물까지 마치면 수업이 완료됩니다."}</p>
                                     </div>
                                     <div className="kids-completion-grid">
                                         <div><span>학습 화면</span><b>{lessonCompletion.pages.completed} / {lessonCompletion.pages.total}</b></div>
@@ -1769,7 +1775,7 @@ export default function CourseDetailPage() {
                                     >
                                         {completedUnits.has(selectedUnit.id)
                                             ? completionSaveStatus === "saving" ? "수업 완료 저장 중..." : "✓ 이번 회차 완료됨"
-                                            : lessonCompletion.ready ? "이번 회차 수업 완료하기" : isAiProjectLabUnit ? "남은 스튜디오 단계와 제작 기록을 마쳐주세요" : "남은 화면과 활동 기록을 마쳐주세요"}
+                                            : lessonCompletion.ready ? "이번 회차 수업 완료하기" : isAiProjectLabUnit ? "남은 스튜디오 단계와 제작 기록을 마쳐주세요" : isGameStudioUnit ? "남은 빌드 단계와 게임 개발 기록을 마쳐주세요" : "남은 화면과 활동 기록을 마쳐주세요"}
                                     </button>
                                     {completionMessage && <p className="kids-completion-message">{completionMessage}</p>}
                                 </section>
@@ -1791,7 +1797,7 @@ export default function CourseDetailPage() {
                                     else if (prevUnitInCourse) selectUnit(prevUnitInCourse);
                                 };
                                 return (
-                                    <div className={isDigitalCreatorUnit ? "kids-page-nav" : isAiProjectLabUnit ? "ai-lab-page-nav" : undefined} style={{
+                                    <div className={isDigitalCreatorUnit ? "kids-page-nav" : isAiProjectLabUnit ? "ai-lab-page-nav" : isGameStudioUnit ? "game-studio-page-nav" : undefined} style={{
                                         // 담당자 '수업자료 밑에 두지' — cpp/어린이IT 코스 inline (슬라이드 바로 아래),
                                         // 다른 코스 fixed 우하단. AI tutor button + toast와 겹침 회피.
                                         ...(usesFocusedLessonUx
@@ -1848,7 +1854,7 @@ export default function CourseDetailPage() {
                                                     boxShadow: "0 2px 8px rgba(37, 99, 235, 0.25)",
                                                 }}
                                             >
-                                                {isDigitalCreatorUnit ? "다음 쪽" : isAiProjectLabUnit ? "다음 단계" : "다음"} <MI icon="arrow_forward" style={{ fontSize: 16 }} />
+                                                {isDigitalCreatorUnit ? "다음 쪽" : isAiProjectLabUnit ? "다음 단계" : isGameStudioUnit ? "다음 빌드" : "다음"} <MI icon="arrow_forward" style={{ fontSize: 16 }} />
                                             </button>
                                         ) : nextUnitInCourse ? (
                                             <>
@@ -2143,6 +2149,117 @@ export default function CourseDetailPage() {
                                 .kids-completion-heading span { display:flex;align-items:center;gap:7px;color:#047857;font-size:18px;font-weight:950; }.kids-completion-heading p { margin:6px 0 0;color:#64748b;font-size:12px;line-height:1.6; }
                                 .kids-completion-grid { display:grid;grid-template-columns:.7fr .7fr 2fr;gap:10px;margin:16px 0; }.kids-completion-grid div { padding:13px;border:1px solid #d1fae5;border-radius:13px;background:#fff; }.kids-completion-grid span,.kids-completion-grid b { display:block; }.kids-completion-grid span { color:#64748b;font-size:10px;font-weight:850; }.kids-completion-grid b { margin-top:5px;color:#047857;font-size:14px;line-height:1.5; }
                                 .kids-complete-btn { width:100%;padding:14px 18px;border:0;border-radius:13px;background:linear-gradient(135deg,#10b981,#059669);color:#fff;font-size:13px;font-weight:950;cursor:pointer;box-shadow:0 8px 20px rgba(5,150,105,.2); }.kids-complete-btn:disabled { background:#cbd5e1;box-shadow:none;cursor:not-allowed; }.kids-completion-message { margin:10px 0 0;padding:9px 11px;border-radius:9px;background:#fff7ed;color:#9a3412;font-size:12px;font-weight:750; }
+
+                                /* 게임 제작 · 블록형 3D 게임 스튜디오 */
+                                .course-content-pad.game-studio-reader {
+                                    overflow-x:clip!important;
+                                    padding:26px clamp(14px,3vw,48px) 126px!important;
+                                    background:
+                                        radial-gradient(circle at 8% 0%,rgba(14,165,233,.18),transparent 26%),
+                                        radial-gradient(circle at 96% 4%,rgba(37,99,235,.16),transparent 24%),
+                                        linear-gradient(160deg,#0d1117,#151a23 55%,#111827)!important;
+                                }
+                                .game-studio-reader .game-studio-material { width:min(100%,1180px);margin:0 auto; }
+                                .course-content-pad .game-studio-slide {
+                                    overflow:hidden;
+                                    width:100%;
+                                    margin:0 auto;
+                                    border:1px solid #333b48;
+                                    border-radius:18px;
+                                    background:#20252d;
+                                    box-shadow:0 26px 70px rgba(0,0,0,.38);
+                                    color:#e5e7eb;
+                                    font-family:'Pretendard','Noto Sans KR',system-ui,sans-serif;
+                                }
+                                .course-content-pad .game-studio-toolbar {
+                                    display:flex;align-items:center;justify-content:space-between;gap:18px;
+                                    min-height:60px;padding:10px 16px;border-bottom:1px solid #3a414c;background:#262b33;
+                                }
+                                .course-content-pad .game-studio-brand { display:flex;align-items:center;gap:10px; }
+                                .course-content-pad .game-studio-brand > span {
+                                    display:grid;width:36px;height:36px;place-items:center;border-radius:9px;
+                                    background:linear-gradient(145deg,#38bdf8,#2563eb);color:#fff;font-size:12px;font-weight:950;
+                                    box-shadow:inset 0 1px rgba(255,255,255,.3),0 5px 14px rgba(37,99,235,.28);
+                                }
+                                .course-content-pad .game-studio-brand div { display:flex;flex-direction:column;line-height:1.05; }
+                                .course-content-pad .game-studio-brand small { color:#9ca3af;font-size:8px;font-weight:900;letter-spacing:.14em; }
+                                .course-content-pad .game-studio-brand b { margin-top:4px;color:#f9fafb;font-size:13px;letter-spacing:.02em; }
+                                .course-content-pad .game-studio-toolbar nav { display:flex;align-items:center;gap:5px; }
+                                .course-content-pad .game-studio-toolbar nav span,
+                                .course-content-pad .game-studio-toolbar nav strong { padding:7px 10px;border-radius:7px;font-size:9px;font-weight:850; }
+                                .course-content-pad .game-studio-toolbar nav span { color:#cbd5e1;background:#303640; }
+                                .course-content-pad .game-studio-toolbar nav strong { color:#fff;background:#2563eb;box-shadow:0 4px 12px rgba(37,99,235,.3); }
+                                .course-content-pad .game-studio-meta {
+                                    display:flex;align-items:center;justify-content:space-between;gap:14px;
+                                    padding:10px 16px;border-bottom:1px solid #353b45;background:#1d2229;color:#9ca3af;font-size:10px;font-weight:800;
+                                }
+                                .course-content-pad .game-studio-meta b { color:#7dd3fc; }
+                                .course-content-pad .game-studio-editor { display:grid;grid-template-columns:minmax(0,1fr) 230px;min-height:450px; }
+                                .course-content-pad .game-studio-scene {
+                                    position:relative;isolation:isolate;display:flex;align-items:flex-end;min-width:0;padding:clamp(26px,4vw,54px);
+                                    background-image:linear-gradient(180deg,rgba(2,6,23,.04),rgba(2,6,23,.78)),url('/images/courses/game-studio-world-v1.png');
+                                    background-position:center;background-size:cover;
+                                }
+                                .course-content-pad .game-studio-scene::before {
+                                    content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;
+                                    background-image:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);
+                                    background-size:32px 32px;mix-blend-mode:overlay;
+                                }
+                                .course-content-pad .game-studio-scene-copy { width:min(100%,760px);padding:20px 22px;border:1px solid rgba(255,255,255,.18);border-radius:15px;background:rgba(14,20,29,.82);backdrop-filter:blur(14px);box-shadow:0 14px 38px rgba(0,0,0,.28); }
+                                .course-content-pad .game-studio-scene-copy small { color:#7dd3fc;font-size:10px;font-weight:900; }
+                                .course-content-pad .game-studio-scene-copy h2 { margin:7px 0 9px;color:#fff;font-size:clamp(28px,3.6vw,46px);line-height:1.16;letter-spacing:-.055em;word-break:keep-all;text-wrap:balance; }
+                                .course-content-pad .game-studio-scene-copy p { margin:0;color:#dbeafe;font-size:14px;line-height:1.72;font-weight:650;word-break:keep-all; }
+                                .course-content-pad .game-studio-axis { position:absolute;right:14px;bottom:12px;padding:6px 8px;border-radius:6px;background:rgba(15,23,42,.76);color:#93c5fd;font:800 9px/1 monospace; }
+                                .course-content-pad .game-studio-explorer { overflow:hidden;border-left:1px solid #3b424d;background:#252a32; }
+                                .course-content-pad .game-studio-explorer header { display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid #3b424d;background:#303640;color:#d1d5db;font-size:9px;font-weight:900;letter-spacing:.08em; }
+                                .course-content-pad .game-studio-explorer p { overflow:hidden;margin:0;padding:8px 12px;border-bottom:1px solid rgba(75,85,99,.35);color:#d1d5db;font-size:10px;line-height:1.3;text-overflow:ellipsis;white-space:nowrap; }
+                                .course-content-pad .game-studio-explorer p:nth-of-type(2) { color:#7dd3fc;background:rgba(14,165,233,.1); }
+                                .course-content-pad .game-studio-explorer dl { margin:0;padding:8px 12px; }
+                                .course-content-pad .game-studio-explorer dl div { display:grid;grid-template-columns:55px minmax(0,1fr);gap:8px;padding:7px 0;border-bottom:1px solid rgba(75,85,99,.32);font-size:9px; }
+                                .course-content-pad .game-studio-explorer dt { color:#9ca3af; }.course-content-pad .game-studio-explorer dd { overflow:hidden;margin:0;color:#e5e7eb;text-overflow:ellipsis;white-space:nowrap; }
+                                .course-content-pad .game-studio-workbench { display:grid;grid-template-columns:minmax(0,1.3fr) minmax(260px,.7fr);gap:12px;padding:16px;background:#1b2027; }
+                                .course-content-pad .game-studio-workbench article { min-height:150px;padding:18px 20px;border:1px solid #39414d;border-radius:13px;background:#252b34;box-shadow:inset 0 1px rgba(255,255,255,.025); }
+                                .course-content-pad .game-studio-workbench article:last-child { border-color:rgba(56,189,248,.35);background:linear-gradient(145deg,rgba(14,165,233,.12),#252b34); }
+                                .course-content-pad .game-studio-workbench span { color:#60a5fa;font-size:9px;font-weight:950;letter-spacing:.12em; }
+                                .course-content-pad .game-studio-workbench h3 { margin:6px 0 8px;color:#f9fafb;font-size:17px; }
+                                .course-content-pad .game-studio-workbench p { margin:0;color:#cbd5e1;font-size:13px;line-height:1.72;font-weight:650;word-break:keep-all; }
+                                .course-content-pad .game-studio-script { margin:0 16px 16px;overflow:hidden;border:1px solid #39414d;border-radius:12px;background:#11151b; }
+                                .course-content-pad .game-studio-script > div { display:flex;align-items:center;gap:7px;padding:9px 12px;border-bottom:1px solid #303640;background:#242a32;color:#d1d5db;font-size:10px;font-weight:800; }
+                                .course-content-pad .game-studio-script > div span { color:#22c55e; }.course-content-pad .game-studio-script > div b { margin-left:auto;color:#7dd3fc;font-size:9px; }
+                                .course-content-pad .game-studio-script pre { overflow-x:auto;margin:0;padding:16px 18px;color:#dbeafe;font:700 12px/1.7 'Cascadia Code','Fira Code',monospace;white-space:pre-wrap;word-break:break-word; }
+                                .course-content-pad .game-studio-script code { color:inherit; }
+                                .course-content-pad .game-studio-rule { display:flex;align-items:center;gap:14px;margin:0 16px 16px;padding:12px 14px;border:1px solid rgba(245,158,11,.3);border-radius:11px;background:rgba(120,53,15,.12); }
+                                .course-content-pad .game-studio-rule b { flex:none;color:#fbbf24;font-size:9px;letter-spacing:.1em; }.course-content-pad .game-studio-rule p { margin:0;color:#fed7aa;font-size:11px;line-height:1.6;font-weight:650; }
+                                .course-content-pad .game-studio-timeline { display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:8px;margin:0 16px 14px;padding:12px;border:1px dashed #475569;border-radius:11px;background:#1b2027;color:#bfdbfe;font-size:10px;font-weight:800; }
+                                .course-content-pad .game-studio-timeline strong { color:#fff; }.course-content-pad .game-studio-timeline i { color:#64748b;font-style:normal; }
+                                .course-content-pad .game-studio-kit { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:0 16px 16px; }
+                                .course-content-pad .game-studio-kit article { padding:14px;border:1px solid #39414d;border-radius:11px;background:#252b34; }.course-content-pad .game-studio-kit b { display:block;margin-bottom:4px;color:#7dd3fc;font-size:9px; }.course-content-pad .game-studio-kit p { margin:0;color:#cbd5e1;font-size:10px;line-height:1.6; }
+                                .course-content-pad .game-studio-finish { margin:0 16px 16px;padding:17px 19px;border:1px solid rgba(34,197,94,.3);border-radius:13px;background:rgba(20,83,45,.14); }
+                                .course-content-pad .game-studio-finish > strong { color:#86efac;font-size:14px; }.course-content-pad .game-studio-finish ol { margin:9px 0 12px;padding-left:21px;color:#d1fae5;font-size:11px;line-height:1.7; }.course-content-pad .game-studio-finish p { margin:0;padding:11px 13px;border-radius:9px;background:#151a21;color:#cbd5e1;font-size:11px;line-height:1.6; }.course-content-pad .game-studio-finish p b { display:block;color:#86efac; }
+                                .game-studio-reader .game-studio-activity-panel,
+                                .game-studio-reader .game-studio-teacher-guide,
+                                .game-studio-reader .game-studio-completion { width:min(100%,1180px)!important;margin:16px auto!important;border-radius:16px!important;box-shadow:0 18px 46px rgba(0,0,0,.28)!important; }
+                                .game-studio-reader .game-studio-activity-panel { padding:23px 25px!important;border:1px solid #7dd3fc!important;background:linear-gradient(135deg,#eff6ff,#f8fafc)!important; }
+                                .game-studio-reader .game-studio-activity-panel .kids-activity-top { padding-bottom:11px;border-bottom:1px solid #bfdbfe; }.game-studio-reader .game-studio-activity-panel .kids-activity-top > span { color:#1d4ed8;font-size:13px; }.game-studio-reader .game-studio-activity-panel h3 { color:#172554;font-size:18px; }
+                                .game-studio-reader .game-studio-activity-panel textarea { min-height:135px;border-color:#93c5fd;border-radius:10px;background:#fff;font-family:'Cascadia Code','Pretendard',monospace; }
+                                .game-studio-reader .game-studio-teacher-guide { padding:0!important;overflow:hidden;border:1px solid #93c5fd!important;background:#f8fafc!important; }.game-studio-reader .game-studio-teacher-guide summary { min-height:60px;padding:16px 20px;background:linear-gradient(90deg,#dbeafe,#eff6ff);color:#1e40af; }.game-studio-reader .game-studio-teacher-guide summary::after { content:'GAME STUDIO · 교사용';margin-left:auto;padding:5px 8px;border:1px solid #93c5fd;border-radius:7px;background:#fff;color:#2563eb;font-size:8px;letter-spacing:.08em; }.game-studio-reader .game-studio-teacher-guide-grid { padding:0 18px 16px; }.game-studio-reader .game-studio-teacher-guide article { border-color:#dbeafe; }.game-studio-reader .game-studio-teacher-guide .kids-teacher-check { padding:14px 18px 18px;border-top:1px solid #dbeafe;background:#eff6ff; }
+                                .game-studio-reader .game-studio-completion { border:1px solid #86efac!important;background:linear-gradient(135deg,#ecfdf5,#f8fafc)!important; }
+                                .game-studio-reader .game-studio-page-nav { width:min(100%,1180px)!important;margin:18px auto 8px!important;padding:8px 11px!important;justify-content:center;border:1px solid #3b82f6;border-radius:12px!important;background:#20252d!important;box-shadow:0 16px 38px rgba(0,0,0,.34)!important; }.game-studio-reader .game-studio-page-nav > div { color:#9ca3af!important; }.game-studio-reader .game-studio-page-nav > div span:first-child { color:#7dd3fc!important; }
+                                @media (max-width:800px) {
+                                    .course-content-pad.game-studio-reader { padding:10px 8px 94px!important; }
+                                    .course-content-pad .game-studio-toolbar nav span { display:none; }
+                                    .course-content-pad .game-studio-editor { grid-template-columns:1fr; }
+                                    .course-content-pad .game-studio-scene { min-height:430px;padding:18px; }
+                                    .course-content-pad .game-studio-scene-copy h2 { font-size:29px; }
+                                    .course-content-pad .game-studio-explorer { display:none; }
+                                    .course-content-pad .game-studio-workbench,.course-content-pad .game-studio-kit { grid-template-columns:1fr; }
+                                    .course-content-pad .game-studio-workbench article { min-height:auto; }
+                                    .course-content-pad .game-studio-rule { align-items:flex-start;flex-direction:column;gap:5px; }
+                                    .game-studio-reader .game-studio-activity-panel { padding:18px 15px!important; }
+                                    .game-studio-reader .game-studio-teacher-guide summary::after { display:none; }
+                                    .game-studio-reader .game-studio-teacher-guide-grid { grid-template-columns:1fr;padding:0 13px 13px; }
+                                    .game-studio-reader .game-studio-page-nav { position:sticky!important;bottom:10px;z-index:12; }
+                                }
 
                                 /* AI 프로젝트 랩 · 창작 스튜디오형 */
                                 .course-content-pad.ai-project-reader {
