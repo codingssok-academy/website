@@ -25,7 +25,7 @@ describe("Digital Creator learning UI", () => {
         expect(coursePage).toContain("activePage?.id.startsWith('digital-creator-v2-')");
         expect(coursePage).toContain('selectedUnit?.id.startsWith("digital-creator-v2-")');
         expect(coursePage).toContain("kids-activity-panel");
-        expect(coursePage).toContain("updateDigitalCreatorAnswer");
+        expect(coursePage).toContain("updateProjectActivityAnswer");
         expect(coursePage).toContain("setActivityCompleted");
         expect(coursePage).toContain("lessonCompletion.activities.completed");
         expect(coursePage).toContain("10개 학습 화면과 네 번의 활동 기록");

@@ -115,7 +115,9 @@ export default function CourseDetailPage() {
     const [activePage, setActivePage] = useState<Page | null>(null);
     const isPythonCorePage = courseId === '3' && !!activePage?.id.startsWith('py-core-');
     const isDigitalCreatorPage = courseId === '11' && !!activePage?.id.startsWith('digital-creator-v2-');
-    const usesFocusedLessonUx = courseId === '4' || courseId === '11' || isPythonCorePage;
+    const isAiProjectLabPage = courseId === '10' && !!activePage?.id.startsWith('ai-project-v1-');
+    const isProjectActivityPage = isDigitalCreatorPage || isAiProjectLabPage;
+    const usesFocusedLessonUx = courseId === '4' || courseId === '10' || courseId === '11' || isPythonCorePage;
 
     // 학생 학습 활동 영구 기록 — student_activity_log INSERT/UPDATE
     // 학부모 portal /parent dashboard가 fetch하는 테이블. 담당자 '성장기록 데이터 연동 안된 듯'
@@ -133,7 +135,7 @@ export default function CourseDetailPage() {
     // 학생이 챕터/유닛 list 필요하면 좌상단 chevron 버튼 클릭.
     const [leftOpen, setLeftOpen] = useState(false);
     // 어린이 IT (id 11)는 영유아용 슬라이드 학습 전용 → 우측 패널 default 닫음 (PNG 풀폭 표시)
-    const [rightOpen, setRightOpen] = useState(courseId !== '11');
+    const [rightOpen, setRightOpen] = useState(courseId !== '10' && courseId !== '11');
     const [bookViewerOpen, setBookViewerOpen] = useState(true);
     const [slideMode, setSlideMode] = useState(false); // 수업자료 슬라이드 모드
     // 책 모드 (1|2 페이지 분할) — 피드백 #G
@@ -204,11 +206,13 @@ export default function CourseDetailPage() {
     const [runResult, setRunResult] = useState<Record<number, { stdout: string; stderr: string; exitCode: number } | null>>({});
     const [runLoading, setRunLoading] = useState<Record<number, boolean>>({});
     const [completionMessage, setCompletionMessage] = useState("");
-    const [digitalCreatorAnswer, setDigitalCreatorAnswer] = useState("");
+    const [projectActivityAnswer, setProjectActivityAnswer] = useState("");
 
     const isPythonCoreUnit = courseId === "3" && !!selectedUnit?.id.startsWith("py-core-");
     const isDigitalCreatorUnit = courseId === "11" && !!selectedUnit?.id.startsWith("digital-creator-v2-");
-    const usesLessonPersistence = isPythonCoreUnit || isDigitalCreatorUnit;
+    const isAiProjectLabUnit = courseId === "10" && !!selectedUnit?.id.startsWith("ai-project-v1-");
+    const usesProjectActivityUnit = isDigitalCreatorUnit || isAiProjectLabUnit;
+    const usesLessonPersistence = isPythonCoreUnit || usesProjectActivityUnit;
     const lessonPageIds = useMemo(() => selectedUnit?.pages?.map((page) => page.id) ?? [], [selectedUnit]);
     const lessonQuizPageIds = useMemo(
         () => selectedUnit?.pages?.filter((page) => page.quiz).map((page) => page.id) ?? [],
@@ -248,9 +252,9 @@ export default function CourseDetailPage() {
     );
 
     const restoreLessonAnswer = useCallback((saved: LessonAnswerSnapshot) => {
-        if (isDigitalCreatorPage) {
+        if (isProjectActivityPage) {
             const restoredAnswer = saved.codeAnswers.activity ?? "";
-            setDigitalCreatorAnswer(restoredAnswer);
+            setProjectActivityAnswer(restoredAnswer);
             if (activePage?.activity) {
                 setActivityCompleted(activePage.id, restoredAnswer.trim().length >= (activePage.activity.minLength ?? 1));
             }
@@ -261,18 +265,18 @@ export default function CourseDetailPage() {
         setEditorCode(Object.fromEntries(
             Object.entries(saved.codeAnswers).map(([problemId, code]) => [Number(problemId), code]),
         ));
-    }, [activePage, isDigitalCreatorPage, setActivityCompleted]);
-    const lessonAnswerDraft = useMemo(() => isDigitalCreatorPage ? ({
+    }, [activePage, isProjectActivityPage, setActivityCompleted]);
+    const lessonAnswerDraft = useMemo(() => isProjectActivityPage ? ({
         quizAnswer: null,
         quizResult: null,
-        codeAnswers: { activity: digitalCreatorAnswer },
+        codeAnswers: { activity: projectActivityAnswer },
     }) : ({
         quizAnswer: selectedAnswer,
         quizResult: quizResult === "correct" ? "correct" as const : null,
         codeAnswers: Object.fromEntries(Object.entries(editorCode).map(([problemId, code]) => [String(problemId), code])),
-    }), [digitalCreatorAnswer, editorCode, isDigitalCreatorPage, quizResult, selectedAnswer]);
+    }), [editorCode, isProjectActivityPage, projectActivityAnswer, quizResult, selectedAnswer]);
     const { status: answerSaveStatus } = useLessonAnswerPersistence({
-        enabled: isPythonCorePage || (isDigitalCreatorPage && !!activePage?.activity),
+        enabled: isPythonCorePage || (isProjectActivityPage && !!activePage?.activity),
         userId: user?.id,
         courseId,
         unitId: selectedUnit?.id,
@@ -282,11 +286,11 @@ export default function CourseDetailPage() {
     });
 
     useEffect(() => {
-        if ((isPythonCorePage || isDigitalCreatorPage) && activePage && lessonProgressReady) markPageVisited(activePage.id);
-    }, [activePage, isDigitalCreatorPage, isPythonCorePage, lessonProgressReady, markPageVisited]);
+        if ((isPythonCorePage || isProjectActivityPage) && activePage && lessonProgressReady) markPageVisited(activePage.id);
+    }, [activePage, isProjectActivityPage, isPythonCorePage, lessonProgressReady, markPageVisited]);
 
-    const updateDigitalCreatorAnswer = useCallback((value: string) => {
-        setDigitalCreatorAnswer(value);
+    const updateProjectActivityAnswer = useCallback((value: string) => {
+        setProjectActivityAnswer(value);
         if (activePage?.activity) {
             setActivityCompleted(activePage.id, value.trim().length >= (activePage.activity.minLength ?? 1));
         }
@@ -309,7 +313,7 @@ export default function CourseDetailPage() {
 
     // Right panel tab
     // 어린이 IT는 코드 컴파일러 무용 → default 'notes'
-    const [rightTab, setRightTab] = useState<"notes" | "timer" | "qa" | "bookmarks" | "code">(courseId === '11' ? 'notes' : 'code');
+    const [rightTab, setRightTab] = useState<"notes" | "timer" | "qa" | "bookmarks" | "code">(courseId === '10' || courseId === '11' ? 'notes' : 'code');
 
     // 슬라이드 lightbox — 학생이 이미지 클릭하면 풀스크린 zoom (담당자 '이미지 잘 보이게' 명시)
     const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
@@ -586,7 +590,7 @@ export default function CourseDetailPage() {
             // 저장 → fresh cpp.ts pageImg 무시 → 슬라이드 잘림. cpp 코스(courseId='4')는 항상
             // fresh content 사용 (형광펜 잠깐 사라져도 OK, 슬라이드 fit 우선).
             // 어린이 IT(11)도 동일 — kids-it.ts에 inline style 강제 추가했지만 stale HTML이 무시했음.
-            const skipStaleHtml = courseId === '4' || courseId === '11' || isPythonCorePage;
+            const skipStaleHtml = courseId === '4' || courseId === '10' || courseId === '11' || isPythonCorePage;
             const saved = skipStaleHtml ? null : localStorage.getItem(hlStorageKey);
             if (saved) {
                 htmlContentRef.current.innerHTML = sanitizeHTML(saved);
@@ -816,7 +820,7 @@ export default function CourseDetailPage() {
         resetQuiz();
     };
 
-    const resetQuiz = () => { setSelectedAnswer(null); setQuizResult(null); setWrongCount(0); setShowHint(false); setShaking(false); setShowProblemAnswer({}); setEditorCode({}); setRunResult({}); setDigitalCreatorAnswer(""); };
+    const resetQuiz = () => { setSelectedAnswer(null); setQuizResult(null); setWrongCount(0); setShowHint(false); setShaking(false); setShowProblemAnswer({}); setEditorCode({}); setRunResult({}); setProjectActivityAnswer(""); };
 
     const executeCode = async (probId: number, code: string) => {
         setEditorCode(prev => ({ ...prev, [probId]: code }));
@@ -1464,7 +1468,7 @@ export default function CourseDetailPage() {
                                 );
                             })()
                         ) : (
-                        <div ref={contentRef} className={`hide-sb${isIframePage ? " course-iframe-wrap" : " course-content-pad"}${isDigitalCreatorUnit ? " digital-creator-reader" : ""}`} style={{
+                        <div ref={contentRef} className={`hide-sb${isIframePage ? " course-iframe-wrap" : " course-content-pad"}${isDigitalCreatorUnit ? " digital-creator-reader" : ""}${isAiProjectLabUnit ? " ai-project-reader" : ""}`} style={{
                             flex: 1, overflowY: isIframePage ? "hidden" : "auto",
                             // cpp/어린이IT: 풀폭 활용 (담당자 '공간 낭비'). 다른 코스: 1080 가운데.
                             padding: isIframePage
@@ -1660,7 +1664,7 @@ export default function CourseDetailPage() {
                                     <motion.div
                                         ref={htmlContentRef}
                                         key={`content-${activePage.id}`}
-                                        className={isDigitalCreatorPage ? "digital-creator-material" : undefined}
+                                        className={isDigitalCreatorPage ? "digital-creator-material" : isAiProjectLabPage ? "ai-project-material" : undefined}
                                         initial={{ opacity: 0, y: 10 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ duration: 0.35, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
@@ -1676,8 +1680,8 @@ export default function CourseDetailPage() {
                                 )
                             )}
 
-                            {isDigitalCreatorPage && activePage.activity && (
-                                <section className="kids-activity-panel">
+                            {isProjectActivityPage && activePage.activity && (
+                                <section className={`kids-activity-panel${isAiProjectLabPage ? " ai-lab-activity-panel" : ""}`}>
                                     <div className="kids-activity-top">
                                         <span>{activePage.activity.label}</span>
                                         <b data-status={answerSaveStatus}>
@@ -1688,18 +1692,18 @@ export default function CourseDetailPage() {
                                     <h3>{activePage.activity.prompt}</h3>
                                     {activePage.activity.example && <p className="kids-activity-example"><strong>생각이 안 날 때 예시</strong>{activePage.activity.example}</p>}
                                     <textarea
-                                        value={digitalCreatorAnswer}
-                                        onChange={(event) => updateDigitalCreatorAnswer(event.target.value)}
+                                        value={projectActivityAnswer}
+                                        onChange={(event) => updateProjectActivityAnswer(event.target.value)}
                                         placeholder={activePage.activity.placeholder}
                                         maxLength={500}
                                         aria-label={activePage.activity.prompt}
                                     />
-                                    <p className="kids-activity-help">한 단어나 짧은 문장으로 적어도 괜찮아요. 선생님과 함께 적을 수도 있어요.</p>
+                                    <p className="kids-activity-help">{isAiProjectLabPage ? "결과만 적지 말고 예상·실험·선택·수정의 근거를 함께 남겨 보세요." : "한 단어나 짧은 문장으로 적어도 괜찮아요. 선생님과 함께 적을 수도 있어요."}</p>
                                 </section>
                             )}
 
-                            {isDigitalCreatorPage && isTeacherView && activePage.teacherGuide && (
-                                <details className="kids-teacher-guide">
+                            {isProjectActivityPage && isTeacherView && activePage.teacherGuide && (
+                                <details className={`kids-teacher-guide${isAiProjectLabPage ? " ai-lab-teacher-guide" : ""}`}>
                                     <summary><MI icon="school" style={{ fontSize: 18 }} /> 강사용 지도안 열기</summary>
                                     <div className="kids-teacher-guide-grid">
                                         <article><span>이번 화면 목표</span><p>{activePage.teacherGuide.objective}</p></article>
@@ -1747,11 +1751,11 @@ export default function CourseDetailPage() {
                                 </section>
                             )}
 
-                            {isDigitalCreatorUnit && selectedUnit.lessonPackage && currentPageIdx === pages.length - 1 && (
-                                <section className="kids-completion">
+                            {usesProjectActivityUnit && selectedUnit.lessonPackage && currentPageIdx === pages.length - 1 && (
+                                <section className={`kids-completion${isAiProjectLabUnit ? " ai-lab-completion" : ""}`}>
                                     <div className="kids-completion-heading">
                                         <span><MI icon="workspace_premium" style={{ fontSize: 20 }} /> 120분 수업 완료 확인</span>
-                                        <p>화면만 넘기는 것이 아니라 활동 기록과 결과물까지 마치면 수업이 완료됩니다.</p>
+                                        <p>{isAiProjectLabUnit ? "탐구·실험·제작 기록과 안전 점검까지 마치면 이번 프로젝트 수업이 완료됩니다." : "화면만 넘기는 것이 아니라 활동 기록과 결과물까지 마치면 수업이 완료됩니다."}</p>
                                     </div>
                                     <div className="kids-completion-grid">
                                         <div><span>학습 화면</span><b>{lessonCompletion.pages.completed} / {lessonCompletion.pages.total}</b></div>
@@ -1765,7 +1769,7 @@ export default function CourseDetailPage() {
                                     >
                                         {completedUnits.has(selectedUnit.id)
                                             ? completionSaveStatus === "saving" ? "수업 완료 저장 중..." : "✓ 이번 회차 완료됨"
-                                            : lessonCompletion.ready ? "이번 회차 수업 완료하기" : "남은 화면과 활동 기록을 마쳐주세요"}
+                                            : lessonCompletion.ready ? "이번 회차 수업 완료하기" : isAiProjectLabUnit ? "남은 스튜디오 단계와 제작 기록을 마쳐주세요" : "남은 화면과 활동 기록을 마쳐주세요"}
                                     </button>
                                     {completionMessage && <p className="kids-completion-message">{completionMessage}</p>}
                                 </section>
@@ -1777,8 +1781,8 @@ export default function CourseDetailPage() {
                                 const unitIdxInCourse = curIdx + 1;
                                 const totalUnits = allUnits.length;
                                 const pageIdxInUnit = pages.findIndex((page) => page.id === activePage.id) + 1;
-                                const progressCurrent = isDigitalCreatorUnit ? pageIdxInUnit : unitIdxInCourse;
-                                const progressTotal = isDigitalCreatorUnit ? pages.length : totalUnits;
+                                const progressCurrent = usesProjectActivityUnit ? pageIdxInUnit : unitIdxInCourse;
+                                const progressTotal = usesProjectActivityUnit ? pages.length : totalUnits;
                                 const nextUnitInCourse = curIdx >= 0 && curIdx < totalUnits - 1 ? allUnits[curIdx + 1] : null;
                                 const prevUnitInCourse = curIdx > 0 ? allUnits[curIdx - 1] : null;
                                 const canGoBack = !!prevPage || !!prevUnitInCourse;
@@ -1787,7 +1791,7 @@ export default function CourseDetailPage() {
                                     else if (prevUnitInCourse) selectUnit(prevUnitInCourse);
                                 };
                                 return (
-                                    <div className={isDigitalCreatorUnit ? "kids-page-nav" : undefined} style={{
+                                    <div className={isDigitalCreatorUnit ? "kids-page-nav" : isAiProjectLabUnit ? "ai-lab-page-nav" : undefined} style={{
                                         // 담당자 '수업자료 밑에 두지' — cpp/어린이IT 코스 inline (슬라이드 바로 아래),
                                         // 다른 코스 fixed 우하단. AI tutor button + toast와 겹침 회피.
                                         ...(usesFocusedLessonUx
@@ -1844,7 +1848,7 @@ export default function CourseDetailPage() {
                                                     boxShadow: "0 2px 8px rgba(37, 99, 235, 0.25)",
                                                 }}
                                             >
-                                                {isDigitalCreatorUnit ? "다음 쪽" : "다음"} <MI icon="arrow_forward" style={{ fontSize: 16 }} />
+                                                {isDigitalCreatorUnit ? "다음 쪽" : isAiProjectLabUnit ? "다음 단계" : "다음"} <MI icon="arrow_forward" style={{ fontSize: 16 }} />
                                             </button>
                                         ) : nextUnitInCourse ? (
                                             <>
@@ -1864,7 +1868,7 @@ export default function CourseDetailPage() {
                                                     onClick={async () => {
                                                         if (!completedUnits.has(selectedUnit.id)) {
                                                             await completeUnit(selectedUnit);
-                                                            if ((isPythonCoreUnit || (isDigitalCreatorUnit && !!selectedUnit.lessonPackage)) && !lessonCompletion.ready) return;
+                                                            if ((isPythonCoreUnit || (usesProjectActivityUnit && !!selectedUnit.lessonPackage)) && !lessonCompletion.ready) return;
                                                         }
                                                         selectUnit(nextUnitInCourse);
                                                     }}
@@ -2139,6 +2143,284 @@ export default function CourseDetailPage() {
                                 .kids-completion-heading span { display:flex;align-items:center;gap:7px;color:#047857;font-size:18px;font-weight:950; }.kids-completion-heading p { margin:6px 0 0;color:#64748b;font-size:12px;line-height:1.6; }
                                 .kids-completion-grid { display:grid;grid-template-columns:.7fr .7fr 2fr;gap:10px;margin:16px 0; }.kids-completion-grid div { padding:13px;border:1px solid #d1fae5;border-radius:13px;background:#fff; }.kids-completion-grid span,.kids-completion-grid b { display:block; }.kids-completion-grid span { color:#64748b;font-size:10px;font-weight:850; }.kids-completion-grid b { margin-top:5px;color:#047857;font-size:14px;line-height:1.5; }
                                 .kids-complete-btn { width:100%;padding:14px 18px;border:0;border-radius:13px;background:linear-gradient(135deg,#10b981,#059669);color:#fff;font-size:13px;font-weight:950;cursor:pointer;box-shadow:0 8px 20px rgba(5,150,105,.2); }.kids-complete-btn:disabled { background:#cbd5e1;box-shadow:none;cursor:not-allowed; }.kids-completion-message { margin:10px 0 0;padding:9px 11px;border-radius:9px;background:#fff7ed;color:#9a3412;font-size:12px;font-weight:750; }
+
+                                /* AI 프로젝트 랩 · 창작 스튜디오형 */
+                                .course-content-pad.ai-project-reader {
+                                    overflow-x:clip!important;
+                                    padding:30px clamp(16px,3.2vw,52px) 128px!important;
+                                    background:
+                                        radial-gradient(circle at 12% 7%,rgba(34,211,238,.17),transparent 25%),
+                                        radial-gradient(circle at 88% 14%,rgba(168,85,247,.15),transparent 24%),
+                                        linear-gradient(145deg,#07111f 0%,#0d1729 48%,#111a2d 100%)!important;
+                                    scrollbar-gutter:stable;
+                                }
+                                .ai-project-reader .ai-project-material {
+                                    width:min(100%,1160px)!important;
+                                    min-width:0!important;
+                                    margin:0 auto!important;
+                                    overflow:visible!important;
+                                }
+                                .course-content-pad .ai-lab-studio {
+                                    position:relative;
+                                    isolation:isolate;
+                                    overflow:hidden;
+                                    width:100%;
+                                    min-height:720px;
+                                    margin:0 auto 22px;
+                                    padding:clamp(24px,3.8vw,48px);
+                                    border:1px solid rgba(148,163,184,.2);
+                                    border-radius:28px;
+                                    background:
+                                        linear-gradient(rgba(12,23,42,.96),rgba(12,23,42,.96)),
+                                        linear-gradient(90deg,rgba(56,189,248,.08) 1px,transparent 1px),
+                                        linear-gradient(rgba(56,189,248,.08) 1px,transparent 1px);
+                                    background-size:auto,32px 32px,32px 32px;
+                                    box-shadow:0 28px 80px rgba(0,0,0,.38),inset 0 1px rgba(255,255,255,.06);
+                                    color:#e5edf8;
+                                    font-family:'Pretendard','Noto Sans KR',system-ui,sans-serif;
+                                    box-sizing:border-box;
+                                }
+                                .course-content-pad .ai-lab-studio::before,
+                                .course-content-pad .ai-lab-studio::after {
+                                    content:'';
+                                    position:absolute;
+                                    z-index:-1;
+                                    width:260px;
+                                    height:260px;
+                                    border-radius:50%;
+                                    filter:blur(70px);
+                                    opacity:.2;
+                                    pointer-events:none;
+                                }
+                                .course-content-pad .ai-lab-studio::before { top:-120px;right:-70px;background:#22d3ee; }
+                                .course-content-pad .ai-lab-studio::after { bottom:-130px;left:-80px;background:#a855f7; }
+                                .course-content-pad .ai-lab-header {
+                                    display:flex;
+                                    align-items:center;
+                                    justify-content:space-between;
+                                    gap:18px;
+                                    padding-bottom:20px;
+                                    border-bottom:1px solid rgba(148,163,184,.2);
+                                }
+                                .course-content-pad .ai-lab-header > div { display:flex;flex-direction:column;gap:5px; }
+                                .course-content-pad .ai-lab-header small { color:#67e8f9;font-size:9px;font-weight:900;letter-spacing:.18em; }
+                                .course-content-pad .ai-lab-header b { color:#f8fafc;font-size:17px;letter-spacing:-.035em; }
+                                .course-content-pad .ai-lab-header > span {
+                                    padding:8px 13px;
+                                    border:1px solid rgba(103,232,249,.28);
+                                    border-radius:999px;
+                                    background:rgba(8,145,178,.13);
+                                    color:#a5f3fc;
+                                    font-size:11px;
+                                    font-weight:850;
+                                }
+                                .course-content-pad .ai-lab-title-row {
+                                    display:grid;
+                                    grid-template-columns:auto minmax(0,1fr);
+                                    gap:20px;
+                                    align-items:center;
+                                    margin:30px 0 24px;
+                                }
+                                .course-content-pad .ai-lab-unit-number {
+                                    display:flex;
+                                    width:76px;
+                                    height:76px;
+                                    align-items:center;
+                                    justify-content:center;
+                                    border:1px solid rgba(103,232,249,.35);
+                                    border-radius:22px;
+                                    background:linear-gradient(145deg,rgba(6,182,212,.2),rgba(59,130,246,.12));
+                                    color:#67e8f9;
+                                    font-size:25px;
+                                    font-weight:950;
+                                    box-shadow:inset 0 0 24px rgba(34,211,238,.08);
+                                }
+                                .course-content-pad .ai-lab-title-row p { margin:0 0 5px;color:#a5b4fc;font-size:12px;font-weight:850; }
+                                .course-content-pad .ai-lab-title-row h2 {
+                                    margin:0;
+                                    color:#f8fafc;
+                                    font-size:clamp(29px,4vw,48px);
+                                    line-height:1.18;
+                                    font-weight:950;
+                                    letter-spacing:-.06em;
+                                    word-break:keep-all;
+                                    text-wrap:balance;
+                                }
+                                .course-content-pad .ai-lab-brief {
+                                    position:relative;
+                                    margin-bottom:18px;
+                                    padding:22px 24px 22px 27px;
+                                    border:1px solid rgba(34,211,238,.25);
+                                    border-left:5px solid #22d3ee;
+                                    border-radius:18px;
+                                    background:linear-gradient(120deg,rgba(8,145,178,.16),rgba(15,23,42,.72));
+                                }
+                                .course-content-pad .ai-lab-brief > span,
+                                .course-content-pad .ai-lab-board article > span { color:#67e8f9;font-size:9px;font-weight:950;letter-spacing:.15em; }
+                                .course-content-pad .ai-lab-brief h3,
+                                .course-content-pad .ai-lab-board h3 { margin:5px 0 7px;color:#f8fafc;font-size:18px;letter-spacing:-.035em; }
+                                .course-content-pad .ai-lab-brief p { margin:0;color:#c9d7e8;font-size:15px;line-height:1.75;font-weight:650;word-break:keep-all; }
+                                .course-content-pad .ai-lab-board {
+                                    display:grid;
+                                    grid-template-columns:minmax(0,1.25fr) minmax(260px,.75fr);
+                                    gap:16px;
+                                    margin-bottom:16px;
+                                }
+                                .course-content-pad .ai-lab-board article {
+                                    min-height:175px;
+                                    padding:22px 24px;
+                                    border:1px solid rgba(148,163,184,.2);
+                                    border-radius:20px;
+                                    background:rgba(22,34,55,.82);
+                                    box-shadow:inset 0 1px rgba(255,255,255,.035);
+                                }
+                                .course-content-pad .ai-lab-board article:last-child {
+                                    border-color:rgba(250,204,21,.25);
+                                    background:linear-gradient(145deg,rgba(120,53,15,.16),rgba(22,34,55,.86));
+                                }
+                                .course-content-pad .ai-lab-board article:last-child > span { color:#fde68a; }
+                                .course-content-pad .ai-lab-board p { margin:0;color:#cbd5e1;font-size:14px;line-height:1.75;font-weight:650;word-break:keep-all; }
+                                .course-content-pad .ai-lab-ethics {
+                                    display:grid;
+                                    grid-template-columns:auto minmax(0,1fr);
+                                    gap:15px;
+                                    align-items:center;
+                                    padding:14px 18px;
+                                    border:1px solid rgba(251,146,60,.28);
+                                    border-radius:15px;
+                                    background:rgba(124,45,18,.13);
+                                }
+                                .course-content-pad .ai-lab-ethics b { color:#fdba74;font-size:12px;white-space:nowrap; }
+                                .course-content-pad .ai-lab-ethics p { margin:0;color:#fed7aa;font-size:12px;line-height:1.65;font-weight:650; }
+                                .course-content-pad .ai-lab-timeline {
+                                    display:flex;
+                                    align-items:center;
+                                    justify-content:center;
+                                    flex-wrap:wrap;
+                                    gap:8px;
+                                    margin-top:18px;
+                                    padding:13px 16px;
+                                    border:1px dashed rgba(165,180,252,.3);
+                                    border-radius:15px;
+                                    background:rgba(49,46,129,.11);
+                                    color:#c7d2fe;
+                                    font-size:11px;
+                                    font-weight:800;
+                                }
+                                .course-content-pad .ai-lab-timeline strong { color:#f8fafc;margin-right:3px; }
+                                .course-content-pad .ai-lab-timeline i { color:#64748b;font-style:normal; }
+                                .course-content-pad .ai-lab-kit {
+                                    display:grid;
+                                    grid-template-columns:repeat(3,minmax(0,1fr));
+                                    gap:12px;
+                                    margin-top:14px;
+                                }
+                                .course-content-pad .ai-lab-kit article {
+                                    padding:16px;
+                                    border:1px solid rgba(148,163,184,.18);
+                                    border-radius:15px;
+                                    background:rgba(15,23,42,.72);
+                                }
+                                .course-content-pad .ai-lab-kit b { display:block;margin-bottom:5px;color:#93c5fd;font-size:10px; }
+                                .course-content-pad .ai-lab-kit p { margin:0;color:#cbd5e1;font-size:12px;line-height:1.6;font-weight:650; }
+                                .course-content-pad .ai-lab-finish {
+                                    margin-top:18px;
+                                    padding:20px 22px;
+                                    border:1px solid rgba(74,222,128,.24);
+                                    border-radius:18px;
+                                    background:rgba(20,83,45,.13);
+                                }
+                                .course-content-pad .ai-lab-finish > strong { color:#86efac;font-size:15px; }
+                                .course-content-pad .ai-lab-finish ol { margin:10px 0 14px;padding-left:22px;color:#d1fae5;font-size:13px;line-height:1.75;font-weight:650; }
+                                .course-content-pad .ai-lab-finish p { margin:0;padding:13px 15px;border-radius:12px;background:rgba(15,23,42,.6);color:#cbd5e1;font-size:12px;line-height:1.65; }
+                                .course-content-pad .ai-lab-finish p b { display:block;margin-bottom:4px;color:#86efac; }
+                                .ai-project-reader .ai-lab-activity-panel,
+                                .ai-project-reader .ai-lab-teacher-guide,
+                                .ai-project-reader .ai-lab-completion {
+                                    width:min(100%,1160px)!important;
+                                    margin:18px auto!important;
+                                    border-radius:20px!important;
+                                    box-shadow:0 20px 54px rgba(0,0,0,.26)!important;
+                                }
+                                .ai-project-reader .ai-lab-activity-panel {
+                                    padding:24px 26px!important;
+                                    border:1px solid rgba(34,211,238,.3)!important;
+                                    background:linear-gradient(135deg,#ecfeff,#f8fafc 58%,#eef2ff)!important;
+                                }
+                                .ai-project-reader .ai-lab-activity-panel .kids-activity-top { padding-bottom:12px;border-bottom:1px solid #bae6fd; }
+                                .ai-project-reader .ai-lab-activity-panel .kids-activity-top > span { color:#0e7490;font-size:14px;letter-spacing:-.02em; }
+                                .ai-project-reader .ai-lab-activity-panel h3 { color:#164e63;font-size:19px; }
+                                .ai-project-reader .ai-lab-activity-panel textarea {
+                                    min-height:140px;
+                                    border:1px solid #a5d8e8;
+                                    border-radius:12px;
+                                    background:linear-gradient(rgba(255,255,255,.94),rgba(255,255,255,.94)),repeating-linear-gradient(0deg,transparent 0 31px,#cffafe 31px 32px);
+                                    line-height:32px;
+                                }
+                                .ai-project-reader .ai-lab-teacher-guide {
+                                    padding:0!important;
+                                    overflow:hidden;
+                                    border:1px solid #c4b5fd!important;
+                                    background:#faf9ff!important;
+                                }
+                                .ai-project-reader .ai-lab-teacher-guide summary {
+                                    min-height:64px;
+                                    padding:17px 22px;
+                                    background:linear-gradient(90deg,#ede9fe,#f5f3ff 55%,#faf5ff);
+                                    color:#5b21b6;
+                                    font-size:15px;
+                                }
+                                .ai-project-reader .ai-lab-teacher-guide summary::after {
+                                    content:'AI LAB · 교사용';
+                                    margin-left:auto;
+                                    padding:5px 9px;
+                                    border:1px solid #c4b5fd;
+                                    border-radius:999px;
+                                    background:#fff;
+                                    color:#7c3aed;
+                                    font-size:9px;
+                                    letter-spacing:.08em;
+                                }
+                                .ai-project-reader .ai-lab-teacher-guide-grid { gap:10px;padding:0 20px 18px; }
+                                .ai-project-reader .ai-lab-teacher-guide article { border-color:#ddd6fe;background:#fff; }
+                                .ai-project-reader .ai-lab-teacher-guide article span { color:#6d28d9; }
+                                .ai-project-reader .ai-lab-teacher-guide .kids-teacher-check { margin:0;padding:16px 20px 20px;border-top:1px solid #ede9fe;background:#f5f3ff; }
+                                .ai-project-reader .ai-lab-completion {
+                                    border:1px solid rgba(34,197,94,.34)!important;
+                                    background:linear-gradient(135deg,#ecfdf5,#f8fafc)!important;
+                                }
+                                .ai-project-reader .ai-lab-completion .kids-completion-heading span { color:#047857; }
+                                .ai-project-reader .ai-lab-page-nav {
+                                    width:min(100%,1160px)!important;
+                                    margin:20px auto 8px!important;
+                                    padding:9px 12px!important;
+                                    justify-content:center;
+                                    border:1px solid rgba(103,232,249,.24);
+                                    border-radius:16px!important;
+                                    background:rgba(15,23,42,.94)!important;
+                                    box-shadow:0 18px 45px rgba(0,0,0,.32)!important;
+                                }
+                                .ai-project-reader .ai-lab-page-nav > div { color:#94a3b8!important; }
+                                .ai-project-reader .ai-lab-page-nav > div span:first-child { color:#67e8f9!important; }
+
+                                @media (max-width:760px) {
+                                    .course-content-pad.ai-project-reader { padding:12px 10px 96px!important; }
+                                    .course-content-pad .ai-lab-studio { min-height:auto;padding:21px 16px;border-radius:20px; }
+                                    .course-content-pad .ai-lab-header { align-items:flex-start; }
+                                    .course-content-pad .ai-lab-header small { display:none; }
+                                    .course-content-pad .ai-lab-header b { font-size:14px; }
+                                    .course-content-pad .ai-lab-title-row { grid-template-columns:1fr;gap:12px;margin:22px 0 18px; }
+                                    .course-content-pad .ai-lab-unit-number { width:54px;height:54px;border-radius:16px;font-size:19px; }
+                                    .course-content-pad .ai-lab-title-row h2 { font-size:29px; }
+                                    .course-content-pad .ai-lab-board,.course-content-pad .ai-lab-kit { grid-template-columns:1fr; }
+                                    .course-content-pad .ai-lab-board article { min-height:auto;padding:19px 18px; }
+                                    .course-content-pad .ai-lab-ethics { grid-template-columns:1fr;gap:5px; }
+                                    .ai-project-reader .ai-lab-activity-panel { padding:19px 16px!important; }
+                                    .ai-project-reader .ai-lab-teacher-guide summary { min-height:56px;padding:14px 15px; }
+                                    .ai-project-reader .ai-lab-teacher-guide summary::after { display:none; }
+                                    .ai-project-reader .ai-lab-teacher-guide-grid { grid-template-columns:1fr;padding:0 14px 14px; }
+                                    .ai-project-reader .ai-lab-page-nav { position:sticky!important;bottom:10px;z-index:12; }
+                                }
 
                                 /* 디지털 창작자 · 초등 교과서형 */
                                 .course-content-pad .kids-it-textbook {

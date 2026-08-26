@@ -118,14 +118,14 @@ function createStudioPages(unit: AiProjectBlueprint): AiStudioPage[] {
         },
         {
             title: '조건을 바꾸며 두 번 실험하기',
-            phase: '실험', time: '20분', idea: '한 번에 한 조건만 바꾸어야 결과 차이의 까닭을 비교할 수 있습니다.',
+            phase: '실험', time: '10분', idea: '한 번에 한 조건만 바꾸어야 결과 차이의 까닭을 비교할 수 있습니다.',
             task: `${unit.experiment} 입력이나 조건 하나만 바꾸어 두 번째 실험을 하고 결과를 비교하세요.`,
             checkpoint: '두 결과의 같은 점과 다른 점을 근거와 함께 기록한다.',
             activity: createActivity(unit, 'experiment'),
         },
         {
             title: '프로젝트 캔버스 설계하기',
-            phase: '설계', time: '15분', idea: '좋은 AI 프로젝트는 도구보다 사용자·문제·성공 기준을 먼저 정합니다.',
+            phase: '설계', time: '10분', idea: '좋은 AI 프로젝트는 도구보다 사용자·문제·성공 기준을 먼저 정합니다.',
             task: `‘${unit.deliverable}’의 사용자, 필요한 입력, AI의 역할, 사람의 판단, 성공 기준을 설계하세요.`,
             checkpoint: '사용자·입력·결과·안전 약속이 있는 설계도를 완성한다.',
         },
@@ -195,7 +195,7 @@ function createPage(unit: AiProjectBlueprint, page: AiStudioPage, pageIndex: num
     const lessonPackage = createLessonPackage(unit);
     const plan = pageNumber === 1 ? `
         <div class="ai-lab-timeline" aria-label="120분 수업 순서">
-            <strong>오늘의 120분</strong><span>탐구 20분</span><i>→</i><span>실험 50분</span><i>→</i><span>설계·제작 30분</span><i>→</i><span>공유 20분</span>
+            <strong>오늘의 120분</strong><span>탐구 20분</span><i>→</i><span>실험 40분</span><i>→</i><span>설계·제작 40분</span><i>→</i><span>공유 20분</span>
         </div>
         <div class="ai-lab-kit">
             <article><b>준비물</b><p>${getMaterials(unit).map(escapeHtml).join(' · ')}</p></article>
@@ -244,7 +244,7 @@ function createUnit(unit: AiProjectBlueprint): Unit {
         id: `ai-project-v1-u${String(unit.unitNumber).padStart(2, '0')}`,
         unitNumber: unit.unitNumber,
         title: unit.title,
-        subtitle: `${unit.focus} · 탐구 20분 · 실험 50분 · 설계·제작 30분 · 공유 20분`,
+        subtitle: `${unit.focus} · 탐구 20분 · 실험 40분 · 설계·제작 40분 · 공유 20분`,
         duration: '120분',
         type: UNIT_TYPE,
         difficulty: unit.unitNumber <= 6 ? 1 : unit.unitNumber <= 18 ? 2 : 3,

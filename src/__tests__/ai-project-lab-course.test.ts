@@ -16,6 +16,7 @@ describe('AI Project Lab course', () => {
         expect(course?.chapters.every((chapter) => chapter.recommendedGrade === '초등 4학년~중학생')).toBe(true);
         expect(units).toHaveLength(24);
         expect(units.every((unit) => unit.duration === '120분')).toBe(true);
+        expect(units.every((unit) => unit.subtitle?.includes('탐구 20분 · 실험 40분 · 설계·제작 40분 · 공유 20분'))).toBe(true);
         expect(units[0]?.title).toBe('AI 탐정의 첫 번째 사건');
         expect(units.at(-1)?.title).toBe('AI 프로젝트 데모데이');
     });
