@@ -56,15 +56,15 @@ function publicStudent(row: StudentRow) {
     };
 }
 
-async function findAuthUserByEmail(adminClient: AdminClient, email: string) {
-    for (let page = 1; page <= 10; page += 1) {
-        const { data, error } = await adminClient.auth.admin.listUsers({ page, perPage: 1000 });
-        if (error) throw new Error(error.message);
-        const match = data.users.find(user => user.email?.toLowerCase() === email.toLowerCase());
-        if (match) return match;
-        if (data.users.length < 1000) break;
-    }
-    return null;
+async function findProfileAuthUserIdByEmail(adminClient: AdminClient, email: string) {
+    const { data, error } = await adminClient
+        .from("profiles")
+        .select("id")
+        .eq("email", email)
+        .limit(1)
+        .maybeSingle();
+    if (error) throw new Error(error.message);
+    return typeof data?.id === "string" ? data.id : null;
 }
 
 function isMissingAuthUserError(error: { message?: string; status?: number } | null | undefined) {
@@ -107,16 +107,15 @@ async function resolveStudentAuthUser(input: {
     studentAuthUserId?: string | null;
     payload: StudentAuthPayload;
 }) {
-    const existingUser = await findAuthUserByEmail(input.adminClient, input.payload.email);
-    if (existingUser?.id) {
-        const error = await updateStudentAuthUser(input.adminClient, existingUser.id, input.payload);
-        if (error) throw new Error(error.message);
-        return { authUserId: existingUser.id, created: false };
-    }
+    const profileAuthUserId = await findProfileAuthUserIdByEmail(input.adminClient, input.payload.email);
+    const candidateAuthUserIds = Array.from(new Set([
+        profileAuthUserId,
+        input.studentAuthUserId,
+    ].filter((value): value is string => Boolean(value))));
 
-    if (input.studentAuthUserId) {
-        const error = await updateStudentAuthUser(input.adminClient, input.studentAuthUserId, input.payload);
-        if (!error) return { authUserId: input.studentAuthUserId, created: false };
+    for (const authUserId of candidateAuthUserIds) {
+        const error = await updateStudentAuthUser(input.adminClient, authUserId, input.payload);
+        if (!error) return { authUserId, created: false };
         if (!isMissingAuthUserError(error)) throw new Error(error.message);
     }
 
