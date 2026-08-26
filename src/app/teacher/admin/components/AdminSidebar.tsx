@@ -8,6 +8,7 @@ import {
     FolderOpen,
     Home,
     LogOut,
+    Megaphone,
     PanelLeftClose,
     PanelLeftOpen,
     UserCog,
@@ -21,6 +22,7 @@ const NAV_ITEMS = [
     { href: "/teacher/admin/students", label: "학생 계정 관리", icon: Users },
     { href: "/teacher/admin/files", label: "학생 파일함", icon: FolderOpen },
     { href: "/teacher/admin/growth", label: "Growth 2.0 성장관리", icon: ClipboardList },
+    { href: "/teacher/admin/announcements", label: "전체 메시지", icon: Megaphone },
 ];
 
 export default function AdminSidebar() {
