@@ -93,7 +93,7 @@ ${actualOutput || '(없음 또는 오류)'}
             const err = await res.text();
             console.error('[AI Review] Ollama error:', res.status, err?.slice(0, 200));
             return NextResponse.json(
-                { error: '나바쌤이 지금 쉬고 있어요. 잠시 후 다시 시도해주세요.' },
+                { error: '쏙쌤이 지금 쉬고 있어요. 잠시 후 다시 시도해주세요.' },
                 { status: 502 }
             );
         }

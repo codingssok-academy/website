@@ -617,7 +617,6 @@ export default function CompilerPage() {
       {/* AI 튜터 — Smart Context */}
       <AITutor
         context={`${cfg.label} 코드 작성 중${activeTab?.name ? ` (${activeTab.name})` : ""}`}
-        studentId={userId || undefined}
         currentLanguage={lang}
         getCurrentCode={() => activeTab?.content || ""}
         getCurrentError={() => outStatus === "error" ? output : ""}

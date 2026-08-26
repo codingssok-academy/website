@@ -3333,7 +3333,6 @@ export default function CourseDetailPage() {
                     const ch = courseData.chapters.find((c: any) => c.units.some((u: any) => u.id === selectedUnit?.id));
                     return [courseData.title, ch?.title, selectedUnit?.title].filter(Boolean).join(" > ");
                 })()}
-                studentId={user?.id}
                 currentLanguage={courseId === '4' ? 'cpp' : courseId === '3' ? 'python' : undefined}
             />
         </div>

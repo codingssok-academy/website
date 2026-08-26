@@ -1,7 +1,7 @@
 /**
  * /api/tutor
  *
- * 나바쌤 AI 튜터 v3 — Memory + Concept Tracking + Socratic Mode
+ * 쏙쌤 AI 튜터 — Memory + Concept Tracking + Socratic Mode
  *
  * Phase 2 추가 기능:
  * - 최근 대화 5건을 시스템 프롬프트에 주입 (메모리 증강)
@@ -13,7 +13,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { rateLimit } from "@/lib/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { truncate } from "@/lib/sanitize";
+import { createClient } from "@/lib/supabase/server";
+import { truncate } from "@/lib/text-utils";
 
 const GROQ_KEY = process.env.GROQ_API_KEY || "";
 const MODEL = "llama-3.3-70b-versatile";
@@ -26,11 +27,16 @@ const MAX_WEAK_CONCEPTS = 5;
 
 type TutorMode = "direct" | "socratic";
 
+function redactPrivateCodes(input: string) {
+    return truncate(input, MAX_CONTENT_CHARS).replace(
+        /((?:비밀번호|인증번호|password|passcode|pin)\s*[:=]?\s*)\d{4,}/gi,
+        "$1[숨김]",
+    );
+}
+
 function buildSystemPrompt(opts: {
     mode: TutorMode;
     context?: string;
-    studentName?: string;
-    studentLevel?: number;
     currentCode?: string;
     currentLanguage?: string;
     currentError?: string;
@@ -38,8 +44,9 @@ function buildSystemPrompt(opts: {
     pastExchanges?: { role: string; content: string; created_at: string }[];
 }): string {
     const lines: string[] = [
-        "You are 나바쌤, an expert coding tutor at 코딩쏙 academy in Daejeon, Korea.",
+        "You are 쏙쌤, a friendly AI coding tutor at 코딩쏙 academy in Daejeon, Korea.",
         "You teach ALL programming languages, algorithms, data structures, and CS theory.",
+        "Never ask for or repeat passwords, parent access codes, phone numbers, or other personal information.",
     ];
 
     // 모드별 교수 방식
@@ -68,18 +75,6 @@ function buildSystemPrompt(opts: {
             "7. Use markdown ```code``` blocks.",
             "8. 학생이 좌절하면 격려."
         );
-    }
-
-    if (opts.studentName || opts.studentLevel) {
-        lines.push("", "STUDENT INFO:");
-        if (opts.studentName) lines.push(`- 이름: ${opts.studentName}`);
-        if (opts.studentLevel) {
-            const guide =
-                opts.studentLevel <= 2 ? "초급 — 쉬운 비유, 짧은 코드(5줄 이내)" :
-                opts.studentLevel <= 5 ? "중급 — 표준 설명 + 주석 많은 코드" :
-                "상급 — 심화 + 엣지케이스 + Big-O 분석";
-            lines.push(`- 레벨: Lv.${opts.studentLevel} (${guide})`);
-        }
     }
 
     // 약점 개념 주입
@@ -245,22 +240,30 @@ async function extractAndSaveConcepts(
 }
 
 export async function POST(req: NextRequest) {
-    if (!GROQ_KEY) {
-        return NextResponse.json(
-            { error: "AI 튜터가 설정되지 않았어요. 선생님에게 문의해주세요." },
-            { status: 503 },
-        );
-    }
-
     try {
+        const authClient = await createClient();
+        const {
+            data: { user },
+            error: authError,
+        } = await authClient.auth.getUser();
+        if (authError || !user) {
+            return NextResponse.json(
+                { error: "쏙쌤에게 질문하려면 학생 로그인이 필요해요." },
+                { status: 401 },
+            );
+        }
+        if (!GROQ_KEY) {
+            return NextResponse.json(
+                { error: "쏙쌤이 아직 설정되지 않았어요. 선생님에게 문의해주세요." },
+                { status: 503 },
+            );
+        }
+
         const body = await req.json();
         const {
             messages,
             mode,
             context,
-            studentName,
-            studentLevel,
-            studentId,
             currentCode,
             currentLanguage,
             currentError,
@@ -269,9 +272,6 @@ export async function POST(req: NextRequest) {
             messages: Array<{ role: "user" | "assistant"; content: string }>;
             mode?: TutorMode;
             context?: string;
-            studentName?: string;
-            studentLevel?: number;
-            studentId?: string;
             currentCode?: string;
             currentLanguage?: string;
             currentError?: string;
@@ -282,19 +282,34 @@ export async function POST(req: NextRequest) {
         if (!Array.isArray(messages) || messages.length === 0) {
             return NextResponse.json({ error: "메시지가 필요해요." }, { status: 400 });
         }
-        const lastUser = messages[messages.length - 1];
-        if (!lastUser || lastUser.role !== "user" || typeof lastUser.content !== "string") {
+        const validMessages = messages.every(message =>
+            (message?.role === "user" || message?.role === "assistant")
+            && typeof message?.content === "string"
+            && message.content.trim().length > 0
+            && message.content.length <= MAX_CONTENT_CHARS,
+        );
+        if (!validMessages) {
             return NextResponse.json({ error: "잘못된 메시지 형식" }, { status: 400 });
         }
-        if (lastUser.content.length > 2000) {
-            return NextResponse.json({ error: "질문이 너무 길어요 (2000자 이내)" }, { status: 400 });
+        const safeMessages = messages.slice(-10).map(message => ({
+            role: message.role,
+            content: redactPrivateCodes(message.content.trim()),
+        }));
+        const lastUser = safeMessages[safeMessages.length - 1];
+        if (lastUser.role !== "user") {
+            return NextResponse.json({ error: "마지막 메시지는 학생 질문이어야 해요." }, { status: 400 });
         }
 
-        const effectiveMode: TutorMode = mode === "socratic" ? "socratic" : "direct";
+        const effectiveMode: TutorMode = mode === "direct" ? "direct" : "socratic";
+        const verifiedStudentId = user.id;
+        const safeContext = typeof context === "string" ? truncate(context, 200) : undefined;
+        const safeCode = typeof currentCode === "string" ? truncate(currentCode, MAX_CODE_CHARS) : undefined;
+        const safeLanguage = typeof currentLanguage === "string" ? truncate(currentLanguage, 30) : undefined;
+        const safeError = typeof currentError === "string" ? truncate(currentError, MAX_ERROR_CHARS) : undefined;
 
         // Rate Limit
         const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-        const rateKey = studentId || ip;
+        const rateKey = `${verifiedStudentId}:${ip}`;
         const [minuteResult, dayResult] = await Promise.all([
             rateLimit(`tutor-min:${rateKey}`, { maxRequests: 10, windowMs: 60_000 }),
             rateLimit(`tutor-day:${rateKey}`, { maxRequests: 200, windowMs: 24 * 60 * 60_000 }),
@@ -307,35 +322,33 @@ export async function POST(req: NextRequest) {
         }
         if (!dayResult.success) {
             return NextResponse.json(
-                { error: "오늘은 나바쌤이 많이 도와줬네! 내일 다시 만나 💤" },
+                { error: "오늘은 쏙쌤이 많이 도와줬네! 내일 다시 만나 💤" },
                 { status: 429 }
             );
         }
 
         const effectiveSessionId = sessionId || `sess-${Date.now()}`;
-        const contextKey = context || null;
+        const contextKey = safeContext || null;
 
         // 과거 대화 + 약점 병렬 조회
         const [pastExchanges, weakConcepts] = await Promise.all([
-            fetchRecentExchanges(studentId || null, effectiveSessionId),
-            fetchWeakConcepts(studentId || null),
+            fetchRecentExchanges(verifiedStudentId, effectiveSessionId),
+            fetchWeakConcepts(verifiedStudentId),
         ]);
 
         // 시스템 프롬프트 빌드
         const systemPrompt = buildSystemPrompt({
             mode: effectiveMode,
-            context,
-            studentName,
-            studentLevel,
-            currentCode,
-            currentLanguage,
-            currentError,
+            context: safeContext,
+            currentCode: safeCode,
+            currentLanguage: safeLanguage,
+            currentError: safeError,
             weakConcepts,
             pastExchanges,
         });
 
         // 사용자 메시지 저장
-        saveConversation(studentId || null, effectiveSessionId, contextKey, "user", lastUser.content);
+        saveConversation(verifiedStudentId, effectiveSessionId, contextKey, "user", lastUser.content);
 
         // Groq 스트리밍 호출
         const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -348,7 +361,7 @@ export async function POST(req: NextRequest) {
                 model: MODEL,
                 messages: [
                     { role: "system", content: systemPrompt },
-                    ...messages.slice(-10).map(m => ({ role: m.role, content: m.content })),
+                    ...safeMessages,
                 ],
                 temperature: effectiveMode === "socratic" ? 0.5 : 0.7,
                 max_tokens: effectiveMode === "socratic" ? 300 : 1024,
@@ -359,13 +372,13 @@ export async function POST(req: NextRequest) {
         if (!groqRes.ok || !groqRes.body) {
             if (groqRes.status === 429) {
                 return NextResponse.json(
-                    { error: "나바쌤이 너무 바빠요. 잠시 후 다시!" },
+                    { error: "쏙쌤이 너무 바빠요. 잠시 후 다시!" },
                     { status: 429 }
                 );
             }
             if (process.env.NODE_ENV === "development") console.error("[tutor] groq error:", groqRes.status);
             return NextResponse.json(
-                { error: "나바쌤이 잠시 쉬고 있어요. 다시 시도해주세요." },
+                { error: "쏙쌤이 잠시 쉬고 있어요. 다시 시도해주세요." },
                 { status: 502 }
             );
         }
@@ -420,9 +433,9 @@ export async function POST(req: NextRequest) {
 
                 // 백그라운드: 저장 + 개념 추출
                 if (fullText) {
-                    saveConversation(studentId || null, effectiveSessionId, contextKey, "assistant", fullText);
-                    if (studentId && effectiveMode === "direct") {
-                        extractAndSaveConcepts(studentId, lastUser.content, fullText);
+                    saveConversation(verifiedStudentId, effectiveSessionId, contextKey, "assistant", fullText);
+                    if (effectiveMode === "direct") {
+                        extractAndSaveConcepts(verifiedStudentId, lastUser.content, fullText);
                     }
                 }
             },
@@ -439,7 +452,7 @@ export async function POST(req: NextRequest) {
     } catch (err) {
         if (process.env.NODE_ENV === "development") console.error("[tutor] error:", err);
         return NextResponse.json(
-            { error: "AI 튜터 연결 오류. 잠시 후 다시 시도해주세요." },
+            { error: "쏙쌤 연결 오류. 잠시 후 다시 시도해주세요." },
             { status: 500 }
         );
     }
