@@ -64,11 +64,19 @@ describe("student signup route", () => {
     const updatedIdEq = vi.fn(() => ({ select: updatedSelect }));
     const studentUpdate = vi.fn(() => ({ eq: updatedIdEq }));
     const profileUpsert = vi.fn().mockResolvedValue({ error: null });
+    const profileMaybeSingle = vi.fn().mockResolvedValue({ data: null, error: null });
+    const profileLimit = vi.fn(() => ({ maybeSingle: profileMaybeSingle }));
+    const profileEmailEq = vi.fn(() => ({ limit: profileLimit }));
+    const profileSelect = vi.fn(() => ({ eq: profileEmailEq }));
+    const listUsers = vi.fn().mockResolvedValue({
+      data: { users: [] },
+      error: { message: "Database error finding users" },
+    });
 
     const adminClient = {
       auth: {
         admin: {
-          listUsers: vi.fn().mockResolvedValue({ data: { users: [] }, error: null }),
+          listUsers,
           createUser: vi.fn().mockResolvedValue({ data: { user: { id: authUserId } }, error: null }),
           updateUserById: vi.fn(),
           deleteUser: vi.fn(),
@@ -82,7 +90,7 @@ describe("student signup route", () => {
           return { select: progressSelect, upsert: progressUpsert };
         }
         if (table === "profiles") {
-          return { upsert: profileUpsert };
+          return { select: profileSelect, upsert: profileUpsert };
         }
         throw new Error(`Unexpected table: ${table}`);
       }),
@@ -101,6 +109,8 @@ describe("student signup route", () => {
     expect(response.status).toBe(200);
     expect(body.success).toBe(true);
     expect(body.student.auth_user_id).toBe(authUserId);
+    expect(listUsers).not.toHaveBeenCalled();
+    expect(profileEmailEq).toHaveBeenCalledWith("email", `student_${studentId}@codingssok.local`);
     expect(parentCodeUserEq).toHaveBeenCalledWith("user_id", studentId);
     expect(adminClient.auth.admin.createUser).toHaveBeenCalledTimes(1);
     expect(progressUpsert).toHaveBeenCalledWith(
