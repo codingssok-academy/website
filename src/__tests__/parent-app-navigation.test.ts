@@ -9,21 +9,20 @@ function read(relativePath: string) {
 }
 
 describe("parent app navigation", () => {
-  it("keeps only feedback and settings in the bottom tabs", () => {
+  it("keeps dashboard, feedback, and settings in the bottom tabs", () => {
     const nav = read("src/app/parent/ParentBottomNav.tsx");
     const hrefs = Array.from(nav.matchAll(/href:\s*"([^"]+)"/g)).map((match) => match[1]);
 
-    expect(hrefs).toEqual(["/parent/feedback", "/parent/settings"]);
-    expect(nav).not.toContain('label: "홈"');
-    expect(nav).not.toContain('label: "성장"');
+    expect(hrefs).toEqual(["/parent/dashboard", "/parent/feedback", "/parent/settings"]);
+    expect(nav).toContain('label: "현황"');
   });
 
-  it("redirects retired parent home and growth routes to feedback", () => {
+  it("redirects parent home and legacy growth routes to the integrated dashboard", () => {
     const home = read("src/app/parent/page.tsx");
     const growth = read("src/app/parent/growth/page.tsx");
 
-    expect(home).toContain('redirect("/parent/feedback")');
-    expect(growth).toContain('redirect("/parent/feedback")');
+    expect(home).toContain('redirect("/parent/dashboard")');
+    expect(growth).toContain('redirect("/parent/dashboard")');
   });
 
   it("keeps linked student switching on the feedback screen", () => {
@@ -38,7 +37,7 @@ describe("parent app navigation", () => {
     const settings = read("src/app/parent/settings/page.tsx");
 
     expect(settings).toContain("연결된 학생");
-    expect(settings).toContain("코딩쏙 학부모 앱");
+    expect(settings).toContain("코딩쏙 학부모 포털");
     expect(settings).not.toContain("인증 초기화");
     expect(settings).not.toContain("데이터 초기화");
     expect(settings).not.toContain("clearParentStudentAccess");

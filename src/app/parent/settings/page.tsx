@@ -22,7 +22,7 @@ export default function ParentSettingsPage() {
     return (
         <div className="px-4 pt-5 pb-2 max-w-[480px] mx-auto">
             <div className="mb-7">
-                <div className="text-[13px] text-slate-500 font-semibold mb-0.5">앱 설정</div>
+                <div className="text-[13px] text-slate-500 font-semibold mb-0.5">학부모 포털 설정</div>
                 <div className="text-xl font-black text-slate-900">설정</div>
             </div>
 
@@ -55,14 +55,14 @@ export default function ParentSettingsPage() {
                         iconBg="bg-green-50"
                         iconColor="text-green-600"
                         label="서비스"
-                        value="코딩쏙 학부모 앱"
+                        value="코딩쏙 학부모 포털"
                         divider={false}
                     />
                 </div>
             </section>
 
             <div className="text-center mt-8 text-[11px] text-slate-300 font-semibold">
-                코딩쏙 학부모 앱 v{APP_VERSION}
+                코딩쏙 학부모 포털 v{APP_VERSION}
             </div>
         </div>
     );
