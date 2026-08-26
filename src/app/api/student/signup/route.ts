@@ -141,12 +141,16 @@ async function resolveParentCode(input: {
     const studentPin = normalizeParentCode(input.student?.pin || "");
     if (studentPin) return { code: studentPin, source: "students", reference };
 
-    const authUserId = input.student?.auth_user_id || null;
-    if (authUserId) {
+    const progressOwnerIds = Array.from(new Set([
+        input.student?.id,
+        input.student?.auth_user_id,
+    ].filter((value): value is string => Boolean(value))));
+
+    for (const ownerId of progressOwnerIds) {
         const { data, error } = await input.adminClient
             .from("study_progress")
             .select("completed_units")
-            .eq("user_id", authUserId)
+            .eq("user_id", ownerId)
             .eq("course_id", PIN_COURSE)
             .maybeSingle();
         if (error) throw new Error(error.message);
