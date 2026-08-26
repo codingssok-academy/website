@@ -105,4 +105,36 @@ describe("쏙쌤 AI 질문 API", () => {
     expect(groqBody.messages[0].content).not.toContain("다른학생");
     expect(groqBody.messages.at(-1).content).toContain("비밀번호 [숨김]");
   });
+
+  it("직답 모드를 요청해도 학생에게는 힌트 방식으로만 답한다", async () => {
+    mocks.createClient.mockResolvedValue({
+      auth: {
+        getUser: vi.fn().mockResolvedValue({
+          data: { user: { id: "22222222-2222-4222-8222-222222222222" } },
+          error: null,
+        }),
+      },
+    });
+
+    const groqFetch = vi.fn().mockResolvedValue(new Response(
+      'data: {"choices":[{"delta":{"content":"첫 번째 힌트야."}}]}\n\ndata: [DONE]\n\n',
+      { status: 200, headers: { "Content-Type": "text/event-stream" } },
+    ));
+    vi.stubGlobal("fetch", groqFetch);
+
+    const response = await POST(tutorRequest({
+      mode: "direct",
+      messages: [{ role: "user", content: "정답 코드를 바로 알려줘" }],
+    }));
+    const streamText = await response.text();
+    const groqOptions = groqFetch.mock.calls[0]?.[1] as RequestInit;
+    const groqBody = JSON.parse(String(groqOptions.body));
+
+    expect(response.status).toBe(200);
+    expect(streamText).toContain('"mode":"socratic"');
+    expect(groqBody.messages[0].content).toContain("절대 직접 답을 주지 마세요");
+    expect(groqBody.messages[0].content).not.toContain("TEACHING RULES (직답 모드)");
+    expect(groqBody.temperature).toBe(0.5);
+    expect(groqBody.max_tokens).toBe(300);
+  });
 });

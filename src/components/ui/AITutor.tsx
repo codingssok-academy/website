@@ -8,8 +8,6 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import TutorMessage from "./TutorMessage";
 
-type TutorMode = "direct" | "socratic";
-
 interface Message {
     role: "user" | "assistant";
     content: string;
@@ -37,7 +35,6 @@ export default function AITutor({
     const [input, setInput] = useState("");
     const [loading, setLoading] = useState(false);
     const [sessionId, setSessionId] = useState<string | undefined>(undefined);
-    const [mode, setMode] = useState<TutorMode>("socratic"); // 기본: 힌트 모드 (학습 효과)
     const [followups, setFollowups] = useState<string[]>([]);
     const endRef = useRef<HTMLDivElement>(null);
 
@@ -63,7 +60,7 @@ export default function AITutor({
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     messages: next,
-                    mode,
+                    mode: "socratic",
                     context,
                     currentCode: getCurrentCode?.() || undefined,
                     currentLanguage,
@@ -168,7 +165,7 @@ export default function AITutor({
         }
 
         setLoading(false);
-    }, [input, loading, msgs, mode, context, getCurrentCode, currentLanguage, getCurrentError, sessionId]);
+    }, [input, loading, msgs, context, getCurrentCode, currentLanguage, getCurrentError, sessionId]);
 
     return (
         <>
@@ -233,41 +230,14 @@ export default function AITutor({
                             <span style={{ color: "rgba(255,255,255,0.6)", fontSize: 10 }}>AI 코딩 선생님</span>
                         </div>
 
-                        {/* 모드 토글 */}
+                        {/* 학생은 정답 대신 힌트로만 학습합니다. */}
                         <div style={{
-                            display: "flex", gap: 4, padding: "8px 12px",
+                            display: "flex", alignItems: "center", justifyContent: "center", gap: 5, padding: "9px 12px",
                             background: "#f8fafc", borderBottom: "1px solid #e2e8f0", flexShrink: 0,
+                            color: "#475569", fontSize: 11, fontWeight: 700,
                         }}>
-                            <button
-                                onClick={() => setMode("socratic")}
-                                style={{
-                                    flex: 1, padding: "6px 10px", borderRadius: 8, border: "none",
-                                    background: mode === "socratic" ? "#1a1a1a" : "transparent",
-                                    color: mode === "socratic" ? "#fff" : "#64748b",
-                                    fontSize: 11, fontWeight: 700, cursor: "pointer",
-                                    display: "flex", alignItems: "center", justifyContent: "center", gap: 4,
-                                    fontFamily: "inherit", transition: "all 0.15s",
-                                }}
-                                title="스스로 생각하도록 질문으로 유도"
-                            >
-                                <span className="material-symbols-outlined" style={{ fontSize: 13 }}>psychology</span>
-                                힌트로 배우기
-                            </button>
-                            <button
-                                onClick={() => setMode("direct")}
-                                style={{
-                                    flex: 1, padding: "6px 10px", borderRadius: 8, border: "none",
-                                    background: mode === "direct" ? "#1a1a1a" : "transparent",
-                                    color: mode === "direct" ? "#fff" : "#64748b",
-                                    fontSize: 11, fontWeight: 700, cursor: "pointer",
-                                    display: "flex", alignItems: "center", justifyContent: "center", gap: 4,
-                                    fontFamily: "inherit", transition: "all 0.15s",
-                                }}
-                                title="바로 답을 보여줌"
-                            >
-                                <span className="material-symbols-outlined" style={{ fontSize: 13 }}>lightbulb</span>
-                                직답 보기
-                            </button>
+                            <span className="material-symbols-outlined" style={{ fontSize: 14 }}>psychology</span>
+                            쏙쌤은 정답 대신 힌트로 생각을 도와줘요
                         </div>
 
                         {/* 메시지 영역 */}
@@ -282,12 +252,10 @@ export default function AITutor({
                                         <ellipse cx="60" cy="60" rx="3" ry="14" fill="#cbd5e1" opacity="0.5" />
                                     </svg>
                                     <div style={{ fontWeight: 700, marginBottom: 4 }}>
-                                        {mode === "socratic" ? "같이 생각해볼까?" : "코딩 질문을 해보세요"}
+                                        같이 생각해볼까?
                                     </div>
                                     <div style={{ fontSize: 11 }}>
-                                        {mode === "socratic"
-                                            ? "답 대신 힌트로 스스로 풀어보기"
-                                            : "C, Python, 알고리즘 뭐든 물어봐!"}
+                                        답 대신 힌트로 스스로 풀어보기
                                     </div>
                                     <div style={{ fontSize: 10, marginTop: 12, color: "#ef4444" }}>
                                         비밀번호·인증번호·전화번호는 입력하지 마세요.
