@@ -7,12 +7,22 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { rateLimit } from "@/lib/rate-limit";
+import { createClient } from "@/lib/supabase/server";
 import { truncate } from "@/lib/text-utils";
 import { fetchGroqChatCompletion } from "@/lib/groq";
 
 const MODEL = "llama-3.1-8b-instant";
 
 export async function POST(req: NextRequest) {
+    const authClient = await createClient();
+    const {
+        data: { user },
+        error: authError,
+    } = await authClient.auth.getUser();
+    if (authError || !user) {
+        return NextResponse.json({ suggestions: [] }, { status: 401 });
+    }
+
     const apiKey = process.env.GROQ_API_KEY;
     if (!apiKey) {
         return NextResponse.json({ suggestions: [] });
@@ -24,12 +34,10 @@ export async function POST(req: NextRequest) {
             lastQuestion,
             lastAnswer,
             context,
-            studentLevel,
         } = body as {
             lastQuestion?: string;
             lastAnswer?: string;
             context?: string;
-            studentLevel?: number;
         };
 
         if (!lastAnswer || typeof lastAnswer !== "string") {
@@ -38,16 +46,12 @@ export async function POST(req: NextRequest) {
 
         // Rate Limit: IP당 분당 20회
         const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-        const { success } = await rateLimit(`followup:${ip}`, { maxRequests: 20, windowMs: 60_000 });
+        const { success } = await rateLimit(`followup:${user.id}:${ip}`, { maxRequests: 20, windowMs: 60_000 });
         if (!success) return NextResponse.json({ suggestions: [] });
-
-        const levelHint =
-            studentLevel && studentLevel <= 2 ? "초급" :
-            studentLevel && studentLevel >= 6 ? "상급" : "중급";
 
         const systemPrompt = [
             "You generate follow-up coding questions for a Korean K-12 student.",
-            `Student level: ${levelHint}.`,
+            "Use short, age-appropriate Korean that a K-12 student can understand.",
             context ? `Current lesson: ${context}.` : "",
             "",
             "Return EXACTLY a JSON array of 3 short Korean follow-up questions the student might ask next.",

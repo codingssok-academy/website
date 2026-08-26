@@ -1,13 +1,7 @@
 "use client";
 
 /**
- * 나바쌤 AI 튜터 — 자체 채팅 UI + Ollama 직접 호출
- *
- * Open WebUI 제거 (회원가입 필요 → 학생 UX 최악).
- * 대신 /api/tutor → Ollama API 직접 호출. 로그인 불필요.
- *
- * 학원 네트워크에서: Ollama(localhost:11434) 응답
- * 외부에서: "학원에서 접속해주세요" 안내
+ * 쏙쌤 AI 질문 도우미 — 로그인한 학생의 현재 학습 맥락을 서버에 전달합니다.
  */
 
 import { useState, useRef, useEffect, useCallback } from "react";
@@ -24,12 +18,6 @@ interface Message {
 interface AITutorProps {
     /** 현재 학습 중인 단원명 */
     context?: string;
-    /** 학생 이름 (개인화) */
-    studentName?: string;
-    /** 학생 레벨 (답변 난이도 조절) */
-    studentLevel?: number;
-    /** 학생 ID — Rate Limit + 대화 저장용 */
-    studentId?: string;
     /** 현재 에디터의 코드 (getter 함수, 호출 시점 최신값 반환) */
     getCurrentCode?: () => string;
     /** 현재 언어 */
@@ -40,9 +28,6 @@ interface AITutorProps {
 
 export default function AITutor({
     context,
-    studentName,
-    studentLevel,
-    studentId,
     getCurrentCode,
     currentLanguage,
     getCurrentError,
@@ -80,9 +65,6 @@ export default function AITutor({
                     messages: next,
                     mode,
                     context,
-                    studentName,
-                    studentLevel,
-                    studentId,
                     currentCode: getCurrentCode?.() || undefined,
                     currentLanguage,
                     currentError: getCurrentError?.() || undefined,
@@ -169,7 +151,6 @@ export default function AITutor({
                         lastQuestion: q,
                         lastAnswer: accumulated,
                         context,
-                        studentLevel,
                     }),
                 }).then(r => r.json()).then(data => {
                     if (Array.isArray(data.suggestions)) setFollowups(data.suggestions);
@@ -187,7 +168,7 @@ export default function AITutor({
         }
 
         setLoading(false);
-    }, [input, loading, msgs, mode, context, studentName, studentLevel, studentId, getCurrentCode, currentLanguage, getCurrentError, sessionId]);
+    }, [input, loading, msgs, mode, context, getCurrentCode, currentLanguage, getCurrentError, sessionId]);
 
     return (
         <>
@@ -196,7 +177,7 @@ export default function AITutor({
                 onClick={() => setOpen(p => !p)}
                 whileHover={{ scale: 1.12 }}
                 whileTap={{ scale: 0.92 }}
-                aria-label="나바쌤 AI 튜터"
+                aria-label="쏙쌤 AI 질문 도우미"
                 style={{
                     position: "fixed", bottom: 24, right: 24, zIndex: 10000,
                     width: 60, height: 60, borderRadius: "50%",
@@ -248,7 +229,7 @@ export default function AITutor({
                                 <path d="M62 52C72 28 102 18 106 38C110 54 92 62 62 58" opacity="0.9" />
                                 <ellipse cx="60" cy="60" rx="3" ry="14" fill="white" opacity="0.9" />
                             </svg>
-                            <span style={{ color: "#fff", fontSize: 15, fontWeight: 700, flex: 1 }}>나바쌤</span>
+                            <span style={{ color: "#fff", fontSize: 15, fontWeight: 700, flex: 1 }}>쏙쌤</span>
                             <span style={{ color: "rgba(255,255,255,0.6)", fontSize: 10 }}>AI 코딩 선생님</span>
                         </div>
 
@@ -308,6 +289,9 @@ export default function AITutor({
                                             ? "답 대신 힌트로 스스로 풀어보기"
                                             : "C, Python, 알고리즘 뭐든 물어봐!"}
                                     </div>
+                                    <div style={{ fontSize: 10, marginTop: 12, color: "#ef4444" }}>
+                                        비밀번호·인증번호·전화번호는 입력하지 마세요.
+                                    </div>
                                 </div>
                             )}
                             {msgs.map((m, i) => (
@@ -338,7 +322,7 @@ export default function AITutor({
                                     borderRadius: "16px 16px 16px 4px", background: "#f1f5f9",
                                     fontSize: 13, color: "#94a3b8",
                                 }}>
-                                    나바쌤이 생각하는 중...
+                                    쏙쌤이 생각하는 중...
                                 </div>
                             )}
                             <div ref={endRef} />
@@ -404,6 +388,7 @@ export default function AITutor({
                                 onChange={e => setInput(e.target.value)}
                                 onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
                                 placeholder="코딩 질문을 입력하세요..."
+                                maxLength={2000}
                                 disabled={loading}
                                 style={{
                                     flex: 1, padding: "10px 14px", borderRadius: 12,

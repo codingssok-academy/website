@@ -1032,7 +1032,6 @@ export default function LearningContentPage() {
             {/* ═══ AI Tutor — Smart Context ═══ */}
             <AITutor
                 context={`${courseData.title} > Unit ${unit.unitNumber}. ${unit.title} > ${currentPage.title}`}
-                studentId={user?.id}
             />
         </div>
     );
