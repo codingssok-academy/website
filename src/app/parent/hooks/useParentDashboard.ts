@@ -17,6 +17,7 @@ import {
     PARENT_DASH_CACHE_KEY,
     PARENT_STUDENT_KEY,
 } from "@/lib/parent-client-auth";
+import type { ParentAttendance, ParentGrowthRecord } from "@/lib/parent-dashboard";
 const CACHE_TTL = 5 * 60 * 1000; // 5분 — sessionStorage 캐시 (탭 닫으면 초기화)
 
 export interface DashboardData {
@@ -24,6 +25,9 @@ export interface DashboardData {
     student: {
         id: string;
         name: string;
+        school: string | null;
+        grade: string | null;
+        currentClass: string | null;
         totalXp: number;
         level: number;
         tier: string;
@@ -35,10 +39,23 @@ export interface DashboardData {
         lastActive: string | null;
     } | null;
     xp: { total: number; today: number; weekly: { date: string; xp: number }[] };
-    activity: { todayMinutes: number; totalMinutes: number; recent: any[] };
+    activity: {
+        todayMinutes: number;
+        totalMinutes: number;
+        recent: Array<{
+            event_type?: string | null;
+            course_title?: string | null;
+            unit_title?: string | null;
+            page_title?: string | null;
+            duration_seconds?: number | null;
+            created_at?: string | null;
+        }>;
+    };
     feedbacks: { id: string; date: string | null; status: string }[];
     codeHistory: any[];
     announcements: { id: string; title: string; content: string; isPinned: boolean; createdAt: string }[];
+    growth: { current: ParentGrowthRecord | null; history: ParentGrowthRecord[] };
+    attendance: ParentAttendance | null;
     studyNotes: { count30d: number; latestAt: string | null };
 }
 

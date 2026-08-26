@@ -11,6 +11,7 @@ interface Tab {
 }
 
 const TABS: Tab[] = [
+    { href: "/parent/dashboard", label: "현황", icon: "dashboard" },
     { href: "/parent/feedback", label: "피드백", icon: "rate_review" },
     { href: "/parent/settings", label: "설정", icon: "settings" },
 ];

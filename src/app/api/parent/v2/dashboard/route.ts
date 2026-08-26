@@ -16,6 +16,7 @@ import { verifyParentSessionToken, PARENT_SESSION_COOKIE } from "@/lib/parent-se
 import { createClient as createServerSupabase } from "@/lib/supabase/server";
 import { findReferenceParentCode } from "@/lib/parent-code-reference";
 import { canParentSessionReadStudent } from "@/lib/parent-session-access";
+import { toParentAttendance, toParentGrowthRecord } from "@/lib/parent-dashboard";
 
 // jsdom 체인은 text-utils로 끊었음. lazy dynamic import는 매 요청마다 module load
 // 4-5초 비용 → static import 복귀. cold start 1-2초 + 그 후 호출 즉시.
@@ -109,6 +110,9 @@ function getReferenceDashboard(req: NextRequest, name: string) {
         student: {
             id: `reference:${name}`,
             name,
+            school: null,
+            grade: null,
+            currentClass: null,
             totalXp: 0,
             level: 1,
             tier: "Reference",
@@ -123,6 +127,8 @@ function getReferenceDashboard(req: NextRequest, name: string) {
         activity: { todayMinutes: 0, totalMinutes: 0, recent: [] },
         feedbacks: [],
         announcements: [],
+        growth: { current: null, history: [] },
+        attendance: null,
         studyNotes: { count30d: 0, latestAt: null },
         codeHistory: [],
         reference,
@@ -222,21 +228,31 @@ export async function GET(req: NextRequest) {
         .limit(1);
 
     const profile = profiles?.[0] ?? null;
-    let fallbackStudent: any = null;
-    if (!profile) {
-        const { data: fallbackStudents } = await sb
-            .from("students")
-            .select("id, name, auth_user_id, pin")
-            .eq("name", name)
-            .limit(1);
-        fallbackStudent = fallbackStudents?.[0] ?? null;
-    }
+    const { data: matchingStudents } = await sb
+        .from("students")
+        .select("id, name, auth_user_id, school, grade, class, status")
+        .eq("name", name)
+        .neq("status", "deactivated")
+        .limit(1);
+    const fallbackStudent: any = matchingStudents?.[0] ?? null;
     const userId = profile?.id || fallbackStudent?.auth_user_id || null;
+    const studentId = fallbackStudent?.id || null;
+    const currentMonth = new Date(Date.now() + (9 * 60 * 60 * 1000)).toISOString().slice(0, 7);
 
     // 2. Parallel fetch — Supabase만 (노션은 별도 endpoint /api/parent/v2/notion-feedbacks로 분리)
     // 자현 '앱 출시 — 느려터지면 어쩌잔겨' 명시: 노션 fetch가 토큰 stale 시 매번 5초 timeout
     // 까지 대기 → 학부모 페이지 첫 진입 5초+. 분리해서 dashboard는 0.5초 안에 응답.
-    const [xpResult, progressResult, activityResult, codeResult, announcementResult, notesResult] = await Promise.all([
+    const [
+        xpResult,
+        progressResult,
+        activityResult,
+        codeResult,
+        announcementResult,
+        notesResult,
+        growthResult,
+        growthEntriesResult,
+        attendanceResult,
+    ] = await Promise.all([
         // XP history (last 30 days)
         userId
             ? sb.from("xp_history")
@@ -285,6 +301,32 @@ export async function GET(req: NextRequest) {
                   .eq("user_id", userId)
                   .gte("updated_at", new Date(Date.now() - 30 * 86400000).toISOString())
             : Promise.resolve({ data: [] }),
+
+        // Growth 2.0 — 완료된 공개용 현재 기록만 조회
+        studentId
+            ? sb.from("student_growth_management")
+                  .select("id,current_class,strengths,current_goal,class_progress,parent_feedback_draft,status,updated_at")
+                  .eq("student_id", studentId)
+                  .maybeSingle()
+            : Promise.resolve({ data: null }),
+
+        // Growth 2.0 — 완료된 누적 기록만 조회
+        studentId
+            ? sb.from("student_growth_entries")
+                  .select("id,current_class,strengths,current_goal,class_progress,parent_feedback_draft,status,created_at")
+                  .eq("student_id", studentId)
+                  .eq("status", "완료")
+                  .order("created_at", { ascending: false })
+                  .limit(6)
+            : Promise.resolve({ data: [] }),
+
+        // 월별 출석 RPC가 적용된 환경에서만 표시하며, 미적용 환경은 빈 상태로 처리
+        studentId
+            ? sb.rpc("growth_api_monthly_attendance", {
+                  p_student_id: studentId,
+                  p_month: `${currentMonth}-01`,
+              })
+            : Promise.resolve({ data: null }),
     ]);
 
     // XP 통계 계산
@@ -319,11 +361,20 @@ export async function GET(req: NextRequest) {
 
     const progress = (progressResult as any)?.data;
 
+    const growthHistory = ((growthEntriesResult as any)?.data || [])
+        .map((row: unknown) => toParentGrowthRecord(row))
+        .filter(Boolean);
+    const currentGrowth = toParentGrowthRecord((growthResult as any)?.data) || growthHistory[0] || null;
+    const attendance = toParentAttendance((attendanceResult as any)?.data);
+
     const responseObj = {
         found: !!profile || !!fallbackStudent,
         student: profile ? {
             id: profile.id,
             name: profile.display_name,
+            school: fallbackStudent?.school || null,
+            grade: fallbackStudent?.grade || null,
+            currentClass: currentGrowth?.currentClass || fallbackStudent?.class || null,
             totalXp: totalXp || progress?.xp || 0,
             level: progress?.level || profile.level || 1,
             tier: progress?.tier || "Iron",
@@ -336,6 +387,9 @@ export async function GET(req: NextRequest) {
         } : fallbackStudent ? {
             id: fallbackStudent.auth_user_id || fallbackStudent.id,
             name: fallbackStudent.name,
+            school: fallbackStudent.school || null,
+            grade: fallbackStudent.grade || null,
+            currentClass: currentGrowth?.currentClass || fallbackStudent.class || null,
             totalXp: progress?.xp || 0,
             level: progress?.level || 1,
             tier: progress?.tier || "Iron",
@@ -365,6 +419,11 @@ export async function GET(req: NextRequest) {
             isPinned: !!a.is_pinned,
             createdAt: a.created_at,
         })),
+        growth: {
+            current: currentGrowth,
+            history: growthHistory.filter((item: any) => item?.id !== currentGrowth?.id).slice(0, 5),
+        },
+        attendance,
         studyNotes: {
             count30d: ((notesResult as any)?.data || []).length,
             latestAt: ((notesResult as any)?.data || [])[0]?.updated_at || null,
