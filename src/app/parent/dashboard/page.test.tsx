@@ -48,11 +48,15 @@ describe("학부모 통합 현황판", () => {
 
     render(<ParentDashboardPage />);
 
-    expect(screen.getByRole("heading", { name: "가짜학생 학생의 오늘" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "가짜학생 학생의 성장 현황" })).toBeInTheDocument();
+    expect(screen.getByLabelText("학부모 통합 현황판")).toHaveClass("max-w-[1180px]");
+    expect(screen.getByLabelText("학부모 통합 현황판")).toHaveClass("lg:px-8");
+    expect(screen.getByLabelText("학습 세부 현황")).toHaveClass("lg:grid-cols-12");
     expect(screen.getAllByText("가짜 프로젝트반").length).toBeGreaterThan(0);
     expect(screen.getByText("for 반복문")).toBeInTheDocument();
     expect(screen.getByText("끝까지 해결했습니다.")).toBeInTheDocument();
     expect(screen.getByText("3회")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "2026년 8월 출석" })).toBeInTheDocument();
     expect(screen.getByText("가짜 수업 안내")).toBeInTheDocument();
     expect(screen.getByText("가짜 반복문 학습")).toBeInTheDocument();
     expect(screen.getByText(/내부 메모는 표시되지 않습니다/)).toBeInTheDocument();
