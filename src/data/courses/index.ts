@@ -262,10 +262,10 @@ export const COURSES: Course[] = [
         icon: 'smart_toy',
         gradient: 'linear-gradient(135deg, #06b6d4, #3b82f6)',
         cardImage: '/images/courses/ai-class-v2.png',
-        description: 'AI의 원리를 이해하고 도구 활용, 안전과 윤리, 생활 문제 해결 프로젝트로 연결하는 융합 과정입니다.',
-        totalUnits: 0,
+        description: '초등 4학년부터 중학생까지 120분 수업 24회로 AI 원리·도구·안전·사용자 문제 해결·캡스톤을 완성합니다.',
+        totalUnits: 24,
         totalProblems: 0,
-        estimatedHours: 0,
+        estimatedHours: 48,
         chapters: AI_LITERACY_CHAPTERS,
     },
     {
