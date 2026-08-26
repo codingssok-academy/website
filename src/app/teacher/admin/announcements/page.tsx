@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useAdmin } from "../context";
-import { createClient } from "@/lib/supabase";
 import type { Announcement } from "../types";
 
 /* ═══════════════════════════════════════
@@ -11,8 +9,6 @@ import type { Announcement } from "../types";
    ═══════════════════════════════════════ */
 
 export default function AnnouncementsPage() {
-    const { getTeacherId } = useAdmin();
-
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
     const [isPinned, setIsPinned] = useState(false);
@@ -25,17 +21,25 @@ export default function AnnouncementsPage() {
     const [editContent, setEditContent] = useState("");
     const [editPinned, setEditPinned] = useState(false);
     const [deleteId, setDeleteId] = useState<string | null>(null);
+    const [loading, setLoading] = useState(true);
 
     const fetchAnnouncements = useCallback(async () => {
-        const sb = createClient();
-        const { data } = await sb.from("announcements").select("*")
-            .order("is_pinned", { ascending: false })
-            .order("created_at", { ascending: false })
-            .limit(50);
-        setAnnouncements((data || []) as Announcement[]);
+        setLoading(true);
+        try {
+            const response = await fetch("/api/teacher/announcements", { cache: "no-store" });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(data.error || "전체 메시지를 불러오지 못했습니다.");
+            setAnnouncements((data.announcements || []) as Announcement[]);
+        } catch (error) {
+            setMsg({ ok: false, text: error instanceof Error ? error.message : "전체 메시지를 불러오지 못했습니다." });
+        } finally {
+            setLoading(false);
+        }
     }, []);
 
-    useEffect(() => { fetchAnnouncements(); }, [fetchAnnouncements]);
+    useEffect(() => {
+        void Promise.resolve().then(fetchAnnouncements);
+    }, [fetchAnnouncements]);
 
     const createAnnouncement = async () => {
         if (!title.trim() || !content.trim()) {
@@ -44,20 +48,18 @@ export default function AnnouncementsPage() {
         }
         setSending(true); setMsg(null);
         try {
-            const sb = createClient();
-            const teacherId = await getTeacherId();
-            const { error } = await sb.from("announcements").insert({
-                title: title.trim(),
-                content: content.trim(),
-                author_id: teacherId,
-                is_pinned: isPinned,
+            const response = await fetch("/api/teacher/announcements", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ title, content, isPinned }),
             });
-            if (error) throw error;
-            setMsg({ ok: true, text: "공지가 등록되었습니다!" });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(data.error || "전체 메시지를 보내지 못했습니다.");
+            setMsg({ ok: true, text: "전체 학생에게 메시지를 보냈습니다." });
             setTitle(""); setContent(""); setIsPinned(false);
-            fetchAnnouncements();
+            await fetchAnnouncements();
         } catch (err: unknown) {
-            setMsg({ ok: false, text: `오류: ${err instanceof Error ? err.message : String(err)}` });
+            setMsg({ ok: false, text: err instanceof Error ? err.message : "전체 메시지를 보내지 못했습니다." });
         } finally { setSending(false); }
     };
 
@@ -71,34 +73,56 @@ export default function AnnouncementsPage() {
     const saveEdit = async () => {
         if (!editingId || !editTitle.trim() || !editContent.trim()) return;
         try {
-            const sb = createClient();
-            await sb.from("announcements").update({
-                title: editTitle.trim(),
-                content: editContent.trim(),
-                is_pinned: editPinned,
-            }).eq("id", editingId);
+            const response = await fetch("/api/teacher/announcements", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id: editingId, title: editTitle, content: editContent, isPinned: editPinned }),
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(data.error || "전체 메시지를 수정하지 못했습니다.");
             setEditingId(null);
-            fetchAnnouncements();
+            setMsg({ ok: true, text: "전체 메시지를 수정했습니다." });
+            await fetchAnnouncements();
         } catch (err) {
-            if (process.env.NODE_ENV === "development") console.error(err);
+            setMsg({ ok: false, text: err instanceof Error ? err.message : "전체 메시지를 수정하지 못했습니다." });
         }
     };
 
     const deleteAnnouncement = async (id: string) => {
         try {
-            const sb = createClient();
-            await sb.from("announcements").delete().eq("id", id);
+            const response = await fetch("/api/teacher/announcements", {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id }),
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(data.error || "전체 메시지를 삭제하지 못했습니다.");
             setDeleteId(null);
-            fetchAnnouncements();
+            setMsg({ ok: true, text: "전체 메시지를 삭제했습니다." });
+            await fetchAnnouncements();
         } catch (err) {
-            if (process.env.NODE_ENV === "development") console.error(err);
+            setMsg({ ok: false, text: err instanceof Error ? err.message : "전체 메시지를 삭제하지 못했습니다." });
         }
     };
 
-    const togglePin = async (id: string, currentPinned: boolean) => {
-        const sb = createClient();
-        await sb.from("announcements").update({ is_pinned: !currentPinned }).eq("id", id);
-        fetchAnnouncements();
+    const togglePin = async (announcement: Announcement) => {
+        try {
+            const response = await fetch("/api/teacher/announcements", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    id: announcement.id,
+                    title: announcement.title,
+                    content: announcement.content,
+                    isPinned: !announcement.is_pinned,
+                }),
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(data.error || "상단 고정 상태를 변경하지 못했습니다.");
+            await fetchAnnouncements();
+        } catch (err) {
+            setMsg({ ok: false, text: err instanceof Error ? err.message : "상단 고정 상태를 변경하지 못했습니다." });
+        }
     };
 
     const inputStyle: React.CSSProperties = {
@@ -108,25 +132,31 @@ export default function AnnouncementsPage() {
 
     return (
         <div>
-            <h2 style={{ fontSize: 20, fontWeight: 800, color: "#172554", margin: "0 0 24px" }}>공지 작성</h2>
+            <div style={{ marginBottom: 24 }}>
+                <div style={{ fontSize: 11, fontWeight: 900, color: "#2563eb", letterSpacing: "0.08em", marginBottom: 6 }}>CODINGSSOK MESSAGE</div>
+                <h1 style={{ fontSize: 28, fontWeight: 900, color: "#172554", margin: "0 0 8px" }}>전체 메시지</h1>
+                <p style={{ margin: 0, color: "#64748b", fontSize: 13, lineHeight: 1.6 }}>
+                    장민 관리자 계정에서 작성한 내용이 모든 학생의 학습 화면 ‘선생님 메시지’에 표시됩니다.
+                </p>
+            </div>
 
             {/* 공지 작성 폼 */}
             <div style={{ background: "#fff", borderRadius: 16, padding: 24, border: "1px solid #e2e8f0", marginBottom: 24 }}>
                 <h3 style={{ fontSize: 15, fontWeight: 700, color: "#172554", margin: "0 0 16px", display: "flex", alignItems: "center", gap: 8 }}>
                     <span className="material-symbols-outlined" style={{ fontSize: 20, color: "#2563eb" }}>edit_note</span>
-                    새 공지 작성
+                    새 전체 메시지 작성
                 </h3>
 
                 <div style={{ marginBottom: 12 }}>
                     <label style={{ fontSize: 11, fontWeight: 600, color: "#64748b", display: "block", marginBottom: 4 }}>제목 *</label>
-                    <input value={title} onChange={e => setTitle(e.target.value)}
-                        placeholder="공지 제목" style={inputStyle} />
+                    <input aria-label="전체 메시지 제목" value={title} onChange={e => setTitle(e.target.value)}
+                        maxLength={80} placeholder="예: 9월 프로젝트 수업 안내" style={inputStyle} />
                 </div>
 
                 <div style={{ marginBottom: 12 }}>
                     <label style={{ fontSize: 11, fontWeight: 600, color: "#64748b", display: "block", marginBottom: 4 }}>내용 *</label>
-                    <textarea value={content} onChange={e => setContent(e.target.value)}
-                        placeholder="공지 내용을 작성해주세요..." rows={5}
+                    <textarea aria-label="전체 메시지 내용" value={content} onChange={e => setContent(e.target.value)}
+                        maxLength={2000} placeholder="모든 학생에게 전달할 내용을 작성해주세요." rows={5}
                         style={{ ...inputStyle, resize: "vertical" }} />
                 </div>
 
@@ -140,15 +170,20 @@ export default function AnnouncementsPage() {
                         </span>
                     </label>
 
-                    <button onClick={createAnnouncement} disabled={sending} style={{
+                    <button
+                        type="button"
+                        aria-label={sending ? "전체 메시지 보내는 중" : "전체 학생에게 보내기"}
+                        onClick={createAnnouncement}
+                        disabled={sending}
+                        style={{
                         padding: "12px 24px", borderRadius: 12, border: "none",
                         background: sending ? "#94a3b8" : "linear-gradient(135deg, #2563eb, #6366f1)",
                         color: "#fff", fontSize: 14, fontWeight: 700,
                         cursor: sending ? "not-allowed" : "pointer",
                         display: "flex", alignItems: "center", gap: 6,
-                    }}>
+                        }}>
                         <span className="material-symbols-outlined" style={{ fontSize: 18 }}>campaign</span>
-                        {sending ? "등록 중..." : "공지 등록"}
+                        {sending ? "보내는 중..." : "전체 학생에게 보내기"}
                     </button>
                 </div>
 
@@ -162,14 +197,16 @@ export default function AnnouncementsPage() {
                 )}
             </div>
 
-            {/* 공지 목록 */}
+            {/* 전체 메시지 목록 */}
             <div style={{ background: "#fff", borderRadius: 16, padding: 24, border: "1px solid #e2e8f0" }}>
                 <h3 style={{ fontSize: 15, fontWeight: 700, color: "#172554", margin: "0 0 16px" }}>
-                    공지 목록 ({announcements.length})
+                    보낸 전체 메시지 ({announcements.length})
                 </h3>
 
-                {announcements.length === 0 ? (
-                    <div style={{ textAlign: "center", padding: 30, color: "#94a3b8", fontSize: 13 }}>등록된 공지가 없습니다</div>
+                {loading ? (
+                    <div style={{ textAlign: "center", padding: 30, color: "#94a3b8", fontSize: 13 }}>메시지를 불러오는 중입니다...</div>
+                ) : announcements.length === 0 ? (
+                    <div style={{ textAlign: "center", padding: 30, color: "#94a3b8", fontSize: 13 }}>아직 보낸 전체 메시지가 없습니다.</div>
                 ) : (
                     <div style={{ display: "grid", gap: 10 }}>
                         {announcements.map(ann => (
@@ -212,7 +249,7 @@ export default function AnnouncementsPage() {
                                                 </div>
                                             </div>
                                             <div style={{ display: "flex", gap: 4 }}>
-                                                <button onClick={() => togglePin(ann.id, ann.is_pinned)}
+                                                <button onClick={() => togglePin(ann)}
                                                     title={ann.is_pinned ? "고정 해제" : "상단 고정"}
                                                     style={{ padding: 4, border: "none", background: "transparent", cursor: "pointer", color: "#94a3b8" }}>
                                                     <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
