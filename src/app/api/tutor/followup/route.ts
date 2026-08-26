@@ -2,7 +2,7 @@
  * /api/tutor/followup
  *
  * 방금 받은 AI 답변을 기반으로 3개의 후속 질문 제안
- * 작은 모델(llama-3.1-8b-instant)로 빠르게 생성
+ * 공식 경량 모델로 빠르게 생성
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -10,8 +10,7 @@ import { rateLimit } from "@/lib/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 import { truncate } from "@/lib/text-utils";
 import { fetchGroqChatCompletion } from "@/lib/groq";
-
-const MODEL = "llama-3.1-8b-instant";
+import { TUTOR_LIGHTWEIGHT_MODEL } from "@/lib/tutor-models";
 
 export async function POST(req: NextRequest) {
     const authClient = await createClient();
@@ -64,7 +63,7 @@ export async function POST(req: NextRequest) {
         const userPrompt = `Question: ${truncate(lastQuestion || "", 300)}\nAnswer: ${truncate(lastAnswer, 800)}`;
 
         const res = await fetchGroqChatCompletion(apiKey, {
-                model: MODEL,
+                model: TUTOR_LIGHTWEIGHT_MODEL,
                 messages: [
                     { role: "system", content: systemPrompt },
                     { role: "user", content: userPrompt },

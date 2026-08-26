@@ -15,10 +15,9 @@ import { rateLimit } from "@/lib/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { truncate } from "@/lib/text-utils";
+import { TUTOR_LIGHTWEIGHT_MODEL, TUTOR_RESPONSE_MODEL } from "@/lib/tutor-models";
 
 const GROQ_KEY = process.env.GROQ_API_KEY || "";
-const MODEL = "llama-3.3-70b-versatile";
-const CONCEPT_MODEL = "llama-3.1-8b-instant"; // 태깅은 빠르고 저렴한 모델
 const MAX_CODE_CHARS = 3000;
 const MAX_ERROR_CHARS = 500;
 const MAX_CONTENT_CHARS = 2000;
@@ -199,7 +198,7 @@ async function extractAndSaveConcepts(
                 "Authorization": `Bearer ${GROQ_KEY}`,
             },
             body: JSON.stringify({
-                model: CONCEPT_MODEL,
+                model: TUTOR_LIGHTWEIGHT_MODEL,
                 messages: [
                     {
                         role: "system",
@@ -358,7 +357,7 @@ export async function POST(req: NextRequest) {
                 "Authorization": `Bearer ${GROQ_KEY}`,
             },
             body: JSON.stringify({
-                model: MODEL,
+                model: TUTOR_RESPONSE_MODEL,
                 messages: [
                     { role: "system", content: systemPrompt },
                     ...safeMessages,

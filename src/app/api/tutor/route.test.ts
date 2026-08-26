@@ -100,6 +100,7 @@ describe("쏙쌤 AI 질문 API", () => {
 
     const groqOptions = groqFetch.mock.calls[0]?.[1] as RequestInit;
     const groqBody = JSON.parse(String(groqOptions.body));
+    expect(groqBody.model).toBe("openai/gpt-oss-120b");
     expect(groqBody.messages[0].content).toContain("You are 쏙쌤");
     expect(groqBody.messages[0].content).not.toContain("다른학생");
     expect(groqBody.messages.at(-1).content).toContain("비밀번호 [숨김]");
