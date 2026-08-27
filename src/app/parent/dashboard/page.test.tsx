@@ -25,7 +25,14 @@ describe("학부모 통합 현황판", () => {
           bestStreak: 3, accuracy: 80, totalCodeRuns: 10, totalProblems: 7, lastActive: "2026-08-25",
         },
         xp: { total: 100, today: 10, weekly: [], history: [] },
-        activity: { todayMinutes: 25, totalMinutes: 80, recent: [{ page_title: "가짜 반복문 학습", created_at: "2026-08-25" }] },
+        activity: {
+          todayMinutes: 25,
+          totalMinutes: 80,
+          recent: [
+            { page_title: "가짜 반복문 학습", created_at: "2026-08-25" },
+            { page_title: "login", created_at: "2026-08-24" },
+          ],
+        },
         feedbacks: [],
         codeHistory: [],
         announcements: [{ id: "message-1", title: "가짜 수업 안내", content: "가짜 안내 내용", isPinned: true, createdAt: "2026-08-26" }],
@@ -49,16 +56,17 @@ describe("학부모 통합 현황판", () => {
     render(<ParentDashboardPage />);
 
     expect(screen.getByRole("heading", { name: "가짜학생 학생의 성장 현황" })).toBeInTheDocument();
-    expect(screen.getByLabelText("학부모 통합 현황판")).toHaveClass("max-w-[1180px]");
-    expect(screen.getByLabelText("학부모 통합 현황판")).toHaveClass("lg:px-8");
-    expect(screen.getByLabelText("학습 세부 현황")).toHaveClass("lg:grid-cols-12");
+    expect(screen.getByLabelText("학부모 통합 현황판")).toHaveClass("max-w-[1120px]");
+    expect(screen.getByLabelText("학습 세부 현황")).toHaveClass("lg:grid-cols-2");
     expect(screen.getAllByText("가짜 프로젝트반").length).toBeGreaterThan(0);
     expect(screen.getByText("for 반복문")).toBeInTheDocument();
     expect(screen.getByText("끝까지 해결했습니다.")).toBeInTheDocument();
     expect(screen.getByText("3회")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "2026년 8월 출석" })).toBeInTheDocument();
     expect(screen.getByText("가짜 수업 안내")).toBeInTheDocument();
+    expect(screen.getByLabelText("선생님 메시지 목록")).not.toHaveClass("sm:grid-cols-2");
     expect(screen.getByText("가짜 반복문 학습")).toBeInTheDocument();
+    expect(screen.getByText("홈페이지 로그인")).toBeInTheDocument();
     expect(screen.getByText(/내부 메모는 표시되지 않습니다/)).toBeInTheDocument();
   });
 });
