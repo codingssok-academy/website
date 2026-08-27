@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import ParentSwRegister from "./ParentSwRegister";
 import ParentShell from "./ParentShell";
+import "./parent-portal.css";
 
 export const dynamic = "force-dynamic";
 
