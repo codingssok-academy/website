@@ -33,6 +33,7 @@ import ProgrammingContestSelector from "./ProgrammingContestSelector";
 import ProgrammingContestComingSoon from "./ProgrammingContestComingSoon";
 import WordProcessorView from "./WordProcessorView";
 import CertificateSelector from "./CertificateSelector";
+import { PictureChoiceActivity } from "./PictureChoiceActivity";
 import { getCertificateChapters } from "@/data/courses";
 
 /* ── Highlighter Colors ── */
@@ -207,6 +208,7 @@ export default function CourseDetailPage() {
     const [runLoading, setRunLoading] = useState<Record<number, boolean>>({});
     const [completionMessage, setCompletionMessage] = useState("");
     const [projectActivityAnswer, setProjectActivityAnswer] = useState("");
+    const [pictureChoiceAnswer, setPictureChoiceAnswer] = useState("");
 
     const isPythonCoreUnit = courseId === "3" && !!selectedUnit?.id.startsWith("py-core-");
     const isDigitalCreatorUnit = courseId === "11" && !!selectedUnit?.id.startsWith("digital-creator-v2-");
@@ -284,6 +286,23 @@ export default function CourseDetailPage() {
         pageId: activePage?.id,
         answer: lessonAnswerDraft,
         onRestore: restoreLessonAnswer,
+    });
+    const restorePictureChoiceAnswer = useCallback((saved: LessonAnswerSnapshot) => {
+        setPictureChoiceAnswer(saved.codeAnswers.activity ?? "");
+    }, []);
+    const pictureChoiceAnswerDraft = useMemo(() => ({
+        quizAnswer: null,
+        quizResult: null,
+        codeAnswers: { activity: pictureChoiceAnswer },
+    }), [pictureChoiceAnswer]);
+    const { status: pictureChoiceSaveStatus } = useLessonAnswerPersistence({
+        enabled: isDigitalCreatorPage && !!activePage?.choiceActivity,
+        userId: user?.id,
+        courseId,
+        unitId: selectedUnit?.id,
+        pageId: activePage?.id,
+        answer: pictureChoiceAnswerDraft,
+        onRestore: restorePictureChoiceAnswer,
     });
 
     useEffect(() => {
@@ -1681,6 +1700,15 @@ export default function CourseDetailPage() {
                                         }}
                                     />
                                 )
+                            )}
+
+                            {isDigitalCreatorPage && activePage.choiceActivity && (
+                                <PictureChoiceActivity
+                                    activity={activePage.choiceActivity}
+                                    value={pictureChoiceAnswer}
+                                    onChange={setPictureChoiceAnswer}
+                                    saveStatus={pictureChoiceSaveStatus}
+                                />
                             )}
 
                             {isProjectActivityPage && activePage.activity && (

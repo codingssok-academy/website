@@ -293,6 +293,18 @@ function createPage(unit: DigitalCreatorBlueprint, slide: DigitalCreatorSlide, p
             </section>
         `,
         activity: slide.activity,
+        choiceActivity: unit.unitNumber === 1 && pageNumber === 1 ? {
+            label: '그림 카드 고르기',
+            prompt: '컴퓨터로 해 본 일을 하나 이상 골라보세요.',
+            soloGuide: '혼자 공부한다면 고른 카드를 보며 “나는 컴퓨터로 ○○을 해 봤어요”라고 소리 내어 말해 보세요.',
+            groupGuide: '함께 공부한다면 고른 카드를 친구나 선생님에게 이야기해 보세요.',
+            options: [
+                { id: 'drawing', emoji: '🎨', label: '그림 그리기', description: '그림판이나 꾸미기' },
+                { id: 'game', emoji: '🎮', label: '게임하기', description: '규칙을 보고 플레이하기' },
+                { id: 'video', emoji: '🎬', label: '영상 보기', description: '재미있는 영상이나 수업 보기' },
+                { id: 'search', emoji: '🔎', label: '공부·검색하기', description: '궁금한 것을 찾아보기' },
+            ],
+        } : undefined,
         teacherGuide: createTeacherGuide(unit, slide, pageNumber),
     };
 }
@@ -325,7 +337,7 @@ const DIGITAL_CREATOR_BLUEPRINTS: DigitalCreatorBlueprint[] = [
         parentReport: '컴퓨터의 주요 부분을 구별하고, 모르는 화면에서는 바로 누르지 않고 먼저 읽고 질문하는 안전 습관을 익혔습니다.',
         concept: '컴퓨터는 화면·본체·키보드·마우스가 서로 신호를 주고받으며 내 생각을 작품으로 바꾸는 도구입니다.',
         analogy: '컴퓨터는 여러 대원이 역할을 나누는 탐험대와 같습니다. 화면은 안내판, 키보드와 마우스는 명령 도구입니다.',
-        warmup: '컴퓨터로 해 본 일을 그림 카드에서 골라 친구와 한 가지씩 말합니다.',
+        warmup: '아래 그림 카드에서 컴퓨터로 해 본 일을 하나 이상 고릅니다. 혼자라면 소리 내어 말하고, 함께라면 친구나 선생님에게 이야기합니다.',
         observe: '화면·본체·키보드·마우스를 찾아 이름표 카드를 알맞은 곳에 놓습니다.',
         demo: '선생님이 바른 자세로 앉아 프로그램을 열고, 모르는 창에서 멈춰 질문하는 순서를 보여 줍니다.',
         guided: ['컴퓨터 부분 네 곳을 차례로 가리키며 이름을 말합니다.', '화면에서 아이콘과 버튼을 하나씩 찾고 누르기 전에 글자를 읽습니다.'],
