@@ -17,6 +17,16 @@ describe("parent app navigation", () => {
     expect(nav).toContain('label: "현황"');
   });
 
+  it("keeps the desktop parent shell centered and uses a compact floating menu", () => {
+    const shell = read("src/app/parent/ParentShell.tsx");
+    const nav = read("src/app/parent/ParentBottomNav.tsx");
+
+    expect(shell).toContain("max-w-[1100px]");
+    expect(nav).toContain("md:w-[360px]");
+    expect(nav).toContain("md:left-1/2");
+    expect(nav).toContain("md:rounded-2xl");
+  });
+
   it("redirects parent home and legacy growth routes to the integrated dashboard", () => {
     const home = read("src/app/parent/page.tsx");
     const growth = read("src/app/parent/growth/page.tsx");
