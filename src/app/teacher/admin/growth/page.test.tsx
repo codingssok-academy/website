@@ -2,6 +2,12 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import GrowthManagementPage from "./page";
 
+vi.mock("@/features/growth-v2/attendance/MonthlyAttendancePanel", () => ({
+  MonthlyAttendancePanel: ({ studentId }: { studentId: string }) => (
+    <section aria-label="관리자 월별 출석">{studentId} 출석 입력 연결</section>
+  ),
+}));
+
 afterEach(() => {
   vi.unstubAllGlobals();
 });
@@ -61,6 +67,7 @@ describe("Growth 2.0 관리자 성장관리", () => {
       "조건문을 활용한 프로젝트 완성",
     );
     expect(screen.getByText("전달 준비·완료")).toBeInTheDocument();
+    expect(screen.getByLabelText("관리자 월별 출석")).toHaveTextContent("student-1");
     expect(fetchMock).toHaveBeenCalledWith("/api/teacher/growth-management", {
       cache: "no-store",
     });

@@ -12,7 +12,13 @@ import {
   Save,
   XCircle,
 } from "lucide-react";
-import { fetchMonthlyAttendance, saveTeacherAttendance } from "./attendance-client";
+import {
+  fetchMonthlyAttendance,
+  fetchStudentMonthlyAttendance,
+  fetchTeacherMonthlyAttendance,
+  saveProductionTeacherAttendance,
+  saveTeacherAttendance,
+} from "./attendance-client";
 import {
   ATTENDANCE_STATUS_LABEL,
   type GrowthAttendanceRecord,
@@ -22,9 +28,10 @@ import {
 import styles from "./MonthlyAttendancePanel.module.css";
 
 interface MonthlyAttendancePanelProps {
-  accessToken: string;
-  studentId: string;
+  accessToken?: string;
+  studentId?: string;
   editable?: boolean;
+  source?: "preview" | "teacher" | "student";
 }
 
 const STATUS_OPTIONS = Object.entries(ATTENDANCE_STATUS_LABEL) as Array<
@@ -67,9 +74,10 @@ function recordIcon(status: GrowthAttendanceStatus) {
 }
 
 export function MonthlyAttendancePanel({
-  accessToken,
-  studentId,
+  accessToken = "",
+  studentId = "",
   editable = false,
+  source = "preview",
 }: MonthlyAttendancePanelProps) {
   const [month, setMonth] = useState(currentMonthKey);
   const [attendance, setAttendance] = useState<MonthlyAttendanceResponse | null>(null);
@@ -83,12 +91,17 @@ export function MonthlyAttendancePanel({
   const [status, setStatus] = useState<GrowthAttendanceStatus>("present");
   const [lessonTitle, setLessonTitle] = useState("정규 수업");
   const [note, setNote] = useState("");
-  const requestKey = `${studentId}:${month}`;
+  const requestKey = `${source}:${studentId || "self"}:${month}`;
   const isLoading = resolvedRequestKey !== requestKey && failedRequestKey !== requestKey;
 
   useEffect(() => {
     let active = true;
-    fetchMonthlyAttendance(accessToken, studentId, month)
+    const request = source === "teacher"
+      ? fetchTeacherMonthlyAttendance(studentId, month)
+      : source === "student"
+        ? fetchStudentMonthlyAttendance(month)
+        : fetchMonthlyAttendance(accessToken, studentId, month);
+    request
       .then((result) => {
         if (active) {
           setAttendance(result);
@@ -108,7 +121,7 @@ export function MonthlyAttendancePanel({
     return () => {
       active = false;
     };
-  }, [accessToken, month, requestKey, studentId]);
+  }, [accessToken, month, requestKey, source, studentId]);
 
   const summary = attendance?.data.summary;
   const completionRate = useMemo(() => {
@@ -160,15 +173,19 @@ export function MonthlyAttendancePanel({
     setErrorMessage("");
     setMessage("");
     try {
-      await saveTeacherAttendance(accessToken, {
+      const input = {
         studentId,
         recordId,
         classDate,
         status,
         lessonTitle: title,
         note: note.trim(),
-      });
-      const refreshed = await fetchMonthlyAttendance(accessToken, studentId, month);
+      };
+      if (source === "teacher") await saveProductionTeacherAttendance(input);
+      else await saveTeacherAttendance(accessToken, input);
+      const refreshed = source === "teacher"
+        ? await fetchTeacherMonthlyAttendance(studentId, month)
+        : await fetchMonthlyAttendance(accessToken, studentId, month);
       setAttendance(refreshed);
       setMessage(recordId ? "출석 기록을 수정했습니다." : "출석 기록을 저장했습니다.");
       resetEditor();
@@ -180,13 +197,13 @@ export function MonthlyAttendancePanel({
   };
 
   return (
-    <section className={styles.panel} aria-labelledby={`attendance-title-${studentId}`}>
+    <section className={styles.panel} aria-labelledby={`attendance-title-${studentId || "self"}`}>
       <div className={styles.headingRow}>
         <div className={styles.headingCopy}>
           <span className={styles.icon}><CalendarDays size={21} /></span>
           <div>
             <p>월 수강 기준</p>
-            <h2 id={`attendance-title-${studentId}`}>{monthLabel(month)} 출석 현황</h2>
+            <h2 id={`attendance-title-${studentId || "self"}`}>{monthLabel(month)} 출석 현황</h2>
             <span>학습 평가는 매주, 출석은 한 달 단위로 확인합니다.</span>
           </div>
         </div>

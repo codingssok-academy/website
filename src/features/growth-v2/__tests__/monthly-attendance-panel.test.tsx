@@ -3,12 +3,18 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MonthlyAttendancePanel } from "@/features/growth-v2/attendance/MonthlyAttendancePanel";
 import {
   fetchMonthlyAttendance,
+  fetchStudentMonthlyAttendance,
+  fetchTeacherMonthlyAttendance,
+  saveProductionTeacherAttendance,
   saveTeacherAttendance,
 } from "@/features/growth-v2/attendance/attendance-client";
 import type { MonthlyAttendanceResponse } from "@/features/growth-v2/attendance/types";
 
 vi.mock("@/features/growth-v2/attendance/attendance-client", () => ({
   fetchMonthlyAttendance: vi.fn(),
+  fetchStudentMonthlyAttendance: vi.fn(),
+  fetchTeacherMonthlyAttendance: vi.fn(),
+  saveProductionTeacherAttendance: vi.fn(),
   saveTeacherAttendance: vi.fn(),
 }));
 
@@ -45,6 +51,15 @@ describe("monthly attendance panel", () => {
   beforeEach(() => {
     vi.setSystemTime(new Date("2026-08-06T10:00:00+09:00"));
     vi.mocked(fetchMonthlyAttendance).mockImplementation(async (_token, _studentId, month) => monthData(month));
+    vi.mocked(fetchStudentMonthlyAttendance).mockImplementation(async (month) => monthData(month));
+    vi.mocked(fetchTeacherMonthlyAttendance).mockImplementation(async (_studentId, month) => monthData(month));
+    vi.mocked(saveProductionTeacherAttendance).mockResolvedValue({
+      saved: true,
+      record: {
+        ...monthData("2026-08").data.records[0],
+        student_id: STUDENT_ID,
+      },
+    });
     vi.mocked(saveTeacherAttendance).mockResolvedValue({
       saved: true,
       record: {
@@ -95,6 +110,36 @@ describe("monthly attendance panel", () => {
 
     render(<MonthlyAttendancePanel accessToken={TOKEN} studentId={STUDENT_ID} />);
     await screen.findByRole("heading", { name: "2026년 8월 출석 현황" });
+    expect(screen.queryByRole("button", { name: /출석 기록 저장|수정 내용 저장/ })).not.toBeInTheDocument();
+  });
+
+  it("connects the production teacher editor to the teacher attendance API", async () => {
+    render(<MonthlyAttendancePanel source="teacher" studentId={STUDENT_ID} editable />);
+
+    await screen.findByRole("heading", { name: "2026년 8월 출석 현황" });
+    expect(fetchTeacherMonthlyAttendance).toHaveBeenCalledWith(STUDENT_ID, "2026-08");
+
+    fireEvent.change(screen.getByLabelText("수업 날짜"), { target: { value: "2026-08-06" } });
+    fireEvent.change(screen.getByLabelText("출석 상태"), { target: { value: "makeup" } });
+    fireEvent.change(screen.getByLabelText("수업 이름"), { target: { value: "보강 수업" } });
+    fireEvent.click(screen.getByRole("button", { name: "출석 기록 저장" }));
+
+    await waitFor(() => expect(saveProductionTeacherAttendance).toHaveBeenCalledWith({
+      studentId: STUDENT_ID,
+      recordId: null,
+      classDate: "2026-08-06",
+      status: "makeup",
+      lessonTitle: "보강 수업",
+      note: "",
+    }));
+    expect(fetchTeacherMonthlyAttendance).toHaveBeenCalledTimes(2);
+  });
+
+  it("shows the signed-in student their own attendance without edit controls", async () => {
+    render(<MonthlyAttendancePanel source="student" />);
+
+    expect(await screen.findByRole("heading", { name: "2026년 8월 출석 현황" })).toBeInTheDocument();
+    expect(fetchStudentMonthlyAttendance).toHaveBeenCalledWith("2026-08");
     expect(screen.queryByRole("button", { name: /출석 기록 저장|수정 내용 저장/ })).not.toBeInTheDocument();
   });
 });

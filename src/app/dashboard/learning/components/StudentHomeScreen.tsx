@@ -51,6 +51,7 @@ export default function StudentHomeScreen() {
                 <QuickCard icon="menu_book" label="코스 보기" sub="교재와 문제" href="/dashboard/learning/courses" color="#2563eb" />
                 <QuickCard icon="terminal" label="코드 실행" sub="C-Studio" href="/dashboard/compiler" color="#0f172a" />
                 <QuickCard icon="emoji_events" label="알고리즘·대회" sub="C++ 문제해결" href="/dashboard/learning/courses/4" color="#ca8a04" />
+                <QuickCard icon="trending_up" label="성장 기록" sub="선생님 피드백" href="/dashboard/learning/growth" color="#059669" />
             </section>
 
             <section className="course-section" aria-label="코스 목록">
@@ -86,6 +87,7 @@ export default function StudentHomeScreen() {
                 .quick-card .material-symbols-outlined { font-size: 26px; }
                 .quick-card strong { font-size: 16px; font-weight: 900; letter-spacing: -0.02em; }
                 .quick-card small { color: #64748b; font-size: 12px; font-weight: 700; }
+                .quick-card:last-child:nth-child(odd) { grid-column: 1 / -1; min-height: 96px; }
                 .course-section { background: #fff; border: 1px solid #dbe4f2; border-radius: 22px; padding: 16px; box-shadow: 0 12px 30px rgba(15,23,42,.05); }
                 .section-title { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
                 .section-title h2 { margin: 0; font-size: 18px; letter-spacing: -0.03em; }
