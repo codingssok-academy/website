@@ -56,8 +56,8 @@ export default function ParentDashboardPage() {
 
     if (loading && !data) {
         return (
-            <div className="mx-auto max-w-[1120px] px-4 py-5 sm:px-6" aria-label="학부모 통합 현황 불러오는 중">
-                <div className="h-28 animate-pulse rounded-3xl bg-slate-200" />
+            <div className="mx-auto w-full max-w-[1440px] px-4 py-5 sm:px-5 lg:px-6" aria-label="학부모 통합 현황 불러오는 중">
+                <div className="h-24 animate-pulse rounded-2xl bg-slate-200" />
                 <div className="mt-4 grid gap-3 lg:grid-cols-2">
                     {[0, 1, 2, 3].map(item => <div key={item} className="h-52 animate-pulse rounded-3xl bg-slate-200" />)}
                 </div>
@@ -87,12 +87,10 @@ export default function ParentDashboardPage() {
     return (
         <div
             aria-label="학부모 통합 현황판"
-            className="relative mx-auto max-w-[1120px] overflow-hidden px-4 pb-5 pt-4 text-slate-900 sm:px-6 sm:pt-5"
+            className="mx-auto w-full max-w-[1440px] px-4 pb-5 pt-4 text-slate-900 sm:px-5 lg:px-6"
+            style={{ marginInline: "auto" }}
         >
-            <div className="pointer-events-none absolute -right-24 top-28 h-64 w-64 rounded-full bg-blue-100/50 blur-3xl" />
-            <div className="pointer-events-none absolute -left-24 top-[520px] h-56 w-56 rounded-full bg-violet-100/40 blur-3xl" />
-
-            <header className="relative mb-4 flex items-center justify-between gap-3">
+            <header className="mb-3 flex items-center justify-between gap-3">
                 <div className="flex min-w-0 items-center gap-3 sm:gap-4">
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-base font-black text-white shadow-[0_8px_20px_rgba(37,99,235,0.24)] sm:h-11 sm:w-11">
                         {displayName.slice(0, 1)}
@@ -102,7 +100,7 @@ export default function ParentDashboardPage() {
                             <p className="text-[10px] font-black uppercase tracking-[0.12em] text-blue-600">Growth Report</p>
                             <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[9px] font-black text-emerald-600">안전 공개</span>
                         </div>
-                        <h1 className="mt-0.5 truncate text-lg font-black tracking-tight sm:text-xl lg:text-2xl">{displayName} 학생의 성장 현황</h1>
+                        <h1 className="mt-0.5 truncate text-lg font-black tracking-tight sm:text-xl">{displayName} 학생의 성장 현황</h1>
                         <p className="mt-0.5 truncate text-xs font-semibold text-slate-500">
                             {profileLine || "학습 정보를 확인하고 있어요"}
                         </p>
@@ -120,30 +118,33 @@ export default function ParentDashboardPage() {
                 </button>
             </header>
 
-            <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#2563eb] via-[#3156d9] to-[#4338ca] p-4 text-white shadow-[0_18px_42px_rgba(37,99,235,0.24)] sm:p-5" aria-label="학습 요약">
-                <div className="absolute -right-16 -top-20 h-56 w-56 rounded-full border-[34px] border-white/10" />
-                <div className="absolute -bottom-28 left-1/3 h-48 w-48 rounded-full bg-white/5" />
-                <div className="relative grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(320px,0.78fr)] md:items-end">
-                    <div>
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-[11px] font-black text-blue-50 backdrop-blur-sm">
-                            <span className="material-symbols-outlined text-[15px]">school</span>
-                            현재 수업
-                        </span>
-                        <h2 className="mt-2 text-xl font-black tracking-tight sm:text-2xl">{student.currentClass || "수업 반 확인 중"}</h2>
-                        <p className="mt-1.5 flex items-center gap-1.5 text-xs font-semibold text-blue-100">
-                            <span className="material-symbols-outlined text-base">schedule</span>
-                            최근 학습일 {formatDate(student.lastActive)}
-                        </p>
-                    </div>
-                    <div className="grid grid-cols-3 gap-2.5">
-                        <SummaryStat icon="workspace_premium" value={`Lv.${student.level}`} label="학습 레벨" />
-                        <SummaryStat icon="timer" value={`${activity.todayMinutes}분`} label="오늘 학습" />
-                        <SummaryStat icon="task_alt" value={`${student.totalProblems}개`} label="푼 문제" />
+            <section
+                className="grid grid-cols-3 gap-2.5 lg:grid-cols-[minmax(260px,1.35fr)_repeat(3,minmax(140px,0.65fr))] lg:gap-3"
+                aria-label="학습 요약"
+            >
+                <div className="relative col-span-3 overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 p-4 text-white shadow-[0_12px_30px_rgba(37,99,235,0.2)] lg:col-span-1">
+                    <div className="absolute -right-8 -top-12 h-32 w-32 rounded-full border-[22px] border-white/10" />
+                    <div className="relative flex items-center justify-between gap-4">
+                        <div className="min-w-0">
+                            <p className="flex items-center gap-1.5 text-[10px] font-black text-blue-100">
+                                <span className="material-symbols-outlined text-sm">school</span>
+                                현재 수업
+                            </p>
+                            <h2 className="mt-1 truncate text-lg font-black tracking-tight sm:text-xl">{student.currentClass || "수업 반 확인 중"}</h2>
+                            <p className="mt-1 flex items-center gap-1 text-[11px] font-semibold text-blue-100">
+                                <span className="material-symbols-outlined text-sm">schedule</span>
+                                최근 학습일 {formatDate(student.lastActive)}
+                            </p>
+                        </div>
+                        <span className="material-symbols-outlined shrink-0 text-3xl text-white/25">developer_board</span>
                     </div>
                 </div>
+                <SummaryStat icon="workspace_premium" value={`Lv.${student.level}`} label="학습 레벨" />
+                <SummaryStat icon="timer" value={`${activity.todayMinutes}분`} label="오늘 학습" />
+                <SummaryStat icon="task_alt" value={`${student.totalProblems}개`} label="푼 문제" />
             </section>
 
-            <div aria-label="학습 세부 현황" className="relative mt-4 grid gap-3 lg:grid-cols-2 lg:gap-4">
+            <div aria-label="학습 세부 현황" className="mt-3 grid gap-3 lg:grid-cols-2">
                 <DashboardSection icon="trending_up" title="Growth 2.0" subtitle="선생님이 완료하여 공개한 최신 성장 기록" tone="blue">
                     {currentGrowth ? (
                         <div className="grid gap-3 sm:grid-cols-2">
@@ -226,18 +227,18 @@ export default function ParentDashboardPage() {
 
             <Link
                 href="/parent/feedback"
-                className="relative mt-4 flex min-h-14 items-center justify-between overflow-hidden rounded-2xl bg-slate-900 px-4 text-sm font-black text-white no-underline shadow-[0_12px_28px_rgba(15,23,42,0.18)] transition hover:-translate-y-0.5 hover:bg-slate-800 sm:px-5"
+                className="mt-3 flex min-h-12 items-center justify-between overflow-hidden rounded-xl bg-slate-900 px-4 text-[13px] font-black text-white no-underline shadow-[0_10px_24px_rgba(15,23,42,0.16)] transition hover:bg-slate-800"
             >
                 <span className="flex items-center gap-3">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10">
-                        <span className="material-symbols-outlined text-xl">description</span>
+                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10">
+                        <span className="material-symbols-outlined text-lg">description</span>
                     </span>
                     자세한 수업 피드백 보기
                 </span>
                 <span className="material-symbols-outlined">arrow_forward</span>
             </Link>
 
-            <p className="relative px-3 pb-2 pt-5 text-center text-[11px] font-semibold leading-5 text-slate-400">
+            <p className="px-3 pb-2 pt-3 text-center text-[10px] font-semibold leading-4 text-slate-400">
                 작성 중인 평가와 선생님 내부 메모는 표시되지 않습니다.<br className="sm:hidden" /> 완료하여 공개한 기록만 보여드립니다.
             </p>
         </div>
@@ -246,10 +247,10 @@ export default function ParentDashboardPage() {
 
 function SummaryStat({ icon, value, label }: { icon: string; value: string; label: string }) {
     return (
-        <div className="rounded-xl border border-white/10 bg-white/12 px-2 py-2.5 text-center backdrop-blur-sm">
-            <span className="material-symbols-outlined text-base text-blue-100">{icon}</span>
-            <strong className="block text-base font-black">{value}</strong>
-            <span className="mt-0.5 block text-[10px] font-bold text-blue-100">{label}</span>
+        <div className="flex min-h-20 flex-col items-center justify-center rounded-2xl border border-slate-200/80 bg-white px-2 py-2.5 text-center shadow-[0_6px_20px_rgba(15,23,42,0.04)]">
+            <span className="material-symbols-outlined text-lg text-blue-500">{icon}</span>
+            <strong className="mt-0.5 block text-base font-black text-slate-900">{value}</strong>
+            <span className="block text-[10px] font-bold text-slate-400">{label}</span>
         </div>
     );
 }
@@ -268,7 +269,7 @@ function DashboardSection({
     tone: keyof typeof SECTION_TONE;
 }) {
     return (
-        <section className="rounded-3xl border border-slate-200/80 bg-white p-4 shadow-[0_8px_28px_rgba(15,23,42,0.05)] sm:p-5">
+        <section className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_6px_22px_rgba(15,23,42,0.045)]">
             <div className="mb-3 flex items-center gap-2.5">
                 <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${SECTION_TONE[tone]}`}>
                     <span className="material-symbols-outlined text-lg">{icon}</span>
