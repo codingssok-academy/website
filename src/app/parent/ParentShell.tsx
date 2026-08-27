@@ -117,7 +117,7 @@ export default function ParentShell({ children }: { children: React.ReactNode })
     return (
         <div className="min-h-dvh bg-slate-50 font-[Pretendard,'Noto_Sans_KR',sans-serif] flex flex-col">
             <header
-                className="sticky top-0 z-[100] backdrop-blur-[20px] border-b border-slate-200/70 px-5 flex items-end"
+                className="sticky top-0 z-[100] flex items-end border-b border-slate-200/70 px-4 backdrop-blur-[20px] sm:px-5"
                 style={{
                     background: "rgba(255,255,255,0.95)",
                     paddingTop: "env(safe-area-inset-top, 0px)",
@@ -125,7 +125,7 @@ export default function ParentShell({ children }: { children: React.ReactNode })
                     paddingBottom: 10,
                 }}
             >
-                <div className="flex items-center justify-between w-full">
+                <div className="mx-auto flex w-full max-w-[1100px] items-center justify-between">
                     <Image
                         src="/images/logo-codingssok.png"
                         alt="코딩쏙"
@@ -140,7 +140,7 @@ export default function ParentShell({ children }: { children: React.ReactNode })
                 </div>
             </header>
 
-            <main className="flex-1 overflow-y-auto" style={{ paddingBottom: "calc(64px + env(safe-area-inset-bottom, 0px))" }}>
+            <main className="flex-1 overflow-y-auto [padding-bottom:calc(64px+env(safe-area-inset-bottom,0px))] md:pb-24">
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={pathname}

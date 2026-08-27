@@ -56,7 +56,7 @@ export default function ParentDashboardPage() {
 
     if (loading && !data) {
         return (
-            <div className="mx-auto w-full max-w-[1440px] px-4 py-5 sm:px-5 lg:px-6" aria-label="학부모 통합 현황 불러오는 중">
+            <div className="mx-auto w-full max-w-[1100px] px-4 py-5 sm:px-5" aria-label="학부모 통합 현황 불러오는 중">
                 <div className="h-24 animate-pulse rounded-2xl bg-slate-200" />
                 <div className="mt-4 grid gap-3 lg:grid-cols-2">
                     {[0, 1, 2, 3].map(item => <div key={item} className="h-52 animate-pulse rounded-3xl bg-slate-200" />)}
@@ -87,7 +87,7 @@ export default function ParentDashboardPage() {
     return (
         <div
             aria-label="학부모 통합 현황판"
-            className="mx-auto w-full max-w-[1440px] px-4 pb-5 pt-4 text-slate-900 sm:px-5 lg:px-6"
+            className="mx-auto w-full max-w-[1100px] px-4 pb-5 pt-4 text-slate-900 sm:px-5"
             style={{ marginInline: "auto" }}
         >
             <header className="mb-3 flex items-center justify-between gap-3">

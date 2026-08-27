@@ -56,7 +56,7 @@ describe("학부모 통합 현황판", () => {
     render(<ParentDashboardPage />);
 
     expect(screen.getByRole("heading", { name: "가짜학생 학생의 성장 현황" })).toBeInTheDocument();
-    expect(screen.getByLabelText("학부모 통합 현황판")).toHaveClass("max-w-[1440px]");
+    expect(screen.getByLabelText("학부모 통합 현황판")).toHaveClass("max-w-[1100px]");
     expect(screen.getByLabelText("학습 요약")).toHaveClass("grid-cols-3");
     expect(screen.getByLabelText("학습 요약")).toHaveClass("lg:grid-cols-[minmax(260px,1.35fr)_repeat(3,minmax(140px,0.65fr))]");
     expect(screen.getByLabelText("학습 세부 현황")).toHaveClass("lg:grid-cols-2");

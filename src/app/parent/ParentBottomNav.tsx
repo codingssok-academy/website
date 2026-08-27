@@ -22,7 +22,7 @@ export default function ParentBottomNav() {
     return (
         <nav
             aria-label="하단 메뉴"
-            className="fixed bottom-0 left-0 right-0 z-[500] flex items-stretch backdrop-blur-[24px] border-t border-slate-200/70"
+            className="fixed bottom-0 left-0 right-0 z-[500] flex items-stretch border-t border-slate-200/70 backdrop-blur-[24px] md:bottom-4 md:left-1/2 md:right-auto md:w-[360px] md:-translate-x-1/2 md:overflow-hidden md:rounded-2xl md:border md:border-slate-200/80 md:shadow-[0_12px_34px_rgba(15,23,42,0.16)]"
             style={{
                 height: "calc(60px + env(safe-area-inset-bottom, 0px))",
                 paddingBottom: "env(safe-area-inset-bottom, 0px)",
@@ -38,7 +38,7 @@ export default function ParentBottomNav() {
                         href={tab.href}
                         aria-label={tab.label}
                         aria-current={active ? "page" : undefined}
-                        className={`flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 no-underline relative min-h-[48px] transition-colors duration-150 ${active ? "text-blue-600" : "text-slate-400"}`}
+                        className={`relative flex min-h-[48px] flex-1 flex-col items-center justify-center gap-0.5 py-1.5 no-underline transition-colors duration-150 md:flex-row md:gap-1.5 md:py-2 ${active ? "text-blue-600" : "text-slate-400"}`}
                         style={{ WebkitTapHighlightColor: "transparent" }}
                     >
                         {active && (
@@ -61,7 +61,7 @@ export default function ParentBottomNav() {
                             {tab.icon}
                         </motion.span>
 
-                        <span className={`text-[10px] leading-none font-[Pretendard,sans-serif] ${active ? "font-bold" : "font-medium"}`}>
+                        <span className={`text-[10px] leading-none font-[Pretendard,sans-serif] md:text-xs ${active ? "font-bold" : "font-medium"}`}>
                             {tab.label}
                         </span>
                     </Link>
