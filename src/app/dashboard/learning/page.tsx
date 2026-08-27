@@ -616,9 +616,14 @@ export default function LearningDashboard() {
                             <span className="material-symbols-outlined" style={{fontSize:15,color:"#fff"}}>admin_panel_settings</span>관리자
                         </button>
                     ) : (
-                        <button className="pg-btn" onClick={() => router.push("/dashboard/learning/files")} title="내 파일함">
-                            <span className="material-symbols-outlined" style={{fontSize:15}}>folder_open</span>내 파일함
-                        </button>
+                        <>
+                            <button className="pg-btn" onClick={() => router.push("/dashboard/learning/growth")} title="나의 성장 기록">
+                                <span className="material-symbols-outlined" style={{fontSize:15}}>trending_up</span>성장기록
+                            </button>
+                            <button className="pg-btn" onClick={() => router.push("/dashboard/learning/files")} title="내 파일함">
+                                <span className="material-symbols-outlined" style={{fontSize:15}}>folder_open</span>내 파일함
+                            </button>
+                        </>
                     )}
                     <button className="pg-btn" onClick={() => router.push("/dashboard/compiler")} title="C-Studio 컴파일러">
                         <span className="material-symbols-outlined" style={{fontSize:15}}>terminal</span>

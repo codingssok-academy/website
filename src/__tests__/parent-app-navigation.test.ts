@@ -56,6 +56,15 @@ describe("parent app navigation", () => {
     expect(feedback).toContain("allowedNames.map");
   });
 
+  it("links both mobile and desktop student home screens to the completed growth record", () => {
+    const mobileHome = read("src/app/dashboard/learning/components/StudentHomeScreen.tsx");
+    const desktopHome = read("src/app/dashboard/learning/page.tsx");
+
+    expect(mobileHome).toContain('href="/dashboard/learning/growth"');
+    expect(mobileHome).toContain('label="성장 기록"');
+    expect(desktopHome).toContain('router.push("/dashboard/learning/growth")');
+  });
+
   it("shows settings as a read-only parent account screen without reset or retired tab controls", () => {
     const settings = read("src/app/parent/settings/page.tsx");
 
