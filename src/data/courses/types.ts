@@ -30,6 +30,20 @@ export interface LearningActivity {
     minLength?: number;
 }
 
+/** 저학년 학생이 글 입력 전에 그림을 보고 고르는 도입 활동 */
+export interface LearningChoiceActivity {
+    label: string;
+    prompt: string;
+    soloGuide: string;
+    groupGuide: string;
+    options: Array<{
+        id: string;
+        emoji: string;
+        label: string;
+        description: string;
+    }>;
+}
+
 /** 학생 화면과 분리해 교사 계정에만 보여주는 페이지별 지도안 */
 export interface TeacherGuide {
     objective: string;
@@ -58,6 +72,7 @@ export interface Page {
     quiz?: Quiz;             // 객관식 퀴즈
     problems?: CodeProblem[]; // 코드 문제
     activity?: LearningActivity; // 짧은 학생 기록 활동
+    choiceActivity?: LearningChoiceActivity; // 그림 카드 선택 활동
     teacherGuide?: TeacherGuide; // 교사 계정 전용 지도안
 }
 

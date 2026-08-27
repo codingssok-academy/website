@@ -80,4 +80,19 @@ describe('Digital Creator course', () => {
         expect(units.every((unit) => unit.pages?.[0]?.content?.includes('오늘의 결과물'))).toBe(true);
         expect(units.every((unit) => unit.pages?.at(-1)?.content?.includes('학부모 리포트 문장'))).toBe(true);
     });
+
+    it('starts the first lesson with selectable picture cards for solo or group learning', () => {
+        const firstPage = getCourseById('11')?.chapters[0]?.units[0]?.pages?.[0];
+
+        expect(firstPage?.choiceActivity?.options.map((option) => option.label)).toEqual([
+            '그림 그리기',
+            '게임하기',
+            '영상 보기',
+            '공부·검색하기',
+        ]);
+        expect(firstPage?.choiceActivity?.soloGuide).toContain('혼자 공부한다면');
+        expect(firstPage?.choiceActivity?.groupGuide).toContain('친구나 선생님');
+        expect(firstPage?.content).toContain('아래 그림 카드');
+        expect(firstPage?.content).not.toContain('그림 카드에서 골라 친구와 한 가지씩');
+    });
 });
