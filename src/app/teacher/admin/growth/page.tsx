@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
+import { MonthlyAttendancePanel } from "@/features/growth-v2/attendance/MonthlyAttendancePanel";
 
 type StudentOption = {
     id: string;
@@ -759,6 +760,8 @@ export default function GrowthManagementPage() {
                                 이번 주 기록 남기기
                             </button>
                         </div>
+
+                        <MonthlyAttendancePanel source="teacher" studentId={selectedStudent.id} editable />
 
                         <section className="history">
                             <div className="history-title">

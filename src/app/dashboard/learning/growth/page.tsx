@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { ParentGrowthRecord } from "@/lib/parent-dashboard";
+import { MonthlyAttendancePanel } from "@/features/growth-v2/attendance/MonthlyAttendancePanel";
 import styles from "./student-growth.module.css";
 
 type StudentGrowthResponse = {
@@ -140,6 +141,8 @@ export default function StudentGrowthPage() {
                             ))}
                         </section>
                     )}
+
+                    <MonthlyAttendancePanel source="student" />
                 </>
             )}
 

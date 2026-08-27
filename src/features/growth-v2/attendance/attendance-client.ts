@@ -60,3 +60,42 @@ export function saveTeacherAttendance(accessToken: string, input: SaveAttendance
     { ...input },
   );
 }
+
+async function readAttendanceResponse<T>(response: Response, fallback: string): Promise<T> {
+  const result = (await response.json().catch(() => null)) as T | { error?: string } | null;
+  if (response.status === 401) {
+    throw new AttendanceRequestError("SESSION_EXPIRED", "로그인 시간이 끝났어요. 다시 로그인해 주세요.");
+  }
+  if (response.status === 403) {
+    throw new AttendanceRequestError("ACCESS_DENIED", "이 학생의 출석 정보를 확인할 권한이 없어요.");
+  }
+  if (!response.ok || !result) {
+    const message = result && typeof result === "object" && "error" in result && typeof result.error === "string"
+      ? result.error
+      : fallback;
+    throw new AttendanceRequestError("REQUEST_FAILED", message);
+  }
+  return result as T;
+}
+
+export async function fetchTeacherMonthlyAttendance(studentId: string, month: string) {
+  const query = new URLSearchParams({ studentId, month });
+  const response = await fetch(`/api/teacher/growth-attendance?${query.toString()}`, { cache: "no-store" });
+  return readAttendanceResponse<MonthlyAttendanceResponse>(response, "출석 정보를 불러오지 못했어요.");
+}
+
+export async function saveProductionTeacherAttendance(input: SaveAttendanceInput) {
+  const response = await fetch("/api/teacher/growth-attendance", {
+    method: "POST",
+    cache: "no-store",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  return readAttendanceResponse<SaveAttendanceResponse>(response, "출석 기록을 저장하지 못했어요.");
+}
+
+export async function fetchStudentMonthlyAttendance(month: string) {
+  const query = new URLSearchParams({ month });
+  const response = await fetch(`/api/student/attendance?${query.toString()}`, { cache: "no-store" });
+  return readAttendanceResponse<MonthlyAttendanceResponse>(response, "출석 정보를 불러오지 못했어요.");
+}
