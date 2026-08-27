@@ -36,7 +36,8 @@ function activityLabel(activity: {
     unit_title?: string | null;
     page_title?: string | null;
 }) {
-    return activity.page_title || activity.unit_title || activity.course_title || "학습 활동";
+    const label = activity.page_title || activity.unit_title || activity.course_title || "학습 활동";
+    return label.toLowerCase() === "login" ? "홈페이지 로그인" : label;
 }
 
 export default function ParentDashboardPage() {
@@ -55,10 +56,10 @@ export default function ParentDashboardPage() {
 
     if (loading && !data) {
         return (
-            <div className="mx-auto max-w-[1180px] px-4 py-6 sm:px-6" aria-label="학부모 통합 현황 불러오는 중">
-                <div className="h-36 animate-pulse rounded-[28px] bg-slate-200" />
-                <div className="mt-5 grid gap-4 lg:grid-cols-2">
-                    {[0, 1, 2, 3].map(item => <div key={item} className="h-64 animate-pulse rounded-[26px] bg-slate-200" />)}
+            <div className="mx-auto max-w-[1120px] px-4 py-5 sm:px-6" aria-label="학부모 통합 현황 불러오는 중">
+                <div className="h-28 animate-pulse rounded-3xl bg-slate-200" />
+                <div className="mt-4 grid gap-3 lg:grid-cols-2">
+                    {[0, 1, 2, 3].map(item => <div key={item} className="h-52 animate-pulse rounded-3xl bg-slate-200" />)}
                 </div>
             </div>
         );
@@ -86,23 +87,23 @@ export default function ParentDashboardPage() {
     return (
         <div
             aria-label="학부모 통합 현황판"
-            className="relative mx-auto max-w-[1180px] overflow-hidden px-4 pb-7 pt-5 text-slate-900 sm:px-6 sm:pt-7 lg:px-8"
+            className="relative mx-auto max-w-[1120px] overflow-hidden px-4 pb-5 pt-4 text-slate-900 sm:px-6 sm:pt-5"
         >
             <div className="pointer-events-none absolute -right-24 top-28 h-64 w-64 rounded-full bg-blue-100/50 blur-3xl" />
             <div className="pointer-events-none absolute -left-24 top-[520px] h-56 w-56 rounded-full bg-violet-100/40 blur-3xl" />
 
-            <header className="relative mb-5 flex items-center justify-between gap-3 sm:mb-6">
+            <header className="relative mb-4 flex items-center justify-between gap-3">
                 <div className="flex min-w-0 items-center gap-3 sm:gap-4">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 text-lg font-black text-white shadow-[0_10px_25px_rgba(37,99,235,0.28)] sm:h-14 sm:w-14 sm:text-xl">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-base font-black text-white shadow-[0_8px_20px_rgba(37,99,235,0.24)] sm:h-11 sm:w-11">
                         {displayName.slice(0, 1)}
                     </div>
                     <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                            <p className="text-xs font-black uppercase tracking-[0.12em] text-blue-600">Growth Report</p>
-                            <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-black text-emerald-600">안전 공개</span>
+                            <p className="text-[10px] font-black uppercase tracking-[0.12em] text-blue-600">Growth Report</p>
+                            <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[9px] font-black text-emerald-600">안전 공개</span>
                         </div>
-                        <h1 className="mt-1 truncate text-xl font-black tracking-tight sm:text-2xl lg:text-3xl">{displayName} 학생의 성장 현황</h1>
-                        <p className="mt-1 truncate text-xs font-semibold text-slate-500 sm:text-sm">
+                        <h1 className="mt-0.5 truncate text-lg font-black tracking-tight sm:text-xl lg:text-2xl">{displayName} 학생의 성장 현황</h1>
+                        <p className="mt-0.5 truncate text-xs font-semibold text-slate-500">
                             {profileLine || "학습 정보를 확인하고 있어요"}
                         </p>
                     </div>
@@ -112,24 +113,24 @@ export default function ParentDashboardPage() {
                     aria-label="통합 현황 새로고침"
                     onClick={() => void handleRefresh()}
                     disabled={refreshing}
-                    className="flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 text-slate-500 shadow-sm transition hover:border-blue-200 hover:text-blue-600 disabled:opacity-50 sm:px-4"
+                    className="flex min-h-10 shrink-0 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-2.5 text-slate-500 shadow-sm transition hover:border-blue-200 hover:text-blue-600 disabled:opacity-50 sm:px-3"
                 >
                     <span className={`material-symbols-outlined text-xl ${refreshing ? "animate-spin" : ""}`}>refresh</span>
                     <span className="hidden text-xs font-black sm:inline">새로고침</span>
                 </button>
             </header>
 
-            <section className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-[#2563eb] via-[#3156d9] to-[#4338ca] p-5 text-white shadow-[0_22px_55px_rgba(37,99,235,0.28)] sm:p-7" aria-label="학습 요약">
+            <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#2563eb] via-[#3156d9] to-[#4338ca] p-4 text-white shadow-[0_18px_42px_rgba(37,99,235,0.24)] sm:p-5" aria-label="학습 요약">
                 <div className="absolute -right-16 -top-20 h-56 w-56 rounded-full border-[34px] border-white/10" />
                 <div className="absolute -bottom-28 left-1/3 h-48 w-48 rounded-full bg-white/5" />
-                <div className="relative grid gap-5 md:grid-cols-[minmax(0,1fr)_minmax(340px,0.85fr)] md:items-end">
+                <div className="relative grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(320px,0.78fr)] md:items-end">
                     <div>
                         <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-[11px] font-black text-blue-50 backdrop-blur-sm">
                             <span className="material-symbols-outlined text-[15px]">school</span>
                             현재 수업
                         </span>
-                        <h2 className="mt-3 text-2xl font-black tracking-tight sm:text-3xl">{student.currentClass || "수업 반 확인 중"}</h2>
-                        <p className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-blue-100 sm:text-sm">
+                        <h2 className="mt-2 text-xl font-black tracking-tight sm:text-2xl">{student.currentClass || "수업 반 확인 중"}</h2>
+                        <p className="mt-1.5 flex items-center gap-1.5 text-xs font-semibold text-blue-100">
                             <span className="material-symbols-outlined text-base">schedule</span>
                             최근 학습일 {formatDate(student.lastActive)}
                         </p>
@@ -142,8 +143,8 @@ export default function ParentDashboardPage() {
                 </div>
             </section>
 
-            <div aria-label="학습 세부 현황" className="relative mt-5 grid gap-4 lg:grid-cols-12 lg:gap-5">
-                <DashboardSection className="lg:col-span-7" icon="trending_up" title="Growth 2.0" subtitle="선생님이 완료하여 공개한 최신 성장 기록" tone="blue">
+            <div aria-label="학습 세부 현황" className="relative mt-4 grid gap-3 lg:grid-cols-2 lg:gap-4">
+                <DashboardSection icon="trending_up" title="Growth 2.0" subtitle="선생님이 완료하여 공개한 최신 성장 기록" tone="blue">
                     {currentGrowth ? (
                         <div className="grid gap-3 sm:grid-cols-2">
                             <InfoBlock icon="menu_book" label="이번 수업에서 배운 내용" value={currentGrowth.classProgress} />
@@ -157,7 +158,7 @@ export default function ParentDashboardPage() {
                     )}
                 </DashboardSection>
 
-                <DashboardSection className="lg:col-span-5" icon="calendar_month" title={formatMonth(attendance?.month)} subtitle="월 수강 기준 출석·결석·보강 현황" tone="violet">
+                <DashboardSection icon="calendar_month" title={formatMonth(attendance?.month)} subtitle="월 수강 기준 출석·결석·보강 현황" tone="violet">
                     {attendance ? (
                         <>
                             <div className="grid grid-cols-3 gap-2">
@@ -182,9 +183,9 @@ export default function ParentDashboardPage() {
                     )}
                 </DashboardSection>
 
-                <DashboardSection className="lg:col-span-7" icon="campaign" title="선생님 메시지" subtitle="학원에서 전달한 최신 안내" tone="amber">
+                <DashboardSection icon="campaign" title="선생님 메시지" subtitle="학원에서 전달한 최신 안내" tone="amber">
                     {recentAnnouncements.length > 0 ? (
-                        <div className="grid gap-2 sm:grid-cols-2">
+                        <div aria-label="선생님 메시지 목록" className={`grid gap-2 ${recentAnnouncements.length > 1 ? "sm:grid-cols-2" : ""}`}>
                             {recentAnnouncements.map(message => (
                                 <article key={message.id} className="rounded-2xl border border-slate-100 bg-slate-50/80 p-4 transition hover:border-blue-100 hover:bg-blue-50/40">
                                     <div className="flex items-center gap-2">
@@ -201,7 +202,7 @@ export default function ParentDashboardPage() {
                     )}
                 </DashboardSection>
 
-                <DashboardSection className="lg:col-span-5" icon="history" title="최근 학습 활동" subtitle="홈페이지에서 확인된 최근 학습 기록" tone="emerald">
+                <DashboardSection icon="history" title="최근 학습 활동" subtitle="홈페이지에서 확인된 최근 학습 기록" tone="emerald">
                     {recentActivities.length > 0 ? (
                         <div className="divide-y divide-slate-100">
                             {recentActivities.map((item, index) => (
@@ -225,7 +226,7 @@ export default function ParentDashboardPage() {
 
             <Link
                 href="/parent/feedback"
-                className="relative mt-5 flex min-h-16 items-center justify-between overflow-hidden rounded-[22px] bg-slate-900 px-5 text-sm font-black text-white no-underline shadow-[0_14px_32px_rgba(15,23,42,0.2)] transition hover:-translate-y-0.5 hover:bg-slate-800 sm:px-6"
+                className="relative mt-4 flex min-h-14 items-center justify-between overflow-hidden rounded-2xl bg-slate-900 px-4 text-sm font-black text-white no-underline shadow-[0_12px_28px_rgba(15,23,42,0.18)] transition hover:-translate-y-0.5 hover:bg-slate-800 sm:px-5"
             >
                 <span className="flex items-center gap-3">
                     <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10">
@@ -245,9 +246,9 @@ export default function ParentDashboardPage() {
 
 function SummaryStat({ icon, value, label }: { icon: string; value: string; label: string }) {
     return (
-        <div className="rounded-2xl border border-white/10 bg-white/12 px-2 py-3 text-center backdrop-blur-sm sm:py-4">
-            <span className="material-symbols-outlined text-lg text-blue-100">{icon}</span>
-            <strong className="mt-0.5 block text-base font-black sm:text-lg">{value}</strong>
+        <div className="rounded-xl border border-white/10 bg-white/12 px-2 py-2.5 text-center backdrop-blur-sm">
+            <span className="material-symbols-outlined text-base text-blue-100">{icon}</span>
+            <strong className="block text-base font-black">{value}</strong>
             <span className="mt-0.5 block text-[10px] font-bold text-blue-100">{label}</span>
         </div>
     );
@@ -259,24 +260,22 @@ function DashboardSection({
     subtitle,
     children,
     tone,
-    className = "",
 }: {
     icon: string;
     title: string;
     subtitle: string;
     children: React.ReactNode;
     tone: keyof typeof SECTION_TONE;
-    className?: string;
 }) {
     return (
-        <section className={`rounded-[26px] border border-slate-200/80 bg-white p-5 shadow-[0_10px_35px_rgba(15,23,42,0.055)] sm:p-6 ${className}`}>
-            <div className="mb-4 flex items-center gap-3">
-                <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${SECTION_TONE[tone]}`}>
-                    <span className="material-symbols-outlined text-xl">{icon}</span>
+        <section className="rounded-3xl border border-slate-200/80 bg-white p-4 shadow-[0_8px_28px_rgba(15,23,42,0.05)] sm:p-5">
+            <div className="mb-3 flex items-center gap-2.5">
+                <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${SECTION_TONE[tone]}`}>
+                    <span className="material-symbols-outlined text-lg">{icon}</span>
                 </div>
                 <div className="min-w-0">
-                    <h2 className="text-base font-black text-slate-900 sm:text-lg">{title}</h2>
-                    <p className="mt-0.5 text-[11px] font-semibold text-slate-400">{subtitle}</p>
+                    <h2 className="text-base font-black text-slate-900">{title}</h2>
+                    <p className="mt-0.5 text-[10px] font-semibold text-slate-400">{subtitle}</p>
                 </div>
             </div>
             {children}
@@ -302,21 +301,21 @@ function InfoBlock({
         amber: "border-amber-100 bg-amber-50 text-amber-600",
     };
     return (
-        <div className={`rounded-2xl border p-4 ${tones[tone]}`}>
+        <div className={`rounded-xl border p-3 ${tones[tone]}`}>
             <p className="flex items-center gap-1.5 text-[11px] font-black">
                 <span className="material-symbols-outlined text-base">{icon}</span>
                 {label}
             </p>
-            <p className="mt-2 whitespace-pre-wrap text-sm font-bold leading-6 text-slate-800">{value || "아직 작성된 내용이 없습니다."}</p>
+            <p className="mt-1.5 whitespace-pre-wrap text-[13px] font-bold leading-5 text-slate-800">{value || "아직 작성된 내용이 없습니다."}</p>
         </div>
     );
 }
 
 function MiniStat({ icon, value, label, color, bg }: { icon: string; value: number; label: string; color: string; bg: string }) {
     return (
-        <div className={`rounded-2xl px-2 py-3 text-center ${bg}`}>
-            <span className={`material-symbols-outlined text-lg ${color}`}>{icon}</span>
-            <strong className={`block text-lg font-black sm:text-xl ${color}`}>{value}회</strong>
+        <div className={`rounded-xl px-2 py-2.5 text-center ${bg}`}>
+            <span className={`material-symbols-outlined text-base ${color}`}>{icon}</span>
+            <strong className={`block text-base font-black ${color}`}>{value}회</strong>
             <span className="mt-0.5 block text-[10px] font-bold text-slate-500">{label}</span>
         </div>
     );
@@ -324,9 +323,9 @@ function MiniStat({ icon, value, label, color, bg }: { icon: string; value: numb
 
 function EmptyState({ icon, text }: { icon: string; text: string }) {
     return (
-        <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/80 px-4 py-8 text-center">
-            <span className="material-symbols-outlined text-3xl text-slate-300">{icon}</span>
-            <p className="mt-2 text-xs font-bold leading-5 text-slate-500">{text}</p>
+        <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/80 px-4 py-5 text-center">
+            <span className="material-symbols-outlined text-2xl text-slate-300">{icon}</span>
+            <p className="mt-1.5 text-[11px] font-bold leading-5 text-slate-500">{text}</p>
         </div>
     );
 }
