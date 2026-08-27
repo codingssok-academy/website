@@ -115,7 +115,10 @@ export default function ParentShell({ children }: { children: React.ReactNode })
     }
 
     return (
-        <div className="min-h-dvh bg-slate-50 font-[Pretendard,'Noto_Sans_KR',sans-serif] flex flex-col">
+        <div
+            id="parent-portal-root"
+            className="min-h-dvh bg-slate-50 font-[Pretendard,'Noto_Sans_KR',sans-serif] flex flex-col"
+        >
             <header
                 className="sticky top-0 z-[100] flex items-end border-b border-slate-200/70 px-4 backdrop-blur-[20px] sm:px-5"
                 style={{

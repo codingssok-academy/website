@@ -27,6 +27,19 @@ describe("parent app navigation", () => {
     expect(nav).toContain("md:rounded-2xl");
   });
 
+  it("isolates the parent portal from the public site's desktop rem scale and reset", () => {
+    const layout = read("src/app/parent/layout.tsx");
+    const shell = read("src/app/parent/ParentShell.tsx");
+    const styles = read("src/app/parent/parent-portal.css");
+
+    expect(layout).toContain('import "./parent-portal.css"');
+    expect(shell).toContain('id="parent-portal-root"');
+    expect(styles).toContain("--spacing: 4px");
+    expect(styles).toContain("--text-base: 16px");
+    expect(styles).toContain("margin: revert-layer");
+    expect(styles).toContain("padding: revert-layer");
+  });
+
   it("redirects parent home and legacy growth routes to the integrated dashboard", () => {
     const home = read("src/app/parent/page.tsx");
     const growth = read("src/app/parent/growth/page.tsx");
