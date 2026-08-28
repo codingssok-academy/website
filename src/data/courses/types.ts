@@ -44,6 +44,20 @@ export interface LearningChoiceActivity {
     }>;
 }
 
+/** 디지털 창작 수업의 만들기·도전하기를 직접 적는 두 칸 활동 */
+export interface LearningActionWriting {
+    label: string;
+    help: string;
+    make: {
+        prompt: string;
+        placeholder: string;
+    };
+    challenge: {
+        prompt: string;
+        placeholder: string;
+    };
+}
+
 /** 학생 화면과 분리해 교사 계정에만 보여주는 페이지별 지도안 */
 export interface TeacherGuide {
     objective: string;
@@ -73,6 +87,7 @@ export interface Page {
     problems?: CodeProblem[]; // 코드 문제
     activity?: LearningActivity; // 짧은 학생 기록 활동
     choiceActivity?: LearningChoiceActivity; // 그림 카드 선택 활동
+    actionWriting?: LearningActionWriting; // 만들기·도전하기 직접 작성 활동
     teacherGuide?: TeacherGuide; // 교사 계정 전용 지도안
 }
 

@@ -31,6 +31,12 @@ describe("Digital Creator learning UI", () => {
         expect(coursePage).toContain("10개 학습 화면과 네 번의 활동 기록");
         expect(coursePage).toContain("PictureChoiceActivity");
         expect(coursePage).toContain("pictureChoiceSaveStatus");
+        expect(coursePage).toContain("DigitalCreatorActionWriting");
+        expect(coursePage).toContain("projectActionAnswers");
+        expect(coursePage).toContain("make: projectActionAnswers.make");
+        expect(coursePage).toContain("challenge: projectActionAnswers.challenge");
+        expect(pageDetail).toContain("DigitalCreatorActionWriting");
+        expect(pageDetail).toContain("actionWritingSaveStatus");
     });
 
     it("shows instructor guidance only in teacher view", () => {
