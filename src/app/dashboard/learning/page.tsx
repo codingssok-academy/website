@@ -11,6 +11,7 @@ import HomeworkBanner from "@/components/ui/HomeworkBanner";
 import { useUserProgress } from "@/hooks/useUserProgress";
 import BadgeIcon from "@/components/icons/BadgeIcon";
 import StudentHomeScreen from "./components/StudentHomeScreen";
+import LearningResumeCard from "./components/LearningResumeCard";
 
 const Scene3D = dynamic(() => import("@/components/dashboard3d/Scene"), { ssr: false });
 
@@ -654,6 +655,8 @@ export default function LearningDashboard() {
                     {toast}
                 </div>
             )}
+
+            <LearningResumeCard userId={user?.id} />
 
             {/* ?숈젣 ?뚮┝ 諛곕꼫 */}
             <HomeworkBanner userName={user?.name || user?.email?.split("@")[0]} />

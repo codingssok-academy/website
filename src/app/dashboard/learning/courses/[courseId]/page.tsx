@@ -62,6 +62,8 @@ export default function CourseDetailPage() {
     const courseId = params.courseId as string;
     const contestTrack = searchParams.get("track");
     const certId = searchParams.get("cert");
+    const resumeUnitId = searchParams.get("unit");
+    const resumePageId = searchParams.get("page");
     const { user } = useAuth();
     const isTeacherView = user?.role === "teacher" || (user?.role as string) === "admin" || user?.name === "장민";
     const supabase = useMemo(() => createClient(), []);
@@ -87,6 +89,16 @@ export default function CourseDetailPage() {
         if (!courseData) return [];
         return courseData.chapters.flatMap(ch => ch.units);
     }, [courseData]);
+    const initialResumeSelection = useMemo(() => {
+        if (!resumeUnitId || !resumePageId) return null;
+        const unit = allUnits.find((item) => item.id === resumeUnitId);
+        const page = unit?.pages?.find((item) => item.id === resumePageId);
+        if (!unit || !page) return null;
+        const chapterId = courseData?.chapters.find((chapter) =>
+            chapter.units.some((item) => item.id === unit.id),
+        )?.id;
+        return { unit, page, chapterId };
+    }, [allUnits, courseData, resumePageId, resumeUnitId]);
     const { progress: userProgress } = useUserProgress();
     const presenceCourseId = courseId === "6" && contestTrack ? `6-${contestTrack}` : courseId;
     const courseDisplayTitle = courseId === "6" && contestTrack === "c"
@@ -110,9 +122,11 @@ export default function CourseDetailPage() {
 
     // ── State ──
     const { completedUnits, toggleUnit, setUnitCompleted, saveStatus: completionSaveStatus } = useStudyProgress(user?.id, courseId);
-    const [expandedChapters, setExpandedChapters] = useState<Set<string>>(new Set());
-    const [selectedUnit, setSelectedUnit] = useState<Unit | null>(null);
-    const [activePage, setActivePage] = useState<Page | null>(null);
+    const [expandedChapters, setExpandedChapters] = useState<Set<string>>(() =>
+        initialResumeSelection?.chapterId ? new Set([initialResumeSelection.chapterId]) : new Set(),
+    );
+    const [selectedUnit, setSelectedUnit] = useState<Unit | null>(() => initialResumeSelection?.unit ?? null);
+    const [activePage, setActivePage] = useState<Page | null>(() => initialResumeSelection?.page ?? null);
     const isPythonCorePage = courseId === '3' && !!activePage?.id.startsWith('py-core-');
     const isDigitalCreatorPage = courseId === '11' && !!activePage?.id.startsWith('digital-creator-v2-');
     const isAiProjectLabPage = courseId === '10' && !!activePage?.id.startsWith('ai-project-v1-');
