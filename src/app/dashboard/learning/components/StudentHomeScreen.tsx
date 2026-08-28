@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { STUDENT_SHELF_COURSES } from "@/data/courses";
+import LearningResumeCard from "./LearningResumeCard";
 
 function QuickCard({
     icon,
@@ -45,6 +46,8 @@ export default function StudentHomeScreen() {
                 <h1>오늘 수업 자료와 결과물을 한 곳에서 관리합니다.</h1>
                 <p>코스 학습, 코드 실행, 파일 보관함을 바로 열 수 있습니다.</p>
             </section>
+
+            <LearningResumeCard userId={user?.id} />
 
             <section className="quick-grid" aria-label="빠른 메뉴">
                 <QuickCard icon="folder_open" label="내 파일함" sub="결과물 저장" href="/dashboard/learning/files" color="#4f46e5" />
