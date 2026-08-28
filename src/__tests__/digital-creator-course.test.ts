@@ -49,6 +49,8 @@ describe('Digital Creator course', () => {
         expect(pages.every((page) => page.content?.includes('만들기'))).toBe(true);
         expect(pages.every((page) => page.content?.includes('도전하기'))).toBe(true);
         expect(pages.every((page) => page.content?.includes('수업 기록'))).toBe(true);
+        expect(pages.every((page) => !page.content?.includes('kids-it-write-line'))).toBe(true);
+        expect(pages.every((page) => page.content?.includes('kids-it-action-cue'))).toBe(true);
     });
 
     it('packages every session with student records, teacher guidance and class-ready outcomes', () => {
@@ -92,7 +94,21 @@ describe('Digital Creator course', () => {
         ]);
         expect(firstPage?.choiceActivity?.soloGuide).toContain('혼자 공부한다면');
         expect(firstPage?.choiceActivity?.groupGuide).toContain('친구나 선생님');
+        expect(firstPage?.actionWriting).toBeUndefined();
         expect(firstPage?.content).toContain('아래 그림 카드');
         expect(firstPage?.content).not.toContain('그림 카드에서 골라 친구와 한 가지씩');
+    });
+
+    it('turns every remaining make and challenge line into an optional autosaved writing activity', () => {
+        const pages = getCourseById('11')?.chapters.flatMap((chapter) =>
+            chapter.units.flatMap((unit) => unit.pages ?? []),
+        ) ?? [];
+        const writingPages = pages.filter((page) => page.actionWriting);
+
+        expect(writingPages).toHaveLength(149);
+        expect(writingPages.every((page) => page.actionWriting?.make.prompt)).toBe(true);
+        expect(writingPages.every((page) => page.actionWriting?.challenge.prompt)).toBe(true);
+        expect(writingPages.every((page) => page.actionWriting?.help.includes('자동 저장'))).toBe(true);
+        expect(writingPages.every((page) => page.content?.includes('아래 실제 작성칸'))).toBe(true);
     });
 });

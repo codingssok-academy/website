@@ -21,10 +21,13 @@ import { useHighlighter } from "@/hooks/useHighlighter";
 import { sanitizeHTML } from "@/lib/sanitize";
 import { usePresenceHeartbeat } from "@/hooks/usePresenceHeartbeat";
 import { useActivityLog } from "@/hooks/useActivityLog";
+import { useLessonAnswerPersistence } from "@/hooks/useLessonPersistence";
+import type { LessonAnswerSnapshot } from "@/lib/python-core-learning";
 import PptViewer from "@/components/learning/PptViewer";
 import SlideViewer from "@/components/learning/SlideViewer";
 import BookSlideViewer from "@/components/learning/BookSlideViewer";
 import { createClient } from "@/lib/supabase";
+import { DigitalCreatorActionWriting, type DigitalCreatorActionAnswers } from "../../../../DigitalCreatorActionWriting";
 
 /* ──────────────────────────────────────────────
    Learning Content Page
@@ -90,6 +93,34 @@ export default function LearningContentPage() {
     const [editorCode, setEditorCode] = useState<Record<number, string>>({});
     const [runResult, setRunResult] = useState<Record<number, { stdout: string; stderr: string; exitCode: number } | null>>({});
     const [runLoading, setRunLoading] = useState<Record<number, boolean>>({});
+    const [projectActionAnswers, setProjectActionAnswers] = useState<DigitalCreatorActionAnswers>({ make: "", challenge: "" });
+    const [preservedActivityAnswer, setPreservedActivityAnswer] = useState("");
+
+    const restoreActionWritingAnswer = useCallback((saved: LessonAnswerSnapshot) => {
+        setPreservedActivityAnswer(saved.codeAnswers.activity ?? "");
+        setProjectActionAnswers({
+            make: saved.codeAnswers.make ?? "",
+            challenge: saved.codeAnswers.challenge ?? "",
+        });
+    }, []);
+    const actionWritingDraft = useMemo(() => ({
+        quizAnswer: null,
+        quizResult: null,
+        codeAnswers: {
+            activity: preservedActivityAnswer,
+            make: projectActionAnswers.make,
+            challenge: projectActionAnswers.challenge,
+        },
+    }), [preservedActivityAnswer, projectActionAnswers]);
+    const { status: actionWritingSaveStatus } = useLessonAnswerPersistence({
+        enabled: courseId === "11" && !!currentPage?.actionWriting,
+        userId: user?.id,
+        courseId,
+        unitId: unit?.id,
+        pageId: currentPage?.id,
+        answer: actionWritingDraft,
+        onRestore: restoreActionWritingAnswer,
+    });
 
     // Wrong answer notebook
     const { addWrongAnswer } = useWrongAnswers();
@@ -141,6 +172,8 @@ export default function LearningContentPage() {
         setShowProblemAnswer({});
         setEditorCode({});
         setRunResult({});
+        setProjectActionAnswers({ make: "", challenge: "" });
+        setPreservedActivityAnswer("");
         if (contentRef.current) contentRef.current.scrollTop = 0;
     }, [activePageId]);
 
@@ -698,6 +731,14 @@ export default function LearningContentPage() {
                                     cursor: hlActive ? "text" : "auto",
                                 }}
                             />
+                            {courseId === "11" && currentPage.actionWriting && (
+                                <DigitalCreatorActionWriting
+                                    activity={currentPage.actionWriting}
+                                    value={projectActionAnswers}
+                                    onChange={setProjectActionAnswers}
+                                    saveStatus={actionWritingSaveStatus}
+                                />
+                            )}
                             {courseId === '11' && (
                                 <style dangerouslySetInnerHTML={{ __html: `
                                     .kids-it-content .kids-it-slide {
@@ -876,7 +917,7 @@ export default function LearningContentPage() {
                                     .kids-it-content .kids-it-action-make .kids-it-section-title i { background:#77c692; }
                                     .kids-it-content .kids-it-action p { margin:0 38px 20px 0;color:#31516d;font-size:15px;line-height:1.65;font-weight:750; }
                                     .kids-it-content .kids-it-step-number { position:absolute;top:18px;right:18px;display:flex;width:28px;height:28px;align-items:center;justify-content:center;border-radius:9px;background:#fff;color:#5082ab;font-size:12px;font-weight:950;box-shadow:0 3px 8px rgba(15,23,42,.08); }
-                                    .kids-it-content .kids-it-write-line { height:36px;border:2px dashed rgba(85,124,156,.38);border-radius:12px;background:rgba(255,255,255,.67); }
+                                    .kids-it-content .kids-it-action-cue { padding:10px 12px;border:2px dashed rgba(85,124,156,.38);border-radius:12px;background:rgba(255,255,255,.67);color:#4b6b85;font-size:12px;line-height:1.45;font-weight:850;text-align:center; }
                                     .kids-it-content .kids-it-record-box { display:grid;grid-template-columns:auto 1fr auto;gap:15px;align-items:center;margin-top:15px;padding:16px 20px;border:1px solid #fde68a;border-radius:19px;background:linear-gradient(135deg,#fffdf3,#fff9df);box-shadow:none; }
                                     .kids-it-content .kids-it-record-box strong { margin:0;color:#895708;font-size:19px; }
                                     .kids-it-content .kids-it-record-box p { padding:10px 14px;border:1px solid #f9d56e;border-radius:11px;background:#fff;color:#65583b;font-size:13px;line-height:1.55; }

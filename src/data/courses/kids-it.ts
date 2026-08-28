@@ -214,6 +214,10 @@ function createPage(unit: DigitalCreatorBlueprint, slide: DigitalCreatorSlide, p
     const pageNumber = pageIndex + 1;
     const phase = getLessonPhase(pageNumber);
     const pageId = `digital-creator-v2-${String((unit.unitNumber - 1) * 10 + pageNumber).padStart(3, '0')}`;
+    const hasPictureChoice = unit.unitNumber === 1 && pageNumber === 1;
+    const actionCue = hasPictureChoice
+        ? '아래 그림 카드 활동에서 해보세요 ↓'
+        : '아래 실제 작성칸에 적어보세요 ↓';
     const lessonPlan = pageNumber === 1 ? `
         <div class="kids-it-plan">
             <strong>오늘의 120분</strong>
@@ -273,13 +277,13 @@ function createPage(unit: DigitalCreatorBlueprint, slide: DigitalCreatorSlide, p
                         <span class="kids-it-section-title"><i>🧩</i> 만들기</span>
                         <div class="kids-it-step-number">1</div>
                         <p>${escapeHtml(slide.practice[0])}</p>
-                        <div class="kids-it-write-line"></div>
+                        <div class="kids-it-action-cue">${actionCue}</div>
                     </article>
                     <article class="kids-it-action kids-it-action-challenge">
                         <span class="kids-it-section-title"><i>⚑</i> 도전하기</span>
                         <div class="kids-it-step-number">2</div>
                         <p>${escapeHtml(slide.practice[1])}</p>
-                        <div class="kids-it-write-line"></div>
+                        <div class="kids-it-action-cue">${actionCue}</div>
                     </article>
                 </div>
                 ${lessonPlan}
@@ -293,7 +297,7 @@ function createPage(unit: DigitalCreatorBlueprint, slide: DigitalCreatorSlide, p
             </section>
         `,
         activity: slide.activity,
-        choiceActivity: unit.unitNumber === 1 && pageNumber === 1 ? {
+        choiceActivity: hasPictureChoice ? {
             label: '그림 카드 고르기',
             prompt: '컴퓨터로 해 본 일을 하나 이상 골라보세요.',
             soloGuide: '혼자 공부한다면 고른 카드를 보며 “나는 컴퓨터로 ○○을 해 봤어요”라고 소리 내어 말해 보세요.',
@@ -304,6 +308,18 @@ function createPage(unit: DigitalCreatorBlueprint, slide: DigitalCreatorSlide, p
                 { id: 'video', emoji: '🎬', label: '영상 보기', description: '재미있는 영상이나 수업 보기' },
                 { id: 'search', emoji: '🔎', label: '공부·검색하기', description: '궁금한 것을 찾아보기' },
             ],
+        } : undefined,
+        actionWriting: !hasPictureChoice ? {
+            label: '만들기·도전 기록',
+            help: '한 단어나 짧은 문장으로 적어도 좋아요. 적은 내용은 자동 저장됩니다.',
+            make: {
+                prompt: slide.practice[0],
+                placeholder: '무엇을 만들거나 해 보았는지 적어 보세요.',
+            },
+            challenge: {
+                prompt: slide.practice[1],
+                placeholder: '어떻게 바꾸거나 다시 도전했는지 적어 보세요.',
+            },
         } : undefined,
         teacherGuide: createTeacherGuide(unit, slide, pageNumber),
     };

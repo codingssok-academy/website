@@ -34,6 +34,8 @@ import ProgrammingContestComingSoon from "./ProgrammingContestComingSoon";
 import WordProcessorView from "./WordProcessorView";
 import CertificateSelector from "./CertificateSelector";
 import { PictureChoiceActivity } from "./PictureChoiceActivity";
+import { DigitalCreatorActionWriting, type DigitalCreatorActionAnswers } from "./DigitalCreatorActionWriting";
+import { DigitalCreatorLessonProgress } from "./DigitalCreatorLessonProgress";
 import { getCertificateChapters } from "@/data/courses";
 
 /* ── Highlighter Colors ── */
@@ -222,6 +224,7 @@ export default function CourseDetailPage() {
     const [runLoading, setRunLoading] = useState<Record<number, boolean>>({});
     const [completionMessage, setCompletionMessage] = useState("");
     const [projectActivityAnswer, setProjectActivityAnswer] = useState("");
+    const [projectActionAnswers, setProjectActionAnswers] = useState<DigitalCreatorActionAnswers>({ make: "", challenge: "" });
     const [pictureChoiceAnswer, setPictureChoiceAnswer] = useState("");
 
     const isPythonCoreUnit = courseId === "3" && !!selectedUnit?.id.startsWith("py-core-");
@@ -272,6 +275,10 @@ export default function CourseDetailPage() {
         if (isProjectActivityPage) {
             const restoredAnswer = saved.codeAnswers.activity ?? "";
             setProjectActivityAnswer(restoredAnswer);
+            setProjectActionAnswers({
+                make: saved.codeAnswers.make ?? "",
+                challenge: saved.codeAnswers.challenge ?? "",
+            });
             if (activePage?.activity) {
                 setActivityCompleted(activePage.id, restoredAnswer.trim().length >= (activePage.activity.minLength ?? 1));
             }
@@ -286,14 +293,18 @@ export default function CourseDetailPage() {
     const lessonAnswerDraft = useMemo(() => isProjectActivityPage ? ({
         quizAnswer: null,
         quizResult: null,
-        codeAnswers: { activity: projectActivityAnswer },
+        codeAnswers: {
+            activity: projectActivityAnswer,
+            make: projectActionAnswers.make,
+            challenge: projectActionAnswers.challenge,
+        },
     }) : ({
         quizAnswer: selectedAnswer,
         quizResult: quizResult === "correct" ? "correct" as const : null,
         codeAnswers: Object.fromEntries(Object.entries(editorCode).map(([problemId, code]) => [String(problemId), code])),
-    }), [editorCode, isProjectActivityPage, projectActivityAnswer, quizResult, selectedAnswer]);
+    }), [editorCode, isProjectActivityPage, projectActionAnswers, projectActivityAnswer, quizResult, selectedAnswer]);
     const { status: answerSaveStatus } = useLessonAnswerPersistence({
-        enabled: isPythonCorePage || (isProjectActivityPage && !!activePage?.activity),
+        enabled: isPythonCorePage || (isProjectActivityPage && (!!activePage?.activity || !!activePage?.actionWriting)),
         userId: user?.id,
         courseId,
         unitId: selectedUnit?.id,
@@ -854,7 +865,7 @@ export default function CourseDetailPage() {
         resetQuiz();
     };
 
-    const resetQuiz = () => { setSelectedAnswer(null); setQuizResult(null); setWrongCount(0); setShowHint(false); setShaking(false); setShowProblemAnswer({}); setEditorCode({}); setRunResult({}); setProjectActivityAnswer(""); };
+    const resetQuiz = () => { setSelectedAnswer(null); setQuizResult(null); setWrongCount(0); setShowHint(false); setShaking(false); setShowProblemAnswer({}); setEditorCode({}); setRunResult({}); setProjectActivityAnswer(""); setProjectActionAnswers({ make: "", challenge: "" }); };
 
     const executeCode = async (probId: number, code: string) => {
         setEditorCode(prev => ({ ...prev, [probId]: code }));
@@ -1516,6 +1527,14 @@ export default function CourseDetailPage() {
                             position: "relative",
                             minHeight: 0,
                         }}>
+                            {isDigitalCreatorUnit && (
+                                <DigitalCreatorLessonProgress
+                                    screens={lessonCompletion.pages}
+                                    records={lessonCompletion.activities}
+                                    loading={!lessonProgressReady}
+                                    completed={completedUnits.has(selectedUnit.id)}
+                                />
+                            )}
                                                         {/* Page header — breadcrumb + progress + title (cpp/어린이IT는 hide — 담당자 '딱 수업자료만') */}
                             {!isIframePage && !usesFocusedLessonUx && (() => {
                                 const currentChapter = courseData.chapters.find((c: any) => c.units.some((u: any) => u.id === selectedUnit.id));
@@ -1722,6 +1741,15 @@ export default function CourseDetailPage() {
                                     value={pictureChoiceAnswer}
                                     onChange={setPictureChoiceAnswer}
                                     saveStatus={pictureChoiceSaveStatus}
+                                />
+                            )}
+
+                            {isDigitalCreatorPage && activePage.actionWriting && (
+                                <DigitalCreatorActionWriting
+                                    activity={activePage.actionWriting}
+                                    value={projectActionAnswers}
+                                    onChange={setProjectActionAnswers}
+                                    saveStatus={answerSaveStatus}
                                 />
                             )}
 
@@ -2639,7 +2667,7 @@ export default function CourseDetailPage() {
                                 .course-content-pad .kids-it-action-challenge .kids-it-section-title { color:#1968ad; }
                                 .course-content-pad .kids-it-action p { margin:0 38px 20px 0;color:#31516d;font-size:15px;line-height:1.65;font-weight:750; }
                                 .course-content-pad .kids-it-step-number { position:absolute;top:18px;right:18px;display:flex;width:28px;height:28px;align-items:center;justify-content:center;border-radius:9px;background:#fff;color:#5082ab;font-size:12px;font-weight:950;box-shadow:0 3px 8px rgba(15,23,42,.08); }
-                                .course-content-pad .kids-it-write-line { height:36px;border:2px dashed rgba(85,124,156,.38);border-radius:12px;background:rgba(255,255,255,.67); }
+                                .course-content-pad .kids-it-action-cue { padding:10px 12px;border:2px dashed rgba(85,124,156,.38);border-radius:12px;background:rgba(255,255,255,.67);color:#4b6b85;font-size:12px;line-height:1.45;font-weight:850;text-align:center; }
                                 .course-content-pad .kids-it-textbook .kids-it-plan { margin:15px 0;border-color:#d8e3f1;background:#f8fafc;color:#526781; }
                                 .course-content-pad .kids-it-record-box { display:grid;grid-template-columns:auto 1fr auto;gap:15px;align-items:center;margin-top:15px;padding:16px 20px;border:1px solid #fde68a;border-radius:19px;background:linear-gradient(135deg,#fffdf3,#fff9df);box-shadow:none; }
                                 .course-content-pad .kids-it-record-box strong { display:flex;align-items:center;gap:7px;margin:0;color:#895708;font-size:19px; }
