@@ -37,6 +37,9 @@ describe("Digital Creator learning UI", () => {
         expect(coursePage).toContain("challenge: projectActionAnswers.challenge");
         expect(pageDetail).toContain("DigitalCreatorActionWriting");
         expect(pageDetail).toContain("actionWritingSaveStatus");
+        expect(coursePage).toContain("DigitalCreatorLessonProgress");
+        expect(coursePage).toContain("screens={lessonCompletion.pages}");
+        expect(coursePage).toContain("records={lessonCompletion.activities}");
     });
 
     it("shows instructor guidance only in teacher view", () => {

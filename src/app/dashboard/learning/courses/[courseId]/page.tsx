@@ -35,6 +35,7 @@ import WordProcessorView from "./WordProcessorView";
 import CertificateSelector from "./CertificateSelector";
 import { PictureChoiceActivity } from "./PictureChoiceActivity";
 import { DigitalCreatorActionWriting, type DigitalCreatorActionAnswers } from "./DigitalCreatorActionWriting";
+import { DigitalCreatorLessonProgress } from "./DigitalCreatorLessonProgress";
 import { getCertificateChapters } from "@/data/courses";
 
 /* ── Highlighter Colors ── */
@@ -1526,6 +1527,14 @@ export default function CourseDetailPage() {
                             position: "relative",
                             minHeight: 0,
                         }}>
+                            {isDigitalCreatorUnit && (
+                                <DigitalCreatorLessonProgress
+                                    screens={lessonCompletion.pages}
+                                    records={lessonCompletion.activities}
+                                    loading={!lessonProgressReady}
+                                    completed={completedUnits.has(selectedUnit.id)}
+                                />
+                            )}
                                                         {/* Page header — breadcrumb + progress + title (cpp/어린이IT는 hide — 담당자 '딱 수업자료만') */}
                             {!isIframePage && !usesFocusedLessonUx && (() => {
                                 const currentChapter = courseData.chapters.find((c: any) => c.units.some((u: any) => u.id === selectedUnit.id));
