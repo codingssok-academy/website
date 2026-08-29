@@ -971,6 +971,7 @@ export default function LearningContentPage() {
                                     runResult={runResult} runLoading={runLoading}
                                     executeCode={executeCode}
                                     showProblemAnswer={showProblemAnswer} setShowProblemAnswer={setShowProblemAnswer}
+                                    startBlank={courseId === "3" && currentPage.id.startsWith("py-core-")}
                                 />
                             ))}
                         </div>

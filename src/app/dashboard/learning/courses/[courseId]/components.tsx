@@ -127,12 +127,15 @@ export function QuizPanel({ quiz, unit, selectedAnswer, setSelectedAnswer, quizR
 }
 
 /* ── Code Problem Component ── */
-export function CodeProblemCard({ prob, editorCode, setEditorCode, runResult, runLoading, executeCode, showProblemAnswer, setShowProblemAnswer }: {
+export function CodeProblemCard({ prob, editorCode, setEditorCode, runResult, runLoading, executeCode, showProblemAnswer, setShowProblemAnswer, startBlank = false }: {
     prob: CodeProblem; editorCode: Record<number, string>; setEditorCode: React.Dispatch<React.SetStateAction<Record<number, string>>>;
     runResult: Record<number, { stdout: string; stderr: string; exitCode: number } | null>; runLoading: Record<number, boolean>;
     executeCode: (id: number, code: string) => void;
     showProblemAnswer: Record<number, boolean>; setShowProblemAnswer: React.Dispatch<React.SetStateAction<Record<number, boolean>>>;
+    startBlank?: boolean;
 }) {
+    const initialCode = startBlank ? "" : (prob.codeTemplate ?? "");
+
     return (
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ type: "spring", stiffness: 200, damping: 25 }}
             style={{ borderRadius: 24, overflow: "hidden", background: "linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)", border: "1px solid rgba(226,232,240,0.6)", boxShadow: "0 20px 40px -10px rgba(0,0,0,0.05)", position: "relative" }}>
@@ -168,17 +171,17 @@ export function CodeProblemCard({ prob, editorCode, setEditorCode, runResult, ru
                         </div>
                         <div style={{ display: "flex", gap: 8 }}>
                             <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-                                onClick={() => setEditorCode(prev => ({ ...prev, [prob.id]: prob.codeTemplate || '' }))}
-                                style={{ padding: "5px 12px", borderRadius: 8, border: "1px solid #475569", background: "rgba(255,255,255,0.05)", color: "#94a3b8", fontSize: 10, fontWeight: 700, cursor: "pointer" }}>↺ 초기화</motion.button>
+                                onClick={() => setEditorCode(prev => ({ ...prev, [prob.id]: initialCode }))}
+                                style={{ padding: "5px 12px", borderRadius: 8, border: "1px solid #475569", background: "rgba(255,255,255,0.05)", color: "#94a3b8", fontSize: 10, fontWeight: 700, cursor: "pointer" }}>↺ {startBlank ? "전체 지우기" : "초기화"}</motion.button>
                             <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-                                onClick={() => executeCode(prob.id, editorCode[prob.id] ?? prob.codeTemplate ?? '')}
+                                onClick={() => executeCode(prob.id, editorCode[prob.id] ?? initialCode)}
                                 disabled={runLoading[prob.id]}
                                 style={{ padding: "5px 16px", borderRadius: 8, border: "none", background: runLoading[prob.id] ? "#475569" : "linear-gradient(135deg, #10b981, #059669)", color: "#fff", fontSize: 11, fontWeight: 800, cursor: runLoading[prob.id] ? "wait" : "pointer" }}>
                                 {runLoading[prob.id] ? "⏳ 실행 중..." : "▶ 실행하기"}
                             </motion.button>
                         </div>
                     </div>
-                    <textarea value={editorCode[prob.id] ?? prob.codeTemplate} onChange={(e) => setEditorCode(prev => ({ ...prev, [prob.id]: e.target.value }))} spellCheck={false}
+                    <textarea value={editorCode[prob.id] ?? initialCode} onChange={(e) => setEditorCode(prev => ({ ...prev, [prob.id]: e.target.value }))} spellCheck={false}
                         style={{ width: "100%", minHeight: 200, padding: "18px 20px", border: "none", background: "#0f172a", color: "#e2e8f0", fontSize: 13, fontFamily: "'Fira Code', monospace", lineHeight: 1.9, resize: "vertical", outline: "none", boxSizing: "border-box" }} />
                 </div>
             )}
