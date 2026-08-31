@@ -887,12 +887,11 @@ export default function CourseDetailPage() {
                     : stderr || !res.ok ? 1 : 0;
             setRunResult(prev => ({ ...prev, [probId]: { stdout, stderr, exitCode } }));
             if (isPythonCorePage && exitCode === 0) {
-                const template = activePage?.problems?.find((problem) => problem.id === probId)?.codeTemplate ?? "";
-                if (code.trim() !== template.trim()) {
+                if (code.trim().length > 0) {
                     markProblemSuccessful(probId);
                     setCompletionMessage("");
                 } else {
-                    setCompletionMessage("예제 코드를 한 곳 이상 직접 바꾼 뒤 다시 실행하면 코딩 활동이 인정됩니다.");
+                    setCompletionMessage("코드를 직접 작성한 뒤 실행하면 코딩 활동이 인정됩니다.");
                 }
             }
         } catch { setRunResult(prev => ({ ...prev, [probId]: { stdout: "", stderr: "네트워크 오류", exitCode: 1 } })); }
@@ -1797,7 +1796,7 @@ export default function CourseDetailPage() {
                             {activePage.problems && activePage.problems.length > 0 && (
                                 <div style={{ display: "flex", flexDirection: "column", gap: 24, marginTop: activePage.content ? 28 : 0 }}>
                                     {activePage.problems.map((prob: CodeProblem) => (
-                                        <CodeProblemCard key={prob.id} prob={prob} editorCode={editorCode} setEditorCode={setEditorCode} runResult={runResult} runLoading={runLoading} executeCode={executeCode} showProblemAnswer={showProblemAnswer} setShowProblemAnswer={setShowProblemAnswer} />
+                                        <CodeProblemCard key={prob.id} prob={prob} editorCode={editorCode} setEditorCode={setEditorCode} runResult={runResult} runLoading={runLoading} executeCode={executeCode} showProblemAnswer={showProblemAnswer} setShowProblemAnswer={setShowProblemAnswer} startBlank={isPythonCorePage} />
                                     ))}
                                 </div>
                             )}
