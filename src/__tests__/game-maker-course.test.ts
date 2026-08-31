@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { getCourseById } from '@/data/courses';
-import { GAME_MAKER_CURRICULUM_VERSION } from '@/data/courses/game-dev';
+import { GAME_MAKER_CURRICULUM_VERSION, GAME_MAKER_REFERENCE_LINKS } from '@/data/courses/game-dev';
 
 describe('Game Maker course', () => {
     it('provides four stages and twenty-four 120-minute game studio sessions', () => {
@@ -25,7 +25,7 @@ describe('Game Maker course', () => {
         const units = getCourseById('5')?.chapters.flatMap((chapter) => chapter.units) ?? [];
         const pages = units.flatMap((unit) => unit.pages ?? []);
 
-        expect(GAME_MAKER_CURRICULUM_VERSION).toBe('2026.1-game-maker');
+        expect(GAME_MAKER_CURRICULUM_VERSION).toBe('2026.2-game-maker-ai');
         expect(units.every((unit) => unit.id.startsWith('game-maker-v1-u'))).toBe(true);
         expect(units.every((unit) => unit.pages?.length === 10)).toBe(true);
         expect(pages).toHaveLength(240);
@@ -35,6 +35,20 @@ describe('Game Maker course', () => {
         expect(pages.every((page) => page.content?.includes('STUDIO RULE'))).toBe(true);
         expect(pages.every((page) => page.teacherGuide)).toBe(true);
         expect(units.every((unit) => unit.pages?.filter((page) => page.activity).length === 4)).toBe(true);
+    });
+
+    it('gives every beginner class exact click steps, expected results and a bounded AI Assistant lab', () => {
+        const units = getCourseById('5')?.chapters.flatMap((chapter) => chapter.units) ?? [];
+
+        expect(units.every((unit) => unit.pages?.filter((page) => page.content?.includes('game-studio-beginner-guide')).length === 3)).toBe(true);
+        expect(units.every((unit) => unit.pages?.filter((page) => page.content?.includes('game-studio-ai-card')).length === 1)).toBe(true);
+        expect(units.every((unit) => unit.pages?.some((page) => page.content?.includes('이렇게 보이면 성공')))).toBe(true);
+        expect(units.every((unit) => unit.pages?.some((page) => page.content?.includes('막혔을 때')))).toBe(true);
+        expect(units.every((unit) => unit.pages?.some((page) => page.content?.includes('AI에게 부탁해도 되는 일')))).toBe(true);
+        expect(units.every((unit) => unit.pages?.some((page) => page.content?.includes('학생이 직접 해야 하는 일')))).toBe(true);
+        expect(units.every((unit) => unit.pages?.some((page) => page.content?.includes('Accept 전 현재 파일을 저장')))).toBe(true);
+        expect(GAME_MAKER_REFERENCE_LINKS).toHaveLength(5);
+        expect(GAME_MAKER_REFERENCE_LINKS.every((reference) => reference.url.startsWith('https://create.roblox.com/docs/'))).toBe(true);
     });
 
     it('packages every class with materials, a build outcome, completion checks and a parent report', () => {

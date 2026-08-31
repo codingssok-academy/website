@@ -19,6 +19,8 @@ describe('Game Maker learning UI', () => {
         expect(coursePage).toContain('game-studio-reader');
         expect(coursePage).toContain('game-studio-material');
         expect(coursePage).toContain('game-studio-page-nav');
+        expect(coursePage).toContain('game-studio-beginner-guide');
+        expect(coursePage).toContain('game-studio-ai-card');
         expect(coursePage).toContain('다음 빌드');
         expect(coursePage).toContain("url('/images/courses/game-studio-world-v1.png')");
     });

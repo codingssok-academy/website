@@ -22,9 +22,29 @@ interface StudioPage {
     task: string;
     checkpoint: string;
     activity?: LearningActivity;
+    guideSteps?: string[];
+    expectedResult?: string;
+    commonMistake?: string;
+    assistant?: boolean;
 }
 
-export const GAME_MAKER_CURRICULUM_VERSION = '2026.1-game-maker';
+interface BeginnerDetail {
+    startFile: string;
+    target: string;
+    clickSteps: [string, string, string, string];
+    expectedResult: string;
+    commonMistake: string;
+}
+
+export const GAME_MAKER_CURRICULUM_VERSION = '2026.2-game-maker-ai';
+
+export const GAME_MAKER_REFERENCE_LINKS = [
+    { label: 'Roblox Creator Hub · Explore Studio UI', url: 'https://create.roblox.com/docs/tutorials/curriculums/studio/explore-ui' },
+    { label: 'Roblox Creator Hub · Intro to coding and game design', url: 'https://create.roblox.com/docs/education/lesson-plans/intro-to-game-and-coding' },
+    { label: 'Roblox Creator Hub · Core curriculum', url: 'https://create.roblox.com/docs/tutorials/curriculums/core' },
+    { label: 'Roblox Creator Hub · AI Assistant', url: 'https://create.roblox.com/docs/tutorials/curriculums/building/code-with-assistant' },
+    { label: 'Roblox Creator Hub · Assistant prompt guide', url: 'https://create.roblox.com/docs/assistant/prompt-engineering' },
+] as const;
 
 function escapeHtml(value: string): string {
     return value
@@ -40,6 +60,37 @@ function getStageLabel(unitNumber: number): string {
     if (unitNumber <= 12) return '2단계 · Luau 게임 코더';
     if (unitNumber <= 18) return '3단계 · 게임 시스템 빌더';
     return '4단계 · 게임 디렉터';
+}
+
+const BEGINNER_DETAILS: Record<number, BeginnerDetail> = {
+    1: { startFile: '새 Baseplate', target: 'Workspace와 StartBlock', clickSteps: ['Roblox Studio에 로그인하고 New Experience에서 Baseplate를 누릅니다.', '상단 Window 메뉴 또는 Home 도구막대에서 Explorer·Properties·Output을 켭니다.', 'Explorer의 Workspace 옆 ＋를 눌러 Part를 넣고 이름을 StartBlock으로 바꿉니다.', 'File 메뉴에서 Save to File을 눌러 01_FirstWorld.rbxl로 저장합니다.'], expectedResult: 'Explorer의 Workspace 아래에 StartBlock이 보이고, 컴퓨터에 01_FirstWorld.rbxl 파일이 저장됩니다.', commonMistake: '화면에서 블록을 잃어버리면 Explorer에서 StartBlock을 한 번 누른 뒤 F 키를 누릅니다.' },
+    2: { startFile: '01_FirstWorld.rbxl', target: 'AxisX·AxisY·AxisZ', clickSteps: ['01_FirstWorld.rbxl을 열고 Explorer에서 StartBlock을 선택한 뒤 F 키를 누릅니다.', '마우스 오른쪽 버튼을 누른 채 움직이고, 휠과 W·A·S·D로 카메라를 연습합니다.', 'Home 또는 Model의 Part를 세 번 눌러 블록을 만들고 AxisX·AxisY·AxisZ로 이름을 바꿉니다.', 'Properties의 Position을 펼쳐 X·Y·Z 숫자를 한 축씩 바꾸고 위·앞·옆에서 확인합니다.'], expectedResult: '서로 다른 방향에 놓인 블록 세 개를 어느 시점에서도 다시 찾을 수 있습니다.', commonMistake: '블록이 움직이지 않고 카메라만 움직이면 먼저 블록을 클릭해 파란 선택 테두리가 보이는지 확인합니다.' },
+    3: { startFile: '02_AxisTraining.rbxl', target: 'Step1~Step5', clickSteps: ['Part 하나를 만들고 Ctrl+D로 네 번 복제해 Step1부터 Step5까지 이름을 붙입니다.', 'Model 도구막대에서 Move를 누르고 각 블록을 옆으로 일정하게 옮깁니다.', 'Scale로 높이와 길이를 바꾸고 Rotate로 마지막 블록의 방향을 돌립니다.', '위·옆 시점에서 겹침을 확인한 뒤 모든 발판의 Anchored를 켭니다.'], expectedResult: '다섯 발판이 겹치지 않고 계단처럼 이어지며 Play 중에도 떨어지지 않습니다.', commonMistake: 'Scale 대신 Move 화살표를 잡았다면 Esc를 누르고 Model에서 Scale을 다시 선택합니다.' },
+    4: { startFile: '03_BlockLab.rbxl', target: 'SafeBlock·FallingBlock·SecretDoor', clickSteps: ['Part 세 개를 만들고 SafeBlock·FallingBlock·SecretDoor로 이름을 바꿉니다.', 'Properties 검색창에 Material을 입력해 서로 다른 재질을 고릅니다.', 'Anchored와 CanCollide를 검색해 세 블록의 값을 수업표대로 다르게 설정합니다.', 'Play로 밟기·떨어지기·통과하기를 시험하고 Stop으로 돌아옵니다.'], expectedResult: '안전 블록은 고정되고, 떨어지는 블록은 중력으로 내려가며, 비밀문은 통과됩니다.', commonMistake: 'Play 중에는 편집하지 말고 먼저 Stop을 누른 뒤 Properties 값을 고칩니다.' },
+    5: { startFile: '04_PhysicsRoom.rbxl', target: 'StartIsland·MiddleIsland·GoalIsland', clickSteps: ['Part를 크게 늘려 StartIsland를 만들고 두 번 복제합니다.', '복제한 블록을 MiddleIsland와 GoalIsland로 바꾸고 높이와 거리를 조절합니다.', 'Properties에서 GoalIsland의 Color·Material을 눈에 띄게 바꿉니다.', '세 블록을 선택해 Ctrl+G로 묶고 SkyIslands라는 Model 이름을 붙입니다.'], expectedResult: '시작·중간·목표 섬이 한눈에 구분되고 목표 방향을 설명 없이 찾을 수 있습니다.', commonMistake: '여러 블록이 함께 선택되지 않으면 Ctrl 키를 누른 채 Explorer에서 하나씩 선택합니다.' },
+    6: { startFile: '05_SkyIslands.rbxl', target: 'FinishFlag와 FinishScript', clickSteps: ['시작부터 도착까지 다섯 구간을 연결하고 각 발판의 Anchored를 확인합니다.', '도착 지점에 Part를 놓고 FinishFlag로 이름을 바꿉니다.', 'Explorer에서 FinishFlag 옆 ＋를 눌러 Script를 넣고 예제 코드를 입력합니다.', 'Script 도구막대에서 Output을 열고 Play로 세 번 완주 테스트합니다.'], expectedResult: '캐릭터가 FinishFlag에 닿을 때마다 Output에 플레이어 이름과 완주 메시지가 한 번 표시됩니다.', commonMistake: 'Touched가 작동하지 않으면 Script가 FinishFlag 안에 있는지와 이름 철자를 먼저 확인합니다.' },
+    7: { startFile: '새 Baseplate 또는 06_Obby.rbxl 복사본', target: 'SignalBlock의 Script', clickSteps: ['Window 또는 Script 도구막대에서 Output을 열고 화면 아래에 고정합니다.', 'Workspace에 SignalBlock을 만들고 옆 ＋로 Script를 추가합니다.', '기본 코드를 지운 뒤 print 세 줄을 직접 입력하고 철자를 확인합니다.', 'Play를 누른 뒤 Output의 1·2·3 메시지 순서를 읽고 Stop을 누릅니다.'], expectedResult: 'Output에 세 메시지가 위에서 아래 순서대로 한 번씩 표시됩니다.', commonMistake: 'Output이 비어 있으면 Script 왼쪽 아이콘이 회색인지, Disabled가 켜졌는지 확인합니다.' },
+    8: { startFile: '07_SignalBlock.rbxl', target: 'GameSettings Script', clickSteps: ['ServerScriptService 옆 ＋를 눌러 Script를 만들고 GameSettings로 바꿉니다.', 'speed와 reward 변수를 한 줄씩 입력하고 Output으로 출력합니다.', '숫자를 하나만 바꾼 뒤 실행 전 결과를 기록지에 예상합니다.', 'Play 후 Output의 실제 값을 예상과 비교하고 파일을 새 이름으로 저장합니다.'], expectedResult: '변수 숫자를 바꿀 때 Output 결과도 같은 값으로 바뀝니다.', commonMistake: '숫자에 따옴표를 붙이면 글자가 되므로 계산할 숫자는 따옴표 없이 씁니다.' },
+    9: { startFile: '08_GameSettings.rbxl', target: 'ScoreGate Script', clickSteps: ['Workspace에 Gate Part를 만들고 ScoreGate로 이름을 바꿉니다.', 'ScoreGate 안에 Script를 넣고 score와 need 변수를 만듭니다.', 'if·then·else·end를 줄 맞춰 입력하고 >= 비교 기호를 확인합니다.', 'score를 5와 12로 각각 바꾸어 통과·실패 메시지를 모두 테스트합니다.'], expectedResult: 'score가 need 이상일 때만 “문이 열렸어요”가 출력됩니다.', commonMistake: '빨간 밑줄이 보이면 then 또는 end가 빠졌는지, 대문자 철자가 같은지 확인합니다.' },
+    10: { startFile: '09_ScoreGate.rbxl', target: 'ObstacleFactory Script', clickSteps: ['ServerScriptService에 Script를 만들고 ObstacleFactory로 이름을 바꿉니다.', 'for index = 1, 6 do와 end를 먼저 입력합니다.', '반복 안에서 Part를 만들고 Size·Position·Anchored·Parent를 차례로 정합니다.', '먼저 3개만 생성해 Play로 확인한 뒤 6개로 늘립니다.'], expectedResult: 'Play할 때 같은 간격의 고정 발판 여섯 개가 한 번만 생성됩니다.', commonMistake: '발판이 계속 생기면 Script가 반복해서 복제된 것은 아닌지 Explorer와 Output을 확인합니다.' },
+    11: { startFile: '10_ObstacleFactory.rbxl', target: 'Goal과 Paint Script', clickSteps: ['Workspace에 Goal Part를 만들고 눈에 띄는 위치에 둡니다.', 'Goal 안에 Script를 넣고 paint 함수의 이름·매개변수·end부터 작성합니다.', '함수 아래에서 paint를 한 번 호출하고 Color3 값을 전달합니다.', '다른 색을 두 번 더 전달해 마지막 색이 무엇일지 예상하고 실행합니다.'], expectedResult: '함수를 호출할 때 전달한 마지막 색으로 Goal이 바뀝니다.', commonMistake: '함수를 만들기만 하고 호출하지 않으면 아무 변화가 없으므로 paint(...) 줄을 확인합니다.' },
+    12: { startFile: '11_FunctionLab.rbxl', target: 'Coin과 Collect Script', clickSteps: ['작은 원기둥 Part를 만들고 Coin으로 이름을 바꾼 뒤 Anchored를 켭니다.', 'Coin 안에 Script를 넣고 Touched 이벤트를 연결합니다.', 'GetPlayerFromCharacter로 플레이어인지 확인한 뒤 Coin을 숨깁니다.', 'Play에서 한 번 수집하고 다시 닿아도 중복 실행되지 않는지 확인합니다.'], expectedResult: '플레이어가 Coin에 닿으면 Coin이 사라지고 같은 Coin은 한 번만 처리됩니다.', commonMistake: '코인이 닿기 전에 사라지면 Transparency 기본값과 Script 실행 시점을 확인합니다.' },
+    13: { startFile: '12_CoinCollector.rbxl', target: 'ServerScriptService의 PlayerStats', clickSteps: ['ServerScriptService에 Script를 만들고 PlayerStats로 이름을 바꿉니다.', 'PlayerAdded 이벤트 안에 leaderstats Folder를 만들고 이름을 정확히 입력합니다.', 'leaderstats 안에 Coins IntValue를 만들고 시작값을 0으로 둡니다.', 'Play 후 플레이어 목록에 Coins가 표시되는지 확인합니다.'], expectedResult: '플레이어가 입장하면 이름 옆에 Coins 0이 표시됩니다.', commonMistake: '점수판이 안 보이면 leaderstats의 대소문자와 Parent가 player인지 확인합니다.' },
+    14: { startFile: '13_Leaderboard.rbxl', target: 'DangerPart의 Damage Script', clickSteps: ['빨간 Part를 만들고 DangerPart로 이름을 바꾸며 위험 표지를 옆에 둡니다.', 'DangerPart 안에 Script를 넣고 Touched로 닿은 캐릭터를 받습니다.', 'FindFirstChildOfClass로 Humanoid를 찾고 TakeDamage(20)를 실행합니다.', 'Play에서 한 번만 닿아 체력 감소량과 재실행 속도를 확인합니다.'], expectedResult: '위험 블록에 닿으면 체력이 20 줄고, 떨어져 있으면 더 줄지 않습니다.', commonMistake: '체력이 순식간에 0이 되면 Touched가 여러 번 실행되므로 debounce 시간을 추가합니다.' },
+    15: { startFile: '14_DangerZone.rbxl', target: 'Checkpoint1~Checkpoint3', clickSteps: ['Home의 Part 삽입 목록에서 SpawnLocation을 세 개 넣습니다.', '각각 Checkpoint1·Checkpoint2·Checkpoint3으로 이름을 바꾸고 순서대로 배치합니다.', '각 SpawnLocation 안에 Script를 넣어 RespawnLocation을 현재 체크포인트로 바꿉니다.', '각 지점에 닿은 뒤 일부러 떨어져 최근 위치에서 부활하는지 확인합니다.'], expectedResult: '마지막으로 닿은 체크포인트에서 캐릭터가 다시 시작합니다.', commonMistake: '항상 처음에서 부활하면 오브젝트가 SpawnLocation인지와 RespawnLocation 대입을 확인합니다.' },
+    16: { startFile: '15_Checkpoints.rbxl', target: 'RoundManager Script', clickSteps: ['ServerScriptService에 RoundManager Script를 만듭니다.', '준비 상태와 플레이 상태를 주석으로 먼저 나눕니다.', '10부터 0까지 줄어드는 for 반복문과 task.wait(1)을 입력합니다.', '테스트에서는 시간을 3초로 줄여 흐름을 확인한 뒤 10초로 되돌립니다.'], expectedResult: 'Output에 준비 숫자가 1초 간격으로 줄고 ROUND START가 한 번 표시됩니다.', commonMistake: '숫자가 한꺼번에 나오면 task.wait(1)이 반복문 안쪽에 있는지 확인합니다.' },
+    17: { startFile: '16_RoundGame.rbxl', target: 'StarterGui의 GameHUD', clickSteps: ['StarterGui 옆 ＋에서 ScreenGui를 만들고 GameHUD로 이름을 바꿉니다.', 'GameHUD 안에 TextLabel을 넣고 ObjectiveLabel로 이름을 바꿉니다.', 'Properties에서 Text·Size·Position·TextScaled·BackgroundColor를 조정합니다.', 'Play 화면 크기를 바꾸어 글자가 잘리거나 화면 밖으로 나가지 않는지 확인합니다.'], expectedResult: '화면 위쪽에 목표 문장이 크게 보이고 창 크기를 바꿔도 읽을 수 있습니다.', commonMistake: 'UI가 안 보이면 ScreenGui의 Enabled와 TextLabel의 Visible·Size를 확인합니다.' },
+    18: { startFile: '17_GameHUD.rbxl', target: 'ShopGui와 BuyButton', clickSteps: ['StarterGui에 ShopGui를 만들고 Frame·TextLabel·TextButton을 차례로 넣습니다.', '버튼 이름을 BuyButton으로 바꾸고 가격과 효과를 화면에 씁니다.', '서버 Script에서 Coins가 가격 이상인지 다시 확인한 뒤 한 번만 차감합니다.', 'Coins가 부족할 때와 충분할 때를 각각 테스트합니다.'], expectedResult: '가격이 보이고 조건을 만족할 때만 게임 점수가 차감되며 효과가 적용됩니다.', commonMistake: 'LocalScript 화면만 믿지 말고 실제 점수 차감은 서버에서 다시 검증해야 합니다.' },
+    19: { startFile: '18_SystemGame.rbxl의 복사본', target: 'GamePlan과 필수 기능 3개', clickSteps: ['기존 파일을 다른 이름으로 저장해 원본을 보존합니다.', '기록지에 플레이어·목표·반복 행동·반응·보상·실패 조건을 한 문장씩 씁니다.', '반드시 필요한 기능 세 개와 나중에 할 기능을 나눕니다.', 'Workspace에 Start·Challenge·Goal 표시 블록만 먼저 배치합니다.'], expectedResult: '한 문장 게임 루프와 필수 기능 세 개, 시작·도전·목표 위치가 정해집니다.', commonMistake: '아이디어가 커지면 맵·상점·NPC를 모두 넣지 말고 120분 안에 검증할 핵심 세 개만 남깁니다.' },
+    20: { startFile: '19_MyGamePlan.rbxl', target: 'Greybox Model', clickSteps: ['File에서 Save to File로 20_Greybox_v1.rbxl 복사본을 만듭니다.', '회색 Part만 사용해 시작·도전·휴식·목표 공간을 만듭니다.', '색·장식·무료 모델은 넣지 않고 이동 거리와 시야만 조절합니다.', '타이머로 3분 플레이 후 막힌 위치를 기록하고 블록을 옮깁니다.'], expectedResult: '장식 없이도 처음부터 목표까지 길을 찾고 3분 안에 플레이할 수 있습니다.', commonMistake: '꾸미기에 시간이 쓰이면 Material을 SmoothPlastic과 회색으로 고정하고 이동 동선부터 끝냅니다.' },
+    21: { startFile: '20_Greybox_v1.rbxl', target: 'CoreLoop Model과 관련 Scripts', clickSteps: ['Explorer에 CoreLoop Folder를 만들고 핵심 오브젝트와 Script를 모읍니다.', '행동 하나를 고르고 즉시 보이는 반응과 점수 보상을 연결합니다.', '보상을 받은 뒤 다음 목표가 화면이나 공간에 나타나게 합니다.', '같은 행동을 세 번 반복해 점수와 오브젝트 상태가 꼬이지 않는지 확인합니다.'], expectedResult: '행동→반응→보상→다음 목표가 세 번 연속 끊기지 않고 작동합니다.', commonMistake: '기능을 한꺼번에 연결하지 말고 행동·반응·보상 순서로 하나씩 Play 테스트합니다.' },
+    22: { startFile: '21_CoreLoop.rbxl', target: 'ThemeGuide와 EasyPath·HardPath', clickSteps: ['기록지에 주색·보조색·재질·빛·소리 규칙을 정합니다.', '쉬운 길과 도전 길을 블록 크기와 거리로 구분합니다.', 'Lighting과 Part Material을 같은 테마 규칙으로 조정합니다.', '두 길을 모두 플레이해 어려운 길의 추가 보상이 알맞은지 비교합니다.'], expectedResult: '테마가 통일되고 플레이어가 쉬운 길과 도전 길을 선택할 수 있습니다.', commonMistake: '색이 많아 목표가 묻히면 주색 두 개와 강조색 한 개만 남깁니다.' },
+    23: { startFile: '22_BetaGame.rbxl', target: 'TestChecklist와 Output', clickSteps: ['TestChecklist에 시작·목표·실패·보상·UI 항목을 적습니다.', '친구 세 명에게 설명 없이 같은 시작 지점에서 플레이하도록 합니다.', '걸린 시간·멈춘 위치·오류 메시지를 기록하고 영향이 큰 두 문제를 고칩니다.', '수정 후 같은 방법으로 다시 테스트해 전후 결과를 비교합니다.'], expectedResult: '세 명의 관찰 기록과 수정 전후가 남고 영향이 큰 문제 두 개가 해결됩니다.', commonMistake: '친구에게 조작법을 계속 알려 주면 문제가 숨으므로 질문은 기록하고 테스트 후 설명합니다.' },
+    24: { startFile: '23_FinalCandidate.rbxl', target: '최종 게임과 포트폴리오', clickSteps: ['File에서 최종 파일과 날짜가 붙은 백업 파일을 각각 저장합니다.', '새 Play 세션에서 시작·성공·실패·재시작을 처음부터 끝까지 확인합니다.', '게임 목표·조작법·핵심 코드·발견한 버그·수정 전후 화면을 포트폴리오에 정리합니다.', '공개 게시 전에 선생님과 개인정보·외부 에셋·도움받은 코드를 확인합니다.'], expectedResult: '작동하는 최종 파일, 복구 가능한 백업, 제작 과정을 설명하는 포트폴리오가 준비됩니다.', commonMistake: '마지막 날 새 기능을 추가하지 말고 알려진 문제와 발표 순서를 먼저 점검합니다.' },
+};
+
+function getBeginnerDetail(unit: GameBlueprint): BeginnerDetail {
+    return BEGINNER_DETAILS[unit.unitNumber];
 }
 
 function getMaterials(unit: GameBlueprint): string[] {
@@ -81,53 +132,86 @@ function createActivity(unit: GameBlueprint, kind: 'predict' | 'build' | 'debug'
     };
 }
 
+function getAssistantLevel(unitNumber: number): string {
+    if (unitNumber <= 3) return 'AI 1단계 · 질문하고 위치 찾기';
+    if (unitNumber <= 6) return 'AI 2단계 · 선택한 오브젝트 설명받기';
+    if (unitNumber <= 12) return 'AI 3단계 · 코드 설명·오류 힌트 받기';
+    if (unitNumber <= 18) return 'AI 4단계 · 반복 작업·기본 코드 함께 만들기';
+    return 'AI 5단계 · 제작 보조·검토·플레이테스트 아이디어';
+}
+
+function getAssistantAllowed(unit: GameBlueprint): string {
+    if (unit.unitNumber <= 3) return 'Studio 창과 선택한 오브젝트의 역할을 질문하고, 다음 클릭 위치를 한 단계씩 설명받습니다.';
+    if (unit.unitNumber <= 6) return '정확히 선택한 Part의 속성 의미를 묻고, 작은 변화 한 가지를 제안받습니다.';
+    if (unit.unitNumber <= 12) return '내가 먼저 입력한 짧은 Luau 코드의 줄별 설명, 오류 원인 후보, 수정 힌트를 받습니다.';
+    if (unit.unitNumber <= 18) return 'Folder·Part·GUI 같은 반복 생성과 이벤트 기본 틀을 요청하고 서버·클라이언트 위치를 확인합니다.';
+    return '작업 목록 정리, 반복 편집, 코드 검토, 테스트 시나리오와 개선 후보를 제안받습니다.';
+}
+
+function getAssistantStudentWork(unit: GameBlueprint): string {
+    if (unit.unitNumber <= 6) return '오브젝트 배치, 색·거리·난이도 결정, Play 테스트는 학생이 직접 합니다.';
+    if (unit.unitNumber <= 12) return '코드의 대상·조건·결과를 먼저 예상하고, 바뀐 줄을 표시하고, Output을 읽는 일은 학생 몫입니다.';
+    if (unit.unitNumber <= 18) return '게임 규칙·보상·공정성·서버 검증을 결정하고 정상·실패 테스트를 모두 학생이 수행합니다.';
+    return '게임 아이디어, 재미의 이유, 최종 선택, 친구 관찰, 공개 여부와 포트폴리오는 학생이 책임집니다.';
+}
+
+function createAssistantPrompt(unit: GameBlueprint): string {
+    const detail = getBeginnerDetail(unit);
+    return `지금 ${detail.startFile}에서 ${detail.target}을(를) 선택했습니다. 목표는 “${unit.deliverable}”입니다. ${unit.build} 먼저 바꿀 대상과 이유를 3단계로 설명해 주세요. Script가 필요하면 넣을 정확한 위치를 말하고, 짧은 Luau 코드 뒤에 각 줄의 뜻도 설명해 주세요. 아직 실행하거나 Accept하지 말고 제가 확인할 체크리스트를 먼저 주세요.`;
+}
+
 function createStudioPages(unit: GameBlueprint): StudioPage[] {
+    const detail = getBeginnerDetail(unit);
     return [
         {
             title: `오늘의 게임 미션 · ${unit.title}`, phase: '미션', time: '10분', idea: unit.mission,
-            task: `완성 목표는 ‘${unit.deliverable}’입니다. 플레이어가 무엇을 하고 언제 성공하는지 한 문장으로 정하세요.`,
-            checkpoint: '플레이어·목표·성공 조건을 자신의 말로 설명한다.',
+            task: `시작 파일은 ‘${detail.startFile}’입니다. 먼저 파일을 찾고, 완성 목표 ‘${unit.deliverable}’에서 플레이어가 무엇을 하고 언제 성공하는지 말하세요.`,
+            checkpoint: '시작 파일·플레이어 행동·성공 조건을 자신의 말로 설명한다.', expectedResult: detail.expectedResult,
         },
         {
-            title: `게임 장면 탐색 · ${unit.focus}`, phase: '탐색', time: '10분', idea: unit.concept,
-            task: '완성 예시를 플레이하며 오브젝트, 플레이어 행동, 게임의 반응을 각각 찾아 표시하세요.',
-            checkpoint: '화면에 보이는 것과 코드가 하는 일을 구분한다.',
+            title: `화면 길잡이 · 어디를 눌러야 할까요?`, phase: '탐색', time: '10분', idea: unit.concept,
+            task: `오늘 다룰 대상은 ‘${detail.target}’입니다. 선생님의 화면과 내 화면에서 같은 이름을 찾아 선택 테두리가 보이는지 확인하세요.`,
+            checkpoint: 'Explorer에서 정확한 대상을 선택하고 Properties 또는 Script 위치를 찾는다.',
             activity: createActivity(unit, 'predict'),
+            guideSteps: detail.clickSteps.slice(0, 2), expectedResult: detail.expectedResult, commonMistake: detail.commonMistake,
         },
         {
-            title: `핵심 원리 · ${unit.focus}`, phase: '코딩', time: '10분', idea: unit.concept,
-            task: '코드를 실행하기 전에 바뀌는 대상, 조건, 결과에 밑줄을 긋고 실행 순서를 말해 보세요.',
-            checkpoint: `${unit.focus}의 입력과 결과를 연결해 설명한다.`,
+            title: '따라 만들기 ① · 선생님과 같은 화면 만들기', phase: '제작', time: '15분', idea: '한 단계가 끝날 때마다 선생님 화면과 이름·위치·값을 비교하면 길을 잃지 않습니다.',
+            task: `1~2단계를 천천히 실행하세요. 각 단계가 끝나면 ‘완료’라고 말하고 ${detail.target}이(가) Explorer에 보이는지 확인하세요.`,
+            checkpoint: '첫 두 단계를 순서대로 실행하고 오브젝트 이름과 위치를 확인한다.',
+            guideSteps: detail.clickSteps.slice(0, 2), expectedResult: detail.expectedResult, commonMistake: detail.commonMistake,
         },
         {
-            title: '선생님 시범 · 한 단계씩 만들기', phase: '제작', time: '15분',
+            title: '따라 만들기 ② · 직접 완성하고 바로 실행하기', phase: '제작', time: '15분',
             idea: '작은 기능 하나를 만든 뒤 바로 실행하면 어느 단계에서 문제가 생겼는지 찾기 쉽습니다.',
-            task: `${unit.build} 선생님의 첫 단계를 따라 만든 뒤 Play 버튼으로 바로 확인하세요.`,
-            checkpoint: '자신의 프로젝트에 핵심 기능을 직접 연결한다.',
+            task: `3~4단계를 실행한 뒤 ${unit.build} Play 버튼으로 예상 결과와 같은지 확인하세요.`,
+            checkpoint: '나머지 두 단계를 실행하고 예상 결과를 Play 또는 Output에서 확인한다.',
+            guideSteps: detail.clickSteps.slice(2, 4), expectedResult: detail.expectedResult, commonMistake: detail.commonMistake,
         },
         {
-            title: '스크립트 랩 · 읽고 바꾸고 실행하기', phase: '코딩', time: '15분',
+            title: '코드 돋보기 · AI보다 먼저 읽고 예상하기', phase: '코딩', time: '15분',
             idea: '코드를 그대로 복사하는 것보다 어떤 값이 결과를 바꾸는지 예상하고 한 곳씩 수정하는 것이 중요합니다.',
-            task: '예제 코드에서 오브젝트 이름이나 숫자 한 곳을 찾아 내 게임에 맞게 바꾸고 Output과 화면 결과를 비교하세요.',
-            checkpoint: '예제 코드의 한 줄 이상을 목적에 맞게 수정하고 결과를 확인한다.',
+            task: '예제 코드에서 ① 바뀌는 대상 ② 실행 조건 ③ 보이는 결과를 색으로 표시하세요. 그다음 이름이나 숫자 한 곳을 내 게임에 맞게 바꾸고 결과를 예상합니다.',
+            checkpoint: 'AI를 열기 전에 코드의 대상·조건·결과와 바꾼 한 줄을 설명한다.',
             activity: createActivity(unit, 'build'),
         },
         {
-            title: '핵심 기능 제작 · 플레이 가능한 흐름', phase: '제작', time: '15분',
-            idea: '게임은 시작 → 행동 → 반응 → 보상 흐름이 끊기지 않아야 플레이할 수 있습니다.',
-            task: `${unit.build} 시작부터 결과까지 한 번에 작동하도록 오브젝트와 스크립트를 연결하세요.`,
-            checkpoint: '핵심 기능이 처음부터 끝까지 한 번 이상 정상 작동한다.',
+            title: `AI Assistant 실험실 · ${getAssistantLevel(unit.unitNumber)}`, phase: '코딩', time: '10분',
+            idea: 'AI의 답은 매번 달라질 수 있으므로 Accept 전에 무엇을 바꾸는지 읽고, Play와 Output으로 반드시 검증해야 합니다.',
+            task: 'Studio 오른쪽 위 Assistant를 열고 제공된 프롬프트를 입력하세요. 답을 바로 적용하지 말고 대상·위치·코드·테스트 방법을 먼저 표시합니다.',
+            checkpoint: '구체적인 프롬프트를 사용하고 AI 제안을 설명·검토·실행·수정의 네 단계로 확인한다.',
+            assistant: true, expectedResult: detail.expectedResult, commonMistake: 'AI 결과가 예상과 다르면 Accept하지 말고 이름·수치·실행 시점을 더 구체적으로 적어 다시 요청합니다.',
         },
         {
-            title: '나만의 도전 · 규칙 하나 바꾸기', phase: '도전', time: '15분',
+            title: '나만의 도전 · AI가 정하지 않은 규칙 만들기', phase: '도전', time: '15분',
             idea: '같은 기능도 속도·크기·시간·보상·배치 규칙을 바꾸면 다른 게임 경험이 됩니다.',
-            task: '난이도, 보상 또는 화면 표현 중 한 가지를 골라 나만의 규칙으로 바꾸고 전후를 비교하세요.',
+            task: '난이도, 보상 또는 화면 표현 중 한 가지를 직접 골라 바꾸세요. AI가 제안한 것과 내가 선택한 것을 구분해 기록하고 전후를 비교합니다.',
             checkpoint: '기본 예제와 다른 나만의 선택이 한 가지 이상 들어 있다.',
         },
         {
             title: '버그 헌터 · 예상과 실제 비교', phase: '테스트', time: '10분', idea: unit.debugTip,
             task: '정상 플레이와 일부러 실패하는 플레이를 각각 실행해 첫 번째로 예상과 달라지는 지점을 찾으세요.',
-            checkpoint: '문제의 위치와 원인을 구분하고 한 번 이상 수정한다.',
+            checkpoint: '문제의 위치와 원인을 구분하고 한 번 이상 수정한다.', commonMistake: detail.commonMistake,
             activity: createActivity(unit, 'debug'),
         },
         {
@@ -160,23 +244,41 @@ function createLessonPackage(unit: GameBlueprint): LessonPackage {
 }
 
 function createTeacherGuide(unit: GameBlueprint, page: StudioPage): TeacherGuide {
+    const detail = getBeginnerDetail(unit);
     return {
         objective: page.idea,
-        say: `“오늘은 게임을 하는 사람이 아니라 게임의 규칙을 설계하고 테스트하는 개발자입니다.” ${page.idea}`,
+        say: `“오늘은 게임을 하는 사람이 아니라 게임의 규칙을 설계하고 테스트하는 개발자입니다. 선생님 화면과 다르면 멈추고 Explorer에서 ‘${detail.target}’부터 다시 찾으면 됩니다.” ${page.idea}`,
         questions: [
             '플레이어가 한 행동과 게임이 보여 준 반응은 각각 무엇인가요?',
-            '숫자나 조건 한 가지를 바꾸면 게임 경험이 어떻게 달라질까요?',
+            page.assistant ? 'AI가 바꾸려는 대상·위치·결과를 학생이 설명할 수 있나요?' : '숫자나 조건 한 가지를 바꾸면 게임 경험이 어떻게 달라질까요?',
         ],
         expectedAnswer: page.checkpoint,
-        coaching: '정답 코드를 바로 주지 말고 Explorer의 오브젝트 이름, Script 위치, Output 오류 순서로 확인하게 하세요.',
+        coaching: `정답 코드를 바로 주지 말고 ① Play를 Stop했는지 ② Explorer 이름 ③ Script 위치 ④ Output의 첫 오류 순서로 확인하게 하세요. 자주 막히는 지점: ${page.commonMistake ?? detail.commonMistake}`,
         extension: `빠른 학생은 ${unit.focus}에 난이도 선택이나 두 번째 규칙을 추가하고 플레이 경험의 차이를 설명합니다.`,
-        assessment: [page.task, page.checkpoint, unit.studioRule],
+        assessment: [page.task, page.checkpoint, page.expectedResult ?? detail.expectedResult, unit.studioRule],
     };
 }
 
 function createPage(unit: GameBlueprint, page: StudioPage, pageIndex: number): Page {
     const pageNumber = pageIndex + 1;
+    const detail = getBeginnerDetail(unit);
     const lessonPackage = createLessonPackage(unit);
+    const guide = page.guideSteps?.length ? `
+        <section class="game-studio-beginner-guide" aria-label="초보자 따라하기">
+            <header><span>🖱️ 처음이어도 괜찮아요</span><b>한 칸씩 따라가기</b></header>
+            <ol>${page.guideSteps.map((step) => `<li><span>${escapeHtml(step)}</span><em>완료 □</em></li>`).join('')}</ol>
+            <div><p><b>이렇게 보이면 성공</b>${escapeHtml(page.expectedResult ?? detail.expectedResult)}</p><p><b>막혔을 때</b>${escapeHtml(page.commonMistake ?? detail.commonMistake)}</p></div>
+        </section>
+    ` : '';
+    const assistant = page.assistant ? `
+        <section class="game-studio-ai-card" aria-label="Roblox Studio AI Assistant 활용">
+            <header><span>✦ ROBLOX STUDIO ASSISTANT</span><b>${escapeHtml(getAssistantLevel(unit.unitNumber))}</b></header>
+            <div class="game-studio-ai-scope"><article><b>AI에게 부탁해도 되는 일</b><p>${escapeHtml(getAssistantAllowed(unit))}</p></article><article><b>학생이 직접 해야 하는 일</b><p>${escapeHtml(getAssistantStudentWork(unit))}</p></article></div>
+            <div class="game-studio-ai-prompt"><b>복사해서 내 프로젝트에 맞게 고칠 프롬프트</b><p>${escapeHtml(createAssistantPrompt(unit))}</p></div>
+            <ol><li>AI가 바꿀 정확한 오브젝트와 Script 위치를 확인합니다.</li><li>코드의 대상·조건·결과를 내 말로 설명합니다.</li><li>Accept 전 현재 파일을 저장하고, 필요하면 Ctrl+Z로 되돌립니다.</li><li>Play와 Output으로 정상·실패 상황을 모두 시험합니다.</li></ol>
+            <small>공식 Roblox Creator Hub의 Assistant 사용법·프롬프트 가이드 기준 · AI 출력은 매번 달라질 수 있으며 반드시 직접 검증합니다.</small>
+        </section>
+    ` : '';
     const schedule = pageNumber === 1 ? `
         <div class="game-studio-timeline" aria-label="120분 수업 순서">
             <strong>오늘의 120분</strong><span>미션·탐색 20분</span><i>→</i><span>코딩·제작 70분</span><i>→</i><span>테스트 20분</span><i>→</i><span>기록·공유 10분</span>
@@ -221,6 +323,7 @@ function createPage(unit: GameBlueprint, page: StudioPage, pageIndex: number): P
                     <article><span>BUILD TASK</span><h3>직접 만들기</h3><p>${escapeHtml(page.task)}</p></article>
                     <article><span>CHECKPOINT</span><h3>완료 기준</h3><p>${escapeHtml(page.checkpoint)}</p></article>
                 </div>
+                ${guide}${assistant}
                 <div class="game-studio-script"><div><span>●</span> MainScript <b>Luau</b></div><pre><code>${escapeHtml(unit.code)}</code></pre></div>
                 <aside class="game-studio-rule"><b>STUDIO RULE</b><p>${escapeHtml(unit.studioRule)}</p></aside>
                 ${schedule}${finish}
