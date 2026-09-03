@@ -5,6 +5,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { createClient } from "@/lib/supabase";
 import { buildStudentAuthEmail, buildStudentAuthPassword } from "@/lib/auth-bridge";
+import PasswordResetRequest from "./PasswordResetRequest";
 
 /* ── 클라이언트 사이드 Rate Limiting (UX 보호용, 보안 목적 아님) ──
  * PIN 비교는 Supabase 서버에서 처리되므로 PIN 노출 위험 없음.
@@ -557,6 +558,13 @@ export default function LoginPage() {
               </>
             )}
           </button>
+
+          {!signupOpen && (
+            <PasswordResetRequest
+              studentName={name}
+              disabled={loading || signupLoading}
+            />
+          )}
         </form>
 
         {/* Footer */}
