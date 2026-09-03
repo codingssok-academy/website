@@ -3,6 +3,8 @@ import {
     getStudentAccessCodeMode,
     isValidStudentAccessCode,
     issueHashedStudentAccessCode,
+    loadHashedStudentAccessCodeStatuses,
+    revokeHashedStudentAccessCode,
     verifyHashedStudentAccessCode,
 } from "@/lib/student-access-codes";
 
@@ -81,5 +83,40 @@ describe("student access codes", () => {
 
         expect(result).toEqual([]);
         expect(rpc).not.toHaveBeenCalled();
+    });
+
+    it("loads only issue status flags and never credential hashes", async () => {
+        const rpc = vi.fn().mockResolvedValue({
+            data: [{
+                student_id: "11111111-1111-4111-8111-111111111111",
+                student_login_issued: true,
+                parent_access_issued: false,
+            }],
+            error: null,
+        });
+
+        const result = await loadHashedStudentAccessCodeStatuses({ rpc } as never);
+
+        expect(rpc).toHaveBeenCalledWith("codingssok_list_student_access_code_status");
+        expect(result).toEqual([{
+            studentId: "11111111-1111-4111-8111-111111111111",
+            studentLoginIssued: true,
+            parentAccessIssued: false,
+        }]);
+        expect(JSON.stringify(result)).not.toContain("hash");
+    });
+
+    it("revokes one requested credential purpose through the server RPC", async () => {
+        const rpc = vi.fn().mockResolvedValue({ data: null, error: null });
+
+        await revokeHashedStudentAccessCode({ rpc } as never, {
+            studentId: "11111111-1111-4111-8111-111111111111",
+            purpose: "parent_access",
+        });
+
+        expect(rpc).toHaveBeenCalledWith("codingssok_revoke_student_access_code", {
+            p_student_id: "11111111-1111-4111-8111-111111111111",
+            p_purpose: "parent_access",
+        });
     });
 });

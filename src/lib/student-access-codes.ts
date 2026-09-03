@@ -11,10 +11,22 @@ export type VerifiedStudentAccess = {
     status: string;
 };
 
+export type StudentAccessCodeStatus = {
+    studentId: string;
+    studentLoginIssued: boolean;
+    parentAccessIssued: boolean;
+};
+
 type RpcRow = {
     student_id?: unknown;
     auth_user_id?: unknown;
     student_status?: unknown;
+};
+
+type StatusRpcRow = {
+    student_id?: unknown;
+    student_login_issued?: unknown;
+    parent_access_issued?: unknown;
 };
 
 function readText(value: unknown) {
@@ -87,4 +99,39 @@ export async function issueHashedStudentAccessCode(
         p_code: code,
     });
     if (error) throw new Error(error.message || "인증번호를 안전하게 저장하지 못했습니다.");
+}
+
+export async function loadHashedStudentAccessCodeStatuses(
+    admin: SupabaseClient,
+): Promise<StudentAccessCodeStatus[]> {
+    const { data, error } = await admin.rpc("codingssok_list_student_access_code_status");
+    if (error) throw new Error(error.message || "인증번호 발급 상태를 확인하지 못했습니다.");
+
+    const rows = Array.isArray(data) ? data : data ? [data] : [];
+    return (rows as StatusRpcRow[]).flatMap((row) => {
+        const studentId = readText(row.student_id);
+        if (!studentId) return [];
+        return [{
+            studentId,
+            studentLoginIssued: row.student_login_issued === true,
+            parentAccessIssued: row.parent_access_issued === true,
+        }];
+    });
+}
+
+export async function revokeHashedStudentAccessCode(
+    admin: SupabaseClient,
+    input: {
+        studentId: string;
+        purpose: StudentAccessCodePurpose;
+    },
+) {
+    const studentId = input.studentId.trim();
+    if (!studentId) throw new Error("학생 정보를 확인해주세요.");
+
+    const { error } = await admin.rpc("codingssok_revoke_student_access_code", {
+        p_student_id: studentId,
+        p_purpose: input.purpose,
+    });
+    if (error) throw new Error(error.message || "인증번호를 해제하지 못했습니다.");
 }

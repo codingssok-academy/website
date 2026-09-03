@@ -3,6 +3,12 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { requireTeacher } from "@/lib/auth-teacher";
 import { buildStudentAuthPassword } from "@/lib/auth-bridge";
+import {
+    issueHashedStudentAccessCode,
+    loadHashedStudentAccessCodeStatuses,
+    revokeHashedStudentAccessCode,
+    usesHashedStudentAccessCodes,
+} from "@/lib/student-access-codes";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,6 +25,7 @@ type StudentRow = {
     created_at: string | null;
     updated_at: string | null;
     auth_user_id: string | null;
+    profile_id?: string | null;
 };
 
 type ProfileRow = {
@@ -46,6 +53,7 @@ type StudentAccountsRpcResponse = {
 };
 
 const STUDENT_COLUMNS = "id,name,school,grade,class,pin,login_pin,status,created_at,updated_at,auth_user_id";
+const HASHED_STUDENT_COLUMNS = "id,name,school,grade,class,status,created_at,updated_at,auth_user_id,profile_id";
 const PROFILE_COLUMNS = "id,email,role,name,display_name,approval_status";
 const MUTABLE_STATUSES = new Set(["pending", "approved", "deactivated", "rejected"]);
 const ACTIVE_STUDENT_NAMES = new Set([
@@ -211,9 +219,11 @@ async function listAuthUsers(admin: NonNullable<ReturnType<typeof createAdminCli
 }
 
 async function loadStudentAccounts(admin: NonNullable<ReturnType<typeof createAdminClient>>) {
-    const [studentsRes, profilesRes] = await Promise.all([
-        admin.from("students").select(STUDENT_COLUMNS).order("name", { ascending: true }),
+    const hashedMode = usesHashedStudentAccessCodes();
+    const [studentsRes, profilesRes, accessCodeStatuses] = await Promise.all([
+        admin.from("students").select(hashedMode ? HASHED_STUDENT_COLUMNS : STUDENT_COLUMNS).order("name", { ascending: true }),
         admin.from("profiles").select(PROFILE_COLUMNS),
+        hashedMode ? loadHashedStudentAccessCodeStatuses(admin) : Promise.resolve([]),
     ]);
 
     if (studentsRes.error) throw new Error(studentsRes.error.message);
@@ -228,16 +238,20 @@ async function loadStudentAccounts(admin: NonNullable<ReturnType<typeof createAd
     }
 
     const profiles = new Map((profilesRes.data || []).map(profile => [profile.id, profile as ProfileRow]));
+    const accessStatusByStudentId = new Map(accessCodeStatuses.map(status => [status.studentId, status]));
     const linkedProfileIds = new Set<string>();
 
-    const allStudentAccounts = ((studentsRes.data || []) as StudentRow[])
+    const allStudentAccounts = ((studentsRes.data || []) as unknown as StudentRow[])
         .filter(student => student.class !== "admin")
         .map(student => {
             const profile = student.auth_user_id ? profiles.get(student.auth_user_id) || null : null;
             const authUser = student.auth_user_id ? authUsers.get(student.auth_user_id) || null : null;
             if (student.auth_user_id) linkedProfileIds.add(student.auth_user_id);
             const isActiveRoster = ACTIVE_STUDENT_NAMES.has(normalizeStudentName(student.name));
-            const deleteRecommended = !isActiveRoster && Boolean(student.auth_user_id && !isProtectedProfile(profile));
+            const deleteRecommended = !hashedMode
+                && !isActiveRoster
+                && Boolean(student.auth_user_id && !isProtectedProfile(profile));
+            const accessStatus = accessStatusByStudentId.get(student.id);
 
             return {
                 id: student.id,
@@ -248,8 +262,9 @@ async function loadStudentAccounts(admin: NonNullable<ReturnType<typeof createAd
                 className: student.class,
                 status: student.status || "approved",
                 canChangeStatus: true,
-                pinIssued: /^\d{5}$/.test(student.pin || ""),
-                loginPin: student.auth_user_id && /^\d{4}$/.test(student.login_pin || "") ? student.login_pin : null,
+                pinIssued: hashedMode ? accessStatus?.parentAccessIssued === true : /^\d{5}$/.test(student.pin || ""),
+                loginPin: !hashedMode && student.auth_user_id && /^\d{4}$/.test(student.login_pin || "") ? student.login_pin : null,
+                loginPinIssued: hashedMode ? accessStatus?.studentLoginIssued === true : /^\d{4}$/.test(student.login_pin || ""),
                 createdAt: student.created_at,
                 updatedAt: student.updated_at,
                 authUserId: student.auth_user_id,
@@ -265,12 +280,14 @@ async function loadStudentAccounts(admin: NonNullable<ReturnType<typeof createAd
             };
         });
 
-    const studentAccounts = allStudentAccounts.filter(student => {
-        if (ACTIVE_STUDENT_NAMES.has(normalizeStudentName(student.name))) {
-            return student.status !== "deactivated";
-        }
-        return student.deleteRecommended;
-    });
+    const studentAccounts = hashedMode
+        ? allStudentAccounts
+        : allStudentAccounts.filter(student => {
+            if (ACTIVE_STUDENT_NAMES.has(normalizeStudentName(student.name))) {
+                return student.status !== "deactivated";
+            }
+            return student.deleteRecommended;
+        });
 
     const orphanAccounts = (profilesRes.data || [])
         .map(profile => profile as ProfileRow)
@@ -309,14 +326,14 @@ async function loadStudentAccounts(admin: NonNullable<ReturnType<typeof createAd
         .sort((a, b) => a.name.localeCompare(b.name, "ko"));
 
     const students = [...studentAccounts, ...orphanAccounts];
-    const activeRosterAccounts = studentAccounts.filter(student =>
-        ACTIVE_STUDENT_NAMES.has(normalizeStudentName(student.name)),
-    );
+    const activeRosterAccounts = hashedMode
+        ? studentAccounts
+        : studentAccounts.filter(student => ACTIVE_STUDENT_NAMES.has(normalizeStudentName(student.name)));
     const stats = {
         total: activeRosterAccounts.length,
         linked: activeRosterAccounts.filter(student => student.accountLinked).length,
         unlinked: activeRosterAccounts.filter(student => !student.accountLinked).length,
-        approved: activeRosterAccounts.filter(student => student.status === "approved").length,
+        approved: activeRosterAccounts.filter(student => student.status === "approved" || student.status === "active").length,
         deactivated: activeRosterAccounts.filter(student => student.status === "deactivated").length,
         pending: activeRosterAccounts.filter(student => student.status === "pending").length,
         orphan: orphanAccounts.length,
@@ -333,9 +350,15 @@ async function loadStudentAccounts(admin: NonNullable<ReturnType<typeof createAd
 
 async function updateStatusWithAdmin(admin: NonNullable<ReturnType<typeof createAdminClient>>, body: Record<string, unknown>) {
     const studentId = normalizeId(body?.studentId);
-    const status = normalizeStatus(body?.status);
+    const requestedStatus = normalizeStatus(body?.status);
+    const status = usesHashedStudentAccessCodes() && requestedStatus === "approved"
+        ? "active"
+        : requestedStatus;
+    const allowedStatuses = usesHashedStudentAccessCodes()
+        ? new Set(["pending", "active", "deactivated"])
+        : MUTABLE_STATUSES;
 
-    if (!studentId || !MUTABLE_STATUSES.has(status)) {
+    if (!studentId || !allowedStatuses.has(status)) {
         return NextResponse.json(
             { success: false, error: "Student id and valid status are required." },
             { status: 400 },
@@ -393,9 +416,10 @@ async function updateStudentLoginPinWithAdmin(admin: NonNullable<ReturnType<type
         );
     }
 
+    const hashedMode = usesHashedStudentAccessCodes();
     const { data: student, error: studentError } = await admin
         .from("students")
-        .select(STUDENT_COLUMNS)
+        .select(hashedMode ? HASHED_STUDENT_COLUMNS : STUDENT_COLUMNS)
         .eq("id", studentId)
         .maybeSingle();
 
@@ -404,7 +428,7 @@ async function updateStudentLoginPinWithAdmin(admin: NonNullable<ReturnType<type
         return NextResponse.json({ success: false, error: "Student was not found." }, { status: 404 });
     }
 
-    const row = student as StudentRow;
+    const row = student as unknown as StudentRow;
     if (!row.auth_user_id) {
         return NextResponse.json(
             { success: false, error: "Only registered student accounts can have a login password." },
@@ -423,21 +447,39 @@ async function updateStudentLoginPinWithAdmin(admin: NonNullable<ReturnType<type
         return NextResponse.json({ success: false, error: "Teacher and admin accounts are protected." }, { status: 400 });
     }
 
+    if (hashedMode) {
+        await issueHashedStudentAccessCode(admin, {
+            studentId: row.id,
+            purpose: "student_login",
+            code: loginPin,
+        });
+    }
+
     const { error: authError } = await admin.auth.admin.updateUserById(row.auth_user_id, {
         password: buildStudentAuthPassword(row.id, loginPin),
     });
 
-    if (authError) throw new Error(authError.message);
+    if (authError) {
+        if (hashedMode) {
+            await revokeHashedStudentAccessCode(admin, {
+                studentId: row.id,
+                purpose: "student_login",
+            });
+        }
+        throw new Error(authError.message);
+    }
 
-    const { error: updateError } = await admin
-        .from("students")
-        .update({
-            login_pin: loginPin,
-            updated_at: new Date().toISOString(),
-        })
-        .eq("id", row.id);
+    if (!hashedMode) {
+        const { error: updateError } = await admin
+            .from("students")
+            .update({
+                login_pin: loginPin,
+                updated_at: new Date().toISOString(),
+            })
+            .eq("id", row.id);
 
-    if (updateError) throw new Error(updateError.message);
+        if (updateError) throw new Error(updateError.message);
+    }
 
     return NextResponse.json(await loadStudentAccounts(admin), {
         headers: { "Cache-Control": "no-store" },
@@ -490,7 +532,7 @@ async function deactivateAccountWithAdmin(
         return NextResponse.json({ success: false, error: "Student was not found." }, { status: 404 });
     }
 
-    const row = student as StudentRow;
+    const row = student as unknown as StudentRow;
     const authUserId = row.auth_user_id;
 
     if (authUserId) {
@@ -511,14 +553,19 @@ async function deactivateAccountWithAdmin(
 
         await deactivateProfile(admin, authUserId);
         await clearParentLoginBridge(admin, authUserId);
+        if (usesHashedStudentAccessCodes()) {
+            await revokeHashedStudentAccessCode(admin, {
+                studentId: row.id,
+                purpose: "student_login",
+            });
+        }
     }
 
     const { error: studentUpdateError } = await admin
         .from("students")
-        .update({
-            auth_user_id: null,
-            updated_at: new Date().toISOString(),
-        })
+        .update(usesHashedStudentAccessCodes()
+            ? { auth_user_id: null, profile_id: null, updated_at: new Date().toISOString() }
+            : { auth_user_id: null, updated_at: new Date().toISOString() })
         .eq("id", row.id);
 
     if (studentUpdateError) throw new Error(studentUpdateError.message);

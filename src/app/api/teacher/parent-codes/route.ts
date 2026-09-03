@@ -20,6 +20,12 @@ import {
     syncProgressPinInDatabase,
     upsertStudentCodeInDatabase,
 } from '@/lib/postgres-admin'
+import {
+    issueHashedStudentAccessCode,
+    loadHashedStudentAccessCodeStatuses,
+    revokeHashedStudentAccessCode,
+    usesHashedStudentAccessCodes,
+} from '@/lib/student-access-codes'
 
 type AdminClient = NonNullable<ReturnType<typeof createAdminClient>>
 type TeacherContext =
@@ -35,6 +41,22 @@ type EdgeParentCodeBaseData = {
     progress: ParentCodeProgressRow[]
     warning?: string | null
 }
+
+type HashedStudentRow = {
+    id: string
+    name: string
+    school: string | null
+    grade: string | null
+    class: string | null
+    auth_user_id: string | null
+    profile_id: string | null
+    status: string
+    created_at: string | null
+    updated_at: string | null
+}
+
+const HASHED_STUDENT_COLUMNS = 'id,name,school,grade,class,auth_user_id,profile_id,status,created_at,updated_at'
+const NO_STORE_HEADERS = { 'Cache-Control': 'no-store' }
 
 function isLocalRequest(request: NextRequest) {
     const host = request.headers.get('host') || ''
@@ -149,7 +171,9 @@ async function requireTeacherContext(): Promise<TeacherContext> {
         ? (await adminClient.from('profiles').select('role').eq('id', user.id).maybeSingle()).data?.role
         : await getProfileRoleFromDatabase(user.id)
 
-    if (role !== 'teacher' && role !== 'admin' && !(await isApprovedAdminUser(user.id, adminClient, databaseAdmin))) {
+    const legacyAdminStudent = !usesHashedStudentAccessCodes()
+        && await isApprovedAdminUser(user.id, adminClient, databaseAdmin)
+    if (role !== 'teacher' && role !== 'admin' && !legacyAdminStudent) {
         return {
             error: NextResponse.json({ success: false, error: '관리자 권한이 필요합니다.' }, { status: 403 }),
         }
@@ -329,9 +353,93 @@ async function loadEdgeResponse(accessToken: string, payload: Record<string, unk
     }
 }
 
+async function loadHashedResponse(adminClient: AdminClient) {
+    const [studentsRes, accessCodeStatuses] = await Promise.all([
+        adminClient
+            .from('students')
+            .select(HASHED_STUDENT_COLUMNS)
+            .order('name', { ascending: true }),
+        loadHashedStudentAccessCodeStatuses(adminClient),
+    ])
+    if (studentsRes.error) throw new Error(studentsRes.error.message)
+
+    const statusByStudentId = new Map(accessCodeStatuses.map(status => [status.studentId, status]))
+    const rows = ((studentsRes.data || []) as HashedStudentRow[]).map(student => {
+        const codeIssued = statusByStudentId.get(student.id)?.parentAccessIssued === true
+        const codeUsable = codeIssued && student.status === 'active'
+        return {
+            id: student.id,
+            studentId: student.id,
+            authUserId: student.auth_user_id,
+            name: student.name,
+            code: '',
+            codeIssued,
+            feedbackRows: 0,
+            issuedAt: codeIssued ? student.updated_at : null,
+            school: student.school || '',
+            grade: student.grade || '',
+            className: student.class || '',
+            linked: Boolean(student.auth_user_id || student.profile_id),
+            source: codeUsable ? 'database' as const : 'inactive' as const,
+            studentStatus: student.status,
+        }
+    })
+
+    return {
+        success: true,
+        canMutate: true,
+        secureMode: true,
+        rows,
+        warning: null,
+    }
+}
+
+async function upsertHashedParentCode(input: {
+    adminClient: AdminClient
+    name: string
+    pin?: string
+    school?: string
+    grade?: string
+    className?: string
+}) {
+    assertName(input.name)
+    if (input.pin !== undefined) assertPin(input.pin)
+
+    const { data: students, error: listError } = await input.adminClient
+        .from('students')
+        .select(HASHED_STUDENT_COLUMNS)
+    if (listError) throw new Error(listError.message)
+
+    const existing = ((students || []) as HashedStudentRow[])
+        .find(student => normalizeName(student.name) === input.name) || null
+    const payload = {
+        name: input.name,
+        school: input.school !== undefined ? input.school || null : existing?.school || null,
+        grade: input.grade !== undefined ? input.grade || null : existing?.grade || null,
+        class: input.className !== undefined ? input.className || null : existing?.class || null,
+        status: input.pin ? 'active' : existing?.status || 'pending',
+        updated_at: new Date().toISOString(),
+    }
+    const query = existing
+        ? input.adminClient.from('students').update(payload).eq('id', existing.id).select(HASHED_STUDENT_COLUMNS).single()
+        : input.adminClient.from('students').insert(payload).select(HASHED_STUDENT_COLUMNS).single()
+    const { data, error } = await query
+    if (error || !data) throw new Error(error?.message || '학생 정보를 저장하지 못했습니다.')
+
+    const student = data as HashedStudentRow
+    if (input.pin) {
+        await issueHashedStudentAccessCode(input.adminClient, {
+            studentId: student.id,
+            purpose: 'parent_access',
+            code: input.pin,
+        })
+    }
+    return student
+}
+
 export async function GET(request: NextRequest) {
     try {
-        if (!createAdminClient() && isLocalRequest(request)) {
+        if (!usesHashedStudentAccessCodes() && !createAdminClient() && isLocalRequest(request)) {
             return NextResponse.json({
                 success: true,
                 canMutate: false,
@@ -341,6 +449,15 @@ export async function GET(request: NextRequest) {
         }
         const context = await requireTeacherContext()
         if ('error' in context) return context.error
+        if (usesHashedStudentAccessCodes()) {
+            if (!hasAdminClient(context)) {
+                return NextResponse.json(
+                    { success: false, error: '새 인증번호 관리에는 서버 서비스 키가 필요합니다.' },
+                    { status: 503 },
+                )
+            }
+            return NextResponse.json(await loadHashedResponse(context.adminClient), { headers: NO_STORE_HEADERS })
+        }
         if (hasEdgeAdmin(context)) return NextResponse.json(await loadEdgeResponse(context.accessToken))
         return NextResponse.json(hasAdminClient(context)
             ? await loadResponse(context.adminClient)
@@ -359,6 +476,41 @@ export async function POST(request: NextRequest) {
         if ('error' in context) return context.error
 
         const body = await request.json()
+        if (usesHashedStudentAccessCodes()) {
+            if (!hasAdminClient(context)) {
+                return NextResponse.json(
+                    { success: false, error: '새 인증번호 관리에는 서버 서비스 키가 필요합니다.' },
+                    { status: 503 },
+                )
+            }
+            if (body?.action === 'seedBaseline') {
+                return NextResponse.json(
+                    { success: false, error: '새 DB에서는 기존 기준표를 자동 복사하지 않습니다. 학생을 개별 등록해주세요.' },
+                    { status: 400 },
+                )
+            }
+
+            const name = normalizeName(body?.name)
+            const school = typeof body?.school === 'string' ? body.school.trim().slice(0, 40) : ''
+            const grade = typeof body?.grade === 'string' ? body.grade.trim().slice(0, 20) : ''
+            const className = typeof body?.className === 'string' ? body.className.trim().slice(0, 60) : ''
+            const isInformationOnly = body?.action === 'edit'
+            const pin = isInformationOnly ? undefined : normalizePin(body?.pin) || generateParentPin()
+            await upsertHashedParentCode({
+                adminClient: context.adminClient,
+                name,
+                pin,
+                school,
+                grade,
+                className,
+            })
+            return NextResponse.json({
+                ...await loadHashedResponse(context.adminClient),
+                issuedCode: pin || null,
+                issuedStudentNames: pin ? [name] : [],
+            }, { headers: NO_STORE_HEADERS })
+        }
+
         if (body?.action === 'seedBaseline') {
             if (hasEdgeAdmin(context)) {
                 return NextResponse.json(await loadEdgeResponse(context.accessToken, {
@@ -415,6 +567,49 @@ export async function PATCH(request: NextRequest) {
         if ('error' in context) return context.error
 
         const body = await request.json()
+        if (usesHashedStudentAccessCodes()) {
+            if (!hasAdminClient(context)) {
+                return NextResponse.json(
+                    { success: false, error: '새 인증번호 관리에는 서버 서비스 키가 필요합니다.' },
+                    { status: 503 },
+                )
+            }
+
+            if (body?.action === 'group') {
+                const names = Array.isArray(body?.names)
+                    ? body.names.map(normalizeName).filter(Boolean)
+                    : String(body?.names || '').split(/[,\n]/).map(normalizeName).filter(Boolean)
+                if (names.length < 2) {
+                    return NextResponse.json(
+                        { success: false, error: '형제/자매로 묶을 학생 이름을 2명 이상 입력해주세요.' },
+                        { status: 400 },
+                    )
+                }
+                const pin = normalizePin(body?.pin) || generateParentPin()
+                assertPin(pin)
+                for (const name of names) {
+                    await upsertHashedParentCode({ adminClient: context.adminClient, name, pin })
+                }
+                return NextResponse.json({
+                    ...await loadHashedResponse(context.adminClient),
+                    issuedCode: pin,
+                    issuedStudentNames: names,
+                }, { headers: NO_STORE_HEADERS })
+            }
+
+            const name = normalizeName(body?.name)
+            const pin = normalizePin(body?.pin) || generateParentPin()
+            const school = typeof body?.school === 'string' ? body.school.trim().slice(0, 40) : ''
+            const grade = typeof body?.grade === 'string' ? body.grade.trim().slice(0, 20) : ''
+            const className = typeof body?.className === 'string' ? body.className.trim().slice(0, 60) : ''
+            await upsertHashedParentCode({ adminClient: context.adminClient, name, pin, school, grade, className })
+            return NextResponse.json({
+                ...await loadHashedResponse(context.adminClient),
+                issuedCode: pin,
+                issuedStudentNames: [name],
+            }, { headers: NO_STORE_HEADERS })
+        }
+
         if (body?.action === 'group') {
             const names = Array.isArray(body?.names)
                 ? body.names.map(normalizeName).filter(Boolean)
@@ -485,6 +680,34 @@ export async function DELETE(request: NextRequest) {
         const body = await request.json()
         const name = normalizeName(body?.name)
         assertName(name)
+
+        if (usesHashedStudentAccessCodes()) {
+            if (!hasAdminClient(context)) {
+                return NextResponse.json(
+                    { success: false, error: '새 인증번호 관리에는 서버 서비스 키가 필요합니다.' },
+                    { status: 503 },
+                )
+            }
+            const { data: students, error: listError } = await context.adminClient
+                .from('students')
+                .select(HASHED_STUDENT_COLUMNS)
+            if (listError) throw new Error(listError.message)
+            const existing = ((students || []) as HashedStudentRow[])
+                .find(student => normalizeName(student.name) === name) || null
+            if (!existing) {
+                return NextResponse.json({ success: false, error: '학생을 찾지 못했습니다.' }, { status: 404 })
+            }
+            const { error: updateError } = await context.adminClient
+                .from('students')
+                .update({ status: 'deactivated', updated_at: new Date().toISOString() })
+                .eq('id', existing.id)
+            if (updateError) throw new Error(updateError.message)
+            await Promise.all([
+                revokeHashedStudentAccessCode(context.adminClient, { studentId: existing.id, purpose: 'parent_access' }),
+                revokeHashedStudentAccessCode(context.adminClient, { studentId: existing.id, purpose: 'student_login' }),
+            ])
+            return NextResponse.json(await loadHashedResponse(context.adminClient), { headers: NO_STORE_HEADERS })
+        }
 
         if (hasEdgeAdmin(context)) {
             return NextResponse.json(await loadEdgeResponse(context.accessToken, {

@@ -13,6 +13,7 @@ type StudentAccount = {
     canChangeStatus: boolean;
     pinIssued: boolean;
     loginPin: string | null;
+    loginPinIssued?: boolean;
     createdAt: string | null;
     updatedAt: string | null;
     authUserId: string | null;
@@ -64,6 +65,7 @@ const FILTERS = [
 const STATUS_LABEL: Record<string, string> = {
     pending: "대기",
     approved: "활성",
+    active: "활성",
     deactivated: "비활성",
     rejected: "거절",
     orphan: "미연결",
@@ -77,7 +79,7 @@ function formatDate(value: string | null) {
 }
 
 function statusColor(status: string) {
-    if (status === "approved") return { bg: "#ecfdf5", fg: "#047857", bd: "#bbf7d0" };
+    if (status === "approved" || status === "active") return { bg: "#ecfdf5", fg: "#047857", bd: "#bbf7d0" };
     if (status === "deactivated") return { bg: "#fef2f2", fg: "#b91c1c", bd: "#fecaca" };
     if (status === "pending") return { bg: "#fffbeb", fg: "#b45309", bd: "#fde68a" };
     return { bg: "#f8fafc", fg: "#475569", bd: "#cbd5e1" };
@@ -127,6 +129,7 @@ export default function StudentAccountsPage() {
     }, []);
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         void load();
     }, [load]);
 
@@ -405,8 +408,12 @@ export default function StudentAccountsPage() {
                                 <div>
                                     {student.accountLinked ? (
                                         <div className="login-pin-cell">
-                                            <span className={student.loginPin ? "password-pill" : "password-pill missing"}>
-                                                {student.loginPin ? `비밀번호 ${student.loginPin}` : "비밀번호 재설정 필요"}
+                                            <span className={student.loginPinIssued || student.loginPin ? "password-pill" : "password-pill missing"}>
+                                                {student.loginPin
+                                                    ? `비밀번호 ${student.loginPin}`
+                                                    : student.loginPinIssued
+                                                        ? "비밀번호 설정됨"
+                                                        : "비밀번호 재설정 필요"}
                                             </span>
                                             {student.source === "student" && (
                                                 <div className="pin-reset-row">

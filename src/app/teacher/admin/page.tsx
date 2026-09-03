@@ -11,6 +11,7 @@ type ParentCodeRow = {
     authUserId: string | null;
     name: string;
     code: string;
+    codeIssued?: boolean;
     feedbackRows: number;
     issuedAt: string | null;
     school: string;
@@ -18,6 +19,7 @@ type ParentCodeRow = {
     className: string;
     linked: boolean;
     source: "database" | "reference" | "inactive";
+    studentStatus?: string;
 };
 
 type FormState = {
@@ -31,29 +33,33 @@ type FormState = {
 const EMPTY_FORM: FormState = { name: "", pin: "", school: "", grade: "", className: "" };
 
 export default function ParentCodeAdminPage() {
-    const { students, loading: studentsLoading } = useAdmin();
+    const { loading: studentsLoading } = useAdmin();
     const [rows, setRows] = useState<ParentCodeRow[]>([]);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState("");
     const [search, setSearch] = useState("");
     const [form, setForm] = useState<FormState>(EMPTY_FORM);
-    const [groupNames, setGroupNames] = useState("한보리\n한보윤");
-    const [groupPin, setGroupPin] = useState("47864");
+    const [groupNames, setGroupNames] = useState("");
+    const [groupPin, setGroupPin] = useState("");
     const [editingRow, setEditingRow] = useState<ParentCodeRow | null>(null);
     const [editForm, setEditForm] = useState<FormState>(EMPTY_FORM);
     const [error, setError] = useState("");
     const [notice, setNotice] = useState("");
     const [canMutate, setCanMutate] = useState(true);
+    const [secureMode, setSecureMode] = useState(false);
+    const [issuedCode, setIssuedCode] = useState<{ code: string; names: string[] } | null>(null);
 
     const loadRows = async () => {
         setLoading(true);
         setError("");
+        setIssuedCode(null);
         try {
             const res = await fetch("/api/teacher/parent-codes", { cache: "no-store" });
             const data = await res.json();
             if (!res.ok || !data.success) throw new Error(data.error || "목록을 불러오지 못했습니다.");
             setRows(data.rows || []);
             setCanMutate(data.canMutate !== false);
+            setSecureMode(data.secureMode === true);
             if (data.warning) setNotice(data.warning);
         } catch (err) {
             setError(err instanceof Error ? err.message : "목록을 불러오지 못했습니다.");
@@ -80,7 +86,7 @@ export default function ParentCodeAdminPage() {
     }, [rows, search]);
 
     const stats = useMemo(() => {
-        const active = rows.filter(row => row.code && row.source === "database").length;
+        const active = rows.filter(row => (row.codeIssued ?? Boolean(row.code)) && row.source === "database").length;
         const reference = rows.filter(row => row.source === "reference").length;
         const inactive = rows.filter(row => row.source === "inactive").length;
         const siblings = rows.reduce<Record<string, number>>((acc, row) => {
@@ -105,11 +111,12 @@ export default function ParentCodeAdminPage() {
     ) => {
         if (!canMutate) {
             setError("현재 로컬 기준표 모드라서 발급/재발급/삭제를 실행할 수 없습니다. SUPABASE_SERVICE_ROLE_KEY가 있는 환경에서 실행해주세요.");
-            return false;
+            return null;
         }
         setSaving(actionKey);
         setError("");
         setNotice("");
+        setIssuedCode(null);
         try {
             const res = await fetch("/api/teacher/parent-codes", {
                 method,
@@ -120,11 +127,20 @@ export default function ParentCodeAdminPage() {
             if (!res.ok || !data.success) throw new Error(data.error || "처리하지 못했습니다.");
             setRows(data.rows || []);
             setCanMutate(data.canMutate !== false);
-            setNotice(successText);
-            return true;
+            setSecureMode(data.secureMode === true);
+            if (typeof data.issuedCode === "string" && /^\d{5}$/.test(data.issuedCode)) {
+                const names = Array.isArray(data.issuedStudentNames)
+                    ? data.issuedStudentNames.filter((name: unknown): name is string => typeof name === "string")
+                    : [];
+                setIssuedCode({ code: data.issuedCode, names });
+                setNotice(`${successText} 새 번호는 아래에서 한 번만 확인할 수 있습니다.`);
+            } else {
+                setNotice(successText);
+            }
+            return data;
         } catch (err) {
             setError(err instanceof Error ? err.message : "처리하지 못했습니다.");
-            return false;
+            return null;
         } finally {
             setSaving("");
         }
@@ -136,13 +152,13 @@ export default function ParentCodeAdminPage() {
             setError("학생 이름을 입력해주세요.");
             return;
         }
-        const ok = await requestJson(
+        const result = await requestJson(
             "POST",
             { name, pin: form.pin, school: form.school, grade: form.grade, className: form.className },
             `${name} 학부모 인증번호를 발급했습니다.`,
             "issue",
         );
-        if (ok) setForm(EMPTY_FORM);
+        if (result) setForm(EMPTY_FORM);
     };
 
     const reissueCode = (row: ParentCodeRow) =>
@@ -155,7 +171,7 @@ export default function ParentCodeAdminPage() {
 
     const startEdit = (row: ParentCodeRow) => {
         setEditingRow(row);
-        setEditForm({ name: row.name, pin: row.code, school: row.school, grade: row.grade, className: row.className });
+        setEditForm({ name: row.name, pin: secureMode ? "" : row.code, school: row.school, grade: row.grade, className: row.className });
         setError("");
         setNotice("");
     };
@@ -164,17 +180,17 @@ export default function ParentCodeAdminPage() {
         if (!editingRow) return;
         const name = editForm.name.trim().replace(/\s+/g, "");
         const pin = editForm.pin.replace(/\D/g, "").slice(0, 5);
-        if (name.length < 2 || pin.length !== 5) {
-            setError("학생 이름과 5자리 인증번호를 확인해주세요.");
+        if (name.length < 2 || (!secureMode && pin.length !== 5)) {
+            setError(secureMode ? "학생 이름을 확인해주세요." : "학생 이름과 5자리 인증번호를 확인해주세요.");
             return;
         }
-        const ok = await requestJson(
+        const result = await requestJson(
             "POST",
-            { name, pin, school: editForm.school, grade: editForm.grade, className: editForm.className },
+            { action: secureMode ? "edit" : undefined, name, pin, school: editForm.school, grade: editForm.grade, className: editForm.className },
             `${name} 학생 정보를 수정했습니다.`,
             `edit-${editingRow.name}`,
         );
-        if (ok) {
+        if (result) {
             setEditingRow(null);
             setEditForm(EMPTY_FORM);
         }
@@ -226,6 +242,17 @@ export default function ParentCodeAdminPage() {
         }
     };
 
+    const copyIssuedCode = async () => {
+        if (!issuedCode) return;
+        const names = issuedCode.names.join(", ") || "선택한 학생";
+        try {
+            await navigator.clipboard.writeText(`학생: ${names}\n학부모 인증번호: ${issuedCode.code}`);
+            setNotice("새 인증번호를 복사했습니다. 학부모님께 안전하게 전달해주세요.");
+        } catch {
+            setError("인증번호 복사에 실패했습니다.");
+        }
+    };
+
     return (
         <div className="code-admin">
             <div className="page-head">
@@ -246,14 +273,25 @@ export default function ParentCodeAdminPage() {
             <section className="stat-grid">
                 <StatCard icon={Users} label="학생 목록" value={studentsLoading && rows.length === 0 ? "-" : String(stats.students)} />
                 <StatCard icon={ShieldCheck} label="활성 인증번호" value={String(stats.active)} />
-                <StatCard icon={Database} label="기준표/미발급" value={String(stats.reference + stats.inactive)} />
-                <StatCard icon={Network} label="형제/자매 묶음" value={String(stats.siblingGroups)} />
+                <StatCard icon={Database} label={secureMode ? "미발급/비활성" : "기준표/미발급"} value={String(stats.reference + stats.inactive)} />
+                <StatCard icon={Network} label={secureMode ? "보안 저장 방식" : "형제/자매 묶음"} value={secureMode ? "사용" : String(stats.siblingGroups)} />
             </section>
 
             {(error || notice) && (
                 <div className={error ? "alert error" : "alert ok"}>
                     {error ? <AlertCircle size={17} strokeWidth={2.5} /> : <CheckCircle size={17} strokeWidth={2.5} />}
                     {error || notice}
+                </div>
+            )}
+
+            {issuedCode && (
+                <div className="issued-code" role="status">
+                    <div>
+                        <strong>이번에 발급한 번호 {issuedCode.code}</strong>
+                        <span>{issuedCode.names.join(", ") || "선택한 학생"} · 화면을 벗어나면 다시 볼 수 없습니다.</span>
+                    </div>
+                    <button className="outline-btn" onClick={copyIssuedCode}>번호 복사</button>
+                    <button className="outline-btn" onClick={() => setIssuedCode(null)}>확인 완료</button>
                 </div>
             )}
 
@@ -272,13 +310,15 @@ export default function ParentCodeAdminPage() {
                     </div>
                     <div className="form-row edit-row">
                         <input value={editForm.name} readOnly aria-label="학생 이름" />
-                        <input
-                            value={editForm.pin}
-                            onChange={event => setEditForm(prev => ({ ...prev, pin: event.target.value.replace(/\D/g, "").slice(0, 5) }))}
-                            placeholder="학부모 인증번호"
-                            inputMode="numeric"
-                            maxLength={5}
-                        />
+                        {!secureMode && (
+                            <input
+                                value={editForm.pin}
+                                onChange={event => setEditForm(prev => ({ ...prev, pin: event.target.value.replace(/\D/g, "").slice(0, 5) }))}
+                                placeholder="학부모 인증번호"
+                                inputMode="numeric"
+                                maxLength={5}
+                            />
+                        )}
                         <input
                             value={editForm.school}
                             onChange={event => setEditForm(prev => ({ ...prev, school: event.target.value.slice(0, 40) }))}
@@ -301,7 +341,7 @@ export default function ParentCodeAdminPage() {
                             취소
                         </button>
                     </div>
-                    <p className="hint">인증번호를 바꾸면 기존 앱 세션은 다음 조회부터 인증이 풀리고, 새 번호로 다시 인증해야 합니다.</p>
+                    <p className="hint">{secureMode ? "보안 저장된 인증번호는 편집 화면에서 노출하지 않습니다. 번호 변경은 목록의 재발급 버튼을 이용해주세요." : "인증번호를 바꾸면 기존 앱 세션은 다음 조회부터 인증이 풀리고, 새 번호로 다시 인증해야 합니다."}</p>
                 </section>
             )}
 
@@ -385,10 +425,12 @@ export default function ParentCodeAdminPage() {
                         <p>피드백 row 수 합계 {rows.reduce((sum, row) => sum + (row.feedbackRows || 0), 0)}</p>
                     </div>
                     <div className="toolbar-actions">
-                        <button className="outline-btn" onClick={seedBaseline} disabled={!canMutate || saving === "seed"}>
-                            <Database size={16} strokeWidth={2.4} />
-                            기준표 전체 활성화
-                        </button>
+                        {!secureMode && (
+                            <button className="outline-btn" onClick={seedBaseline} disabled={!canMutate || saving === "seed"}>
+                                <Database size={16} strokeWidth={2.4} />
+                                기준표 전체 활성화
+                            </button>
+                        )}
                         <input value={search} onChange={event => setSearch(event.target.value)} placeholder="학생 검색" />
                     </div>
                 </div>
@@ -431,12 +473,12 @@ export default function ParentCodeAdminPage() {
                                         <td>{row.school || "-"}</td>
                                         <td>{row.grade || "-"}</td>
                                         <td>
-                                            <span className="pin">{row.code || "미발급"}</span>
+                                            <span className="pin">{row.code || (row.codeIssued ? "안전하게 발급됨" : "미발급")}</span>
                                         </td>
                                         <td>{row.feedbackRows}</td>
                                         <td>
                                             <span className={`badge ${row.source === "database" ? "active" : row.source === "reference" ? "ref" : "inactive"}`}>
-                                                {row.source === "database" ? "활성" : row.source === "reference" ? "기준표 · 활성화 필요" : "미발급"}
+                                                {row.source === "database" ? "활성" : row.source === "reference" ? "기준표 · 활성화 필요" : row.studentStatus === "deactivated" ? "비활성" : "미발급"}
                                             </span>
                                         </td>
                                         <td>{formatDate(row.issuedAt)}</td>
@@ -588,6 +630,31 @@ h1 {
     border: 1px solid #fed7aa;
     background: #fff7ed;
     color: #c2410c;
+}
+.issued-code {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    border: 1px solid #93c5fd;
+    border-radius: 8px;
+    background: #eff6ff;
+}
+.issued-code > div {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 4px;
+}
+.issued-code strong {
+    color: #1e3a8a;
+    font-size: 18px;
+}
+.issued-code span {
+    color: #475569;
+    font-size: 12px;
+    font-weight: 700;
 }
 .work-grid {
     display: grid;
@@ -849,5 +916,6 @@ tr:last-child td {
     .table-toolbar { align-items: stretch; flex-direction: column; }
     .toolbar-actions { flex-direction: column; align-items: stretch; }
     .toolbar-actions input { width: 100%; }
+    .issued-code { align-items: stretch; flex-direction: column; }
 }
 `;
