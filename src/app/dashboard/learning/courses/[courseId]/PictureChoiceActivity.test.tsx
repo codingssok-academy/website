@@ -33,6 +33,6 @@ describe("PictureChoiceActivity", () => {
         view.rerender(<PictureChoiceActivity activity={activity} value="그림 그리기" onChange={onChange} saveStatus="saved" />);
         fireEvent.click(screen.getByRole("button", { name: /게임하기/ }));
         expect(onChange).toHaveBeenLastCalledWith("그림 그리기 · 게임하기");
-        expect(screen.getByText("자동 저장됨")).toBeInTheDocument();
+        expect(screen.getByText("학원 계정에 안전하게 저장됐어요")).toBeInTheDocument();
     });
 });

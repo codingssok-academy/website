@@ -3,27 +3,22 @@
 import type { LearningChoiceActivity } from "@/data/courses/types";
 import type { PersistenceStatus } from "@/hooks/useLessonPersistence";
 import styles from "./PictureChoiceActivity.module.css";
+import { StudentSaveStatus } from "./StudentSaveStatus";
 
 const SEPARATOR = " · ";
-
-function statusLabel(status: PersistenceStatus) {
-    if (status === "loading" || status === "saving") return "저장 중";
-    if (status === "error") return "저장 오류";
-    if (status === "local") return "이 기기에 저장";
-    if (status === "saved") return "자동 저장됨";
-    return "고르면 자동 저장";
-}
 
 export function PictureChoiceActivity({
     activity,
     value,
     onChange,
     saveStatus,
+    onRetrySave,
 }: {
     activity: LearningChoiceActivity;
     value: string;
     onChange: (value: string) => void;
     saveStatus: PersistenceStatus;
+    onRetrySave?: () => void | Promise<void>;
 }) {
     const validLabels = new Set(activity.options.map((option) => option.label));
     const selectedLabels = value.split(SEPARATOR).filter((label) => validLabels.has(label));
@@ -39,7 +34,7 @@ export function PictureChoiceActivity({
         <section className={styles.panel} aria-labelledby="picture-choice-title">
             <div className={styles.top}>
                 <span>{activity.label}</span>
-                <b data-status={saveStatus}>{statusLabel(saveStatus)}</b>
+                <StudentSaveStatus status={saveStatus} onRetry={onRetrySave} />
             </div>
             <h3 id="picture-choice-title">{activity.prompt}</h3>
             <div className={styles.grid} role="group" aria-label={activity.prompt}>

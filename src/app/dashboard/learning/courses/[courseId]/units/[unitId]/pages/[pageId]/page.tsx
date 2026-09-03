@@ -113,7 +113,7 @@ export default function LearningContentPage() {
             challenge: projectActionAnswers.challenge,
         },
     }), [preservedActivityAnswer, projectActionAnswers]);
-    const { status: actionWritingSaveStatus } = useLessonAnswerPersistence({
+    const { status: actionWritingSaveStatus, retry: retryActionWritingSave } = useLessonAnswerPersistence({
         enabled: courseId === "11" && !!currentPage?.actionWriting,
         userId: user?.id,
         courseId,
@@ -750,6 +750,7 @@ export default function LearningContentPage() {
                                     value={projectActionAnswers}
                                     onChange={setProjectActionAnswers}
                                     saveStatus={actionWritingSaveStatus}
+                                    onRetrySave={retryActionWritingSave}
                                 />
                             )}
                             {courseId === '11' && (
