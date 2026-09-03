@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useAdmin } from "../context";
 import { createClient } from "@/lib/supabase";
 import type { ChatStudent, ChatMessage } from "../types";
+import LearningReviewRequestComposer from "./LearningReviewRequestComposer";
 
 /* ═══════════════════════════════════════
    학생 채팅 — 학생 선택 → 1:1 DM
@@ -72,23 +73,34 @@ export default function ChatPage() {
         setTimeout(() => { scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" }); }, 100);
     }, [fetchChatStudents, getTeacherId]);
 
-    const sendMessage = useCallback(async () => {
-        if (!activeId || !input.trim()) return;
+    const sendMessageContent = useCallback(async (content: string) => {
+        if (!activeId || !content.trim()) return false;
         setSending(true);
         try {
             const sb = createClient();
             const teacherId = await getTeacherId();
             if (!teacherId) throw new Error("인증 세션 없음");
-            await sb.from("direct_messages").insert({
+            const { error } = await sb.from("direct_messages").insert({
                 sender_id: teacherId, receiver_id: activeId,
-                sender_name: "선생님", content: input.trim(),
+                sender_name: "선생님", content: content.trim(),
             });
-            setInput("");
-            loadConversation(activeId);
+            if (error) throw error;
+            await loadConversation(activeId);
+            return true;
         } catch (err) {
             if (process.env.NODE_ENV === "development") console.error(err);
-        } finally { setSending(false); }
-    }, [activeId, input, getTeacherId, loadConversation]);
+            return false;
+        } finally {
+            setSending(false);
+        }
+    }, [activeId, getTeacherId, loadConversation]);
+
+    const sendMessage = useCallback(async () => {
+        const content = input.trim();
+        if (!content) return;
+        const sent = await sendMessageContent(content);
+        if (sent) setInput("");
+    }, [input, sendMessageContent]);
 
     const startNewChat = (studentId: string) => {
         setActiveId(studentId);
@@ -220,11 +232,16 @@ export default function ChatPage() {
                         {/* Header */}
                         <div style={{
                             padding: "14px 20px", borderBottom: "1px solid #f1f5f9",
-                            display: "flex", alignItems: "center", gap: 10,
+                            display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10,
                         }}>
                             <span style={{ fontSize: 14, fontWeight: 800, color: "#172554" }}>
                                 {studentNameByAnyId.get(activeId) || chatStudents.find(s => s.id === activeId)?.name || "학생"}
                             </span>
+                            <LearningReviewRequestComposer
+                                studentName={studentNameByAnyId.get(activeId) || chatStudents.find(s => s.id === activeId)?.name || "학생"}
+                                sending={sending}
+                                onSend={sendMessageContent}
+                            />
                         </div>
 
                         {/* Messages */}
@@ -270,13 +287,13 @@ export default function ChatPage() {
                         }}>
                             <input value={input}
                                 onChange={e => setInput(e.target.value)}
-                                onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
+                                onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void sendMessage(); } }}
                                 placeholder="메시지 입력..."
                                 style={{
                                     flex: 1, padding: "10px 14px", borderRadius: 12,
                                     border: "1px solid #e2e8f0", fontSize: 13, outline: "none",
                                 }} />
-                            <button onClick={sendMessage} disabled={sending || !input.trim()} style={{
+                            <button onClick={() => void sendMessage()} disabled={sending || !input.trim()} style={{
                                 padding: "10px 20px", borderRadius: 12, border: "none",
                                 background: sending || !input.trim() ? "#94a3b8" : "#2563eb",
                                 color: "#fff", fontSize: 13, fontWeight: 700,

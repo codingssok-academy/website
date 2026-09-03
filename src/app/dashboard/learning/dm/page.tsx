@@ -9,6 +9,7 @@ import {
     prioritizeTeacherContacts,
     readTeacherQuestionDraft,
 } from "@/lib/tutor-fallback";
+import LearningReviewMessage from "@/components/learning/LearningReviewMessage";
 
 interface DM {
     id: string;
@@ -491,7 +492,7 @@ export default function DMPage() {
                                                                     whiteSpace: "pre-wrap", wordBreak: "break-word",
                                                                 }}
                                                             >
-                                                                {m.content}
+                                                                <LearningReviewMessage content={m.content} />
                                                             </motion.div>
                                                             <span style={{
                                                                 fontSize: 10, color: "#94a3b8", flexShrink: 0,

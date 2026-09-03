@@ -39,6 +39,7 @@ import { DigitalCreatorActionWriting, type DigitalCreatorActionAnswers } from ".
 import { DigitalCreatorLessonProgress } from "./DigitalCreatorLessonProgress";
 import LessonReadAloudButton from "./LessonReadAloudButton";
 import { getCertificateChapters } from "@/data/courses";
+import LearningReviewMarker from "@/components/learning/LearningReviewMarker";
 
 /* ── Highlighter Colors ── */
 const HL_COLORS = [
@@ -1612,6 +1613,15 @@ export default function CourseDetailPage() {
                                     </motion.div>
                                 );
                             })()}
+
+                            <LearningReviewMarker
+                                enabled={!isTeacherView}
+                                authUserId={user?.id}
+                                studentId={user?.studentId}
+                                courseId={courseId}
+                                unitId={selectedUnit?.id}
+                                pageId={activePage?.id}
+                            />
 
                             {activePage.content && courseId !== "4" && !isIframePage && (
                                 <LessonReadAloudButton
