@@ -1401,6 +1401,8 @@ export default function CourseDetailPage() {
                ══════════════════════════════════════════════ */}
             <main style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", position: "relative" }}>
 
+                <MobileCodingGuidance />
+
                 {selectedUnit && activePage ? (
                     <>
                         {/* Toolbar — 형광펜 + 보기 모드 (cpp/어린이IT는 hide) */}
@@ -1495,8 +1497,6 @@ export default function CourseDetailPage() {
                                 </>
                             )}
                         </div>
-
-                        <MobileCodingGuidance />
 
                         {/* Content */}
                         {slideMode && (courseId === "4" || courseId === "10") ? (
