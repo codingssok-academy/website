@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { PIN_COURSE } from "@/lib/parent-auth";
 import type { ParentSessionPayload } from "@/lib/parent-session";
+import { usesHashedStudentAccessCodes } from "@/lib/student-access-codes";
 
 type StudentAccessRow = {
     id: string;
@@ -70,11 +71,28 @@ export async function canParentSessionReadStudent(
     session: ParentSessionPayload | null,
     studentName: string,
 ) {
-    if (!session?.studentId || !session.parentPin) return false;
+    if (!session?.studentId) return false;
 
     const normalizedName = normalizeParentAccessName(studentName);
     const allowedNames = getSessionAllowedNames(session, normalizedName);
     if (!allowedNames.includes(normalizedName)) return false;
+
+    if (usesHashedStudentAccessCodes()) {
+        const allowedIds = unique([session.studentId, ...(session.studentIds || [])]);
+        const { data, error } = await supabase
+            .from("students")
+            .select("id, name, status")
+            .in("id", allowedIds);
+        if (error) return false;
+
+        return ((data || []) as StudentAccessRow[]).some(row => (
+            allowedIds.includes(row.id)
+            && normalizeParentAccessName(row.name) === normalizedName
+            && row.status === "active"
+        ));
+    }
+
+    if (!session.parentPin) return false;
 
     const normalizedPin = session.parentPin.replace(/\D/g, "").slice(0, 5);
     if (!/^\d{5}$/.test(normalizedPin)) return false;

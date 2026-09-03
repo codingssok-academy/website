@@ -187,7 +187,7 @@ export default function LoginPage() {
 
       const matched = result.student as StudentRow;
       clearLoginAttempts();
-      loginAs(matched, authUser.id);
+      loginAs(matched, authUser.id, result.accountRole);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       if (process.env.NODE_ENV === 'development') console.error("[Login] error:", err);
@@ -226,7 +226,7 @@ export default function LoginPage() {
       const sb = createClient();
       const authUserId = await signInStudentAuth(sb, student, pin);
       clearLoginAttempts();
-      loginAs(student, authUserId);
+      loginAs(student, authUserId, data.accountRole);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       if (process.env.NODE_ENV === "development") console.error("[Signup] error:", err);
@@ -237,9 +237,11 @@ export default function LoginPage() {
   };
 
   /* ── 로그인 처리 ── */
-  const loginAs = (student: StudentRow, authUserId: string) => {
-    const isAdminStudent = student.class?.replace(/\s+/g, "").toLowerCase() === "admin"
-      || student.name.replace(/\s+/g, "") === "장민";
+  const loginAs = (student: StudentRow, authUserId: string, accountRole?: unknown) => {
+    const isAdminStudent = accountRole === "admin" || (accountRole == null && (
+      student.class?.replace(/\s+/g, "").toLowerCase() === "admin"
+      || student.name.replace(/\s+/g, "") === "장민"
+    ));
     const profile = {
       id: authUserId,
       studentId: student.id,
@@ -253,7 +255,6 @@ export default function LoginPage() {
       joinedAt: new Date().toISOString(),
     };
     localStorage.setItem("codingssok_user", JSON.stringify(profile));
-    document.cookie = `codingssok_session=${authUserId}; path=/; max-age=${60 * 60 * 24 * 30}; Secure; SameSite=Lax`;
     const params = new URLSearchParams(window.location.search);
     const redirect = params.get("redirect");
     window.location.href = redirect || "/dashboard/learning";

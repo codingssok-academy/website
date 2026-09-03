@@ -13,6 +13,10 @@ import { createNotionStudentId, getNotionParentAccess } from "@/lib/notion-feedb
 import { canParentSessionReadStudent, loadAllowedStudentsByParentPin, normalizeParentAccessName } from "@/lib/parent-session-access";
 import { callParentPortalEdge } from "@/lib/parent-edge";
 import { canParentSessionReadStudentFromDatabase, hasDatabaseAdmin } from "@/lib/postgres-admin";
+import {
+    usesHashedStudentAccessCodes,
+    verifyHashedStudentAccessCode,
+} from "@/lib/student-access-codes";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -61,6 +65,13 @@ export async function GET(req: NextRequest) {
 
         const adminClient = createAdminClient();
         let canRead = false;
+
+        if (usesHashedStudentAccessCodes() && !adminClient) {
+            return NextResponse.json(
+                { success: false, error: "새 학부모 인증 서버 설정을 확인해주세요." },
+                { status: 503, headers: NO_STORE_HEADERS },
+            );
+        }
 
         if (adminClient) {
             canRead = await canParentSessionReadStudent(adminClient, session, studentName);
@@ -154,6 +165,56 @@ export async function POST(req: NextRequest) {
                 return NextResponse.json({ success: false, error: "요청이 너무 많습니다. 잠시 후 다시 시도해주세요." }, { status: 429, headers: NO_STORE_HEADERS });
             }
         } catch { /* Redis가 없어도 인증 자체는 계속 진행 */ }
+
+        if (usesHashedStudentAccessCodes()) {
+            const adminClient = createAdminClient();
+            if (!adminClient) {
+                return NextResponse.json(
+                    { success: false, error: "새 학부모 인증 서버 설정을 확인해주세요." },
+                    { status: 503, headers: NO_STORE_HEADERS },
+                );
+            }
+
+            const verified = await verifyHashedStudentAccessCode(adminClient, {
+                studentName,
+                purpose: "parent_access",
+                code: pin,
+            });
+            if (verified.length !== 1) {
+                return NextResponse.json(
+                    { success: false, error: "학생 이름 또는 학부모 인증번호가 맞지 않습니다." },
+                    { status: 401, headers: NO_STORE_HEADERS },
+                );
+            }
+
+            const { data: student, error } = await adminClient
+                .from("students")
+                .select("id,name,status")
+                .eq("id", verified[0].studentId)
+                .maybeSingle();
+            if (error) throw new Error(error.message);
+            if (!student || student.status !== "active") {
+                return NextResponse.json(
+                    { success: false, error: "학생 이름 또는 학부모 인증번호가 맞지 않습니다." },
+                    { status: 401, headers: NO_STORE_HEADERS },
+                );
+            }
+
+            const canonicalName = normalizeParentAccessName(student.name);
+            const token = createParentSessionToken({
+                studentId: student.id,
+                studentIds: [student.id],
+                studentNames: [canonicalName],
+                parentName: canonicalName,
+            });
+            const response = NextResponse.json({
+                success: true,
+                studentName: canonicalName,
+                allowedStudents: [canonicalName],
+            }, { headers: NO_STORE_HEADERS });
+            setParentSessionCookie(response, token);
+            return response;
+        }
 
         const notionResult = await getNotionParentAccess(studentName, pin);
         const notionAccess = notionResult.access;

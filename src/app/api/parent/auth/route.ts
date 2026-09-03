@@ -7,6 +7,11 @@ import { callParentPortalEdge } from '@/lib/parent-edge'
 import { findParentAuthInDatabase, hasDatabaseAdmin } from '@/lib/postgres-admin'
 import { loadAllowedStudentsByParentPin } from '@/lib/parent-session-access'
 import { getLinkedStudentNames } from '@/lib/student-family'
+import {
+    usesHashedStudentAccessCodes,
+    verifyHashedStudentAccessCode,
+} from '@/lib/student-access-codes'
+import { rateLimit } from '@/lib/rate-limit'
 
 function isLocalRequest(request: NextRequest) {
     const host = request.headers.get('host') || ''
@@ -54,7 +59,66 @@ export async function POST(request: NextRequest) {
             )
         }
 
+        const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
+        const limit = await rateLimit(`parent-auth:${ip}`, { maxRequests: 12, windowMs: 60_000 })
+        if (!limit.success) {
+            return NextResponse.json(
+                { success: false, error: '인증 시도가 너무 많습니다. 잠시 후 다시 시도해주세요.' },
+                { status: 429 },
+            )
+        }
+
         const adminClient = createAdminClient()
+        if (usesHashedStudentAccessCodes()) {
+            if (!adminClient) {
+                return NextResponse.json(
+                    { success: false, error: '새 학부모 인증 서버 설정을 확인해주세요.' },
+                    { status: 503 },
+                )
+            }
+
+            const verified = await verifyHashedStudentAccessCode(adminClient, {
+                studentName: name,
+                purpose: 'parent_access',
+                code: pin,
+            })
+            if (verified.length !== 1) {
+                return NextResponse.json(
+                    { success: false, error: '학생 이름 또는 학부모 인증번호가 맞지 않습니다.' },
+                    { status: 401 },
+                )
+            }
+
+            const { data: student, error } = await adminClient
+                .from('students')
+                .select('id,name,status')
+                .eq('id', verified[0].studentId)
+                .maybeSingle()
+            if (error) throw new Error(error.message)
+            if (!student || student.status !== 'active') {
+                return NextResponse.json(
+                    { success: false, error: '학생 이름 또는 학부모 인증번호가 맞지 않습니다.' },
+                    { status: 401 },
+                )
+            }
+
+            const studentName = normalizeName(student.name)
+            const response = NextResponse.json({
+                success: true,
+                studentName,
+                studentId: student.id,
+                mode: 'hashed',
+                allowedStudents: [studentName],
+            })
+            setParentSessionCookie(response, createParentSessionToken({
+                studentId: student.id,
+                studentIds: [student.id],
+                studentNames: [studentName],
+                parentName: studentName,
+            }))
+            return response
+        }
+
         if (!adminClient) {
             if (hasDatabaseAdmin()) {
                 const auth = await findParentAuthInDatabase(name, pin)

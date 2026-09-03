@@ -4,6 +4,12 @@ import { buildStudentAuthEmail, buildStudentAuthPassword } from "@/lib/auth-brid
 import { PIN_COURSE } from "@/lib/parent-auth";
 import { findReferenceParentCode } from "@/lib/parent-code-reference";
 import { callParentPortalEdge } from "@/lib/parent-edge";
+import {
+    issueHashedStudentAccessCode,
+    usesHashedStudentAccessCodes,
+    verifyHashedStudentAccessCode,
+} from "@/lib/student-access-codes";
+import { rateLimit } from "@/lib/rate-limit";
 
 type AdminClient = NonNullable<ReturnType<typeof createAdminClient>>;
 
@@ -182,6 +188,109 @@ async function syncParentCode(input: {
     if (error) throw new Error(error.message);
 }
 
+async function signupWithHashedAccessCodes(input: {
+    adminClient: AdminClient;
+    name: string;
+    parentCode: string;
+    loginPin: string;
+    school: string;
+    grade: string;
+}) {
+    const verified = await verifyHashedStudentAccessCode(input.adminClient, {
+        studentName: input.name,
+        purpose: "parent_access",
+        code: input.parentCode,
+    });
+    if (verified.length !== 1) {
+        return NextResponse.json(
+            { success: false, error: "학생 이름 또는 학부모 인증번호가 맞지 않습니다." },
+            { status: 401 },
+        );
+    }
+
+    const { data, error } = await input.adminClient
+        .from("students")
+        .select("id, name, school, grade, class, avatar, auth_user_id, birthday, status")
+        .eq("id", verified[0].studentId)
+        .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!data) {
+        return NextResponse.json(
+            { success: false, error: "등록된 학생 정보를 찾지 못했습니다." },
+            { status: 404 },
+        );
+    }
+
+    const student = data as StudentRow;
+    if (student.status === "deactivated") {
+        return NextResponse.json(
+            { success: false, error: "비활성화된 학생입니다. 선생님에게 문의해주세요." },
+            { status: 403 },
+        );
+    }
+
+    const email = buildStudentAuthEmail(student.id);
+    const password = buildStudentAuthPassword(student.id, input.loginPin);
+    const authPayload = { email, password, name: input.name, role: "student" };
+    const authResult = await resolveStudentAuthUser({
+        adminClient: input.adminClient,
+        studentAuthUserId: student.auth_user_id,
+        payload: authPayload,
+    });
+
+    try {
+        const now = new Date().toISOString();
+        const { error: profileError } = await input.adminClient
+            .from("profiles")
+            .upsert({
+                id: authResult.authUserId,
+                email,
+                name: input.name,
+                display_name: input.name,
+                role: "student",
+                approval_status: "approved",
+                birth_date: student.birthday || null,
+                updated_at: now,
+            }, { onConflict: "id" });
+        if (profileError) throw new Error(profileError.message);
+
+        const { data: updated, error: updateError } = await input.adminClient
+            .from("students")
+            .update({
+                profile_id: authResult.authUserId,
+                auth_user_id: authResult.authUserId,
+                school: input.school || student.school || null,
+                grade: input.grade || student.grade || null,
+                status: "active",
+                updated_at: now,
+            })
+            .eq("id", student.id)
+            .select("id, name, school, grade, class, avatar, auth_user_id, birthday, status")
+            .single();
+        if (updateError || !updated) {
+            throw new Error(updateError?.message || "학생 계정을 연결하지 못했습니다.");
+        }
+
+        await issueHashedStudentAccessCode(input.adminClient, {
+            studentId: student.id,
+            purpose: "student_login",
+            code: input.loginPin,
+        });
+
+        return NextResponse.json({
+            success: true,
+            student: publicStudent(updated as StudentRow),
+            accountRole: "student",
+            message: "회원가입이 완료되었습니다.",
+        });
+    } catch (error) {
+        if (authResult.created) {
+            await cleanupCreatedAuthUser(input.adminClient, authResult.authUserId);
+        }
+        throw error;
+    }
+}
+
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
@@ -201,8 +310,23 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ success: false, error: "로그인에 사용할 비밀번호 4자리를 입력해주세요." }, { status: 400 });
         }
 
+        const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+        const limit = await rateLimit(`student-signup:${ip}`, { maxRequests: 8, windowMs: 60_000 });
+        if (!limit.success) {
+            return NextResponse.json(
+                { success: false, error: "가입 시도가 너무 많습니다. 잠시 후 다시 시도해주세요." },
+                { status: 429 },
+            );
+        }
+
         const adminClient = createAdminClient();
         if (!adminClient) {
+            if (usesHashedStudentAccessCodes()) {
+                return NextResponse.json(
+                    { success: false, error: "새 로그인 서버 설정을 확인해주세요." },
+                    { status: 503 },
+                );
+            }
             const edge = await callParentPortalEdge<{
                 success: boolean;
                 student?: ReturnType<typeof publicStudent>;
@@ -216,6 +340,17 @@ export async function POST(request: NextRequest) {
                 );
             }
             return NextResponse.json(edge.data);
+        }
+
+        if (usesHashedStudentAccessCodes()) {
+            return signupWithHashedAccessCodes({
+                adminClient,
+                name,
+                parentCode,
+                loginPin: pin,
+                school,
+                grade,
+            });
         }
 
         const { data: studentRowsData, error: studentError } = await adminClient
@@ -319,6 +454,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({
                 success: true,
                 student: publicStudent(updated as StudentRow),
+                accountRole,
                 message: "회원가입이 완료되었습니다.",
             });
         } catch (error) {

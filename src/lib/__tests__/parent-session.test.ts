@@ -61,4 +61,19 @@ describe('parent-session', () => {
             })
         ).toThrow('PARENT_SESSION_SECRET is not configured.')
     })
+
+    it('never places a parent access code in a fresh-mode session token', () => {
+        vi.stubEnv('SUPABASE_ACCESS_CODE_MODE', 'hashed')
+        const token = createParentSessionToken({
+            studentId: 'student-5',
+            studentIds: ['student-5'],
+            studentNames: ['테스트학생'],
+            parentPin: '54321',
+            parentName: '테스트학생',
+        })
+
+        const payload = verifyParentSessionToken(token)
+        expect(payload?.studentId).toBe('student-5')
+        expect(payload?.parentPin).toBeUndefined()
+    })
 })

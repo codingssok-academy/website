@@ -1,6 +1,7 @@
 import { createHmac, timingSafeEqual } from 'crypto'
 import type { NextResponse } from 'next/server'
 import { env } from '@/lib/env'
+import { usesHashedStudentAccessCodes } from '@/lib/student-access-codes'
 
 export const PARENT_SESSION_COOKIE = 'codingssok_parent_session'
 const PARENT_SESSION_TTL_MS = 1000 * 60 * 60 * 12
@@ -50,7 +51,9 @@ export function createParentSessionToken(input: {
     parentName?: string | null
 }) {
     const now = Date.now()
-    const parentPin = (input.parentPin || '').replace(/\D/g, '').slice(0, 5)
+    const parentPin = usesHashedStudentAccessCodes()
+        ? ''
+        : (input.parentPin || '').replace(/\D/g, '').slice(0, 5)
     const payload: ParentSessionPayload = {
         studentId: input.studentId,
         studentIds: input.studentIds?.filter(Boolean).slice(0, 5),

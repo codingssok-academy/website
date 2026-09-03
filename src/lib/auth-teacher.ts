@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { usesHashedStudentAccessCodes } from "@/lib/student-access-codes";
 
 export type TeacherAuthResult =
     | { ok: true; userId: string; role: string }
@@ -40,7 +41,7 @@ export async function requireTeacher(): Promise<TeacherAuthResult> {
 
         if (profile?.role !== "teacher" && profile?.role !== "admin") {
             const admin = createAdminClient();
-            if (admin) {
+            if (admin && !usesHashedStudentAccessCodes()) {
                 const { data: linkedStudent } = await admin
                     .from("students")
                     .select("name,class,status")
