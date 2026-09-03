@@ -36,6 +36,7 @@ import CertificateSelector from "./CertificateSelector";
 import { PictureChoiceActivity } from "./PictureChoiceActivity";
 import { DigitalCreatorActionWriting, type DigitalCreatorActionAnswers } from "./DigitalCreatorActionWriting";
 import { DigitalCreatorLessonProgress } from "./DigitalCreatorLessonProgress";
+import LessonReadAloudButton from "./LessonReadAloudButton";
 import { getCertificateChapters } from "@/data/courses";
 
 /* ── Highlighter Colors ── */
@@ -1608,6 +1609,14 @@ export default function CourseDetailPage() {
                                     </motion.div>
                                 );
                             })()}
+
+                            {activePage.content && courseId !== "4" && !isIframePage && (
+                                <LessonReadAloudButton
+                                    key={activePage.id}
+                                    title={activePage.title}
+                                    html={activePage.content}
+                                />
+                            )}
 
                             {/* HTML content — cpp(4)는 React img 직접 렌더, 어린이 IT(11)는 HTML 슬라이드 렌더 */}
                             {activePage.content && (

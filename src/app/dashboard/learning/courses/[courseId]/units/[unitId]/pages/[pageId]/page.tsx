@@ -28,6 +28,7 @@ import SlideViewer from "@/components/learning/SlideViewer";
 import BookSlideViewer from "@/components/learning/BookSlideViewer";
 import { createClient } from "@/lib/supabase";
 import { DigitalCreatorActionWriting, type DigitalCreatorActionAnswers } from "../../../../DigitalCreatorActionWriting";
+import LessonReadAloudButton from "../../../../LessonReadAloudButton";
 
 /* ──────────────────────────────────────────────
    Learning Content Page
@@ -680,6 +681,18 @@ export default function LearningContentPage() {
 
                 {/* Content Body */}
                 <div style={{ padding: "28px 36px 36px" }}>
+                    {currentPage.content
+                        && !currentPage.content.includes('<iframe')
+                        && !currentPage.content.includes('cs-slide-wrap')
+                        && (courseData.materialMode !== 'ppt' || courseId === '11' || courseId === '12')
+                        && (
+                            <LessonReadAloudButton
+                                key={currentPage.id}
+                                title={currentPage.title}
+                                html={currentPage.content}
+                            />
+                        )}
+
                     {/* HTML content — all content is sanitized via isomorphic-dompurify in sanitizeHTML() */}
                     {courseData.materialMode === 'ppt' && courseId !== '11' && courseId !== '12' ? (
                         /* PPT 모드 (컴퓨터기초/코딩기초/피지컬) — 선생님 PPT iframe */
