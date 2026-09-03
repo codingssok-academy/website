@@ -4,6 +4,11 @@ import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { createClient } from "@/lib/supabase";
+import {
+    clearTeacherQuestionDraft,
+    prioritizeTeacherContacts,
+    readTeacherQuestionDraft,
+} from "@/lib/tutor-fallback";
 
 interface DM {
     id: string;
@@ -19,6 +24,7 @@ interface TeacherProfile {
     id: string;
     name: string | null;
     display_name: string | null;
+    role: string | null;
 }
 
 const glassCard: React.CSSProperties = {
@@ -63,6 +69,17 @@ export default function DMPage() {
     const scrollRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
 
+    useEffect(() => {
+        const draft = readTeacherQuestionDraft();
+        if (!draft) return;
+        const timer = window.setTimeout(() => {
+            setNewMsg(current => current || draft);
+            setMobileView("chat");
+            clearTeacherQuestionDraft();
+        }, 0);
+        return () => window.clearTimeout(timer);
+    }, []);
+
     const userIds = useMemo(() => {
         if (!user) return [] as string[];
         return Array.from(new Set([user.id, user.studentId].filter(Boolean))) as string[];
@@ -72,11 +89,12 @@ export default function DMPage() {
     const fetchTeachers = useCallback(async () => {
         const { data } = await supabase
             .from("profiles")
-            .select("id, name, display_name")
-            .eq("role", "teacher");
+            .select("id, name, display_name, role")
+            .in("role", ["admin", "teacher"]);
         if (data && data.length > 0) {
-            setTeachers(data);
-            setActiveTeacherId(prev => prev ?? data[0].id);
+            const contacts = prioritizeTeacherContacts(data as TeacherProfile[]);
+            setTeachers(contacts);
+            setActiveTeacherId(prev => prev ?? contacts[0].id);
         }
     }, [supabase]);
 
