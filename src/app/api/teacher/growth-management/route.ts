@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireTeacher } from "@/lib/auth-teacher";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import {
+    normalizeGrowthArtifactTitle,
+    normalizeGrowthArtifactUrl,
+} from "@/lib/growth-artifacts";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -57,7 +62,8 @@ function isMissingGrowthTable(error: DbError | null) {
 
 async function loadData() {
     const supabase = await createClient();
-    const [studentsRes, recordsRes, entriesRes] = await Promise.all([
+    const admin = createAdminClient();
+    const [studentsRes, recordsRes, entriesRes, filesRes] = await Promise.all([
         supabase
             .from("students")
             .select("id,name,school,grade,class,status,updated_at,created_at")
@@ -72,6 +78,13 @@ async function loadData() {
             .select("*")
             .order("created_at", { ascending: false })
             .limit(500),
+        admin
+            ? admin
+                .from("student_files")
+                .select("id,student_id,original_name,mime_type,category,created_at")
+                .order("created_at", { ascending: false })
+                .limit(1000)
+            : Promise.resolve({ data: [], error: null }),
     ]);
 
     if (studentsRes.error) throw new Error(studentsRes.error.message);
@@ -98,7 +111,39 @@ async function loadData() {
         students,
         records: recordsRes.data || [],
         entries: entriesRes.data || [],
+        files: filesRes.error ? [] : filesRes.data || [],
     };
+}
+
+function readArtifact(body: Record<string, unknown>) {
+    const artifactTitle = normalizeGrowthArtifactTitle(body.artifactTitle);
+    const artifactFileId = readString(body, "artifactFileId", 120) || null;
+    const artifactUrl = normalizeGrowthArtifactUrl(body.artifactUrl);
+
+    if (artifactFileId && artifactUrl) {
+        throw new Error("결과물은 엔트리 링크 또는 학생 파일 중 하나만 선택해주세요.");
+    }
+
+    return {
+        artifact_title: artifactTitle || null,
+        artifact_url: artifactUrl,
+        artifact_file_id: artifactFileId,
+    };
+}
+
+async function artifactFileBelongsToStudent(studentId: string, fileId: string | null) {
+    if (!fileId) return true;
+    const admin = createAdminClient();
+    if (!admin) throw new Error("학생 파일함을 확인할 서버 설정이 필요합니다.");
+
+    const { data, error } = await admin
+        .from("student_files")
+        .select("id")
+        .eq("id", fileId)
+        .eq("student_id", studentId)
+        .maybeSingle();
+    if (error) throw new Error(error.message);
+    return Boolean(data);
 }
 
 export async function GET() {
@@ -133,6 +178,15 @@ export async function POST(request: NextRequest) {
     const autoSave = readBoolean(body, "autoSave");
     const createEntry = readBoolean(body, "createEntry");
     const entryNote = readText(body, "entryNote");
+    let artifact: ReturnType<typeof readArtifact>;
+    try {
+        artifact = readArtifact(body);
+    } catch (error) {
+        return NextResponse.json(
+            { success: false, error: error instanceof Error ? error.message : "결과물 정보를 확인해주세요." },
+            { status: 400, headers: NO_STORE_HEADERS },
+        );
+    }
     const payload = {
         student_id: studentId,
         student_name: readText(body, "studentName", 120),
@@ -146,6 +200,7 @@ export async function POST(request: NextRequest) {
         parent_feedback_draft: readText(body, "parentFeedbackDraft"),
         teacher_memo: readText(body, "teacherMemo"),
         status: readString(body, "recordStatus", 120) || "관찰중",
+        ...artifact,
         created_by: auth.userId,
         updated_by: auth.userId,
     };
@@ -164,10 +219,20 @@ export async function POST(request: NextRequest) {
         teacher_memo: payload.teacher_memo,
         entry_note: entryNote,
         status: payload.status,
+        artifact_title: payload.artifact_title,
+        artifact_url: payload.artifact_url,
+        artifact_file_id: payload.artifact_file_id,
         created_by: auth.userId,
     };
 
     try {
+        if (!await artifactFileBelongsToStudent(studentId, artifact.artifact_file_id)) {
+            return NextResponse.json(
+                { success: false, error: "선택한 학생의 파일을 찾지 못했습니다." },
+                { status: 400, headers: NO_STORE_HEADERS },
+            );
+        }
+
         const { data: record, error: upsertError } = await supabase
             .from("student_growth_management")
             .upsert(payload, { onConflict: "student_id" })
@@ -212,6 +277,16 @@ export async function PATCH(request: NextRequest) {
         return NextResponse.json({ success: false, error: "수정할 성장 기록을 찾지 못했습니다." }, { status: 400 });
     }
 
+    let artifact: ReturnType<typeof readArtifact>;
+    try {
+        artifact = readArtifact(body);
+    } catch (error) {
+        return NextResponse.json(
+            { success: false, error: error instanceof Error ? error.message : "결과물 정보를 확인해주세요." },
+            { status: 400, headers: NO_STORE_HEADERS },
+        );
+    }
+
     const payload = {
         current_class: readText(body, "currentClass", 120),
         strengths: readText(body, "strengths"),
@@ -223,9 +298,17 @@ export async function PATCH(request: NextRequest) {
         teacher_memo: readText(body, "teacherMemo"),
         entry_note: readText(body, "entryNote"),
         status: readString(body, "recordStatus", 120) || "관찰중",
+        ...artifact,
     };
 
     try {
+        if (!await artifactFileBelongsToStudent(studentId, artifact.artifact_file_id)) {
+            return NextResponse.json(
+                { success: false, error: "선택한 학생의 파일을 찾지 못했습니다." },
+                { status: 400, headers: NO_STORE_HEADERS },
+            );
+        }
+
         const supabase = await createClient();
         const { data: entry, error } = await supabase
             .from("student_growth_entries")

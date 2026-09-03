@@ -34,6 +34,51 @@ describe("학부모 통합 현황 공개 데이터", () => {
     expect(toParentGrowthRecord({ id: "ready-1", status: "전달 준비" })).toBeNull();
   });
 
+  it("완료된 기록에 연결된 엔트리 링크만 안전한 주소로 공개한다", () => {
+    const result = toParentGrowthRecord({
+      id: "growth-link",
+      status: "완료",
+      artifact_title: "가짜 우주 게임",
+      artifact_url: "https://playentry.org/project/fake-project",
+    });
+
+    expect(result?.artifact).toEqual({
+      kind: "link",
+      title: "가짜 우주 게임",
+      url: "https://playentry.org/project/fake-project",
+    });
+    expect(toParentGrowthRecord({
+      id: "growth-unsafe",
+      status: "완료",
+      artifact_url: "javascript:alert(1)",
+    })?.artifact).toBeUndefined();
+  });
+
+  it("성장 기록과 정확히 일치하는 학생 파일만 공개한다", () => {
+    const growth = {
+      id: "growth-file",
+      status: "완료",
+      artifact_title: "가짜 발표 자료",
+      artifact_file_id: "file-1",
+    };
+
+    expect(toParentGrowthRecord(growth, {
+      id: "file-1",
+      original_name: "fake-project.pdf",
+      mime_type: "application/pdf",
+    })?.artifact).toEqual({
+      kind: "file",
+      title: "가짜 발표 자료",
+      fileId: "file-1",
+      fileName: "fake-project.pdf",
+      mimeType: "application/pdf",
+    });
+    expect(toParentGrowthRecord(growth, {
+      id: "another-file",
+      original_name: "private.pdf",
+    })?.artifact).toBeUndefined();
+  });
+
   it("출석 기록에서 내부 메모를 제외한다", () => {
     const result = toParentAttendance({
       period: { month: "2026-08" },

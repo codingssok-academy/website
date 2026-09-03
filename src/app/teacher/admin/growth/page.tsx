@@ -13,6 +13,17 @@ type StudentOption = {
     status: string | null;
 };
 
+type StudentFileOption = {
+    id: string;
+    student_id: string;
+    original_name: string;
+    mime_type: string | null;
+    category: string;
+    created_at: string;
+};
+
+type ArtifactType = "none" | "link" | "file";
+
 type GrowthRecord = {
     id: string;
     student_id: string;
@@ -27,6 +38,9 @@ type GrowthRecord = {
     parent_feedback_draft: string | null;
     teacher_memo: string | null;
     status: string | null;
+    artifact_title: string | null;
+    artifact_url: string | null;
+    artifact_file_id: string | null;
     updated_at: string | null;
 };
 
@@ -41,6 +55,7 @@ type ApiResponse = {
     students?: StudentOption[];
     records?: GrowthRecord[];
     entries?: GrowthEntry[];
+    files?: StudentFileOption[];
     record?: GrowthRecord;
     entry?: GrowthEntry | null;
     error?: string;
@@ -59,6 +74,10 @@ type FormState = {
     teacherMemo: string;
     entryNote: string;
     recordStatus: string;
+    artifactType: ArtifactType;
+    artifactTitle: string;
+    artifactUrl: string;
+    artifactFileId: string;
 };
 
 type EntryEditState = {
@@ -72,6 +91,10 @@ type EntryEditState = {
     teacherMemo: string;
     entryNote: string;
     recordStatus: string;
+    artifactType: ArtifactType;
+    artifactTitle: string;
+    artifactUrl: string;
+    artifactFileId: string;
 };
 
 const EMPTY_FORM: FormState = {
@@ -87,6 +110,10 @@ const EMPTY_FORM: FormState = {
     teacherMemo: "",
     entryNote: "",
     recordStatus: "관찰중",
+    artifactType: "none",
+    artifactTitle: "",
+    artifactUrl: "",
+    artifactFileId: "",
 };
 
 const NO_CLASS_PROGRESS_LABEL = "수업 미진행";
@@ -183,6 +210,10 @@ function toForm(record: GrowthRecord, fallback?: StudentOption): FormState {
         teacherMemo: record.teacher_memo || "",
         entryNote: "",
         recordStatus: record.status || "관찰중",
+        artifactType: record.artifact_file_id ? "file" : record.artifact_url ? "link" : "none",
+        artifactTitle: record.artifact_title || "",
+        artifactUrl: record.artifact_url || "",
+        artifactFileId: record.artifact_file_id || "",
     };
 }
 
@@ -207,6 +238,10 @@ function toEntryEdit(entry: GrowthEntry): EntryEditState {
         teacherMemo: entry.teacher_memo || "",
         entryNote: entry.entry_note || "",
         recordStatus: entry.status || "관찰중",
+        artifactType: entry.artifact_file_id ? "file" : entry.artifact_url ? "link" : "none",
+        artifactTitle: entry.artifact_title || "",
+        artifactUrl: entry.artifact_url || "",
+        artifactFileId: entry.artifact_file_id || "",
     };
 }
 
@@ -246,6 +281,7 @@ function buildParentCopy(form: FormState) {
 
 export default function GrowthManagementPage() {
     const [students, setStudents] = useState<StudentOption[]>([]);
+    const [studentFiles, setStudentFiles] = useState<StudentFileOption[]>([]);
     const [records, setRecords] = useState<GrowthRecord[]>([]);
     const [entries, setEntries] = useState<GrowthEntry[]>([]);
     const [selectedId, setSelectedId] = useState("");
@@ -278,6 +314,10 @@ export default function GrowthManagementPage() {
     const selectedStudent = useMemo(() => students.find(student => student.id === selectedId), [selectedId, students]);
     const selectedRecord = selectedId ? recordByStudent.get(selectedId) : undefined;
     const selectedEntries = selectedId ? entriesByStudent.get(selectedId) || [] : [];
+    const availableFiles = useMemo(
+        () => studentFiles.filter(file => file.student_id === selectedId),
+        [selectedId, studentFiles],
+    );
     const summary = useMemo(() => {
         const recorded = records.filter(record => hasGrowthContent(record)).length;
         const ready = records.filter(record => {
@@ -343,6 +383,7 @@ export default function GrowthManagementPage() {
             const nextStudents = data.students || [];
             const nextRecords = data.records || [];
             setStudents(nextStudents);
+            setStudentFiles(data.files || []);
             setRecords(nextRecords);
             setEntries(data.entries || []);
             setMigrationRequired(Boolean(data.migrationRequired));
@@ -433,6 +474,16 @@ export default function GrowthManagementPage() {
         setForm(prev => ({ ...prev, [key]: value }));
     };
 
+    const updateArtifactType = (artifactType: ArtifactType) => {
+        setForm(prev => ({
+            ...prev,
+            artifactType,
+            artifactUrl: artifactType === "link" ? prev.artifactUrl : "",
+            artifactFileId: artifactType === "file" ? prev.artifactFileId : "",
+            artifactTitle: artifactType === "none" ? "" : prev.artifactTitle,
+        }));
+    };
+
     const startEntryEdit = (entry: GrowthEntry) => {
         if (entry.student_id !== form.studentId) return;
         setEditingEntryId(entry.id);
@@ -447,6 +498,16 @@ export default function GrowthManagementPage() {
 
     const updateEntryEdit = (key: keyof EntryEditState, value: string) => {
         setEntryEdit(prev => prev ? { ...prev, [key]: value } : prev);
+    };
+
+    const updateEntryArtifactType = (artifactType: ArtifactType) => {
+        setEntryEdit(prev => prev ? {
+            ...prev,
+            artifactType,
+            artifactUrl: artifactType === "link" ? prev.artifactUrl : "",
+            artifactFileId: artifactType === "file" ? prev.artifactFileId : "",
+            artifactTitle: artifactType === "none" ? "" : prev.artifactTitle,
+        } : prev);
     };
 
     const saveEntryEdit = async () => {
@@ -733,6 +794,50 @@ export default function GrowthManagementPage() {
                                     placeholder="예: for 반복문, 조건 비교, 오류 찾기처럼 선생님이 직접 작성해주세요."
                                 />
                             </Field>
+                            <section className="artifact-editor" aria-label="이번 수업 결과물 연결">
+                                <div className="artifact-head">
+                                    <div>
+                                        <h3>이번 수업 결과물</h3>
+                                        <p>엔트리 공유 주소 또는 학생 파일함의 파일 하나를 연결할 수 있습니다.</p>
+                                    </div>
+                                    <span>완료 기록만 학부모 공개</span>
+                                </div>
+                                <div className="artifact-type-buttons" role="group" aria-label="결과물 종류">
+                                    <button type="button" className={form.artifactType === "none" ? "active" : ""} onClick={() => updateArtifactType("none")}>없음</button>
+                                    <button type="button" className={form.artifactType === "link" ? "active" : ""} onClick={() => updateArtifactType("link")}>엔트리·웹 링크</button>
+                                    <button type="button" className={form.artifactType === "file" ? "active" : ""} onClick={() => updateArtifactType("file")}>학생 파일</button>
+                                </div>
+                                {form.artifactType !== "none" && (
+                                    <Field label="학부모에게 보일 결과물 이름">
+                                        <input
+                                            value={form.artifactTitle}
+                                            onChange={event => updateForm("artifactTitle", event.target.value)}
+                                            placeholder="예: 나만의 우주 게임"
+                                            maxLength={120}
+                                        />
+                                    </Field>
+                                )}
+                                {form.artifactType === "link" && (
+                                    <Field label="엔트리 공유 주소">
+                                        <input
+                                            type="url"
+                                            inputMode="url"
+                                            value={form.artifactUrl}
+                                            onChange={event => updateForm("artifactUrl", event.target.value)}
+                                            placeholder="https://playentry.org/project/..."
+                                        />
+                                    </Field>
+                                )}
+                                {form.artifactType === "file" && (
+                                    <Field label="학생 파일함에서 선택">
+                                        <select value={form.artifactFileId} onChange={event => updateForm("artifactFileId", event.target.value)}>
+                                            <option value="">파일을 선택해주세요</option>
+                                            {availableFiles.map(file => <option key={file.id} value={file.id}>{file.original_name}</option>)}
+                                        </select>
+                                        {!availableFiles.length && <small className="artifact-empty">학생이 먼저 파일함에 결과물을 올리면 여기에서 선택할 수 있습니다.</small>}
+                                    </Field>
+                                )}
+                            </section>
                             <Field label="다음 수업 목표">
                                 <textarea value={form.currentGoal} onChange={event => updateForm("currentGoal", event.target.value)} />
                             </Field>
@@ -773,6 +878,12 @@ export default function GrowthManagementPage() {
                             </div>
                             {selectedEntries.length ? selectedEntries.slice(0, 8).map(entry => {
                                 const editDraft = editingEntryId === entry.id ? entryEdit : null;
+                                const artifactFile = entry.artifact_file_id
+                                    ? studentFiles.find(file => file.id === entry.artifact_file_id)
+                                    : null;
+                                const artifactLabel = entry.artifact_title
+                                    || artifactFile?.original_name
+                                    || (entry.artifact_url ? "엔트리·웹 결과물" : "");
                                 return (
                                     <article key={entry.id} className={editDraft ? "editing" : ""}>
                                         <div className="history-card-head">
@@ -833,6 +944,52 @@ export default function GrowthManagementPage() {
                                                         onChange={event => updateEntryEdit("classProgress", event.target.value)}
                                                     />
                                                 </Field>
+                                                <section className="artifact-editor compact" aria-label="누적 기록 결과물 수정">
+                                                    <div className="artifact-head">
+                                                        <div>
+                                                            <h3>이번 수업 결과물</h3>
+                                                            <p>이 기록과 함께 학부모에게 공개할 결과물입니다.</p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="artifact-type-buttons" role="group" aria-label="누적 기록 결과물 종류">
+                                                        <button type="button" className={editDraft.artifactType === "none" ? "active" : ""} onClick={() => updateEntryArtifactType("none")}>없음</button>
+                                                        <button type="button" className={editDraft.artifactType === "link" ? "active" : ""} onClick={() => updateEntryArtifactType("link")}>엔트리·웹 링크</button>
+                                                        <button type="button" className={editDraft.artifactType === "file" ? "active" : ""} onClick={() => updateEntryArtifactType("file")}>학생 파일</button>
+                                                    </div>
+                                                    {editDraft.artifactType !== "none" && (
+                                                        <Field label="결과물 이름">
+                                                            <input
+                                                                aria-label="누적 기록 결과물 이름 수정"
+                                                                value={editDraft.artifactTitle}
+                                                                onChange={event => updateEntryEdit("artifactTitle", event.target.value)}
+                                                                maxLength={120}
+                                                            />
+                                                        </Field>
+                                                    )}
+                                                    {editDraft.artifactType === "link" && (
+                                                        <Field label="엔트리 공유 주소">
+                                                            <input
+                                                                aria-label="누적 기록 엔트리 공유 주소 수정"
+                                                                type="url"
+                                                                inputMode="url"
+                                                                value={editDraft.artifactUrl}
+                                                                onChange={event => updateEntryEdit("artifactUrl", event.target.value)}
+                                                            />
+                                                        </Field>
+                                                    )}
+                                                    {editDraft.artifactType === "file" && (
+                                                        <Field label="학생 파일함에서 선택">
+                                                            <select
+                                                                aria-label="누적 기록 학생 파일 수정"
+                                                                value={editDraft.artifactFileId}
+                                                                onChange={event => updateEntryEdit("artifactFileId", event.target.value)}
+                                                            >
+                                                                <option value="">파일을 선택해주세요</option>
+                                                                {availableFiles.map(file => <option key={file.id} value={file.id}>{file.original_name}</option>)}
+                                                            </select>
+                                                        </Field>
+                                                    )}
+                                                </section>
                                                 <Field label="다음 수업 목표">
                                                     <textarea
                                                         aria-label="누적 기록 다음 수업 목표 수정"
@@ -883,6 +1040,7 @@ export default function GrowthManagementPage() {
                                                     <div><dt>배운 내용</dt><dd>{compact(entry.class_progress, 120)}</dd></div>
                                                     <div><dt>다음 목표</dt><dd>{compact(entry.current_goal, 120)}</dd></div>
                                                     <div><dt>잘한 점</dt><dd>{compact(entry.strengths, 120)}</dd></div>
+                                                    {artifactLabel && <div><dt>결과물</dt><dd>{artifactLabel}</dd></div>}
                                                 </dl>
                                             </div>
                                         )}
@@ -1333,6 +1491,45 @@ export default function GrowthManagementPage() {
                     color: #334155;
                     font-weight: 950;
                 }
+                .artifact-editor {
+                    display: grid;
+                    gap: 10px;
+                    border: 1px solid #bfdbfe;
+                    border-radius: 10px;
+                    background: #f8fbff;
+                    padding: 12px;
+                }
+                .artifact-editor.compact { background: #fff; }
+                .artifact-head {
+                    display: flex;
+                    justify-content: space-between;
+                    gap: 10px;
+                    align-items: flex-start;
+                }
+                .artifact-head h3 { color: #1e3a8a; font-size: 14px; }
+                .artifact-head p { margin-top: 3px; color: #64748b; font-size: 10px; font-weight: 750; line-height: 1.45; }
+                .artifact-head > span {
+                    flex: 0 0 auto;
+                    border-radius: 999px;
+                    background: #dcfce7;
+                    color: #047857;
+                    padding: 4px 7px;
+                    font-size: 9px;
+                    font-weight: 900;
+                }
+                .artifact-type-buttons { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+                .artifact-type-buttons button {
+                    min-height: 34px;
+                    border: 1px solid #dbe4f0;
+                    border-radius: 7px;
+                    background: #fff;
+                    color: #64748b;
+                    padding: 0 6px;
+                    font-size: 10px;
+                    font-weight: 900;
+                }
+                .artifact-type-buttons button.active { border-color: #2563eb; background: #eff6ff; color: #1d4ed8; }
+                .artifact-empty { color: #64748b; font-size: 10px; font-weight: 700; line-height: 1.45; }
                 .detail-actions {
                     display: grid;
                     grid-template-columns: repeat(3, minmax(0, 1fr));

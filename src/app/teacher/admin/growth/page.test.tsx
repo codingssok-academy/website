@@ -148,4 +148,83 @@ describe("Growth 2.0 관리자 성장관리", () => {
     expect(await screen.findByText("선택한 누적 성장 기록을 수정했습니다.")).toBeInTheDocument();
     expect(screen.getByText("수정한 기록 메모")).toBeInTheDocument();
   });
+
+  it("학생 파일함의 결과물을 성장 기록에 연결한다", async () => {
+    const baseRecord = {
+      id: "record-1",
+      student_id: "student-1",
+      student_name: "가짜학생",
+      current_class: "만들기반",
+      skill_level: null,
+      strengths: "",
+      weaknesses: "",
+      current_goal: "",
+      next_class_potential: "",
+      class_progress: "엔트리 작품 만들기",
+      parent_feedback_draft: "",
+      teacher_memo: "",
+      status: "완료",
+      artifact_title: null,
+      artifact_url: null,
+      artifact_file_id: null,
+      updated_at: "2026-09-03T00:00:00.000Z",
+    };
+    const fetchMock = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
+      if (init?.method === "POST") {
+        const body = JSON.parse(String(init.body));
+        const saved = {
+          ...baseRecord,
+          artifact_title: body.artifactTitle,
+          artifact_url: body.artifactUrl || null,
+          artifact_file_id: body.artifactFileId || null,
+        };
+        return new Response(
+          JSON.stringify({ success: true, record: saved, entry: { ...saved, id: "entry-new", entry_note: "", created_at: "2026-09-03T00:00:00.000Z" } }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+
+      return new Response(JSON.stringify({
+        success: true,
+        migrationRequired: false,
+        students: [{
+          id: "student-1", name: "가짜학생", school: "가짜초", grade: "3학년",
+          class: "만들기반", status: "approved",
+        }],
+        records: [baseRecord],
+        entries: [],
+        files: [{
+          id: "file-1", student_id: "student-1", original_name: "fake-entry.ent",
+          mime_type: "application/octet-stream", category: "entry", created_at: "2026-09-03T00:00:00.000Z",
+        }],
+      }), { status: 200, headers: { "Content-Type": "application/json" } });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<GrowthManagementPage />);
+
+    await screen.findByRole("heading", { name: "Growth 2.0 성장관리" });
+    fireEvent.click(screen.getByRole("button", { name: "학생 파일" }));
+    fireEvent.change(screen.getByLabelText("학부모에게 보일 결과물 이름"), {
+      target: { value: "가짜 엔트리 작품" },
+    });
+    fireEvent.change(screen.getByLabelText("학생 파일함에서 선택"), {
+      target: { value: "file-1" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "이번 주 기록 남기기" }));
+
+    await waitFor(() => {
+      const entryCall = fetchMock.mock.calls.find(([, options]) => {
+        if (options?.method !== "POST") return false;
+        return JSON.parse(String(options.body)).createEntry === true;
+      });
+      expect(entryCall).toBeDefined();
+      expect(JSON.parse(String(entryCall?.[1]?.body))).toMatchObject({
+        artifactType: "file",
+        artifactTitle: "가짜 엔트리 작품",
+        artifactUrl: "",
+        artifactFileId: "file-1",
+      });
+    });
+  });
 });
