@@ -38,6 +38,7 @@ import { PictureChoiceActivity } from "./PictureChoiceActivity";
 import { DigitalCreatorActionWriting, type DigitalCreatorActionAnswers } from "./DigitalCreatorActionWriting";
 import { DigitalCreatorLessonProgress } from "./DigitalCreatorLessonProgress";
 import LessonReadAloudButton from "./LessonReadAloudButton";
+import MobileCodingGuidance from "./MobileCodingGuidance";
 import { getCertificateChapters } from "@/data/courses";
 import LearningReviewMarker from "@/components/learning/LearningReviewMarker";
 
@@ -1494,6 +1495,8 @@ export default function CourseDetailPage() {
                                 </>
                             )}
                         </div>
+
+                        <MobileCodingGuidance />
 
                         {/* Content */}
                         {slideMode && (courseId === "4" || courseId === "10") ? (
