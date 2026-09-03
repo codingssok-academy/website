@@ -7,10 +7,17 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import TutorMessage from "./TutorMessage";
+import TutorFallbackCard from "./TutorFallbackCard";
+import { buildBasicTutorHint } from "@/lib/tutor-fallback";
 
 interface Message {
     role: "user" | "assistant";
     content: string;
+}
+
+interface TutorFallback {
+    question: string;
+    hint: string;
 }
 
 interface AITutorProps {
@@ -36,12 +43,32 @@ export default function AITutor({
     const [loading, setLoading] = useState(false);
     const [sessionId, setSessionId] = useState<string | undefined>(undefined);
     const [followups, setFollowups] = useState<string[]>([]);
+    const [fallback, setFallback] = useState<TutorFallback | null>(null);
     const endRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs]);
 
-    const send = useCallback(async () => {
-        const q = input.trim();
+    const showFallback = useCallback((placeholderIdx: number, question: string, reason: string) => {
+        setMsgs(prev => {
+            const copy = [...prev];
+            copy[placeholderIdx] = {
+                role: "assistant",
+                content: `${reason}\n\n아래 기본 힌트부터 차근차근 해볼까요?`,
+            };
+            return copy;
+        });
+        setFallback({
+            question,
+            hint: buildBasicTutorHint({
+                question,
+                currentError: getCurrentError?.() || undefined,
+                currentLanguage,
+            }),
+        });
+    }, [currentLanguage, getCurrentError]);
+
+    const send = useCallback(async (question?: string) => {
+        const q = (question ?? input).trim();
         if (!q || loading) return;
         const userMsg: Message = { role: "user", content: q };
         const next = [...msgs, userMsg];
@@ -49,6 +76,7 @@ export default function AITutor({
         setInput("");
         setLoading(true);
         setFollowups([]); // 새 질문 시 이전 제안 초기화
+        setFallback(null);
 
         // assistant 메시지 플레이스홀더 추가 (스트리밍으로 채워짐)
         const placeholderIdx = next.length; // 새 메시지 인덱스
@@ -72,15 +100,8 @@ export default function AITutor({
             // 에러 응답은 JSON (스트림 아님)
             const contentType = res.headers.get("content-type") || "";
             if (!res.ok || !contentType.includes("event-stream") || !res.body) {
-                const data = await res.json().catch(() => ({}));
-                setMsgs(prev => {
-                    const copy = [...prev];
-                    copy[placeholderIdx] = {
-                        role: "assistant",
-                        content: data.error || "잠시 후 다시 시도해주세요.",
-                    };
-                    return copy;
-                });
+                const data = await res.json().catch(() => ({})) as { error?: string };
+                showFallback(placeholderIdx, q, data.error || "쏙쌤의 답변을 불러오지 못했어요.");
                 setLoading(false);
                 return;
             }
@@ -131,14 +152,7 @@ export default function AITutor({
 
             // 빈 응답 방어
             if (!accumulated) {
-                setMsgs(prev => {
-                    const copy = [...prev];
-                    copy[placeholderIdx] = {
-                        role: "assistant",
-                        content: "답변을 생성하지 못했어요. 다시 시도해주세요.",
-                    };
-                    return copy;
-                });
+                showFallback(placeholderIdx, q, "쏙쌤의 답변이 비어 있어요.");
             } else {
                 // 후속 질문 제안 (비동기, 실패해도 무시)
                 fetch("/api/tutor/followup", {
@@ -154,18 +168,11 @@ export default function AITutor({
                 }).catch(() => { /* ignore */ });
             }
         } catch {
-            setMsgs(prev => {
-                const copy = [...prev];
-                copy[placeholderIdx] = {
-                    role: "assistant",
-                    content: "네트워크 오류가 발생했어요. 인터넷 연결을 확인해주세요.",
-                };
-                return copy;
-            });
+            showFallback(placeholderIdx, q, "인터넷 연결 때문에 쏙쌤의 답변을 불러오지 못했어요.");
         }
 
         setLoading(false);
-    }, [input, loading, msgs, context, getCurrentCode, currentLanguage, getCurrentError, sessionId]);
+    }, [input, loading, msgs, context, getCurrentCode, currentLanguage, getCurrentError, sessionId, showFallback]);
 
     return (
         <>
@@ -293,6 +300,14 @@ export default function AITutor({
                                     쏙쌤이 생각하는 중...
                                 </div>
                             )}
+                            {fallback && !loading && (
+                                <TutorFallbackCard
+                                    hint={fallback.hint}
+                                    question={fallback.question}
+                                    context={context}
+                                    onRetry={() => void send(fallback.question)}
+                                />
+                            )}
                             <div ref={endRef} />
                         </div>
 
@@ -354,7 +369,7 @@ export default function AITutor({
                             <input
                                 value={input}
                                 onChange={e => setInput(e.target.value)}
-                                onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
+                                onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void send(); } }}
                                 placeholder="코딩 질문을 입력하세요..."
                                 maxLength={2000}
                                 disabled={loading}
@@ -366,7 +381,7 @@ export default function AITutor({
                                 }}
                             />
                             <button
-                                onClick={send}
+                                onClick={() => void send()}
                                 disabled={loading || !input.trim()}
                                 style={{
                                     width: 40, height: 40, borderRadius: 12,
