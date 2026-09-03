@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useParentDashboard } from "../hooks/useParentDashboard";
+import type { ParentGrowthArtifact } from "@/lib/parent-dashboard";
 
 const ATTENDANCE_LABEL = {
     scheduled: "예정",
@@ -152,6 +153,9 @@ export default function ParentDashboardPage() {
                             <InfoBlock icon="auto_awesome" label="잘하고 있는 점" value={currentGrowth.strengths} tone="green" />
                             <InfoBlock icon="flag" label="다음 수업 목표" value={currentGrowth.currentGoal} tone="blue" />
                             {currentGrowth.parentFeedback && <InfoBlock icon="forum" label="선생님 이야기" value={currentGrowth.parentFeedback} tone="amber" />}
+                            {currentGrowth.artifact && (
+                                <GrowthArtifactCard artifact={currentGrowth.artifact} studentName={student.name} />
+                            )}
                             <p className="text-right text-[11px] font-semibold text-slate-400 sm:col-span-2">최근 기록 {formatDate(currentGrowth.recordedAt)}</p>
                         </div>
                     ) : (
@@ -241,6 +245,39 @@ export default function ParentDashboardPage() {
             <p className="px-3 pb-2 pt-3 text-center text-[10px] font-semibold leading-4 text-slate-400">
                 작성 중인 평가와 선생님 내부 메모는 표시되지 않습니다.<br className="sm:hidden" /> 완료하여 공개한 기록만 보여드립니다.
             </p>
+        </div>
+    );
+}
+
+function GrowthArtifactCard({ artifact, studentName }: { artifact: ParentGrowthArtifact; studentName: string }) {
+    const isFile = artifact.kind === "file";
+    const href = isFile
+        ? `/api/parent/v2/student-files/${encodeURIComponent(artifact.fileId)}?name=${encodeURIComponent(studentName)}`
+        : artifact.url;
+
+    return (
+        <div className="rounded-xl border border-indigo-100 bg-gradient-to-br from-indigo-50 to-blue-50 p-3 sm:col-span-2">
+            <p className="flex items-center gap-1.5 text-[11px] font-black text-indigo-600">
+                <span className="material-symbols-outlined text-base">palette</span>
+                이번 수업 결과물
+            </p>
+            <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                    <strong className="block truncate text-sm font-black text-slate-800">{artifact.title}</strong>
+                    <span className="mt-0.5 block truncate text-[10px] font-semibold text-slate-500">
+                        {isFile ? artifact.fileName : "엔트리·웹 작품 공유 링크"}
+                    </span>
+                </div>
+                <a
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex min-h-10 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-indigo-600 px-4 text-xs font-black text-white no-underline shadow-sm transition hover:bg-indigo-700"
+                >
+                    <span className="material-symbols-outlined text-lg">{isFile ? "draft" : "open_in_new"}</span>
+                    {isFile ? "파일 열기" : "작품 열기"}
+                </a>
+            </div>
         </div>
     );
 }

@@ -41,6 +41,10 @@ describe("학부모 통합 현황판", () => {
             id: "growth-1", currentClass: "가짜 프로젝트반", strengths: "끝까지 해결했습니다.",
             currentGoal: "반복문 프로젝트 완성", classProgress: "for 반복문", parentFeedback: "꾸준히 성장하고 있습니다.",
             recordedAt: "2026-08-25",
+            artifact: {
+              kind: "file", title: "가짜 발표 자료", fileId: "file-1",
+              fileName: "fake-project.pdf", mimeType: "application/pdf",
+            },
           },
           history: [],
         },
@@ -69,6 +73,11 @@ describe("학부모 통합 현황판", () => {
     expect(screen.getByLabelText("선생님 메시지 목록")).not.toHaveClass("sm:grid-cols-2");
     expect(screen.getByText("가짜 반복문 학습")).toBeInTheDocument();
     expect(screen.getByText("홈페이지 로그인")).toBeInTheDocument();
+    expect(screen.getByText("가짜 발표 자료")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /파일 열기/ })).toHaveAttribute(
+      "href",
+      "/api/parent/v2/student-files/file-1?name=%EA%B0%80%EC%A7%9C%ED%95%99%EC%83%9D",
+    );
     expect(screen.getByText(/내부 메모는 표시되지 않습니다/)).toBeInTheDocument();
   });
 });

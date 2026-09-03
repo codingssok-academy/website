@@ -251,6 +251,7 @@ export async function GET(req: NextRequest) {
         notesResult,
         growthResult,
         growthEntriesResult,
+        studentFilesResult,
         attendanceResult,
     ] = await Promise.all([
         // XP history (last 30 days)
@@ -305,7 +306,7 @@ export async function GET(req: NextRequest) {
         // Growth 2.0 — 완료된 공개용 현재 기록만 조회
         studentId
             ? sb.from("student_growth_management")
-                  .select("id,current_class,strengths,current_goal,class_progress,parent_feedback_draft,status,updated_at")
+                  .select("id,current_class,strengths,current_goal,class_progress,parent_feedback_draft,status,artifact_title,artifact_url,artifact_file_id,updated_at")
                   .eq("student_id", studentId)
                   .maybeSingle()
             : Promise.resolve({ data: null }),
@@ -313,11 +314,20 @@ export async function GET(req: NextRequest) {
         // Growth 2.0 — 완료된 누적 기록만 조회
         studentId
             ? sb.from("student_growth_entries")
-                  .select("id,current_class,strengths,current_goal,class_progress,parent_feedback_draft,status,created_at")
+                  .select("id,current_class,strengths,current_goal,class_progress,parent_feedback_draft,status,artifact_title,artifact_url,artifact_file_id,created_at")
                   .eq("student_id", studentId)
                   .eq("status", "완료")
                   .order("created_at", { ascending: false })
                   .limit(6)
+            : Promise.resolve({ data: [] }),
+
+        // 학부모에게 공개할 성장 기록에 연결된 학생 파일의 표시 정보
+        studentId
+            ? sb.from("student_files")
+                  .select("id,original_name,mime_type")
+                  .eq("student_id", studentId)
+                  .order("created_at", { ascending: false })
+                  .limit(100)
             : Promise.resolve({ data: [] }),
 
         // 월별 출석 RPC가 적용된 환경에서만 표시하며, 미적용 환경은 빈 상태로 처리
@@ -361,10 +371,17 @@ export async function GET(req: NextRequest) {
 
     const progress = (progressResult as any)?.data;
 
+    const artifactFiles = new Map(
+        (((studentFilesResult as any)?.data || []) as any[]).map(file => [file.id, file]),
+    );
     const growthHistory = ((growthEntriesResult as any)?.data || [])
-        .map((row: unknown) => toParentGrowthRecord(row))
+        .map((row: any) => toParentGrowthRecord(row, artifactFiles.get(row?.artifact_file_id)))
         .filter(Boolean);
-    const currentGrowth = toParentGrowthRecord((growthResult as any)?.data) || growthHistory[0] || null;
+    const currentGrowthRow = (growthResult as any)?.data;
+    const currentGrowth = toParentGrowthRecord(
+        currentGrowthRow,
+        artifactFiles.get(currentGrowthRow?.artifact_file_id),
+    ) || growthHistory[0] || null;
     const attendance = toParentAttendance((attendanceResult as any)?.data);
 
     const responseObj = {

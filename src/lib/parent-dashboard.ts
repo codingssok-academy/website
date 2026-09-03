@@ -1,3 +1,19 @@
+import { normalizeGrowthArtifactTitle, safeGrowthArtifactUrl } from "./growth-artifacts";
+
+export type ParentGrowthArtifact =
+    | {
+        kind: "link";
+        title: string;
+        url: string;
+    }
+    | {
+        kind: "file";
+        title: string;
+        fileId: string;
+        fileName: string;
+        mimeType: string | null;
+    };
+
 export type ParentGrowthRecord = {
     id: string;
     currentClass: string | null;
@@ -6,6 +22,7 @@ export type ParentGrowthRecord = {
     classProgress: string | null;
     parentFeedback: string | null;
     recordedAt: string | null;
+    artifact?: ParentGrowthArtifact;
 };
 
 export type ParentAttendance = {
@@ -40,13 +57,38 @@ function readNumber(row: UnknownRow, key: string) {
     return Number.isFinite(value) && value >= 0 ? Math.floor(value) : 0;
 }
 
-export function toParentGrowthRecord(value: unknown): ParentGrowthRecord | null {
+export function toParentGrowthRecord(value: unknown, fileValue?: unknown): ParentGrowthRecord | null {
     if (!value || typeof value !== "object" || Array.isArray(value)) return null;
     const row = value as UnknownRow;
     if (readText(row, "status", 20) !== "완료") return null;
 
     const id = readText(row, "id", 100);
     if (!id) return null;
+
+    const artifactTitle = normalizeGrowthArtifactTitle(row.artifact_title);
+    const artifactUrl = safeGrowthArtifactUrl(row.artifact_url);
+    const artifactFileId = readText(row, "artifact_file_id", 100);
+    const fileRow = fileValue && typeof fileValue === "object" && !Array.isArray(fileValue)
+        ? fileValue as UnknownRow
+        : null;
+    const fileId = fileRow ? readText(fileRow, "id", 100) : null;
+    const fileName = fileRow ? readText(fileRow, "original_name", 160) : null;
+    const mimeType = fileRow ? readText(fileRow, "mime_type", 160) : null;
+    const artifact: ParentGrowthArtifact | null = artifactFileId && fileId === artifactFileId && fileName
+        ? {
+            kind: "file",
+            title: artifactTitle || fileName,
+            fileId: artifactFileId,
+            fileName,
+            mimeType,
+        }
+        : artifactUrl
+            ? {
+                kind: "link",
+                title: artifactTitle || "엔트리 작품 보기",
+                url: artifactUrl,
+            }
+            : null;
 
     return {
         id,
@@ -56,6 +98,7 @@ export function toParentGrowthRecord(value: unknown): ParentGrowthRecord | null 
         classProgress: readText(row, "class_progress"),
         parentFeedback: readText(row, "parent_feedback_draft"),
         recordedAt: readText(row, "updated_at", 50) || readText(row, "created_at", 50),
+        ...(artifact ? { artifact } : {}),
     };
 }
 
