@@ -28,7 +28,7 @@ describe("DigitalCreatorActionWriting", () => {
 
         expect(screen.getByRole("textbox", { name: /만들기:/ })).toBeInTheDocument();
         expect(screen.getByRole("textbox", { name: /도전하기:/ })).toBeInTheDocument();
-        expect(screen.getByText("적으면 자동 저장")).toBeInTheDocument();
+        expect(screen.getByText("내용을 바꾸면 자동으로 저장돼요")).toBeInTheDocument();
         expect(screen.getByText(/한 단어나 짧은 문장/)).toBeInTheDocument();
     });
 
@@ -56,6 +56,6 @@ describe("DigitalCreatorActionWriting", () => {
         );
         fireEvent.change(screen.getByRole("textbox", { name: /도전하기:/ }), { target: { value: "파란색으로 바꿨어요" } });
         expect(onChange).toHaveBeenLastCalledWith({ make: "원을 그렸어요", challenge: "파란색으로 바꿨어요" });
-        expect(screen.getByText("자동 저장됨")).toBeInTheDocument();
+        expect(screen.getByText("학원 계정에 안전하게 저장됐어요")).toBeInTheDocument();
     });
 });

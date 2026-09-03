@@ -24,6 +24,7 @@ import { MI, glassPanel, QuizPanel, CodeProblemCard, TYPE_STYLES, DIFF_LABELS } 
 import { useStudyNotes } from "@/hooks/useStudyNotes";
 import { useStudyProgress } from "@/hooks/useStudyProgress";
 import StudyNotesEditor from "./StudyNotesEditor";
+import { mergePersistenceStatuses, StudentSaveStatus } from "./StudentSaveStatus";
 import { usePresenceHeartbeat } from "@/hooks/usePresenceHeartbeat";
 import { useActivityLog } from "@/hooks/useActivityLog";
 import { useLessonAnswerPersistence, useLessonSessionProgress } from "@/hooks/useLessonPersistence";
@@ -250,6 +251,7 @@ export default function CourseDetailPage() {
     const {
         progress: lessonSessionProgress,
         status: lessonProgressSaveStatus,
+        retry: retryLessonProgressSave,
         ready: lessonProgressReady,
         markPageVisited,
         markQuizCorrect,
@@ -304,7 +306,7 @@ export default function CourseDetailPage() {
         quizResult: quizResult === "correct" ? "correct" as const : null,
         codeAnswers: Object.fromEntries(Object.entries(editorCode).map(([problemId, code]) => [String(problemId), code])),
     }), [editorCode, isProjectActivityPage, projectActionAnswers, projectActivityAnswer, quizResult, selectedAnswer]);
-    const { status: answerSaveStatus } = useLessonAnswerPersistence({
+    const { status: answerSaveStatus, retry: retryAnswerSave } = useLessonAnswerPersistence({
         enabled: isPythonCorePage || (isProjectActivityPage && (!!activePage?.activity || !!activePage?.actionWriting)),
         userId: user?.id,
         courseId,
@@ -321,7 +323,7 @@ export default function CourseDetailPage() {
         quizResult: null,
         codeAnswers: { activity: pictureChoiceAnswer },
     }), [pictureChoiceAnswer]);
-    const { status: pictureChoiceSaveStatus } = useLessonAnswerPersistence({
+    const { status: pictureChoiceSaveStatus, retry: retryPictureChoiceSave } = useLessonAnswerPersistence({
         enabled: isDigitalCreatorPage && !!activePage?.choiceActivity,
         userId: user?.id,
         courseId,
@@ -330,6 +332,7 @@ export default function CourseDetailPage() {
         answer: pictureChoiceAnswerDraft,
         onRestore: restorePictureChoiceAnswer,
     });
+    const pythonSaveStatus = mergePersistenceStatuses(answerSaveStatus, lessonProgressSaveStatus);
 
     useEffect(() => {
         if ((isPythonCorePage || isProjectActivityPage) && activePage && lessonProgressReady) markPageVisited(activePage.id);
@@ -1152,7 +1155,7 @@ export default function CourseDetailPage() {
                 .pycore-frame-top{display:flex;align-items:center;gap:10px;margin:0 2px 12px;min-height:34px}
                 .pycore-frame-count{display:inline-flex;align-items:center;justify-content:center;min-width:58px;height:30px;padding:0 12px;border-radius:999px;background:linear-gradient(135deg,#2563eb,#0ea5e9);color:#fff;font-size:12px;font-weight:900;box-shadow:0 5px 14px rgba(37,99,235,.24)}
                 .pycore-frame-context{font-size:11px;color:#64748b;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-                .pycore-save-state{display:inline-flex;align-items:center;gap:5px;margin-left:auto;padding:6px 9px;border:1px solid #dbeafe;border-radius:999px;background:#f8fbff;color:#64748b;font-size:10px;font-weight:800;white-space:nowrap}.pycore-save-state[data-status="saving"],.pycore-save-state[data-status="loading"]{color:#2563eb}.pycore-save-state[data-status="saved"]{color:#047857;border-color:#a7f3d0;background:#ecfdf5}.pycore-save-state[data-status="local"]{color:#b45309;border-color:#fde68a;background:#fffbeb}.pycore-save-state[data-status="error"]{color:#b91c1c;border-color:#fecaca;background:#fef2f2}
+                .pycore-save-state{margin-left:auto;white-space:nowrap}
                 .pycore-focus-btn{margin-left:auto;display:inline-flex;align-items:center;gap:5px;padding:7px 10px;border:1px solid #dbeafe;border-radius:10px;background:#fff;color:#2563eb;font-size:11px;font-weight:800;cursor:pointer}
                 .pycore-save-state+.pycore-focus-btn{margin-left:0}
                 .pycore-focus-btn:hover{background:#eff6ff}
@@ -1703,10 +1706,14 @@ export default function CourseDetailPage() {
                                             <div className="pycore-frame-top">
                                                 <span className="pycore-frame-count">{corePageIndex} / {corePageTotal}</span>
                                                 <span className="pycore-frame-context">{coreChapter?.title} · {selectedUnit.title}</span>
-                                                <span className="pycore-save-state" data-status={answerSaveStatus === "idle" ? lessonProgressSaveStatus : answerSaveStatus}>
-                                                    <MI icon={(answerSaveStatus === "saving" || answerSaveStatus === "loading") ? "sync" : answerSaveStatus === "error" ? "cloud_off" : answerSaveStatus === "local" ? "save" : "cloud_done"} style={{ fontSize: 13 }} />
-                                                    {(answerSaveStatus === "saving" || answerSaveStatus === "loading") ? "저장 중" : answerSaveStatus === "error" ? "저장 오류" : answerSaveStatus === "local" ? "기기에 저장" : "자동 저장됨"}
-                                                </span>
+                                                <StudentSaveStatus
+                                                    className="pycore-save-state"
+                                                    compact
+                                                    status={pythonSaveStatus}
+                                                    onRetry={async () => {
+                                                        await Promise.all([retryAnswerSave(), retryLessonProgressSave()]);
+                                                    }}
+                                                />
                                                 <button
                                                     className="pycore-focus-btn"
                                                     onClick={() => {
@@ -1749,6 +1756,7 @@ export default function CourseDetailPage() {
                                     value={pictureChoiceAnswer}
                                     onChange={setPictureChoiceAnswer}
                                     saveStatus={pictureChoiceSaveStatus}
+                                    onRetrySave={retryPictureChoiceSave}
                                 />
                             )}
 
@@ -1758,6 +1766,7 @@ export default function CourseDetailPage() {
                                     value={projectActionAnswers}
                                     onChange={setProjectActionAnswers}
                                     saveStatus={answerSaveStatus}
+                                    onRetrySave={retryAnswerSave}
                                 />
                             )}
 
@@ -1765,10 +1774,7 @@ export default function CourseDetailPage() {
                                 <section className={`kids-activity-panel${isAiProjectLabPage ? " ai-lab-activity-panel" : ""}${isGameStudioPage ? " game-studio-activity-panel" : ""}`}>
                                     <div className="kids-activity-top">
                                         <span>{activePage.activity.label}</span>
-                                        <b data-status={answerSaveStatus}>
-                                            <MI icon={(answerSaveStatus === "saving" || answerSaveStatus === "loading") ? "sync" : answerSaveStatus === "error" ? "cloud_off" : answerSaveStatus === "local" ? "save" : "cloud_done"} style={{ fontSize: 15 }} />
-                                            {(answerSaveStatus === "saving" || answerSaveStatus === "loading") ? "저장 중" : answerSaveStatus === "error" ? "저장 오류" : answerSaveStatus === "local" ? "이 기기에 저장" : "자동 저장됨"}
-                                        </b>
+                                        <StudentSaveStatus status={answerSaveStatus} onRetry={retryAnswerSave} />
                                     </div>
                                     <h3>{activePage.activity.prompt}</h3>
                                     {activePage.activity.example && <p className="kids-activity-example"><strong>생각이 안 날 때 예시</strong>{activePage.activity.example}</p>}

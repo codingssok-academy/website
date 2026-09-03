@@ -3,30 +3,25 @@
 import type { LearningActionWriting } from "@/data/courses/types";
 import type { PersistenceStatus } from "@/hooks/useLessonPersistence";
 import styles from "./DigitalCreatorActionWriting.module.css";
+import { StudentSaveStatus } from "./StudentSaveStatus";
 
 export type DigitalCreatorActionAnswers = {
     make: string;
     challenge: string;
 };
 
-function statusLabel(status: PersistenceStatus) {
-    if (status === "loading" || status === "saving") return "저장 중";
-    if (status === "error") return "저장 오류";
-    if (status === "local") return "이 기기에 저장";
-    if (status === "saved") return "자동 저장됨";
-    return "적으면 자동 저장";
-}
-
 export function DigitalCreatorActionWriting({
     activity,
     value,
     onChange,
     saveStatus,
+    onRetrySave,
 }: {
     activity: LearningActionWriting;
     value: DigitalCreatorActionAnswers;
     onChange: (value: DigitalCreatorActionAnswers) => void;
     saveStatus: PersistenceStatus;
+    onRetrySave?: () => void | Promise<void>;
 }) {
     return (
         <section className={styles.panel} aria-labelledby="digital-creator-action-title">
@@ -35,9 +30,7 @@ export function DigitalCreatorActionWriting({
                     <span className={styles.eyebrow}>직접 작성하기</span>
                     <h3 id="digital-creator-action-title">{activity.label}</h3>
                 </div>
-                <b className={styles.status} data-status={saveStatus} role="status" aria-live="polite">
-                    {statusLabel(saveStatus)}
-                </b>
+                <StudentSaveStatus status={saveStatus} onRetry={onRetrySave} />
             </div>
 
             <div className={styles.grid}>

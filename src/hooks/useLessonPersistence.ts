@@ -94,47 +94,53 @@ export function useLessonAnswerPersistence({
             setStatus("loading");
             const local = readLocal(path, normalizeLessonAnswer);
             let chosen = local;
+            let remoteFailed = false;
 
             if (userId) {
                 try {
                     const remote = await readRemote(path, normalizeLessonAnswer);
                     if (remote && (!chosen || Date.parse(remote.updatedAt) >= Date.parse(chosen.updatedAt))) chosen = remote;
                 } catch {
-                    if (!cancelled) setStatus(local ? "local" : "error");
+                    remoteFailed = true;
                 }
             }
 
             if (cancelled) return;
             if (chosen) onRestore(chosen);
             setHydratedPath(path);
-            setStatus(userId ? "saved" : chosen ? "local" : "idle");
+            setStatus(remoteFailed ? (local ? "local" : "error") : userId ? "saved" : chosen ? "local" : "idle");
         };
 
         void hydrate();
         return () => { cancelled = true; };
     }, [onRestore, path, userId]);
 
-    useEffect(() => {
+    const saveAnswer = useCallback(async () => {
         if (!path || hydratedPath !== path) return;
-        const timer = setTimeout(async () => {
-            const value: LessonAnswerSnapshot = { version: 1, ...answer, updatedAt: new Date().toISOString() };
-            const localSaved = writeLocal(path, value);
-            setStatus("saving");
-            if (!userId) {
-                setStatus(localSaved ? "local" : "error");
-                return;
-            }
-            try {
-                await writeRemote(path, value);
-                setStatus("saved");
-            } catch {
-                setStatus(localSaved ? "local" : "error");
-            }
-        }, 650);
-        return () => clearTimeout(timer);
+        const value: LessonAnswerSnapshot = { version: 1, ...answer, updatedAt: new Date().toISOString() };
+        const localSaved = writeLocal(path, value);
+        setStatus("saving");
+        if (!userId) {
+            setStatus(localSaved ? "local" : "error");
+            return;
+        }
+        try {
+            await writeRemote(path, value);
+            setStatus("saved");
+        } catch {
+            setStatus(localSaved ? "local" : "error");
+        }
     }, [answer, hydratedPath, path, userId]);
 
-    return { status };
+    useEffect(() => {
+        if (!path || hydratedPath !== path) return;
+        const timer = setTimeout(() => {
+            void saveAnswer();
+        }, 650);
+        return () => clearTimeout(timer);
+    }, [hydratedPath, path, saveAnswer]);
+
+    return { status, retry: saveAnswer };
 }
 
 export function useLessonSessionProgress({
@@ -166,43 +172,49 @@ export function useLessonSessionProgress({
             setStatus("loading");
             const local = readLocal(path, normalizeLessonProgress);
             let chosen = local;
+            let remoteFailed = false;
             if (userId) {
                 try {
                     const remote = await readRemote(path, normalizeLessonProgress);
                     if (remote && (!chosen || Date.parse(remote.updatedAt) >= Date.parse(chosen.updatedAt))) chosen = remote;
                 } catch {
-                    if (!cancelled) setStatus(local ? "local" : "error");
+                    remoteFailed = true;
                 }
             }
             if (cancelled) return;
             setProgress(chosen ?? emptyLessonProgress());
             setHydratedPath(path);
-            setStatus(userId ? "saved" : chosen ? "local" : "idle");
+            setStatus(remoteFailed ? (local ? "local" : "error") : userId ? "saved" : chosen ? "local" : "idle");
         };
 
         void hydrate();
         return () => { cancelled = true; };
     }, [path, userId]);
 
+    const saveProgress = useCallback(async () => {
+        if (!path || hydratedPath !== path) return;
+        const value = { ...progress, updatedAt: new Date().toISOString() };
+        const localSaved = writeLocal(path, value);
+        setStatus("saving");
+        if (!userId) {
+            setStatus(localSaved ? "local" : "error");
+            return;
+        }
+        try {
+            await writeRemote(path, value);
+            setStatus("saved");
+        } catch {
+            setStatus(localSaved ? "local" : "error");
+        }
+    }, [hydratedPath, path, progress, userId]);
+
     useEffect(() => {
         if (!path || hydratedPath !== path) return;
-        const timer = setTimeout(async () => {
-            const value = { ...progress, updatedAt: new Date().toISOString() };
-            const localSaved = writeLocal(path, value);
-            setStatus("saving");
-            if (!userId) {
-                setStatus(localSaved ? "local" : "error");
-                return;
-            }
-            try {
-                await writeRemote(path, value);
-                setStatus("saved");
-            } catch {
-                setStatus(localSaved ? "local" : "error");
-            }
+        const timer = setTimeout(() => {
+            void saveProgress();
         }, 650);
         return () => clearTimeout(timer);
-    }, [hydratedPath, path, progress, userId]);
+    }, [hydratedPath, path, saveProgress]);
 
     const markPageVisited = useCallback((pageId: string) => {
         setProgress((current) => current.visitedPageIds.includes(pageId) ? current : {
@@ -241,6 +253,7 @@ export function useLessonSessionProgress({
     return {
         progress,
         status,
+        retry: saveProgress,
         ready: Boolean(path) && hydratedPath === path,
         markPageVisited,
         markQuizCorrect,
