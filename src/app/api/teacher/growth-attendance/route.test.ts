@@ -4,10 +4,16 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
     requireTeacher: vi.fn(),
     createAdminClient: vi.fn(),
+    createClient: vi.fn(),
+    usesHashedStudentAccessCodes: vi.fn(),
 }));
 
 vi.mock("@/lib/auth-teacher", () => ({ requireTeacher: mocks.requireTeacher }));
 vi.mock("@/lib/supabase/admin", () => ({ createAdminClient: mocks.createAdminClient }));
+vi.mock("@/lib/supabase/server", () => ({ createClient: mocks.createClient }));
+vi.mock("@/lib/student-access-codes", () => ({
+    usesHashedStudentAccessCodes: mocks.usesHashedStudentAccessCodes,
+}));
 
 import { GET, POST } from "./route";
 
@@ -17,14 +23,15 @@ describe("teacher growth attendance API", () => {
     beforeEach(() => {
         vi.clearAllMocks();
         mocks.requireTeacher.mockResolvedValue({ ok: true, userId: "teacher-1" });
+        mocks.usesHashedStudentAccessCodes.mockReturnValue(true);
     });
 
-    it("loads one student's selected attendance month", async () => {
+    it("loads one student's selected attendance month with the signed-in fresh DB session", async () => {
         const rpc = vi.fn().mockResolvedValue({
             data: { api_version: "1.0", data: { summary: {}, records: [] } },
             error: null,
         });
-        mocks.createAdminClient.mockReturnValue({ rpc });
+        mocks.createClient.mockResolvedValue({ rpc });
 
         const request = new NextRequest(
             `https://www.codingssok.com/api/teacher/growth-attendance?studentId=${STUDENT_ID}&month=2026-08`,
@@ -36,11 +43,12 @@ describe("teacher growth attendance API", () => {
             p_student_id: STUDENT_ID,
             p_month: "2026-08-01",
         });
+        expect(mocks.createAdminClient).not.toHaveBeenCalled();
     });
 
     it("saves a validated attendance record for the selected student", async () => {
         const rpc = vi.fn().mockResolvedValue({ data: { saved: true }, error: null });
-        mocks.createAdminClient.mockReturnValue({ rpc });
+        mocks.createClient.mockResolvedValue({ rpc });
         const request = new NextRequest("https://www.codingssok.com/api/teacher/growth-attendance", {
             method: "POST",
             headers: { "content-type": "application/json" },
@@ -65,6 +73,24 @@ describe("teacher growth attendance API", () => {
             p_lesson_title: "가짜 정규 수업",
             p_note: "가짜 테스트 메모",
         });
+        expect(mocks.createAdminClient).not.toHaveBeenCalled();
+    });
+
+    it("keeps the legacy server-key path unchanged outside fresh DB mode", async () => {
+        mocks.usesHashedStudentAccessCodes.mockReturnValue(false);
+        const rpc = vi.fn().mockResolvedValue({
+            data: { api_version: "1.0", data: { summary: {}, records: [] } },
+            error: null,
+        });
+        mocks.createAdminClient.mockReturnValue({ rpc });
+
+        const response = await GET(new NextRequest(
+            `https://www.codingssok.com/api/teacher/growth-attendance?studentId=${STUDENT_ID}&month=2026-08`,
+        ));
+
+        expect(response.status).toBe(200);
+        expect(mocks.createAdminClient).toHaveBeenCalledOnce();
+        expect(mocks.createClient).not.toHaveBeenCalled();
     });
 
     it("stops before the database when the teacher is not signed in", async () => {
@@ -79,5 +105,6 @@ describe("teacher growth attendance API", () => {
 
         expect(response.status).toBe(401);
         expect(mocks.createAdminClient).not.toHaveBeenCalled();
+        expect(mocks.createClient).not.toHaveBeenCalled();
     });
 });

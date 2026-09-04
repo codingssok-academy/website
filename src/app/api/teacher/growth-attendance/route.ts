@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireTeacher } from "@/lib/auth-teacher";
+import { usesHashedStudentAccessCodes } from "@/lib/student-access-codes";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 import type { GrowthAttendanceStatus } from "@/features/growth-v2/attendance/types";
 
 export const runtime = "nodejs";
@@ -16,6 +18,11 @@ function json(body: unknown, status = 200) {
     return NextResponse.json(body, { status, headers: NO_STORE_HEADERS });
 }
 
+async function createAttendanceClient() {
+    if (usesHashedStudentAccessCodes()) return createClient();
+    return createAdminClient();
+}
+
 export async function GET(request: NextRequest) {
     const auth = await requireTeacher();
     if (!auth.ok) return auth.response;
@@ -26,10 +33,10 @@ export async function GET(request: NextRequest) {
         return json({ success: false, error: "학생과 출석 확인 월을 다시 선택해주세요." }, 400);
     }
 
-    const admin = createAdminClient();
-    if (!admin) return json({ success: false, error: "서버 연결 설정이 필요합니다." }, 503);
+    const attendanceClient = await createAttendanceClient();
+    if (!attendanceClient) return json({ success: false, error: "서버 연결 설정이 필요합니다." }, 503);
 
-    const { data, error } = await admin.rpc("growth_api_monthly_attendance", {
+    const { data, error } = await attendanceClient.rpc("growth_api_monthly_attendance", {
         p_student_id: studentId,
         p_month: `${month}-01`,
     });
@@ -62,10 +69,10 @@ export async function POST(request: NextRequest) {
         return json({ success: false, error: "출석 입력 내용을 다시 확인해주세요." }, 400);
     }
 
-    const admin = createAdminClient();
-    if (!admin) return json({ success: false, error: "서버 연결 설정이 필요합니다." }, 503);
+    const attendanceClient = await createAttendanceClient();
+    if (!attendanceClient) return json({ success: false, error: "서버 연결 설정이 필요합니다." }, 503);
 
-    const { data, error } = await admin.rpc("growth_api_teacher_set_attendance", {
+    const { data, error } = await attendanceClient.rpc("growth_api_teacher_set_attendance", {
         p_student_id: studentId,
         p_record_id: recordId,
         p_class_date: classDate,
