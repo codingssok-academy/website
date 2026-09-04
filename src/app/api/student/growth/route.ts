@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { toParentGrowthRecord } from "@/lib/parent-dashboard";
+import { usesHashedStudentAccessCodes } from "@/lib/student-access-codes";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -48,20 +49,39 @@ export async function GET() {
         );
     }
 
-    const [currentResult, entriesResult] = await Promise.all([
-        admin
-            .from("student_growth_management")
-            .select("id,current_class,strengths,current_goal,class_progress,parent_feedback_draft,status,updated_at")
-            .eq("student_id", student.id)
-            .maybeSingle(),
-        admin
-            .from("student_growth_entries")
-            .select("id,current_class,strengths,current_goal,class_progress,parent_feedback_draft,status,created_at")
-            .eq("student_id", student.id)
-            .eq("status", "완료")
-            .order("created_at", { ascending: false })
-            .limit(6),
-    ]);
+    const freshMode = usesHashedStudentAccessCodes();
+    const [currentResult, entriesResult] = freshMode
+        ? await Promise.all([
+            supabase
+                .from("student_growth_records")
+                .select("id,class_snapshot,learned_concepts,strengths,next_goal,lesson_summary,parent_message,status,published_at,updated_at,created_at")
+                .eq("student_id", student.id)
+                .eq("status", "published")
+                .order("published_at", { ascending: false })
+                .limit(1)
+                .maybeSingle(),
+            supabase
+                .from("student_growth_records")
+                .select("id,class_snapshot,learned_concepts,strengths,next_goal,lesson_summary,parent_message,status,published_at,updated_at,created_at")
+                .eq("student_id", student.id)
+                .eq("status", "published")
+                .order("published_at", { ascending: false })
+                .limit(6),
+        ])
+        : await Promise.all([
+            admin
+                .from("student_growth_management")
+                .select("id,current_class,strengths,current_goal,class_progress,parent_feedback_draft,status,updated_at")
+                .eq("student_id", student.id)
+                .maybeSingle(),
+            admin
+                .from("student_growth_entries")
+                .select("id,current_class,strengths,current_goal,class_progress,parent_feedback_draft,status,created_at")
+                .eq("student_id", student.id)
+                .eq("status", "완료")
+                .order("created_at", { ascending: false })
+                .limit(6),
+        ]);
 
     if (currentResult.error || entriesResult.error) {
         return NextResponse.json(
