@@ -78,11 +78,41 @@ describe("monthly attendance panel", () => {
     render(<MonthlyAttendancePanel accessToken={TOKEN} studentId={STUDENT_ID} />);
     expect(await screen.findByRole("heading", { name: "2026년 8월 출석 현황" })).toBeInTheDocument();
     expect(screen.getByText("3/4")).toBeInTheDocument();
+    expect(screen.getByText("75%")).toBeInTheDocument();
     expect(screen.getByText("프로젝트반 정규 수업", { exact: false })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "다음 달 출석 보기" }));
     expect(await screen.findByRole("heading", { name: "2026년 9월 출석 현황" })).toBeInTheDocument();
     expect(fetchMonthlyAttendance).toHaveBeenLastCalledWith(TOKEN, STUDENT_ID, "2026-09");
     expect(screen.getByText("이 달에 등록된 출석 기록이 아직 없습니다.")).toBeInTheDocument();
+  });
+
+  it("shows a makeup-only month as completed without an impossible zero target", async () => {
+    const makeupOnly = monthData("2026-08");
+    makeupOnly.data.summary = {
+      scheduled: 0,
+      present: 0,
+      absent: 0,
+      makeup: 1,
+      upcoming: 0,
+      completed: 1,
+    };
+    makeupOnly.data.records = [{
+      id: "33333333-3333-4333-8333-333333333333",
+      class_date: "2026-08-06",
+      lesson_title: "보강 수업",
+      status: "makeup",
+      note: null,
+      updated_at: "2026-08-06T10:00:00Z",
+    }];
+    vi.mocked(fetchMonthlyAttendance).mockResolvedValue(makeupOnly);
+
+    render(<MonthlyAttendancePanel accessToken={TOKEN} studentId={STUDENT_ID} />);
+
+    expect(await screen.findByText("1/1")).toBeInTheDocument();
+    expect(screen.queryByText("1/0")).not.toBeInTheDocument();
+    expect(screen.getByText("100%")).toBeInTheDocument();
+    expect(screen.getByRole("progressbar", { name: "2026년 8월 수업 이수율" }))
+      .toHaveAttribute("aria-valuenow", "100");
   });
 
   it("lets a teacher add and edit attendance but keeps viewer mode read-only", async () => {

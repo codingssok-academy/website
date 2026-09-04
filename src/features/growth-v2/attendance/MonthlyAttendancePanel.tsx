@@ -124,10 +124,13 @@ export function MonthlyAttendancePanel({
   }, [accessToken, month, requestKey, source, studentId]);
 
   const summary = attendance?.data.summary;
+  const completionTarget = summary
+    ? Math.max(summary.scheduled, summary.completed)
+    : 0;
   const completionRate = useMemo(() => {
-    if (!summary?.scheduled) return 0;
-    return Math.round((summary.completed / summary.scheduled) * 100);
-  }, [summary]);
+    if (!summary || completionTarget === 0) return 0;
+    return Math.min(Math.round((summary.completed / completionTarget) * 100), 100);
+  }, [completionTarget, summary]);
 
   const beginEdit = (record: GrowthAttendanceRecord) => {
     setRecordId(record.id);
@@ -225,7 +228,7 @@ export function MonthlyAttendancePanel({
       ) : attendance && summary ? (
         <>
           <div className={styles.metrics}>
-            <div><strong>{summary.completed}/{summary.scheduled}</strong><span>수업 이수</span></div>
+            <div><strong>{summary.completed}/{completionTarget}</strong><span>수업 이수</span></div>
             <div><strong>{summary.present}회</strong><span>출석</span></div>
             <div><strong>{summary.absent}회</strong><span>결석</span></div>
             <div><strong>{summary.makeup}회</strong><span>보강 완료</span></div>
