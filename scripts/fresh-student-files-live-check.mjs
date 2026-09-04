@@ -32,10 +32,14 @@ const studentPin = "2468";
 const teacherEmail = `fake_teacher_${runId}@codingssok.local`;
 const teacherPassword = `FakeTeacher!${runId}`;
 const teacherName = `가짜선생님${runId.slice(-5)}`;
+const adminEmail = `fake_admin_${runId}@codingssok.local`;
+const adminPassword = `FakeAdmin!${runId}`;
+const adminName = `가짜관리자${runId.slice(-5)}`;
 
 let studentId = null;
 let studentAuthUserId = null;
 let teacherAuthUserId = null;
+let adminAuthUserId = null;
 let uploadedFile = null;
 
 async function jsonRequest(path, init = {}) {
@@ -80,10 +84,13 @@ async function cleanup() {
     if (teacherAuthUserId) {
         await admin.auth.admin.deleteUser(teacherAuthUserId);
     }
+    if (adminAuthUserId) {
+        await admin.auth.admin.deleteUser(adminAuthUserId);
+    }
 }
 
 async function verifyCleanup() {
-    const [studentCheck, fileCheck, studentProfileCheck, teacherProfileCheck] = await Promise.all([
+    const [studentCheck, fileCheck, studentProfileCheck, teacherProfileCheck, adminProfileCheck] = await Promise.all([
         studentId
             ? admin.from("students").select("id", { count: "exact", head: true }).eq("id", studentId)
             : Promise.resolve({ count: 0, error: null }),
@@ -96,13 +103,17 @@ async function verifyCleanup() {
         teacherAuthUserId
             ? admin.from("profiles").select("id", { count: "exact", head: true }).eq("id", teacherAuthUserId)
             : Promise.resolve({ count: 0, error: null }),
+        adminAuthUserId
+            ? admin.from("profiles").select("id", { count: "exact", head: true }).eq("id", adminAuthUserId)
+            : Promise.resolve({ count: 0, error: null }),
     ]);
-    const cleanupError = studentCheck.error || fileCheck.error || studentProfileCheck.error || teacherProfileCheck.error;
+    const cleanupError = studentCheck.error || fileCheck.error || studentProfileCheck.error || teacherProfileCheck.error || adminProfileCheck.error;
     if (cleanupError) throw cleanupError;
     assert(studentCheck.count === 0, "가짜 학생 자료가 남아 있습니다.");
     assert(fileCheck.count === 0, "가짜 파일 자료가 남아 있습니다.");
     assert(studentProfileCheck.count === 0, "가짜 학생 계정 자료가 남아 있습니다.");
     assert(teacherProfileCheck.count === 0, "가짜 선생님 계정 자료가 남아 있습니다.");
+    assert(adminProfileCheck.count === 0, "가짜 관리자 계정 자료가 남아 있습니다.");
 }
 
 try {
@@ -275,6 +286,73 @@ try {
         redirect: "manual",
     });
     assert(assignedDownload.status === 307, `담당 선생님 다운로드 실패: ${assignedDownload.status}`);
+
+    const teacherVisibilityUpdate = await jsonRequest("/api/teacher/student-files", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", cookie: teacherCookie },
+        body: JSON.stringify({ fileId: uploadedFile.id, visibility: "staff_only" }),
+    });
+    assert(teacherVisibilityUpdate.response.status === 403, `일반 선생님의 공개 범위 변경이 차단되지 않았습니다: ${teacherVisibilityUpdate.response.status}`);
+
+    const { data: adminUser, error: adminCreateError } = await admin.auth.admin.createUser({
+        email: adminEmail,
+        password: adminPassword,
+        email_confirm: true,
+        user_metadata: { name: adminName, role: "admin" },
+        app_metadata: { role: "admin" },
+    });
+    if (adminCreateError || !adminUser.user) throw adminCreateError || new Error("가짜 관리자를 준비하지 못했습니다.");
+    adminAuthUserId = adminUser.user.id;
+
+    const { error: adminApprovalError } = await admin
+        .from("profiles")
+        .update({
+            name: adminName,
+            display_name: adminName,
+            role: "admin",
+            approval_status: "approved",
+        })
+        .eq("id", adminAuthUserId);
+    if (adminApprovalError) throw adminApprovalError;
+
+    const { data: adminLogin, error: adminLoginError } = await publicClient.auth.signInWithPassword({
+        email: adminEmail,
+        password: adminPassword,
+    });
+    if (adminLoginError || !adminLogin.session) throw adminLoginError || new Error("가짜 관리자 로그인이 실패했습니다.");
+    const adminCookie = await makeSessionCookie(adminLogin.session);
+
+    const hideFromParent = await jsonRequest("/api/teacher/student-files", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", cookie: adminCookie },
+        body: JSON.stringify({ fileId: uploadedFile.id, visibility: "staff_only" }),
+    });
+    assert(hideFromParent.response.status === 200 && hideFromParent.body?.file?.visibility === "staff_only", `관리자 비공개 변경 실패: ${hideFromParent.body?.error || hideFromParent.response.status}`);
+
+    const hiddenDashboard = await jsonRequest(`/api/parent/v2/dashboard?name=${encodeURIComponent(fakeName)}`, {
+        headers: { cookie: parentCookie },
+    });
+    assert(hiddenDashboard.response.status === 200, `비공개 변경 후 학부모 현황판 조회 실패: ${hiddenDashboard.body?.error || hiddenDashboard.response.status}`);
+    assert(!hiddenDashboard.body?.files?.some(file => file.id === uploadedFile.id), "선생님 전용 파일이 학부모 현황판에 남아 있습니다.");
+
+    const hiddenParentDownload = await fetch(`${baseUrl}/api/student/files/${uploadedFile.id}`, {
+        headers: { cookie: parentCookie },
+        redirect: "manual",
+    });
+    assert(hiddenParentDownload.status === 403, `선생님 전용 파일의 학부모 다운로드가 차단되지 않았습니다: ${hiddenParentDownload.status}`);
+
+    const revealToParent = await jsonRequest("/api/teacher/student-files", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", cookie: adminCookie },
+        body: JSON.stringify({ fileId: uploadedFile.id, visibility: "student_parent" }),
+    });
+    assert(revealToParent.response.status === 200 && revealToParent.body?.file?.visibility === "student_parent", `관리자 공개 변경 실패: ${revealToParent.body?.error || revealToParent.response.status}`);
+
+    const visibleDashboard = await jsonRequest(`/api/parent/v2/dashboard?name=${encodeURIComponent(fakeName)}`, {
+        headers: { cookie: parentCookie },
+    });
+    assert(visibleDashboard.response.status === 200, `공개 변경 후 학부모 현황판 조회 실패: ${visibleDashboard.body?.error || visibleDashboard.response.status}`);
+    assert(visibleDashboard.body?.files?.some(file => file.id === uploadedFile.id), "다시 공개한 파일이 학부모 현황판에 나타나지 않습니다.");
 
     console.log("PASS: fresh-test 홈페이지 학생 파일 연결 검사가 모두 통과했습니다.");
 } finally {

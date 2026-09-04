@@ -167,6 +167,7 @@ export async function GET(req: NextRequest) {
             },
         }, { status: 500 });
     }
+    const freshMode = usesHashedStudentAccessCodes();
 
     // Rate limit: IP당 1분에 60회 (탭 전환 + 백그라운드 갱신 대응)
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
@@ -215,7 +216,7 @@ export async function GET(req: NextRequest) {
     }
 
     // ── Lambda in-memory cache hit (30초) — Supabase 7 query 비용 0 ──
-    const cachedDash = getCachedDash(name);
+    const cachedDash = freshMode ? null : getCachedDash(name);
     if (cachedDash) {
         return NextResponse.json(cachedDash, {
             headers: { "Cache-Control": "private, max-age=60, stale-while-revalidate=120", "X-Cache": "HIT" },
@@ -332,7 +333,7 @@ export async function GET(req: NextRequest) {
             : Promise.resolve({ data: null }),
 
         // 새 시험 DB — 학부모에게 공개한 결과물의 안전한 표시 정보만 조회
-        studentId && usesHashedStudentAccessCodes()
+        studentId && freshMode
             ? sb.from("student_files")
                   .select("id,original_name,mime_type,size_bytes,category,note,created_at")
                   .eq("student_id", studentId)
@@ -454,10 +455,10 @@ export async function GET(req: NextRequest) {
             created_at: c.created_at,
         })),
     };
-    setCachedDash(name, responseObj);
+    if (!freshMode) setCachedDash(name, responseObj);
     return NextResponse.json(responseObj, {
         headers: {
-            "Cache-Control": "private, max-age=60, stale-while-revalidate=120",
+            "Cache-Control": freshMode ? "no-store" : "private, max-age=60, stale-while-revalidate=120",
             "X-Cache": "MISS",
         },
     });

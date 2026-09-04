@@ -2,6 +2,7 @@
 import { requireTeacher } from "@/lib/auth-teacher";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
+    normalizeStudentFileVisibility,
     toStudentFileDto,
     type StudentFileRow,
 } from "@/lib/student-files";
@@ -59,7 +60,7 @@ export async function GET(request: NextRequest) {
             )];
             if (allowedStudentIds.length === 0) {
                 return NextResponse.json(
-                    { success: true, students: [], files: [] },
+                    { success: true, students: [], files: [], canManageVisibility: false },
                     { headers: { "Cache-Control": "no-store" } },
                 );
             }
@@ -104,10 +105,65 @@ export async function GET(request: NextRequest) {
                 } : null);
             });
 
-        return NextResponse.json({ success: true, students, files }, { headers: { "Cache-Control": "no-store" } });
+        return NextResponse.json({
+            success: true,
+            students,
+            files,
+            canManageVisibility: freshMode && teacher.role === "admin",
+        }, { headers: { "Cache-Control": "no-store" } });
     } catch (error) {
         return NextResponse.json(
             { success: false, error: error instanceof Error ? error.message : "학생 파일 목록을 불러오지 못했습니다." },
+            { status: 500 },
+        );
+    }
+}
+
+export async function PATCH(request: NextRequest) {
+    const teacher = await requireTeacher();
+    if (!teacher.ok) return teacher.response;
+    if (teacher.role !== "admin") {
+        return NextResponse.json(
+            { success: false, error: "파일 공개 범위는 관리자만 변경할 수 있습니다." },
+            { status: 403 },
+        );
+    }
+    if (!usesHashedStudentAccessCodes()) {
+        return NextResponse.json(
+            { success: false, error: "새 시험 DB에서만 파일 공개 범위를 변경할 수 있습니다." },
+            { status: 409 },
+        );
+    }
+
+    try {
+        const body = await request.json().catch(() => null);
+        const fileId = typeof body?.fileId === "string" ? body.fileId.trim() : "";
+        const visibility = normalizeStudentFileVisibility(body?.visibility);
+        if (!fileId || !visibility) {
+            return NextResponse.json(
+                { success: false, error: "파일과 공개 범위를 정확히 선택해주세요." },
+                { status: 400 },
+            );
+        }
+
+        const admin = createAdminClient();
+        if (!admin) return NextResponse.json({ success: false, error: "서버 저장소 설정이 필요합니다." }, { status: 503 });
+
+        const { data, error } = await admin
+            .from("student_files")
+            .update({ visibility })
+            .eq("id", fileId)
+            .select("id,visibility")
+            .maybeSingle();
+        if (error) throw new Error(error.message);
+        if (!data) {
+            return NextResponse.json({ success: false, error: "파일을 찾을 수 없습니다." }, { status: 404 });
+        }
+
+        return NextResponse.json({ success: true, file: data }, { headers: { "Cache-Control": "no-store" } });
+    } catch (error) {
+        return NextResponse.json(
+            { success: false, error: error instanceof Error ? error.message : "파일 공개 범위를 변경하지 못했습니다." },
             { status: 500 },
         );
     }

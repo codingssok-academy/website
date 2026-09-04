@@ -1,6 +1,8 @@
 ﻿export const STUDENT_FILES_BUCKET = "student-files";
 export const STUDENT_FILE_MAX_BYTES = 50 * 1024 * 1024;
 
+export type StudentFileVisibility = "student_parent" | "staff_only";
+
 const ALLOWED_EXTENSIONS = new Set([
     "png",
     "jpg",
@@ -41,7 +43,7 @@ export type StudentFileRow = {
     size_bytes: number;
     category: string;
     note: string | null;
-    visibility?: "student_parent" | "staff_only";
+    visibility?: StudentFileVisibility;
     created_at: string;
 };
 
@@ -55,7 +57,7 @@ export type StudentFileDto = {
     sizeBytes: number;
     category: string;
     note: string | null;
-    visibility: "student_parent" | "staff_only";
+    visibility: StudentFileVisibility;
     createdAt: string;
     canStudentDelete: boolean;
     student?: {
@@ -75,6 +77,10 @@ export function normalizeStudentFileCategory(input: unknown) {
 export function normalizeStudentFileNote(input: unknown) {
     const value = typeof input === "string" ? input.trim().slice(0, 240) : "";
     return value || null;
+}
+
+export function normalizeStudentFileVisibility(input: unknown): StudentFileVisibility | null {
+    return input === "student_parent" || input === "staff_only" ? input : null;
 }
 
 export function sanitizeOriginalFileName(input: unknown) {

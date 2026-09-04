@@ -127,7 +127,7 @@ export function useParentDashboard() {
         try {
             const res = await fetch(
                 `/api/parent/v2/dashboard?name=${encodeURIComponent(studentName)}`,
-                { signal: controller.signal }
+                { signal: controller.signal, cache: "no-store" }
             );
             if (res.status === 401 || res.status === 403) {
                 clearParentClientAuth();

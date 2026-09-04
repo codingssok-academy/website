@@ -9,10 +9,18 @@ const mocks = vi.hoisted(() => ({
 vi.mock("@/lib/supabase/admin", () => ({ createAdminClient: mocks.createAdminClient }));
 vi.mock("@/lib/auth-teacher", () => ({ requireTeacher: mocks.requireTeacher }));
 
-import { GET } from "./route";
+import { GET, PATCH } from "./route";
 
 function request() {
     return new NextRequest("https://www.codingssok.com/api/teacher/student-files");
+}
+
+function patchRequest(body: unknown) {
+    return new NextRequest("https://www.codingssok.com/api/teacher/student-files", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+    });
 }
 
 function makeListQuery(data: unknown[]) {
@@ -99,6 +107,7 @@ describe("teacher student file list in fresh database mode", () => {
         expect(body.students).toHaveLength(1);
         expect(body.files).toHaveLength(1);
         expect(body.files[0].visibility).toBe("student_parent");
+        expect(body.canManageVisibility).toBe(false);
     });
 
     it("returns an empty list without querying all students when a teacher has no assignment", async () => {
@@ -126,8 +135,68 @@ describe("teacher student file list in fresh database mode", () => {
         const body = await response.json();
 
         expect(response.status).toBe(200);
-        expect(body).toEqual({ success: true, students: [], files: [] });
+        expect(body).toEqual({ success: true, students: [], files: [], canManageVisibility: false });
         expect(studentsSelect).not.toHaveBeenCalled();
         expect(filesSelect).not.toHaveBeenCalled();
+    });
+
+    it("blocks a non-admin teacher from changing a file's visibility", async () => {
+        const response = await PATCH(patchRequest({
+            fileId: "22222222-2222-4222-8222-222222222222",
+            visibility: "staff_only",
+        }));
+        const body = await response.json();
+
+        expect(response.status).toBe(403);
+        expect(body.error).toContain("관리자만");
+        expect(mocks.createAdminClient).not.toHaveBeenCalled();
+    });
+
+    it("lets an admin change only the allowed visibility values", async () => {
+        mocks.requireTeacher.mockResolvedValue({
+            ok: true,
+            userId: "admin-user",
+            role: "admin",
+        });
+        const maybeSingle = vi.fn().mockResolvedValue({
+            data: { id: "22222222-2222-4222-8222-222222222222", visibility: "staff_only" },
+            error: null,
+        });
+        const select = vi.fn(() => ({ maybeSingle }));
+        const eq = vi.fn(() => ({ select }));
+        const update = vi.fn(() => ({ eq }));
+        mocks.createAdminClient.mockReturnValue({
+            from: vi.fn(() => ({ update })),
+        });
+
+        const response = await PATCH(patchRequest({
+            fileId: "22222222-2222-4222-8222-222222222222",
+            visibility: "staff_only",
+        }));
+        const body = await response.json();
+
+        expect(response.status).toBe(200);
+        expect(update).toHaveBeenCalledWith({ visibility: "staff_only" });
+        expect(eq).toHaveBeenCalledWith("id", "22222222-2222-4222-8222-222222222222");
+        expect(select).toHaveBeenCalledWith("id,visibility");
+        expect(body.file.visibility).toBe("staff_only");
+    });
+
+    it("rejects an unknown visibility value before accessing the database", async () => {
+        mocks.requireTeacher.mockResolvedValue({
+            ok: true,
+            userId: "admin-user",
+            role: "admin",
+        });
+
+        const response = await PATCH(patchRequest({
+            fileId: "22222222-2222-4222-8222-222222222222",
+            visibility: "public_everyone",
+        }));
+        const body = await response.json();
+
+        expect(response.status).toBe(400);
+        expect(body.error).toContain("정확히 선택");
+        expect(mocks.createAdminClient).not.toHaveBeenCalled();
     });
 });

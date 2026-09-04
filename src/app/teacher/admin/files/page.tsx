@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Download, FolderOpen, RefreshCw, Search, Trash2 } from "lucide-react";
+import { Download, Eye, FolderOpen, LockKeyhole, RefreshCw, Search, Trash2 } from "lucide-react";
 
 type StudentOption = {
     id: string;
@@ -22,6 +22,7 @@ type StudentFile = {
     sizeBytes: number;
     category: string;
     note: string | null;
+    visibility: "student_parent" | "staff_only";
     createdAt: string;
     student: {
         id: string;
@@ -82,6 +83,7 @@ export default function AdminStudentFilesPage() {
     const [selectedStudentId, setSelectedStudentId] = useState("");
     const [query, setQuery] = useState("");
     const [loading, setLoading] = useState(true);
+    const [canManageVisibility, setCanManageVisibility] = useState(false);
     const [actingId, setActingId] = useState<string | null>(null);
     const [message, setMessage] = useState<{ type: "ok" | "error"; text: string } | null>(null);
 
@@ -96,6 +98,7 @@ export default function AdminStudentFilesPage() {
             const nextStudents = (data.students || []) as StudentOption[];
             setStudents(nextStudents);
             setFiles((data.files || []) as StudentFile[]);
+            setCanManageVisibility(data.canManageVisibility === true);
             setSelectedStudentId(current => {
                 if (current && nextStudents.some(student => student.id === current)) return current;
                 return nextStudents[0]?.id || "";
@@ -104,11 +107,14 @@ export default function AdminStudentFilesPage() {
             setMessage({ type: "error", text: error instanceof Error ? error.message : "학생 파일 목록을 불러오지 못했습니다." });
             setStudents([]);
             setFiles([]);
+            setCanManageVisibility(false);
         } finally {
             setLoading(false);
         }
     }, []);
 
+    // 최초 진입 시 서버의 파일 목록을 한 번 불러옵니다.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     useEffect(() => { void load(); }, [load]);
 
     const filteredStudents = useMemo(() => {
@@ -138,13 +144,39 @@ export default function AdminStudentFilesPage() {
         }
     };
 
+    const changeVisibility = async (file: StudentFile, visibility: StudentFile["visibility"]) => {
+        if (file.visibility === visibility || actingId) return;
+        setActingId(file.id);
+        setMessage(null);
+        try {
+            const res = await fetch("/api/teacher/student-files", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ fileId: file.id, visibility }),
+            });
+            const data = await readJson(res);
+            if (!res.ok || !data.success) throw new Error(data.error || "공개 범위를 변경하지 못했습니다.");
+            setFiles(prev => prev.map(item => item.id === file.id ? { ...item, visibility } : item));
+            setMessage({
+                type: "ok",
+                text: visibility === "student_parent"
+                    ? `${file.originalName} 파일을 학부모에게 공개했습니다.`
+                    : `${file.originalName} 파일을 선생님만 볼 수 있게 변경했습니다.`,
+            });
+        } catch (error) {
+            setMessage({ type: "error", text: error instanceof Error ? error.message : "공개 범위를 변경하지 못했습니다." });
+        } finally {
+            setActingId(null);
+        }
+    };
+
     return (
         <main className="admin-files-page">
             <header className="page-head">
                 <div>
                     <p className="kicker">Student File Console</p>
                     <h1>학생 파일함</h1>
-                    <p>학생별 보관 파일을 조회하고, 필요 없는 파일을 삭제합니다.</p>
+                    <p>학생별 파일을 확인하고 학부모에게 보여줄 결과물을 선택합니다.</p>
                 </div>
                 <button type="button" className="subtle-button" onClick={load} disabled={loading}>
                     <RefreshCw size={16} /> 새로고침
@@ -199,7 +231,7 @@ export default function AdminStudentFilesPage() {
                             <FolderOpen size={18} />
                             <div>
                                 <h2>파일 목록</h2>
-                                <p>관리자 화면에서는 다운로드와 삭제만 가능합니다.</p>
+                                <p>공개 범위를 바꾸면 학부모 현황판에 바로 반영됩니다.</p>
                             </div>
                         </div>
 
@@ -210,7 +242,7 @@ export default function AdminStudentFilesPage() {
                         ) : (
                             <div className="file-table">
                                 <div className="file-row head">
-                                    <span>파일</span><span>분류</span><span>등록자</span><span>일시</span><span>관리</span>
+                                    <span>파일</span><span>분류</span><span>등록자</span><span>공개 범위</span><span>일시</span><span>관리</span>
                                 </div>
                                 {visibleFiles.map(file => (
                                     <div className="file-row" key={file.id}>
@@ -220,6 +252,34 @@ export default function AdminStudentFilesPage() {
                                         </div>
                                         <span>{CATEGORY_LABELS[file.category] || file.category}</span>
                                         <span>{roleLabel(file.uploadedByRole)}</span>
+                                        {canManageVisibility ? (
+                                            <div className="visibility-control" role="group" aria-label={`${file.originalName} 공개 범위`}>
+                                                <button
+                                                    type="button"
+                                                    className={`visibility-button${file.visibility === "student_parent" ? " active public" : ""}`}
+                                                    aria-pressed={file.visibility === "student_parent"}
+                                                    aria-label={`${file.originalName}을 학부모 공개로 변경`}
+                                                    onClick={() => void changeVisibility(file, "student_parent")}
+                                                    disabled={actingId === file.id}
+                                                >
+                                                    <Eye size={13} /> 학부모 공개
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    className={`visibility-button${file.visibility === "staff_only" ? " active private" : ""}`}
+                                                    aria-pressed={file.visibility === "staff_only"}
+                                                    aria-label={`${file.originalName}을 선생님만 보기로 변경`}
+                                                    onClick={() => void changeVisibility(file, "staff_only")}
+                                                    disabled={actingId === file.id}
+                                                >
+                                                    <LockKeyhole size={13} /> 선생님만
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <span className={`visibility-badge ${file.visibility}`}>
+                                                {file.visibility === "student_parent" ? "학부모 공개" : "선생님만"}
+                                            </span>
+                                        )}
                                         <span>{formatDate(file.createdAt)}</span>
                                         <div className="row-actions">
                                             <a className="small-button" href={`/api/student/files/${file.id}`} target="_blank" rel="noreferrer">
@@ -270,13 +330,21 @@ export default function AdminStudentFilesPage() {
                 .file-panel { padding: 18px; box-shadow: none; }
                 .empty { padding: 42px 16px; border: 1px dashed #d8e0ee; border-radius: 14px; background: #f8fafc; color: #94a3b8; text-align: center; font-weight: 800; }
                 .file-table { border: 1px solid #e2e8f0; border-radius: 14px; overflow: hidden; }
-                .file-row { display: grid; grid-template-columns: minmax(250px, 1fr) 100px 90px 120px 220px; gap: 12px; align-items: center; padding: 13px 14px; border-top: 1px solid #e2e8f0; font-size: 13px; font-weight: 700; }
+                .file-row { display: grid; grid-template-columns: minmax(210px, 1fr) 74px 68px minmax(210px, .9fr) 108px 196px; gap: 10px; align-items: center; padding: 13px 14px; border-top: 1px solid #e2e8f0; font-size: 13px; font-weight: 700; }
                 .file-row:first-child { border-top: none; }
                 .file-row.head { background: #f8fafc; color: #64748b; font-size: 12px; font-weight: 900; }
                 .file-main { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
                 .file-main strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
                 .file-main small { color: #64748b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
                 .row-actions { display: flex; gap: 8px; justify-content: flex-end; }
+                .visibility-control { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; padding: 4px; border-radius: 11px; background: #f1f5f9; }
+                .visibility-button { min-height: 32px; border: 1px solid transparent; border-radius: 8px; background: transparent; color: #64748b; display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 0 7px; font-size: 11px; font-weight: 900; cursor: pointer; white-space: nowrap; }
+                .visibility-button.active.public { color: #047857; background: #ecfdf5; border-color: #a7f3d0; }
+                .visibility-button.active.private { color: #475569; background: #fff; border-color: #cbd5e1; }
+                .visibility-button:disabled { opacity: .55; cursor: wait; }
+                .visibility-badge { width: fit-content; border-radius: 999px; padding: 6px 9px; font-size: 11px; font-weight: 900; }
+                .visibility-badge.student_parent { color: #047857; background: #ecfdf5; }
+                .visibility-badge.staff_only { color: #475569; background: #f1f5f9; }
                 .small-button { min-height: 34px; padding: 0 10px; border-radius: 10px; font-size: 12px; }
                 .small-button.danger { color: #b91c1c; background: #fff7f7; border-color: #fecaca; }
                 @media (max-width: 1100px) {
