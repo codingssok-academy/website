@@ -1,27 +1,33 @@
-﻿import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireTeacher } from "@/lib/auth-teacher";
+import { canParentSessionReadStudent } from "@/lib/parent-session-access";
+import { PARENT_SESSION_COOKIE, verifyParentSessionToken } from "@/lib/parent-session";
+import { usesHashedStudentAccessCodes } from "@/lib/student-access-codes";
 import { STUDENT_FILES_BUCKET, type StudentFileRow } from "@/lib/student-files";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 type AccessResult =
-    | { ok: true; role: "student" | "teacher" | "admin" }
+    | { ok: true; role: "student" | "parent" | "teacher" | "admin" }
     | { ok: false; response: NextResponse };
 
 async function loadFile(admin: NonNullable<ReturnType<typeof createAdminClient>>, fileId: string) {
+    const columns = usesHashedStudentAccessCodes()
+        ? "id,student_id,owner_auth_user_id,uploaded_by,uploaded_by_role,original_name,storage_path,mime_type,size_bytes,category,note,visibility,created_at"
+        : "id,student_id,owner_auth_user_id,uploaded_by,uploaded_by_role,original_name,storage_path,mime_type,size_bytes,category,note,created_at";
     const { data, error } = await admin
         .from("student_files")
-        .select("id,student_id,owner_auth_user_id,uploaded_by,uploaded_by_role,original_name,storage_path,mime_type,size_bytes,category,note,created_at")
+        .select(columns)
         .eq("id", fileId)
         .maybeSingle();
     if (error) throw new Error(error.message);
     return data as StudentFileRow | null;
 }
 
-async function checkAccess(file: StudentFileRow, intent: "download" | "delete"): Promise<AccessResult> {
+async function checkLegacyAccess(file: StudentFileRow, intent: "download" | "delete"): Promise<AccessResult> {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -50,8 +56,121 @@ async function checkAccess(file: StudentFileRow, intent: "download" | "delete"):
     return teacher;
 }
 
+async function checkFreshAccess(
+    request: NextRequest,
+    file: StudentFileRow,
+    intent: "download" | "delete",
+    admin: NonNullable<ReturnType<typeof createAdminClient>>,
+): Promise<AccessResult> {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (user) {
+        const { data: allowed, error: permissionError } = await supabase.rpc(
+            "codingssok_can_read_student_file",
+            { p_file_id: file.id },
+        );
+        if (permissionError) {
+            return {
+                ok: false,
+                response: NextResponse.json(
+                    { success: false, error: "파일 권한을 확인하지 못했습니다." },
+                    { status: 503 },
+                ),
+            };
+        }
+
+        if (allowed === true) {
+            const { data: profile, error: profileError } = await supabase
+                .from("profiles")
+                .select("role,approval_status")
+                .eq("id", user.id)
+                .maybeSingle();
+            if (profileError) {
+                return {
+                    ok: false,
+                    response: NextResponse.json(
+                        { success: false, error: "계정 권한을 확인하지 못했습니다." },
+                        { status: 503 },
+                    ),
+                };
+            }
+
+            if (profile?.approval_status === "approved") {
+                const role = profile.role;
+                if (
+                    intent === "download"
+                    && (role === "student" || role === "parent" || role === "teacher" || role === "admin")
+                ) {
+                    return { ok: true, role };
+                }
+                if (intent === "delete" && (role === "teacher" || role === "admin")) {
+                    return { ok: true, role };
+                }
+                if (
+                    intent === "delete"
+                    && role === "student"
+                    && file.owner_auth_user_id === user.id
+                    && file.uploaded_by_role === "student"
+                ) {
+                    return { ok: true, role: "student" };
+                }
+            }
+        }
+    }
+
+    if (intent === "download" && file.visibility === "student_parent") {
+        const token = request.cookies.get(PARENT_SESSION_COOKIE)?.value;
+        const session = verifyParentSessionToken(token);
+        const allowedStudentIds = new Set([
+            session?.studentId,
+            ...(session?.studentIds || []),
+        ].filter((id): id is string => Boolean(id)));
+
+        if (session && allowedStudentIds.has(file.student_id)) {
+            const { data: student, error: studentError } = await admin
+                .from("students")
+                .select("id,name,status")
+                .eq("id", file.student_id)
+                .maybeSingle();
+            if (studentError) {
+                return {
+                    ok: false,
+                    response: NextResponse.json(
+                        { success: false, error: "학생 정보를 확인하지 못했습니다." },
+                        { status: 503 },
+                    ),
+                };
+            }
+
+            if (
+                student?.status === "active"
+                && await canParentSessionReadStudent(admin, session, student.name)
+            ) {
+                return { ok: true, role: "parent" };
+            }
+        }
+    }
+
+    return {
+        ok: false,
+        response: NextResponse.json({ success: false, error: "파일 접근 권한이 없습니다." }, { status: 403 }),
+    };
+}
+
+async function checkAccess(
+    request: NextRequest,
+    file: StudentFileRow,
+    intent: "download" | "delete",
+    admin: NonNullable<ReturnType<typeof createAdminClient>>,
+) {
+    return usesHashedStudentAccessCodes()
+        ? checkFreshAccess(request, file, intent, admin)
+        : checkLegacyAccess(file, intent);
+}
+
 export async function GET(
-    _request: Request,
+    request: NextRequest,
     { params }: { params: Promise<{ fileId: string }> },
 ) {
     try {
@@ -64,7 +183,7 @@ export async function GET(
         const file = await loadFile(admin, fileId);
         if (!file) return NextResponse.json({ success: false, error: "파일을 찾을 수 없습니다." }, { status: 404 });
 
-        const access = await checkAccess(file, "download");
+        const access = await checkAccess(request, file, "download", admin);
         if (!access.ok) return access.response;
 
         const { data, error } = await admin.storage
@@ -82,7 +201,7 @@ export async function GET(
 }
 
 export async function DELETE(
-    _request: Request,
+    request: NextRequest,
     { params }: { params: Promise<{ fileId: string }> },
 ) {
     try {
@@ -95,7 +214,7 @@ export async function DELETE(
         const file = await loadFile(admin, fileId);
         if (!file) return NextResponse.json({ success: true });
 
-        const access = await checkAccess(file, "delete");
+        const access = await checkAccess(request, file, "delete", admin);
         if (!access.ok) return access.response;
 
         const storage = await admin.storage.from(STUDENT_FILES_BUCKET).remove([file.storage_path]);

@@ -11,6 +11,7 @@ import {
     toStudentFileDto,
     type StudentFileRow,
 } from "@/lib/student-files";
+import { usesHashedStudentAccessCodes } from "@/lib/student-access-codes";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -24,6 +25,12 @@ type StudentRow = {
     status: string | null;
     auth_user_id: string | null;
 };
+
+function getStudentFileColumns() {
+    return usesHashedStudentAccessCodes()
+        ? "id,student_id,owner_auth_user_id,uploaded_by,uploaded_by_role,original_name,storage_path,mime_type,size_bytes,category,note,visibility,created_at"
+        : "id,student_id,owner_auth_user_id,uploaded_by,uploaded_by_role,original_name,storage_path,mime_type,size_bytes,category,note,created_at";
+}
 
 async function getCurrentStudent() {
     const supabase = await createClient();
@@ -48,7 +55,10 @@ async function getCurrentStudent() {
     }
 
     const student = data as StudentRow | null;
-    if (!student || student.status === "deactivated" || student.status === "rejected") {
+    const inactive = usesHashedStudentAccessCodes()
+        ? student?.status !== "active"
+        : student?.status === "deactivated" || student?.status === "rejected";
+    if (!student || inactive) {
         return { error: NextResponse.json({ success: false, error: "사용 가능한 학생 계정이 아닙니다." }, { status: 403 }) };
     }
 
@@ -59,11 +69,14 @@ export async function GET() {
     const ctx = await getCurrentStudent();
     if (ctx.error) return ctx.error;
 
-    const { data, error } = await ctx.admin
+    let filesQuery = ctx.admin
         .from("student_files")
-        .select("id,student_id,owner_auth_user_id,uploaded_by,uploaded_by_role,original_name,storage_path,mime_type,size_bytes,category,note,created_at")
-        .eq("student_id", ctx.student.id)
-        .order("created_at", { ascending: false });
+        .select(getStudentFileColumns())
+        .eq("student_id", ctx.student.id);
+    if (usesHashedStudentAccessCodes()) {
+        filesQuery = filesQuery.eq("visibility", "student_parent");
+    }
+    const { data, error } = await filesQuery.order("created_at", { ascending: false });
 
     if (error) {
         return NextResponse.json({ success: false, error: error.message }, { status: 500 });
@@ -78,7 +91,7 @@ export async function GET() {
             grade: ctx.student.grade,
             className: ctx.student.class,
         },
-        files: ((data || []) as StudentFileRow[]).map(row => toStudentFileDto(row)),
+        files: ((data || []) as unknown as StudentFileRow[]).map(row => toStudentFileDto(row)),
     }, { headers: { "Cache-Control": "no-store" } });
 }
 
@@ -110,21 +123,23 @@ export async function POST(request: NextRequest) {
             });
         if (upload.error) throw new Error(upload.error.message);
 
+        const metadata = {
+            student_id: ctx.student.id,
+            owner_auth_user_id: ctx.user.id,
+            uploaded_by: ctx.user.id,
+            uploaded_by_role: "student",
+            original_name: originalName,
+            storage_path: storagePath,
+            mime_type: file.type || null,
+            size_bytes: file.size,
+            category: normalizeStudentFileCategory(form.get("category")),
+            note: normalizeStudentFileNote(form.get("note")),
+            ...(usesHashedStudentAccessCodes() ? { visibility: "student_parent" } : {}),
+        };
         const { data, error } = await ctx.admin
             .from("student_files")
-            .insert({
-                student_id: ctx.student.id,
-                owner_auth_user_id: ctx.user.id,
-                uploaded_by: ctx.user.id,
-                uploaded_by_role: "student",
-                original_name: originalName,
-                storage_path: storagePath,
-                mime_type: file.type || null,
-                size_bytes: file.size,
-                category: normalizeStudentFileCategory(form.get("category")),
-                note: normalizeStudentFileNote(form.get("note")),
-            })
-            .select("id,student_id,owner_auth_user_id,uploaded_by,uploaded_by_role,original_name,storage_path,mime_type,size_bytes,category,note,created_at")
+            .insert(metadata)
+            .select(getStudentFileColumns())
             .single();
 
         if (error || !data) {
@@ -132,7 +147,7 @@ export async function POST(request: NextRequest) {
             throw new Error(error?.message || "파일 정보를 저장하지 못했습니다.");
         }
 
-        return NextResponse.json({ success: true, file: toStudentFileDto(data as StudentFileRow) }, { status: 201 });
+        return NextResponse.json({ success: true, file: toStudentFileDto(data as unknown as StudentFileRow) }, { status: 201 });
     } catch (error) {
         return NextResponse.json(
             { success: false, error: error instanceof Error ? error.message : "파일 업로드에 실패했습니다." },

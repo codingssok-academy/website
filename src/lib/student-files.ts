@@ -41,6 +41,7 @@ export type StudentFileRow = {
     size_bytes: number;
     category: string;
     note: string | null;
+    visibility?: "student_parent" | "staff_only";
     created_at: string;
 };
 
@@ -54,6 +55,7 @@ export type StudentFileDto = {
     sizeBytes: number;
     category: string;
     note: string | null;
+    visibility: "student_parent" | "staff_only";
     createdAt: string;
     canStudentDelete: boolean;
     student?: {
@@ -126,6 +128,7 @@ export function toStudentFileDto(row: StudentFileRow, student?: StudentFileDto["
         sizeBytes: Number(row.size_bytes || 0),
         category: row.category,
         note: row.note,
+        visibility: row.visibility ?? "student_parent",
         createdAt: row.created_at,
         canStudentDelete: row.uploaded_by_role === "student",
         student: student ?? null,

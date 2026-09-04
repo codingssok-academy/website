@@ -5,6 +5,7 @@ import {
     toStudentFileDto,
     type StudentFileRow,
 } from "@/lib/student-files";
+import { usesHashedStudentAccessCodes } from "@/lib/student-access-codes";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -40,15 +41,47 @@ export async function GET(request: NextRequest) {
 
     try {
         const studentId = request.nextUrl.searchParams.get("studentId")?.trim() || "";
+        const freshMode = usesHashedStudentAccessCodes();
+        let allowedStudentIds: string[] | null = null;
+
+        if (freshMode && teacher.role !== "admin") {
+            const { data: assignments, error: assignmentError } = await admin
+                .from("teacher_student_assignments")
+                .select("student_id")
+                .eq("teacher_id", teacher.userId)
+                .eq("status", "active");
+            if (assignmentError) throw new Error(assignmentError.message);
+
+            allowedStudentIds = [...new Set(
+                ((assignments || []) as { student_id: string | null }[])
+                    .map(assignment => assignment.student_id)
+                    .filter((id): id is string => Boolean(id)),
+            )];
+            if (allowedStudentIds.length === 0) {
+                return NextResponse.json(
+                    { success: true, students: [], files: [] },
+                    { headers: { "Cache-Control": "no-store" } },
+                );
+            }
+        }
+
+        let studentsQuery = admin
+            .from("students")
+            .select("id,name,school,grade,class,status,auth_user_id");
+        let filesQuery = admin
+            .from("student_files")
+            .select(freshMode
+                ? "id,student_id,owner_auth_user_id,uploaded_by,uploaded_by_role,original_name,storage_path,mime_type,size_bytes,category,note,visibility,created_at"
+                : "id,student_id,owner_auth_user_id,uploaded_by,uploaded_by_role,original_name,storage_path,mime_type,size_bytes,category,note,created_at");
+
+        if (allowedStudentIds) {
+            studentsQuery = studentsQuery.in("id", allowedStudentIds);
+            filesQuery = filesQuery.in("student_id", allowedStudentIds);
+        }
+
         const [studentsRes, filesRes] = await Promise.all([
-            admin
-                .from("students")
-                .select("id,name,school,grade,class,status,auth_user_id")
-                .order("name", { ascending: true }),
-            admin
-                .from("student_files")
-                .select("id,student_id,owner_auth_user_id,uploaded_by,uploaded_by_role,original_name,storage_path,mime_type,size_bytes,category,note,created_at")
-                .order("created_at", { ascending: false }),
+            studentsQuery.order("name", { ascending: true }),
+            filesQuery.order("created_at", { ascending: false }),
         ]);
 
         if (studentsRes.error) throw new Error(studentsRes.error.message);
@@ -58,7 +91,7 @@ export async function GET(request: NextRequest) {
             .filter(student => student.class !== "admin" && student.status !== "deactivated")
             .map(toStudentOption);
         const studentMap = new Map(students.map(student => [student.id, student]));
-        const files = ((filesRes.data || []) as StudentFileRow[])
+        const files = ((filesRes.data || []) as unknown as StudentFileRow[])
             .filter(file => !studentId || file.student_id === studentId)
             .map(file => {
                 const student = studentMap.get(file.student_id);
