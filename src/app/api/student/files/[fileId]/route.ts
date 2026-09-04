@@ -5,7 +5,7 @@ import { requireTeacher } from "@/lib/auth-teacher";
 import { canParentSessionReadStudent } from "@/lib/parent-session-access";
 import { PARENT_SESSION_COOKIE, verifyParentSessionToken } from "@/lib/parent-session";
 import { usesHashedStudentAccessCodes } from "@/lib/student-access-codes";
-import { STUDENT_FILES_BUCKET, type StudentFileRow } from "@/lib/student-files";
+import { getStudentFilePreviewKind, STUDENT_FILES_BUCKET, type StudentFileRow } from "@/lib/student-files";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -176,6 +176,10 @@ export async function GET(
     try {
         const { fileId } = await params;
         if (!fileId) return NextResponse.json({ success: false, error: "파일 ID가 필요합니다." }, { status: 400 });
+        const mode = request.nextUrl.searchParams.get("mode") || "download";
+        if (mode !== "download" && mode !== "preview") {
+            return NextResponse.json({ success: false, error: "지원하지 않는 파일 열기 방식입니다." }, { status: 400 });
+        }
 
         const admin = createAdminClient();
         if (!admin) return NextResponse.json({ success: false, error: "서버 저장소 설정이 필요합니다." }, { status: 503 });
@@ -186,9 +190,17 @@ export async function GET(
         const access = await checkAccess(request, file, "download", admin);
         if (!access.ok) return access.response;
 
-        const { data, error } = await admin.storage
-            .from(STUDENT_FILES_BUCKET)
-            .createSignedUrl(file.storage_path, 60, { download: file.original_name });
+        if (mode === "preview" && !getStudentFilePreviewKind(file.original_name, file.mime_type)) {
+            return NextResponse.json(
+                { success: false, error: "이 파일은 안전한 미리보기를 지원하지 않습니다. 다운로드를 이용해주세요." },
+                { status: 400 },
+            );
+        }
+
+        const storage = admin.storage.from(STUDENT_FILES_BUCKET);
+        const { data, error } = mode === "preview"
+            ? await storage.createSignedUrl(file.storage_path, 60)
+            : await storage.createSignedUrl(file.storage_path, 60, { download: file.original_name });
         if (error || !data?.signedUrl) throw new Error(error?.message || "다운로드 링크를 만들지 못했습니다.");
 
         return NextResponse.redirect(data.signedUrl);

@@ -16,11 +16,13 @@ describe("학부모 현황판 결과물 공개 계약", () => {
     expect(fileQuery).not.toContain("uploaded_by");
   });
 
-  it("결과물 다운로드는 기존의 권한 확인 API를 사용한다", () => {
+  it("결과물 다운로드와 미리보기는 기존의 권한 확인 API를 사용한다", () => {
     const page = read("src/app/parent/dashboard/page.tsx");
 
     expect(page).toContain('title="아이 결과물"');
     expect(page).toContain('href={`/api/student/files/${file.id}`}');
     expect(page).toContain('aria-label={`${file.name} 다운로드`}');
+    expect(page).toContain('src={`/api/student/files/${previewFile.id}?mode=preview`}');
+    expect(page).toContain('aria-modal="true"');
   });
 });

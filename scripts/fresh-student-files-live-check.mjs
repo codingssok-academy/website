@@ -196,7 +196,8 @@ try {
     assert(studentCookie, "학생 로그인 쿠키를 만들지 못했습니다.");
 
     const form = new FormData();
-    form.set("file", new File(["fake student result for fresh DB integration check\n"], "fake-result.txt", { type: "text/plain" }));
+    const fakePng = Uint8Array.from(Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=", "base64"));
+    form.set("file", new File([fakePng], "fake-preview.png", { type: "image/png" }));
     form.set("category", "result");
     form.set("note", "가짜 학생 파일 연결 검사");
     const upload = await jsonRequest("/api/student/files", {
@@ -240,6 +241,15 @@ try {
     });
     assert(parentDownload.status === 307, `학부모 공개 파일 다운로드 실패: ${parentDownload.status}`);
     assert(parentDownload.headers.get("location")?.includes("/storage/v1/object/sign/student-files/"), "임시 다운로드 주소가 아닙니다.");
+
+    const parentPreview = await fetch(`${baseUrl}/api/student/files/${uploadedFile.id}?mode=preview`, {
+        headers: { cookie: parentCookie },
+        redirect: "manual",
+    });
+    const parentPreviewLocation = parentPreview.headers.get("location") || "";
+    assert(parentPreview.status === 307, `학부모 공개 이미지 미리보기 실패: ${parentPreview.status}`);
+    assert(parentPreviewLocation.includes("/storage/v1/object/sign/student-files/"), "미리보기가 임시 주소를 사용하지 않습니다.");
+    assert(!parentPreviewLocation.includes("download="), "미리보기가 파일 다운로드를 강제하고 있습니다.");
 
     const parentDelete = await jsonRequest(`/api/student/files/${uploadedFile.id}`, {
         method: "DELETE",
@@ -430,6 +440,12 @@ try {
     });
     assert(adminFileVisibleDashboard.response.status === 200, `관리자 업로드 파일 공개 후 학부모 현황판 조회 실패: ${adminFileVisibleDashboard.body?.error || adminFileVisibleDashboard.response.status}`);
     assert(adminFileVisibleDashboard.body?.files?.some(file => file.id === adminUploadedFile.id), "관리자가 공개한 파일이 학부모 현황판에 나타나지 않습니다.");
+
+    const projectFilePreview = await fetch(`${baseUrl}/api/student/files/${adminUploadedFile.id}?mode=preview`, {
+        headers: { cookie: parentCookie },
+        redirect: "manual",
+    });
+    assert(projectFilePreview.status === 400, `엔트리 프로젝트 파일 미리보기가 차단되지 않았습니다: ${projectFilePreview.status}`);
 
     console.log("PASS: fresh-test 홈페이지 학생 파일 연결 검사가 모두 통과했습니다.");
 } finally {

@@ -2,6 +2,9 @@
 export const STUDENT_FILE_MAX_BYTES = 50 * 1024 * 1024;
 
 export type StudentFileVisibility = "student_parent" | "staff_only";
+export type StudentFilePreviewKind = "image" | "pdf";
+
+const IMAGE_PREVIEW_EXTENSIONS = new Set(["png", "jpg", "jpeg", "webp", "gif"]);
 
 const ALLOWED_EXTENSIONS = new Set([
     "png",
@@ -97,6 +100,13 @@ export function sanitizeOriginalFileName(input: unknown) {
 export function getSafeFileExtension(fileName: string) {
     const match = sanitizeOriginalFileName(fileName).toLowerCase().match(/\.([a-z0-9]{1,10})$/);
     return match?.[1] || "bin";
+}
+
+export function getStudentFilePreviewKind(fileName: string, mimeType: string | null | undefined): StudentFilePreviewKind | null {
+    const extension = getSafeFileExtension(fileName);
+    if (mimeType?.startsWith("image/") && IMAGE_PREVIEW_EXTENSIONS.has(extension)) return "image";
+    if (mimeType === "application/pdf" && extension === "pdf") return "pdf";
+    return null;
 }
 
 export function assertAllowedStudentFile(file: File) {

@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import type { ParentStudentFile } from "@/lib/parent-dashboard";
+import { getStudentFilePreviewKind } from "@/lib/student-files";
 import { useParentDashboard } from "../hooks/useParentDashboard";
 
 const ATTENDANCE_LABEL = {
@@ -58,6 +60,7 @@ function activityLabel(activity: {
 export default function ParentDashboardPage() {
     const { data, loading, name, refresh } = useParentDashboard();
     const [refreshing, setRefreshing] = useState(false);
+    const [previewFile, setPreviewFile] = useState<ParentStudentFile | null>(null);
 
     const handleRefresh = async () => {
         if (refreshing) return;
@@ -209,30 +212,47 @@ export default function ParentDashboardPage() {
                 >
                     {recentFiles.length > 0 ? (
                         <div aria-label="아이 결과물 목록" className="grid gap-2 sm:grid-cols-2">
-                            {recentFiles.map(file => (
-                                <article key={file.id} className="flex min-w-0 items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/80 p-3">
-                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
-                                        <span className="material-symbols-outlined text-xl">{fileIcon(file.name, file.mimeType)}</span>
-                                    </div>
-                                    <div className="min-w-0 flex-1">
-                                        <h3 className="truncate text-sm font-black text-slate-800">{file.name}</h3>
-                                        {file.note && <p className="mt-0.5 truncate text-[11px] font-semibold text-slate-500">{file.note}</p>}
-                                        <p className="mt-0.5 text-[10px] font-bold text-slate-400">
-                                            {formatDate(file.createdAt)} · {formatFileSize(file.sizeBytes)}
-                                        </p>
-                                    </div>
-                                    <a
-                                        href={`/api/student/files/${file.id}`}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        aria-label={`${file.name} 다운로드`}
-                                        className="flex min-h-10 shrink-0 items-center gap-1 rounded-xl border border-blue-100 bg-white px-3 text-xs font-black text-blue-600 no-underline transition hover:border-blue-300 hover:bg-blue-50"
-                                    >
-                                        <span className="material-symbols-outlined text-lg">download</span>
-                                        <span className="hidden sm:inline">받기</span>
-                                    </a>
-                                </article>
-                            ))}
+                            {recentFiles.map(file => {
+                                const previewKind = getStudentFilePreviewKind(file.name, file.mimeType);
+
+                                return (
+                                    <article key={file.id} className="flex min-w-0 items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/80 p-3">
+                                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                                            <span className="material-symbols-outlined text-xl">{fileIcon(file.name, file.mimeType)}</span>
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <h3 className="truncate text-sm font-black text-slate-800">{file.name}</h3>
+                                            {file.note && <p className="mt-0.5 truncate text-[11px] font-semibold text-slate-500">{file.note}</p>}
+                                            <p className="mt-0.5 text-[10px] font-bold text-slate-400">
+                                                {formatDate(file.createdAt)} · {formatFileSize(file.sizeBytes)}
+                                            </p>
+                                        </div>
+                                        <div className="flex shrink-0 items-center gap-1.5">
+                                            {previewKind && (
+                                                <button
+                                                    type="button"
+                                                    aria-label={`${file.name} 미리보기`}
+                                                    onClick={() => setPreviewFile(file)}
+                                                    className="flex min-h-10 items-center gap-1 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-black text-slate-600 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600"
+                                                >
+                                                    <span className="material-symbols-outlined text-lg">visibility</span>
+                                                    <span className="hidden md:inline">미리보기</span>
+                                                </button>
+                                            )}
+                                            <a
+                                                href={`/api/student/files/${file.id}`}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                aria-label={`${file.name} 다운로드`}
+                                                className="flex min-h-10 items-center gap-1 rounded-xl border border-blue-100 bg-white px-2.5 text-xs font-black text-blue-600 no-underline transition hover:border-blue-300 hover:bg-blue-50 sm:px-3"
+                                            >
+                                                <span className="material-symbols-outlined text-lg">download</span>
+                                                <span className="hidden sm:inline">받기</span>
+                                            </a>
+                                        </div>
+                                    </article>
+                                );
+                            })}
                         </div>
                     ) : (
                         <EmptyState icon="folder_off" text="선생님이나 아이가 공개한 결과물이 아직 없습니다." />
@@ -296,6 +316,54 @@ export default function ParentDashboardPage() {
             <p className="px-3 pb-2 pt-3 text-center text-[10px] font-semibold leading-4 text-slate-400">
                 작성 중인 평가와 선생님 내부 메모는 표시되지 않습니다.<br className="sm:hidden" /> 완료하여 공개한 기록만 보여드립니다.
             </p>
+
+            {previewFile && (
+                <div
+                    role="dialog"
+                    aria-modal="true"
+                    aria-label={`${previewFile.name} 미리보기`}
+                    className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/70 p-3 sm:p-6"
+                >
+                    <div className="flex h-[88vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+                        <header className="flex items-center gap-2 border-b border-slate-200 px-3 py-3 sm:px-4">
+                            <div className="min-w-0 flex-1">
+                                <h2 className="truncate text-sm font-black text-slate-900 sm:text-base">{previewFile.name}</h2>
+                                <p className="text-[10px] font-bold text-slate-400">안전한 임시 미리보기</p>
+                            </div>
+                            <a
+                                href={`/api/student/files/${previewFile.id}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                aria-label={`${previewFile.name} 미리보기 창에서 다운로드`}
+                                className="flex min-h-10 items-center gap-1 rounded-xl border border-blue-100 px-2.5 text-xs font-black text-blue-600 no-underline hover:bg-blue-50 sm:px-3"
+                            >
+                                <span className="material-symbols-outlined text-lg">download</span>
+                                <span className="hidden sm:inline">다운로드</span>
+                            </a>
+                            <button
+                                type="button"
+                                aria-label="미리보기 닫기"
+                                onClick={() => setPreviewFile(null)}
+                                className="flex min-h-10 min-w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+                            >
+                                <span className="material-symbols-outlined">close</span>
+                            </button>
+                        </header>
+                        <div className="min-h-0 flex-1 bg-slate-100 p-2 sm:p-4">
+                            <iframe
+                                title={`${previewFile.name} 미리보기 내용`}
+                                src={`/api/student/files/${previewFile.id}?mode=preview`}
+                                className="h-full w-full rounded-xl border border-slate-200 bg-white"
+                                sandbox=""
+                                referrerPolicy="no-referrer"
+                            />
+                        </div>
+                        <p className="border-t border-slate-200 px-3 py-2 text-center text-[10px] font-semibold text-slate-500">
+                            미리보기 주소는 1분간만 사용할 수 있으며 파일은 공개 저장되지 않습니다.
+                        </p>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

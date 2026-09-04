@@ -38,8 +38,9 @@ const file = {
     created_at: "2026-09-04T00:00:00.000Z",
 };
 
-function makeRequest(method = "GET", withParentCookie = false) {
-    return new NextRequest(`https://www.codingssok.com/api/student/files/${file.id}`, {
+function makeRequest(method = "GET", withParentCookie = false, mode?: "preview" | "download") {
+    const query = mode ? `?mode=${mode}` : "";
+    return new NextRequest(`https://www.codingssok.com/api/student/files/${file.id}${query}`, {
         method,
         headers: withParentCookie
             ? { cookie: "codingssok_parent_session=test-token" }
@@ -162,6 +163,44 @@ describe("student file route in fresh database mode", () => {
         expect(response.status).toBe(307);
         expect(response.headers.get("location")).toBe("https://files.example.test/temporary-download");
         expect(createSignedUrl).toHaveBeenCalledWith(file.storage_path, 60, { download: file.original_name });
+    });
+
+    it("creates an inline short URL for a safe image preview", async () => {
+        const previewFile = {
+            original_name: "fake-preview.png",
+            mime_type: "image/png",
+            storage_path: "students/22222222-2222-4222-8222-222222222222/teacher/fake-preview.png",
+        };
+        const { admin, createSignedUrl } = makeAdmin(previewFile);
+        mocks.createAdminClient.mockReturnValue(admin);
+        mocks.createClient.mockResolvedValue(makeServerClient({
+            userId: "assigned-teacher",
+            allowed: true,
+            role: "teacher",
+        }));
+
+        const response = await GET(makeRequest("GET", false, "preview"), routeContext);
+
+        expect(response.status).toBe(307);
+        expect(createSignedUrl).toHaveBeenCalledWith(previewFile.storage_path, 60);
+        expect(createSignedUrl).not.toHaveBeenCalledWith(previewFile.storage_path, 60, expect.anything());
+    });
+
+    it("does not preview executable or project files inline", async () => {
+        const { admin, createSignedUrl } = makeAdmin();
+        mocks.createAdminClient.mockReturnValue(admin);
+        mocks.createClient.mockResolvedValue(makeServerClient({
+            userId: "assigned-teacher",
+            allowed: true,
+            role: "teacher",
+        }));
+
+        const response = await GET(makeRequest("GET", false, "preview"), routeContext);
+        const body = await response.json();
+
+        expect(response.status).toBe(400);
+        expect(body.error).toContain("안전한 미리보기");
+        expect(createSignedUrl).not.toHaveBeenCalled();
     });
 
     it("allows a valid parent session to download a parent-safe child file", async () => {

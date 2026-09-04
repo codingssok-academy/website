@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -49,10 +49,16 @@ describe("학부모 통합 현황판", () => {
           summary: { scheduled: 4, present: 3, absent: 1, makeup: 0, upcoming: 0, completed: 3 },
           records: [{ id: "attendance-1", classDate: "2026-08-20", lessonTitle: "가짜 정규 수업", status: "present" }],
         },
-        files: [{
-          id: "file-1", name: "가짜 프로젝트.ent", mimeType: "application/octet-stream",
-          sizeBytes: 2048, category: "result", note: "가짜 엔트리 작품", createdAt: "2026-08-25",
-        }],
+        files: [
+          {
+            id: "file-1", name: "가짜 프로젝트.ent", mimeType: "application/octet-stream",
+            sizeBytes: 2048, category: "result", note: "가짜 엔트리 작품", createdAt: "2026-08-25",
+          },
+          {
+            id: "file-2", name: "가짜 작품.png", mimeType: "image/png",
+            sizeBytes: 1024, category: "image", note: "가짜 이미지 작품", createdAt: "2026-08-26",
+          },
+        ],
         studyNotes: { count30d: 0, latestAt: null },
       },
     });
@@ -77,6 +83,15 @@ describe("학부모 통합 현황판", () => {
     expect(screen.getByText("가짜 프로젝트.ent")).toBeInTheDocument();
     expect(screen.getByText("가짜 엔트리 작품")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "가짜 프로젝트.ent 다운로드" })).toHaveAttribute("href", "/api/student/files/file-1");
+    expect(screen.queryByRole("button", { name: "가짜 프로젝트.ent 미리보기" })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "가짜 작품.png 미리보기" }));
+    expect(screen.getByRole("dialog", { name: "가짜 작품.png 미리보기" })).toBeInTheDocument();
+    expect(screen.getByTitle("가짜 작품.png 미리보기 내용")).toHaveAttribute("src", "/api/student/files/file-2?mode=preview");
+    expect(screen.getByRole("link", { name: "가짜 작품.png 미리보기 창에서 다운로드" })).toHaveAttribute("href", "/api/student/files/file-2");
+
+    fireEvent.click(screen.getByRole("button", { name: "미리보기 닫기" }));
+    expect(screen.queryByRole("dialog", { name: "가짜 작품.png 미리보기" })).not.toBeInTheDocument();
     expect(screen.getByText(/내부 메모는 표시되지 않습니다/)).toBeInTheDocument();
   });
 });
