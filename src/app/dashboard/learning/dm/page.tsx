@@ -15,10 +15,10 @@ interface DM {
     created_at: string;
 }
 
-interface TeacherProfile {
-    id: string;
-    name: string | null;
-    display_name: string | null;
+interface MessageRecipient {
+    receiver_id: string;
+    receiver_name: string;
+    receiver_role: "teacher" | "admin";
 }
 
 const glassCard: React.CSSProperties = {
@@ -52,41 +52,60 @@ function formatTime(ts: string): string {
 export default function DMPage() {
     const { user } = useAuth();
     const supabase = useMemo(() => createClient(), []);
-    const [teachers, setTeachers] = useState<TeacherProfile[]>([]);
-    const [activeTeacherId, setActiveTeacherId] = useState<string | null>(null);
+    const [recipients, setRecipients] = useState<MessageRecipient[]>([]);
+    const [activeRecipientId, setActiveRecipientId] = useState<string | null>(null);
     const [messages, setMessages] = useState<DM[]>([]);
     const [unreadMap, setUnreadMap] = useState<Record<string, number>>({});
     const [newMsg, setNewMsg] = useState("");
     const [sending, setSending] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [recipientsLoading, setRecipientsLoading] = useState(true);
+    const [loadError, setLoadError] = useState("");
+    const [sendError, setSendError] = useState("");
     const [mobileView, setMobileView] = useState<"list" | "chat">("list");
     const scrollRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
 
     const userIds = useMemo(() => {
         if (!user) return [] as string[];
-        return Array.from(new Set([user.id, user.studentId].filter(Boolean))) as string[];
+        return [user.id];
     }, [user]);
 
-    // 선생님 목록 + 읽지 않은 수 로드
-    const fetchTeachers = useCallback(async () => {
-        const { data } = await supabase
-            .from("profiles")
-            .select("id, name, display_name")
-            .eq("role", "teacher");
-        if (data && data.length > 0) {
-            setTeachers(data);
-            setActiveTeacherId(prev => prev ?? data[0].id);
+    // DB가 허용한 담당 선생님과 관리자만 로드합니다.
+    const fetchRecipients = useCallback(async () => {
+        setRecipientsLoading(true);
+        setLoadError("");
+        const { data, error } = await supabase
+            .rpc("codingssok_student_message_recipients");
+
+        if (error) {
+            setRecipients([]);
+            setActiveRecipientId(null);
+            setLoadError("담당 선생님 정보를 불러오지 못했어요. 잠시 후 다시 눌러주세요.");
+            setLoading(false);
+        } else {
+            const allowed = ((data || []) as MessageRecipient[]).filter(
+                (recipient) =>
+                    Boolean(recipient.receiver_id && recipient.receiver_name)
+                    && (recipient.receiver_role === "teacher" || recipient.receiver_role === "admin"),
+            );
+            setRecipients(allowed);
+            setActiveRecipientId((previous) =>
+                previous && allowed.some((recipient) => recipient.receiver_id === previous)
+                    ? previous
+                    : allowed[0]?.receiver_id ?? null,
+            );
+            if (allowed.length === 0) setLoading(false);
         }
+        setRecipientsLoading(false);
     }, [supabase]);
 
     const fetchUnreadCounts = useCallback(async () => {
-        if (userIds.length === 0) return;
-        const filter = userIds.map((id: string) => `receiver_id.eq.${id}`).join(",");
+        if (!user) return;
         const { data } = await supabase
             .from("direct_messages")
             .select("sender_id, is_read")
-            .or(filter)
+            .eq("receiver_id", user.id)
             .eq("is_read", false);
 
         if (!data) return;
@@ -95,16 +114,16 @@ export default function DMPage() {
             counts[m.sender_id] = (counts[m.sender_id] || 0) + 1;
         });
         setUnreadMap(counts);
-    }, [supabase, userIds]);
+    }, [supabase, user]);
 
     // 특정 선생님과의 메시지 로드
-    const fetchMessages = useCallback(async (teacherId: string) => {
+    const fetchMessages = useCallback(async (recipientId: string) => {
         if (!user || userIds.length === 0) return;
         setLoading(true);
         try {
             const orParts = userIds.flatMap((uid: string) => [
-                `and(sender_id.eq.${uid},receiver_id.eq.${teacherId})`,
-                `and(sender_id.eq.${teacherId},receiver_id.eq.${uid})`,
+                `and(sender_id.eq.${uid},receiver_id.eq.${recipientId})`,
+                `and(sender_id.eq.${recipientId},receiver_id.eq.${uid})`,
             ]);
             const { data } = await supabase
                 .from("direct_messages")
@@ -135,13 +154,20 @@ export default function DMPage() {
     }, [supabase, user, userIds, fetchUnreadCounts]);
 
     useEffect(() => {
-        fetchTeachers();
-        fetchUnreadCounts();
-    }, [fetchTeachers, fetchUnreadCounts]);
+        const loadTimer = window.setTimeout(() => {
+            void fetchRecipients();
+            void fetchUnreadCounts();
+        }, 0);
+        return () => window.clearTimeout(loadTimer);
+    }, [fetchRecipients, fetchUnreadCounts]);
 
     useEffect(() => {
-        if (activeTeacherId) fetchMessages(activeTeacherId);
-    }, [activeTeacherId, fetchMessages]);
+        if (!activeRecipientId) return;
+        const loadTimer = window.setTimeout(() => {
+            void fetchMessages(activeRecipientId);
+        }, 0);
+        return () => window.clearTimeout(loadTimer);
+    }, [activeRecipientId, fetchMessages]);
 
     // 스크롤 하단
     useEffect(() => {
@@ -160,7 +186,7 @@ export default function DMPage() {
                     userIds.includes(msg.sender_id) || userIds.includes(msg.receiver_id);
                 if (!isRelated) return;
 
-                if (activeTeacherId && (msg.sender_id === activeTeacherId || msg.receiver_id === activeTeacherId)) {
+                if (activeRecipientId && (msg.sender_id === activeRecipientId || msg.receiver_id === activeRecipientId)) {
                     setMessages(prev => {
                         // optimistic 중복 방지
                         const tempIdx = prev.findIndex(
@@ -186,11 +212,12 @@ export default function DMPage() {
             })
             .subscribe();
         return () => { supabase.removeChannel(ch); };
-    }, [supabase, user, userIds, activeTeacherId, fetchUnreadCounts]);
+    }, [supabase, user, userIds, activeRecipientId, fetchUnreadCounts]);
 
     const sendMessage = async () => {
-        if (!user || !newMsg.trim() || !activeTeacherId) return;
+        if (!user || !newMsg.trim() || !activeRecipientId) return;
         setSending(true);
+        setSendError("");
         const content = newMsg.trim();
         setNewMsg("");
 
@@ -198,7 +225,7 @@ export default function DMPage() {
         const optimistic: DM = {
             id: `temp-${Date.now()}`,
             sender_id: user.id,
-            receiver_id: activeTeacherId,
+            receiver_id: activeRecipientId,
             sender_name: user.name || "학생",
             content,
             is_read: false,
@@ -209,16 +236,20 @@ export default function DMPage() {
         try {
             const { error } = await supabase.from("direct_messages").insert({
                 sender_id: user.id,
-                receiver_id: activeTeacherId,
+                receiver_id: activeRecipientId,
                 sender_name: user.name || "학생",
                 content,
             });
             if (error) {
                 setMessages(prev => prev.filter(m => m.id !== optimistic.id));
+                setNewMsg(content);
+                setSendError("전송하지 못했어요. 인터넷 연결을 확인하고 다시 눌러주세요.");
                 if (process.env.NODE_ENV === "development") console.error(error);
             }
         } catch (err) {
             setMessages(prev => prev.filter(m => m.id !== optimistic.id));
+            setNewMsg(content);
+            setSendError("전송하지 못했어요. 인터넷 연결을 확인하고 다시 눌러주세요.");
             if (process.env.NODE_ENV === "development") console.error(err);
         } finally {
             setSending(false);
@@ -233,8 +264,8 @@ export default function DMPage() {
         }
     };
 
-    const selectTeacher = (tid: string) => {
-        setActiveTeacherId(tid);
+    const selectRecipient = (recipientId: string) => {
+        setActiveRecipientId(recipientId);
         setMobileView("chat");
     };
 
@@ -253,43 +284,63 @@ export default function DMPage() {
         return groups;
     }, [messages]);
 
-    const activeTeacher = teachers.find(t => t.id === activeTeacherId);
-    const activeTeacherName = activeTeacher?.display_name || activeTeacher?.name || "선생님";
+    const activeRecipient = recipients.find(
+        (recipient) => recipient.receiver_id === activeRecipientId,
+    );
+    const activeRecipientName = activeRecipient?.receiver_name || "선생님";
+    const activeRecipientRoleLabel = activeRecipient?.receiver_role === "admin" ? "관리자" : "선생님";
 
     return (
         <div style={{ height: "calc(100vh - 160px)", minHeight: 500, display: "flex", gap: 0, borderRadius: 20, overflow: "hidden", ...glassCard }}>
 
-            {/* 좌측: 선생님 목록 */}
+            {/* 좌측: DB가 허용한 담당 선생님·관리자 목록 */}
             <div style={{
                 width: 240, borderRight: "1px solid rgba(226,232,240,0.8)",
                 display: "flex", flexDirection: "column",
             }} className={`dm-list-panel${mobileView === "chat" ? " dm-hidden-mobile" : ""}`}>
                 <div style={{ padding: "16px 16px 12px", borderBottom: "1px solid #f1f5f9" }}>
                     <h2 style={{ fontSize: 14, fontWeight: 800, color: "#0f172a", margin: 0 }}>
-                        선생님과 채팅
+                        선생님께 질문하기
                     </h2>
                     <p style={{ fontSize: 11, color: "#94a3b8", margin: "4px 0 0" }}>
-                        선생님을 선택하세요
+                        질문을 받을 분만 보여드려요
                     </p>
                 </div>
 
                 <div style={{ flex: 1, overflowY: "auto" }}>
-                    {teachers.length === 0 ? (
+                    {recipientsLoading ? (
                         <div style={{ padding: 24, textAlign: "center", color: "#94a3b8", fontSize: 12 }}>
-                            <span className="material-symbols-outlined" style={{ fontSize: 32, display: "block", marginBottom: 8 }}>person_off</span>
+                            <span className="material-symbols-outlined" style={{ fontSize: 32, display: "block", marginBottom: 8 }}>progress_activity</span>
                             선생님 정보를 불러오는 중...
                         </div>
-                    ) : teachers.map((t, i) => {
-                        const isActive = t.id === activeTeacherId;
-                        const unread = unreadMap[t.id] || 0;
-                        const tName = t.display_name || t.name || "선생님";
+                    ) : loadError ? (
+                        <div style={{ padding: 20, textAlign: "center", color: "#64748b", fontSize: 12 }} role="alert">
+                            <span className="material-symbols-outlined" style={{ fontSize: 30, display: "block", marginBottom: 8, color: "#f59e0b" }}>wifi_off</span>
+                            <p style={{ margin: "0 0 12px", lineHeight: 1.6 }}>{loadError}</p>
+                            <button
+                                type="button"
+                                onClick={fetchRecipients}
+                                style={{ border: "1px solid #bfdbfe", background: "#eff6ff", color: "#1d4ed8", borderRadius: 9, padding: "7px 12px", fontWeight: 700, cursor: "pointer" }}
+                            >
+                                다시 불러오기
+                            </button>
+                        </div>
+                    ) : recipients.length === 0 ? (
+                        <div style={{ padding: 24, textAlign: "center", color: "#64748b", fontSize: 12, lineHeight: 1.6 }}>
+                            <span className="material-symbols-outlined" style={{ fontSize: 32, display: "block", marginBottom: 8, color: "#94a3b8" }}>person_off</span>
+                            담당 선생님이 아직 연결되지 않았어요.<br />관리자에게 말씀해주세요.
+                        </div>
+                    ) : recipients.map((recipient, i) => {
+                        const isActive = recipient.receiver_id === activeRecipientId;
+                        const unread = unreadMap[recipient.receiver_id] || 0;
+                        const roleLabel = recipient.receiver_role === "admin" ? "관리자" : "선생님";
                         return (
                             <motion.button
-                                key={t.id}
+                                key={recipient.receiver_id}
                                 initial={{ opacity: 0, x: -10 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ delay: i * 0.05 }}
-                                onClick={() => selectTeacher(t.id)}
+                                onClick={() => selectRecipient(recipient.receiver_id)}
                                 whileHover={{ backgroundColor: isActive ? undefined : "rgba(241,245,249,0.8)" }}
                                 style={{
                                     width: "100%", display: "flex", alignItems: "center", gap: 10,
@@ -305,7 +356,7 @@ export default function DMPage() {
                                     display: "flex", alignItems: "center", justifyContent: "center",
                                     color: "#fff", fontSize: 14, fontWeight: 800,
                                 }}>
-                                    {tName.charAt(0)}
+                                    {recipient.receiver_name.charAt(0)}
                                 </div>
                                 <div style={{ flex: 1, minWidth: 0 }}>
                                     <div style={{
@@ -313,9 +364,9 @@ export default function DMPage() {
                                         color: isActive ? "#1e40af" : "#0f172a",
                                         overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                                     }}>
-                                        {tName}
+                                        {recipient.receiver_name}
                                     </div>
-                                    <div style={{ fontSize: 10, color: "#94a3b8", marginTop: 1 }}>선생님</div>
+                                    <div style={{ fontSize: 10, color: "#94a3b8", marginTop: 1 }}>{roleLabel}</div>
                                 </div>
                                 {unread > 0 && (
                                     <motion.span
@@ -365,15 +416,17 @@ export default function DMPage() {
                         display: "flex", alignItems: "center", justifyContent: "center",
                         color: "#fff", fontSize: 13, fontWeight: 800,
                     }}>
-                        {activeTeacherName.charAt(0)}
+                        {activeRecipientName.charAt(0)}
                     </div>
                     <div>
                         <div style={{ fontSize: 14, fontWeight: 700, color: "#0f172a" }}>
-                            {activeTeacherName} 선생님
+                            {activeRecipientId
+                                ? `${activeRecipientName} ${activeRecipientRoleLabel}`
+                                : "질문할 선생님을 선택하세요"}
                         </div>
                         <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 1 }}>
-                            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#22c55e", display: "inline-block" }} />
-                            <span style={{ fontSize: 10, color: "#64748b", fontWeight: 600 }}>온라인</span>
+                            <span className="material-symbols-outlined" style={{ fontSize: 12, color: "#64748b" }}>lock</span>
+                            <span style={{ fontSize: 10, color: "#64748b", fontWeight: 600 }}>학생과 선생님만 보는 비공개 질문</span>
                         </div>
                     </div>
                 </div>
@@ -448,14 +501,14 @@ export default function DMPage() {
                                                             display: "flex", alignItems: "center", justifyContent: "center",
                                                             color: "#fff", fontSize: 11, fontWeight: 800, marginBottom: 2,
                                                         }}>
-                                                            {activeTeacherName.charAt(0)}
+                                                            {activeRecipientName.charAt(0)}
                                                         </div>
                                                     )}
 
                                                     <div style={{ maxWidth: "70%", display: "flex", flexDirection: "column", alignItems: isMine ? "flex-end" : "flex-start" }}>
                                                         {!isMine && (
                                                             <span style={{ fontSize: 11, color: "#64748b", fontWeight: 600, marginBottom: 3 }}>
-                                                                {m.sender_name || activeTeacherName}
+                                                                {m.sender_name || activeRecipientName}
                                                             </span>
                                                         )}
                                                         <div style={{ display: "flex", alignItems: "flex-end", gap: 6, flexDirection: isMine ? "row-reverse" : "row" }}>
@@ -496,6 +549,12 @@ export default function DMPage() {
                     )}
                 </div>
 
+                {sendError && (
+                    <div role="alert" style={{ padding: "9px 16px", background: "#fff7ed", color: "#c2410c", borderTop: "1px solid #fed7aa", fontSize: 12, fontWeight: 700 }}>
+                        {sendError}
+                    </div>
+                )}
+
                 {/* 입력 영역 */}
                 <div style={{
                     padding: "12px 16px",
@@ -508,9 +567,11 @@ export default function DMPage() {
                         value={newMsg}
                         onChange={e => setNewMsg(e.target.value)}
                         onKeyDown={handleKeyDown}
-                        placeholder="메시지를 입력하세요... (Enter 전송, Shift+Enter 줄바꿈)"
+                        placeholder="궁금한 내용을 적어주세요... (Enter 전송)"
                         rows={1}
-                        disabled={!activeTeacherId}
+                        maxLength={2000}
+                        disabled={!activeRecipientId || sending}
+                        aria-label="선생님께 보낼 질문"
                         style={{
                             flex: 1, padding: "11px 16px", borderRadius: 14,
                             border: "1.5px solid #e2e8f0", fontSize: 13, outline: "none",
@@ -526,17 +587,18 @@ export default function DMPage() {
                         whileHover={{ scale: newMsg.trim() ? 1.06 : 1 }}
                         whileTap={{ scale: newMsg.trim() ? 0.94 : 1 }}
                         onClick={sendMessage}
-                        disabled={sending || !newMsg.trim() || !activeTeacherId}
+                        disabled={sending || !newMsg.trim() || !activeRecipientId}
+                        aria-label="질문 보내기"
                         style={{
                             width: 42, height: 42, borderRadius: 12, border: "none",
-                            background: newMsg.trim() && activeTeacherId
+                            background: newMsg.trim() && activeRecipientId
                                 ? "linear-gradient(135deg, #2563eb, #3b82f6)"
                                 : "#e2e8f0",
-                            color: newMsg.trim() && activeTeacherId ? "#fff" : "#94a3b8",
-                            cursor: newMsg.trim() && activeTeacherId ? "pointer" : "default",
+                            color: newMsg.trim() && activeRecipientId ? "#fff" : "#94a3b8",
+                            cursor: newMsg.trim() && activeRecipientId ? "pointer" : "default",
                             display: "flex", alignItems: "center", justifyContent: "center",
                             flexShrink: 0,
-                            boxShadow: newMsg.trim() && activeTeacherId ? "0 4px 12px rgba(37,99,235,0.3)" : "none",
+                            boxShadow: newMsg.trim() && activeRecipientId ? "0 4px 12px rgba(37,99,235,0.3)" : "none",
                             transition: "all 0.2s",
                         }}
                     >

@@ -40,10 +40,10 @@ export default function StudentBottomNav() {
             try {
                 const sb = createClient();
                 const { count } = await sb
-                    .from("messages")
+                    .from("direct_messages")
                     .select("id", { count: "exact", head: true })
-                    .eq("recipient_id", user!.id)
-                    .eq("read", false);
+                    .eq("receiver_id", user!.id)
+                    .eq("is_read", false);
 
                 setChatCount(count ?? 0);
             } catch {
@@ -62,8 +62,8 @@ export default function StudentBottomNav() {
                 {
                     event: "*",
                     schema: "public",
-                    table: "messages",
-                    filter: `recipient_id=eq.${user.id}`,
+                    table: "direct_messages",
+                    filter: `receiver_id=eq.${user.id}`,
                 },
                 () => fetchUnread()
             )
