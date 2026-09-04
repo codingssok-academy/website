@@ -53,19 +53,32 @@ function readNumber(row: UnknownRow, key: string) {
 export function toParentGrowthRecord(value: unknown): ParentGrowthRecord | null {
     if (!value || typeof value !== "object" || Array.isArray(value)) return null;
     const row = value as UnknownRow;
-    if (readText(row, "status", 20) !== "완료") return null;
+    const status = readText(row, "status", 20);
+    const isFreshRecord = status === "published";
+    const isLegacyRecord = status === "완료";
+    if (!isFreshRecord && !isLegacyRecord) return null;
 
     const id = readText(row, "id", 100);
     if (!id) return null;
 
     return {
         id,
-        currentClass: readText(row, "current_class", 100),
+        currentClass: isFreshRecord
+            ? readText(row, "class_snapshot", 100)
+            : readText(row, "current_class", 100),
         strengths: readText(row, "strengths"),
-        currentGoal: readText(row, "current_goal"),
-        classProgress: readText(row, "class_progress"),
-        parentFeedback: readText(row, "parent_feedback_draft"),
-        recordedAt: readText(row, "updated_at", 50) || readText(row, "created_at", 50),
+        currentGoal: isFreshRecord
+            ? readText(row, "next_goal")
+            : readText(row, "current_goal"),
+        classProgress: isFreshRecord
+            ? readText(row, "learned_concepts") || readText(row, "lesson_summary")
+            : readText(row, "class_progress"),
+        parentFeedback: isFreshRecord
+            ? readText(row, "parent_message")
+            : readText(row, "parent_feedback_draft"),
+        recordedAt: isFreshRecord
+            ? readText(row, "published_at", 50) || readText(row, "updated_at", 50) || readText(row, "created_at", 50)
+            : readText(row, "updated_at", 50) || readText(row, "created_at", 50),
     };
 }
 

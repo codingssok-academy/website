@@ -34,6 +34,39 @@ describe("학부모 통합 현황 공개 데이터", () => {
     expect(toParentGrowthRecord({ id: "ready-1", status: "전달 준비" })).toBeNull();
   });
 
+  it("새 시험 DB의 공개 완료 성장 기록을 학부모 표시 형식으로 바꾼다", () => {
+    const result = toParentGrowthRecord({
+      id: "fresh-growth-1",
+      status: "published",
+      class_snapshot: "가짜 공통기초반",
+      learned_concepts: "가짜 반복문과 조건문",
+      lesson_summary: "가짜 수업 요약",
+      strengths: "가짜 문제 해결 과정이 좋았습니다.",
+      improvements: "학부모 화면에 직접 전달하지 않을 보완점",
+      next_goal: "가짜 블록코딩 작품 완성",
+      parent_message: "가짜 수업 안내입니다.",
+      published_at: "2026-09-04T01:00:00.000Z",
+      created_by: "teacher-private-id",
+      updated_by: "teacher-private-id",
+    });
+
+    expect(result).toEqual({
+      id: "fresh-growth-1",
+      currentClass: "가짜 공통기초반",
+      strengths: "가짜 문제 해결 과정이 좋았습니다.",
+      currentGoal: "가짜 블록코딩 작품 완성",
+      classProgress: "가짜 반복문과 조건문",
+      parentFeedback: "가짜 수업 안내입니다.",
+      recordedAt: "2026-09-04T01:00:00.000Z",
+    });
+    expect(JSON.stringify(result)).not.toMatch(/improvements|보완점|created_by|updated_by|teacher-private-id/);
+  });
+
+  it("새 시험 DB의 초안과 보관 기록을 학부모에게 공개하지 않는다", () => {
+    expect(toParentGrowthRecord({ id: "fresh-draft", status: "draft" })).toBeNull();
+    expect(toParentGrowthRecord({ id: "fresh-archived", status: "archived" })).toBeNull();
+  });
+
   it("출석 기록에서 내부 메모를 제외한다", () => {
     const result = toParentAttendance({
       period: { month: "2026-08" },

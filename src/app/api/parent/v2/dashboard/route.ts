@@ -306,22 +306,37 @@ export async function GET(req: NextRequest) {
                   .gte("updated_at", new Date(Date.now() - 30 * 86400000).toISOString())
             : Promise.resolve({ data: [] }),
 
-        // Growth 2.0 — 완료된 공개용 현재 기록만 조회
+        // Growth 2.0 — 새 DB는 published 월별 기록, 기존 DB는 완료된 현재 기록만 조회
         studentId
-            ? sb.from("student_growth_management")
-                  .select("id,current_class,strengths,current_goal,class_progress,parent_feedback_draft,status,updated_at")
-                  .eq("student_id", studentId)
-                  .maybeSingle()
+            ? freshMode
+                ? sb.from("student_growth_records")
+                      .select("id,class_snapshot,learned_concepts,strengths,next_goal,lesson_summary,parent_message,status,published_at,updated_at,created_at")
+                      .eq("student_id", studentId)
+                      .eq("status", "published")
+                      .order("published_at", { ascending: false })
+                      .limit(1)
+                      .maybeSingle()
+                : sb.from("student_growth_management")
+                      .select("id,current_class,strengths,current_goal,class_progress,parent_feedback_draft,status,updated_at")
+                      .eq("student_id", studentId)
+                      .maybeSingle()
             : Promise.resolve({ data: null }),
 
-        // Growth 2.0 — 완료된 누적 기록만 조회
+        // Growth 2.0 — 새 DB는 published 월별 기록, 기존 DB는 완료된 누적 기록만 조회
         studentId
-            ? sb.from("student_growth_entries")
-                  .select("id,current_class,strengths,current_goal,class_progress,parent_feedback_draft,status,created_at")
-                  .eq("student_id", studentId)
-                  .eq("status", "완료")
-                  .order("created_at", { ascending: false })
-                  .limit(6)
+            ? freshMode
+                ? sb.from("student_growth_records")
+                      .select("id,class_snapshot,learned_concepts,strengths,next_goal,lesson_summary,parent_message,status,published_at,updated_at,created_at")
+                      .eq("student_id", studentId)
+                      .eq("status", "published")
+                      .order("published_at", { ascending: false })
+                      .limit(6)
+                : sb.from("student_growth_entries")
+                      .select("id,current_class,strengths,current_goal,class_progress,parent_feedback_draft,status,created_at")
+                      .eq("student_id", studentId)
+                      .eq("status", "완료")
+                      .order("created_at", { ascending: false })
+                      .limit(6)
             : Promise.resolve({ data: [] }),
 
         // 월별 출석 RPC가 적용된 환경에서만 표시하며, 미적용 환경은 빈 상태로 처리
