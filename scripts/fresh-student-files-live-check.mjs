@@ -25,7 +25,7 @@ const publicClient = createClient(supabaseUrl, publishableKey, {
 });
 
 const runId = `${Date.now()}${Math.floor(Math.random() * 1000)}`;
-const fakeName = `가짜파일검사${runId.slice(-6)}`;
+const fakeName = `가짜파일${runId.slice(-4)}`;
 const fakeSchool = "가짜테스트초등학교";
 const parentCode = "53842";
 const studentPin = "2468";
@@ -80,6 +80,29 @@ async function cleanup() {
     if (teacherAuthUserId) {
         await admin.auth.admin.deleteUser(teacherAuthUserId);
     }
+}
+
+async function verifyCleanup() {
+    const [studentCheck, fileCheck, studentProfileCheck, teacherProfileCheck] = await Promise.all([
+        studentId
+            ? admin.from("students").select("id", { count: "exact", head: true }).eq("id", studentId)
+            : Promise.resolve({ count: 0, error: null }),
+        uploadedFile?.id
+            ? admin.from("student_files").select("id", { count: "exact", head: true }).eq("id", uploadedFile.id)
+            : Promise.resolve({ count: 0, error: null }),
+        studentAuthUserId
+            ? admin.from("profiles").select("id", { count: "exact", head: true }).eq("id", studentAuthUserId)
+            : Promise.resolve({ count: 0, error: null }),
+        teacherAuthUserId
+            ? admin.from("profiles").select("id", { count: "exact", head: true }).eq("id", teacherAuthUserId)
+            : Promise.resolve({ count: 0, error: null }),
+    ]);
+    const cleanupError = studentCheck.error || fileCheck.error || studentProfileCheck.error || teacherProfileCheck.error;
+    if (cleanupError) throw cleanupError;
+    assert(studentCheck.count === 0, "가짜 학생 자료가 남아 있습니다.");
+    assert(fileCheck.count === 0, "가짜 파일 자료가 남아 있습니다.");
+    assert(studentProfileCheck.count === 0, "가짜 학생 계정 자료가 남아 있습니다.");
+    assert(teacherProfileCheck.count === 0, "가짜 선생님 계정 자료가 남아 있습니다.");
 }
 
 try {
@@ -158,6 +181,14 @@ try {
     assert(parentSession.response.status === 200 && parentSession.body?.success, `학부모 인증 실패: ${parentSession.body?.error || parentSession.response.status}`);
     const parentCookie = parentSession.response.headers.get("set-cookie")?.split(";")[0] || "";
     assert(parentCookie.startsWith("codingssok_parent_session="), "학부모 세션 쿠키가 없습니다.");
+
+    const parentDashboard = await jsonRequest(`/api/parent/v2/dashboard?name=${encodeURIComponent(fakeName)}`, {
+        headers: { cookie: parentCookie },
+    });
+    assert(parentDashboard.response.status === 200 && parentDashboard.body?.found, `학부모 현황판 조회 실패: ${parentDashboard.body?.error || parentDashboard.response.status}`);
+    assert(parentDashboard.body?.files?.some(file => file.id === uploadedFile.id), "학부모 현황판에서 공개 결과물을 찾지 못했습니다.");
+    assert(!JSON.stringify(parentDashboard.body.files).includes("storage_path"), "학부모 현황판에 내부 저장 경로가 노출됐습니다.");
+    assert(!JSON.stringify(parentDashboard.body.files).includes("storagePath"), "학부모 현황판에 내부 저장 경로가 노출됐습니다.");
 
     const parentDownload = await fetch(`${baseUrl}/api/student/files/${uploadedFile.id}`, {
         headers: { cookie: parentCookie },
@@ -248,5 +279,6 @@ try {
     console.log("PASS: fresh-test 홈페이지 학생 파일 연결 검사가 모두 통과했습니다.");
 } finally {
     await cleanup();
+    await verifyCleanup();
     console.log("CLEANUP: 가짜 학생·선생님·파일 자료를 모두 정리했습니다.");
 }

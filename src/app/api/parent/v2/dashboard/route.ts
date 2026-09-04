@@ -16,7 +16,8 @@ import { verifyParentSessionToken, PARENT_SESSION_COOKIE } from "@/lib/parent-se
 import { createClient as createServerSupabase } from "@/lib/supabase/server";
 import { findReferenceParentCode } from "@/lib/parent-code-reference";
 import { canParentSessionReadStudent } from "@/lib/parent-session-access";
-import { toParentAttendance, toParentGrowthRecord } from "@/lib/parent-dashboard";
+import { toParentAttendance, toParentGrowthRecord, toParentStudentFile } from "@/lib/parent-dashboard";
+import { usesHashedStudentAccessCodes } from "@/lib/student-access-codes";
 
 // jsdom 체인은 text-utils로 끊었음. lazy dynamic import는 매 요청마다 module load
 // 4-5초 비용 → static import 복귀. cold start 1-2초 + 그 후 호출 즉시.
@@ -129,6 +130,7 @@ function getReferenceDashboard(req: NextRequest, name: string) {
         announcements: [],
         growth: { current: null, history: [] },
         attendance: null,
+        files: [],
         studyNotes: { count30d: 0, latestAt: null },
         codeHistory: [],
         reference,
@@ -252,6 +254,7 @@ export async function GET(req: NextRequest) {
         growthResult,
         growthEntriesResult,
         attendanceResult,
+        filesResult,
     ] = await Promise.all([
         // XP history (last 30 days)
         userId
@@ -327,6 +330,16 @@ export async function GET(req: NextRequest) {
                   p_month: `${currentMonth}-01`,
               })
             : Promise.resolve({ data: null }),
+
+        // 새 시험 DB — 학부모에게 공개한 결과물의 안전한 표시 정보만 조회
+        studentId && usesHashedStudentAccessCodes()
+            ? sb.from("student_files")
+                  .select("id,original_name,mime_type,size_bytes,category,note,created_at")
+                  .eq("student_id", studentId)
+                  .eq("visibility", "student_parent")
+                  .order("created_at", { ascending: false })
+                  .limit(6)
+            : Promise.resolve({ data: [] }),
     ]);
 
     // XP 통계 계산
@@ -366,6 +379,9 @@ export async function GET(req: NextRequest) {
         .filter(Boolean);
     const currentGrowth = toParentGrowthRecord((growthResult as any)?.data) || growthHistory[0] || null;
     const attendance = toParentAttendance((attendanceResult as any)?.data);
+    const parentFiles = ((filesResult as any)?.data || [])
+        .map((row: unknown) => toParentStudentFile(row))
+        .filter(Boolean);
 
     const responseObj = {
         found: !!profile || !!fallbackStudent,
@@ -424,6 +440,7 @@ export async function GET(req: NextRequest) {
             history: growthHistory.filter((item: any) => item?.id !== currentGrowth?.id).slice(0, 5),
         },
         attendance,
+        files: parentFiles,
         studyNotes: {
             count30d: ((notesResult as any)?.data || []).length,
             latestAt: ((notesResult as any)?.data || [])[0]?.updated_at || null,

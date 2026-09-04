@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { toParentAttendance, toParentGrowthRecord } from "./parent-dashboard";
+import { toParentAttendance, toParentGrowthRecord, toParentStudentFile } from "./parent-dashboard";
 
 describe("학부모 통합 현황 공개 데이터", () => {
   it("완료된 성장 기록에서 학부모 공개 항목만 고른다", () => {
@@ -56,5 +56,30 @@ describe("학부모 통합 현황 공개 데이터", () => {
       status: "present",
     });
     expect(JSON.stringify(result)).not.toContain("선생님만 보는 출석 메모");
+  });
+
+  it("결과물에서 학부모 화면에 필요한 안전한 항목만 고른다", () => {
+    const result = toParentStudentFile({
+      id: "file-1",
+      original_name: "가짜 프로젝트.ent",
+      mime_type: "application/octet-stream",
+      size_bytes: 2048,
+      category: "result",
+      note: "가짜 엔트리 작품",
+      created_at: "2026-08-25T00:00:00.000Z",
+      storage_path: "students/private/internal.ent",
+      uploaded_by: "teacher-secret-id",
+    });
+
+    expect(result).toEqual({
+      id: "file-1",
+      name: "가짜 프로젝트.ent",
+      mimeType: "application/octet-stream",
+      sizeBytes: 2048,
+      category: "result",
+      note: "가짜 엔트리 작품",
+      createdAt: "2026-08-25T00:00:00.000Z",
+    });
+    expect(JSON.stringify(result)).not.toMatch(/storage_path|internal\.ent|uploaded_by|teacher-secret-id/);
   });
 });

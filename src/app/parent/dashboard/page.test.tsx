@@ -49,6 +49,10 @@ describe("학부모 통합 현황판", () => {
           summary: { scheduled: 4, present: 3, absent: 1, makeup: 0, upcoming: 0, completed: 3 },
           records: [{ id: "attendance-1", classDate: "2026-08-20", lessonTitle: "가짜 정규 수업", status: "present" }],
         },
+        files: [{
+          id: "file-1", name: "가짜 프로젝트.ent", mimeType: "application/octet-stream",
+          sizeBytes: 2048, category: "result", note: "가짜 엔트리 작품", createdAt: "2026-08-25",
+        }],
         studyNotes: { count30d: 0, latestAt: null },
       },
     });
@@ -69,6 +73,10 @@ describe("학부모 통합 현황판", () => {
     expect(screen.getByLabelText("선생님 메시지 목록")).not.toHaveClass("sm:grid-cols-2");
     expect(screen.getByText("가짜 반복문 학습")).toBeInTheDocument();
     expect(screen.getByText("홈페이지 로그인")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "아이 결과물" })).toBeInTheDocument();
+    expect(screen.getByText("가짜 프로젝트.ent")).toBeInTheDocument();
+    expect(screen.getByText("가짜 엔트리 작품")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "가짜 프로젝트.ent 다운로드" })).toHaveAttribute("href", "/api/student/files/file-1");
     expect(screen.getByText(/내부 메모는 표시되지 않습니다/)).toBeInTheDocument();
   });
 });

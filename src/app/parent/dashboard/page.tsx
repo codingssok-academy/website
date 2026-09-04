@@ -31,6 +31,21 @@ function formatMonth(value?: string | null) {
     return `${year}년 ${Number(month)}월 출석`;
 }
 
+function formatFileSize(bytes: number) {
+    if (!Number.isFinite(bytes) || bytes <= 0) return "크기 확인 중";
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${Math.ceil(bytes / 1024)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function fileIcon(name: string, mimeType?: string | null) {
+    const extension = name.split(".").pop()?.toLowerCase();
+    if (extension === "ent" || extension === "sb3") return "extension";
+    if (extension === "py" || extension === "js" || extension === "html" || extension === "cpp") return "code";
+    if (mimeType?.startsWith("image/")) return "image";
+    return "draft";
+}
+
 function activityLabel(activity: {
     course_title?: string | null;
     unit_title?: string | null;
@@ -81,6 +96,7 @@ export default function ParentDashboardPage() {
     const currentGrowth = growth?.current || null;
     const recentActivities = activity.recent.slice(0, 4);
     const recentAnnouncements = announcements.slice(0, 3);
+    const recentFiles = (data.files || []).slice(0, 6);
     const displayName = name || student.name;
     const profileLine = [student.school, student.grade, student.currentClass].filter(Boolean).join(" · ");
 
@@ -184,6 +200,45 @@ export default function ParentDashboardPage() {
                     )}
                 </DashboardSection>
 
+                <DashboardSection
+                    icon="folder_open"
+                    title="아이 결과물"
+                    subtitle="선생님이나 아이가 학부모에게 공개한 작품과 학습 파일"
+                    tone="blue"
+                    className="lg:col-span-2"
+                >
+                    {recentFiles.length > 0 ? (
+                        <div aria-label="아이 결과물 목록" className="grid gap-2 sm:grid-cols-2">
+                            {recentFiles.map(file => (
+                                <article key={file.id} className="flex min-w-0 items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/80 p-3">
+                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                                        <span className="material-symbols-outlined text-xl">{fileIcon(file.name, file.mimeType)}</span>
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                        <h3 className="truncate text-sm font-black text-slate-800">{file.name}</h3>
+                                        {file.note && <p className="mt-0.5 truncate text-[11px] font-semibold text-slate-500">{file.note}</p>}
+                                        <p className="mt-0.5 text-[10px] font-bold text-slate-400">
+                                            {formatDate(file.createdAt)} · {formatFileSize(file.sizeBytes)}
+                                        </p>
+                                    </div>
+                                    <a
+                                        href={`/api/student/files/${file.id}`}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        aria-label={`${file.name} 다운로드`}
+                                        className="flex min-h-10 shrink-0 items-center gap-1 rounded-xl border border-blue-100 bg-white px-3 text-xs font-black text-blue-600 no-underline transition hover:border-blue-300 hover:bg-blue-50"
+                                    >
+                                        <span className="material-symbols-outlined text-lg">download</span>
+                                        <span className="hidden sm:inline">받기</span>
+                                    </a>
+                                </article>
+                            ))}
+                        </div>
+                    ) : (
+                        <EmptyState icon="folder_off" text="선생님이나 아이가 공개한 결과물이 아직 없습니다." />
+                    )}
+                </DashboardSection>
+
                 <DashboardSection icon="campaign" title="선생님 메시지" subtitle="학원에서 전달한 최신 안내" tone="amber">
                     {recentAnnouncements.length > 0 ? (
                         <div aria-label="선생님 메시지 목록" className={`grid gap-2 ${recentAnnouncements.length > 1 ? "sm:grid-cols-2" : ""}`}>
@@ -261,15 +316,17 @@ function DashboardSection({
     subtitle,
     children,
     tone,
+    className = "",
 }: {
     icon: string;
     title: string;
     subtitle: string;
     children: React.ReactNode;
     tone: keyof typeof SECTION_TONE;
+    className?: string;
 }) {
     return (
-        <section className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_6px_22px_rgba(15,23,42,0.045)]">
+        <section className={`rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_6px_22px_rgba(15,23,42,0.045)] ${className}`}>
             <div className="mb-3 flex items-center gap-2.5">
                 <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${SECTION_TONE[tone]}`}>
                     <span className="material-symbols-outlined text-lg">{icon}</span>

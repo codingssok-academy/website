@@ -17,7 +17,7 @@ import {
     PARENT_DASH_CACHE_KEY,
     PARENT_STUDENT_KEY,
 } from "@/lib/parent-client-auth";
-import type { ParentAttendance, ParentGrowthRecord } from "@/lib/parent-dashboard";
+import type { ParentAttendance, ParentGrowthRecord, ParentStudentFile } from "@/lib/parent-dashboard";
 const CACHE_TTL = 5 * 60 * 1000; // 5분 — sessionStorage 캐시 (탭 닫으면 초기화)
 
 export interface DashboardData {
@@ -56,6 +56,7 @@ export interface DashboardData {
     announcements: { id: string; title: string; content: string; isPinned: boolean; createdAt: string }[];
     growth: { current: ParentGrowthRecord | null; history: ParentGrowthRecord[] };
     attendance: ParentAttendance | null;
+    files: ParentStudentFile[];
     studyNotes: { count30d: number; latestAt: string | null };
 }
 

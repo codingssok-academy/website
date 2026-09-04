@@ -26,6 +26,16 @@ export type ParentAttendance = {
     }>;
 };
 
+export type ParentStudentFile = {
+    id: string;
+    name: string;
+    mimeType: string | null;
+    sizeBytes: number;
+    category: string;
+    note: string | null;
+    createdAt: string;
+};
+
 type UnknownRow = Record<string, unknown>;
 
 function readText(row: UnknownRow, key: string, max = 1000) {
@@ -102,5 +112,24 @@ export function toParentAttendance(value: unknown): ParentAttendance | null {
             completed: readNumber(summaryRow, "completed"),
         },
         records,
+    };
+}
+
+export function toParentStudentFile(value: unknown): ParentStudentFile | null {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+    const row = value as UnknownRow;
+    const id = readText(row, "id", 100);
+    const name = readText(row, "original_name", 160);
+    const createdAt = readText(row, "created_at", 50);
+    if (!id || !name || !createdAt) return null;
+
+    return {
+        id,
+        name,
+        mimeType: readText(row, "mime_type", 160),
+        sizeBytes: readNumber(row, "size_bytes"),
+        category: readText(row, "category", 24) || "result",
+        note: readText(row, "note", 240),
+        createdAt,
     };
 }
