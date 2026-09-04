@@ -27,6 +27,7 @@ type GrowthRecord = {
     parent_feedback_draft: string | null;
     teacher_memo: string | null;
     status: string | null;
+    period_month?: string | null;
     updated_at: string | null;
 };
 
@@ -37,6 +38,7 @@ type GrowthEntry = GrowthRecord & {
 
 type ApiResponse = {
     success: boolean;
+    freshMode?: boolean;
     migrationRequired?: boolean;
     students?: StudentOption[];
     records?: GrowthRecord[];
@@ -94,6 +96,7 @@ const CLASS_OPTIONS = ["공통기초반", "흥미반", "만들기반", "프로�
 const TRACKS = ["전체 반", NO_CLASS_PROGRESS_LABEL, ...CLASS_OPTIONS];
 const MOVE_OPTIONS = ["-", "관찰 필요", "이동 가능", "보강 후 이동", "상담 필요"];
 const RECORD_STATUS_OPTIONS = ["관찰중", "초안", "전달 준비", "상담 필요", "완료"];
+const FRESH_RECORD_STATUS_OPTIONS = ["초안", "완료"];
 
 function safeText(value: string | null | undefined) {
     return String(value || "").trim();
@@ -169,6 +172,11 @@ function formatDate(value: string | null | undefined) {
     });
 }
 
+function formatPeriodMonth(value: string | null | undefined) {
+    const match = value?.match(/^(\d{4})-(\d{2})/);
+    return match ? `${Number(match[1])}년 ${Number(match[2])}월` : "";
+}
+
 function toForm(record: GrowthRecord, fallback?: StudentOption): FormState {
     return {
         studentId: record.student_id,
@@ -186,12 +194,13 @@ function toForm(record: GrowthRecord, fallback?: StudentOption): FormState {
     };
 }
 
-function newForm(student: StudentOption): FormState {
+function newForm(student: StudentOption, freshMode = false): FormState {
     return {
         ...EMPTY_FORM,
         studentId: student.id,
         studentName: student.name,
         currentClass: student.class || "",
+        recordStatus: freshMode ? "초안" : EMPTY_FORM.recordStatus,
     };
 }
 
@@ -258,6 +267,7 @@ export default function GrowthManagementPage() {
     const [entryEdit, setEntryEdit] = useState<EntryEditState | null>(null);
     const [entrySaving, setEntrySaving] = useState(false);
     const [saveState, setSaveState] = useState<"idle" | "dirty" | "saving" | "saved" | "error">("idle");
+    const [freshMode, setFreshMode] = useState(false);
     const [migrationRequired, setMigrationRequired] = useState(false);
     const [message, setMessage] = useState<{ type: "ok" | "error" | "info"; text: string } | null>(null);
     const selectedIdRef = useRef("");
@@ -324,11 +334,11 @@ export default function GrowthManagementPage() {
         setSelectedId(studentId);
         setEditingEntryId(null);
         setEntryEdit(null);
-        const nextForm = record ? toForm(record, student) : student ? newForm(student) : EMPTY_FORM;
+        const nextForm = record ? toForm(record, student) : student ? newForm(student, freshMode) : EMPTY_FORM;
         setForm(nextForm);
         lastSavedSnapshotRef.current = snapshot(nextForm);
         setSaveState("idle");
-    }, [records, students]);
+    }, [freshMode, records, students]);
 
     const load = useCallback(async () => {
         setLoading(true);
@@ -342,9 +352,11 @@ export default function GrowthManagementPage() {
 
             const nextStudents = data.students || [];
             const nextRecords = data.records || [];
+            const nextFreshMode = Boolean(data.freshMode);
             setStudents(nextStudents);
             setRecords(nextRecords);
             setEntries(data.entries || []);
+            setFreshMode(nextFreshMode);
             setMigrationRequired(Boolean(data.migrationRequired));
 
             const previousSelected = selectedIdRef.current;
@@ -357,7 +369,7 @@ export default function GrowthManagementPage() {
             if (nextSelected) {
                 const student = nextStudents.find(item => item.id === nextSelected);
                 const record = nextRecords.find(item => item.student_id === nextSelected);
-                const nextForm = record ? toForm(record, student) : student ? newForm(student) : EMPTY_FORM;
+                const nextForm = record ? toForm(record, student) : student ? newForm(student, nextFreshMode) : EMPTY_FORM;
                 setForm(nextForm);
                 lastSavedSnapshotRef.current = snapshot(nextForm);
             } else {
@@ -390,6 +402,7 @@ export default function GrowthManagementPage() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     ...form,
+                    recordId: selectedRecord?.id || null,
                     autoSave: mode === "auto",
                     createEntry: mode === "entry",
                 }),
@@ -401,12 +414,19 @@ export default function GrowthManagementPage() {
                 const rest = prev.filter(record => record.student_id !== data.record!.student_id);
                 return [data.record!, ...rest];
             });
-            if (data.entry) setEntries(prev => [data.entry!, ...prev]);
+            if (data.entry) setEntries(prev => [data.entry!, ...prev.filter(entry => entry.id !== data.entry!.id)]);
             lastSavedSnapshotRef.current = currentSnapshot;
             setSaveState("saved");
             if (mode === "entry") {
                 setForm(prev => ({ ...prev, entryNote: "" }));
-                setMessage({ type: "ok", text: "현재 내용을 저장하고 누적 기록을 남겼습니다." });
+                setMessage({
+                    type: "ok",
+                    text: freshMode
+                        ? form.recordStatus === "완료"
+                            ? "이번 달 성장 기록을 저장하고 학부모·학생에게 공개했습니다."
+                            : "이번 달 성장 기록을 초안으로 안전하게 저장했습니다."
+                        : "현재 내용을 저장하고 누적 기록을 남겼습니다.",
+                });
             }
         } catch (error) {
             setSaveState("error");
@@ -416,7 +436,7 @@ export default function GrowthManagementPage() {
         } finally {
             setSaving(false);
         }
-    }, [form, migrationRequired]);
+    }, [form, freshMode, migrationRequired, selectedRecord]);
 
     useEffect(() => {
         if (firstLoadRef.current || loading || !form.studentId || migrationRequired) return;
@@ -467,6 +487,9 @@ export default function GrowthManagementPage() {
             if (!response.ok || !data.success || !data.entry) throw new Error(data.error || "성장 기록 수정에 실패했습니다.");
 
             setEntries(prev => prev.map(entry => entry.id === data.entry!.id ? data.entry! : entry));
+            if (data.record) {
+                setRecords(prev => prev.map(record => record.id === data.record!.id ? data.record! : record));
+            }
             setEditingEntryId(null);
             setEntryEdit(null);
             setMessage({ type: "ok", text: "선택한 누적 성장 기록을 수정했습니다." });
@@ -479,7 +502,11 @@ export default function GrowthManagementPage() {
 
     const removeRecord = async () => {
         if (!form.studentId) return;
-        if (!window.confirm(`${form.studentName || "선택한 학생"}의 성장관리 기록을 초기화할까요?`)) return;
+        if (!window.confirm(
+            freshMode
+                ? `${form.studentName || "선택한 학생"}의 성장관리 기록을 보관 처리할까요? 학부모·학생 화면에서는 숨겨집니다.`
+                : `${form.studentName || "선택한 학생"}의 성장관리 기록을 초기화할까요?`,
+        )) return;
 
         try {
             const response = await fetch("/api/teacher/growth-management", {
@@ -493,11 +520,16 @@ export default function GrowthManagementPage() {
             setRecords(prev => prev.filter(record => record.student_id !== form.studentId));
             setEntries(prev => prev.filter(entry => entry.student_id !== form.studentId));
             const student = students.find(item => item.id === form.studentId);
-            const nextForm = student ? newForm(student) : EMPTY_FORM;
+            const nextForm = student ? newForm(student, freshMode) : EMPTY_FORM;
             setForm(nextForm);
             lastSavedSnapshotRef.current = snapshot(nextForm);
             setSaveState("idle");
-            setMessage({ type: "ok", text: "성장관리 기록을 초기화했습니다." });
+            setMessage({
+                type: "ok",
+                text: freshMode
+                    ? "성장관리 기록을 안전하게 보관 처리했습니다. 학부모·학생 화면에서는 더 이상 보이지 않습니다."
+                    : "성장관리 기록을 초기화했습니다.",
+            });
         } catch (error) {
             setMessage({ type: "error", text: error instanceof Error ? error.message : "삭제에 실패했습니다." });
         }
@@ -608,7 +640,7 @@ export default function GrowthManagementPage() {
                     <article><span>전체 학생</span><strong>{summary.total}</strong><small>운영 학생 명단</small></article>
                     <article><span>성장 기록 있음</span><strong>{summary.recorded}</strong><small>현재 기록 보유</small></article>
                     <article><span>기록 미작성</span><strong>{summary.pending}</strong><small>첫 기록 필요</small></article>
-                    <article><span>전달 준비·완료</span><strong>{summary.ready}</strong><small>학부모 공유 단계</small></article>
+                    <article><span>{freshMode ? "공개 완료" : "전달 준비·완료"}</span><strong>{summary.ready}</strong><small>학부모 공유 단계</small></article>
                 </section>
 
                 <section className="filters">
@@ -700,12 +732,16 @@ export default function GrowthManagementPage() {
                         <div className="growth-workflow" aria-label="성장 기록 작성 순서">
                             <span className="complete"><b>1</b>학생 선택</span>
                             <span className={hasGrowthContent(selectedRecord) || saveState !== "idle" ? "complete" : ""}><b>2</b>성장 내용 작성</span>
-                            <span className={selectedEntries.length ? "complete" : ""}><b>3</b>누적 기록 남기기</span>
+                            <span className={selectedEntries.length ? "complete" : ""}><b>3</b>{freshMode ? "월별 기록 저장" : "누적 기록 남기기"}</span>
                         </div>
 
                         <div className="autosave-note">
                             <strong>현재 기록</strong>
-                            <span>아래 내용을 바꾸면 자동 저장됩니다. 지난 기록은 누적 기록의 수정 버튼을 이용해주세요.</span>
+                            <span>
+                                {freshMode
+                                    ? "아래 내용을 바꾸면 이번 달 초안으로 자동 저장됩니다. 관리 상태를 ‘완료’로 선택하고 공개 버튼을 눌러야 학부모·학생에게 보입니다."
+                                    : "아래 내용을 바꾸면 자동 저장됩니다. 지난 기록은 누적 기록의 수정 버튼을 이용해주세요."}
+                            </span>
                         </div>
 
                         <div className="form-grid">
@@ -717,7 +753,7 @@ export default function GrowthManagementPage() {
                             </Field>
                             <Field label="관리 상태">
                                 <select value={form.recordStatus} onChange={event => updateForm("recordStatus", event.target.value)}>
-                                    {RECORD_STATUS_OPTIONS.map(item => <option key={item} value={item}>{item}</option>)}
+                                    {(freshMode ? FRESH_RECORD_STATUS_OPTIONS : RECORD_STATUS_OPTIONS).map(item => <option key={item} value={item}>{item}</option>)}
                                 </select>
                             </Field>
                             <Field label="반 이동 가능성">
@@ -755,9 +791,11 @@ export default function GrowthManagementPage() {
 
                         <div className="detail-actions">
                             <button className="outline" onClick={copyFeedback}>피드백 복사</button>
-                            <button className="danger" onClick={removeRecord} disabled={!selectedRecord}>기록 초기화</button>
+                            <button className="danger" onClick={removeRecord} disabled={!selectedRecord}>{freshMode ? "기록 보관" : "기록 초기화"}</button>
                             <button className="primary" onClick={() => void submit("entry")} disabled={saving || migrationRequired}>
-                                이번 주 기록 남기기
+                                {freshMode
+                                    ? form.recordStatus === "완료" ? "이번 달 기록 공개" : "이번 달 초안 저장"
+                                    : "이번 주 기록 남기기"}
                             </button>
                         </div>
 
@@ -777,7 +815,7 @@ export default function GrowthManagementPage() {
                                     <article key={entry.id} className={editDraft ? "editing" : ""}>
                                         <div className="history-card-head">
                                             <div>
-                                                <strong>{formatDate(entry.created_at)}</strong>
+                                                <strong>{formatPeriodMonth(entry.period_month) || formatDate(entry.created_at)}</strong>
                                                 <em className={`status-badge ${statusTone(entry.status)}`}>{entry.status || "관찰중"}</em>
                                             </div>
                                             {!editDraft && (
@@ -806,7 +844,7 @@ export default function GrowthManagementPage() {
                                                             value={editDraft.recordStatus}
                                                             onChange={event => updateEntryEdit("recordStatus", event.target.value)}
                                                         >
-                                                            {RECORD_STATUS_OPTIONS.map(item => <option key={item} value={item}>{item}</option>)}
+                                                            {(freshMode ? FRESH_RECORD_STATUS_OPTIONS : RECORD_STATUS_OPTIONS).map(item => <option key={item} value={item}>{item}</option>)}
                                                         </select>
                                                     </Field>
                                                     <Field label="반 이동 가능성">

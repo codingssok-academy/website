@@ -148,4 +148,50 @@ describe("Growth 2.0 관리자 성장관리", () => {
     expect(await screen.findByText("선택한 누적 성장 기록을 수정했습니다.")).toBeInTheDocument();
     expect(screen.getByText("수정한 기록 메모")).toBeInTheDocument();
   });
+
+  it("새 시험 모드에서는 월별 초안과 공개 흐름을 분명하게 안내한다", async () => {
+    const monthlyRecord = {
+      id: "record-1",
+      student_id: "student-1",
+      student_name: "가짜학생",
+      current_class: "공통기초반",
+      skill_level: null,
+      strengths: "스스로 오류를 찾았습니다.",
+      weaknesses: "풀이 순서를 정리합니다.",
+      current_goal: "조건문 프로젝트 완성",
+      next_class_potential: "관찰 필요",
+      class_progress: "반복문",
+      parent_feedback_draft: "꾸준히 성장하고 있습니다.",
+      teacher_memo: "선생님만 보는 메모",
+      entry_note: "이번 달 기록",
+      status: "완료",
+      period_month: "2026-09-01",
+      updated_at: "2026-09-04T02:00:00.000Z",
+      created_at: "2026-09-04T01:00:00.000Z",
+    };
+    const fetchMock = vi.fn(async () => new Response(JSON.stringify({
+      success: true,
+      freshMode: true,
+      migrationRequired: false,
+      students: [{
+        id: "student-1",
+        name: "가짜학생",
+        school: "테스트초",
+        grade: "3",
+        class: "공통기초반",
+        status: "active",
+      }],
+      records: [monthlyRecord],
+      entries: [monthlyRecord],
+    }), { status: 200, headers: { "Content-Type": "application/json" } }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<GrowthManagementPage />);
+
+    expect(await screen.findByRole("button", { name: "이번 달 기록 공개" })).toBeInTheDocument();
+    expect(screen.getByText("공개 완료")).toBeInTheDocument();
+    expect(screen.getByText("2026년 9월")).toBeInTheDocument();
+    expect(screen.getByText(/이번 달 초안으로 자동 저장됩니다/)).toBeInTheDocument();
+    expect(screen.getByLabelText("관리 상태")).not.toHaveTextContent("상담 필요");
+  });
 });
