@@ -2,7 +2,13 @@
 import { requireTeacher } from "@/lib/auth-teacher";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
+    assertAllowedStudentFile,
+    buildStudentFilePath,
+    normalizeStudentFileCategory,
+    normalizeStudentFileNote,
     normalizeStudentFileVisibility,
+    sanitizeOriginalFileName,
+    STUDENT_FILES_BUCKET,
     toStudentFileDto,
     type StudentFileRow,
 } from "@/lib/student-files";
@@ -20,6 +26,10 @@ type StudentOptionRow = {
     status: string | null;
     auth_user_id: string | null;
 };
+
+const FRESH_FILE_COLUMNS = "id,student_id,owner_auth_user_id,uploaded_by,uploaded_by_role,original_name,storage_path,mime_type,size_bytes,category,note,visibility,created_at";
+const LEGACY_FILE_COLUMNS = "id,student_id,owner_auth_user_id,uploaded_by,uploaded_by_role,original_name,storage_path,mime_type,size_bytes,category,note,created_at";
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function toStudentOption(row: StudentOptionRow) {
     return {
@@ -71,9 +81,7 @@ export async function GET(request: NextRequest) {
             .select("id,name,school,grade,class,status,auth_user_id");
         let filesQuery = admin
             .from("student_files")
-            .select(freshMode
-                ? "id,student_id,owner_auth_user_id,uploaded_by,uploaded_by_role,original_name,storage_path,mime_type,size_bytes,category,note,visibility,created_at"
-                : "id,student_id,owner_auth_user_id,uploaded_by,uploaded_by_role,original_name,storage_path,mime_type,size_bytes,category,note,created_at");
+            .select(freshMode ? FRESH_FILE_COLUMNS : LEGACY_FILE_COLUMNS);
 
         if (allowedStudentIds) {
             studentsQuery = studentsQuery.in("id", allowedStudentIds);
@@ -169,9 +177,114 @@ export async function PATCH(request: NextRequest) {
     }
 }
 
-export async function POST() {
-    return NextResponse.json(
-        { success: false, error: "관리자 파일함은 조회와 삭제만 지원합니다." },
-        { status: 405 },
-    );
+export async function POST(request: NextRequest) {
+    const teacher = await requireTeacher();
+    if (!teacher.ok) return teacher.response;
+    if (teacher.role !== "admin") {
+        return NextResponse.json(
+            { success: false, error: "학생 파일은 관리자만 올릴 수 있습니다." },
+            { status: 403 },
+        );
+    }
+    if (!usesHashedStudentAccessCodes()) {
+        return NextResponse.json(
+            { success: false, error: "새 시험 DB에서만 관리자 파일 업로드를 사용할 수 있습니다." },
+            { status: 409 },
+        );
+    }
+
+    try {
+        const form = await request.formData();
+        const studentId = typeof form.get("studentId") === "string" ? String(form.get("studentId")).trim() : "";
+        const file = form.get("file");
+        const visibility = normalizeStudentFileVisibility(form.get("visibility"));
+        if (!UUID_PATTERN.test(studentId)) {
+            return NextResponse.json({ success: false, error: "학생을 정확히 선택해주세요." }, { status: 400 });
+        }
+        if (!(file instanceof File)) {
+            return NextResponse.json({ success: false, error: "업로드할 파일을 선택해주세요." }, { status: 400 });
+        }
+        if (!visibility) {
+            return NextResponse.json({ success: false, error: "공개 범위를 정확히 선택해주세요." }, { status: 400 });
+        }
+
+        try {
+            assertAllowedStudentFile(file);
+        } catch (error) {
+            return NextResponse.json(
+                { success: false, error: error instanceof Error ? error.message : "지원하지 않는 파일입니다." },
+                { status: 400 },
+            );
+        }
+        const admin = createAdminClient();
+        if (!admin) return NextResponse.json({ success: false, error: "서버 저장소 설정이 필요합니다." }, { status: 503 });
+
+        const { data: studentData, error: studentError } = await admin
+            .from("students")
+            .select("id,name,school,grade,class,status,auth_user_id")
+            .eq("id", studentId)
+            .eq("status", "active")
+            .maybeSingle();
+        if (studentError) throw new Error(studentError.message);
+        const student = studentData as StudentOptionRow | null;
+        if (!student || !student.auth_user_id) {
+            return NextResponse.json(
+                { success: false, error: "로그인 계정이 연결된 활동 중인 학생만 파일을 올릴 수 있습니다." },
+                { status: 400 },
+            );
+        }
+
+        const originalName = sanitizeOriginalFileName(file.name);
+        const storagePath = buildStudentFilePath({
+            studentId: student.id,
+            fileName: originalName,
+            uploadedByRole: "admin",
+        });
+        const bytes = Buffer.from(await file.arrayBuffer());
+        const upload = await admin.storage
+            .from(STUDENT_FILES_BUCKET)
+            .upload(storagePath, bytes, {
+                contentType: file.type || "application/octet-stream",
+                upsert: false,
+            });
+        if (upload.error) throw new Error(upload.error.message);
+
+        const { data, error } = await admin
+            .from("student_files")
+            .insert({
+                student_id: student.id,
+                owner_auth_user_id: student.auth_user_id,
+                uploaded_by: teacher.userId,
+                uploaded_by_role: "admin",
+                original_name: originalName,
+                storage_path: storagePath,
+                mime_type: file.type || null,
+                size_bytes: file.size,
+                category: normalizeStudentFileCategory(form.get("category")),
+                note: normalizeStudentFileNote(form.get("note")),
+                visibility,
+            })
+            .select(FRESH_FILE_COLUMNS)
+            .single();
+        if (error || !data) {
+            await admin.storage.from(STUDENT_FILES_BUCKET).remove([storagePath]);
+            throw new Error(error?.message || "파일 정보를 저장하지 못했습니다.");
+        }
+
+        return NextResponse.json({
+            success: true,
+            file: toStudentFileDto(data as unknown as StudentFileRow, {
+                id: student.id,
+                name: student.name,
+                school: student.school,
+                grade: student.grade,
+                className: student.class,
+            }),
+        }, { status: 201, headers: { "Cache-Control": "no-store" } });
+    } catch (error) {
+        return NextResponse.json(
+            { success: false, error: error instanceof Error ? error.message : "파일 업로드에 실패했습니다." },
+            { status: 500 },
+        );
+    }
 }

@@ -9,7 +9,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock("@/lib/supabase/admin", () => ({ createAdminClient: mocks.createAdminClient }));
 vi.mock("@/lib/auth-teacher", () => ({ requireTeacher: mocks.requireTeacher }));
 
-import { GET, PATCH } from "./route";
+import { GET, PATCH, POST } from "./route";
 
 function request() {
     return new NextRequest("https://www.codingssok.com/api/teacher/student-files");
@@ -21,6 +21,16 @@ function patchRequest(body: unknown) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
     });
+}
+
+function uploadRequest(fields: { studentId: string; visibility: string; file?: File }) {
+    const form = new FormData();
+    form.set("studentId", fields.studentId);
+    form.set("visibility", fields.visibility);
+    form.set("category", "entry");
+    form.set("note", "가짜 관리자 업로드");
+    if (fields.file) form.set("file", fields.file);
+    return { formData: vi.fn().mockResolvedValue(form) } as unknown as NextRequest;
 }
 
 function makeListQuery(data: unknown[]) {
@@ -198,5 +208,116 @@ describe("teacher student file list in fresh database mode", () => {
         expect(response.status).toBe(400);
         expect(body.error).toContain("정확히 선택");
         expect(mocks.createAdminClient).not.toHaveBeenCalled();
+    });
+
+    it("blocks a non-admin teacher from uploading a student file", async () => {
+        const response = await POST(uploadRequest({
+            studentId: "11111111-1111-4111-8111-111111111111",
+            visibility: "student_parent",
+            file: new File(["fake"], "fake.ent", { type: "application/octet-stream" }),
+        }));
+        const body = await response.json();
+
+        expect(response.status).toBe(403);
+        expect(body.error).toContain("관리자만");
+        expect(mocks.createAdminClient).not.toHaveBeenCalled();
+    });
+
+    it("rejects a disallowed file before using storage", async () => {
+        mocks.requireTeacher.mockResolvedValue({ ok: true, userId: "admin-user", role: "admin" });
+
+        const response = await POST(uploadRequest({
+            studentId: "11111111-1111-4111-8111-111111111111",
+            visibility: "student_parent",
+            file: new File(["fake"], "unsafe.exe", { type: "application/octet-stream" }),
+        }));
+        const body = await response.json();
+
+        expect(response.status).toBe(400);
+        expect(body.error).toContain("지원하지 않는 파일 형식");
+        expect(mocks.createAdminClient).not.toHaveBeenCalled();
+    });
+
+    it("uploads an allowed file for the selected active student as an admin", async () => {
+        const studentId = "11111111-1111-4111-8111-111111111111";
+        const authUserId = "33333333-3333-4333-8333-333333333333";
+        const fileId = "22222222-2222-4222-8222-222222222222";
+        mocks.requireTeacher.mockResolvedValue({ ok: true, userId: "admin-user", role: "admin" });
+
+        const studentMaybeSingle = vi.fn().mockResolvedValue({
+            data: {
+                id: studentId,
+                name: "가짜학생",
+                school: "가짜초등학교",
+                grade: "3학년",
+                class: "공통기초반",
+                status: "active",
+                auth_user_id: authUserId,
+            },
+            error: null,
+        });
+        const studentStatusEq = vi.fn(() => ({ maybeSingle: studentMaybeSingle }));
+        const studentIdEq = vi.fn(() => ({ eq: studentStatusEq }));
+        const uploadedRow = {
+            id: fileId,
+            student_id: studentId,
+            owner_auth_user_id: authUserId,
+            uploaded_by: "admin-user",
+            uploaded_by_role: "admin",
+            original_name: "fake-project.ent",
+            storage_path: `students/${studentId}/admin/fake-project.ent`,
+            mime_type: "application/octet-stream",
+            size_bytes: 12,
+            category: "entry",
+            note: "가짜 관리자 업로드",
+            visibility: "student_parent",
+            created_at: "2026-09-04T00:00:00.000Z",
+        };
+        const fileSingle = vi.fn().mockResolvedValue({ data: uploadedRow, error: null });
+        const fileSelect = vi.fn(() => ({ single: fileSingle }));
+        const fileInsert = vi.fn(() => ({ select: fileSelect }));
+        const storageUpload = vi.fn().mockResolvedValue({ data: { path: uploadedRow.storage_path }, error: null });
+        const storageRemove = vi.fn().mockResolvedValue({ data: [], error: null });
+        const admin = {
+            from: vi.fn((table: string) => {
+                if (table === "students") {
+                    return { select: vi.fn(() => ({ eq: studentIdEq })) };
+                }
+                if (table === "student_files") return { insert: fileInsert };
+                throw new Error(`unexpected table: ${table}`);
+            }),
+            storage: {
+                from: vi.fn(() => ({ upload: storageUpload, remove: storageRemove })),
+            },
+        };
+        mocks.createAdminClient.mockReturnValue(admin);
+
+        const response = await POST(uploadRequest({
+            studentId,
+            visibility: "student_parent",
+            file: new File(["fake content"], "fake-project.ent", { type: "application/octet-stream" }),
+        }));
+        const body = await response.json();
+
+        expect(response.status, JSON.stringify(body)).toBe(201);
+        expect(studentIdEq).toHaveBeenCalledWith("id", studentId);
+        expect(studentStatusEq).toHaveBeenCalledWith("status", "active");
+        expect(storageUpload).toHaveBeenCalledOnce();
+        expect(fileInsert).toHaveBeenCalledWith(expect.objectContaining({
+            student_id: studentId,
+            uploaded_by: "admin-user",
+            uploaded_by_role: "admin",
+            original_name: "fake-project.ent",
+            category: "entry",
+            visibility: "student_parent",
+        }));
+        expect(body.file).toMatchObject({
+            id: fileId,
+            studentId,
+            originalName: "fake-project.ent",
+            uploadedByRole: "admin",
+            visibility: "student_parent",
+        });
+        expect(storageRemove).not.toHaveBeenCalled();
     });
 });

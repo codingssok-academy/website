@@ -55,4 +55,46 @@ describe("관리자 학생 파일 공개 범위", () => {
     expect(await screen.findByText("가짜작품.ent 파일을 선생님만 볼 수 있게 변경했습니다.")).toBeInTheDocument();
     expect(staffButton).toHaveAttribute("aria-pressed", "true");
   });
+
+  it("선택한 학생에게 공개 범위와 설명을 포함한 파일을 올린다", async () => {
+    const uploadedFile = {
+      id: "uploaded-file", studentId: "student-1", uploadedByRole: "admin",
+      originalName: "관리자작품.ent", mimeType: "application/octet-stream", sizeBytes: 12,
+      category: "entry", note: "9월 엔트리 작품", visibility: "staff_only",
+      createdAt: "2026-09-04T00:00:00.000Z", student: null,
+    };
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(jsonResponse({
+        success: true,
+        canManageVisibility: true,
+        students: [{
+          id: "student-1", name: "가짜학생", school: "가짜초등학교", grade: "3학년",
+          className: "공통기초반", status: "active", linked: true,
+        }],
+        files: [],
+      }))
+      .mockResolvedValueOnce(jsonResponse({ success: true, file: uploadedFile }, 201));
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<AdminStudentFilesPage />);
+
+    const fileInput = await screen.findByLabelText("파일 선택");
+    const file = new File(["fake content"], "관리자작품.ent", { type: "application/octet-stream" });
+    fireEvent.change(fileInput, { target: { files: [file] } });
+    fireEvent.change(screen.getByLabelText("분류"), { target: { value: "entry" } });
+    fireEvent.change(screen.getByLabelText("공개 범위"), { target: { value: "staff_only" } });
+    fireEvent.change(screen.getByLabelText(/파일 설명/), { target: { value: "9월 엔트리 작품" } });
+    fireEvent.click(screen.getByRole("button", { name: "선택 학생에게 올리기" }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+    const [, uploadOptions] = fetchMock.mock.calls[1];
+    expect(uploadOptions.method).toBe("POST");
+    expect(uploadOptions.body).toBeInstanceOf(FormData);
+    expect(uploadOptions.body.get("studentId")).toBe("student-1");
+    expect(uploadOptions.body.get("category")).toBe("entry");
+    expect(uploadOptions.body.get("visibility")).toBe("staff_only");
+    expect(uploadOptions.body.get("note")).toBe("9월 엔트리 작품");
+    expect(await screen.findByText("관리자작품.ent 파일을 선생님 전용으로 올렸습니다.")).toBeInTheDocument();
+    expect(screen.getByText("관리자작품.ent")).toBeInTheDocument();
+  });
 });

@@ -1,7 +1,7 @@
 ﻿"use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { Download, Eye, FolderOpen, LockKeyhole, RefreshCw, Search, Trash2 } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Download, Eye, FileUp, FolderOpen, LockKeyhole, RefreshCw, Search, Trash2 } from "lucide-react";
 
 type StudentOption = {
     id: string;
@@ -85,7 +85,13 @@ export default function AdminStudentFilesPage() {
     const [loading, setLoading] = useState(true);
     const [canManageVisibility, setCanManageVisibility] = useState(false);
     const [actingId, setActingId] = useState<string | null>(null);
+    const [uploading, setUploading] = useState(false);
+    const [uploadFile, setUploadFile] = useState<File | null>(null);
+    const [uploadCategory, setUploadCategory] = useState("result");
+    const [uploadNote, setUploadNote] = useState("");
+    const [uploadVisibility, setUploadVisibility] = useState<StudentFile["visibility"]>("student_parent");
     const [message, setMessage] = useState<{ type: "ok" | "error"; text: string } | null>(null);
+    const fileInputRef = useRef<HTMLInputElement | null>(null);
 
     const load = useCallback(async () => {
         setLoading(true);
@@ -170,6 +176,46 @@ export default function AdminStudentFilesPage() {
         }
     };
 
+    const upload = async () => {
+        if (!selectedStudent || !uploadFile || uploading) {
+            setMessage({ type: "error", text: selectedStudent ? "업로드할 파일을 선택해주세요." : "학생을 먼저 선택해주세요." });
+            return;
+        }
+        if (!selectedStudent.linked) {
+            setMessage({ type: "error", text: "로그인 계정이 연결된 학생에게만 파일을 올릴 수 있습니다." });
+            return;
+        }
+
+        setUploading(true);
+        setMessage(null);
+        try {
+            const form = new FormData();
+            form.set("studentId", selectedStudent.id);
+            form.set("file", uploadFile);
+            form.set("category", uploadCategory);
+            form.set("note", uploadNote);
+            form.set("visibility", uploadVisibility);
+            const res = await fetch("/api/teacher/student-files", { method: "POST", body: form });
+            const data = await readJson(res);
+            if (!res.ok || !data.success) throw new Error(data.error || "파일 업로드에 실패했습니다.");
+
+            setFiles(prev => [data.file as StudentFile, ...prev]);
+            setUploadFile(null);
+            setUploadNote("");
+            if (fileInputRef.current) fileInputRef.current.value = "";
+            setMessage({
+                type: "ok",
+                text: uploadVisibility === "student_parent"
+                    ? `${uploadFile.name} 파일을 올리고 학부모에게 공개했습니다.`
+                    : `${uploadFile.name} 파일을 선생님 전용으로 올렸습니다.`,
+            });
+        } catch (error) {
+            setMessage({ type: "error", text: error instanceof Error ? error.message : "파일 업로드에 실패했습니다." });
+        } finally {
+            setUploading(false);
+        }
+    };
+
     return (
         <main className="admin-files-page">
             <header className="page-head">
@@ -201,7 +247,11 @@ export default function AdminStudentFilesPage() {
                                 type="button"
                                 key={student.id}
                                 className={`student-item${selectedStudentId === student.id ? " active" : ""}`}
-                                onClick={() => setSelectedStudentId(student.id)}
+                                onClick={() => {
+                                    setSelectedStudentId(student.id);
+                                    setUploadFile(null);
+                                    if (fileInputRef.current) fileInputRef.current.value = "";
+                                }}
                             >
                                 <strong>{student.name}</strong>
                                 <span>{[student.className, student.school, student.grade].filter(Boolean).join(" · ") || "정보 없음"}</span>
@@ -225,6 +275,58 @@ export default function AdminStudentFilesPage() {
                             <strong>{formatBytes(totalSize)}</strong>
                         </div>
                     </div>
+
+                    {canManageVisibility && (
+                        <section className="upload-panel" aria-label="관리자 학생 파일 업로드">
+                            <div className="panel-title compact">
+                                <FileUp size={18} />
+                                <div>
+                                    <h2>새 파일 올리기</h2>
+                                    <p>{selectedStudent?.name || "선택한 학생"}의 결과물을 최대 50MB까지 올릴 수 있습니다.</p>
+                                </div>
+                            </div>
+                            <div className="upload-form">
+                                <label className="form-field file-field">
+                                    <span>파일 선택</span>
+                                    <input
+                                        ref={fileInputRef}
+                                        type="file"
+                                        aria-label="파일 선택"
+                                        accept=".ent,.sb3,.py,.cpp,.c,.h,.html,.css,.js,.json,.png,.jpg,.jpeg,.webp,.gif,.pdf,.txt,.md,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip"
+                                        onChange={event => setUploadFile(event.target.files?.[0] || null)}
+                                        disabled={uploading || !selectedStudent?.linked}
+                                    />
+                                    <small>{uploadFile ? `${uploadFile.name} · ${formatBytes(uploadFile.size)}` : "엔트리, 스크래치, 코드, 이미지, 문서"}</small>
+                                </label>
+                                <label className="form-field">
+                                    <span>분류</span>
+                                    <select aria-label="분류" value={uploadCategory} onChange={event => setUploadCategory(event.target.value)} disabled={uploading}>
+                                        {Object.entries(CATEGORY_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                                    </select>
+                                </label>
+                                <label className="form-field">
+                                    <span>공개 범위</span>
+                                    <select aria-label="공개 범위" value={uploadVisibility} onChange={event => setUploadVisibility(event.target.value as StudentFile["visibility"])} disabled={uploading}>
+                                        <option value="student_parent">학부모 공개</option>
+                                        <option value="staff_only">선생님만 보기</option>
+                                    </select>
+                                </label>
+                                <label className="form-field note-field">
+                                    <span>파일 설명 <em>선택</em></span>
+                                    <input aria-label="파일 설명" value={uploadNote} onChange={event => setUploadNote(event.target.value)} maxLength={240} placeholder="예: 9월 엔트리 게임 작품" disabled={uploading} />
+                                </label>
+                                <button
+                                    type="button"
+                                    className="upload-button"
+                                    onClick={() => void upload()}
+                                    disabled={uploading || !selectedStudent?.linked}
+                                >
+                                    <FileUp size={17} /> {uploading ? "올리는 중..." : "선택 학생에게 올리기"}
+                                </button>
+                            </div>
+                            {selectedStudent && !selectedStudent.linked && <p className="upload-warning">이 학생은 로그인 계정 연결 후 파일을 올릴 수 있습니다.</p>}
+                        </section>
+                    )}
 
                     <section className="file-panel">
                         <div className="panel-title compact">
@@ -310,7 +412,7 @@ export default function AdminStudentFilesPage() {
                 .notice.ok { color: #047857; background: #ecfdf5; border-color: #bbf7d0; }
                 .notice.error { color: #b91c1c; background: #fef2f2; border-color: #fecaca; }
                 .layout-grid { display: grid; grid-template-columns: 320px minmax(0, 1fr); gap: 18px; align-items: start; }
-                .student-panel, .work-panel, .file-panel { background: #fff; border: 1px solid #dbe4f2; border-radius: 18px; box-shadow: 0 18px 50px rgba(15, 23, 42, 0.05); }
+                .student-panel, .work-panel, .file-panel, .upload-panel { background: #fff; border: 1px solid #dbe4f2; border-radius: 18px; box-shadow: 0 18px 50px rgba(15, 23, 42, 0.05); }
                 .student-panel { padding: 18px; position: sticky; top: 24px; max-height: calc(100vh - 48px); overflow: hidden; display: flex; flex-direction: column; }
                 .panel-title { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 14px; }
                 .panel-title h2 { margin: 0 0 3px; font-size: 17px; letter-spacing: -0.02em; }
@@ -327,6 +429,19 @@ export default function AdminStudentFilesPage() {
                 .selected-strip > div { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px 16px; }
                 .selected-strip span { display: block; color: #64748b; font-size: 12px; font-weight: 900; margin-bottom: 6px; }
                 .selected-strip strong { font-size: 22px; letter-spacing: -0.03em; }
+                .upload-panel { margin-bottom: 14px; padding: 18px; box-shadow: none; border-color: #bfdbfe; background: linear-gradient(135deg, #eff6ff 0%, #ffffff 68%); }
+                .upload-form { display: grid; grid-template-columns: minmax(240px, 1fr) 130px 160px; gap: 12px; align-items: end; }
+                .form-field { min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+                .form-field > span { color: #334155; font-size: 12px; font-weight: 900; }
+                .form-field em { color: #94a3b8; font-style: normal; font-weight: 700; }
+                .form-field input, .form-field select { min-width: 0; height: 42px; border: 1px solid #cbd5e1; border-radius: 11px; background: #fff; color: #0f172a; padding: 0 11px; font: inherit; font-size: 13px; font-weight: 700; }
+                .form-field input[type="file"] { padding: 8px; }
+                .form-field input:disabled, .form-field select:disabled { cursor: not-allowed; opacity: .6; }
+                .form-field small { min-height: 16px; overflow: hidden; color: #64748b; font-size: 11px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+                .note-field { grid-column: 1 / 3; }
+                .upload-button { height: 42px; border: 0; border-radius: 11px; background: #2563eb; color: #fff; display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 0 15px; font-weight: 900; cursor: pointer; box-shadow: 0 8px 18px rgba(37, 99, 235, .2); }
+                .upload-button:disabled { cursor: not-allowed; opacity: .55; box-shadow: none; }
+                .upload-warning { margin: 10px 0 0; color: #b45309; font-size: 12px; font-weight: 800; }
                 .file-panel { padding: 18px; box-shadow: none; }
                 .empty { padding: 42px 16px; border: 1px dashed #d8e0ee; border-radius: 14px; background: #f8fafc; color: #94a3b8; text-align: center; font-weight: 800; }
                 .file-table { border: 1px solid #e2e8f0; border-radius: 14px; overflow: hidden; }
@@ -349,6 +464,8 @@ export default function AdminStudentFilesPage() {
                 .small-button.danger { color: #b91c1c; background: #fff7f7; border-color: #fecaca; }
                 @media (max-width: 1100px) {
                     .layout-grid, .selected-strip { grid-template-columns: 1fr; }
+                    .upload-form { grid-template-columns: 1fr; }
+                    .note-field { grid-column: auto; }
                     .student-panel { position: static; max-height: none; }
                     .file-row, .file-row.head { grid-template-columns: 1fr; align-items: start; }
                     .file-row.head { display: none; }

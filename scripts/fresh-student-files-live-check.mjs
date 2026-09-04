@@ -41,6 +41,7 @@ let studentAuthUserId = null;
 let teacherAuthUserId = null;
 let adminAuthUserId = null;
 let uploadedFile = null;
+let adminUploadedFile = null;
 
 async function jsonRequest(path, init = {}) {
     const response = await fetch(`${baseUrl}${path}`, init);
@@ -68,9 +69,25 @@ async function makeSessionCookie(session) {
     return [...jar].map(([name, value]) => `${name}=${value}`).join("; ");
 }
 
+async function loadStoragePath(fileId) {
+    const { data, error } = await admin
+        .from("student_files")
+        .select("storage_path")
+        .eq("id", fileId)
+        .maybeSingle();
+    if (error || !data?.storage_path) throw error || new Error("가짜 파일의 정리 경로를 확인하지 못했습니다.");
+    return data.storage_path;
+}
+
 async function cleanup() {
+    if (adminUploadedFile?.storagePath) {
+        await admin.storage.from("student-files").remove([adminUploadedFile.storagePath]);
+    }
     if (uploadedFile?.storagePath) {
         await admin.storage.from("student-files").remove([uploadedFile.storagePath]);
+    }
+    if (adminUploadedFile?.id) {
+        await admin.from("student_files").delete().eq("id", adminUploadedFile.id);
     }
     if (uploadedFile?.id) {
         await admin.from("student_files").delete().eq("id", uploadedFile.id);
@@ -89,13 +106,26 @@ async function cleanup() {
     }
 }
 
+async function verifyStorageObjectRemoved(file) {
+    if (!file?.storagePath) return;
+    const segments = file.storagePath.split("/");
+    const fileName = segments.pop();
+    const folder = segments.join("/");
+    const { data, error } = await admin.storage.from("student-files").list(folder, { search: fileName, limit: 10 });
+    if (error) throw error;
+    assert(!(data || []).some(item => item.name === fileName), "가짜 저장소 파일이 남아 있습니다.");
+}
+
 async function verifyCleanup() {
-    const [studentCheck, fileCheck, studentProfileCheck, teacherProfileCheck, adminProfileCheck] = await Promise.all([
+    const [studentCheck, fileCheck, adminFileCheck, studentProfileCheck, teacherProfileCheck, adminProfileCheck] = await Promise.all([
         studentId
             ? admin.from("students").select("id", { count: "exact", head: true }).eq("id", studentId)
             : Promise.resolve({ count: 0, error: null }),
         uploadedFile?.id
             ? admin.from("student_files").select("id", { count: "exact", head: true }).eq("id", uploadedFile.id)
+            : Promise.resolve({ count: 0, error: null }),
+        adminUploadedFile?.id
+            ? admin.from("student_files").select("id", { count: "exact", head: true }).eq("id", adminUploadedFile.id)
             : Promise.resolve({ count: 0, error: null }),
         studentAuthUserId
             ? admin.from("profiles").select("id", { count: "exact", head: true }).eq("id", studentAuthUserId)
@@ -107,13 +137,16 @@ async function verifyCleanup() {
             ? admin.from("profiles").select("id", { count: "exact", head: true }).eq("id", adminAuthUserId)
             : Promise.resolve({ count: 0, error: null }),
     ]);
-    const cleanupError = studentCheck.error || fileCheck.error || studentProfileCheck.error || teacherProfileCheck.error || adminProfileCheck.error;
+    const cleanupError = studentCheck.error || fileCheck.error || adminFileCheck.error || studentProfileCheck.error || teacherProfileCheck.error || adminProfileCheck.error;
     if (cleanupError) throw cleanupError;
     assert(studentCheck.count === 0, "가짜 학생 자료가 남아 있습니다.");
     assert(fileCheck.count === 0, "가짜 파일 자료가 남아 있습니다.");
+    assert(adminFileCheck.count === 0, "가짜 관리자 업로드 파일이 남아 있습니다.");
     assert(studentProfileCheck.count === 0, "가짜 학생 계정 자료가 남아 있습니다.");
     assert(teacherProfileCheck.count === 0, "가짜 선생님 계정 자료가 남아 있습니다.");
     assert(adminProfileCheck.count === 0, "가짜 관리자 계정 자료가 남아 있습니다.");
+    await verifyStorageObjectRemoved(uploadedFile);
+    await verifyStorageObjectRemoved(adminUploadedFile);
 }
 
 try {
@@ -174,7 +207,7 @@ try {
     assert(upload.response.status === 201 && upload.body?.file?.id, `학생 파일 업로드 실패: ${upload.body?.error || upload.response.status}`);
     uploadedFile = {
         id: upload.body.file.id,
-        storagePath: upload.body.file.storagePath,
+        storagePath: await loadStoragePath(upload.body.file.id),
     };
     assert(upload.body.file.visibility === "student_parent", "학생 파일의 학부모 공개 설정이 올바르지 않습니다.");
 
@@ -322,6 +355,37 @@ try {
     if (adminLoginError || !adminLogin.session) throw adminLoginError || new Error("가짜 관리자 로그인이 실패했습니다.");
     const adminCookie = await makeSessionCookie(adminLogin.session);
 
+    const adminUploadForm = new FormData();
+    adminUploadForm.set("studentId", studentId);
+    adminUploadForm.set("file", new File(["fake admin result for fresh DB integration check\n"], "fake-admin-result.ent", { type: "application/octet-stream" }));
+    adminUploadForm.set("category", "entry");
+    adminUploadForm.set("note", "가짜 관리자 파일 업로드 검사");
+    adminUploadForm.set("visibility", "staff_only");
+    const adminUpload = await jsonRequest("/api/teacher/student-files", {
+        method: "POST",
+        headers: { cookie: adminCookie },
+        body: adminUploadForm,
+    });
+    assert(adminUpload.response.status === 201 && adminUpload.body?.file?.id, `관리자 파일 업로드 실패: ${adminUpload.body?.error || adminUpload.response.status}`);
+    adminUploadedFile = {
+        id: adminUpload.body.file.id,
+        storagePath: await loadStoragePath(adminUpload.body.file.id),
+    };
+    assert(adminUpload.body.file.uploadedByRole === "admin", "관리자 업로드 기록의 등록자 역할이 올바르지 않습니다.");
+    assert(adminUpload.body.file.visibility === "staff_only", "관리자 업로드 파일의 최초 공개 범위가 올바르지 않습니다.");
+
+    const adminFileList = await jsonRequest("/api/teacher/student-files", {
+        headers: { cookie: adminCookie },
+    });
+    assert(adminFileList.response.status === 200, `관리자 파일 목록 확인 실패: ${adminFileList.body?.error || adminFileList.response.status}`);
+    assert(adminFileList.body?.files?.some(file => file.id === adminUploadedFile.id), "관리자가 올린 파일이 관리자 파일함에 보이지 않습니다.");
+
+    const privateAdminFileDashboard = await jsonRequest(`/api/parent/v2/dashboard?name=${encodeURIComponent(fakeName)}`, {
+        headers: { cookie: parentCookie },
+    });
+    assert(privateAdminFileDashboard.response.status === 200, `관리자 전용 파일 등록 후 학부모 현황판 조회 실패: ${privateAdminFileDashboard.body?.error || privateAdminFileDashboard.response.status}`);
+    assert(!privateAdminFileDashboard.body?.files?.some(file => file.id === adminUploadedFile.id), "관리자가 선생님 전용으로 올린 파일이 학부모에게 노출됐습니다.");
+
     const hideFromParent = await jsonRequest("/api/teacher/student-files", {
         method: "PATCH",
         headers: { "Content-Type": "application/json", cookie: adminCookie },
@@ -353,6 +417,19 @@ try {
     });
     assert(visibleDashboard.response.status === 200, `공개 변경 후 학부모 현황판 조회 실패: ${visibleDashboard.body?.error || visibleDashboard.response.status}`);
     assert(visibleDashboard.body?.files?.some(file => file.id === uploadedFile.id), "다시 공개한 파일이 학부모 현황판에 나타나지 않습니다.");
+
+    const revealAdminFile = await jsonRequest("/api/teacher/student-files", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", cookie: adminCookie },
+        body: JSON.stringify({ fileId: adminUploadedFile.id, visibility: "student_parent" }),
+    });
+    assert(revealAdminFile.response.status === 200 && revealAdminFile.body?.file?.visibility === "student_parent", `관리자 업로드 파일 공개 실패: ${revealAdminFile.body?.error || revealAdminFile.response.status}`);
+
+    const adminFileVisibleDashboard = await jsonRequest(`/api/parent/v2/dashboard?name=${encodeURIComponent(fakeName)}`, {
+        headers: { cookie: parentCookie },
+    });
+    assert(adminFileVisibleDashboard.response.status === 200, `관리자 업로드 파일 공개 후 학부모 현황판 조회 실패: ${adminFileVisibleDashboard.body?.error || adminFileVisibleDashboard.response.status}`);
+    assert(adminFileVisibleDashboard.body?.files?.some(file => file.id === adminUploadedFile.id), "관리자가 공개한 파일이 학부모 현황판에 나타나지 않습니다.");
 
     console.log("PASS: fresh-test 홈페이지 학생 파일 연결 검사가 모두 통과했습니다.");
 } finally {
