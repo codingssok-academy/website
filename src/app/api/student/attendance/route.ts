@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { usesHashedStudentAccessCodes } from "@/lib/student-access-codes";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -20,10 +21,11 @@ export async function GET(request: NextRequest) {
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) return json({ success: false, error: "로그인이 필요합니다." }, 401);
 
-    const admin = createAdminClient();
-    if (!admin) return json({ success: false, error: "서버 연결 설정이 필요합니다." }, 503);
+    // Fresh attendance uses the student's RLS-scoped session, as the teacher API does.
+    const attendanceClient = usesHashedStudentAccessCodes() ? supabase : createAdminClient();
+    if (!attendanceClient) return json({ success: false, error: "서버 연결 설정이 필요합니다." }, 503);
 
-    const { data: student, error: studentError } = await admin
+    const { data: student, error: studentError } = await attendanceClient
         .from("students")
         .select("id,status")
         .eq("auth_user_id", user.id)
@@ -35,7 +37,7 @@ export async function GET(request: NextRequest) {
         return json({ success: false, error: "관리자 학생 명단과 연결된 계정이 아닙니다." }, 403);
     }
 
-    const { data, error } = await admin.rpc("growth_api_monthly_attendance", {
+    const { data, error } = await attendanceClient.rpc("growth_api_monthly_attendance", {
         p_student_id: student.id,
         p_month: `${month}-01`,
     });
