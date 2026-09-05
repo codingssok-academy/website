@@ -198,12 +198,16 @@ export async function GET(
         }
 
         const storage = admin.storage.from(STUDENT_FILES_BUCKET);
-        const { data, error } = mode === "preview"
-            ? await storage.createSignedUrl(file.storage_path, 60)
-            : await storage.createSignedUrl(file.storage_path, 60, { download: file.original_name });
+        const { data, error } = await storage.createSignedUrl(file.storage_path, 60);
         if (error || !data?.signedUrl) throw new Error(error?.message || "다운로드 링크를 만들지 못했습니다.");
 
-        return NextResponse.redirect(data.signedUrl);
+        if (mode === "preview") return NextResponse.redirect(data.signedUrl);
+
+        // Add the filename after signing: the SDK download option encodes it twice.
+        // Do not decode the signed path or token; encode only this query value once.
+        const downloadUrl = new URL(data.signedUrl);
+        downloadUrl.searchParams.set("download", file.original_name);
+        return NextResponse.redirect(downloadUrl);
     } catch (error) {
         return NextResponse.json(
             { success: false, error: error instanceof Error ? error.message : "파일 다운로드에 실패했습니다." },

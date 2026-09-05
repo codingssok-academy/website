@@ -161,8 +161,8 @@ describe("student file route in fresh database mode", () => {
         const response = await GET(makeRequest(), routeContext);
 
         expect(response.status).toBe(307);
-        expect(response.headers.get("location")).toBe("https://files.example.test/temporary-download");
-        expect(createSignedUrl).toHaveBeenCalledWith(file.storage_path, 60, { download: file.original_name });
+        expect(response.headers.get("location")).toBe("https://files.example.test/temporary-download?download=fake-project.ent");
+        expect(createSignedUrl).toHaveBeenCalledWith(file.storage_path, 60);
     });
 
     it("creates an inline short URL for a safe image preview", async () => {
