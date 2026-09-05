@@ -39,6 +39,8 @@ function makeBuilder(data: unknown) {
 
   builder.select = chain;
   builder.eq = chain;
+  builder.in = chain;
+  builder.lte = chain;
   builder.neq = chain;
   builder.gte = chain;
   builder.order = chain;
@@ -64,7 +66,7 @@ describe("fresh parent dashboard growth connection", () => {
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://fresh-test.invalid");
     vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "fake-service-key-for-unit-test");
     vi.stubEnv("SUPABASE_ACCESS_CODE_MODE", "hashed");
-    mocks.verifyParentSessionToken.mockReturnValue({ studentId: "student-1", studentName: "가짜학생" });
+    mocks.verifyParentSessionToken.mockReturnValue({ studentId: "student-1", studentNames: ["가짜학생"], parentName: "가짜학생" });
     mocks.canParentSessionReadStudent.mockResolvedValue(true);
     mocks.rateLimit.mockResolvedValue({ success: true, remaining: 59 });
   });

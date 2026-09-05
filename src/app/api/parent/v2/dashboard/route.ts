@@ -18,6 +18,7 @@ import { findReferenceParentCode } from "@/lib/parent-code-reference";
 import { canParentSessionReadStudent } from "@/lib/parent-session-access";
 import { toParentAttendance, toParentGrowthRecord, toParentStudentFile } from "@/lib/parent-dashboard";
 import { usesHashedStudentAccessCodes } from "@/lib/student-access-codes";
+import { readFreshParentAttendance, resolveFreshDashboardStudent } from "@/features/growth-v2/parent/fresh-dashboard";
 
 // jsdom 체인은 text-utils로 끊었음. lazy dynamic import는 매 요청마다 module load
 // 4-5초 비용 → static import 복귀. cold start 1-2초 + 그 후 호출 즉시.
@@ -187,14 +188,18 @@ export async function GET(req: NextRequest) {
     // 1) 학부모 세션 — 쿠키의 studentId가 요청한 name의 student와 매칭되어야 함
     const parentToken = req.cookies.get(PARENT_SESSION_COOKIE)?.value;
     const parentSession = parentToken ? verifyParentSessionToken(parentToken) : null;
-    if (parentSession?.studentId) {
+    const freshStudent = freshMode
+        ? await resolveFreshDashboardStudent(sb, parentSession, name, createServerSupabase)
+        : null;
+    if (freshMode) isAuthorized = Boolean(freshStudent);
+    if (!freshMode && parentSession?.studentId) {
         if (await canParentSessionReadStudent(sb, parentSession, name)) {
             isAuthorized = true;
         }
     }
 
     // 2) 교사/관리자 — supabase auth + role 확인
-    if (!isAuthorized) {
+    if (!freshMode && !isAuthorized) {
         try {
             const userClient = await createServerSupabase();
             const { data: { user } } = await userClient.auth.getUser();
@@ -212,7 +217,7 @@ export async function GET(req: NextRequest) {
     }
 
     if (!isAuthorized) {
-        return NextResponse.json({ error: "권한이 없습니다." }, { status: 403 });
+        return NextResponse.json({ error: "권한이 없습니다." }, { status: 403, headers: { "Cache-Control": "no-store" } });
     }
 
     // ── Lambda in-memory cache hit (30초) — Supabase 7 query 비용 0 ──
@@ -224,14 +229,21 @@ export async function GET(req: NextRequest) {
     }
 
     // 1. Find profile by display_name
-    const { data: profiles } = await sb
+    const { data: profiles, error: profileError } = freshMode
+        ? freshStudent?.auth_user_id
+            ? await sb.from("profiles").select("id,display_name,total_xp,level,role")
+                  .eq("id", freshStudent.auth_user_id).limit(1)
+            : { data: [], error: null }
+        : await sb
         .from("profiles")
         .select("id, display_name, total_xp, level, role, avatar_url")
         .eq("display_name", name)
         .limit(1);
 
     const profile = profiles?.[0] ?? null;
-    const { data: matchingStudents } = await sb
+    const { data: matchingStudents } = freshMode
+        ? { data: [freshStudent] }
+        : await sb
         .from("students")
         .select("id, name, auth_user_id, school, grade, class, status")
         .eq("name", name)
@@ -269,21 +281,30 @@ export async function GET(req: NextRequest) {
 
         // User progress (level, tier, streak)
         userId
-            ? sb.from("user_progress")
+            ? freshMode ? sb.from("user_progress")
+                  .select("xp, level, streak, best_streak, tier, accuracy, total_code_runs, total_problems, last_active_date, tier_points")
+                  .eq("user_id", userId)
+                  .maybeSingle()
+              : sb.from("user_progress")
                   .select("xp, level, streak, best_streak, tier, accuracy, total_code_runs, total_problems, last_active_date, tier_points")
                   .eq("user_id", userId)
                   .single()
             : Promise.resolve({ data: null }),
 
         // Activity log (학습 활동)
-        sb.from("student_activity_log")
+        freshMode
+            ? userId ? sb.from("student_activity_log")
+                  .select("event_type,course_title,unit_title,page_title,duration_seconds,created_at")
+                  .eq("user_id", userId).order("created_at", { ascending: false }).limit(30)
+                : Promise.resolve({ data: [] })
+            : sb.from("student_activity_log")
           .select("student_name, event_type, course_title, unit_title, page_title, duration_seconds, created_at")
           .eq("student_name", name)
           .order("created_at", { ascending: false })
           .limit(30),
 
         // 최근 코드 기록
-        userId
+        userId && !freshMode
             ? sb.from("code_submissions")
                   .select("id, language, code, output, status, created_at")
                   .eq("user_id", userId)
@@ -292,14 +313,17 @@ export async function GET(req: NextRequest) {
             : Promise.resolve({ data: [] }),
 
         // 공지사항 (고정 + 최근)
-        sb.from("announcements")
+        (freshMode ? sb.from("announcements")
+          .select("id, title, content, is_pinned, created_at").eq("status", "published")
+          : sb.from("announcements")
           .select("id, title, content, is_pinned, created_at")
+        )
           .order("is_pinned", { ascending: false })
           .order("created_at", { ascending: false })
           .limit(5),
 
         // 학습 노트 개수 (최근 30일)
-        userId
+        userId && !freshMode
             ? sb.from("study_notes")
                   .select("id, updated_at")
                   .eq("user_id", userId)
@@ -340,8 +364,9 @@ export async function GET(req: NextRequest) {
             : Promise.resolve({ data: [] }),
 
         // 월별 출석 RPC가 적용된 환경에서만 표시하며, 미적용 환경은 빈 상태로 처리
-        studentId
-            ? sb.rpc("growth_api_monthly_attendance", {
+        freshStudent
+            ? readFreshParentAttendance(sb, freshStudent, currentMonth)
+            : studentId ? sb.rpc("growth_api_monthly_attendance", {
                   p_student_id: studentId,
                   p_month: `${currentMonth}-01`,
               })
@@ -357,6 +382,14 @@ export async function GET(req: NextRequest) {
                   .limit(6)
             : Promise.resolve({ data: [] }),
     ]);
+
+    if (freshMode && (profileError || [xpResult, progressResult, activityResult,
+        announcementResult, growthResult, growthEntriesResult, attendanceResult, filesResult]
+        .some(result => (result as { error?: unknown }).error))) {
+        return NextResponse.json({ error: "학습 정보를 불러오지 못했습니다. 잠시 후 다시 확인해주세요." }, {
+            status: 503, headers: { "Cache-Control": "no-store" },
+        });
+    }
 
     // XP 통계 계산
     const xpHistory = (xpResult as any)?.data || [];
@@ -389,6 +422,7 @@ export async function GET(req: NextRequest) {
     );
 
     const progress = (progressResult as any)?.data;
+    const freshTotalXp = progress?.xp ?? profile?.total_xp ?? 0;
 
     const growthHistory = ((growthEntriesResult as any)?.data || [])
         .map((row: unknown) => toParentGrowthRecord(row))
@@ -407,7 +441,7 @@ export async function GET(req: NextRequest) {
             school: fallbackStudent?.school || null,
             grade: fallbackStudent?.grade || null,
             currentClass: currentGrowth?.currentClass || fallbackStudent?.class || null,
-            totalXp: totalXp || progress?.xp || 0,
+            totalXp: freshMode ? freshTotalXp : totalXp || progress?.xp || 0,
             level: progress?.level || profile.level || 1,
             tier: progress?.tier || "Iron",
             streak: progress?.streak || 0,
@@ -422,7 +456,7 @@ export async function GET(req: NextRequest) {
             school: fallbackStudent.school || null,
             grade: fallbackStudent.grade || null,
             currentClass: currentGrowth?.currentClass || fallbackStudent.class || null,
-            totalXp: progress?.xp || 0,
+            totalXp: freshMode ? freshTotalXp : progress?.xp || 0,
             level: progress?.level || 1,
             tier: progress?.tier || "Iron",
             streak: progress?.streak || 0,
@@ -433,7 +467,7 @@ export async function GET(req: NextRequest) {
             lastActive: progress?.last_active_date || null,
         } : null,
         xp: {
-            total: totalXp || progress?.xp || 0,
+            total: freshMode ? freshTotalXp : totalXp || progress?.xp || 0,
             today: todayXp,
             weekly: weeklyXp,
             history: xpHistory.slice(0, 20),
@@ -478,6 +512,11 @@ export async function GET(req: NextRequest) {
         },
     });
     } catch (err: any) {
+        if (usesHashedStudentAccessCodes()) {
+            return NextResponse.json({ error: "학습 정보를 불러오지 못했습니다. 잠시 후 다시 확인해주세요." }, {
+                status: 503, headers: { "Cache-Control": "no-store" },
+            });
+        }
         // 진단용: 500 에러 stack을 Vercel 로그 + 응답 body 양쪽에 남김
         const stack = err?.stack || err?.message || String(err);
         console.error("[parent-v2-dashboard] FATAL:", stack);
