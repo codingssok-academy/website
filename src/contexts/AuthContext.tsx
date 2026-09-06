@@ -1,6 +1,7 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, ReactNode } from "react";
+import StudentLogoutStatus from "@/components/growth-v2/StudentLogoutStatus";
 
 /* ── Types ── */
 export interface UserProfile {
@@ -55,22 +56,27 @@ function saveUser(u: UserProfile | null) {
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<UserProfile | null>(null);
     const [loading, setLoading] = useState(true);
+    const [logoutStatus, setLogoutStatus] = useState<"idle" | "pending" | "error">("idle");
+    const logoutRequested = useRef(false);
+    const logoutInFlight = useRef(false);
 
     /* On mount: verify Supabase session first, then load localStorage */
     useEffect(() => {
         let cancelled = false;
+        const isCurrent = () => !cancelled && !logoutRequested.current;
 
         async function init() {
             try {
                 const { createClient, isLocalPreviewAuthEnabled, isSupabaseConfigured } = await import("@/lib/supabase");
+                if (!isCurrent()) return;
                 if (!isSupabaseConfigured()) {
                     if (isLocalPreviewAuthEnabled()) {
                         const stored = loadUser();
-                        if (!cancelled) setUser(stored);
+                        if (isCurrent()) setUser(stored);
                     } else {
                         saveUser(null);
                         localStorage.removeItem("codingssok_role");
-                        if (!cancelled) setUser(null);
+                        if (isCurrent()) setUser(null);
                     }
                     return;
                 }
@@ -79,12 +85,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
                 // Step 1: Check if Supabase auth session exists
                 const { data: { session } } = await sb.auth.getSession();
+                if (!isCurrent()) return;
 
                 if (!session) {
                     // No active session — clear any stale localStorage data
                     saveUser(null);
                     localStorage.removeItem("codingssok_role");
-                    if (!cancelled) setUser(null);
+                    if (isCurrent()) setUser(null);
                     return;
                 }
 
@@ -94,17 +101,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     .select("id,name,grade,avatar,status,auth_user_id")
                     .eq("auth_user_id", session.user.id)
                     .maybeSingle();
+                if (!isCurrent()) return;
 
                 if (linkedStudentError || !linkedStudent || linkedStudent.status === "deactivated" || linkedStudent.status === "rejected") {
                     saveUser(null);
                     localStorage.removeItem("codingssok_role");
                     await sb.auth.signOut({ scope: "local" });
-                    if (!cancelled) setUser(null);
+                    if (isCurrent()) setUser(null);
                     return;
                 }
 
                 const stored = loadUser();
-                if (stored && stored.id === session.user.id && !cancelled) {
+                if (stored && stored.id === session.user.id && isCurrent()) {
                     // Sync latest XP/level from Supabase
                     try {
                         const { data: progress } = await sb
@@ -113,7 +121,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                             .eq("user_id", stored.id)
                             .maybeSingle();
 
-                        if (progress && !cancelled) {
+                        if (progress && isCurrent()) {
                             stored.xp = progress.xp ?? stored.xp;
                             stored.level = progress.level ?? stored.level;
                             stored.streak = progress.streak ?? stored.streak;
@@ -122,14 +130,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     } catch (e) {
                         if (process.env.NODE_ENV === 'development') console.error('[Auth] XP sync failed:', e);
                     }
-                    setUser(stored);
-                } else if (!cancelled) {
+                    if (isCurrent()) setUser(stored);
+                } else if (isCurrent()) {
                     // Session exists but localStorage mismatch — clear stale data
                     saveUser(null);
                     setUser(null);
                 }
             } finally {
-                if (!cancelled) setLoading(false);
+                if (isCurrent()) setLoading(false);
             }
         }
 
@@ -137,30 +145,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return () => { cancelled = true; };
     }, []);
 
-    const signOut = () => {
-        setUser(null);
-        saveUser(null);
-        localStorage.removeItem("codingssok_role");
-        // Supabase session token도 확실히 제거
-        for (const key of Object.keys(localStorage)) {
-            if (key.startsWith("sb-") || key.includes("supabase")) {
-                localStorage.removeItem(key);
+    const signOut = async () => {
+        if (logoutInFlight.current) return;
+        logoutInFlight.current = true;
+        logoutRequested.current = true;
+        setLogoutStatus("pending");
+        try {
+            const { createClient, isSupabaseConfigured, isLocalPreviewAuthEnabled } = await import("@/lib/supabase");
+            if (isSupabaseConfigured()) {
+                const sb = createClient();
+                const result = await sb.auth.signOut({ scope: "local" });
+                if (result.error) throw result.error;
+                const verification = await sb.auth.getSession();
+                if (verification.error || verification.data.session) {
+                    throw new Error("Student logout is not confirmed");
+                }
+            } else if (!isLocalPreviewAuthEnabled()) {
+                throw new Error("Student logout configuration is unavailable");
             }
+
+            // Only remove this UI's cache after the SDK confirms session removal.
+            // SSR authentication cookies belong to the SDK, not a broad key scan.
+            saveUser(null);
+            localStorage.removeItem("codingssok_role");
+            setUser(null);
+            window.location.href = "/login";
+        } catch {
+            // Keep the learning UI unmounted; a failed logout is not a success.
+            // Do not expose SDK errors (which may contain account details).
+            setLogoutStatus("error");
+        } finally {
+            logoutInFlight.current = false;
         }
-        import("@/lib/supabase")
-            .then(({ createClient, isSupabaseConfigured }) => {
-                if (!isSupabaseConfigured()) return undefined;
-                return createClient().auth.signOut({ scope: 'local' });
-            })
-            .catch(() => undefined)
-            .finally(() => {
-                window.location.href = "/login";
-            });
     };
 
     const updateProfile = (patch: Partial<UserProfile>) => {
         setUser(prev => {
-            if (!prev) return prev;
+            if (!prev || logoutRequested.current) return prev;
             const updated = { ...prev, ...patch };
             saveUser(updated);
             return updated;
@@ -169,7 +190,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return (
         <AuthContext.Provider value={{ user, loading, signOut, updateProfile }}>
-            {children}
+            {logoutStatus === "idle"
+                ? children
+                : <StudentLogoutStatus status={logoutStatus} onRetry={signOut} />}
         </AuthContext.Provider>
     );
 }
